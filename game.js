@@ -27256,7 +27256,7 @@ function _renderChestWindow(chest){
   const pending = _pendingChestTake?.chestId === chest.id ? _pendingChestTake : null;
 
   const visibleItems = (chest.items || []).map((item, idx) => ({ item, idx }))
-    .filter(({ item, idx }) => !item.tutorial_hidden
+    .filter(({ item, idx }) => !(item.tutorial_hidden_por_heroi?.[GS.myPid] ?? item.tutorial_hidden)
       && !(pending?.kind === 'item' && pending.index === idx));
   const itemCount = visibleItems.length;
   const hasGold   = chest.gold > 0 && pending?.kind !== 'gold';
@@ -27721,6 +27721,12 @@ function _showTrapResult(msg){
   const isSurvival = msg.tipo === 'sobrevivencia' || msg.tipo_id === 'sede_fome' || isSurvivalDamage;
   const isFall = msg.tipo === 'queda' || msg._fall === true;
   const isSwallowed = msg.tipo_id === 'engolido';
+  const isRestraint = msg.tipo === 'prisao' && ['teia', 'cola', 'piche'].includes(msg.prisao_id);
+  const isGrappled = msg.tipo === 'agarrado';
+  const isKnockedDown = msg.tipo === 'derrubado';
+  const isSilenced = msg.tipo === 'silencio';
+  const isFrightfulPresence = msg.tipo === 'presenca_aterradora';
+  const restraintKey = `ui.prisao.${msg.prisao_id}`;
   const conditionImages = {
     sangramento: 'sangramento.png',
     hemorragia: 'hemorragia.png',
@@ -27732,7 +27738,7 @@ function _showTrapResult(msg){
   const conditionTitle = isCondition ? t(`ui.condicao.${conditionId}`) : '';
   const survivalTitle = isSurvival ? (msg.nome || t('ui.sobrevivencia.exaustao_titulo')) : '';
   const swallowedTitle = isSwallowed ? t('ui.armadilha.engolido.titulo') : '';
-  const resultTitle = swallowedTitle || conditionTitle || survivalTitle;
+  const resultTitle = (isFrightfulPresence ? t('ui.presenca_aterradora.titulo') : '') || (isSilenced ? t('ui.silencio.titulo') : '') || (isKnockedDown ? t('ui.derrubado.titulo') : '') || (isGrappled ? t('ui.agarrado.titulo') : '') || (isRestraint ? t(`${restraintKey}.titulo`) : '') || swallowedTitle || conditionTitle || survivalTitle;
   const swallowedDamage = msg.acid_damage || '3d6';
   const swallowedDc = Math.max(1, Number(msg.escape_dc) || 22);
   const swallowedMonster = msg.monstro || 'monstro';
@@ -27749,6 +27755,7 @@ function _showTrapResult(msg){
     equipamento_danificado: 'equipamento_danificado.png',
     arma_quebrada: 'arma_quebrada.png', armadura_quebrada: 'armadura_quebrada.png',
     petrificado: 'petrificado.png', enfeiticado: 'enfeiticado.png',
+    presenca_aterradora: 'medo.png',
     cuspe_acido: 'cuspe_acido.png', falha_magia_dano: 'falha_magia_dano.png',
     congelamento_paralisia: 'congelamento_ou_paralisia.png',
     atordoado: 'atordoado.png', morte: 'morte.png', sono: 'sono.png',
@@ -27805,7 +27812,17 @@ function _showTrapResult(msg){
   }
   $('trap-title').textContent = isFall ? (msg.nome || t('ui.voo.queda_titulo'))
     : resultTitle || msg.nome || t('ui.hud.armadilha');
-  $('trap-desc').textContent = isFall
+  $('trap-desc').textContent = isFrightfulPresence
+    ? t('ui.presenca_aterradora.descricao', {monstro: msg.monstro || t('ui.presenca_aterradora.fonte_padrao')})
+    : isSilenced
+    ? t('ui.silencio.descricao')
+    : isKnockedDown
+    ? t('ui.derrubado.descricao', {monstro: msg.fonte})
+    : isGrappled
+    ? t('ui.agarrado.descricao', {monstro: msg.captor})
+    : isRestraint
+    ? t(`${restraintKey}.descricao`)
+    : isFall
     ? (msg.descricao || t('ui.voo.queda_descricao', {altura: msg.altura || 0, faixa: msg.faixa || '', dano: msg.dano || 0}))
     : isSurvivalDamage
     ? (msg.descricao || t('ui.sobrevivencia.desnutricao_desc'))
@@ -27831,7 +27848,16 @@ function _showTrapResult(msg){
 
   const effectsEl = $('trap-effects');
   effectsEl.innerHTML = '';
-  const conditionEffects = isFall
+  const conditionEffects = isFrightfulPresence
+    ? [t('ui.presenca_aterradora.penalidade'), t('ui.presenca_aterradora.duracao')]
+    : isSilenced
+    ? [t('ui.silencio.rodadas', {n: msg.duracao || 0}), t('ui.silencio.sair')]
+    : isGrappled
+    ? [t('ui.agarrado.escape', {
+        testes: (msg.escape_saves || []).map(s => t(`ui.agarrado.save.${s}`)).join(t('ui.agarrado.ou')),
+        dc: msg.escape_dc,
+      })]
+    : isFall
     ? (msg.efeitos_extra || [t('ui.voo.queda_dano', {expressao: msg.expressao || '—', dano: msg.dano || 0})])
     : isSurvivalDamage
     ? (msg.efeitos_extra || [t('ui.sobrevivencia.desnutricao_recuperar')])
@@ -27893,7 +27919,10 @@ function _showTrapResult(msg){
   });
 
   const statusEl = $('trap-status');
-  if(msg.tipo === 'escuridao'){
+  if(isFrightfulPresence){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t('ui.presenca_aterradora.status');
+  } else if(msg.tipo === 'escuridao'){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.status.escuridao_popup_status');
   } else if(isFall){
@@ -27905,6 +27934,18 @@ function _showTrapResult(msg){
       ? t('ui.sobrevivencia.desnutricao_status')
       : t('ui.sobrevivencia.exaustao_status', {n: Math.abs(Number(msg.penalidade_total) || 0)}));
     tocarSomArmadilha();
+  } else if(isSilenced){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t('ui.silencio.duracao');
+  } else if(isKnockedDown){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t(msg.turno_efeito === 'atual' ? 'ui.derrubado.duracao_atual' : 'ui.derrubado.duracao_proximo');
+  } else if(isGrappled){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t('ui.agarrado.duracao');
+  } else if(isRestraint){
+    statusEl.className = 'trap-status trap-status--fail';
+    statusEl.textContent = t(`${restraintKey}.duracao`, {n: msg.duracao || 0});
   } else if(isSwallowed){
     statusEl.className = 'trap-status trap-status--fail';
     statusEl.textContent = t('ui.armadilha.engolido.status');

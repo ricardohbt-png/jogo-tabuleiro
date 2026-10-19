@@ -1,5 +1,104 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Aviso de Atordoamento por crítico de Bordão (2026-10-18)
+
+`_resolver_critico_bordao` mantém o efeito de atordoamento no alvo quando o 20
+natural falha em Fortitude. Só envia `_enviar_resultado_atordoamento` se o alvo
+afetado for herói; monstros não abrem popup e o atacante não recebe o aviso. A
+janela existente mostra `atordoado.png`, a perda da próxima rodada e as ações
+bloqueadas. Resistência em Fortitude não abre o aviso.
+
+### Aviso de Presença Aterradora (2026-10-18)
+
+Quando `_ciclope_presenca_aterradora` faz um herói falhar em Vontade, envia um
+`trap_result` privado `tipo: "presenca_aterradora"`, com a arte reutilizada
+`assets/armadilhas/medo.png`. O cliente mostra título, descrição, penalidade de
+−1 nos ataques e duração da primeira rodada em caixa própria, com PT/EN. A
+resistência não abre a janela; a regra e o prazo do modificador não mudam.
+
+### Golpe Esmagador do Ciclope atordoa (2026-10-18)
+
+Quando a Clava Gigante acerta e o herói falha em Fortitude, `_ciclope_golpe_esmagador`
+marca `perde_turno` e usa `_enviar_resultado_atordoamento`, o mesmo aviso com
+`atordoado.png` da condição Atordoado. O herói não se move, ataca nem usa
+habilidades durante a próxima rodada; o estado é consumido pelo fluxo normal de
+encerramento do turno. Sucesso em Fortitude não aplica a condição. A metadata e a
+descrição de `golpe_esmagador` também declaram `perde_turno` por uma rodada.
+
+### Janela ilustrada de Medo (2026-10-18)
+
+O resultado da magia Medo continua usando `mental_control_result` e a janela
+compartilhada de controle mental/armadilhas. `_enviar_resultado_controle_mental`
+inclui `imagem: "medo.png"` somente para Medo; o cliente já prioriza a imagem
+enviada no payload. `assets/armadilhas/medo.png` ilustra heróis fugindo da sombra
+gigante feita por um monstrinho junto à tocha. Descrição, instruções de fuga,
+penalidade de −1 no ataque e duração permanecem os valores fornecidos pelo
+executor da magia; nenhuma regra foi alterada.
+
+### Aviso de Amaldiçoar do xamã (2026-10-18)
+
+`_xama_amaldicoar` envia `trap_result` privado a cada herói atingido, com
+`tipo_id: "amaldicoar_xama"` e a arte existente `amaldicoado.png`. O payload
+traduzível inclui título, origem, −1 em ataque/dano/CA/resistências e duração
+de `mods_magia.rodadas` após a aplicação (preserva uma duração anterior maior).
+Explica o término automático; não usa o fluxo das maldições persistentes.
+O popup existente consome título/descrição/efeitos e `imagem` diretamente, sem
+novo ramo de interface. Testes: `tools/test_amaldicoar_xama_aviso.py`,
+`tools/test_prisao_aviso_cliente.js` e `tools/test_xama_goblin.py`.
+
+### Janela de Silêncio (2026-10-18)
+
+`_avisar_silencio`, após o envio do estado, usa `_em_silencio` para detectar
+entrada no efeito real (respeita `imune_silencio_ate`, bordas e áreas móveis).
+Abre `trap_result` privado com `tipo/tipo_id: "silencio"`, `duracao` e a arte
+`assets/armadilhas/silencio.png`. Texto PT/EN explica o bloqueio de magias,
+suspensão dos bônus da Canção Heroica e término ao sair da área. Sobreposições
+mostram a maior duração restante das áreas que contêm o herói; é preciso sair
+de todas. Uma janela por entrada no efeito, sem repetição nos ticks ou ao entrar
+em outra zona sobreposta. Se a imunidade expirar ainda dentro, o aviso dispara.
+`_silencio_avisados` é efêmero. Regressões: `tools/test_silencio_aviso.py`,
+`tools/test_prisao_aviso_cliente.js` e `tools/test_xama_goblin.py`.
+
+### Janela de Derrubado (2026-10-18)
+
+O derrube abre `_enviar_resultado_derrubado` no momento do golpe, apenas para
+heróis vivos. Reutiliza `trap_result` com `tipo/tipo_id: "derrubado"`, `fonte`,
+`turno_efeito: "atual" | "proximo"` e `assets/armadilhas/derrubado.png`. A mordida
+de lobo informa perda do movimento atual; Caudada Derrubadora e Cauda Varredora
+informam a perda do próximo movimento. O consumo de `derrubado_sem_movimento`
+no início do turno continua igual e não abre outra janela. Resistência ou erro
+no ataque não dispara aviso. Texto PT/EN preserva as ações disponíveis e
+explica quando o movimento retorna. Regressões: `tools/test_prisao_aviso.py`,
+`tools/test_prisao_aviso_cliente.js` e `tools/test_tirano.py`.
+
+### Janela de Agarrado (2026-10-18)
+
+`_avisar_agarrados`, após o envio do estado, abre um `trap_result` privado com
+`tipo/tipo_id: "agarrado"`, `captor`, `escape_dc`, `escape_saves` e a arte
+`assets/armadilhas/agarrado.png`. Detecta `preso` + captor vivo em qualquer origem
+(mordida, constrição, garras, tentáculos, salto e onda); não substitui os avisos
+de engolido, rede ou teia. Uma janela por par herói/captor enquanto persistir;
+ao sair do estado ou trocar o captor, o aviso pode disparar novamente.
+`_dados_escape_agarrar` é compartilhado pelo teste real e pela janela, preservando
+a seleção da habilidade e os saves existentes. Texto PT/EN: movimento impedido,
+−2 nos ataques, fuga automática no início do turno e duração até escapar ou o
+captor ser derrotado. Metadados dos avisos são efêmeros e não entram nos saves.
+Regressões: `tools/test_prisao_aviso.py`, `tools/test_prisao_aviso_cliente.js` e
+`tools/test_agarrao.py`.
+
+### Avisos de prisão por teia, cola e piche (2026-10-18)
+
+Reutilizam a fila/janela de armadilhas com `trap_result`, `tipo: "prisao"`,
+`prisao_id: "teia" | "cola" | "piche"` e a arte compartilhada
+`assets/armadilhas/preso.png`. O cliente traduz título, descrição e duração pela
+causa; a rede mantém sua janela/arte existente. A teia avisa somente na falha do
+save de `disparo_teia` (perde o próximo turno). `_avisar_prisoes_aderentes`, após
+o envio do estado, detecta entrada em `cola_sem_movimento` ou piche real (respeita
+voo/ponte) e não repete nos ticks. Cola exibe `mov_reduzido_rodadas`; piche explica
+o limite de uma casa por turno, preservando ações. Não cria novas aplicações de
+cola em heróis nem altera as regras de controle. Testes:
+`tools/test_prisao_aviso.py` e `tools/test_prisao_aviso_cliente.js`.
+
 ### Lâmpada da Vigília Arcana (2026-10-18)
 
 Consumível universal de ação bônus, vendido por 60 moedas nos mercadores. Dura

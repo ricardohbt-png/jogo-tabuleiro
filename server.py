@@ -3632,6 +3632,8 @@ FOTO_SALA_CATEGORIAS = {
     "_positive_effect_events": "efemero", "_resistance_events": "efemero",
     "_damage_visual_context": "efemero", "_condition_alerts": "efemero",
     "_survival_alerts": "efemero", "_story_encadeada": "efemero",
+    "_agarrados_avisados": "efemero", "_prisoes_aderentes_avisadas": "efemero",
+    "_silencio_avisados": "efemero",
     "_campaign_outro": "efemero", "_monster_ai_focus_target_id": "efemero",
     "_monster_ai_reserved_tiles": "efemero",
     "_route_completion_announced": "efemero",
@@ -6563,8 +6565,9 @@ MONSTER_DEFS.extend([
              "attribute_mod_base": 0,
              "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e o bônus de FOR no dano."},
             {"id": "golpe_esmagador", "name": "Golpe Esmagador", "action_type": "passiva",
-             "attack_index": 0, "dc": 17, "save": "fortitude", "effect": "perde_movimento",
-             "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento."},
+             "attack_index": 0, "dc": 17, "save": "fortitude", "effect": "perde_turno",
+             "effect_duration": 1,
+             "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: fica atordoado e perde a próxima rodada."},
             {"id": "investida_colossal", "name": "Investida Colossal", "action_type": "passiva",
              "attack_index": 0, "move_required": 3, "straight": True, "attack_bonus": 2,
              "damage_bonus": 4,
@@ -14963,6 +14966,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvo["perde_turno"] = True
             alvo["bordao_atordoado"] = True
             await self._aplicar_queda(alvo, "atordoamento", atacante.get("id"))
+            if self._eh_jogador(alvo):
+                await self._enviar_resultado_atordoamento(
+                    alvo, "O golpe crítico de Bordão deixou você atordoado.",
+                    "1 rodada",
+                    ["Você perde sua próxima rodada",
+                     "Não pode se mover, atacar nem usar habilidades durante esse turno"],
+                )
         resultado = (T("narracao.bordao_critico_atordoa") if not passou
                      else T("narracao.bordao_critico_resiste"))
         await self.gm_say(T("narracao.bordao_critico_fortitude",
@@ -37342,6 +37352,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "tipo": "enfeiticado",
             "nome": magia,
             "icone": "✨",
+            **({"imagem": "medo.png"} if magia == "Medo" else {}),
             "target_id": alvo.get("id"), "pos": list(alvo.get("pos", [0, 0])),
             "duracao": int(duracao or 0),
             "descricao": descricao,
@@ -37396,6 +37407,89 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "descricao": descricao,
             "efeitos_extra": efeitos,
         })
+
+    async def _enviar_resultado_prisao(self, alvo, causa, duracao=0):
+        """Aviso pessoal: arte compartilhada, regras descritas por causa no cliente."""
+        if not self._eh_jogador(alvo) or causa not in {"teia", "cola", "piche"}:
+            return
+        await self._enviar_trap_result(
+            alvo, "", "🕸️", sucesso=False, dano=0, metade=False,
+            descricao="", efeitos_extra=[], tipo_id="prisao", tipo="prisao",
+            prisao_id=causa, duracao=max(0, int(duracao or 0)), imagem="preso.png")
+
+    async def _avisar_prisoes_aderentes(self):
+        """Uma janela ao entrar em cola/piche; ticks e estados repetidos não duplicam."""
+        anteriores = getattr(self, "_prisoes_aderentes_avisadas", set())
+        atuais = set()
+        if self.phase == "playing":
+            for pid, p in self.players.items():
+                if not p.get("alive") or p.get("fora_masmorra"):
+                    continue
+                for causa, ativa in (
+                    ("cola", p.get("cola_sem_movimento")),
+                    ("piche", self._criatura_em_piche(p) or p.get("_piche_movimento_encerrado")),
+                ):
+                    chave = (pid, causa)
+                    if ativa:
+                        atuais.add(chave)
+                        if chave not in anteriores:
+                            await self._enviar_resultado_prisao(
+                                p, causa, p.get("mov_reduzido_rodadas", 0) if causa == "cola" else 0)
+        self._prisoes_aderentes_avisadas = atuais
+
+    async def _enviar_resultado_derrubado(self, alvo, fonte, turno_efeito):
+        """Aviso no golpe que derruba; não repete nos próximos estados/turnos."""
+        if not self._eh_jogador(alvo) or not alvo.get("alive") or alvo.get("hp", 0) <= 0:
+            return
+        await self._enviar_trap_result(
+            alvo, "", "💥", sucesso=False, dano=0, metade=False,
+            descricao="", efeitos_extra=[], tipo_id="derrubado", tipo="derrubado",
+            imagem="derrubado.png", fonte=fonte, turno_efeito=turno_efeito)
+
+    async def _avisar_silencio(self):
+        """Uma janela ao entrar no efeito real, inclusive quando a área surge sob o herói."""
+        anteriores = getattr(self, "_silencio_avisados", set())
+        atuais = set()
+        if self.phase == "playing":
+            zonas = self._zonas_ativas("silencio")
+            for pid, p in self.players.items():
+                if (not p.get("alive") or p.get("fora_masmorra")
+                        or not self._em_silencio(p)):
+                    continue
+                atuais.add(pid)
+                if pid in anteriores:
+                    continue
+                x, y = p.get("pos", [0, 0])
+                duracao = max((max(0, int(z.get("duracao", 0) or 0)) for z in zonas
+                               if self._em_zona_quadrada(x, y, z)), default=0)
+                await self._enviar_trap_result(
+                    p, "", "🔇", sucesso=False, dano=0, metade=False,
+                    descricao="", efeitos_extra=[], tipo_id="silencio", tipo="silencio",
+                    imagem="silencio.png", duracao=duracao)
+        self._silencio_avisados = atuais
+
+    async def _avisar_agarrados(self):
+        """Uma janela por herói/captor; todas as origens usam o estado autoritativo."""
+        anteriores = getattr(self, "_agarrados_avisados", set())
+        atuais = set()
+        if self.phase == "playing":
+            for pid, p in self.players.items():
+                if (not p.get("alive") or p.get("fora_masmorra") or not p.get("preso")
+                        or p.get("engolido") or p.get("bau_engolido")):
+                    continue
+                captor = self._captor_ativo(p)
+                if not captor:
+                    continue
+                chave = (pid, captor["id"])
+                atuais.add(chave)
+                if chave not in anteriores:
+                    dc, saves, _ = self._dados_escape_agarrar(captor)
+                    await self._enviar_trap_result(
+                        p, "", "🐊", sucesso=False, dano=0, metade=False,
+                        descricao="", efeitos_extra=[], tipo_id="agarrado", tipo="agarrado",
+                        imagem="agarrado.png", captor=nome_criatura(captor), escape_dc=dc,
+                        escape_saves=["forca" if s == "força" else s for s in saves])
+        self._agarrados_avisados = atuais
 
     async def _enviar_resultado_atordoamento(self, alvo, fonte, duracao, efeitos):
         """Alerta pessoal de atordoamento ou perda de ação causada por monstro."""
@@ -40714,6 +40808,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             passou, d20, bonus, total = self._testar_save(p, ab.get("save", "vontade"), dc, fonte=m)
             if not passou:
                 p["ciclope_ataque_penalty_ate"] = self.round_num + int(ab.get("duration_rounds", 1) or 1)
+                await self._enviar_trap_result(
+                    p, "Presença Aterradora", "😱", sucesso=False, dano=0, metade=False,
+                    descricao="", efeitos_extra=[], tipo="presenca_aterradora",
+                    tipo_id="presenca_aterradora", imagem="medo.png",
+                    duracao=int(ab.get("duration_rounds", 1) or 1),
+                    monstro=nome_criatura(m))
             resultado = T("narracao.resiste" if passou
                           else "narracao.falha_e_sofre_pen_ataque_1a_rodada")
             await self.gm_say(T("narracao.usa_presenca_aterradora_contra_vontade_v", monstro=nome_criatura(m), heroi=nome_criatura(p), resultado=resultado, total=total, dc=dc))
@@ -40749,10 +40849,22 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         passou, d20, bonus, total = self._testar_save(target, ab.get("save", "fortitude"), int(ab.get("dc", 17) or 17), fonte=m)
         if not passou and self._eh_jogador(target):
-            target["ciclope_perde_movimento"] = True
-        resultado = T("narracao.resiste" if passou
-                      else "narracao.perde_a_proxima_acao_de_movimento")
-        await self.gm_say(T("narracao.ao_golpe_esmagador_de_fortitude_vs_cd", alvo=nome_criatura(target), resultado=resultado, monstro=nome_criatura(m), total=total, int_ab_get_dc_17_or_17=int(ab.get('dc', 17) or 17)))
+            target["perde_turno"] = True
+            await self._enviar_resultado_atordoamento(
+                target,
+                f"O Golpe Esmagador de {nome_criatura(m)} deixou você atordoado.",
+                "1 rodada",
+                ["Você perde sua próxima rodada",
+                 "Não pode se mover, atacar nem usar habilidades durante esse turno"],
+            )
+            await self.gm_say(T("narracao.fica_atordoado_fortitude_vs_cd_e_perde_a",
+                                tgt_name=nome_criatura(target), stot=total,
+                                dc=int(ab.get("dc", 17) or 17)))
+        else:
+            await self.gm_say(T("narracao.ao_golpe_esmagador_de_fortitude_vs_cd",
+                                alvo=nome_criatura(target), resultado=T("narracao.resiste"),
+                                monstro=nome_criatura(m), total=total,
+                                int_ab_get_dc_17_or_17=int(ab.get("dc", 17) or 17)))
 
     async def _ai_ciclope(self, m, targets):
         await self._ciclope_presenca_aterradora(m)
@@ -46107,6 +46219,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if effect == "perde_turno":
                 target["perde_turno"] = True
                 await self._aplicar_queda(target, "atordoamento", m.get("id"))
+                if ab_id == "disparo_teia":
+                    await self._enviar_resultado_prisao(target, "teia", 1)
                 await self.gm_say(T("narracao.esta_imobilizado_e_perdera_o_proximo_tur", tgt_name=nome_criatura(target)))
             elif effect == "petrificado":
                 if self._eh_jogador(target) and self._imune_a_status(target, "petrificacao"):
@@ -46474,6 +46588,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 sb_str = f"+{sb}" if sb >= 0 else str(sb)
                 if not save_ok:
                     target["moves_left"] = 0
+                    await self._enviar_resultado_derrubado(target, nome_criatura(m), "atual")
                     await self.gm_say(
                         T("narracao.foi_derrubado_d20_vs_cd_perde_o_moviment", target=nome_criatura(target), d20=d20, sb_str=sb_str, stot=stot, dc=dc))
                 else:
@@ -46618,6 +46733,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # o movimento atual não teria efeito. Esta flag é consumida no início
         # do próximo turno da vítima.
         target["derrubado_sem_movimento"] = True
+        await self._enviar_resultado_derrubado(target, nome_criatura(m), "proximo")
         await self.gm_say(T("narracao.tiranossauro_cauda_derruba", monstro=nome_criatura(m),
                             alvo=nome_criatura(target), d20=d20, bonus=f"{bonus:+d}",
                             total=total, dc=dc))
@@ -46802,6 +46918,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._matar_no_abismo(c, m.get("id"))
             await self.gm_say(T("narracao.arrasta", monstro=nome_criatura(m), c=nome_criatura(c)))
 
+    @staticmethod
+    def _dados_escape_agarrar(captor):
+        """Fonte comum para o teste de fuga e sua explicação na janela."""
+        grip = next((ab for ab in captor.get("special_abilities", [])
+                     if ab.get("id") in ("agarrar", "agarrar_aereo", "constricao", "agarrar_lacralion", "mandibulas_colossais", "tentaculos_imobilizar", "constricao_charcos", "onda_envolvente", "salto_selvagem")), None)
+        dc = grip.get("escape_dc", grip.get("dc", 12)) if grip else 12
+        saves = (grip.get("escape_saves") if grip else None) or ["fortitude", "reflexos"]
+        return dc, saves, grip
+
     async def _processar_escape_agarrar(self, p):
         """Tentativa de escape no início do turno do jogador. Os saves e a CD
         vêm da habilidade de agarrão do captor (crocodilo: FOR/REF CD 12;
@@ -46813,12 +46938,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         # Localiza a habilidade de agarrÃ£o do captor para CD e saves de escape.
-        grip = next((ab for ab in captor.get("special_abilities", [])
-                     if ab.get("id") in ("agarrar", "agarrar_aereo", "constricao", "agarrar_lacralion", "mandibulas_colossais", "tentaculos_imobilizar", "constricao_charcos", "onda_envolvente", "salto_selvagem")), None)
-        dc    = (grip.get("escape_dc", grip.get("dc", 12)) if grip else 12)
-        saves = grip.get("escape_saves") if grip else None
-        if not saves:
-            saves = ["fortitude", "reflexos"]   # padrÃ£o (compat. crocodilo)
+        dc, saves, grip = self._dados_escape_agarrar(captor)
 
         SAVE_LBL = {"fortitude": "FOR", "forca": "FOR", "força": "FOR", "reflexos": "REF", "vontade": "VON"}
         sucesso = False
@@ -47598,6 +47718,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if max(abs(p["pos"][0] - centro[0]), abs(p["pos"][1] - centro[1])) > 1:
                 continue
             self._set_mod_magia(p, debuff, dur); n += 1
+            duracao_ativa = p["mods_magia"]["rodadas"]
+            await self._enviar_trap_result(
+                p, T("ui.amaldicoar_xama.titulo"), "☠️", sucesso=False, dano=0, metade=False,
+                descricao=T("ui.amaldicoar_xama.descricao", monstro=nome_criatura(m)),
+                efeitos_extra=[
+                    T("ui.amaldicoar_xama.penalidades", **debuff),
+                    T("ui.amaldicoar_xama.duracao", n=duracao_ativa),
+                    T("ui.amaldicoar_xama.termino"),
+                ], tipo_id="amaldicoar_xama", imagem="amaldicoado.png", duracao=duracao_ativa)
         await self.gm_say(
             T("narracao.lanca_amaldicoar_em_heroi_s_1_ataque_dan", monstro=nome_criatura(m), n=n, dur=dur))
 
@@ -49058,6 +49187,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             passou, d20, sb, st = self._testar_save(vitima, ability.get("save", "reflexos"), cd, fonte=m)
             if not passou:
                 vitima["derrubado_sem_movimento"] = True
+                await self._enviar_resultado_derrubado(vitima, nome_criatura(m), "proximo")
             await self.gm_say(T("narracao.cauda_em_de_dano_reflexos_vs_cd", vitima=nome_criatura(vitima), dano=dano, e_derrubado_if_not_passo=' e derrubado' if not passou else '', st=st, cd=cd))
 
     async def _ai_grotao(self, m, targets):
@@ -51623,23 +51753,41 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             }
             if jogador and (self.training_mode or tem_item_restrito):
                 classe = jogador.get("class_id")
-                def itens_bau_personalizados(chest):
+                def ocultos_para(heroi_pid, heroi, chest):
+                    """tutorial_hidden de cada item do baú para UM herói."""
+                    classe_h = (heroi or {}).get("class_id")
                     visiveis = {}
-                    items = []
+                    out = []
                     for item in chest.get("items", []):
                         classes_item = _weapon_allowed_classes(item)
                         oculto = bool(item.get("effect") == "grimoire"
-                                      and classes_item and classe not in classes_item)
+                                      and classes_item and classe_h not in classes_item)
                         oculto = oculto or (self.training_mode
                                             and item.get("tutorial_class") in LICAO_CLASSES
-                                            and item.get("tutorial_class") != classe)
+                                            and item.get("tutorial_class") != classe_h)
                         provision_id = _tutorial_provision_id(item)
                         if provision_id:
-                            remaining = self._tutorial_provision_remaining(pid, item) or 0
+                            remaining = self._tutorial_provision_remaining(heroi_pid, item) or 0
                             count = visiveis.get(provision_id, 0)
                             oculto = oculto or count >= remaining
                             visiveis[provision_id] = count + 1
-                        items.append({**item, "tutorial_hidden": oculto})
+                        out.append(oculto)
+                    return out
+
+                # Solo com grupo: a conexão controla vários heróis e cada um tem a
+                # própria cota/classe; o cliente lê a visão do herói em foco.
+                extras = {q["id"]: q for q in self._herois_extras_de(pid)}
+
+                def itens_bau_personalizados(chest):
+                    proprio = ocultos_para(pid, jogador, chest)
+                    por_extra = {eid: ocultos_para(eid, q, chest) for eid, q in extras.items()}
+                    items = []
+                    for i, item in enumerate(chest.get("items", [])):
+                        novo = {**item, "tutorial_hidden": proprio[i]}
+                        if por_extra:
+                            novo["tutorial_hidden_por_heroi"] = {
+                                pid: proprio[i], **{eid: v[i] for eid, v in por_extra.items()}}
+                        items.append(novo)
                     return items
 
                 payload["chests"] = [
@@ -51658,6 +51806,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             skip=self._conexoes_fora(),
             personalize=personalizar_estado,
         )
+        await self._avisar_prisoes_aderentes()
+        await self._avisar_agarrados()
+        await self._avisar_silencio()
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
         # broadcast.
