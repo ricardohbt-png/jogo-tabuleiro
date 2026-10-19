@@ -27,6 +27,19 @@ const GS = (() => {
 
   // ── Internal state ─────────────────────────────────────────────────────────
   let ws              = null;
+  let smokeReaction   = null;
+  function _clearSmokeReaction() {
+    if (!smokeReaction) return;
+    const request_id = smokeReaction.request_id;
+    smokeReaction = null;
+    _emit('smokeReactionClosed', {request_id, reason:'cancelled'});
+  }
+  function responderReacaoFumaca(requestId, heroId, usar) {
+    if (!smokeReaction || smokeReaction.request_id !== requestId) return false;
+    if (usar && !smokeReaction.candidates.some(c => c.hero_id === heroId)) return false;
+    return send({type:'smoke_reaction_choice', request_id:requestId,
+      heroi:usar ? heroId : null, usar:!!usar});
+  }
   let myPid           = null;
   // Solo com grupo: `connPid` é a CONEXÃO; `myPid` passa a ser o herói EM FOCO
   // (todo leitor de myPid quer dizer "o herói que estou vendo"). `meusHerois`
@@ -1589,6 +1602,7 @@ const GS = (() => {
   // local antes de fechar o socket. A tela/DOM permanecem responsabilidade do
   // renderer (game.js).
   function leaveSession() {
+    _clearSmokeReaction();
     clearTimeout(_rejoinTimer);
     _rejoinTimer = null;
     _rejoinTries = REJOIN_MAX;
@@ -1631,6 +1645,7 @@ const GS = (() => {
     };
     ws.onerror = () => _emit('wsError');
     ws.onclose = () => {
+      _clearSmokeReaction();
       _emit('wsClosed', gameState, cityState);
       _scheduleRejoin();
     };
@@ -1829,6 +1844,7 @@ const GS = (() => {
         break;
 
       case 'city_state':
+        _clearSmokeReaction();
         cityState = msg;
         pendingMove = null;
         // Descarta o estado da masmorra ANTERIOR (simétrico ao enter_dungeon, que
@@ -1877,6 +1893,7 @@ const GS = (() => {
         break;
 
       case 'enter_dungeon':
+        _clearSmokeReaction();
         _resetSurvivalAll(true);    // pós-taverna/cidade → fome/sede = 100
         cityState = null;           // (após reset, p/ ler o roster da cidade)
         // Descarta o estado da masmorra ANTERIOR. Sem isso, o renderer 3D
@@ -2052,6 +2069,7 @@ const GS = (() => {
         break;
 
       case 'game_over':
+        _clearSmokeReaction();
         clearSession();   // aventura encerrada — não tentar reconectar depois
         _captarStory(msg);
         _emit('gameOver', msg);
@@ -2095,6 +2113,18 @@ const GS = (() => {
 
       case 'sorte_reacao':
         _emit('sorteReacao', msg);
+        break;
+
+      case 'smoke_reaction_prompt':
+        smokeReaction = msg;
+        _emit('smokeReactionPrompt', msg);
+        break;
+
+      case 'smoke_reaction_closed':
+        if (smokeReaction && smokeReaction.request_id === msg.request_id) {
+          smokeReaction = null;
+          _emit('smokeReactionClosed', msg);
+        }
         break;
 
       case 'trap_result':
@@ -3859,6 +3889,7 @@ const GS = (() => {
     // ── State getters (renderer reads these) ──
     get ws()              { return ws; },
     get myPid()           { return myPid; },
+    get smokeReaction()   { return smokeReaction; },
     get connPid()         { return connPid; },
     get meusHerois()      { return meusHerois.slice(); },
     get temGrupo()        { return meusHerois.length > 1; },
@@ -4115,6 +4146,7 @@ const GS = (() => {
     guildEquip,
     usarTecnica,
     responderSorteReacao,
+    responderReacaoFumaca,
     usarOportunidadeMovimento,
     responderMetamorfose,
     cancelarMetamorfose,
