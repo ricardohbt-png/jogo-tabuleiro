@@ -1,7 +1,7 @@
 # Bomba de Fumaça como reação a ataques inimigos
 
 Data: 2026-10-19
-Estado: desenho para revisão; implementação ainda não iniciada.
+Estado: desenho aprovado pelo usuário em 2026-10-19; implementação ainda não iniciada.
 Classificação: arquitetural, pois introduz uma interrupção compartilhada do combate e mensagens novas no protocolo.
 
 ## Objetivo e decisões aprovadas
@@ -18,7 +18,7 @@ Decisões expressamente aprovadas na conversa:
 
 ## Regras propostas para completar o desenho
 
-Estas escolhas completam detalhes que não foram especificados na conversa e fazem parte desta revisão:
+Estas escolhas completam detalhes inicialmente não especificados e foram aprovadas com a revisão deste documento:
 
 - A janela dura até 12 segundos, espelhando a duração da reação de Sorte já existente. Mostra contagem regressiva. Todos recusarem encerra a espera imediatamente; o prazo equivale a recusar.
 - O único custo é uma bomba consumida. Não há custo adicional de fome/sede, ação principal, ação bônus, movimento ou carga de reação por rodada nesta primeira implementação.
