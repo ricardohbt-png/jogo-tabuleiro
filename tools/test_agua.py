@@ -127,10 +127,18 @@ def main():
     sujo["_water_penalty_applied"] = True
     sujo["_water_heavy_step_used"] = True
     sujo["_deep_water_penalty_applied"] = True
+    sujo["_piche_movimento_encerrado"] = True
     r._water_turn_moves(sujo, 5)
     check("limpa os flags de passo do turno anterior",
           not any(sujo.get(k) for k in ("_water_min_step_used", "_water_penalty_applied",
-                                        "_water_heavy_step_used", "_deep_water_penalty_applied")))
+                                        "_water_heavy_step_used", "_deep_water_penalty_applied",
+                                        "_piche_movimento_encerrado")))
+    bloqueado_no_turno = heroi()
+    bloqueado_no_turno["moved_this_turn"] = True
+    bloqueado_no_turno["_piche_movimento_encerrado"] = True
+    r._water_turn_moves(bloqueado_no_turno, 5)
+    check("renovação especial no meio do turno não reabre o passo do piche",
+          bloqueado_no_turno.get("_piche_movimento_encerrado") is True)
 
     print("\n[6] handle_move (herói) — custo debitado por casa")
     r = sala()
@@ -182,6 +190,52 @@ def main():
     check("debitou 2 (4→2)", m["_water_moves_left"] == 2)
     check("profunda (custo 3) recusada com 2", asyncio.run(r._commit_monster_step(m, 3, 1)) is False)
     check("posição intacta após a recusa", m["pos"] == [2, 1])
+
+    print("\n[8b] Piche encerra o movimento ao entrar e ao sair")
+    r = sala()
+    PICHE = (2, 1)
+    r.materiais[PICHE] = "piche"
+    p = heroi(pos=(1, 1))
+    r.players = {"h": p}
+    r.current_pid = lambda: "h"
+    p["moves_left"] = 6
+    asyncio.run(r.handle_move("h", 1, 0))
+    check("entra no piche pela primeira casa", p["pos"] == [2, 1])
+    check("movimento encerra ao entrar no piche", p["moves_left"] == 0)
+    asyncio.run(r.handle_move("h", 1, 0))
+    check("não atravessa o piche em outro comando", p["pos"] == [2, 1])
+
+    r = sala()
+    PICHE = (1, 1)
+    r.materiais[PICHE] = "piche"
+    p = heroi(pos=PICHE)
+    r.players = {"h": p}
+    r.current_pid = lambda: "h"
+    p["moves_left"] = 6
+    asyncio.run(r.handle_move("h", 1, 0))
+    check("quem começa no piche só dá um passo para fora", p["pos"] == [2, 1] and p["moves_left"] == 0)
+
+    for rotulo, extra, ponte in (("voo acima do chão", {"voo": True, "altura": 1}, False),
+                                 ("ponte", {}, True)):
+        r = sala()
+        r.materiais[PICHE] = "piche"
+        r._ponte_tiles = {PICHE} if ponte else set()
+        p = heroi(pos=(1, 1)); p.update(extra)
+        r.players = {"h": p}; r.current_pid = lambda: "h"
+        p["moves_left"] = 6
+        asyncio.run(r.handle_move("h", 1, 0))
+        asyncio.run(r.handle_move("h", 1, 0))
+        check(f"{rotulo} atravessa sem bloquear movimento", p["pos"] == [3, 1] and p["moves_left"] > 0)
+
+    r = sala()
+    r.materiais[PICHE] = "piche"
+    m = {"id": "g1", "type": "goblin", "name": "G", "pos": list(PICHE), "hp": 10,
+         "max_hp": 10, "ac": 12, "movement": 6, "size": [1, 1],
+         "_water_moves_left": 6, "master_moves_left": 6}
+    r.monsters = {"g1": m}
+    check("monstro controlado dá um passo e encerra os dois orçamentos",
+          asyncio.run(r._commit_monster_step(m, 2, 1)) is True
+          and m["_water_moves_left"] == 0 and m["master_moves_left"] == 0)
 
     print("\n[9] Orçamento do monstro é renovado a cada turno")
     # Regressão: o gasto NÃO pode acumular entre turnos. `gm_phase` renova para a

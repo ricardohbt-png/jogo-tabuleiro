@@ -147,6 +147,19 @@ async def main():
     await r.handle_mover_prisioneiro_caminho("p1", [[1, 0]])
     check("prisioneiro não termina em cima do herói", pr["pos"] == [0, 1] and r.erros, r.erros)
 
+    print("\n[6b] Piche limita servo e prisioneiro a um passo")
+    r = await montar(True); r.animados_phase_pid = "p1"
+    r.players["p1"]["pos"] = [0, 0]
+    a = servo(r, "p1", [1, 1]); r.materiais[(1, 1)] = "piche"
+    await r.handle_mover_animado_caminho("p1", "a1", [[1, 0], [1, 0]])
+    check("servo no piche para depois do primeiro passo", a["pos"] == [2, 1] and a["moves_left"] == 0)
+
+    r = await montar(True); r.animados_phase_pid = "p1"
+    r.players["p1"]["pos"] = [0, 0]
+    pr = prisioneiro(r, [1, 1], True); r.materiais[(1, 1)] = "piche"
+    await r.handle_mover_prisioneiro_caminho("p1", [[1, 0], [1, 0]])
+    check("prisioneiro no piche para depois do primeiro passo", pr["pos"] == [2, 1] and pr["moves_left"] == 0)
+
     print("\n[7] Comandar servos (automático) atravessa e nunca termina em cima")
     for ligada, esperado in ((True, [3, 1]), (False, [0, 1])):
         r = await montar(ligada, classe="mage"); r.animados_phase_pid = "p1"

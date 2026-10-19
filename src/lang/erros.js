@@ -1005,6 +1005,10 @@ window.LANG_ERROS = {
     "en": "Invalid item.",
     "pt": "Item inválido."
   },
+  "erro.calice_eter_sem_slot_gasto": {
+    "en": "You have no spent 1st-circle spell slot to restore.",
+    "pt": "Você não tem um espaço gasto de magia de 1º círculo para recuperar."
+  },
   "erro.item_ja_pedido_nesta_visita": {
     "en": "You already ordered {item} on this visit to the city.",
     "pt": "Você já pediu {item} nesta visita à cidade."
@@ -1748,6 +1752,10 @@ window.LANG_ERROS = {
   "erro.somente_armas_compativeis_podem_ser_empunhadas_como_2a": {
     "en": "Only compatible weapons can be wielded as a 2nd weapon in the off hand.",
     "pt": "Somente armas compatíveis podem ser empunhadas como 2ª arma na mão esquerda."
+  },
+  "erro.desequipe_besta_secundaria_antes_de_trocar_arma": {
+    "en": "Unequip the off-hand hand crossbow before changing your main weapon.",
+    "pt": "Desequipe a Besta de Mão secundária antes de trocar a arma principal."
   },
   "erro.somente_o_anfitriao_pode_alterar_o_limit": {
     "en": "Only the host can change the turn limit.",

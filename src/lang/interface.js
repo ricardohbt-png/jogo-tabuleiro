@@ -15,6 +15,44 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.amaldicoar_xama.titulo": {"pt": "Amaldiçoado pelo xamã!", "en": "Cursed by the shaman!"},
+  "ui.amaldicoar_xama.descricao": {"pt": "A magia de {monstro} enfraquece você temporariamente.", "en": "The magic of {monstro} temporarily weakens you."},
+  "ui.amaldicoar_xama.penalidades": {"pt": "{ataque} em ataques, {dano} no dano, {ca} na CA e {resistencia} nos testes de resistência.", "en": "{ataque} to attack rolls, {dano} to damage, {ca} to AC and {resistencia} to saving throws."},
+  "ui.amaldicoar_xama.duracao": {"pt": "Duração restante: {n} rodada(s)", "en": "Remaining duration: {n} round(s)"},
+  "ui.amaldicoar_xama.termino": {"pt": "Estas penalidades terminam automaticamente quando a duração acabar.", "en": "These penalties end automatically when the duration expires."},
+  "ui.presenca_aterradora.titulo": {"pt": "Presença Aterradora!", "en": "Frightful Presence!"},
+  "ui.presenca_aterradora.fonte_padrao": {"pt": "o monstro", "en": "the monster"},
+  "ui.presenca_aterradora.descricao": {"pt": "A presença de {monstro} abala sua coragem. Ao falhar no teste de Vontade, você sofre −1 nas jogadas de ataque durante a primeira rodada do combate.", "en": "The presence of {monstro} shakes your courage. Failing the Will save imposes −1 to your attack rolls during the first combat round."},
+  "ui.presenca_aterradora.penalidade": {"pt": "−1 nas jogadas de ataque.", "en": "−1 to attack rolls."},
+  "ui.presenca_aterradora.duracao": {"pt": "Duração: primeira rodada do combate.", "en": "Duration: first combat round."},
+  "ui.presenca_aterradora.status": {"pt": "−1 no ataque · primeira rodada", "en": "−1 attack · first combat round"},
+  "ui.silencio.titulo": {"pt": "Silenciado!", "en": "Silenced!"},
+  "ui.silencio.descricao": {"pt": "Você está numa área de Silêncio. Não pode lançar magias e os bônus da Canção Heroica ficam suspensos. Ainda pode se mover, atacar e realizar outras ações disponíveis.", "en": "You are in an area of Silence. You cannot cast spells and Heroic Song bonuses are suppressed. You can still move, attack and take other available actions."},
+  "ui.silencio.duracao": {"pt": "Enquanto permanecer na área de Silêncio", "en": "While you remain in the area of Silence"},
+  "ui.silencio.rodadas": {"pt": "Duração restante da área: {n} rodada(s)", "en": "Area duration remaining: {n} round(s)"},
+  "ui.silencio.sair": {"pt": "Sair da área encerra o efeito sobre você. Se houver áreas sobrepostas, é preciso sair de todas elas.", "en": "Leaving the area ends its effect on you. If areas overlap, you must leave all of them."},
+  "ui.derrubado.titulo": {"pt": "Derrubado!", "en": "Knocked down!"},
+  "ui.derrubado.descricao": {"pt": "O golpe de {monstro} derrubou você e impediu seu deslocamento. Você ainda pode atacar e realizar outras ações disponíveis. O movimento volta no turno seguinte ao afetado.", "en": "The blow from {monstro} knocked you down and prevented movement. You can still attack and take other available actions. Movement returns on the turn after the affected one."},
+  "ui.derrubado.duracao_atual": {"pt": "Sem movimento pelo restante deste turno", "en": "No movement for the rest of this turn"},
+  "ui.derrubado.duracao_proximo": {"pt": "Sem movimento durante seu próximo turno", "en": "No movement during your next turn"},
+  "ui.agarrado.titulo": {"pt": "Agarrado!", "en": "Grappled!"},
+  "ui.agarrado.descricao": {"pt": "Você está agarrado por {monstro}. Não pode se mover e sofre −2 nas rolagens de ataque. Ainda pode atacar e realizar outras ações disponíveis.", "en": "You are grappled by {monstro}. You cannot move and suffer −2 to attack rolls. You can still attack and take other available actions."},
+  "ui.agarrado.duracao": {"pt": "Até escapar ou o monstro ser derrotado", "en": "Until you escape or the monster is defeated"},
+  "ui.agarrado.escape": {"pt": "No início de cada turno, você tenta escapar automaticamente: {testes} CD {dc}. Basta passar em um dos testes para se libertar.", "en": "At the start of each turn, you automatically attempt to escape: {testes} DC {dc}. Passing any one of the checks frees you."},
+  "ui.agarrado.ou": {"pt": " ou ", "en": " or "},
+  "ui.agarrado.save.forca": {"pt": "Força", "en": "Strength"},
+  "ui.agarrado.save.fortitude": {"pt": "Fortitude", "en": "Fortitude"},
+  "ui.agarrado.save.reflexos": {"pt": "Reflexos", "en": "Reflexes"},
+  "ui.agarrado.save.vontade": {"pt": "Vontade", "en": "Will"},
+  "ui.prisao.teia.titulo": {"pt": "Preso pela teia!", "en": "Trapped in a web!"},
+  "ui.prisao.teia.descricao": {"pt": "A teia prende seu corpo. Você não pode se mover nem agir durante seu próximo turno. Encerre esse turno para se libertar.", "en": "The web binds your body. You cannot move or act during your next turn. End that turn to break free."},
+  "ui.prisao.teia.duracao": {"pt": "Duração: seu próximo turno", "en": "Duration: your next turn"},
+  "ui.prisao.cola.titulo": {"pt": "Preso pela cola!", "en": "Stuck in glue!"},
+  "ui.prisao.cola.descricao": {"pt": "A cola prende seus pés ao chão e impede seu deslocamento. A imobilização termina quando a duração do efeito acabar.", "en": "Glue sticks your feet to the floor and prevents movement. The restraint ends when the effect expires."},
+  "ui.prisao.cola.duracao": {"pt": "Duração restante: {n} rodada(s)", "en": "Remaining duration: {n} round(s)"},
+  "ui.prisao.piche.titulo": {"pt": "Preso no piche!", "en": "Stuck in tar!"},
+  "ui.prisao.piche.descricao": {"pt": "O piche gruda nos seus pés. Entrar, sair ou andar nele encerra seu deslocamento após uma casa neste turno. Você ainda pode realizar suas ações. No próximo turno, poderá andar novamente.", "en": "Tar sticks to your feet. Entering, leaving or moving through it ends your movement after one tile this turn. You can still take your actions. You can move again next turn."},
+  "ui.prisao.piche.duracao": {"pt": "Duração: enquanto atravessar o piche", "en": "Duration: while moving through tar"},
   "ui.hud.repetir_sala_tutorial": {"en": "Repeat my training room", "pt": "Repetir minha sala de treinamento"},
   "ui.marker.title": {"en": "Mark", "pt": "Marcar"},
   "ui.marker.attack": {"en": "⚔ Attack", "pt": "⚔ Atacar"},
@@ -5007,6 +5045,26 @@ window.LANG_INTERFACE = {
   "ui.item.frasco_piche.desc": {
     "en": "Area (radius 1, range 4). Spreads pitch over 3×3 tiles for 4 rounds; crossing costs 2 movement points and the ground is FLAMMABLE. No damage.",
     "pt": "Área (raio 1, alcance 4). Espalha piche em 3×3 casas por 4 rodadas; atravessar custa 2 pontos de movimento e o chão fica INFLAMÁVEL. Sem dano."
+  },
+  "ui.item.solucao_mecanismo.preview_titulo": {
+    "en": "Solution of the Mechanism",
+    "pt": "Solução do Mecanismo"
+  },
+  "ui.item.solucao_mecanismo.preview_texto": {
+    "en": "The highlighted 3-square area around your hero will be checked. Confirm to spend the item and bonus action; cancel to keep both.",
+    "pt": "A área destacada de 3 casas ao redor do herói será verificada. Confirme para gastar o item e a ação bônus; cancelar preserva os dois."
+  },
+  "ui.item.solucao_mecanismo.confirmar": {
+    "en": "Confirm use",
+    "pt": "Confirmar uso"
+  },
+  "ui.item.solucao_mecanismo.cancelar": {
+    "en": "Cancel",
+    "pt": "Cancelar"
+  },
+  "ui.item.solucao_mecanismo.posicao_atualizada": {
+    "en": "Your hero moved. The highlighted area has been updated; confirm again to use the item.",
+    "pt": "Seu herói mudou de posição. A área destacada foi atualizada; confirme novamente para usar o item."
   },
   "ui.item.bomba_incendiaria.desc": {
     "en": "Area (radius 1, range 4). 2d6 fire, Reflex DC 12 (half).",
@@ -10070,6 +10128,30 @@ window.LANG_INTERFACE = {
     "en": "{n} HP reserve; heals 1 HP at the start of the turn",
     "pt": "reserva de {n} PV; cura 1 PV no início do turno"
   },
+  "ui.status.gole_do_gigante_ef": {
+    "en": "+{n} Strength; applies its normal modifier to attacks, damage, and Strength checks",
+    "pt": "+{n} de Força; aplica o modificador normal a ataques, dano e testes de Força"
+  },
+  "ui.status.bote_da_serpente_ef": {
+    "en": "+{n} Dexterity; applies its normal modifiers to attacks, damage, AC, Reflex saves, initiative, vision radius, Dexterity checks, and Bard instrument ability DCs",
+    "pt": "+{n} de Destreza; aplica os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo"
+  },
+  "ui.status.elixir_cavalo_ferro_ef": {
+    "en": "+{n} Constitution; increases Fortitude and maximum HP according to level",
+    "pt": "+{n} de Constituição; aumenta Fortitude e PV máximos conforme o nível"
+  },
+  "ui.status.sabedoria_liquida_ef": {
+    "en": "+{n} Intelligence; improves Will, spell save DCs, initiative, vision, INT-based healing, and Reviver control slots when applicable",
+    "pt": "+{n} de Inteligência; melhora Vontade, CD das magias, iniciativa, visão, curas com INT e slots de controle do Reviver quando aplicável"
+  },
+  "ui.status.mira_do_falcao_ef": {
+    "en": "+2 to attacks with bows and thrown weapons; no damage bonus",
+    "pt": "+2 nos ataques com arcos e armas de arremesso; sem bônus de dano"
+  },
+  "ui.status.essencia_vento_ef": {
+    "en": "+2 range on ranged weapons, thrown weapons, and throwable items",
+    "pt": "+2 casas de alcance para armas à distância, armas e itens arremessáveis"
+  },
   "ui.status.resistencia": {
     "en": "resistance",
     "pt": "resistência"
@@ -10481,6 +10563,18 @@ window.LANG_INTERFACE = {
   "ui.tooltip.risco_val": {
     "en": "A 1 on the d20 = weapon destroyed",
     "pt": "Resultado 1 no d20 = arma destruída"
+  },
+  "ui.tooltip.risco_arremesso_desgaste": {
+    "en": "A natural 1 damages the weapon by {n} durability levels",
+    "pt": "Um 1 natural causa {n} níveis de dano à arma"
+  },
+  "ui.tooltip.vitalidade_arma": {
+    "en": "Weapon vitality",
+    "pt": "Vitalidade da arma"
+  },
+  "ui.tooltip.penalidade_desgaste": {
+    "en": "Wear penalty",
+    "pt": "Penalidade por desgaste"
   },
   "ui.tooltip.rodadas": {
     "en": "{n} rounds",

@@ -18,10 +18,10 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("86 tipos", len(d) == 86)
+    check("88 tipos", len(d) == 88)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "poco_balde", "cerca_reta", "cerca_curva", "cerca_quebrada",
-        "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
+        "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "choupana_palha_escura", "cabana_palha_velha", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
         "estante", "carroca", "coluna", "barril", "arca_tesouros", "cama_casal",
         "estante_livros", "altar", "trono", "gaiola", "prisao", "grades_prisao",
         "estante_armas", "mesa_tortura", "mesa_quimica", "arvore", "arvore_grande", "arvore_seca", "caverna", "casa",
@@ -65,6 +65,22 @@ def test_catalog():
     check("casa é alta, 3x3, sólida e usa suas artes", d["casa"]["alto"] is True
           and d["casa"]["size"] == [3, 3] and not d["casa"]["pisavel"]
           and not d["casa"]["loot_capaz"] and d["casa"]["image"] == "casa.png")
+    check("choupana ribeirinha ocupa 3x3, bloqueia passagem e usa PNG/GLB",
+          d["choupana_palha_escura"]["size"] == [3, 3]
+          and d["choupana_palha_escura"]["gira"]
+          and d["choupana_palha_escura"]["alto"]
+          and not d["choupana_palha_escura"]["pisavel"]
+          and not d["choupana_palha_escura"]["loot_capaz"]
+          and d["choupana_palha_escura"]["image"] == "choupana_palha_escura.png"
+          and server.DECOR_MODEL3D["choupana_palha_escura"].endswith("choupana_palha_escura.glb"))
+    check("cabana de palha velha ocupa 3x3, bloqueia passagem e usa PNG/GLB",
+          d["cabana_palha_velha"]["size"] == [3, 3]
+          and d["cabana_palha_velha"]["gira"]
+          and d["cabana_palha_velha"]["alto"]
+          and not d["cabana_palha_velha"]["pisavel"]
+          and not d["cabana_palha_velha"]["loot_capaz"]
+          and d["cabana_palha_velha"]["image"] == "cabana_palha_velha.png"
+          and server.DECOR_MODEL3D["cabana_palha_velha"].endswith("cabana_palha_velha.glb"))
     check("tumba com lápide usa PNG/GLB e ocupa 1x2", d["tumba_lapide"]["size"] == [1, 2]
           and d["tumba_lapide"]["gira"] and d["tumba_lapide"]["alto"]
           and not d["tumba_lapide"]["pisavel"] and not d["tumba_lapide"]["loot_capaz"]

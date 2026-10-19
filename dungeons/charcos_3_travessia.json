@@ -11,132 +11,120 @@
   },
   "tiles": [
     [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -151,7 +139,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -166,7 +153,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -179,21 +165,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -208,7 +196,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -223,7 +210,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -236,21 +222,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -265,7 +253,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -280,7 +267,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -293,21 +279,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -322,7 +310,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -337,7 +324,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -350,21 +336,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -379,7 +367,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -394,7 +381,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -407,21 +393,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -436,7 +424,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -451,7 +438,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -464,21 +450,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -493,7 +481,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -508,7 +495,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -521,21 +507,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -550,7 +538,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -565,7 +552,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -578,21 +564,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      2,
       1,
       1,
       1,
@@ -607,7 +595,6 @@
       1,
       1,
       1,
-      2,
       1,
       1,
       1,
@@ -622,7 +609,6 @@
       1,
       1,
       1,
-      2,
       1,
       1,
       1,
@@ -635,21 +621,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -664,7 +652,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -679,7 +666,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -692,21 +678,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -721,7 +709,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -736,7 +723,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -749,21 +735,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -778,7 +766,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -793,7 +780,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -806,21 +792,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -835,7 +823,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -850,7 +837,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -863,21 +849,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -892,7 +880,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -907,7 +894,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -920,21 +906,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -949,7 +937,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -964,7 +951,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -977,21 +963,23 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      1,
-      0,
       1,
       1,
       1,
@@ -1006,7 +994,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -1021,7 +1008,6 @@
       1,
       1,
       1,
-      0,
       1,
       1,
       1,
@@ -1034,121 +1020,135 @@
       1,
       1,
       1,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
     [
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ]
   ],
   "rooms": [
@@ -1160,12 +1160,7 @@
       "h": 16,
       "role": "entrance",
       "locked": false,
-      "doors": [
-        [
-          11,
-          10
-        ]
-      ]
+      "doors": []
     },
     {
       "id": 1,
@@ -1175,16 +1170,7 @@
       "h": 16,
       "role": "monster",
       "locked": true,
-      "doors": [
-        [
-          11,
-          10
-        ],
-        [
-          26,
-          10
-        ]
-      ]
+      "doors": []
     },
     {
       "id": 2,
@@ -1194,16 +1180,7 @@
       "h": 16,
       "role": "monster",
       "locked": true,
-      "doors": [
-        [
-          26,
-          10
-        ],
-        [
-          41,
-          10
-        ]
-      ]
+      "doors": []
     },
     {
       "id": 3,
@@ -1213,12 +1190,7 @@
       "h": 16,
       "role": "monster",
       "locked": true,
-      "doors": [
-        [
-          41,
-          10
-        ]
-      ]
+      "doors": []
     }
   ],
   "door_conditions": {},
@@ -1226,50 +1198,57 @@
     "x": 2,
     "y": 10
   },
+  "hero_spawns": [],
   "exit": {
     "x": 52,
     "y": 10
   },
+  "routes": [],
+  "route_exits": [],
   "monsters": [
     {
       "type": "escorpiao_pedra",
       "pos": [
-        5,
-        6
+        11,
+        19
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_0"
     },
     {
       "type": "escorpiao_pedra",
       "pos": [
-        5,
-        8
+        4,
+        15
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_1"
     },
     {
       "type": "rato_gigante",
       "pos": [
-        6,
-        5
+        21,
+        0
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_2"
     },
     {
       "type": "rato_gigante",
       "pos": [
-        2,
-        3
+        12,
+        0
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_3"
     },
     {
       "type": "rato_gigante",
@@ -1279,67 +1258,90 @@
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_4"
     },
     {
       "type": "rato_gigante",
       "pos": [
-        2,
-        8
+        20,
+        1
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_5"
     },
     {
       "type": "cobra_venenosa",
       "pos": [
-        5,
-        7
+        11,
+        1
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_6"
     },
     {
       "type": "cobra_constritora",
-      "pos": [
-        7,
-        8
-      ],
-      "room_id": 0,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "crocodilo_jovem",
       "pos": [
         15,
-        4
+        9
       ],
-      "room_id": 1,
+      "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_7"
     },
     {
       "type": "crocodilo_jovem",
       "pos": [
-        21,
-        12
+        22,
+        9
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_8",
+      "hostility_override": {
+        "mode": "custom",
+        "rules": {
+          "all_monsters": true,
+          "subtypes": [],
+          "types": []
+        }
+      }
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        23,
+        3
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_9",
+      "hostility_override": {
+        "mode": "custom",
+        "rules": {
+          "all_monsters": true,
+          "subtypes": [],
+          "types": []
+        }
+      }
     },
     {
       "type": "cobra_constritora",
       "pos": [
-        13,
-        13
+        10,
+        18
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_10"
     },
     {
       "type": "rato_gigante",
@@ -1349,77 +1351,96 @@
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_11"
     },
     {
       "type": "rato_gigante",
       "pos": [
-        14,
-        13
+        2,
+        19
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_12"
+    },
+    {
+      "type": "cobra_venenosa",
+      "pos": [
+        25,
+        9
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_13"
+    },
+    {
+      "type": "crocodilo_jovem",
+      "pos": [
+        37,
+        15
+      ],
+      "room_id": 2,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_14",
+      "hostility_override": {
+        "mode": "custom",
+        "rules": {
+          "all_monsters": true,
+          "subtypes": [
+            "animal",
+            "raca_padrao"
+          ],
+          "types": []
+        }
+      }
     },
     {
       "type": "cobra_venenosa",
       "pos": [
         19,
-        8
-      ],
-      "room_id": 1,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "crocodilo_jovem",
-      "pos": [
-        35,
-        12
+        13
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
-    },
-    {
-      "type": "cobra_venenosa",
-      "pos": [
-        34,
-        7
-      ],
-      "room_id": 2,
-      "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_15"
     },
     {
       "type": "cobra_venenosa",
       "pos": [
         39,
-        4
+        2
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_16"
     },
     {
       "type": "escorpiao_pedra",
       "pos": [
-        29,
-        8
+        27,
+        7
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_17"
     },
     {
       "type": "escorpiao_pedra",
       "pos": [
-        32,
-        8
+        28,
+        9
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_18"
     },
     {
       "type": "rato_gigante",
@@ -1429,17 +1450,19 @@
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_19"
     },
     {
       "type": "rato_gigante",
       "pos": [
-        35,
-        11
+        31,
+        13
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_20"
     },
     {
       "type": "cobra_constritora",
@@ -1449,67 +1472,90 @@
       ],
       "room_id": 2,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_21"
     },
     {
       "type": "zumbi_infectado",
       "pos": [
-        52,
+        48,
         4
       ],
       "room_id": 3,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_22",
+      "hostility_override": {
+        "mode": "custom",
+        "rules": {
+          "all_monsters": true,
+          "subtypes": [],
+          "types": []
+        }
+      }
     },
     {
       "type": "zumbi_infectado",
       "pos": [
-        52,
-        5
+        46,
+        8
       ],
       "room_id": 3,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_23",
+      "hostility_override": {
+        "mode": "custom",
+        "rules": {
+          "all_monsters": true,
+          "subtypes": [],
+          "types": []
+        }
+      }
     },
     {
       "type": "cobra_constritora",
       "pos": [
-        52,
-        3
+        43,
+        4
       ],
       "room_id": 3,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_24"
     },
     {
       "type": "escorpiao_de_pedra_customizado",
       "pos": [
-        48,
-        13
+        50,
+        17
       ],
       "room_id": 3,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_25"
     },
     {
       "type": "escorpiao_pedra",
       "pos": [
-        47,
-        14
+        26,
+        17
       ],
       "room_id": 3,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_26"
     },
     {
       "type": "escorpiao_pedra",
       "pos": [
-        49,
-        6
+        52,
+        1
       ],
       "room_id": 3,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_27"
     }
   ],
   "chests": [],
@@ -1526,7 +1572,8 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "travessia_arvore_2",
@@ -1539,7 +1586,12 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "vscale": [
+        1.1,
+        1.8
+      ]
     },
     {
       "id": "travessia_arvore_3",
@@ -1552,7 +1604,8 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "travessia_juncos_4",
@@ -1565,7 +1618,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_5",
@@ -1578,7 +1633,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_6",
@@ -1591,7 +1648,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_7",
@@ -1604,7 +1663,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_8",
@@ -1617,7 +1678,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_9",
@@ -1630,7 +1693,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_10",
@@ -1643,7 +1708,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_11",
@@ -1656,7 +1723,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_12",
@@ -1669,7 +1738,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_tocos_alagados_13",
@@ -1682,7 +1753,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "tocos_alagados.png"
     },
     {
       "id": "travessia_tocos_alagados_14",
@@ -1695,7 +1768,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "tocos_alagados.png"
     },
     {
       "id": "travessia_tocos_alagados_15",
@@ -1708,7 +1783,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "tocos_alagados.png"
     },
     {
       "id": "travessia_raizes_torcidas_16",
@@ -1721,7 +1798,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "raizes_torcidas.png"
     },
     {
       "id": "travessia_raizes_torcidas_17",
@@ -1734,7 +1813,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "raizes_torcidas.png"
     },
     {
       "id": "travessia_juncos_18",
@@ -1747,7 +1828,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_19",
@@ -1760,7 +1843,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_20",
@@ -1773,7 +1858,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_juncos_21",
@@ -1786,7 +1873,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "juncos.png"
     },
     {
       "id": "travessia_tocos_alagados_22",
@@ -1799,7 +1888,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "tocos_alagados.png"
     },
     {
       "id": "travessia_tocos_alagados_23",
@@ -1812,7 +1903,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "tocos_alagados.png"
     },
     {
       "id": "travessia_tocos_alagados_24",
@@ -1825,20 +1918,36 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "tocos_alagados.png",
+      "vscale": [
+        1,
+        1.2
+      ]
     },
     {
       "id": "travessia_arvore_seca_25",
       "type": "arvore_seca",
       "pos": [
-        53,
+        52,
         14
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "arvore_seca.png",
+      "size": [
+        2,
+        2
+      ],
+      "vscale": [
+        1.2,
+        1.5
+      ]
     },
     {
       "id": "travessia_arvore_seca_26",
@@ -1851,20 +1960,32 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "arvore_seca.png",
+      "vscale": [
+        2,
+        0.5
+      ]
     },
     {
       "id": "travessia_arvore_seca_27",
       "type": "arvore_seca",
       "pos": [
-        43,
-        17
+        34,
+        1
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "arvore_seca.png",
+      "vscale": [
+        1.4,
+        2
+      ]
     },
     {
       "id": "travessia_monte_ossos_28",
@@ -1877,7 +1998,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "monte_ossos.png"
     },
     {
       "id": "travessia_monte_ossos_29",
@@ -1890,7 +2013,9 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "monte_ossos.png"
     },
     {
       "id": "travessia_monte_ossos_30",
@@ -1903,37 +2028,4688 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "monte_ossos.png"
     },
     {
-      "id": "travessia_lapide_31",
-      "type": "lapide",
+      "id": "decor_0",
+      "type": "arvore_seca",
       "pos": [
-        44,
-        17
+        9,
+        4
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "arvore_seca.png",
+      "vscale": [
+        1.6,
+        2
+      ]
     },
     {
-      "id": "travessia_lapide_32",
-      "type": "lapide",
+      "id": "decor_1",
+      "type": "arvore_seca",
       "pos": [
-        50,
+        40,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arvore_seca.png",
+      "size": [
+        2,
+        2
+      ],
+      "vscale": [
+        1.4,
+        1
+      ]
+    },
+    {
+      "id": "decor_2",
+      "type": "arvore_seca",
+      "pos": [
+        17,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arvore_seca.png",
+      "size": [
+        2,
+        2
+      ],
+      "vscale": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "decor_3",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_4",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_5",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_6",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_7",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_8",
+      "type": "capim_alto",
+      "pos": [
+        0,
         2
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_9",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_10",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_11",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_12",
+      "type": "capim_alto",
+      "pos": [
+        1,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_13",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_14",
+      "type": "capim_alto",
+      "pos": [
+        0,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_15",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_16",
+      "type": "capim_alto",
+      "pos": [
+        3,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_17",
+      "type": "capim_alto",
+      "pos": [
+        4,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_18",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_19",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_20",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_21",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_22",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_23",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_24",
+      "type": "capim_alto",
+      "pos": [
+        12,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_25",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_26",
+      "type": "capim_alto",
+      "pos": [
+        12,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_27",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_28",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_29",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_30",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_31",
+      "type": "capim_alto",
+      "pos": [
+        12,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_32",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_33",
+      "type": "capim_alto",
+      "pos": [
+        11,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_34",
+      "type": "capim_alto",
+      "pos": [
+        10,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_35",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_36",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_37",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_38",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_39",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_40",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_41",
+      "type": "capim_alto",
+      "pos": [
+        25,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_42",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_43",
+      "type": "capim_alto",
+      "pos": [
+        27,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_44",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_45",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_46",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_47",
+      "type": "capim_alto",
+      "pos": [
+        25,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_48",
+      "type": "capim_alto",
+      "pos": [
+        27,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_49",
+      "type": "capim_alto",
+      "pos": [
+        28,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_50",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_51",
+      "type": "capim_alto",
+      "pos": [
+        25,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_52",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_53",
+      "type": "capim_alto",
+      "pos": [
+        27,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_54",
+      "type": "capim_alto",
+      "pos": [
+        28,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_55",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_56",
+      "type": "capim_alto",
+      "pos": [
+        26,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_57",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_58",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_59",
+      "type": "capim_alto",
+      "pos": [
+        14,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_60",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_61",
+      "type": "capim_alto",
+      "pos": [
+        40,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_62",
+      "type": "capim_alto",
+      "pos": [
+        41,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_63",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_64",
+      "type": "capim_alto",
+      "pos": [
+        40,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_65",
+      "type": "capim_alto",
+      "pos": [
+        41,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_66",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_67",
+      "type": "capim_alto",
+      "pos": [
+        40,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_68",
+      "type": "capim_alto",
+      "pos": [
+        41,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_69",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_70",
+      "type": "capim_alto",
+      "pos": [
+        39,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_71",
+      "type": "capim_alto",
+      "pos": [
+        43,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_72",
+      "type": "capim_alto",
+      "pos": [
+        43,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_73",
+      "type": "capim_alto",
+      "pos": [
+        44,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_74",
+      "type": "capim_alto",
+      "pos": [
+        43,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_75",
+      "type": "capim_alto",
+      "pos": [
+        44,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_76",
+      "type": "capim_alto",
+      "pos": [
+        38,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_77",
+      "type": "capim_alto",
+      "pos": [
+        39,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_78",
+      "type": "capim_alto",
+      "pos": [
+        38,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_79",
+      "type": "capim_alto",
+      "pos": [
+        39,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_80",
+      "type": "capim_alto",
+      "pos": [
+        36,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.4
+      ]
+    },
+    {
+      "id": "decor_81",
+      "type": "capim_alto",
+      "pos": [
+        37,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_82",
+      "type": "capim_alto",
+      "pos": [
+        38,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_83",
+      "type": "capim_alto",
+      "pos": [
+        36,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_84",
+      "type": "capim_alto",
+      "pos": [
+        37,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_85",
+      "type": "capim_alto",
+      "pos": [
+        38,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_86",
+      "type": "capim_alto",
+      "pos": [
+        41,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_87",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_88",
+      "type": "capim_alto",
+      "pos": [
+        41,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_89",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_90",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_91",
+      "type": "capim_alto",
+      "pos": [
+        43,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_92",
+      "type": "capim_alto",
+      "pos": [
+        42,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_93",
+      "type": "capim_alto",
+      "pos": [
+        43,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_94",
+      "type": "capim_alto",
+      "pos": [
+        48,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_95",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_96",
+      "type": "capim_alto",
+      "pos": [
+        50,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_97",
+      "type": "capim_alto",
+      "pos": [
+        51,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_98",
+      "type": "capim_alto",
+      "pos": [
+        48,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_99",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_100",
+      "type": "capim_alto",
+      "pos": [
+        50,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_101",
+      "type": "capim_alto",
+      "pos": [
+        51,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_102",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_103",
+      "type": "capim_alto",
+      "pos": [
+        50,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_104",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_105",
+      "type": "capim_alto",
+      "pos": [
+        50,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_106",
+      "type": "capim_alto",
+      "pos": [
+        53,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_107",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_108",
+      "type": "capim_alto",
+      "pos": [
+        53,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_109",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_110",
+      "type": "capim_alto",
+      "pos": [
+        52,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_111",
+      "type": "capim_alto",
+      "pos": [
+        53,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_112",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_113",
+      "type": "capim_alto",
+      "pos": [
+        52,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_114",
+      "type": "capim_alto",
+      "pos": [
+        53,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_115",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_116",
+      "type": "capim_alto",
+      "pos": [
+        52,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_117",
+      "type": "capim_alto",
+      "pos": [
+        53,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_118",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_119",
+      "type": "capim_alto",
+      "pos": [
+        50,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_120",
+      "type": "capim_alto",
+      "pos": [
+        51,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_121",
+      "type": "capim_alto",
+      "pos": [
+        50,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_122",
+      "type": "capim_alto",
+      "pos": [
+        51,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_123",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_124",
+      "type": "capim_alto",
+      "pos": [
+        48,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_125",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_126",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_127",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_128",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_129",
+      "type": "capim_alto",
+      "pos": [
+        54,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_130",
+      "type": "capim_alto",
+      "pos": [
+        47,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_131",
+      "type": "capim_alto",
+      "pos": [
+        48,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_132",
+      "type": "capim_alto",
+      "pos": [
+        47,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_133",
+      "type": "capim_alto",
+      "pos": [
+        48,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_134",
+      "type": "capim_alto",
+      "pos": [
+        45,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_135",
+      "type": "capim_alto",
+      "pos": [
+        46,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_136",
+      "type": "capim_alto",
+      "pos": [
+        45,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_137",
+      "type": "capim_alto",
+      "pos": [
+        46,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_138",
+      "type": "capim_alto",
+      "pos": [
+        30,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_139",
+      "type": "capim_alto",
+      "pos": [
+        31,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_140",
+      "type": "capim_alto",
+      "pos": [
+        30,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_141",
+      "type": "capim_alto",
+      "pos": [
+        31,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_142",
+      "type": "capim_alto",
+      "pos": [
+        19,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_143",
+      "type": "capim_alto",
+      "pos": [
+        20,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_144",
+      "type": "capim_alto",
+      "pos": [
+        3,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_145",
+      "type": "capim_alto",
+      "pos": [
+        4,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_146",
+      "type": "capim_alto",
+      "pos": [
+        3,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_147",
+      "type": "capim_alto",
+      "pos": [
+        4,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_148",
+      "type": "capim_alto",
+      "pos": [
+        20,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_149",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_150",
+      "type": "capim_alto",
+      "pos": [
+        20,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_151",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_152",
+      "type": "capim_alto",
+      "pos": [
+        19,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_153",
+      "type": "capim_alto",
+      "pos": [
+        33,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_154",
+      "type": "capim_alto",
+      "pos": [
+        34,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_155",
+      "type": "capim_alto",
+      "pos": [
+        35,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_156",
+      "type": "capim_alto",
+      "pos": [
+        35,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_157",
+      "type": "capim_alto",
+      "pos": [
+        31,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_158",
+      "type": "capim_alto",
+      "pos": [
+        32,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_159",
+      "type": "capim_alto",
+      "pos": [
+        33,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_160",
+      "type": "capim_alto",
+      "pos": [
+        34,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_161",
+      "type": "capim_alto",
+      "pos": [
+        35,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.6,
+        2
+      ]
+    },
+    {
+      "id": "decor_163",
+      "type": "tronco_musgo",
+      "pos": [
+        31,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "tronco_musgo.png"
+    },
+    {
+      "id": "decor_164",
+      "type": "arbusto_seco",
+      "pos": [
+        25,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_165",
+      "type": "arbusto_seco",
+      "pos": [
+        27,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_166",
+      "type": "arbusto_seco",
+      "pos": [
+        16,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png",
+      "vscale": [
+        0.8,
+        0.8
+      ]
+    },
+    {
+      "id": "decor_167",
+      "type": "arbusto_seco",
+      "pos": [
+        12,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_168",
+      "type": "arbusto_seco",
+      "pos": [
+        20,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_169",
+      "type": "arbusto_seco",
+      "pos": [
+        27,
+        19
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png",
+      "vscale": [
+        0.5,
+        0.7
+      ]
+    },
+    {
+      "id": "decor_170",
+      "type": "arbusto_seco",
+      "pos": [
+        27,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_171",
+      "type": "arbusto_seco",
+      "pos": [
+        39,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png",
+      "vscale": [
+        0.6,
+        0.6
+      ]
+    },
+    {
+      "id": "decor_172",
+      "type": "arbusto_seco",
+      "pos": [
+        43,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_173",
+      "type": "arbusto_seco",
+      "pos": [
+        48,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_174",
+      "type": "arbusto_seco",
+      "pos": [
+        51,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_175",
+      "type": "arbusto_seco",
+      "pos": [
+        47,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_176",
+      "type": "arbusto_seco",
+      "pos": [
+        46,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "arbusto_seco.png"
+    },
+    {
+      "id": "decor_177",
+      "type": "capim_alto",
+      "pos": [
+        5,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_178",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_179",
+      "type": "capim_alto",
+      "pos": [
+        5,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_180",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_181",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_182",
+      "type": "capim_alto",
+      "pos": [
+        17,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_183",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_184",
+      "type": "capim_alto",
+      "pos": [
+        17,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_185",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_186",
+      "type": "capim_alto",
+      "pos": [
+        17,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_187",
+      "type": "capim_alto",
+      "pos": [
+        16,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_188",
+      "type": "capim_alto",
+      "pos": [
+        17,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_189",
+      "type": "capim_alto",
+      "pos": [
+        15,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_190",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_191",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_192",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_193",
+      "type": "capim_alto",
+      "pos": [
+        9,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_194",
+      "type": "capim_alto",
+      "pos": [
+        33,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_195",
+      "type": "capim_alto",
+      "pos": [
+        34,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_196",
+      "type": "capim_alto",
+      "pos": [
+        33,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_197",
+      "type": "capim_alto",
+      "pos": [
+        34,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_198",
+      "type": "capim_alto",
+      "pos": [
+        34,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_199",
+      "type": "capim_alto",
+      "pos": [
+        39,
+        0
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_200",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_201",
+      "type": "capim_alto",
+      "pos": [
+        51,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_202",
+      "type": "capim_alto",
+      "pos": [
+        49,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_203",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_204",
+      "type": "capim_alto",
+      "pos": [
+        5,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_205",
+      "type": "capim_alto",
+      "pos": [
+        6,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_206",
+      "type": "capim_alto",
+      "pos": [
+        5,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_207",
+      "type": "capim_alto",
+      "pos": [
+        5,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_208",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_209",
+      "type": "capim_alto",
+      "pos": [
+        2,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_210",
+      "type": "capim_alto",
+      "pos": [
+        7,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_211",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        16
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_212",
+      "type": "capim_alto",
+      "pos": [
+        7,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_213",
+      "type": "capim_alto",
+      "pos": [
+        8,
+        17
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_214",
+      "type": "capim_alto",
+      "pos": [
+        12,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_215",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_216",
+      "type": "capim_alto",
+      "pos": [
+        12,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_217",
+      "type": "capim_alto",
+      "pos": [
+        13,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_218",
+      "type": "capim_alto",
+      "pos": [
+        20,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_219",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_220",
+      "type": "capim_alto",
+      "pos": [
+        20,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_221",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_222",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_223",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_224",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_225",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        9
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_226",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_227",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_228",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_229",
+      "type": "capim_alto",
+      "pos": [
+        21,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_230",
+      "type": "capim_alto",
+      "pos": [
+        22,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_231",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_232",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_233",
+      "type": "capim_alto",
+      "pos": [
+        24,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_234",
+      "type": "capim_alto",
+      "pos": [
+        23,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_235",
+      "type": "capim_alto",
+      "pos": [
+        28,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_236",
+      "type": "capim_alto",
+      "pos": [
+        29,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_237",
+      "type": "capim_alto",
+      "pos": [
+        28,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_238",
+      "type": "capim_alto",
+      "pos": [
+        29,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_239",
+      "type": "capim_alto",
+      "pos": [
+        30,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_240",
+      "type": "capim_alto",
+      "pos": [
+        31,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_241",
+      "type": "capim_alto",
+      "pos": [
+        30,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_242",
+      "type": "capim_alto",
+      "pos": [
+        31,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_243",
+      "type": "capim_alto",
+      "pos": [
+        32,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_244",
+      "type": "capim_alto",
+      "pos": [
+        45,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_245",
+      "type": "capim_alto",
+      "pos": [
+        46,
+        14
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_246",
+      "type": "capim_alto",
+      "pos": [
+        45,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_247",
+      "type": "capim_alto",
+      "pos": [
+        46,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
+    },
+    {
+      "id": "decor_248",
+      "type": "capim_alto",
+      "pos": [
+        46,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "capim_alto.png",
+      "vscale": [
+        1.8,
+        2.3
+      ]
     }
   ],
   "secret_passages": [],
-  "master_reinforcements": [],
   "falas": [
     {
       "id": "travessia_aldeia",
@@ -1952,144 +6728,135 @@
       }
     }
   ],
+  "master_reinforcements": [],
   "expected_party": {
     "heroes": 4,
     "level": 3
   },
-  "objectives": {
-    "primary": {
-      "type": "all_heroes_at_exit",
-      "xp": 350,
-      "reward": {
-        "gold": 50,
-        "items": []
-      }
-    },
-    "secondary": []
-  },
+  "prisoner": null,
   "materiais": {
-    "0,0": "rocha_marrom",
-    "1,0": "rocha_marrom",
-    "2,0": "rocha_marrom",
-    "3,0": "rocha_marrom",
-    "4,0": "rocha_marrom",
-    "5,0": "rocha_marrom",
-    "6,0": "rocha_marrom",
-    "7,0": "rocha_marrom",
-    "8,0": "rocha_marrom",
-    "9,0": "rocha_marrom",
-    "10,0": "rocha_marrom",
-    "11,0": "rocha_marrom",
-    "12,0": "rocha_marrom",
-    "13,0": "rocha_marrom",
-    "14,0": "rocha_marrom",
-    "15,0": "rocha_marrom",
-    "16,0": "rocha_marrom",
-    "17,0": "rocha_marrom",
-    "18,0": "rocha_marrom",
-    "19,0": "rocha_marrom",
-    "20,0": "rocha_marrom",
-    "21,0": "rocha_marrom",
-    "22,0": "rocha_marrom",
-    "23,0": "rocha_marrom",
-    "24,0": "rocha_marrom",
-    "25,0": "rocha_marrom",
-    "26,0": "rocha_marrom",
-    "27,0": "rocha_marrom",
-    "28,0": "rocha_marrom",
-    "29,0": "rocha_marrom",
-    "30,0": "rocha_marrom",
-    "31,0": "rocha_marrom",
-    "32,0": "rocha_marrom",
-    "33,0": "rocha_marrom",
-    "34,0": "rocha_marrom",
-    "35,0": "rocha_marrom",
-    "36,0": "rocha_marrom",
-    "37,0": "rocha_marrom",
-    "38,0": "rocha_marrom",
-    "39,0": "rocha_marrom",
-    "40,0": "rocha_marrom",
-    "41,0": "rocha_marrom",
-    "42,0": "rocha_marrom",
-    "43,0": "rocha_marrom",
-    "44,0": "rocha_marrom",
-    "45,0": "rocha_marrom",
-    "46,0": "rocha_marrom",
-    "47,0": "rocha_marrom",
-    "48,0": "rocha_marrom",
-    "49,0": "rocha_marrom",
-    "50,0": "rocha_marrom",
-    "51,0": "rocha_marrom",
-    "52,0": "rocha_marrom",
-    "53,0": "rocha_marrom",
-    "54,0": "rocha_marrom",
-    "0,1": "rocha_marrom",
-    "1,1": "rocha_marrom",
-    "2,1": "rocha_marrom",
-    "3,1": "rocha_marrom",
-    "4,1": "rocha_marrom",
-    "5,1": "rocha_marrom",
-    "6,1": "rocha_marrom",
-    "7,1": "rocha_marrom",
-    "8,1": "rocha_marrom",
-    "9,1": "rocha_marrom",
-    "10,1": "rocha_marrom",
-    "11,1": "rocha_marrom",
-    "12,1": "rocha_marrom",
-    "13,1": "rocha_marrom",
-    "14,1": "rocha_marrom",
-    "15,1": "rocha_marrom",
-    "16,1": "rocha_marrom",
-    "17,1": "rocha_marrom",
-    "18,1": "rocha_marrom",
-    "19,1": "rocha_marrom",
-    "20,1": "rocha_marrom",
-    "21,1": "rocha_marrom",
-    "22,1": "rocha_marrom",
-    "23,1": "rocha_marrom",
-    "24,1": "rocha_marrom",
-    "25,1": "rocha_marrom",
-    "26,1": "rocha_marrom",
-    "27,1": "rocha_marrom",
-    "28,1": "rocha_marrom",
-    "29,1": "rocha_marrom",
-    "30,1": "rocha_marrom",
-    "31,1": "rocha_marrom",
-    "32,1": "rocha_marrom",
-    "33,1": "rocha_marrom",
-    "34,1": "rocha_marrom",
-    "35,1": "rocha_marrom",
-    "36,1": "rocha_marrom",
-    "37,1": "rocha_marrom",
-    "38,1": "rocha_marrom",
-    "39,1": "rocha_marrom",
-    "40,1": "rocha_marrom",
-    "41,1": "rocha_marrom",
-    "42,1": "rocha_marrom",
-    "43,1": "rocha_marrom",
-    "44,1": "rocha_marrom",
-    "45,1": "rocha_marrom",
-    "46,1": "rocha_marrom",
-    "47,1": "rocha_marrom",
-    "48,1": "rocha_marrom",
-    "49,1": "rocha_marrom",
-    "50,1": "rocha_marrom",
-    "51,1": "rocha_marrom",
-    "52,1": "rocha_marrom",
-    "53,1": "rocha_marrom",
-    "54,1": "rocha_marrom",
-    "0,2": "rocha_marrom",
-    "1,2": "grama",
-    "2,2": "grama",
-    "3,2": "grama",
-    "4,2": "grama",
-    "5,2": "grama",
-    "6,2": "grama",
-    "7,2": "grama",
-    "8,2": "grama",
-    "9,2": "grama",
-    "10,2": "grama",
-    "11,2": "rocha_marrom",
+    "0,0": "pantano",
+    "1,0": "pantano",
+    "2,0": "pantano",
+    "3,0": "pantano",
+    "4,0": "pantano",
+    "5,0": "pantano",
+    "6,0": "pantano",
+    "7,0": "pantano",
+    "8,0": "pantano",
+    "9,0": "pantano",
+    "10,0": "pantano",
+    "11,0": "pantano",
+    "12,0": "pantano",
+    "13,0": "pantano",
+    "14,0": "pantano",
+    "15,0": "pantano",
+    "16,0": "pantano",
+    "17,0": "pantano",
+    "18,0": "pantano",
+    "19,0": "pantano",
+    "20,0": "pantano",
+    "21,0": "pantano",
+    "22,0": "pantano",
+    "23,0": "pantano",
+    "24,0": "pantano",
+    "25,0": "pantano",
+    "26,0": "pantano",
+    "27,0": "pantano",
+    "28,0": "pantano",
+    "29,0": "pantano",
+    "30,0": "pantano",
+    "31,0": "pantano",
+    "32,0": "pantano",
+    "33,0": "pantano",
+    "34,0": "pantano",
+    "35,0": "pantano",
+    "36,0": "pantano",
+    "37,0": "pantano",
+    "38,0": "pantano",
+    "39,0": "pantano",
+    "40,0": "pantano",
+    "41,0": "pantano",
+    "42,0": "pantano",
+    "43,0": "pantano",
+    "44,0": "pantano",
+    "45,0": "pantano",
+    "46,0": "pantano",
+    "47,0": "pantano",
+    "48,0": "pantano",
+    "49,0": "pantano",
+    "50,0": "pantano",
+    "51,0": "pantano",
+    "52,0": "pantano",
+    "53,0": "pantano",
+    "54,0": "pantano",
+    "0,1": "pantano",
+    "1,1": "pantano",
+    "2,1": "pantano",
+    "3,1": "pantano",
+    "4,1": "pantano",
+    "5,1": "pantano",
+    "6,1": "pantano",
+    "7,1": "pantano",
+    "8,1": "pantano",
+    "9,1": "pantano",
+    "10,1": "pantano",
+    "11,1": "pantano",
+    "12,1": "pantano",
+    "13,1": "pantano",
+    "14,1": "pantano",
+    "15,1": "pantano",
+    "16,1": "pantano",
+    "17,1": "pantano",
+    "18,1": "pantano",
+    "19,1": "pantano",
+    "20,1": "pantano",
+    "21,1": "pantano",
+    "22,1": "pantano",
+    "23,1": "pantano",
+    "24,1": "pantano",
+    "25,1": "pantano",
+    "26,1": "pantano",
+    "27,1": "pantano",
+    "28,1": "pantano",
+    "29,1": "pantano",
+    "30,1": "pantano",
+    "31,1": "pantano",
+    "32,1": "pantano",
+    "33,1": "pantano",
+    "34,1": "pantano",
+    "35,1": "pantano",
+    "36,1": "pantano",
+    "37,1": "pantano",
+    "38,1": "pantano",
+    "39,1": "pantano",
+    "40,1": "pantano",
+    "41,1": "pantano",
+    "42,1": "pantano",
+    "43,1": "pantano",
+    "44,1": "pantano",
+    "45,1": "pantano",
+    "46,1": "pantano",
+    "47,1": "pantano",
+    "48,1": "pantano",
+    "49,1": "pantano",
+    "50,1": "pantano",
+    "51,1": "pantano",
+    "52,1": "pantano",
+    "53,1": "pantano",
+    "54,1": "pantano",
+    "0,2": "pantano",
+    "1,2": "pantano",
+    "2,2": "pantano",
+    "3,2": "pantano",
+    "4,2": "pantano",
+    "5,2": "pantano",
+    "6,2": "pantano",
+    "7,2": "pantano",
+    "8,2": "pantano",
+    "9,2": "pantano",
+    "10,2": "pantano",
+    "11,2": "pantano",
     "12,2": "pantano",
     "13,2": "pantano",
     "14,2": "pantano",
@@ -2104,22 +6871,22 @@
     "23,2": "pantano",
     "24,2": "pantano",
     "25,2": "pantano",
-    "26,2": "rocha_marrom",
-    "27,2": "agua",
-    "28,2": "agua",
-    "29,2": "agua",
-    "30,2": "agua",
-    "31,2": "agua",
-    "32,2": "agua",
-    "33,2": "agua",
-    "34,2": "agua",
-    "35,2": "agua",
-    "36,2": "agua",
-    "37,2": "agua",
-    "38,2": "agua",
-    "39,2": "agua",
-    "40,2": "agua",
-    "41,2": "rocha_marrom",
+    "26,2": "pantano",
+    "27,2": "pantano",
+    "28,2": "pantano",
+    "29,2": "pantano",
+    "30,2": "pantano",
+    "31,2": "pantano",
+    "32,2": "pantano",
+    "33,2": "pantano",
+    "34,2": "pantano",
+    "35,2": "pantano",
+    "36,2": "pantano",
+    "37,2": "pantano",
+    "38,2": "pantano",
+    "39,2": "pantano",
+    "40,2": "pantano",
+    "41,2": "pantano",
     "42,2": "pantano",
     "43,2": "pantano",
     "44,2": "pantano",
@@ -2127,24 +6894,24 @@
     "46,2": "pantano",
     "47,2": "pantano",
     "48,2": "pantano",
-    "49,2": "grama",
-    "50,2": "grama",
-    "51,2": "grama",
-    "52,2": "grama",
-    "53,2": "grama",
-    "54,2": "rocha_marrom",
-    "0,3": "rocha_marrom",
-    "1,3": "grama",
-    "2,3": "grama",
-    "3,3": "grama",
-    "4,3": "grama",
-    "5,3": "grama",
-    "6,3": "grama",
-    "7,3": "grama",
-    "8,3": "grama",
-    "9,3": "grama",
-    "10,3": "grama",
-    "11,3": "rocha_marrom",
+    "49,2": "pantano",
+    "50,2": "pantano",
+    "51,2": "pantano",
+    "52,2": "pantano",
+    "53,2": "pantano",
+    "54,2": "pantano",
+    "0,3": "pantano",
+    "1,3": "pantano",
+    "2,3": "pantano",
+    "3,3": "pantano",
+    "4,3": "pantano",
+    "5,3": "pantano",
+    "6,3": "pantano",
+    "7,3": "pantano",
+    "8,3": "pantano",
+    "9,3": "pantano",
+    "10,3": "pantano",
+    "11,3": "pantano",
     "12,3": "pantano",
     "13,3": "pantano",
     "14,3": "pantano",
@@ -2159,22 +6926,22 @@
     "23,3": "pantano",
     "24,3": "pantano",
     "25,3": "pantano",
-    "26,3": "rocha_marrom",
-    "27,3": "agua",
-    "28,3": "grama",
-    "29,3": "grama",
-    "30,3": "grama",
-    "31,3": "grama",
-    "32,3": "grama",
-    "33,3": "agua",
-    "34,3": "agua",
-    "35,3": "agua",
-    "36,3": "agua",
-    "37,3": "agua",
-    "38,3": "agua",
-    "39,3": "agua",
-    "40,3": "agua",
-    "41,3": "rocha_marrom",
+    "26,3": "pantano",
+    "27,3": "pantano",
+    "28,3": "pantano",
+    "29,3": "pantano",
+    "30,3": "pantano",
+    "31,3": "pantano",
+    "32,3": "pantano",
+    "33,3": "pantano",
+    "34,3": "pantano",
+    "35,3": "pantano",
+    "36,3": "pantano",
+    "37,3": "pantano",
+    "38,3": "pantano",
+    "39,3": "pantano",
+    "40,3": "pantano",
+    "41,3": "pantano",
     "42,3": "pantano",
     "43,3": "pantano",
     "44,3": "pantano",
@@ -2182,30 +6949,30 @@
     "46,3": "pantano",
     "47,3": "pantano",
     "48,3": "pantano",
-    "49,3": "grama",
-    "50,3": "grama",
-    "51,3": "grama",
-    "52,3": "grama",
-    "53,3": "grama",
-    "54,3": "rocha_marrom",
-    "0,4": "rocha_marrom",
-    "1,4": "grama",
-    "2,4": "grama",
-    "3,4": "grama",
-    "4,4": "grama",
-    "5,4": "grama",
-    "6,4": "grama",
-    "7,4": "grama",
-    "8,4": "grama",
-    "9,4": "grama",
-    "10,4": "grama",
-    "11,4": "rocha_marrom",
+    "49,3": "pantano",
+    "50,3": "pantano",
+    "51,3": "pantano",
+    "52,3": "pantano",
+    "53,3": "pantano",
+    "54,3": "pantano",
+    "0,4": "pantano",
+    "1,4": "pantano",
+    "2,4": "pantano",
+    "3,4": "pantano",
+    "4,4": "pantano",
+    "5,4": "pantano",
+    "6,4": "pantano",
+    "7,4": "pantano",
+    "8,4": "pantano",
+    "9,4": "pantano",
+    "10,4": "pantano",
+    "11,4": "pantano",
     "12,4": "pantano",
     "13,4": "pantano",
-    "14,4": "agua",
-    "15,4": "agua",
-    "16,4": "agua",
-    "17,4": "agua",
+    "14,4": "pantano",
+    "15,4": "pantano",
+    "16,4": "pantano",
+    "17,4": "pantano",
     "18,4": "pantano",
     "19,4": "pantano",
     "20,4": "pantano",
@@ -2214,22 +6981,22 @@
     "23,4": "pantano",
     "24,4": "pantano",
     "25,4": "pantano",
-    "26,4": "rocha_marrom",
-    "27,4": "agua",
-    "28,4": "grama",
-    "29,4": "grama",
-    "30,4": "grama",
-    "31,4": "grama",
-    "32,4": "grama",
-    "33,4": "agua",
-    "34,4": "agua",
-    "35,4": "agua",
-    "36,4": "agua",
-    "37,4": "agua",
-    "38,4": "agua",
-    "39,4": "agua",
-    "40,4": "agua",
-    "41,4": "rocha_marrom",
+    "26,4": "pantano",
+    "27,4": "pantano",
+    "28,4": "pantano",
+    "29,4": "pantano",
+    "30,4": "pantano",
+    "31,4": "pantano",
+    "32,4": "pantano",
+    "33,4": "pantano",
+    "34,4": "pantano",
+    "35,4": "pantano",
+    "36,4": "pantano",
+    "37,4": "pantano",
+    "38,4": "pantano",
+    "39,4": "pantano",
+    "40,4": "pantano",
+    "41,4": "pantano",
     "42,4": "pantano",
     "43,4": "pantano",
     "44,4": "pantano",
@@ -2237,30 +7004,30 @@
     "46,4": "pantano",
     "47,4": "pantano",
     "48,4": "pantano",
-    "49,4": "grama",
-    "50,4": "grama",
-    "51,4": "grama",
-    "52,4": "grama",
-    "53,4": "grama",
-    "54,4": "rocha_marrom",
-    "0,5": "rocha_marrom",
-    "1,5": "grama",
-    "2,5": "grama",
-    "3,5": "grama",
-    "4,5": "grama",
-    "5,5": "grama",
-    "6,5": "grama",
-    "7,5": "grama",
-    "8,5": "grama",
-    "9,5": "grama",
-    "10,5": "grama",
-    "11,5": "rocha_marrom",
+    "49,4": "pantano",
+    "50,4": "pantano",
+    "51,4": "pantano",
+    "52,4": "pantano",
+    "53,4": "pantano",
+    "54,4": "pantano",
+    "0,5": "pantano",
+    "1,5": "pantano",
+    "2,5": "pantano",
+    "3,5": "pantano",
+    "4,5": "pantano",
+    "5,5": "pantano",
+    "6,5": "pantano",
+    "7,5": "pantano",
+    "8,5": "pantano",
+    "9,5": "pantano",
+    "10,5": "pantano",
+    "11,5": "pantano",
     "12,5": "pantano",
     "13,5": "pantano",
-    "14,5": "agua",
-    "15,5": "agua",
-    "16,5": "agua",
-    "17,5": "agua",
+    "14,5": "pantano",
+    "15,5": "pantano",
+    "16,5": "pantano",
+    "17,5": "pantano",
     "18,5": "pantano",
     "19,5": "pantano",
     "20,5": "pantano",
@@ -2269,22 +7036,22 @@
     "23,5": "pantano",
     "24,5": "pantano",
     "25,5": "pantano",
-    "26,5": "rocha_marrom",
-    "27,5": "agua",
-    "28,5": "grama",
-    "29,5": "grama",
-    "30,5": "grama",
-    "31,5": "grama",
-    "32,5": "grama",
-    "33,5": "agua",
-    "34,5": "grama",
-    "35,5": "grama",
-    "36,5": "grama",
-    "37,5": "grama",
-    "38,5": "grama",
-    "39,5": "agua",
-    "40,5": "agua",
-    "41,5": "rocha_marrom",
+    "26,5": "pantano",
+    "27,5": "pantano",
+    "28,5": "pantano",
+    "29,5": "pantano",
+    "30,5": "pantano",
+    "31,5": "pantano",
+    "32,5": "pantano",
+    "33,5": "pantano",
+    "34,5": "pantano",
+    "35,5": "pantano",
+    "36,5": "pantano",
+    "37,5": "pantano",
+    "38,5": "pantano",
+    "39,5": "pantano",
+    "40,5": "pantano",
+    "41,5": "pantano",
     "42,5": "pantano",
     "43,5": "pantano",
     "44,5": "pantano",
@@ -2292,30 +7059,30 @@
     "46,5": "pantano",
     "47,5": "pantano",
     "48,5": "pantano",
-    "49,5": "grama",
-    "50,5": "grama",
-    "51,5": "grama",
-    "52,5": "grama",
-    "53,5": "grama",
-    "54,5": "rocha_marrom",
-    "0,6": "rocha_marrom",
-    "1,6": "grama",
-    "2,6": "grama",
-    "3,6": "grama",
-    "4,6": "grama",
-    "5,6": "grama",
-    "6,6": "grama",
-    "7,6": "grama",
-    "8,6": "grama",
-    "9,6": "grama",
-    "10,6": "grama",
-    "11,6": "rocha_marrom",
+    "49,5": "pantano",
+    "50,5": "pantano",
+    "51,5": "pantano",
+    "52,5": "pantano",
+    "53,5": "pantano",
+    "54,5": "pantano",
+    "0,6": "pantano",
+    "1,6": "pantano",
+    "2,6": "pantano",
+    "3,6": "pantano",
+    "4,6": "pantano",
+    "5,6": "pantano",
+    "6,6": "pantano",
+    "7,6": "pantano",
+    "8,6": "pantano",
+    "9,6": "pantano",
+    "10,6": "pantano",
+    "11,6": "pantano",
     "12,6": "pantano",
     "13,6": "pantano",
-    "14,6": "agua",
-    "15,6": "agua",
-    "16,6": "agua",
-    "17,6": "agua",
+    "14,6": "pantano",
+    "15,6": "pantano",
+    "16,6": "pantano",
+    "17,6": "pantano",
     "18,6": "pantano",
     "19,6": "pantano",
     "20,6": "pantano",
@@ -2324,22 +7091,22 @@
     "23,6": "pantano",
     "24,6": "pantano",
     "25,6": "pantano",
-    "26,6": "rocha_marrom",
-    "27,6": "agua",
-    "28,6": "grama",
-    "29,6": "grama",
-    "30,6": "grama",
-    "31,6": "grama",
-    "32,6": "grama",
-    "33,6": "agua",
-    "34,6": "grama",
-    "35,6": "grama",
-    "36,6": "grama",
-    "37,6": "grama",
-    "38,6": "grama",
-    "39,6": "agua",
-    "40,6": "agua",
-    "41,6": "rocha_marrom",
+    "26,6": "pantano",
+    "27,6": "pantano",
+    "28,6": "pantano",
+    "29,6": "pantano",
+    "30,6": "pantano",
+    "31,6": "pantano",
+    "32,6": "pantano",
+    "33,6": "pantano",
+    "34,6": "pantano",
+    "35,6": "pantano",
+    "36,6": "pantano",
+    "37,6": "pantano",
+    "38,6": "pantano",
+    "39,6": "pantano",
+    "40,6": "pantano",
+    "41,6": "pantano",
     "42,6": "pantano",
     "43,6": "pantano",
     "44,6": "pantano",
@@ -2347,24 +7114,24 @@
     "46,6": "pantano",
     "47,6": "pantano",
     "48,6": "pantano",
-    "49,6": "grama",
-    "50,6": "grama",
-    "51,6": "grama",
-    "52,6": "grama",
-    "53,6": "grama",
-    "54,6": "rocha_marrom",
-    "0,7": "rocha_marrom",
-    "1,7": "grama",
-    "2,7": "grama",
-    "3,7": "grama",
-    "4,7": "grama",
-    "5,7": "grama",
-    "6,7": "grama",
-    "7,7": "grama",
-    "8,7": "grama",
-    "9,7": "grama",
-    "10,7": "grama",
-    "11,7": "rocha_marrom",
+    "49,6": "pantano",
+    "50,6": "pantano",
+    "51,6": "pantano",
+    "52,6": "pantano",
+    "53,6": "pantano",
+    "54,6": "pantano",
+    "0,7": "pantano",
+    "1,7": "pantano",
+    "2,7": "pantano",
+    "3,7": "pantano",
+    "4,7": "pantano",
+    "5,7": "pantano",
+    "6,7": "pantano",
+    "7,7": "pantano",
+    "8,7": "pantano",
+    "9,7": "pantano",
+    "10,7": "pantano",
+    "11,7": "pantano",
     "12,7": "pantano",
     "13,7": "pantano",
     "14,7": "pantano",
@@ -2379,22 +7146,22 @@
     "23,7": "pantano",
     "24,7": "pantano",
     "25,7": "pantano",
-    "26,7": "rocha_marrom",
-    "27,7": "agua",
-    "28,7": "agua",
-    "29,7": "agua",
-    "30,7": "agua",
-    "31,7": "agua",
-    "32,7": "agua",
-    "33,7": "agua",
-    "34,7": "grama",
-    "35,7": "grama",
-    "36,7": "grama",
-    "37,7": "grama",
-    "38,7": "grama",
-    "39,7": "agua",
-    "40,7": "agua",
-    "41,7": "rocha_marrom",
+    "26,7": "pantano",
+    "27,7": "pantano",
+    "28,7": "pantano",
+    "29,7": "pantano",
+    "30,7": "pantano",
+    "31,7": "pantano",
+    "32,7": "pantano",
+    "33,7": "pantano",
+    "34,7": "pantano",
+    "35,7": "pantano",
+    "36,7": "pantano",
+    "37,7": "pantano",
+    "38,7": "pantano",
+    "39,7": "pantano",
+    "40,7": "pantano",
+    "41,7": "pantano",
     "42,7": "pantano",
     "43,7": "pantano",
     "44,7": "pantano",
@@ -2402,24 +7169,24 @@
     "46,7": "pantano",
     "47,7": "pantano",
     "48,7": "pantano",
-    "49,7": "grama",
-    "50,7": "grama",
-    "51,7": "grama",
-    "52,7": "grama",
-    "53,7": "grama",
-    "54,7": "rocha_marrom",
-    "0,8": "rocha_marrom",
-    "1,8": "grama",
-    "2,8": "grama",
-    "3,8": "grama",
-    "4,8": "grama",
-    "5,8": "grama",
-    "6,8": "grama",
-    "7,8": "grama",
-    "8,8": "grama",
-    "9,8": "grama",
-    "10,8": "grama",
-    "11,8": "rocha_marrom",
+    "49,7": "pantano",
+    "50,7": "pantano",
+    "51,7": "pantano",
+    "52,7": "pantano",
+    "53,7": "pantano",
+    "54,7": "pantano",
+    "0,8": "pantano",
+    "1,8": "pantano",
+    "2,8": "pantano",
+    "3,8": "pantano",
+    "4,8": "pantano",
+    "5,8": "pantano",
+    "6,8": "pantano",
+    "7,8": "pantano",
+    "8,8": "pantano",
+    "9,8": "pantano",
+    "10,8": "pantano",
+    "11,8": "pantano",
     "12,8": "pantano",
     "13,8": "pantano",
     "14,8": "pantano",
@@ -2434,22 +7201,22 @@
     "23,8": "pantano",
     "24,8": "pantano",
     "25,8": "pantano",
-    "26,8": "rocha_marrom",
-    "27,8": "agua",
-    "28,8": "agua",
-    "29,8": "agua",
-    "30,8": "agua",
-    "31,8": "agua",
-    "32,8": "agua",
-    "33,8": "agua",
-    "34,8": "grama",
-    "35,8": "grama",
-    "36,8": "grama",
-    "37,8": "grama",
-    "38,8": "grama",
-    "39,8": "agua",
-    "40,8": "agua",
-    "41,8": "rocha_marrom",
+    "26,8": "pantano",
+    "27,8": "pantano",
+    "28,8": "pantano",
+    "29,8": "pantano",
+    "30,8": "pantano",
+    "31,8": "pantano",
+    "32,8": "pantano",
+    "33,8": "pantano",
+    "34,8": "pantano",
+    "35,8": "pantano",
+    "36,8": "pantano",
+    "37,8": "pantano",
+    "38,8": "pantano",
+    "39,8": "pantano",
+    "40,8": "pantano",
+    "41,8": "pantano",
     "42,8": "pantano",
     "43,8": "pantano",
     "44,8": "pantano",
@@ -2457,24 +7224,24 @@
     "46,8": "pantano",
     "47,8": "pantano",
     "48,8": "pantano",
-    "49,8": "grama",
-    "50,8": "grama",
-    "51,8": "grama",
-    "52,8": "grama",
-    "53,8": "grama",
-    "54,8": "rocha_marrom",
-    "0,9": "rocha_marrom",
-    "1,9": "grama",
-    "2,9": "grama",
-    "3,9": "grama",
-    "4,9": "grama",
-    "5,9": "grama",
-    "6,9": "grama",
-    "7,9": "grama",
-    "8,9": "grama",
-    "9,9": "grama",
-    "10,9": "grama",
-    "11,9": "rocha_marrom",
+    "49,8": "pantano",
+    "50,8": "pantano",
+    "51,8": "pantano",
+    "52,8": "pantano",
+    "53,8": "pantano",
+    "54,8": "pantano",
+    "0,9": "pantano",
+    "1,9": "pantano",
+    "2,9": "pantano",
+    "3,9": "pantano",
+    "4,9": "pantano",
+    "5,9": "pantano",
+    "6,9": "pantano",
+    "7,9": "pantano",
+    "8,9": "pantano",
+    "9,9": "pantano",
+    "10,9": "pantano",
+    "11,9": "pantano",
     "12,9": "pantano",
     "13,9": "pantano",
     "14,9": "pantano",
@@ -2489,7 +7256,7 @@
     "23,9": "pantano",
     "24,9": "pantano",
     "25,9": "pantano",
-    "26,9": "rocha_marrom",
+    "26,9": "pantano",
     "27,9": "pantano",
     "28,9": "pantano",
     "29,9": "pantano",
@@ -2504,7 +7271,7 @@
     "38,9": "pantano",
     "39,9": "pantano",
     "40,9": "pantano",
-    "41,9": "rocha_marrom",
+    "41,9": "pantano",
     "42,9": "pantano",
     "43,9": "pantano",
     "44,9": "pantano",
@@ -2512,23 +7279,23 @@
     "46,9": "pantano",
     "47,9": "pantano",
     "48,9": "pantano",
-    "49,9": "grama",
-    "50,9": "grama",
-    "51,9": "grama",
-    "52,9": "grama",
-    "53,9": "grama",
-    "54,9": "rocha_marrom",
-    "0,10": "rocha_marrom",
-    "1,10": "grama",
-    "2,10": "grama",
-    "3,10": "grama",
-    "4,10": "grama",
-    "5,10": "grama",
-    "6,10": "grama",
-    "7,10": "grama",
-    "8,10": "grama",
-    "9,10": "grama",
-    "10,10": "grama",
+    "49,9": "pantano",
+    "50,9": "pantano",
+    "51,9": "pantano",
+    "52,9": "pantano",
+    "53,9": "pantano",
+    "54,9": "pantano",
+    "0,10": "pantano",
+    "1,10": "pantano",
+    "2,10": "pantano",
+    "3,10": "pantano",
+    "4,10": "pantano",
+    "5,10": "pantano",
+    "6,10": "pantano",
+    "7,10": "pantano",
+    "8,10": "pantano",
+    "9,10": "pantano",
+    "10,10": "pantano",
     "11,10": "pantano",
     "12,10": "pantano",
     "13,10": "pantano",
@@ -2567,24 +7334,24 @@
     "46,10": "pantano",
     "47,10": "pantano",
     "48,10": "pantano",
-    "49,10": "grama",
-    "50,10": "grama",
-    "51,10": "grama",
-    "52,10": "grama",
-    "53,10": "grama",
-    "54,10": "rocha_marrom",
-    "0,11": "rocha_marrom",
-    "1,11": "grama",
-    "2,11": "grama",
-    "3,11": "grama",
-    "4,11": "grama",
-    "5,11": "grama",
-    "6,11": "grama",
-    "7,11": "grama",
-    "8,11": "grama",
-    "9,11": "grama",
-    "10,11": "grama",
-    "11,11": "rocha_marrom",
+    "49,10": "pantano",
+    "50,10": "pantano",
+    "51,10": "pantano",
+    "52,10": "pantano",
+    "53,10": "pantano",
+    "54,10": "pantano",
+    "0,11": "pantano",
+    "1,11": "pantano",
+    "2,11": "pantano",
+    "3,11": "pantano",
+    "4,11": "pantano",
+    "5,11": "pantano",
+    "6,11": "pantano",
+    "7,11": "pantano",
+    "8,11": "pantano",
+    "9,11": "pantano",
+    "10,11": "pantano",
+    "11,11": "pantano",
     "12,11": "pantano",
     "13,11": "pantano",
     "14,11": "pantano",
@@ -2593,13 +7360,13 @@
     "17,11": "pantano",
     "18,11": "pantano",
     "19,11": "pantano",
-    "20,11": "agua",
-    "21,11": "agua",
-    "22,11": "agua",
-    "23,11": "agua",
+    "20,11": "pantano",
+    "21,11": "pantano",
+    "22,11": "pantano",
+    "23,11": "pantano",
     "24,11": "pantano",
     "25,11": "pantano",
-    "26,11": "rocha_marrom",
+    "26,11": "pantano",
     "27,11": "pantano",
     "28,11": "pantano",
     "29,11": "pantano",
@@ -2614,7 +7381,7 @@
     "38,11": "pantano",
     "39,11": "pantano",
     "40,11": "pantano",
-    "41,11": "rocha_marrom",
+    "41,11": "pantano",
     "42,11": "pantano",
     "43,11": "pantano",
     "44,11": "pantano",
@@ -2622,24 +7389,24 @@
     "46,11": "pantano",
     "47,11": "pantano",
     "48,11": "pantano",
-    "49,11": "grama",
-    "50,11": "grama",
-    "51,11": "grama",
-    "52,11": "grama",
-    "53,11": "grama",
-    "54,11": "rocha_marrom",
-    "0,12": "rocha_marrom",
-    "1,12": "grama",
-    "2,12": "grama",
-    "3,12": "grama",
-    "4,12": "grama",
-    "5,12": "grama",
-    "6,12": "grama",
-    "7,12": "grama",
-    "8,12": "grama",
-    "9,12": "grama",
-    "10,12": "grama",
-    "11,12": "rocha_marrom",
+    "49,11": "pantano",
+    "50,11": "pantano",
+    "51,11": "pantano",
+    "52,11": "pantano",
+    "53,11": "pantano",
+    "54,11": "pantano",
+    "0,12": "pantano",
+    "1,12": "pantano",
+    "2,12": "pantano",
+    "3,12": "pantano",
+    "4,12": "pantano",
+    "5,12": "pantano",
+    "6,12": "pantano",
+    "7,12": "pantano",
+    "8,12": "pantano",
+    "9,12": "pantano",
+    "10,12": "pantano",
+    "11,12": "pantano",
     "12,12": "pantano",
     "13,12": "pantano",
     "14,12": "pantano",
@@ -2648,28 +7415,28 @@
     "17,12": "pantano",
     "18,12": "pantano",
     "19,12": "pantano",
-    "20,12": "agua",
-    "21,12": "agua",
-    "22,12": "agua",
-    "23,12": "agua",
+    "20,12": "pantano",
+    "21,12": "pantano",
+    "22,12": "pantano",
+    "23,12": "pantano",
     "24,12": "pantano",
     "25,12": "pantano",
-    "26,12": "rocha_marrom",
-    "27,12": "agua",
-    "28,12": "agua",
-    "29,12": "grama",
-    "30,12": "grama",
-    "31,12": "grama",
-    "32,12": "grama",
-    "33,12": "grama",
-    "34,12": "agua",
-    "35,12": "grama",
-    "36,12": "grama",
-    "37,12": "grama",
-    "38,12": "grama",
-    "39,12": "grama",
-    "40,12": "agua",
-    "41,12": "rocha_marrom",
+    "26,12": "pantano",
+    "27,12": "pantano",
+    "28,12": "pantano",
+    "29,12": "pantano",
+    "30,12": "pantano",
+    "31,12": "pantano",
+    "32,12": "pantano",
+    "33,12": "pantano",
+    "34,12": "pantano",
+    "35,12": "pantano",
+    "36,12": "pantano",
+    "37,12": "pantano",
+    "38,12": "pantano",
+    "39,12": "pantano",
+    "40,12": "pantano",
+    "41,12": "pantano",
     "42,12": "pantano",
     "43,12": "pantano",
     "44,12": "pantano",
@@ -2677,24 +7444,24 @@
     "46,12": "pantano",
     "47,12": "pantano",
     "48,12": "pantano",
-    "49,12": "grama",
-    "50,12": "grama",
-    "51,12": "grama",
-    "52,12": "grama",
-    "53,12": "grama",
-    "54,12": "rocha_marrom",
-    "0,13": "rocha_marrom",
-    "1,13": "grama",
-    "2,13": "grama",
-    "3,13": "grama",
-    "4,13": "grama",
-    "5,13": "grama",
-    "6,13": "grama",
-    "7,13": "grama",
-    "8,13": "grama",
-    "9,13": "grama",
-    "10,13": "grama",
-    "11,13": "rocha_marrom",
+    "49,12": "pantano",
+    "50,12": "pantano",
+    "51,12": "pantano",
+    "52,12": "pantano",
+    "53,12": "pantano",
+    "54,12": "pantano",
+    "0,13": "pantano",
+    "1,13": "pantano",
+    "2,13": "pantano",
+    "3,13": "pantano",
+    "4,13": "pantano",
+    "5,13": "pantano",
+    "6,13": "pantano",
+    "7,13": "pantano",
+    "8,13": "pantano",
+    "9,13": "pantano",
+    "10,13": "pantano",
+    "11,13": "pantano",
     "12,13": "pantano",
     "13,13": "pantano",
     "14,13": "pantano",
@@ -2703,28 +7470,28 @@
     "17,13": "pantano",
     "18,13": "pantano",
     "19,13": "pantano",
-    "20,13": "agua",
-    "21,13": "agua",
-    "22,13": "agua",
-    "23,13": "agua",
+    "20,13": "pantano",
+    "21,13": "pantano",
+    "22,13": "pantano",
+    "23,13": "pantano",
     "24,13": "pantano",
     "25,13": "pantano",
-    "26,13": "rocha_marrom",
-    "27,13": "agua",
-    "28,13": "agua",
-    "29,13": "grama",
-    "30,13": "grama",
-    "31,13": "grama",
-    "32,13": "grama",
-    "33,13": "grama",
-    "34,13": "agua",
-    "35,13": "grama",
-    "36,13": "grama",
-    "37,13": "grama",
-    "38,13": "grama",
-    "39,13": "grama",
-    "40,13": "agua",
-    "41,13": "rocha_marrom",
+    "26,13": "pantano",
+    "27,13": "pantano",
+    "28,13": "pantano",
+    "29,13": "pantano",
+    "30,13": "pantano",
+    "31,13": "pantano",
+    "32,13": "pantano",
+    "33,13": "pantano",
+    "34,13": "pantano",
+    "35,13": "pantano",
+    "36,13": "pantano",
+    "37,13": "pantano",
+    "38,13": "pantano",
+    "39,13": "pantano",
+    "40,13": "pantano",
+    "41,13": "pantano",
     "42,13": "pantano",
     "43,13": "pantano",
     "44,13": "pantano",
@@ -2732,24 +7499,24 @@
     "46,13": "pantano",
     "47,13": "pantano",
     "48,13": "pantano",
-    "49,13": "grama",
-    "50,13": "grama",
-    "51,13": "grama",
-    "52,13": "grama",
-    "53,13": "grama",
-    "54,13": "rocha_marrom",
-    "0,14": "rocha_marrom",
-    "1,14": "grama",
-    "2,14": "grama",
-    "3,14": "grama",
-    "4,14": "grama",
-    "5,14": "grama",
-    "6,14": "grama",
-    "7,14": "grama",
-    "8,14": "grama",
-    "9,14": "grama",
-    "10,14": "grama",
-    "11,14": "rocha_marrom",
+    "49,13": "pantano",
+    "50,13": "pantano",
+    "51,13": "pantano",
+    "52,13": "pantano",
+    "53,13": "pantano",
+    "54,13": "pantano",
+    "0,14": "pantano",
+    "1,14": "pantano",
+    "2,14": "pantano",
+    "3,14": "pantano",
+    "4,14": "pantano",
+    "5,14": "pantano",
+    "6,14": "pantano",
+    "7,14": "pantano",
+    "8,14": "pantano",
+    "9,14": "pantano",
+    "10,14": "pantano",
+    "11,14": "pantano",
     "12,14": "pantano",
     "13,14": "pantano",
     "14,14": "pantano",
@@ -2764,22 +7531,22 @@
     "23,14": "pantano",
     "24,14": "pantano",
     "25,14": "pantano",
-    "26,14": "rocha_marrom",
-    "27,14": "agua",
-    "28,14": "agua",
-    "29,14": "grama",
-    "30,14": "grama",
-    "31,14": "grama",
-    "32,14": "grama",
-    "33,14": "grama",
-    "34,14": "agua",
-    "35,14": "grama",
-    "36,14": "grama",
-    "37,14": "grama",
-    "38,14": "grama",
-    "39,14": "grama",
-    "40,14": "agua",
-    "41,14": "rocha_marrom",
+    "26,14": "pantano",
+    "27,14": "pantano",
+    "28,14": "pantano",
+    "29,14": "pantano",
+    "30,14": "pantano",
+    "31,14": "pantano",
+    "32,14": "pantano",
+    "33,14": "pantano",
+    "34,14": "pantano",
+    "35,14": "pantano",
+    "36,14": "pantano",
+    "37,14": "pantano",
+    "38,14": "pantano",
+    "39,14": "pantano",
+    "40,14": "pantano",
+    "41,14": "pantano",
     "42,14": "pantano",
     "43,14": "pantano",
     "44,14": "pantano",
@@ -2787,24 +7554,24 @@
     "46,14": "pantano",
     "47,14": "pantano",
     "48,14": "pantano",
-    "49,14": "grama",
-    "50,14": "grama",
-    "51,14": "grama",
-    "52,14": "grama",
-    "53,14": "grama",
-    "54,14": "rocha_marrom",
-    "0,15": "rocha_marrom",
-    "1,15": "grama",
-    "2,15": "grama",
-    "3,15": "grama",
-    "4,15": "grama",
-    "5,15": "grama",
-    "6,15": "grama",
-    "7,15": "grama",
-    "8,15": "grama",
-    "9,15": "grama",
-    "10,15": "grama",
-    "11,15": "rocha_marrom",
+    "49,14": "pantano",
+    "50,14": "pantano",
+    "51,14": "pantano",
+    "52,14": "pantano",
+    "53,14": "pantano",
+    "54,14": "pantano",
+    "0,15": "pantano",
+    "1,15": "pantano",
+    "2,15": "pantano",
+    "3,15": "pantano",
+    "4,15": "pantano",
+    "5,15": "pantano",
+    "6,15": "pantano",
+    "7,15": "pantano",
+    "8,15": "pantano",
+    "9,15": "pantano",
+    "10,15": "pantano",
+    "11,15": "pantano",
     "12,15": "pantano",
     "13,15": "pantano",
     "14,15": "pantano",
@@ -2819,22 +7586,22 @@
     "23,15": "pantano",
     "24,15": "pantano",
     "25,15": "pantano",
-    "26,15": "rocha_marrom",
-    "27,15": "agua",
-    "28,15": "agua",
-    "29,15": "agua",
-    "30,15": "agua",
-    "31,15": "agua",
-    "32,15": "agua",
-    "33,15": "agua",
-    "34,15": "agua",
-    "35,15": "grama",
-    "36,15": "grama",
-    "37,15": "grama",
-    "38,15": "grama",
-    "39,15": "grama",
-    "40,15": "agua",
-    "41,15": "rocha_marrom",
+    "26,15": "pantano",
+    "27,15": "pantano",
+    "28,15": "pantano",
+    "29,15": "pantano",
+    "30,15": "pantano",
+    "31,15": "pantano",
+    "32,15": "pantano",
+    "33,15": "pantano",
+    "34,15": "pantano",
+    "35,15": "pantano",
+    "36,15": "pantano",
+    "37,15": "pantano",
+    "38,15": "pantano",
+    "39,15": "pantano",
+    "40,15": "pantano",
+    "41,15": "pantano",
     "42,15": "pantano",
     "43,15": "pantano",
     "44,15": "pantano",
@@ -2842,24 +7609,24 @@
     "46,15": "pantano",
     "47,15": "pantano",
     "48,15": "pantano",
-    "49,15": "grama",
-    "50,15": "grama",
-    "51,15": "grama",
-    "52,15": "grama",
-    "53,15": "grama",
-    "54,15": "rocha_marrom",
-    "0,16": "rocha_marrom",
-    "1,16": "grama",
-    "2,16": "grama",
-    "3,16": "grama",
-    "4,16": "grama",
-    "5,16": "grama",
-    "6,16": "grama",
-    "7,16": "grama",
-    "8,16": "grama",
-    "9,16": "grama",
-    "10,16": "grama",
-    "11,16": "rocha_marrom",
+    "49,15": "pantano",
+    "50,15": "pantano",
+    "51,15": "pantano",
+    "52,15": "pantano",
+    "53,15": "pantano",
+    "54,15": "pantano",
+    "0,16": "pantano",
+    "1,16": "pantano",
+    "2,16": "pantano",
+    "3,16": "pantano",
+    "4,16": "pantano",
+    "5,16": "pantano",
+    "6,16": "pantano",
+    "7,16": "pantano",
+    "8,16": "pantano",
+    "9,16": "pantano",
+    "10,16": "pantano",
+    "11,16": "pantano",
     "12,16": "pantano",
     "13,16": "pantano",
     "14,16": "pantano",
@@ -2874,22 +7641,22 @@
     "23,16": "pantano",
     "24,16": "pantano",
     "25,16": "pantano",
-    "26,16": "rocha_marrom",
-    "27,16": "agua",
-    "28,16": "agua",
-    "29,16": "agua",
-    "30,16": "agua",
-    "31,16": "agua",
-    "32,16": "agua",
-    "33,16": "agua",
-    "34,16": "agua",
-    "35,16": "agua",
-    "36,16": "agua",
-    "37,16": "agua",
-    "38,16": "agua",
-    "39,16": "agua",
-    "40,16": "agua",
-    "41,16": "rocha_marrom",
+    "26,16": "pantano",
+    "27,16": "pantano",
+    "28,16": "pantano",
+    "29,16": "pantano",
+    "30,16": "pantano",
+    "31,16": "pantano",
+    "32,16": "pantano",
+    "33,16": "pantano",
+    "34,16": "pantano",
+    "35,16": "pantano",
+    "36,16": "pantano",
+    "37,16": "pantano",
+    "38,16": "pantano",
+    "39,16": "pantano",
+    "40,16": "pantano",
+    "41,16": "pantano",
     "42,16": "pantano",
     "43,16": "pantano",
     "44,16": "pantano",
@@ -2897,24 +7664,24 @@
     "46,16": "pantano",
     "47,16": "pantano",
     "48,16": "pantano",
-    "49,16": "grama",
-    "50,16": "grama",
-    "51,16": "grama",
-    "52,16": "grama",
-    "53,16": "grama",
-    "54,16": "rocha_marrom",
-    "0,17": "rocha_marrom",
-    "1,17": "grama",
-    "2,17": "grama",
-    "3,17": "grama",
-    "4,17": "grama",
-    "5,17": "grama",
-    "6,17": "grama",
-    "7,17": "grama",
-    "8,17": "grama",
-    "9,17": "grama",
-    "10,17": "grama",
-    "11,17": "rocha_marrom",
+    "49,16": "pantano",
+    "50,16": "pantano",
+    "51,16": "pantano",
+    "52,16": "pantano",
+    "53,16": "pantano",
+    "54,16": "pantano",
+    "0,17": "pantano",
+    "1,17": "pantano",
+    "2,17": "pantano",
+    "3,17": "pantano",
+    "4,17": "pantano",
+    "5,17": "pantano",
+    "6,17": "pantano",
+    "7,17": "pantano",
+    "8,17": "pantano",
+    "9,17": "pantano",
+    "10,17": "pantano",
+    "11,17": "pantano",
     "12,17": "pantano",
     "13,17": "pantano",
     "14,17": "pantano",
@@ -2929,22 +7696,22 @@
     "23,17": "pantano",
     "24,17": "pantano",
     "25,17": "pantano",
-    "26,17": "rocha_marrom",
-    "27,17": "agua",
-    "28,17": "agua",
-    "29,17": "agua",
-    "30,17": "agua",
-    "31,17": "agua",
-    "32,17": "agua",
-    "33,17": "agua",
-    "34,17": "agua",
-    "35,17": "agua",
-    "36,17": "agua",
-    "37,17": "agua",
-    "38,17": "agua",
-    "39,17": "agua",
-    "40,17": "agua",
-    "41,17": "rocha_marrom",
+    "26,17": "pantano",
+    "27,17": "pantano",
+    "28,17": "pantano",
+    "29,17": "pantano",
+    "30,17": "pantano",
+    "31,17": "pantano",
+    "32,17": "pantano",
+    "33,17": "pantano",
+    "34,17": "pantano",
+    "35,17": "pantano",
+    "36,17": "pantano",
+    "37,17": "pantano",
+    "38,17": "pantano",
+    "39,17": "pantano",
+    "40,17": "pantano",
+    "41,17": "pantano",
     "42,17": "pantano",
     "43,17": "pantano",
     "44,17": "pantano",
@@ -2952,121 +7719,136 @@
     "46,17": "pantano",
     "47,17": "pantano",
     "48,17": "pantano",
-    "49,17": "grama",
-    "50,17": "grama",
-    "51,17": "grama",
-    "52,17": "grama",
-    "53,17": "grama",
-    "54,17": "rocha_marrom",
-    "0,18": "rocha_marrom",
-    "1,18": "rocha_marrom",
-    "2,18": "rocha_marrom",
-    "3,18": "rocha_marrom",
-    "4,18": "rocha_marrom",
-    "5,18": "rocha_marrom",
-    "6,18": "rocha_marrom",
-    "7,18": "rocha_marrom",
-    "8,18": "rocha_marrom",
-    "9,18": "rocha_marrom",
-    "10,18": "rocha_marrom",
-    "11,18": "rocha_marrom",
-    "12,18": "rocha_marrom",
-    "13,18": "rocha_marrom",
-    "14,18": "rocha_marrom",
-    "15,18": "rocha_marrom",
-    "16,18": "rocha_marrom",
-    "17,18": "rocha_marrom",
-    "18,18": "rocha_marrom",
-    "19,18": "rocha_marrom",
-    "20,18": "rocha_marrom",
-    "21,18": "rocha_marrom",
-    "22,18": "rocha_marrom",
-    "23,18": "rocha_marrom",
-    "24,18": "rocha_marrom",
-    "25,18": "rocha_marrom",
-    "26,18": "rocha_marrom",
-    "27,18": "rocha_marrom",
-    "28,18": "rocha_marrom",
-    "29,18": "rocha_marrom",
-    "30,18": "rocha_marrom",
-    "31,18": "rocha_marrom",
-    "32,18": "rocha_marrom",
-    "33,18": "rocha_marrom",
-    "34,18": "rocha_marrom",
-    "35,18": "rocha_marrom",
-    "36,18": "rocha_marrom",
-    "37,18": "rocha_marrom",
-    "38,18": "rocha_marrom",
-    "39,18": "rocha_marrom",
-    "40,18": "rocha_marrom",
-    "41,18": "rocha_marrom",
-    "42,18": "rocha_marrom",
-    "43,18": "rocha_marrom",
-    "44,18": "rocha_marrom",
-    "45,18": "rocha_marrom",
-    "46,18": "rocha_marrom",
-    "47,18": "rocha_marrom",
-    "48,18": "rocha_marrom",
-    "49,18": "rocha_marrom",
-    "50,18": "rocha_marrom",
-    "51,18": "rocha_marrom",
-    "52,18": "rocha_marrom",
-    "53,18": "rocha_marrom",
-    "54,18": "rocha_marrom",
-    "0,19": "rocha_marrom",
-    "1,19": "rocha_marrom",
-    "2,19": "rocha_marrom",
-    "3,19": "rocha_marrom",
-    "4,19": "rocha_marrom",
-    "5,19": "rocha_marrom",
-    "6,19": "rocha_marrom",
-    "7,19": "rocha_marrom",
-    "8,19": "rocha_marrom",
-    "9,19": "rocha_marrom",
-    "10,19": "rocha_marrom",
-    "11,19": "rocha_marrom",
-    "12,19": "rocha_marrom",
-    "13,19": "rocha_marrom",
-    "14,19": "rocha_marrom",
-    "15,19": "rocha_marrom",
-    "16,19": "rocha_marrom",
-    "17,19": "rocha_marrom",
-    "18,19": "rocha_marrom",
-    "19,19": "rocha_marrom",
-    "20,19": "rocha_marrom",
-    "21,19": "rocha_marrom",
-    "22,19": "rocha_marrom",
-    "23,19": "rocha_marrom",
-    "24,19": "rocha_marrom",
-    "25,19": "rocha_marrom",
-    "26,19": "rocha_marrom",
-    "27,19": "rocha_marrom",
-    "28,19": "rocha_marrom",
-    "29,19": "rocha_marrom",
-    "30,19": "rocha_marrom",
-    "31,19": "rocha_marrom",
-    "32,19": "rocha_marrom",
-    "33,19": "rocha_marrom",
-    "34,19": "rocha_marrom",
-    "35,19": "rocha_marrom",
-    "36,19": "rocha_marrom",
-    "37,19": "rocha_marrom",
-    "38,19": "rocha_marrom",
-    "39,19": "rocha_marrom",
-    "40,19": "rocha_marrom",
-    "41,19": "rocha_marrom",
-    "42,19": "rocha_marrom",
-    "43,19": "rocha_marrom",
-    "44,19": "rocha_marrom",
-    "45,19": "rocha_marrom",
-    "46,19": "rocha_marrom",
-    "47,19": "rocha_marrom",
-    "48,19": "rocha_marrom",
-    "49,19": "rocha_marrom",
-    "50,19": "rocha_marrom",
-    "51,19": "rocha_marrom",
-    "52,19": "rocha_marrom",
-    "53,19": "rocha_marrom",
-    "54,19": "rocha_marrom"
+    "49,17": "pantano",
+    "50,17": "pantano",
+    "51,17": "pantano",
+    "52,17": "pantano",
+    "53,17": "pantano",
+    "54,17": "pantano",
+    "0,18": "pantano",
+    "1,18": "pantano",
+    "2,18": "pantano",
+    "3,18": "pantano",
+    "4,18": "pantano",
+    "5,18": "pantano",
+    "6,18": "pantano",
+    "7,18": "pantano",
+    "8,18": "pantano",
+    "9,18": "pantano",
+    "10,18": "pantano",
+    "11,18": "pantano",
+    "12,18": "pantano",
+    "13,18": "pantano",
+    "14,18": "pantano",
+    "15,18": "pantano",
+    "16,18": "pantano",
+    "17,18": "pantano",
+    "18,18": "pantano",
+    "19,18": "pantano",
+    "20,18": "pantano",
+    "21,18": "pantano",
+    "22,18": "pantano",
+    "23,18": "pantano",
+    "24,18": "pantano",
+    "25,18": "pantano",
+    "26,18": "pantano",
+    "27,18": "pantano",
+    "28,18": "pantano",
+    "29,18": "pantano",
+    "30,18": "pantano",
+    "31,18": "pantano",
+    "32,18": "pantano",
+    "33,18": "pantano",
+    "34,18": "pantano",
+    "35,18": "pantano",
+    "36,18": "pantano",
+    "37,18": "pantano",
+    "38,18": "pantano",
+    "39,18": "pantano",
+    "40,18": "pantano",
+    "41,18": "pantano",
+    "42,18": "pantano",
+    "43,18": "pantano",
+    "44,18": "pantano",
+    "45,18": "pantano",
+    "46,18": "pantano",
+    "47,18": "pantano",
+    "48,18": "pantano",
+    "49,18": "pantano",
+    "50,18": "pantano",
+    "51,18": "pantano",
+    "52,18": "pantano",
+    "53,18": "pantano",
+    "54,18": "pantano",
+    "0,19": "pantano",
+    "1,19": "pantano",
+    "2,19": "pantano",
+    "3,19": "pantano",
+    "4,19": "pantano",
+    "5,19": "pantano",
+    "6,19": "pantano",
+    "7,19": "pantano",
+    "8,19": "pantano",
+    "9,19": "pantano",
+    "10,19": "pantano",
+    "11,19": "pantano",
+    "12,19": "pantano",
+    "13,19": "pantano",
+    "14,19": "pantano",
+    "15,19": "pantano",
+    "16,19": "pantano",
+    "17,19": "pantano",
+    "18,19": "pantano",
+    "19,19": "pantano",
+    "20,19": "pantano",
+    "21,19": "pantano",
+    "22,19": "pantano",
+    "23,19": "pantano",
+    "24,19": "pantano",
+    "25,19": "pantano",
+    "26,19": "pantano",
+    "27,19": "pantano",
+    "28,19": "pantano",
+    "29,19": "pantano",
+    "30,19": "pantano",
+    "31,19": "pantano",
+    "32,19": "pantano",
+    "33,19": "pantano",
+    "34,19": "pantano",
+    "35,19": "pantano",
+    "36,19": "pantano",
+    "37,19": "pantano",
+    "38,19": "pantano",
+    "39,19": "pantano",
+    "40,19": "pantano",
+    "41,19": "pantano",
+    "42,19": "pantano",
+    "43,19": "pantano",
+    "44,19": "pantano",
+    "45,19": "pantano",
+    "46,19": "pantano",
+    "47,19": "pantano",
+    "48,19": "pantano",
+    "49,19": "pantano",
+    "50,19": "pantano",
+    "51,19": "pantano",
+    "52,19": "pantano",
+    "53,19": "pantano",
+    "54,19": "pantano"
+  },
+  "pontes": [],
+  "elevacoes": {},
+  "alturas_parede": {},
+  "transicao_altura": "rampa",
+  "objectives": {
+    "primary": {
+      "type": "all_heroes_at_exit",
+      "xp": 350,
+      "reward": {
+        "gold": 50,
+        "items": []
+      }
+    },
+    "secondary": []
   }
 }

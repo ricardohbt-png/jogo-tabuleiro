@@ -1604,7 +1604,7 @@ WEAPONS = {
     "dagger":        {"id": "dagger",        "name": "Adaga",                "die": "1d4",  "stat": "str_", "finesse": True, "off_hand_weapon": True, "throw_range": 3, "categoria": "perfurante"},
     # â”€â”€ Armas iniciais da spec (EQUIPAMENTOS_INICIAIS) â”€â”€
     "machado_basico":{"id": "machado_basico","name": "Machado de Ferro",     "die": "1d6",  "stat": "str_", "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
-    "machadinha_ana":{"id": "machadinha_ana","name": "Machadinha de Arremesso Anã", "die": "1d6", "stat": "str_", "off_hand_weapon": True, "off_hand_forca": True, "throw_range": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante", "allowed_classes": ["warrior"]},
+    "machadinha_arremesso_ana":{"id": "machadinha_arremesso_ana","name": "Machadinha de Arremesso Anã", "die": "1d6", "stat": "str_", "off_hand_weapon": True, "off_hand_forca": True, "off_hand_stat": "str_", "throw_range": 3, "throw_nat1_damage_levels": 2, "corrosion_max": 3, "icon": "assets/itens/machadinha_arremesso_ana.png", "granted_ability": "arremesso_bruto", "categoria": "cortante", "allowed_classes": ["warrior"]},
     "cajado_madeira":{"id": "cajado_madeira","name": "Cajado de Madeira",    "die": "1d6",  "stat": "str_", "finesse": True, "reach": "cajado", "categoria": "contundente"},
     "instrumento":   {"id": "instrumento",   "name": "Instrumento Musical",  "die": None,   "stat": "dex"},
     "bordao":        {"id": "bordao",        "name": "Bordão",               "die": "1d6",  "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente"},
@@ -3632,6 +3632,8 @@ FOTO_SALA_CATEGORIAS = {
     "_positive_effect_events": "efemero", "_resistance_events": "efemero",
     "_damage_visual_context": "efemero", "_condition_alerts": "efemero",
     "_survival_alerts": "efemero", "_story_encadeada": "efemero",
+    "_agarrados_avisados": "efemero", "_prisoes_aderentes_avisadas": "efemero",
+    "_silencio_avisados": "efemero",
     "_campaign_outro": "efemero", "_monster_ai_focus_target_id": "efemero",
     "_monster_ai_reserved_tiles": "efemero",
     "_route_completion_announced": "efemero",
@@ -3884,6 +3886,28 @@ GUILD_CATALOG = {
         "automatica": True, "nome": "Sorrateiro", "icon": "👁️",
         "desc": "Enquanto equipada, revela o círculo de alcance da visão de cada monstro visível.",
         "efeito": {"tipo": "visao_monstro"},
+    },
+    "disparo_duplo": {
+        "id": "disparo_duplo", "categoria": "especializacao", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 250, "custo_fome": 0, "custo_sede": 0, "recarga_rodadas": 0,
+        "nome": "Disparo Duplo", "icon": "🏹",
+        "desc": ("Passivo. Com uma Besta de Mão em cada mão, ao atacar um inimigo "
+                 "dispara também a besta secundária contra o mesmo alvo como ação bônus. "
+                 "O alvo precisa continuar vivo, ao alcance e visível; cada disparo "
+                 "consome 1 virote, mesmo se errar. Uma vez por turno."),
+        "efeito": {"tipo": "disparo_duplo"},
+    },
+    "arremesso_rapido": {
+        "id": "arremesso_rapido", "categoria": "especializacao", "classe": None,
+        "linha": None, "nivel": None, "requer": None, "exclusiva": False,
+        "preco": 250, "custo_fome": 0, "custo_sede": 0, "recarga_rodadas": 0,
+        "nome": "Arremesso Rápido", "icon": "🧪",
+        "desc": ("Passivo. Uma vez por turno, depois de arremessar um consumível "
+                 "arremessável com a ação principal, você pode arremessar um segundo "
+                 "com a ação bônus. Cada frasco mantém seu alcance e resolução normal "
+                 "e pode mirar um alvo ou local diferente; cada uso consome o item."),
+        "efeito": {"tipo": "arremesso_rapido"},
     },
     "brutalidade": {
         "id": "brutalidade", "categoria": "tecnica", "classe": None,
@@ -4896,7 +4920,7 @@ CORROSAO_ARMA_MADEIRA = {"cajado_madeira", "bordao", "staff", "instrumento",
 # Devorador de Metal: corrÃ³i metal (madeira/couro/ossos sÃ£o imunes).
 CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate",
                            "escudo_p", "escudo_g"}
-CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machado_duplo", "machado_orc",
+CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machadinha_arremesso_ana", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
                        "bastsword", "espada2m", "warhammer", "mangual", "maca"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
@@ -6541,8 +6565,9 @@ MONSTER_DEFS.extend([
              "attribute_mod_base": 0,
              "descricao": "Arremessa um objeto a até 8 quadrados; usa DES no ataque e o bônus de FOR no dano."},
             {"id": "golpe_esmagador", "name": "Golpe Esmagador", "action_type": "passiva",
-             "attack_index": 0, "dc": 17, "save": "fortitude", "effect": "perde_movimento",
-             "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento."},
+             "attack_index": 0, "dc": 17, "save": "fortitude", "effect": "perde_turno",
+             "effect_duration": 1,
+             "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: fica atordoado e perde a próxima rodada."},
             {"id": "investida_colossal", "name": "Investida Colossal", "action_type": "passiva",
              "attack_index": 0, "move_required": 3, "straight": True, "attack_bonus": 2,
              "damage_bonus": 4,
@@ -7066,6 +7091,12 @@ CHEST_ITEMS = [
     {"id": "runa_ancestral", "name": "Runa Ancestral", "emoji": "✨",
      "item_slot": "bag", "effect": "treasure", "value": 0, "price": 0, "loot_only": True,
      "descricao": "Runa ancestral de poder mágico; item especial para uso futuro."},
+    # Molde de grimório encontrado em baús; cada instância recebe conteúdo fixo.
+    {"id": "grimorio_bau", "name": "Grimório Antigo", "emoji": "📘",
+     "item_slot": "off_hand", "effect": "grimoire", "value": 0,
+     "icon": "assets/itens/grimorio.png", "allowed_classes": ["mage"],
+     "loot_only": True, "price": 150,
+     "descricao": "Livro raro de mago com duas ou três magias fixas. Só funciona equipado na mão do escudo e não concede espaços de magia."},
     {"id": "joia", "name": "Joia", "emoji": "💎", "item_slot": "bag",
      "effect": "treasure", "value": 0, "price": 100},
 ]
@@ -7106,7 +7137,7 @@ SHOP_WEAPONS = [
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
-    {"id": "machadinha_ana","name": "Machadinha de Arremesso Anã", "emoji": "🪓", "die": "1d6", "stat": "str_", "price": 35, "off_hand_weapon": True, "off_hand_forca": True, "throw_range": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante",
+    {"id": "machadinha_arremesso_ana","name": "Machadinha de Arremesso Anã", "emoji": "🪓", "icon": "assets/itens/machadinha_arremesso_ana.png", "die": "1d6", "stat": "str_", "price": 35, "off_hand_weapon": True, "off_hand_forca": True, "off_hand_stat": "str_", "throw_range": 3, "throw_nat1_damage_levels": 2, "corrosion_max": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante",
      "allowed_classes": ["warrior"]},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
@@ -7207,6 +7238,9 @@ for _weapon in list(SHOP_WEAPONS):
     _silver.update({"id": f"{_weapon['id']}_prata", "name": f"{_weapon['name']} de Prata",
                     "price": int(_weapon.get("price", 0) or 0) * 10, "silver": True,
                     "corrosion_max": 5, "corrosion_free_levels": 2})
+    if _weapon["id"] == "machadinha_arremesso_ana":
+        _silver["id"] = "machadinha_ana_prata"  # preserva o ID da versão de prata já usada no jogo
+        _silver["icon"] = "assets/itens/machadinha_ana_prata.png"
     _silver["descricao"] = _descricao_arma_catalogo(_silver)
     SHOP_WEAPONS.append(_silver)
 
@@ -7272,6 +7306,12 @@ SHOP_MERCHANT = [
      "descricao": "Purga doenças do corpo e protege por 1d4 rodadas."},
     {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 0,
      "descricao": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."},
+    {"id": "vela_reveladora", "name": "Vela Reveladora", "emoji": "🕯️", "icon": "assets/itens/vela_reveladora.png", "price": 80, "item_slot": "bag", "effect": "reveal_traps_potion", "value": 10,
+     "descricao": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."},
+    {"id": "lampada_vigilia_arcana", "name": "Lâmpada da Vigília Arcana", "emoji": "🏮", "icon": "assets/itens/lampada_vigilia_arcana.png", "price": 60, "item_slot": "bag", "effect": "arcane_vigilance_potion", "value": 10, "radius": 3,
+     "descricao": "Ação bônus. Por 10 rodadas, revela para o grupo criaturas ocultas nas sombras em um raio móvel de 3 casas ao redor de qualquer herói ativo. A revelação não encerra a ocultação; a criatura deixa de ser vista ao sair do raio ou ao fim da duração."},
+    {"id": "solucao_mecanismo", "name": "Solução do Mecanismo", "emoji": "📦", "icon": "assets/itens/solucao_mecanismo.png", "price": 250, "item_slot": "bag", "effect": "disarm_traps_area", "value": 3,
+     "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
     {"id": "ring_str",      "name": "Anel de Força",     "emoji": "💍",  "price": 12, "item_slot": "ring",  "effect": "atk",       "value": 1},
     {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 15, "item_slot": "ring",  "effect": "maxhp",     "value": 5},
@@ -7303,7 +7343,7 @@ SHOP_MERCHANT = [
     {"id": "veneno_agonia_sufocante", "name": "Agonia Sufocante", "emoji": "💀", "price": 40, "item_slot": "bag", "effect": "coat_poison", "value": 0, "veneno_id": "veneno_agonia_sufocante"},
     # â”€â”€ ArremessÃ¡veis de fogo (consumÃ­veis de bolsa; ver ARREMESSAVEIS) â”€â”€
     {"id": "frasco_oleo", "name": "Frasco de Óleo Incendiário", "emoji": "🔥", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
-    {"id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️", "price": 12, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️", "icon": "assets/itens/frasco_piche.png", "price": 12, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "fogo_grego",  "name": "Fogo Grego",                 "emoji": "🟢", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "bomba_incendiaria", "name": "Bomba Incendiária", "emoji": "💣", "price": 45, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "granada",           "name": "Granada Explosiva", "emoji": "💣", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
@@ -8249,7 +8289,6 @@ def validar_dungeon(defn):
             return False, "exit ausente ou fora do grid."
         if tile_at([ex["x"], ex["y"]]) != FLOOR:
             return False, "exit precisa estar em FLOOR (1)."
-    for _ob in _objs:
     _extras = [_o.get("alternativo")] if _o.get("alternativo") is not None else []
     if isinstance(_o.get("primary"), dict) and _o["primary"].get("se_falhar") is not None:
         _extras.append(_o["primary"]["se_falhar"])
@@ -8264,6 +8303,7 @@ def validar_dungeon(defn):
         _ft = _ob.get("fato")
         if _ft is not None and (not isinstance(_ft, str) or len(_ft) > 100):
             return False, "fato do objetivo deve ser um texto de até 100 caracteres."
+    for _ob in _objs:
         if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
         if isinstance(_ob, dict) and _ob.get("type") == "all_heroes_at_exit" and ex is None:
@@ -8937,12 +8977,12 @@ def _story_norm(val):
             if not slide:
                 continue
             slide["fit"] = "contain" if s.get("fit") == "contain" else "cover"
-            out.append(slide)
             req = _clean_requirement(s.get("requisito")) if isinstance(s.get("requisito"), dict) else None
             if req and any(req.values()):
                 slide["requisito"] = req
                 if s.get("negar") is True:
                     slide["negar"] = True
+            out.append(slide)
         audio = val.get("audio")
         audio = audio if (isinstance(audio, str) and audio) else None
         return {"slides": out, "audio": audio}
@@ -8975,11 +9015,11 @@ def _clean_story_field(raw):
             continue
         if s.get("fit") == "contain":
             slide["fit"] = "contain"
-        slides.append(slide)
         if s.get("requisito"):
             slide["requisito"] = s["requisito"]
             if s.get("negar"):
                 slide["negar"] = True
+        slides.append(slide)
     if not slides:
         return ""
     out = {"slides": slides}
@@ -9048,9 +9088,9 @@ def _validar_story(val, rotulo):
             return False, f"{rotulo}: slide {j+1} 'image' deve ser texto."
         if "fit" in s and s["fit"] not in ("cover", "contain"):
             return False, f"{rotulo}: slide {j+1} 'fit' deve ser 'cover' ou 'contain'."
-        if not (s.get("text") or s.get("image")):
         if "requisito" in s and not isinstance(s["requisito"], dict):
             return False, f"{rotulo}: slide {j+1} 'requisito' deve ser um objeto."
+        if not (s.get("text") or s.get("image")):
             return False, f"{rotulo}: slide {j+1} precisa de texto ou imagem."
     if "audio" in val and not isinstance(val["audio"], str):
         return False, f"{rotulo}: 'audio' deve ser texto."
@@ -9386,6 +9426,8 @@ DECOR_MODEL3D = {
     "celeiro_medieval": "assets/objetos/celeiro_medieval.glb",
     "galinheiro": "assets/objetos/galinheiro.glb",
     "cabana_rustica": "assets/objetos/cabana_rustica.glb",
+    "choupana_palha_escura": "assets/objetos/choupana_palha_escura.glb",
+    "cabana_palha_velha": "assets/objetos/cabana_palha_velha.glb",
     "lago_patos": "assets/objetos/lago_patos.glb",
     "grades_prisao": "assets/objetos/grades_prisao.glb",
     "fogueira": "assets/objetos/fogueira_animada.glb",
@@ -9489,6 +9531,10 @@ DECOR_TYPES = {
                                loot_capaz=False, image="galinheiro.png"),
     "cabana_rustica": _decor("Cabana rústica de fazenda", "🛖", [3, 3], gira=True, alto=True,
                                loot_capaz=False, image="cabana_rustica.png"),
+    "choupana_palha_escura": _decor("Choupana de palha escura", "🛖", [3, 3], gira=True, alto=True,
+                                      loot_capaz=False, image="choupana_palha_escura.png"),
+    "cabana_palha_velha": _decor("Cabana de palha velha", "🛖", [3, 3], gira=True, alto=True,
+                                    loot_capaz=False, image="cabana_palha_velha.png"),
     "lago_patos":     _decor("Lago com patos", "🦆", [3, 3], pisavel=False,
                                loot_capaz=False, image="lago_patos.png"),
     # Placa informativa: ocupa visualmente uma casa, mas permite passagem.
@@ -9736,6 +9782,80 @@ SHOP_TEMPLE = [
      "item_slot": "bag", "effect": "heal", "value": 20},
     {"id": "regeneration_potion", "name": "Poção de Regeneração", "emoji": "🌿", "price": 16,
      "item_slot": "bag", "effect": "regeneration", "value": 10},
+    {"id": "pocao_invisibilidade", "name": "Poção de Invisibilidade", "emoji": "🧪",
+     "icon": "assets/itens/pocao_invisibilidade.png", "price": 60,
+     "item_slot": "bag", "effect": "invisibility", "value": 6,
+     "descricao": "Ação bônus. Fica invisível por 6 rodadas; atacar ou lançar outra magia encerra o efeito."},
+    {"id": "pocao_velocidade", "name": "Poção de Velocidade", "emoji": "⚡",
+     "icon": "assets/itens/pocao_velocidade.png", "price": 120,
+     "item_slot": "bag", "effect": "speed", "value": "1d4+1",
+     "descricao": "Ação bônus. Dobra o movimento e concede uma ação principal extra por turno por 1d4+1 rodadas. Cada ação mantém seu custo normal."},
+    {"id": "pocao_voo", "name": "Poção de Voo", "emoji": "🪽",
+     "icon": "assets/itens/pocao_voo.png", "price": 220,
+     "item_slot": "bag", "effect": "flight_potion", "value": 10,
+     "descricao": "Ação bônus. Permite voar e controlar a altura até 10 por 10 rodadas. Ao expirar, pousa na casa segura mais próxima; se perder o controle ou não houver piso seguro, sofre a queda normal."},
+    {"id": "pocao_manto_escuridao", "name": "Poção do Manto da Escuridão", "emoji": "🌑",
+     "icon": "assets/itens/pocao_manto_escuridao.png", "price": 90,
+     "item_slot": "bag", "effect": "darkness_mantle", "value": "1d4",
+     "descricao": "Ação bônus. Cria uma área de escuridão de raio 3 que acompanha você. Você enxerga dentro dela por 1d4 rodadas."},
+    {"id": "pocao_resistencia_fogo", "name": "Poção de Resistência ao Fogo", "emoji": "🧪",
+     "icon": "assets/itens/pocao_resistencia_fogo.png", "price": 80, "item_slot": "bag",
+     "effect": "elemental_resistance_potion", "element": "fogo", "value": "1d6+4",
+     "descricao": "Ação bônus. Absorve até 10 de dano de fogo por rodada durante 1d6+4 rodadas."},
+    {"id": "pocao_resistencia_gelo", "name": "Poção de Resistência ao Gelo", "emoji": "🧪",
+     "icon": "assets/itens/pocao_resistencia_gelo.png", "price": 80, "item_slot": "bag",
+     "effect": "elemental_resistance_potion", "element": "gelo", "value": "1d6+4",
+     "descricao": "Ação bônus. Absorve até 10 de dano de gelo por rodada durante 1d6+4 rodadas."},
+    {"id": "pocao_resistencia_eletricidade", "name": "Poção de Resistência à Eletricidade", "emoji": "🧪",
+     "icon": "assets/itens/pocao_resistencia_eletricidade.png", "price": 80, "item_slot": "bag",
+     "effect": "elemental_resistance_potion", "element": "eletricidade", "value": "1d6+4",
+     "descricao": "Ação bônus. Absorve até 10 de dano elétrico por rodada durante 1d6+4 rodadas."},
+    {"id": "pocao_resistencia_acido", "name": "Poção de Resistência ao Ácido", "emoji": "🧪",
+     "icon": "assets/itens/pocao_resistencia_acido.png", "price": 80, "item_slot": "bag",
+     "effect": "elemental_resistance_potion", "element": "acido", "value": "1d6+4",
+     "descricao": "Ação bônus. Absorve até 10 de dano de ácido por rodada durante 1d6+4 rodadas."},
+    {"id": "pocao_resistencia_agua", "name": "Poção de Resistência à Água", "emoji": "🧪",
+     "icon": "assets/itens/pocao_resistencia_agua.png", "price": 80, "item_slot": "bag",
+     "effect": "elemental_resistance_potion", "element": "agua", "value": "1d6+4",
+     "descricao": "Ação bônus. Absorve até 10 de dano de água por rodada durante 1d6+4 rodadas."},
+    {"id": "pocao_resistencia_sagrado", "name": "Poção de Resistência Sagrada", "emoji": "🧪",
+     "icon": "assets/itens/pocao_resistencia_sagrado.png", "price": 80, "item_slot": "bag",
+     "effect": "elemental_resistance_potion", "element": "sagrado", "value": "1d6+4",
+     "descricao": "Ação bônus. Absorve até 10 de dano sagrado por rodada durante 1d6+4 rodadas."},
+    {"id": "pocao_barreira_arcana", "name": "Poção de Barreira Arcana", "emoji": "🧪",
+     "icon": "assets/itens/pocao_barreira_arcana.png", "price": 110,
+     "item_slot": "bag", "effect": "arcane_barrier_potion", "value": "1d6+2",
+     "descricao": "Ação bônus. Reduz em 5 todo dano recebido por 1d6+2 rodadas. Pode coexistir com proteções elementais."},
+    {"id": "mira_do_falcao", "name": "Elixir da Mira do Falcão", "emoji": "🧪",
+     "icon": "assets/itens/mira_do_falcao.png", "price": 120,
+     "item_slot": "bag", "effect": "archery_potion", "value": "1d4+1",
+     "attack_bonus": 2,
+     "descricao": "Ação bônus. Concede +2 nos ataques com arcos e armas de arremesso por 1d4+1 rodadas. Beber outra renova a duração sem acumular bônus. Não aumenta o dano."},
+    {"id": "essencia_vento_favoravel", "name": "Essência do Vento Favorável", "emoji": "🧪",
+     "icon": "assets/itens/essencia_vento_favoravel.png", "price": 100,
+     "item_slot": "bag", "effect": "ranged_range_potion", "value": "1d6+2",
+     "range_bonus": 2,
+     "descricao": "Ação bônus. Aumenta em 2 casas o alcance de armas à distância, armas arremessadas e itens arremessáveis por 1d6+2 rodadas. Beber outra renova a duração sem acumular alcance."},
+    {"id": "gole_do_gigante", "name": "Gole do Gigante", "emoji": "🧪",
+     "icon": "assets/itens/gole_do_gigante.png", "price": 150,
+     "item_slot": "bag", "effect": "strength_potion", "value": "1d6+4",
+     "strength_bonus": "1d4+1",
+     "descricao": "Ação bônus. Aumenta a Força em 1d4+1 por 1d6+4 rodadas, aplicando o modificador normal a ataques, dano e testes de Força. Beber outro renova a duração sem acumular o bônus; pode coexistir com proteções elementais."},
+    {"id": "bote_da_serpente", "name": "Bote da Serpente", "emoji": "🧪",
+     "icon": "assets/itens/bote_da_serpente.png", "price": 150,
+     "item_slot": "bag", "effect": "dexterity_potion", "value": "1d6+4",
+     "dexterity_bonus": "1d4+1",
+     "descricao": "Ação bônus. Aumenta a Destreza em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo. Beber outro renova a duração sem acumular o bônus."},
+    {"id": "elixir_cavalo_ferro", "name": "Elixir do Cavalo de Ferro", "emoji": "🧪",
+     "icon": "assets/itens/elixir_cavalo_ferro.png", "price": 180,
+     "item_slot": "bag", "effect": "constitution_potion", "value": "1d6+4",
+     "constitution_bonus": "1d4+1",
+     "descricao": "Ação bônus. Aumenta a Constituição em 1d4+1 por 1d6+4 rodadas, ajustando Fortitude e PV máximos conforme o nível. O aumento do máximo pode repor PV atuais, exceto quando Último Esforço bloqueia esse top-up; ao expirar, os PV são limitados ao máximo atualizado. Beber outro renova a duração sem acumular o bônus."},
+    {"id": "sabedoria_liquida", "name": "Sabedoria Líquida", "emoji": "🧪",
+     "icon": "assets/itens/sabedoria_liquida.png", "price": 200,
+     "item_slot": "bag", "effect": "intelligence_potion", "value": "1d6+4",
+     "intelligence_bonus": "1d4+1",
+     "descricao": "Ação bônus. Aumenta a Inteligência em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a Vontade, CD das magias, iniciativa na próxima recalculação, visão, curas que usam INT e slots de controle do Reviver quando aplicável. Não concede slots normais nem magias conhecidas. Beber outra renova a duração sem acumular o bônus."},
     {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
     {"id": "cleanse",   "name": "Purificação",    "emoji": "🕊️", "price": 8,  "effect": "cleanse"},
@@ -9753,11 +9873,11 @@ SHOP_TAVERN = [
     {"id": "garrafa_vinho",  "name": "Garrafa de Vinho", "emoji": "🍷", "price": 10, "item_slot": "bag", "effect": "wine", "value": 15},
     {"id": "racao_viagem",   "name": "Ração de Viagem",  "emoji": "🥩", "price": 20, "item_slot": "bag", "effect": "food", "fome": 20, "sede": 0},
     {"id": "cantil_agua",    "name": "Cantil de Água",   "emoji": "🧴", "price": 25, "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 20},
-]
     # Refeição portátil (a mesma dos baús do Campo de Treinamento): vai para a mochila e é
     # consumida depois; não tem o limite de 1×/visita do Banquete de balcão.
     {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗", "price": 100, "item_slot": "bag",
      "effect": "meal_survival", "fome": 40, "sede": 40, "icon": "assets/itens/banquete.png"},
+]
 # Estoque por cidade: a configuração guarda IDs, enquanto as definições completas
 # continuam nos catálogos. Editar uma loja, portanto, não duplica regras de itens.
 CITY_SHOPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "city_shops.json")
@@ -9805,7 +9925,6 @@ def _city_shop_items(city_id, shop_id):
 
 _load_city_shops()
 
-def _sincronizar_cidades_derivadas():
 # Preço das lojas de uma cidade por marcador (fato) da campanha: `cidade_modificadores.json`
 # = {cidade: [{"fato": str, "preco_mult": 0.1..5}]}. Só a COMPRA muda; a revenda parte do preço base.
 CITY_PRICE_MODS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cidade_modificadores.json")
@@ -9847,6 +9966,7 @@ def _city_price_mult(city_id, fatos):
 
 CITY_PRICE_MODS.update(_carregar_modificadores_cidade())
 
+def _sincronizar_cidades_derivadas():
     """Garante uma entrada vazia de lojas/pontos/taverna para cada cidade e
     remove as sobras de cidades excluídas. Usado após salvar pelo editor (no
     boot cada subsistema já se semeia na sua própria declaração)."""
@@ -10654,6 +10774,156 @@ GRIMORIO = {
 
 # â”€â”€â”€ GAME STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+GRIMORIO_ICON = "assets/itens/grimorio.png"
+CIRCULOS_MAGIA = ("primeiro", "segundo", "terceiro", "quarto", "quinto",
+                  "sexto", "setimo", "oitavo", "nono")
+
+
+def _preco_grimorio(magias):
+    return sum(75 * (2 ** CIRCULOS_MAGIA.index(GRIMORIO[mid]["circulo"]))
+               for mid in magias if mid in GRIMORIO
+               and GRIMORIO[mid].get("circulo") in CIRCULOS_MAGIA)
+
+
+def _grimorio_descricao(magias):
+    nomes = [GRIMORIO[mid]["nome"] for mid in magias if mid in GRIMORIO]
+    return ("Contém " + ", ".join(nomes) + ". Magias fixas: não podem ser trocadas. "
+            "Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração "
+            "consome um espaço normal do círculo; o grimório não concede espaços nem conjurações.")
+
+
+# Uma oferta fixa para cada magia de primeiro círculo que o Mago pode aprender.
+_GRIMORIOS_LOJA = []
+for _mid, _spell in GRIMORIO.items():
+    if "mage" not in _spell.get("classe", []) or _spell.get("circulo") != "primeiro":
+        continue
+    _book = {
+        "id": f"grimorio_{_mid}", "name": f"Grimório: {_spell['nome']}",
+        "emoji": "📘", "icon": GRIMORIO_ICON, "price": 75,
+        "item_slot": "off_hand", "effect": "grimoire", "value": 0,
+        "allowed_classes": ["mage"], "magic_ids": [_mid],
+        "fixed_magic_ids": True,
+        "descricao": _grimorio_descricao([_mid]),
+    }
+    _GRIMORIOS_LOJA.append(_book)
+    SHOP_MERCHANT.append(_book)
+    _DUNGEON_ITEM_CATALOG[_book["id"]] = _book
+
+# O arquivo de estoque é carregado antes do catálogo GRIMORIO ser declarado.
+# Acrescente as novas ofertas após completar o catálogo, em cada mercador ativo.
+for _city_stock in CITY_SHOPS.values():
+    if "mercador" in _city_stock:
+        _city_stock["mercador"].extend(
+            book["id"] for book in _GRIMORIOS_LOJA
+            if book["id"] not in _city_stock["mercador"])
+
+# Artefato reutilizável de exploração: a recarga acompanha a instância para
+# que desequipar e equipar a bola não reinicie o prazo.
+BOLA_CRISTAL_CLARIVIDENCIA = {
+    "id": "bola_cristal_clarividencia",
+    "name": "Bola de Cristal da Clarividência",
+    "emoji": "🔮",
+    "icon": "assets/itens/bola_cristal_clarividencia.png",
+    "price": 1000,
+    "buy_price": 1000,
+    "item_slot": "off_hand",
+    "effect": "crystal_ball_clairvoyance",
+    "value": 10,
+    "descricao": ("Ação principal. Reproduz Clarividência sem consumir espaço de magia. "
+                  "Recarga: 10 rodadas. Mago e Clérigo usam a escala normal; "
+                  "outras classes revelam uma área fixa de 4×4 casas."),
+}
+SHOP_MERCHANT.append(BOLA_CRISTAL_CLARIVIDENCIA)
+_DUNGEON_ITEM_CATALOG[BOLA_CRISTAL_CLARIVIDENCIA["id"]] = BOLA_CRISTAL_CLARIVIDENCIA
+for _city_stock in CITY_SHOPS.values():
+    if "mercador" in _city_stock and BOLA_CRISTAL_CLARIVIDENCIA["id"] not in _city_stock["mercador"]:
+        _city_stock["mercador"].append(BOLA_CRISTAL_CLARIVIDENCIA["id"])
+
+# Consumível arcano vendido nos mercadores: recupera um único slot gasto de 1º
+# círculo, sem aumentar o máximo do herói.
+CALICE_ETER = {
+    "id": "calice_eter",
+    "name": "Cálice de Éter",
+    "emoji": "🏆",
+    "icon": "assets/itens/calice_eter.png",
+    "price": 220,
+    "buy_price": 220,
+    "item_slot": "bag",
+    "effect": "restore_spell_slot",
+    "circle": "primeiro",
+    "allowed_classes": ["mage", "cleric"],
+    "descricao": ("Ação bônus. Recupera um espaço gasto de magia de 1º círculo; "
+                  "não ultrapassa o máximo de espaços do herói."),
+}
+SHOP_MERCHANT.append(CALICE_ETER)
+_DUNGEON_ITEM_CATALOG[CALICE_ETER["id"]] = CALICE_ETER
+for _city_stock in CITY_SHOPS.values():
+    if "mercador" in _city_stock and CALICE_ETER["id"] not in _city_stock["mercador"]:
+        _city_stock["mercador"].append(CALICE_ETER["id"])
+
+
+def _criar_item_grimorio_bau(count=None, max_circulo=None):
+    """Gera grimório raro com 2–3 magias de Mago fixadas na instância.
+
+    A faixa máxima do círculo e a quantidade têm pesos decrescentes: livros de
+    três magias e de círculos altos aparecem menos que livros de círculos baixos.
+    Os parâmetros explícitos deixam a geração determinística nos testes.
+    """
+    por_circulo = {
+        circ: [mid for mid, spell in GRIMORIO.items()
+               if "mage" in spell.get("classe", []) and spell.get("circulo") == circ]
+        for circ in CIRCULOS_MAGIA
+    }
+    circulos_disponiveis = [circ for circ in CIRCULOS_MAGIA if por_circulo[circ]]
+    if max_circulo not in (None, ""):
+        max_idx = CIRCULOS_MAGIA.index(max_circulo)
+        candidatos_max = [circ for circ in circulos_disponiveis
+                          if CIRCULOS_MAGIA.index(circ) <= max_idx]
+        if not candidatos_max:
+            raise ValueError("Não há magias de Mago até esse círculo.")
+        teto = max_circulo if por_circulo.get(max_circulo) else candidatos_max[-1]
+    else:
+        pesos = [1 / (2 ** CIRCULOS_MAGIA.index(circ)) for circ in circulos_disponiveis]
+        teto = random.choices(circulos_disponiveis, weights=pesos, k=1)[0]
+    nivel_teto = CIRCULOS_MAGIA.index(teto)
+    pool = [mid for circ in circulos_disponiveis
+            if CIRCULOS_MAGIA.index(circ) <= nivel_teto for mid in por_circulo[circ]]
+    if count is None:
+        count = random.choices((2, 3), weights=(3, 1), k=1)[0]
+    count = max(2, min(3, int(count)))
+    magias = [random.choice(por_circulo[teto])]
+    restantes = [mid for mid in pool if mid not in magias]
+    if len(restantes) < count - 1:
+        raise ValueError("Catálogo insuficiente para gerar este grimório.")
+    magias.extend(random.sample(restantes, count - 1))
+    random.shuffle(magias)
+    preco = _preco_grimorio(magias)
+    nomes = [GRIMORIO[mid]["nome"] for mid in magias]
+    return {
+        "id": "grimorio_bau", "name": "Grimório: " + " + ".join(nomes),
+        "emoji": "📘", "icon": GRIMORIO_ICON, "price": preco,
+        "buy_price": preco, "item_slot": "off_hand", "effect": "grimoire",
+        "value": 0, "allowed_classes": ["mage"], "magic_ids": magias,
+        "fixed_magic_ids": True, "loot_only": True,
+        "descricao": _grimorio_descricao(magias),
+    }
+
+
+def _grimorio_magias_equipado(p):
+    """Retorna somente magias válidas do livro fixo equipado pelo Mago."""
+    if not isinstance(p, dict) or p.get("class_id") != "mage":
+        return []
+    item = (p.get("gear") or {}).get("off_hand")
+    if not isinstance(item, dict) or item.get("effect") != "grimoire":
+        return []
+    ids = item.get("magic_ids")
+    if not item.get("fixed_magic_ids") or not isinstance(ids, list):
+        return []
+    return list(dict.fromkeys(mid for mid in ids if isinstance(mid, str)
+                              and mid in GRIMORIO
+                              and "mage" in GRIMORIO[mid].get("classe", [])))
+
+
 _id_counter = 0
 def new_id():
     global _id_counter
@@ -10873,6 +11143,8 @@ def make_player(pid, name, cls_id, slot):
         "ignora_obstaculos_voo": False,
         "moves_left": cls["spd"],
         "action_done": False,
+        "arremesso_rapido_rodada": -1,
+        "arremesso_rapido_usados": 0,
         "bonus_action_used": False,   # reseta a cada turno â€” mÃ¡x. 1 aÃ§Ã£o bÃ´nus por turno
         "fome": 100,                  # 0â€“100 (escala unificada servidor/cliente)
         "sede": 100,                  # 0â€“100
@@ -11634,8 +11906,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                               "backgrounds": ["assets/city/refugio_basico.svg"], "trophies": [], "unlocked": False}
         self.hero_rooms = {}
         self.fatos = set()
-        self.scene_conversations_done = set()
         self._consequencia_refem_aplicada = False
+        self.scene_conversations_done = set()
         self.scene_triggers_done = set()  # gatilhos narrativos da campanha já consumidos
         self.story_beats_done = set()     # slides narrativos já concluídos pelo anfitrião
         self.location_scene_trigger = None # cena da entrada atual do mapa-múndi
@@ -13506,7 +13778,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif target_type == "enemy":
             target_id = str(target_id) if target_id is not None else ""
             target = self.monsters.get(target_id)
-            if not target or target.get("hp", 0) <= 0 or target.get("invisivel_sombras"):
+            if (not target or target.get("hp", 0) <= 0
+                    or (target.get("invisivel_sombras")
+                        and not self._lampada_vigilia_arcana_revela_monstro(target))):
                 return False
             target_pos = target.get("pos")
             if not isinstance(target_pos, (list, tuple)) or len(target_pos) < 2:
@@ -14460,10 +14734,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         gl_dano = gl.get("dano", 0)
         maldicao_atk = self._maldicao_mod(p, "ataque")
         main_attack_base = _hero_attack_bonus_with_weapon(p, p.get("weapon"))
+        projetil = _projetil_de(p.get("weapon"))
+        bonus_mira_falcao = (2 if int(p.get("mira_falcao_rodadas", 0) or 0) > 0
+                             and w_range is not None
+                             and projetil and projetil.get("kind") == "arrow" else 0)
         eff_atk = (main_attack_base + p.get("skill_bonus_acerto", 0) + acerto_extra
                    + surv_mod + preso_pen
                    + cancao_acerto + gl_atk + self._pen(p, "ataque")
                    + self._mod_magia(p, "ataque")                        # Abençoar
+                   + bonus_mira_falcao
                    + int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)  # arma custom
                    + self._ciclope_cercado_bonus(target)
                    + self._lenda_atk_bonus(p, target)                    # Lenda (bardo estudou a espécie)
@@ -14687,6 +14966,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvo["perde_turno"] = True
             alvo["bordao_atordoado"] = True
             await self._aplicar_queda(alvo, "atordoamento", atacante.get("id"))
+            if self._eh_jogador(alvo):
+                await self._enviar_resultado_atordoamento(
+                    alvo, "O golpe crítico de Bordão deixou você atordoado.",
+                    "1 rodada",
+                    ["Você perde sua próxima rodada",
+                     "Não pode se mover, atacar nem usar habilidades durante esse turno"],
+                )
         resultado = (T("narracao.bordao_critico_atordoa") if not passou
                      else T("narracao.bordao_critico_resiste"))
         await self.gm_say(T("narracao.bordao_critico_fortitude",
@@ -15650,7 +15936,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.broadcast_city_state()
         self._checkpoint_savegame()
 
-    async def handle_shop_buy(self, pid, shop, item_id, poison_upgrades=None):
     def _ajustar_preco(self, item):
         """Cópia do item da loja com o preço da cidade já ajustado pelos marcadores do grupo."""
         mult = _city_price_mult(self.world_location, self.fatos)
@@ -15664,6 +15949,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _itens_da_loja(self, shop_id):
         return [self._ajustar_preco(i) for i in _city_shop_items(self.world_location, shop_id)]
 
+    async def handle_shop_buy(self, pid, shop, item_id, poison_upgrades=None):
         if not self._em_cidade(pid):
             return
         p = self.players.get(pid)
@@ -15697,7 +15983,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return
 
         # â”€â”€ RestriÃ§Ã£o de classe (allowed_classes) â€” vale tambÃ©m na compra â”€â”€â”€â”€â”€â”€
-        allowed = item.get("allowed_classes")
+        allowed = _weapon_allowed_classes(item)
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item_id))})
@@ -15729,8 +16015,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente_2")})
             return
 
-        p["gold"] -= price
         preco_base = item.get("preco_base", price)   # a revenda não sobe com o ágio da cidade
+        p["gold"] -= price
         log = ""
 
         if shop == "ferreiro_weapon":
@@ -15749,9 +16035,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "descricao": item.get("descricao"),
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
                                      "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
-                                     "two_handed", "dmg_bonus", "corrosao_resistente",
+                                     "two_handed", "dmg_bonus", "corrosao_resistente", "off_hand_stat",
+                                     "throw_nat1_damage_levels",
                                      "corrosao_niveis_penalidade",
                                      "silver", "corrosion_max", "corrosion_free_levels",
+                                     "allowed_classes", "icon",
                                      "atk_bonus", "damage_bonus", "extra_damages",
                                      "granted_ability", "maldicao_id", "maldicao_prende") if k in w},
             }
@@ -15999,9 +16287,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.map_h = defn["grid"]["h"]
         self.tiles = deepcopy(defn["tiles"])
         self.elevacoes = {}
-        # Preset de iluminaÃ§Ã£o do 3D (cliente). Valor desconhecido â†’ "masmorra".
+        # Preset visual do cliente. Valor desconhecido â†’ "masmorra".
         amb = defn.get("ambiente", "masmorra")
-        self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre") else "masmorra"
+        self.ambiente = amb if amb in ("penumbra", "masmorra", "ar_livre", "bruma_tenebrosa") else "masmorra"
 
         # Camada de materiais (piso/parede pintÃ¡vel). Chaves "x,y"->id; descarta
         # entradas malformadas/desconhecidas (a validaÃ§Ã£o jÃ¡ recusou antes).
@@ -16280,8 +16568,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.objective_status = None
         self.mission_step_index = 0
         self.rescue_failed = False
-        self._objetivo_concluido = False
         self._consequencia_refem_aplicada = False
+        self._objetivo_concluido = False
         self.mission_complete_pending = False
         self.salas_visitadas = set()
         pr = defn.get("prisoner")
@@ -16732,12 +17020,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if isinstance(item, dict) and item.get("id") == item_id: return True
         return False
 
-    def _avaliar_requisito(self, raw):
     def _requisito_do_slide(self, raw):
         """Condição de um slide de história (ver `_story_beat`): vale o mesmo vocabulário dos
         requisitos de destino. É avaliada na hora de montar o beat, com o grupo como está."""
         return self._avaliar_requisito(raw)[0]
 
+    def _avaliar_requisito(self, raw):
         """Avalia os requisitos comuns de renome, diálogo e mapa-múndi."""
         req = _clean_requirement(raw)
         # Cada motivo é um T, não texto pronto: quem exibe passa a lista inteira
@@ -16754,9 +17042,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             reasons.append(T("erro.requisito.item_chave", item=req["item_id"]))
         if req["fato"] and req["fato"] not in self.fatos:
             reasons.append(T("erro.requisito.informacao", fato=req["fato"]))
-        if req["aventura_id"]:
         if req["sem_fato"] and req["sem_fato"] in self.fatos:
             reasons.append(T("erro.requisito.sem_informacao", fato=req["sem_fato"]))
+        if req["aventura_id"]:
             adventure = WORLD_ADVENTURES.get(req["aventura_id"])
             if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
                 reasons.append(T("erro.requisito.rota_anterior"))
@@ -17488,6 +17776,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.players[pid2]["moves_left"]       = self._water_turn_moves(self.players[pid2], self.players[pid2]["spd"])
             self.players[pid2]["action_done"]      = False
             self.players[pid2]["bonus_action_used"] = False
+            self.players[pid2]["arremesso_rapido_rodada"] = -1
+            self.players[pid2]["arremesso_rapido_usados"] = 0
             if nova and not self._emendando:
                 self._resetar_corrosao(self.players[pid2])   # corrosÃ£o reseta por dungeon
                 self._resetar_vinho(self.players[pid2])      # embriaguez nÃ£o persiste
@@ -18618,7 +18908,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if marker.get("target_type") == "enemy":
                 target = self.monsters.get(str(marker.get("target_id")))
                 if (not target or target.get("hp", 0) <= 0
-                        or target.get("invisivel_sombras")):
+                        or (target.get("invisivel_sombras")
+                            and not self._lampada_vigilia_arcana_revela_monstro(target))):
                     removidos.append(owner_id)
                     continue
                 try:
@@ -19267,6 +19558,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                   "to": depois, "kind": "player"})
             if not p.get("alive") or not self._is_turn(pid):
                 break
+            if p.get("_piche_movimento_encerrado"):
+                break
         if andou and p.get("alive") and self._sobre_aliado(p):
             await self._recuar_para(p, ultima_livre, pid, "player")
         if andou:
@@ -19336,6 +19629,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         p = self.players[pid]
         if not p["alive"]: return
+        if p.get("_piche_movimento_encerrado"):
+            return
         if p.get("rodamoinho_preso"):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.o_rodamoinho_prende_voce_e_preciso_passa")})
@@ -19436,6 +19731,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.movimento_insuficiente_casa_custa", custo=step_cost)})
             return
         old_pos = list(p["pos"])
+        estava_no_piche = self._criatura_em_piche(p, old_pos)
         p["pos"] = [nx, ny]
         p["facing"] = [dx, dy]
         if p["moves_left"] < step_cost:
@@ -19443,6 +19739,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p["_water_min_step_used"] = True
         else:
             p["moves_left"] -= step_cost
+        if estava_no_piche or self._criatura_em_piche(p, p["pos"]):
+            p["_piche_movimento_encerrado"] = True
+            p["moves_left"] = 0
         if not p.get("alive"):
             await self._push_se(_push)
             return
@@ -20679,6 +20978,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         w = p.get("weapon") or {}
         wr = w.get("range")
         if wr is not None:
+            wr = int(wr) + self._bonus_alcance_arma_distancia(p)
+            wr = self._alcance_escuridao(p, target, wr)
             body = self._monster_tiles(target)
             return any(self._tile_no_alcance_arma_distancia(
                 p, t, wr, target.get("altura", ALTURA_MIN)) for t in body)
@@ -20695,6 +20996,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if w.get("id") == "lanca_curta":
             return self._lanca_curta_no_alcance_jogador(p["pos"], target)
         return self._is_adjacent_to_monster(p["pos"], target)
+
+    def _bonus_alcance_arma_distancia(self, p):
+        """Bônus de alcance para armas que disparam projéteis."""
+        arma = p.get("weapon") or {}
+        if int(p.get("essencia_vento_rodadas", 0) or 0) <= 0:
+            return 0
+        projetil = _projetil_de(arma)
+        return 2 if projetil and projetil.get("kind") in ("arrow", "bolt") else 0
+
+    def _bonus_alcance_arremesso(self, p):
+        """Bônus de alcance para armas e consumíveis arremessáveis."""
+        if int(p.get("essencia_vento_rodadas", 0) or 0) <= 0:
+            return 0
+        return 2
 
     def _tile_no_alcance_arma_distancia(self, p, tile, alcance, target_altitude=ALTURA_MIN):
         """Bestas só disparam em linha ortogonal; arcos têm metade do alcance
@@ -20760,6 +21075,147 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     return s.get("name") or hab_id
         return hab_id
 
+    async def _disparo_duplo_validar_alvo(self, p, target, preferred_tile=None):
+        """Retorna uma casa válida para o tiro secundário ou None sem cobrar ação."""
+        off = (p.get("gear") or {}).get("off_hand") or {}
+        if ((p.get("weapon") or {}).get("id") != "hand_crossbow"
+                or off.get("id") != "hand_crossbow"
+                or not tem_espec(p, "disparo_duplo")
+                or target.get("hp", 0) <= 0):
+            return None
+        alcance_base = int(off.get("range", 0) or 0)
+        if alcance_base <= 0:
+            return None
+        off_view = dict(p, weapon=off)
+        alcance = self._alcance_escuridao(
+            p, target, alcance_base + self._bonus_alcance_arma_distancia(off_view))
+        tiles = self._monster_tiles(target)
+        if preferred_tile in tiles:
+            tiles.remove(preferred_tile)
+            tiles.insert(0, preferred_tile)
+        validos = [tile for tile in tiles
+                   if self._tile_no_alcance_arma_distancia(off_view, tile, alcance)
+                   and self._tem_linha_de_visao(p["pos"], tile)]
+        return validos[0] if validos else None
+
+    async def _executar_disparo_duplo(self, p, target, target_tile, pid):
+        """Resolve o tiro da besta secundária. A validação completa vem antes
+        de consumir munição, ação bônus ou recursos de sobrevivência."""
+        off = (p.get("gear") or {}).get("off_hand") or {}
+        tile = await self._disparo_duplo_validar_alvo(p, target, target_tile)
+        if tile is None or p.get("bonus_action_used"):
+            return False
+        ammo_types = RANGED_AMMO.get("hand_crossbow", [])
+        ammo = sorted((item for item in p.get("bag", [])
+                       if item.get("effect") == "ammo"
+                       and item.get("ammo_type") in ammo_types
+                       and int(item.get("ammo_count", 0) or 0) > 0),
+                      key=lambda item: ammo_types.index(item["ammo_type"]))
+        if not ammo:
+            return False
+
+        off_view = dict(p, weapon=off)
+        mods = self._modificadores_ataque_heroi(
+            off_view, target, tile, off.get("range"), attacker_id=pid, previa=True)
+        vantagem = mods["vantagem"]
+        desvantagem = mods["desvantagem"]
+        eff_target_ac = mods["eff_target_ac"]
+
+        # O projétil só é debitado depois de confirmar alvo, alcance, visão e ação.
+        projectile = ammo[0]
+        ammo_bonus = int(projectile.get("damage_bonus", 0) or 0)
+        ammo_silver = bool(projectile.get("silver"))
+        ammo_extra = projectile.get("extra_damage")
+        ammo_extra_types = projectile.get("extra_damage_types", [])
+        projectile["ammo_count"] = int(projectile.get("ammo_count", 1) or 1) - 1
+        if projectile["ammo_count"] <= 0:
+            p["bag"].remove(projectile)
+            await self.gm_say(T("narracao.usou_o_ultimo_projetil", heroi=p["name"]))
+
+        p["bonus_action_used"] = True
+        self._consumir_recursos(p, "acao_bonus")
+        off_wear = self._penalidade_desgaste_arma(off)
+        off_atk_bonus = int(off.get("atk_bonus", 0) or 0)
+        situacionais = mods["eff_atk"] - mods["main_attack_base"] - off_atk_bonus
+        offhand_atk = (mod(p.get("dex", 12)) + p.get("level_bonus", 1)
+                       + situacionais + off_atk_bonus - off_wear)
+        if _weapon_nat1_wear(off):
+            offhand_atk -= self._corrosao_arma_pen(p)
+
+        feedback_id = await self._emitir_feedback_ataque(
+            "start", p, target, off.get("name") or "Besta de Mão",
+            "advantage" if vantagem and not desvantagem else
+            "disadvantage" if desvantagem and not vantagem else "normal",
+            projectile=_projetil_de(off), impact_weapon_id=off.get("id"),
+            impacto=_impacto_de(off))
+        hit, roll, total, crit, _desc = self._rolar_ataque(
+            offhand_atk, eff_target_ac, vantagem, desvantagem)
+        if not hit and target.get("type") == "ciclope" and roll >= 19:
+            crit = True
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                              "label": T("dado.ataque_mao_secundaria"), "hit": hit,
+                              "crit": crit, "offhand": True,
+                              "modifier": offhand_atk, "total": total})
+        attack_mode = ("advantage" if vantagem and not desvantagem else
+                       "disadvantage" if desvantagem and not vantagem else "normal")
+        await self._emitir_feedback_ataque(
+            "result", p, target, off.get("name") or "Besta de Mão", attack_mode,
+            attack_id=feedback_id, roll=roll, total=total, hit=bool(hit),
+            crit=bool(crit), natural=int(roll), natural_critical=bool(roll == 20),
+            natural_fumble=bool(roll == 1))
+        if not hit:
+            await self.gm_say(T("narracao.erra_o_golpe_de_mao_secundaria_d20_vs_ca",
+                                heroi=p["name"], oroll=roll, offhand_atk=offhand_atk,
+                                ototal=total, tgt_ac=target["ac"]))
+            return True
+
+        damage_weapon = dict(off)
+        if ammo_silver:
+            damage_weapon["silver"] = True
+        dmg, weapon_name, detail, raw, die = self._resolver_dano_ataque_basico(
+            p, target, crit, roll,
+            forca_critico=(bool(p.get("tecnica_golpe_decisivo_armado"))
+                           or bool(p.get("ultimo_esforco_ativo"))),
+            surv_mod=mods["surv_mod"], cancao_dano=mods["cancao_dano"],
+            gl_dano=mods["gl_dano"],
+            bonus_extra=ammo_bonus + int(off.get("damage_bonus", 0) or 0), target_pos=tile,
+            weapon_override=damage_weapon, attacker_id=pid)
+        if die:
+            await self.broadcast({"type": "dice_roll", "die": "d" + die.split("d")[1],
+                                  "value": raw, "label": T("dado.dano_2a_mao"),
+                                  "modifier": dmg - raw, "total": dmg,
+                                  "expression": die, "damage_type": DMG_PHYSICAL,
+                                  "offhand": True})
+        self._registrar_dano_combate(target, dmg, [DMG_PHYSICAL],
+                                     critical=crit, impact_pos=tile)
+        target["hp"] = max(0, target.get("hp", 0) - dmg)
+        await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
+        await self._harpia_reagir_dano(target, dmg, pid)
+        await self.gm_say(T("narracao.ataca_com_d20_vs_ca_dano", heroi=p["name"],
+                            target=nome_criatura(target), weapon_name=weapon_name,
+                            roll=roll, eff_atk=offhand_atk, total=total,
+                            target_ac=target["ac"], crit_str=" **CRÍTICO!**" if crit else "",
+                            dmg_detail=detail, holy_detail="", furtivo_detail="", dmg=dmg))
+        await self._dano_retaliacao(target, p, False, dmg)
+        if ammo_extra and target.get("hp", 1) > 0:
+            extra = roll_dice(ammo_extra)
+            extra = self._apply_damage_types(extra, ammo_extra_types, target)
+            self._registrar_dano_combate(target, extra, ammo_extra_types)
+            target["hp"] = max(0, target.get("hp", 0) - extra)
+            await self._registrar_dano_desbloqueio_metamorfose(p, target, extra)
+            await self._harpia_reagir_dano(target, extra, pid)
+            await self.broadcast({"type": "dice_roll", "die": "d" + str(ammo_extra).split("d")[-1],
+                                  "value": extra, "label": T("dado.dano"),
+                                  "damage_type": ammo_extra_types[0] if ammo_extra_types else DMG_FIRE})
+            await self.gm_say(T("narracao.projetil_incendiario_de_dano_de_fogo", xdmg=extra))
+            for extra_type in ammo_extra_types or []:
+                await self._rx_registrar(
+                    _NORM_ELEMENTO.get(str(extra_type).lower(), extra_type),
+                    self._rx_tiles_da(target), dano=extra, atingidos={target.get("id")})
+        if target.get("hp", 0) <= 0:
+            await self._monster_dies(target, pid)
+        return True
+
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None,
                             furia_attacks=None):
         async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
@@ -20802,6 +21258,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p["action_done"] = True
             await self.push_state()
             return
+        allowed_weapon = _weapon_allowed_classes(p.get("weapon") or {})
+        if allowed_weapon and p.get("class_id") not in allowed_weapon:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_item(p["weapon"]))})
+            return
         if p.get("cego") and p.get("bloqueia_distancia") and (p.get("weapon") or {}).get("range") is not None:
             await self.send_to(pid, {"type": "error", "msg": T("erro.cego_nao_pode_usar_ataques_a_distancia")})
             return
@@ -20812,7 +21272,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         if target_id in self.monsters:
             target = self.monsters[target_id]
-            if target.get("invisivel_sombras") and not p.get("is_master"):
+            if (target.get("invisivel_sombras") and not p.get("is_master")
+                    and not self._lampada_vigilia_arcana_revela_monstro(target)):
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.alvo_oculto_nas_sombras")})
                 return
@@ -20886,7 +21347,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.alvo_desapareceu_nas_sombras", alvo=target["name"])})
                     return
-                eff_range = self._alcance_escuridao(p, target, w_range)   # escuridÃ£o limita a 2q
+                eff_range = self._alcance_escuridao(
+                    p, target, w_range + self._bonus_alcance_arma_distancia(p))   # escuridÃ£o limita a 2q
                 # Multi-tile: vale a casa do corpo mais prÃ³xima com linha de visÃ£o.
                 body = self._monster_tiles(target)
                 in_range = [t for t in body
@@ -21386,7 +21848,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # os mesmos modificadores situacionais do ataque principal (eff_atk menos o
         # bÃ´nus de ataque base da classe).
         off = p["gear"].get("off_hand")
+        if (off and off.get("id") == "hand_crossbow"
+                and target_id in self.monsters and self.monsters[target_id].get("hp", 0) > 0
+                and not p.get("bonus_action_used")):
+            await self._executar_disparo_duplo(p, self.monsters[target_id], target_tile, pid)
         if off and off.get("die") and not p.get("bonus_action_used") \
+           and off.get("id") != "hand_crossbow" \
+           and (not _weapon_allowed_classes(off) or p.get("class_id") in _weapon_allowed_classes(off)) \
            and target_id in self.monsters and self.monsters[target_id]["hp"] > 0:
             tgt = self.monsters[target_id]
             # Golpe corpo a corpo da 2Âª arma: SÃ“ casas ortogonais adjacentes
@@ -21408,8 +21876,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 off_stat_mod = (mod(p.get("str_", 10)) if off_forca
                                 else max(mod(p.get("str_", 10)), odex)
                                 if off_finesse else odex)
+                off_attr = off.get("off_hand_stat") or WEAPONS.get(off.get("id"), {}).get("off_hand_stat")
+                if off_attr:
+                    off_stat_mod = mod(p.get(off_attr, 10))
+                off_wear = self._penalidade_desgaste_arma(off)
                 _mainhand_atk_bonus = int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)
                 offhand_atk = off_stat_mod + p.get("level_bonus", 1) + (eff_atk - main_attack_base - _mainhand_atk_bonus)
+                if _weapon_nat1_wear(off) or _weapon_nat1_wear(p.get("weapon")):
+                    # O desgaste pertence à peça, não à outra mão.
+                    offhand_atk += self._corrosao_arma_pen(p) - off_wear
                 ohit, oroll, ototal, ocrit = d20_attack(
                     offhand_atk, tgt["ac"] + self._mod_magia(tgt, "ca")
                     + self._cancao_monstro_bonus(tgt, "ca"))
@@ -21428,7 +21903,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         self._aplicar_hemorragia(tgt)
                     oraw = roll_dice(off["die"])
                     oraw = self._golpe_raw(p, oraw)   # Golpe tambÃ©m vale na mÃ£o secundÃ¡ria
-                    odmg = max(1, (oraw + off_stat_mod) * (2 if ocrit else 1) + surv_mod)
+                    odmg = max(1, (oraw + off_stat_mod - off_wear) * (2 if ocrit else 1) + surv_mod)
+                    if _weapon_nat1_wear(off):
+                        odmg = self._apply_damage_types(odmg, [DMG_PHYSICAL], tgt, off, attacker_pos=p["pos"])
                     odie_type = "d" + off["die"].split("d")[1]
                     await self.broadcast({"type": "dice_roll", "die": odie_type,
                                            "value": oraw, "label": T("dado.dano_2a_mao"),
@@ -21533,11 +22010,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.voce_nao_tem_uma_adaga_equipada_para_arr")}); return False
 
+        allowed = _weapon_allowed_classes(dagger)
+        if allowed and p.get("class_id") not in allowed:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_item(dagger))})
+            return False
+
         if target_id not in self.monsters:
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return False
         target = self.monsters[target_id]
 
-        rng = throw_range
+        rng = int(throw_range) + self._bonus_alcance_arremesso(p)
         dx = abs(p["pos"][0] - target["pos"][0]); dy = abs(p["pos"][1] - target["pos"][1])
         if not self._alcance_com_altura(p, target["pos"], rng, destino=target):
             await self.send_to(pid, {"type": "error",
@@ -21556,6 +22038,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         throw_stat_mod = (mod(p.get("str_", 10)) if throw_brutal
                           else max(mod(p.get("str_", 10)), dex_mod) if throw_finesse
                           else dex_mod)
+        throw_wear = self._penalidade_desgaste_arma(dagger)
+        throw_atk -= throw_wear
+        if int(p.get("mira_falcao_rodadas", 0) or 0) > 0:
+            throw_atk += 2
         roll = random.randint(1, 20)
         total = roll + throw_atk
         nat1 = (roll == 1)
@@ -21569,12 +22055,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         gear[slot_key] = None
         self._apply_gear_effect(p, dagger, False)   # remove efeito (none â†’ no-op)
         if slot_key == "weapon":
-            p["weapon"] = deepcopy(WEAPONS["unarmed"])   # mÃ£o principal fica vazia
+            self._sincronizar_arma_de_combate(p, WEAPONS["unarmed"])
 
         if hit:
             die_str = throw_die
             raw = roll_dice(die_str)
-            dmg = max(1, (raw + throw_stat_mod) * (2 if crit else 1))
+            dmg = max(1, (raw + throw_stat_mod - throw_wear) * (2 if crit else 1))
+            if _weapon_nat1_wear(dagger):
+                dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, dagger, attacker_pos=p["pos"])
             die_type = "d" + die_str.split("d")[1]
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                    "value": raw, "label": T("dado.dano_arremesso"),
@@ -21589,6 +22077,22 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 T("narracao.arremessa_em_d20_vs_ca_dano", heroi=p['name'], dagger=nome_item(dagger), target=nome_criatura(target), roll=roll, throw_atk=throw_atk, total=total, target_ac=target['ac'], crit_str=crit_str, die_str=die_str, raw=raw, sb=sb, throw_stat_name=throw_stat_name, dmg=dmg))
             if target["hp"] <= 0:
                 await self._monster_dies(target, pid)
+        elif nat1 and _weapon_nat1_wear(dagger):
+            nivel = self._nivel_corrosao_item(dagger) + _weapon_nat1_wear(dagger)
+            dagger["corrosion_level"] = nivel
+            destruida, penalidade = self._corrosao_nm_quebra(dagger, nivel)
+            dagger["corrosion_destroyed"] = destruida
+            if destruida:
+                await self.gm_say(T("narracao.de_foi_destruida_permanentemente", nome_peca=nome_item(dagger), heroi=p["name"]))
+            else:
+                await self.gm_say(T("narracao.de_esta", label="Impacto do arremesso", nome_peca=nome_item(dagger), heroi=p["name"], rot=CORROSAO_NIVEL_NOME.get(nivel, "danificado"), nivel_pen=penalidade))
+            await self._enviar_resultado_equipamento_danificado(
+                p, "Falha crítica de arremesso", dagger["name"],
+                "destruído" if destruida else CORROSAO_NIVEL_NOME.get(nivel, "danificado"),
+                (["A arma foi destruída permanentemente e não pode ser recuperada"] if destruida else
+                 [f"Vitalidade: {max(0, 3 - nivel)}/3", f"Acerto e dano -{penalidade}",
+                  "Cai perto do alvo; pode ser recolhida e reparada no ferreiro"]),
+                arma_quebrada=destruida)
         elif nat1:
             await self.gm_say(
                 T("narracao.arremessa_mas_rola_1_natural_a_adaga_se", heroi=p['name'], dagger=nome_item(dagger)))
@@ -21598,7 +22102,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         # RecuperaÃ§Ã£o: 1 natural = perdida; qualquer outro valor = cai no chÃ£o.
         # O item caÃ­do Ã© uma adaga funcional (carrega die/throw_range p/ reuso).
-        if not nat1:
+        if not nat1 or (_weapon_nat1_wear(dagger) and not dagger.get("corrosion_destroyed")):
             drop_item = deepcopy(dagger)
             drop_item.setdefault("emoji", "🗡️")
             drop_item.setdefault("die", throw_die)
@@ -21610,8 +22114,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         return True
 
+    def _arremesso_rapido_usados_na_rodada(self, p):
+        rodada_registrada = p.get("arremesso_rapido_rodada", -1)
+        if int(rodada_registrada if rodada_registrada is not None else -1) != int(self.round_num):
+            return 0
+        return max(0, min(2, int(p.get("arremesso_rapido_usados", 0) or 0)))
+
+    def _registrar_acao_arremesso_item(self, p, usar_acao_bonus=False):
+        if usar_acao_bonus:
+            p["bonus_action_used"] = True
+            self._consumir_recursos(p, "acao_bonus")
+        else:
+            p["action_done"] = True
+            self._consumir_recursos(p, "apenas_acao")
+        if tem_espec(p, "arremesso_rapido"):
+            rodada = int(self.round_num)
+            usados = self._arremesso_rapido_usados_na_rodada(p)
+            p["arremesso_rapido_rodada"] = rodada
+            p["arremesso_rapido_usados"] = min(2, usados + 1)
+
     async def handle_throw_item(self, pid, data):
-        """Arremessa um consumível de bolsa (ARREMESSAVEIS). AÇÃO PRINCIPAL.
+        """Arremessa um consumível (ARREMESSAVEIS): ação principal ou, com
+        Arremesso Rápido, ação bônus para o segundo arremesso válido do turno.
         Despacha por defn['alvo']: 'ataque_alvo' (single-target, teste de ataque)
         ou 'area' (área com save). `data` é o dict da mensagem (item_id +
         target_id OU tx/ty)."""
@@ -21629,7 +22153,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         defn = ARREMESSAVEIS.get(item_id)
         if not defn:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
-        if self._acao_bloqueada(p):
+        tem_arremesso_rapido = tem_espec(p, "arremesso_rapido")
+        usados_rapidos = self._arremesso_rapido_usados_na_rodada(p) if tem_arremesso_rapido else 0
+        if tem_arremesso_rapido and usados_rapidos >= 2:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_bonus_ja_usada_neste_turno")}); return
+        usar_acao_bonus = bool(tem_arremesso_rapido and p.get("action_done")
+                               and usados_rapidos == 1
+                               and not p.get("bonus_action_used"))
+        if usar_acao_bonus:
+            if (self.active_scene or p.get("bau_engolido")
+                    or p.get("rodamoinho_profundo_preso") or p.get("perde_turno")):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
+        elif self._acao_bloqueada(p):
             await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")}); return
 
         alvo_tipo = defn.get("alvo")
@@ -21640,7 +22175,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         _rx_origem = {"tipo": "item", "id": item_id, "caster_id": pid}
         if alvo_tipo == "ataque_alvo":
             async with self.evento_elemental(_rx_origem):
-                await self._throw_item_alvo(p, defn, item, data.get("target_id"), data.get("target_pos"), source_location)
+                await self._throw_item_alvo(
+                    p, defn, item, data.get("target_id"), data.get("target_pos"), source_location,
+                    usar_acao_bonus=usar_acao_bonus)
         elif alvo_tipo == "area":
             async with self.evento_elemental(_rx_origem):
                 tx, ty = data.get("tx"), data.get("ty")
@@ -21649,17 +22186,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     alvo_antigo = self.monsters.get(data.get("target_id"))
                     if alvo_antigo and alvo_antigo.get("hp", 0) > 0:
                         tx, ty = self._target_tile(alvo_antigo, data.get("target_pos"))
-                await self._throw_item_area(p, defn, item, tx, ty, source_location)
+                await self._throw_item_area(
+                    p, defn, item, tx, ty, source_location,
+                    usar_acao_bonus=usar_acao_bonus)
         else:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_arremessavel")}); return
         if not _agiu_antes and p.get("action_done"):
             await self._licao_evento(p, "arremessar_item", alvo=item.get("id"))
 
-    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None, source_location=None):
+    async def _throw_item_alvo(self, p, defn, item, target_id, target_pos=None,
+                               source_location=None, usar_acao_bonus=False):
         with self._escopo_fogo_grego(defn):
-            return await self._throw_item_alvo_impl(p, defn, item, target_id, target_pos, source_location)
+            return await self._throw_item_alvo_impl(
+                p, defn, item, target_id, target_pos, source_location,
+                usar_acao_bonus=usar_acao_bonus)
 
-    async def _throw_item_alvo_impl(self, p, defn, item, target_id, target_pos=None, source_location=None):
+    async def _throw_item_alvo_impl(self, p, defn, item, target_id, target_pos=None,
+                                    source_location=None, usar_acao_bonus=False):
         """Arremesso single-target: teste de ataque por DES vs CA (espelha
         _executar_arremesso). Consome o item em acerto E erro."""
         pid = p["id"]
@@ -21670,7 +22213,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if target.get("hp", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_ja_esta_morto")}); return
 
-        rng = defn["alcance"]
+        rng = int(defn["alcance"]) + self._bonus_alcance_arremesso(p)
         dx = abs(p["pos"][0] - target["pos"][0]); dy = abs(p["pos"][1] - target["pos"][1])
         if not self._alcance_com_altura(p, target["pos"], rng, destino=target):
             await self.send_to(pid, {"type": "error",
@@ -21705,9 +22248,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Consome o item (espatifa) â€” em acerto ou erro.
         if not self._consume_action_item(p, item, source_location):
             return
-        # Marca a aÃ§Ã£o e cobra sobrevivÃªncia (mesma cadÃªncia de um ataque).
-        p["action_done"] = True
-        self._consumir_recursos(p, 'apenas_acao')
+        # Marca a ação escolhida e cobra seus recursos só depois que o arremesso
+        # válido consumiu o item.
+        self._registrar_acao_arremesso_item(p, usar_acao_bonus)
 
         if hit:
             if (defn.get("causa_sangramento")
@@ -21762,11 +22305,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         await self.push_state()
 
-    async def _throw_item_area(self, p, defn, item, tx, ty, source_location=None):
+    async def _throw_item_area(self, p, defn, item, tx, ty, source_location=None,
+                               usar_acao_bonus=False):
         with self._escopo_fogo_grego(defn):
-            return await self._throw_item_area_impl(p, defn, item, tx, ty, source_location)
+            return await self._throw_item_area_impl(
+                p, defn, item, tx, ty, source_location,
+                usar_acao_bonus=usar_acao_bonus)
 
-    async def _throw_item_area_impl(self, p, defn, item, tx, ty, source_location=None):
+    async def _throw_item_area_impl(self, p, defn, item, tx, ty, source_location=None,
+                                    usar_acao_bonus=False):
         """Arremesso de ÁREA: sem jogada de ataque. Atinge TODOS no raio (fogo
         amigo, como a Bola de Fogo) com save de Reflexos (metade no sucesso);
         opcionalmente aplica 'em chamas' e/ou cria uma zona (fumaça=escuridão)."""
@@ -21774,7 +22321,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if tx is None or ty is None:
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_de_area_invalido")}); return
         cx, cy = int(tx), int(ty)
-        rng = defn["alcance"]
+        rng = int(defn["alcance"]) + self._bonus_alcance_arremesso(p)
         if max(abs(p["pos"][0] - cx), abs(p["pos"][1] - cy)) > rng:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.centro_fora_de_alcance_max", alcance=rng)}); return
@@ -21785,8 +22332,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Consome o item + gasta a aÃ§Ã£o principal.
         if not self._consume_action_item(p, item, source_location):
             return
-        p["action_done"] = True
-        self._consumir_recursos(p, 'apenas_acao')
+        self._registrar_acao_arremesso_item(p, usar_acao_bonus)
         raio = defn.get("area_raio", 1)
         # Feedback visual: o frasco voa até a casa; sem alvo único e sem d20
         # de ataque (os saves rolam durante o voo). Alvo sintético só com pos.
@@ -22833,7 +23379,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             if item.get("id") in {w.get("id") for w in WEAPONS.values()}:
                 item.setdefault("item_slot", "weapon")
-            allowed = item.get("allowed_classes")
+            allowed = _weapon_allowed_classes(item)
             if allowed and class_id not in allowed:
                 continue
             por_id[item["id"]] = _normalizar_item_defesa_equipavel(item)
@@ -23753,12 +24299,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _preparar_janela_controle_monstro(self, m):
         """Prepara o mesmo conjunto de ações usado pelo Mestre."""
+        m["_moved_this_turn"] = False
         m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
         m["master_moves_left"] = int(m.get("_water_moves_left", 0) or 0)
         if m.pop("turbilhao_perde_movimento", False):
             m["master_moves_left"] = 0
             m["_water_moves_left"] = 0
-        m["_moved_this_turn"] = False
         m["_minotauro_move_count"] = 0
         m["_garaloux_move_count"] = 0
         m["_garaloux_charge_consumed"] = False
@@ -23929,12 +24475,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # `_commit_monster_step` debita dele a cada passo, mas só `gm_phase` o
         # renova — e o Manual não passa por lá. Sem este reset o monstro do
         # mestre acumularia o gasto entre turnos e travaria de vez.
+        m["_moved_this_turn"] = False
         m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
         m["master_moves_left"] = int(m.get("_water_moves_left", 0) or 0)
         if m.pop("turbilhao_perde_movimento", False):
             m["master_moves_left"] = 0
             m["_water_moves_left"] = 0
-        m["_moved_this_turn"] = False
         m["_minotauro_move_count"] = 0
         m["_garaloux_move_count"] = 0
         m["_garaloux_charge_consumed"] = False
@@ -24024,6 +24570,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 ultima_livre = list(a["pos"])
             if a.get("vida_atual", 0) <= 0:
                 break
+            if a.get("_piche_movimento_encerrado"):
+                break
         if andou and a.get("vida_atual", 0) > 0 and self._sobre_aliado(a):
             await self._recuar_para(a, ultima_livre, a["id"], "animado")
         if andou:
@@ -24041,6 +24589,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         a = next((x for x in p.get("animados", []) if x.get("id") == animado_id), None)
         if not a or a.get("vida_atual", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
+        if a.get("_piche_movimento_encerrado"):
+            return
         if a.get("rodamoinho_preso"):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.o_rodamoinho_prende_este_servo_e_preciso")})
@@ -24067,6 +24617,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._tile_livre_para_animado(nx, ny, a["id"], a["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_servo")}); return
         old_pos = list(a["pos"])
+        estava_no_piche = self._criatura_em_piche(a, old_pos)
         a["pos"] = [nx, ny]
         a["facing"] = [dx, dy]
         if a.get("vida_atual", 0) <= 0:
@@ -24074,6 +24625,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         self._apply_water_entry_penalty(a, nx, ny, old_pos)
         a["moves_left"] = max(0, a["moves_left"] - 1)
+        if estava_no_piche or self._criatura_em_piche(a, a["pos"]):
+            a["_piche_movimento_encerrado"] = True
+            a["moves_left"] = 0
         self._apply_snow_entry_penalty(a, old_pos, a["pos"])
         await self._aplicar_lava_se_pisar(a)
         await self._aplicar_prisao_chamas_se_pisar(a)
@@ -25787,8 +26341,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             pp.pop("maldicao_corpo_pesado_rodadas", None)
             pp["visao_escuro"] = False
             # Voo da magia termina no descanso; o voo concedido pela Bota
-            # Alada continua enquanto ela permanecer equipada.
+            # Alada continua enquanto ela permanecer equipada. A poção também
+            # encerra o efeito ao sair da masmorra.
             pp.pop("voo_magico", None)
+            pp.pop("voo_pocao_rodadas", None)
             self._atualizar_voo_heroi(pp)
             if pp.get("class_id") in ("mage", "cleric"):
                 self._recarregar_slots(pp)   # descanso â†’ todos os slots voltam cheios
@@ -26314,6 +26870,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             elif kind == "skill":
                 base_ids = {s.get("id") for s in (p.get("skills") or []) if isinstance(s, dict)}
                 granted = self._granted_hero_skills(p) + self._weapon_throw_skills(p)
+                crystal_ball_skill = self._crystal_ball_skill(p)
+                if crystal_ball_skill:
+                    granted.append(crystal_ball_skill)
                 granted_ids = {s.get("id") for s in granted if isinstance(s, dict)}
                 # A habilidade do instrumento é dinâmica: o ID depende da
                 # base atualmente equipada na off_hand (ex.: instrumento_harpa).
@@ -26429,10 +26988,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _opcao_reparo_ferreiro(self, p, item, slot, pref, bag_index=None):
         if not isinstance(item, dict) or item.get("id") in (None, "unarmed"):
             return None
-        if slot == "off_hand" and not (item.get("kind") == "shield" or item.get("item_slot") == "shield"):
+        off_weapon = slot == "off_hand" and self._eh_arma_offhand(item, p)
+        if slot == "off_hand" and not off_weapon and not (item.get("kind") == "shield" or item.get("item_slot") == "shield"):
             return None
-        nivel = self._nivel_corrosao_item(item, p if bag_index is None else None,
-                                          pref if bag_index is None else None)
+        nivel = self._nivel_corrosao_item(item, p if bag_index is None and not off_weapon else None,
+                                          pref if bag_index is None and not off_weapon else None)
         if nivel <= 0 or item.get("corrosion_destroyed"):
             return None
         preco = self._preco_item_original(item)
@@ -26502,6 +27062,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not item and slot == "weapon":
             item = p.get("weapon")
         self._limpar_corrosao_item(item)
+        if slot == "off_hand" and self._eh_arma_offhand(item, p):
+            return item  # A arma secundária não usa o cache de dano do escudo.
         c = self._corr(p)
         c[f"{pref}_lvl"] = 0
         c[f"{pref}_resist"] = 0
@@ -26590,7 +27152,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             skill = next((s for s in (p.get("skills") or [])
                           if isinstance(s, dict) and s.get("id") == clean["id"]), None)
             if not skill:
-                    skill = next((s for s in (self._granted_hero_skills(p) + self._weapon_throw_skills(p))
+                    skill = next((s for s in (self._granted_hero_skills(p) + self._weapon_throw_skills(p)
+                                              + ([self._crystal_ball_skill(p)]
+                                                 if self._crystal_ball_skill(p) else []))
                                   if isinstance(s, dict) and s.get("id") == clean["id"]), None)
             if not skill:
                 inst = (p.get("gear") or {}).get("off_hand")
@@ -26697,7 +27261,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         bota_alada = bool(boots.get("id") == "bota_alada"
                           or boots.get("effect") == "voo")
         voo_magico = bool(p.get("voo_magico"))
-        ativo = bota_alada or voo_magico
+        voo_pocao = int(p.get("voo_pocao_rodadas", 0) or 0) > 0
+        ativo = bota_alada or voo_magico or voo_pocao
         p["voo_bota_alada"] = bota_alada
         p["voo"] = ativo
         if not ativo:
@@ -26708,7 +27273,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p["ignora_obstaculos_voo"] = False
             return
 
-        limite = ALTURA_MAX if voo_magico else ALTURA_MAX_BOTA_ALADA
+        limite = ALTURA_MAX if voo_magico or voo_pocao else ALTURA_MAX_BOTA_ALADA
         p["altura_max"] = limite
         p["pode_alterar_altura"] = True
         p["custo_mov_altura"] = 1
@@ -26717,6 +27282,54 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if altura == ALTURA_MIN:
             altura = min(limite, ALTURA_INICIAL_VOO)
         p["altura"] = min(limite, altura)
+
+    async def _processar_duracao_pocao_voo(self, alvo):
+        """Tica a poção de voo e resolve seu encerramento sem surpresa.
+
+        Ao expirar, um herói consciente pousa na casa segura mais próxima. Se
+        estiver sem controle ou não houver piso seguro, usa a queda normal.
+        Outras fontes de voo (magia ou botas) continuam ativas.
+        """
+        restantes = int(alvo.get("voo_pocao_rodadas", 0) or 0)
+        if restantes <= 0:
+            return
+        restantes -= 1
+        if restantes > 0:
+            alvo["voo_pocao_rodadas"] = restantes
+            if restantes == 1:
+                await self.gm_say(T("narracao.pocao_voo_aviso", heroi=nome_criatura(alvo)))
+            return
+
+        alvo.pop("voo_pocao_rodadas", None)
+        altura = normalizar_altura(alvo.get("altura", ALTURA_MIN))
+        tem_outra_fonte = bool(alvo.get("voo_magico") or alvo.get("voo_bota_alada"))
+        pousou_em_seguranca = False
+        if altura > ALTURA_MIN and not tem_outra_fonte:
+            perdeu_controle = any(alvo.get(flag) for flag in (
+                "paralisado", "petrificado", "dormindo", "atordoado",
+                "perde_turno", "congelado"))
+            if not perdeu_controle and isinstance(self.tiles, list) and self.tiles:
+                origem = list(alvo.get("pos") or [0, 0])
+                altura_original = alvo.get("altura")
+                alvo["altura"] = ALTURA_MIN
+                try:
+                    pouso = self._posicao_segura_ressurreicao(alvo, origem)
+                finally:
+                    alvo["altura"] = altura_original
+                if pouso is not None:
+                    alvo["pos"] = pouso
+                    alvo["altura"] = ALTURA_MIN
+                    pousou_em_seguranca = True
+            if not pousou_em_seguranca:
+                await self._aplicar_queda(alvo, "pocao_voo_expirou_sem_controle"
+                                          if perdeu_controle else
+                                          "pocao_voo_sem_piso_seguro")
+
+        self._atualizar_voo_heroi(alvo)
+        if pousou_em_seguranca:
+            await self.gm_say(T("narracao.pocao_voo_pousa", heroi=nome_criatura(alvo)))
+        if self._eh_jogador(alvo) and alvo.get("alive"):
+            await self._matar_no_abismo(alvo)
 
     def _apply_gear_effect(self, p, item, equipping):
         if equipping and self._is_utility_belt_item(item):
@@ -27055,7 +27668,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         cat = self._slot_category_for_item(item)
         if cat == "bag" or item.get("effect") == "ammo":
             return None
-        allowed = item.get("allowed_classes")
+        allowed = _weapon_allowed_classes(item)
         if allowed and p.get("class_id") not in allowed:
             return None
         gear = p["gear"]
@@ -27089,6 +27702,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         desequipar e reequipar a arma inicial deixava o herói batendo desarmado —
         vale para a bolsa e para o baú do Refúgio. O catálogo `WEAPONS` fecha essa
         lacuna pelo id; arma com campos próprios (loja/loot/editor) segue por eles."""
+        desgaste_por_peca = _weapon_nat1_wear(item) or _weapon_nat1_wear(p.get("weapon"))
         combat_fields = ("id", "name", "die", "stat", "range", "reach",
                          "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
                          "ignora_reducao_dano",
@@ -27102,6 +27716,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["weapon"] = {k: base[k] for k in combat_fields if k in base}
         if item.get("name"): p["weapon"]["name"] = item["name"]
         p["weapon"]["poison_slots"] = list(item.get("poison_slots", []))
+        if desgaste_por_peca:
+            # Ao trocar a machadinha, o cache legado não pode contaminar outra peça.
+            c = self._corr(p)
+            c.update(arma_lvl=self._nivel_corrosao_item(item), arma_id=item.get("id"),
+                     arma_destruida=False, arma_resist=int(item.get("corrosao_resistente", 0) or 0),
+                     arma_penmax=int(item.get("corrosao_niveis_penalidade", 2) or 2))
 
     def _rescue_equip(self, p, item, slot_key):
         """Equipa um item adquirido num slot LIVRE (resgate — bolsa cheia). Espelha
@@ -27289,7 +27909,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # normal para não transformar uma recarga em substituição.
         if item.get("effect") == "ammo":
             return await self._executar_equip_from_bag(pid, slot_index)
-        allowed = item.get("allowed_classes")
+        allowed = _weapon_allowed_classes(item)
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item["id"]))})
@@ -27309,6 +27929,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 and (p.get("weapon") or {}).get("two_handed"):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.arma_de_2_maos_desequipe_antes_de_usar_item", item=nome_de("item", item["id"]))})
+            return False
+        if (cat == "weapon" and (p.get("gear", {}).get("off_hand") or {}).get("id") == "hand_crossbow"
+                and item.get("id") != "hand_crossbow"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.desequipe_besta_secundaria_antes_de_trocar_arma")})
             return False
 
         displaced = []
@@ -27377,7 +28002,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_item_e_consumivel_use_o_durante_o_c")}); return False
 
         # RestriÃ§Ã£o de classe (allowed_classes)
-        allowed = item.get("allowed_classes")
+        allowed = _weapon_allowed_classes(item)
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item["id"]))}); return False
@@ -27386,6 +28011,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if cat == "weapon" and item.get("two_handed") and self._off_hand_ocupa_mao(p):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.item_e_arma_de_2_maos_desequipe_escudo", item=nome_de("item", item["id"]))}); return False
+        if (cat == "weapon" and (p.get("gear", {}).get("off_hand") or {}).get("id") == "hand_crossbow"
+                and item.get("id") != "hand_crossbow"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.desequipe_besta_secundaria_antes_de_trocar_arma")})
+            return False
         if cat == "off_hand" and (item.get("kind") == "shield" or item.get("item_slot") == "shield") \
                 and (p.get("weapon") or {}).get("two_handed"):
             await self.send_to(pid, {"type": "error",
@@ -27441,11 +28071,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return True
 
     @staticmethod
-    def _eh_arma_offhand(item):
+    def _eh_arma_offhand(item, player=None):
         """True se a arma pode ocupar a mão esquerda e gerar ataque extra."""
         if not item:
             return False
         iid = (item.get("id") or "").lower()
+        if iid == "hand_crossbow":
+            return bool(player and tem_espec(player, "disparo_duplo")
+                        and (player.get("weapon") or {}).get("id") == "hand_crossbow"
+                        and (player.get("gear", {}).get("weapon") or {}).get("id") == "hand_crossbow")
         nm  = (item.get("name") or "").lower()
         native = WEAPONS.get(iid, {})
         return bool(item.get("off_hand_weapon") or native.get("off_hand_weapon")
@@ -27471,11 +28105,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.slot_de_inventario_invalido")}); return
 
         item = p["bag"][slot_index]
-        if not self._eh_arma_offhand(item):
+        if not self._eh_arma_offhand(item, p):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.somente_armas_compativeis_podem_ser_empunhadas_como_2a")}); return
         # RestriÃ§Ã£o de classe (allowed_classes) â€” adaga nÃ£o tem, mas respeita se houver
-        allowed = item.get("allowed_classes")
+        allowed = _weapon_allowed_classes(item)
         if allowed and p.get("class_id") not in allowed:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item["id"]))}); return
@@ -27502,6 +28136,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p = self.players.get(pid)
         if not p or slot_key not in GEAR_SLOTS:
             return
+        if (slot_key == "weapon"
+                and (p.get("gear", {}).get("off_hand") or {}).get("id") == "hand_crossbow"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.desequipe_besta_secundaria_antes_de_trocar_arma")})
+            return
         item = p["gear"].get(slot_key)
         if not item:
             return
@@ -27519,7 +28158,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if slot_key == "weapon":
             # p["weapon"] Ã© a cÃ³pia usada no combate (handle_attack); sem isto o
             # jogador continuaria batendo com o dado/bÃ´nus da arma "desequipada".
-            p["weapon"] = {**WEAPONS["unarmed"]}
+            self._sincronizar_arma_de_combate(p, WEAPONS["unarmed"])
         p["bag"].append(item)
         await self.gm_say(T("narracao.desequipou", heroi=p['name'], item=nome_item(item)))
         await self._notify_utility_belt_contents(item)
@@ -27573,11 +28212,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _spawn_chest(self, pos, gold, items, source_id=None):
         """Create a persistent chest object in the world. Returns chest id."""
         cid = new_id()
+        materializados = []
+        for item in items:
+            copia = deepcopy(item)
+            if copia.get("id") == "grimorio_bau":
+                copia = _criar_item_grimorio_bau()
+            materializados.append(copia)
         self.chests[cid] = {
             "id":        cid,
             "pos":       list(pos),
             "gold":      max(0, int(gold)),
-            "items":     [deepcopy(i) for i in items],
+            "items":     materializados,
             "source_id": source_id,
         }
         return cid
@@ -27621,6 +28266,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         room["looted"] = True
         gold  = random.randint(10, 35)
         items = [deepcopy(_DUNGEON_ITEM_CATALOG[random.choice(LOOT_POOL_PROCEDURAL)])]
+        # A rare book replaces a normal item and keeps its spells in the chest.
+        if random.random() < 0.06:
+            items[0] = _criar_item_grimorio_bau()
         if random.random() < 0.45:                            # 45 % chance for 2nd item
             extra = deepcopy(_DUNGEON_ITEM_CATALOG[random.choice(LOOT_POOL_PROCEDURAL)])
             if extra["id"] != items[0]["id"]:
@@ -27689,6 +28337,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if idx < 0 or idx >= len(chest["items"]):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
             item = chest["items"][idx]
+            classes_item = _weapon_allowed_classes(item)
+            if (item.get("effect") == "grimoire" and classes_item
+                    and p.get("class_id") not in classes_item):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item.get("id", "item")))}); return
             classe_tutorial = item.get("tutorial_class")
             if (self.training_mode and classe_tutorial in LICAO_CLASSES
                     and classe_tutorial != p.get("class_id")):
@@ -27783,6 +28436,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             progresso = False
             for idx in range(len(chest["items"])):
                 item = chest["items"][idx]
+                classes_item = _weapon_allowed_classes(item)
+                if (item.get("effect") == "grimoire" and classes_item
+                        and p.get("class_id") not in classes_item):
+                    continue
                 classe_tutorial = item.get("tutorial_class")
                 if (self.training_mode and classe_tutorial in LICAO_CLASSES
                         and classe_tutorial != p.get("class_id")):
@@ -27887,8 +28544,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Efeitos de item que contam como aÃ§Ã£o bÃ´nus (mÃ¡x. 1 por turno).
     BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison",
-                            "veil_shadow", "cure_poison", "cure_petrification", "cure_disease",
-                            "meal_survival"}
+                            "veil_shadow", "reveal_traps_potion", "arcane_vigilance_potion", "disarm_traps_area", "invisibility", "speed", "darkness_mantle", "elemental_resistance_potion", "arcane_barrier_potion", "strength_potion", "dexterity_potion", "cure_poison", "cure_petrification", "cure_disease",
+                            "constitution_potion", "intelligence_potion", "flight_potion", "archery_potion", "ranged_range_potion", "restore_spell_slot", "meal_survival"}
 
     def _consumir_recursos(self, player, tipo_acao):
         """Consumo CENTRAL de fome/sede (escala 0–10). Substitui os consumos
@@ -28610,21 +29267,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         bonus = 1 if (p.get("fome", 100) > 80 and p.get("sede", 100) > 80) else 0
         return bonus - self._penalidade_sobrevivencia(p)
 
-    async def _executar_acao_bonus(self, p):
+    async def _executar_acao_bonus(self, p, narrar=True):
         """Valida e consome a ação bônus do jogador neste turno.
         Retorna True se permitida; False (com mensagem) se já usada.
         Consumo via tabela central (_consumir_recursos, 'acao_bonus').
         """
         if p.get("bonus_action_used"):
-            await self.gm_say(T("narracao.ja_usou_sua_acao_bonus_neste_turno", heroi=p['name']))
+            if narrar:
+                await self.gm_say(T("narracao.ja_usou_sua_acao_bonus_neste_turno", heroi=p['name']))
             return False
 
         p["bonus_action_used"] = True
         self._consumir_recursos(p, 'acao_bonus')
-        await self.gm_say(
-            T("narracao.usou_acao_bonus_fome_sede", heroi=p["name"],
-              fome=f"{p['fome']:.1f}", sede=f"{p['sede']:.1f}")
-        )
+        if narrar:
+            await self.gm_say(
+                T("narracao.usou_acao_bonus_fome_sede", heroi=p["name"],
+                  fome=f"{p['fome']:.1f}", sede=f"{p['sede']:.1f}")
+            )
         return True
 
     # â”€â”€ VENENOS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -28753,6 +29412,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         usados = len(p["slots_cooldown"].get(circulo, []))
         return slots_max_para(p).get(circulo, 0) - usados
 
+    def _magias_conhecidas_com_grimorio(self, p):
+        """Magias permanentes mais as do grimório equipado, sem alterar a ficha."""
+        ids = list(p.get("magias_conhecidas", []) or [])
+        if p.get("class_id") == "mage":
+            ids.extend(_grimorio_magias_equipado(p))
+        return list(dict.fromkeys(mid for mid in ids if mid in GRIMORIO))
+
     def _gastar_slot(self, p, circulo):
         """Marca 1 slot gasto com o tempo de recarga aplicável ao personagem."""
         if self._slots_livres_treino(p):
@@ -28799,6 +29465,92 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
+    async def handle_use_crystal_ball(self, pid, data):
+        """Ativa a bola equipada para lançar Clarividência sem gastar slot."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        if p.get("metamorfose_ativa"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.a_forma_transformada_nao_pode_lancar_mag")})
+            return
+        if p.get("petrificado"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.voce_esta_petrificado_e_nao_pode_lancar")})
+            return
+        if p.get("paralisado"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.voce_esta_paralisado_e_nao_pode_lancar_m")})
+            return
+        if p.get("dormindo"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.voce_esta_dormindo_e_nao_pode_lancar_mag")})
+            return
+        if self._tem_maldicao(p, "silencio_deuses"):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.silencio_dos_deuses_impede_lancar_magias")})
+            return
+        if self._em_silencio(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.voce_esta_numa_area_de_silencio_e_nao_po")})
+            return
+
+        item = (p.get("gear") or {}).get("off_hand")
+        if (not isinstance(item, dict) or item.get("id") != BOLA_CRISTAL_CLARIVIDENCIA["id"]
+                or item.get("effect") != BOLA_CRISTAL_CLARIVIDENCIA["effect"]):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+            return
+        if self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+
+        try:
+            tx, ty = (data or {}).get("tx"), (data or {}).get("ty")
+            if (isinstance(tx, bool) or isinstance(ty, bool)
+                    or not isinstance(tx, int) or not isinstance(ty, int)
+                    or not (0 <= tx < self.map_w and 0 <= ty < self.map_h)):
+                raise ValueError
+        except (TypeError, ValueError):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+
+        pronta_em = int(item.get("clarividencia_pronta_em", 0) or 0)
+        restante = pronta_em - int(self.round_num or 0)
+        if restante > 0:
+            await self.send_to(pid, {"type": "error", "msg": T(
+                "erro.tecnica_em_recarga", tecnica=nome_item(item), rodadas=restante)})
+            return
+
+        magia = deepcopy(GRIMORIO["clarividencia"])
+        dados_magia = {"tx": tx, "ty": ty}
+        if p.get("class_id") not in ("mage", "cleric"):
+            magia["area_lado"] = 4
+            dados_magia["_bola_cristal_area_fixa"] = True
+
+        # A mira e o cooldown já foram validados: consome a ação e recursos uma
+        # única vez, mas não chama _gastar_slot nem concede slots ao personagem.
+        p["action_done"] = True
+        item["clarividencia_pronta_em"] = int(self.round_num or 0) + 10
+        self._pagar_fome_sede(p, 1, 1, contexto="Bola de Cristal")
+        self._verificar_estado_sobrevivencia(p)
+        await self._executar_magia_grimorio(p, magia, dados_magia)
+
+        if p.get("invisivel_magico"):
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "invisibilidade",
+                "phase": "break", "caster_id": p["id"],
+                "origin": list(p.get("pos", [0, 0])), "reason": "nova_magia",
+            })
+            p["invisivel_magico"] = False
+            p.pop("invisivel_magico_rodadas", None)
+            await self.gm_say(T("narracao.revela_se_ao_lancar_magia", heroi=p["name"]))
+        await self._licao_evento(p, "usar_habilidade", alvo="usar_bola_cristal")
+        await self.push_state()
+
     async def handle_magia(self, pid, data):
         """Lança uma magia do GRIMÓRIO (Pedro/mage, Lewis/cleric). Valida classe,
         elegibilidade, slots do círculo e custo de sobrevivência; despacha o efeito."""
@@ -28836,9 +29588,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not magia:
             await self.send_to(pid, {"type": "error", "msg": T("erro.magia_desconhecida")}); return
         magia_teste_livre = magia_id in MAGIAS_TESTE_LIVRE
-        if magia_id not in p.get("magias_conhecidas", []) and not magia_teste_livre:
+        magias_livro = _grimorio_magias_equipado(p)
+        magia_do_livro = magia_id in magias_livro
+        if (magia_id not in p.get("magias_conhecidas", [])
+                and not magia_do_livro and not magia_teste_livre):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.personagem_nao_conhece_magia", personagem=p["name"], magia=nome_de("magia", magia_id))}); return
+        if magia_do_livro and "mage" not in magia.get("classe", []):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("magia", magia_id))}); return
         if magia_id not in GRIMORIO_IMPLEMENTADAS:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.magia_ainda_em_desenvolvimento", icone=magia["icone"], magia=nome_de("magia", magia_id))}); return
@@ -29721,27 +30479,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         # â”€â”€ Manto de EscuridÃ£o: cria zona de escuridÃ£o centrada no caster â”€â”€â”€â”€â”€â”€â”€
         elif mid == "manto_escuridao":
-            dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
-            raio = magia.get("area_raio", 3)
-            area_lado = self._cajado_arcano_area_lado(caster, magia)
-            animation_id = f"manto_escuridao_{caster['id']}_{self.round_num}_{caster['pos'][0]}_{caster['pos'][1]}"
-            await self.broadcast({
-                "type": "spell_animation", "spell_id": "manto_escuridao", "phase": "start",
-                "animation_id": animation_id, "caster_id": caster["id"],
-                "origin": list(caster["pos"]), "radius": raio, "area_lado": area_lado,
-                "duration_rounds": dur, "expand_ms": 920,
-            })
-            await self._aplicar_escuridao(caster, raio=raio, duracao=dur, area_lado=area_lado,
-                                          visual_id=animation_id, seguir_caster=True,
-                                          concede_visao=True)
-            # O próprio conjurador enxerga na escuridão que criou pela mesma duração.
-            # Guardamos a origem para não apagar uma visão que ele já possuía.
-            if not caster.get("visao_escuro_manto"):
-                caster["_visao_escuro_antes_manto"] = bool(caster.get("visao_escuro"))
-            caster["visao_escuro_manto"] = True
-            caster["visao_escuro"] = True
-            caster["visao_escuro_rodadas"] = max(caster.get("visao_escuro_rodadas", 0), dur)
-            await self.gm_say(T("narracao.recebe_visao_no_escuro_enquanto_o_manto", caster=caster['name']))
+            await self._executar_manto_escuridao(caster, magia, dur_bonus)
 
         elif mid == "olhar_petrificante":
             por_niveis = int(magia.get("duracao_por_niveis", 3) or 3)
@@ -30243,7 +30981,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         nivel  = self._nivel_conjurador(caster)
         escala = {1: 4, 2: 4, 3: 6, 4: 6, 5: 8}.get(min(nivel, 5), 4)
         raio   = max(1, escala // 2)
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        dados = data or {}
+        if dados.get("_bola_cristal_area_fixa"):
+            area_lado = magia.get("area_lado", 4)
+        else:
+            area_lado = self._cajado_arcano_area_lado(caster, magia) or magia.get("area_lado")
         tx = int((data or {}).get("tx", caster["pos"][0]))
         ty = int((data or {}).get("ty", caster["pos"][1]))
         dur    = magia.get("duracao", 2)
@@ -31674,6 +32416,31 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "rise_ms": 760, "duration_rounds": dur, "success": True,
         })
         await self.gm_say(T("narracao.acelera_acoes_dobradas_e_movimento_dobra", caster=caster['name'], dur=dur))
+
+    async def _executar_manto_escuridao(self, caster, magia, dur_bonus=0,
+                                        aplicar_bonus_cajado=True):
+        """Aplica o Manto e compartilha seu estado entre magia e poção."""
+        dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
+        raio = magia.get("area_raio", 3)
+        area_lado = (self._cajado_arcano_area_lado(caster, magia)
+                     if aplicar_bonus_cajado else None)
+        animation_id = f"manto_escuridao_{caster['id']}_{self.round_num}_{caster['pos'][0]}_{caster['pos'][1]}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "manto_escuridao", "phase": "start",
+            "animation_id": animation_id, "caster_id": caster["id"],
+            "origin": list(caster["pos"]), "radius": raio, "area_lado": area_lado,
+            "duration_rounds": dur, "expand_ms": 920,
+        })
+        await self._aplicar_escuridao(caster, raio=raio, duracao=dur, area_lado=area_lado,
+                                      visual_id=animation_id, seguir_caster=True,
+                                      concede_visao=True)
+        # Preserva e restaura a visão que o usuário tinha antes do Manto.
+        if not caster.get("visao_escuro_manto"):
+            caster["_visao_escuro_antes_manto"] = bool(caster.get("visao_escuro"))
+        caster["visao_escuro_manto"] = True
+        caster["visao_escuro"] = True
+        caster["visao_escuro_rodadas"] = max(caster.get("visao_escuro_rodadas", 0), dur)
+        await self.gm_say(T("narracao.recebe_visao_no_escuro_enquanto_o_manto", caster=caster['name']))
 
     async def _executar_barreira_arcana(self, caster, magia, dmg_mult, dur_bonus):
         """Barreira temporal: redução fixa de todo dano recebido pelo mago."""
@@ -33747,51 +34514,122 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _executar_protecao_energia(self, caster, magia, dur_bonus):
         dur     = self._rolar_dado(magia.get("duracao", "1d6+1")) + dur_bonus
         reducao = magia.get("reducao_por_rodada", 10)
-        animation_id = f"protecao_energia_{caster['id']}_{self.round_num}"
-        tipos = list(magia.get("tipos", ["fogo", "gelo", "eletricidade", "acido", "agua", "sagrado"]))
-        await self.broadcast({
-            "type": "spell_animation", "spell_id": "protecao_energia", "phase": "start",
-            "animation_id": animation_id, "caster_id": caster["id"], "target_id": caster["id"],
-            "target": list(caster.get("pos", [0, 0])), "reduction": reducao,
-            "remaining": reducao, "duration_rounds": dur, "types": tipos, "rise_ms": 780,
-        })
+        tipos = list(dict.fromkeys(list(magia.get("tipos", ["fogo", "gelo", "eletricidade", "acido", "agua", "sagrado"]))
+                                   + list((caster.get("protecao_pocoes_elementais") or {}).keys())))
+        visual_ja_ativo = bool(caster.get("protecao_visual_id") and
+                               (caster.get("protecao_rodadas", 0) > 0 or caster.get("protecao_pocoes_elementais")))
+        animation_id = caster.get("protecao_visual_id") if visual_ja_ativo else f"protecao_energia_{caster['id']}_{self.round_num}"
+        restante_compartilhado = min(
+            [reducao] + [max(0, int(p.get("restante", 10)))
+                         for elemento, p in (caster.get("protecao_pocoes_elementais") or {}).items()
+                         if elemento in tipos and p.get("rodadas", 0) > 0])
         caster["protecao_rodadas"]  = dur
         caster["protecao_max"]      = reducao
-        caster["protecao_restante"] = reducao
+        caster["protecao_restante"] = restante_compartilhado
         caster["protecao_tipos"]    = tipos
         caster["protecao_visual_id"] = animation_id
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "protecao_energia", "phase": "refresh" if visual_ja_ativo else "start",
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": caster["id"],
+            "target": list(caster.get("pos", [0, 0])), "reduction": reducao,
+            "remaining": restante_compartilhado, "duration_rounds": dur, "types": tipos, "rise_ms": 780,
+        })
         await self.broadcast({
             "type": "spell_animation", "spell_id": "protecao_energia", "phase": "resolve",
             "animation_id": animation_id, "caster_id": caster["id"], "target_id": caster["id"],
             "target": list(caster.get("pos", [0, 0])), "reduction": reducao,
-            "remaining": reducao, "duration_rounds": dur, "types": tipos, "rise_ms": 780,
+            "remaining": restante_compartilhado, "duration_rounds": dur, "types": tipos, "rise_ms": 780,
             "success": True,
         })
         await self.gm_say(T("narracao.fica_protegido_absorve_ate_de_dano_eleme", caster=caster['name'], reducao=reducao, dur=dur))
 
+    async def _executar_pocao_protecao_elemental(self, caster, item):
+        elemento = str(item.get("element", "")).lower()
+        elementos_validos = {"fogo", "gelo", "eletricidade", "acido", "agua", "sagrado"}
+        if elemento not in elementos_validos:
+            return
+        duracao = max(1, self._rolar_dado(item.get("value", "1d6+4")))
+        pocoes = caster.setdefault("protecao_pocoes_elementais", {})
+        protecao = pocoes.get(elemento)
+        if protecao and protecao.get("rodadas", 0) > 0:
+            # Renovar uma proteção do mesmo elemento não recupera o limite já
+            # consumido nesta rodada.
+            restante = max(0, min(10, int(protecao.get("restante", 10))))
+        else:
+            restante = 10
+            # A magia possui um único limite compartilhado entre seus elementos.
+            # A poção começa com o restante atual desse limite para não recarregá-lo.
+            if (caster.get("protecao_rodadas", 0) > 0
+                    and elemento in caster.get("protecao_tipos", [])):
+                restante = max(0, min(10, int(caster.get("protecao_restante", 10))))
+        pocoes[elemento] = {"rodadas": duracao, "max": 10, "restante": restante}
+
+        tipos = list(dict.fromkeys(
+            (list(caster.get("protecao_tipos", [])) if caster.get("protecao_rodadas", 0) > 0 else [])
+            + list(pocoes.keys())))
+        reducao = int(caster.get("protecao_max", 10) or 10)
+        restante_visual = min([int(v.get("restante", 10)) for v in pocoes.values()] or [10])
+        if caster.get("protecao_rodadas", 0) > 0:
+            restante_visual = min(restante_visual, int(caster.get("protecao_restante", 10)))
+        visual_ja_ativo = bool(caster.get("protecao_visual_id") and
+                               (caster.get("protecao_rodadas", 0) > 0 or len(pocoes) > 1 or
+                                protecao and protecao.get("rodadas", 0) > 0))
+        animation_id = caster.get("protecao_visual_id") if visual_ja_ativo else f"protecao_energia_{caster['id']}_{self.round_num}"
+        caster["protecao_visual_id"] = animation_id
+        fase = "refresh" if visual_ja_ativo else "start"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "protecao_energia", "phase": fase,
+            "animation_id": animation_id, "caster_id": caster["id"], "target_id": caster["id"],
+            "target": list(caster.get("pos", [0, 0])), "reduction": reducao,
+            "remaining": restante_visual, "duration_rounds": max(p.get("rodadas", 0) for p in pocoes.values()),
+            "types": tipos, "rise_ms": 780,
+        })
+        if fase == "start":
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "protecao_energia", "phase": "resolve",
+                "animation_id": animation_id, "caster_id": caster["id"], "target_id": caster["id"],
+                "target": list(caster.get("pos", [0, 0])), "reduction": reducao,
+                "remaining": restante_visual, "duration_rounds": duracao, "types": tipos,
+                "rise_ms": 780, "success": True,
+            })
+        await self.gm_say(T("narracao.fica_protegido_absorve_ate_de_dano_eleme",
+                            caster=caster["name"], reducao=10, dur=duracao))
+
     async def _absorver_energia(self, alvo, dano, tipo):
-        """Reduz dano do tipo elemental se o alvo tiver Proteção contra Energia (até o restante da rodada)."""
-        if dano <= 0 or alvo.get("protecao_rodadas", 0) <= 0:
+        """Aplica os limites da magia e das poções de resistência elemental."""
+        if dano <= 0:
             return dano
         normalizados = {
             DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade",
             DMG_ACID: "acido", DMG_WATER: "agua", DMG_HOLY: "sagrado",
         }
         tipo = normalizados.get(_NORM_ELEMENTO.get(str(tipo).lower(), str(tipo).lower()), str(tipo).lower())
-        if tipo not in alvo.get("protecao_tipos", []):
+        protecao_pocao = (alvo.get("protecao_pocoes_elementais") or {}).get(tipo)
+        pocao_ativa = bool(protecao_pocao and protecao_pocao.get("rodadas", 0) > 0)
+        magia_ativa = bool(alvo.get("protecao_rodadas", 0) > 0 and tipo in alvo.get("protecao_tipos", []))
+        if not pocao_ativa and not magia_ativa:
             return dano
-        restante = alvo.get("protecao_restante", 0)
+        limites = []
+        if pocao_ativa:
+            limites.append(max(0, int(protecao_pocao.get("restante", 0))))
+        if magia_ativa:
+            limites.append(max(0, int(alvo.get("protecao_restante", 0))))
+        restante = min(limites)
         if restante <= 0:
             return dano
         absorvido = min(restante, dano)
-        alvo["protecao_restante"] = restante - absorvido
+        restante_aposso = restante - absorvido
+        if pocao_ativa:
+            protecao_pocao["restante"] = restante_aposso
+        if magia_ativa:
+            alvo["protecao_restante"] = restante_aposso
         await self.broadcast({
             "type": "spell_animation", "spell_id": "protecao_energia", "phase": "hit",
             "animation_id": alvo.get("protecao_visual_id"), "caster_id": alvo.get("id"),
             "target_id": alvo.get("id"), "element": tipo, "absorbed": absorvido,
-            "remaining": alvo["protecao_restante"], "reduction": alvo.get("protecao_max", 10),
+            "remaining": restante_aposso, "reduction": alvo.get("protecao_max", 10),
         })
-        await self.gm_say(T("narracao.protecao_de_absorve_de_resta", alvo=nome_criatura(alvo), absorvido=absorvido, tipo=tipo, alvo_protecao_restante=alvo['protecao_restante']))
+        await self.gm_say(T("narracao.protecao_de_absorve_de_resta", alvo=nome_criatura(alvo), absorvido=absorvido, tipo=tipo, alvo_protecao_restante=restante_aposso))
         return dano - absorvido
 
     async def _executar_invisibilidade(self, caster, magia, dur_bonus):
@@ -35194,6 +36032,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _processar_buffs_magicos_turno(self, alvo):
         """Tica buffs mágicos temporários no início do turno (Visão no Escuro, Invisibilidade, Regeneração)."""
+        await self._processar_duracao_pocao_voo(alvo)
         if alvo.get("visao_escuro_manto"):
             # A duração do Manto é controlada pela zona; não consumir um turno
             # aqui, pois isso fazia a vantagem terminar antes da animação/área.
@@ -35221,29 +36060,51 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 alvo["invisivel_magico"] = False
                 alvo.pop("invisivel_magico_rodadas", None)
                 await self.gm_say(T("narracao.a_invisibilidade_de_termina", alvo=nome_criatura(alvo)))
-        # ProteÃ§Ã£o contra Energia: renova a absorÃ§Ã£o da rodada; expira por duraÃ§Ã£o.
+        # ProteÃ§Ã£o contra Energia e poções elementais: renovam seus limites no
+        # início do turno e mantêm uma única animação enquanto houver proteção.
+        protecoes_pocao = alvo.get("protecao_pocoes_elementais") or {}
+        for elemento, protecao in list(protecoes_pocao.items()):
+            protecao["restante"] = int(protecao.get("max", 10) or 10)
+            protecao["rodadas"] = int(protecao.get("rodadas", 0) or 0) - 1
+            if protecao["rodadas"] <= 0:
+                protecoes_pocao.pop(elemento, None)
+        if not protecoes_pocao:
+            alvo.pop("protecao_pocoes_elementais", None)
         if alvo.get("protecao_rodadas", 0) > 0:
             alvo["protecao_restante"] = alvo.get("protecao_max", 10)
             alvo["protecao_rodadas"] -= 1
             if alvo["protecao_rodadas"] <= 0:
-                await self.broadcast({
-                    "type": "spell_animation", "spell_id": "protecao_energia", "phase": "expire",
-                    "animation_id": alvo.get("protecao_visual_id"), "caster_id": alvo.get("id"),
-                    "target_id": alvo.get("id"), "target": list(alvo.get("pos", [0, 0])),
-                    "fade_ms": 820,
-                })
                 for _k in ("protecao_rodadas", "protecao_restante", "protecao_max", "protecao_tipos"):
                     alvo.pop(_k, None)
-                alvo.pop("protecao_visual_id", None)
                 await self.gm_say(T("narracao.a_protecao_contra_energia_de_termina", alvo=nome_criatura(alvo)))
-            else:
-                await self.broadcast({
-                    "type": "spell_animation", "spell_id": "protecao_energia", "phase": "refresh",
-                    "animation_id": alvo.get("protecao_visual_id"), "caster_id": alvo.get("id"),
-                    "target_id": alvo.get("id"), "target": list(alvo.get("pos", [0, 0])),
-                    "remaining": alvo["protecao_restante"], "reduction": alvo.get("protecao_max", 10),
-                    "duration_rounds": alvo["protecao_rodadas"],
-                })
+        protecao_magica_ativa = alvo.get("protecao_rodadas", 0) > 0
+        protecoes_pocao = alvo.get("protecao_pocoes_elementais") or {}
+        if protecao_magica_ativa or protecoes_pocao:
+            tipos_ativos = list(dict.fromkeys(
+                (list(alvo.get("protecao_tipos", [])) if protecao_magica_ativa else [])
+                + list(protecoes_pocao.keys())))
+            limites_visuais = [int(v.get("restante", 10)) for v in protecoes_pocao.values()]
+            if protecao_magica_ativa:
+                limites_visuais.append(int(alvo.get("protecao_restante", 10)))
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "protecao_energia", "phase": "refresh",
+                "animation_id": alvo.get("protecao_visual_id"), "caster_id": alvo.get("id"),
+                "target_id": alvo.get("id"), "target": list(alvo.get("pos", [0, 0])),
+                "remaining": min(limites_visuais or [10]),
+                "reduction": max([int(alvo.get("protecao_max", 10) or 10)] +
+                                 [int(v.get("max", 10) or 10) for v in protecoes_pocao.values()]),
+                "duration_rounds": max([int(alvo.get("protecao_rodadas", 0) or 0)] +
+                                        [int(v.get("rodadas", 0) or 0) for v in protecoes_pocao.values()]),
+                "types": tipos_ativos,
+            })
+        elif alvo.get("protecao_visual_id"):
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "protecao_energia", "phase": "expire",
+                "animation_id": alvo.get("protecao_visual_id"), "caster_id": alvo.get("id"),
+                "target_id": alvo.get("id"), "target": list(alvo.get("pos", [0, 0])),
+                "fade_ms": 820,
+            })
+            alvo.pop("protecao_visual_id", None)
         # Barreira Arcana: redução fixa a cada dano durante sua duração.
         if alvo.get("barreira_arcana_rodadas", 0) > 0:
             alvo["barreira_arcana_rodadas"] -= 1
@@ -35251,6 +36112,48 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 alvo.pop("barreira_arcana_rodadas", None)
                 alvo.pop("barreira_arcana_reducao", None)
                 await self.gm_say(T("narracao.a_barreira_arcana_de_termina", alvo=nome_criatura(alvo)))
+        if alvo.get("gole_gigante_rodadas", 0) > 0:
+            alvo["gole_gigante_rodadas"] -= 1
+            if alvo["gole_gigante_rodadas"] <= 0:
+                bonus_forca = int(alvo.pop("gole_gigante_bonus", 0) or 0)
+                if bonus_forca:
+                    self._apply_attribute_delta(alvo, "str_", -bonus_forca)
+                alvo.pop("gole_gigante_rodadas", None)
+                await self.gm_say(T("narracao.gole_do_gigante_termina", alvo=nome_criatura(alvo)))
+        if alvo.get("bote_serpente_rodadas", 0) > 0:
+            alvo["bote_serpente_rodadas"] -= 1
+            if alvo["bote_serpente_rodadas"] <= 0:
+                bonus_destreza = int(alvo.pop("bote_serpente_bonus", 0) or 0)
+                if bonus_destreza:
+                    self._apply_attribute_delta(alvo, "dex", -bonus_destreza)
+                alvo.pop("bote_serpente_rodadas", None)
+                await self.gm_say(T("narracao.bote_da_serpente_termina", alvo=nome_criatura(alvo)))
+        if alvo.get("elixir_cavalo_ferro_rodadas", 0) > 0:
+            alvo["elixir_cavalo_ferro_rodadas"] -= 1
+            if alvo["elixir_cavalo_ferro_rodadas"] <= 0:
+                bonus_constituicao = int(alvo.pop("elixir_cavalo_ferro_bonus", 0) or 0)
+                if bonus_constituicao:
+                    self._apply_attribute_delta(alvo, "con_", -bonus_constituicao)
+                alvo.pop("elixir_cavalo_ferro_rodadas", None)
+                await self.gm_say(T("narracao.elixir_cavalo_ferro_termina", alvo=nome_criatura(alvo)))
+        if alvo.get("sabedoria_liquida_rodadas", 0) > 0:
+            alvo["sabedoria_liquida_rodadas"] -= 1
+            if alvo["sabedoria_liquida_rodadas"] <= 0:
+                bonus_inteligencia = int(alvo.pop("sabedoria_liquida_bonus", 0) or 0)
+                if bonus_inteligencia:
+                    self._apply_attribute_delta(alvo, "int_", -bonus_inteligencia)
+                alvo.pop("sabedoria_liquida_rodadas", None)
+                await self.gm_say(T("narracao.sabedoria_liquida_termina", alvo=nome_criatura(alvo)))
+        if alvo.get("mira_falcao_rodadas", 0) > 0:
+            alvo["mira_falcao_rodadas"] -= 1
+            if alvo["mira_falcao_rodadas"] <= 0:
+                alvo.pop("mira_falcao_rodadas", None)
+                await self.gm_say(T("narracao.mira_do_falcao_termina", alvo=nome_criatura(alvo)))
+        if alvo.get("essencia_vento_rodadas", 0) > 0:
+            alvo["essencia_vento_rodadas"] -= 1
+            if alvo["essencia_vento_rodadas"] <= 0:
+                alvo.pop("essencia_vento_rodadas", None)
+                await self.gm_say(T("narracao.essencia_vento_termina", alvo=nome_criatura(alvo)))
         # Velocidade: a cada turno renova a aÃ§Ã£o extra; expira por duraÃ§Ã£o.
         if alvo.get("velocidade_rodadas", 0) > 0:
             alvo["velocidade_extra_usada"] = False
@@ -35583,6 +36486,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             cost += 1
         return max(1, cost + custo_elevacao, custo_vento)
 
+    def _criatura_em_piche(self, criatura, pos=None, facing=None):
+        """True quando algum piso ocupado é piche, sem voo nem ponte."""
+        if not criatura or self._voo_imune_terreno(criatura):
+            return False
+        pos = pos if isinstance(pos, (list, tuple)) and len(pos) >= 2 else criatura.get("pos")
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return False
+        x, y = int(pos[0]), int(pos[1])
+        if criatura in getattr(self, "monsters", {}).values():
+            tiles = self._monster_tiles_at(criatura, x, y, facing=facing)
+        else:
+            tiles = [(x, y)]
+        return any(getattr(self, "materiais", {}).get((tx, ty)) == "piche"
+                   and not self._ponte_em(tx, ty) for tx, ty in tiles)
+
     def _lava_tiles_of(self, criatura):
         """Casas de lava sob uma criatura; monstros grandes contam uma vez."""
         pos = criatura.get("pos")
@@ -35890,6 +36808,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         criatura.pop("_swamp_penalty_applied", None)
         criatura.pop("_thorn_bush_penalty_applied", None)
         criatura.pop("_snow_movement_reduced", None)
+        # Reabrir o limite de um passo somente no início de um novo turno;
+        # renovações especiais de movimento no meio do turno não o removem.
+        if not criatura.get("moved_this_turn") and not criatura.get("_moved_this_turn"):
+            criatura.pop("_piche_movimento_encerrado", None)
         if criatura.get("cola_sem_movimento"):
             return 0
         base = max(0, int(base_moves or 0))
@@ -36430,6 +37352,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "tipo": "enfeiticado",
             "nome": magia,
             "icone": "✨",
+            **({"imagem": "medo.png"} if magia == "Medo" else {}),
             "target_id": alvo.get("id"), "pos": list(alvo.get("pos", [0, 0])),
             "duracao": int(duracao or 0),
             "descricao": descricao,
@@ -36484,6 +37407,89 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "descricao": descricao,
             "efeitos_extra": efeitos,
         })
+
+    async def _enviar_resultado_prisao(self, alvo, causa, duracao=0):
+        """Aviso pessoal: arte compartilhada, regras descritas por causa no cliente."""
+        if not self._eh_jogador(alvo) or causa not in {"teia", "cola", "piche"}:
+            return
+        await self._enviar_trap_result(
+            alvo, "", "🕸️", sucesso=False, dano=0, metade=False,
+            descricao="", efeitos_extra=[], tipo_id="prisao", tipo="prisao",
+            prisao_id=causa, duracao=max(0, int(duracao or 0)), imagem="preso.png")
+
+    async def _avisar_prisoes_aderentes(self):
+        """Uma janela ao entrar em cola/piche; ticks e estados repetidos não duplicam."""
+        anteriores = getattr(self, "_prisoes_aderentes_avisadas", set())
+        atuais = set()
+        if self.phase == "playing":
+            for pid, p in self.players.items():
+                if not p.get("alive") or p.get("fora_masmorra"):
+                    continue
+                for causa, ativa in (
+                    ("cola", p.get("cola_sem_movimento")),
+                    ("piche", self._criatura_em_piche(p) or p.get("_piche_movimento_encerrado")),
+                ):
+                    chave = (pid, causa)
+                    if ativa:
+                        atuais.add(chave)
+                        if chave not in anteriores:
+                            await self._enviar_resultado_prisao(
+                                p, causa, p.get("mov_reduzido_rodadas", 0) if causa == "cola" else 0)
+        self._prisoes_aderentes_avisadas = atuais
+
+    async def _enviar_resultado_derrubado(self, alvo, fonte, turno_efeito):
+        """Aviso no golpe que derruba; não repete nos próximos estados/turnos."""
+        if not self._eh_jogador(alvo) or not alvo.get("alive") or alvo.get("hp", 0) <= 0:
+            return
+        await self._enviar_trap_result(
+            alvo, "", "💥", sucesso=False, dano=0, metade=False,
+            descricao="", efeitos_extra=[], tipo_id="derrubado", tipo="derrubado",
+            imagem="derrubado.png", fonte=fonte, turno_efeito=turno_efeito)
+
+    async def _avisar_silencio(self):
+        """Uma janela ao entrar no efeito real, inclusive quando a área surge sob o herói."""
+        anteriores = getattr(self, "_silencio_avisados", set())
+        atuais = set()
+        if self.phase == "playing":
+            zonas = self._zonas_ativas("silencio")
+            for pid, p in self.players.items():
+                if (not p.get("alive") or p.get("fora_masmorra")
+                        or not self._em_silencio(p)):
+                    continue
+                atuais.add(pid)
+                if pid in anteriores:
+                    continue
+                x, y = p.get("pos", [0, 0])
+                duracao = max((max(0, int(z.get("duracao", 0) or 0)) for z in zonas
+                               if self._em_zona_quadrada(x, y, z)), default=0)
+                await self._enviar_trap_result(
+                    p, "", "🔇", sucesso=False, dano=0, metade=False,
+                    descricao="", efeitos_extra=[], tipo_id="silencio", tipo="silencio",
+                    imagem="silencio.png", duracao=duracao)
+        self._silencio_avisados = atuais
+
+    async def _avisar_agarrados(self):
+        """Uma janela por herói/captor; todas as origens usam o estado autoritativo."""
+        anteriores = getattr(self, "_agarrados_avisados", set())
+        atuais = set()
+        if self.phase == "playing":
+            for pid, p in self.players.items():
+                if (not p.get("alive") or p.get("fora_masmorra") or not p.get("preso")
+                        or p.get("engolido") or p.get("bau_engolido")):
+                    continue
+                captor = self._captor_ativo(p)
+                if not captor:
+                    continue
+                chave = (pid, captor["id"])
+                atuais.add(chave)
+                if chave not in anteriores:
+                    dc, saves, _ = self._dados_escape_agarrar(captor)
+                    await self._enviar_trap_result(
+                        p, "", "🐊", sucesso=False, dano=0, metade=False,
+                        descricao="", efeitos_extra=[], tipo_id="agarrado", tipo="agarrado",
+                        imagem="agarrado.png", captor=nome_criatura(captor), escape_dc=dc,
+                        escape_saves=["forca" if s == "força" else s for s in saves])
+        self._agarrados_avisados = atuais
 
     async def _enviar_resultado_atordoamento(self, alvo, fonte, duracao, efeitos):
         """Alerta pessoal de atordoamento ou perda de ação causada por monstro."""
@@ -36656,6 +37662,73 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                      and not a.get("desativada") and not a.get("esgotada")
                      and (a.get("permanente") or a.get("ativa_ate") is None
                           or self.round_num <= a["ativa_ate"])), None)
+
+    async def _solucao_mecanismo_desarmar_raio(self, player, raio=3):
+        """Desarma toda armadilha pendente dentro do raio Chebyshev do herói."""
+        try:
+            px, py = (int(v) for v in player["pos"][:2])
+        except (KeyError, TypeError, ValueError):
+            return 0
+
+        def dentro(pos):
+            try:
+                return (len(pos) >= 2
+                        and max(abs(int(pos[0]) - px), abs(int(pos[1]) - py)) <= raio)
+            except (TypeError, ValueError):
+                return False
+
+        desarmadas = []
+
+        # Buracos procedurais vivem em self.traps e ainda não têm metadados de
+        # catálogo próprios. Eles usam o CR básico do Buraco para o XP normal.
+        for trap in list(self.traps):
+            if not trap.get("triggered") and dentro(trap.get("pos", [])):
+                self.traps.remove(trap)
+                desarmadas.append({**trap, "tipo": "buraco", "permanente": False})
+
+        # Armadilhas colocáveis ou autoradas no chão. Respeita validade,
+        # desativação e estados esgotados; visibilidade não limita o efeito.
+        for arm in list(self.armadilhas):
+            expirada = (arm.get("ativa_ate") is not None
+                        and not arm.get("permanente")
+                        and self.round_num > arm.get("ativa_ate", 0))
+            if (arm.get("desativada") or arm.get("esgotada") or expirada
+                    or not dentro(arm.get("pos", []))):
+                continue
+            self.armadilhas.remove(arm)
+            desarmadas.append(arm)
+
+        # Uma armadilha em objeto é desativada no próprio objeto para preservar
+        # seu estado nos saves; qualquer tile do footprint pode estar no raio.
+        for decor in self.decorations:
+            if not any(dentro(tile) for tile in self._decor_tiles(decor)):
+                continue
+            if self._decor_tem_armadilha_pendente(decor):
+                if (decor.get("trap") and not decor.get("trap_disarmed")
+                        and (not decor.get("trap_triggered")
+                             or decor.get("trap", {}).get("permanente"))):
+                    arm = self._armadilha_da_decoracao(decor)
+                    decor["trap_disarmed"] = True
+                    if arm:
+                        desarmadas.append(arm)
+                if (decor.get("chest_trap_monster_type")
+                        and not decor.get("chest_trap_disarmed")
+                        and (not decor.get("chest_trap_triggered")
+                             or decor.get("chest_trap_permanente"))):
+                    desarmadas.append({
+                        "id": f"decor_chest_trap_{decor['id']}",
+                        "tipo": "bau_armadilha",
+                        "pos": list(decor["pos"]),
+                        "cr": decor.get("chest_trap_cr", 1.0),
+                        "permanente": bool(decor.get("chest_trap_permanente")),
+                    })
+                    decor["chest_trap_disarmed"] = True
+                decor["trap_revealed"] = True
+
+        for arm in desarmadas:
+            await self._conceder_xp_armadilha(
+                arm, multiplicador=2 if arm.get("permanente") else 1)
+        return len(desarmadas)
 
     def _consumir_armadilha_se_descartavel(self, arm):
         """Remove armadilhas de uso único; permanentes ficam até o desarme."""
@@ -38196,6 +39269,76 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             reveladas += 1
         return reveladas
 
+    def _vela_reveladora_cobre_pos(self, pos):
+        """True quando uma Vela ativa mantém `pos` revelada para o grupo.
+
+        Usa o mesmo raio Chebyshev da detecção de armadilhas. A visibilidade é
+        transitória e acompanha os heróis; não altera `explored` nem o estado
+        permanente de armadilhas colocáveis ou de objetos.
+        """
+        if not isinstance(pos, (list, tuple)) or len(pos) < 2:
+            return False
+        try:
+            x, y = int(pos[0]), int(pos[1])
+            rodada = int(self.round_num or 1)
+        except (TypeError, ValueError):
+            return False
+        for heroi in self.players.values():
+            if not heroi.get("alive") or heroi.get("fora_masmorra"):
+                continue
+            try:
+                expira = int(heroi.get("vela_reveladora_expira_em", 0) or 0)
+                hx, hy = heroi.get("pos", [-1, -1])[:2]
+                hx, hy = int(hx), int(hy)
+            except (TypeError, ValueError):
+                continue
+            if expira > rodada and max(abs(x - hx), abs(y - hy)) <= 3:
+                return True
+        return False
+
+    def _lampada_vigilia_arcana_revela_monstro(self, monstro):
+        """A lâmpada revela temporariamente monstros ocultos no raio do grupo."""
+        if not monstro or not monstro.get("invisivel_sombras"):
+            return False
+        rodada = int(self.round_num or 1)
+        try:
+            tiles_monstro = self._monster_tiles(monstro)
+        except (TypeError, ValueError, KeyError):
+            tiles_monstro = [monstro.get("pos", [])]
+        for heroi in self.players.values():
+            if not heroi.get("alive") or heroi.get("fora_masmorra"):
+                continue
+            try:
+                expira = int(heroi.get("lampada_vigilia_arcana_expira_em", 0) or 0)
+                hx, hy = (int(v) for v in heroi.get("pos", [-1, -1])[:2])
+            except (TypeError, ValueError):
+                continue
+            if expira <= rodada:
+                continue
+            for tile in tiles_monstro:
+                try:
+                    tx, ty = int(tile[0]), int(tile[1])
+                except (TypeError, ValueError, IndexError):
+                    continue
+                if max(abs(tx - hx), abs(ty - hy)) <= 3:
+                    return True
+        return False
+
+    def _vela_reveladora_cobre_decor(self, decor):
+        return any(self._vela_reveladora_cobre_pos(tile)
+                   for tile in self._decor_tiles(decor))
+
+    @staticmethod
+    def _decor_tem_armadilha_pendente(decor):
+        regular = bool(decor.get("trap") and not decor.get("trap_disarmed")
+                       and (not decor.get("trap_triggered")
+                            or decor.get("trap", {}).get("permanente")))
+        bau = bool(decor.get("chest_trap_monster_type")
+                   and not decor.get("chest_trap_disarmed")
+                   and (not decor.get("chest_trap_triggered")
+                        or decor.get("chest_trap_permanente")))
+        return regular or bau
+
     async def handle_detectar_armadilhas(self, pid, msg):
         """Luccas alterna a Detecção de Armadilhas (ação bônus). Enquanto ativa,
         revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno."""
@@ -38488,7 +39631,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "pos":     a["pos"],
                 "icone":   tipo.get("icone", "🪤"),
                 "nome":    tipo.get("nome", a["tipo"]),
-                "visivel": a.get("visivel", False),
+                "visivel": bool(a.get("visivel") or self._vela_reveladora_cobre_pos(a.get("pos"))),
+                "vela_revelada": self._vela_reveladora_cobre_pos(a.get("pos")),
                 "ativada": a.get("ativada", False),
                 "aliada":  a.get("criador") in self.players,
                 "so_luccas": False,   # reservado p/ armadilhas de masmorra detectadas (futuro)
@@ -38587,6 +39731,26 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         effect, val = item["effect"], item.get("value", 0)
 
+        # O Cálice só recupera um slot que ainda esteja em recarga. Validar
+        # classe e cooldown antes de cobrar ação ou consumir o item evita uso
+        # inútil quando o herói não pode receber o efeito.
+        if effect == "restore_spell_slot":
+            allowed = _weapon_allowed_classes(item) or ["mage", "cleric"]
+            if p.get("class_id") not in allowed:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_de("item", item_id))})
+                return
+            circle = item.get("circle")
+            if circle != "primeiro":
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+                return
+            self._slot_prune(p, circle)
+            cooldowns = p.get("slots_cooldown", {}).get(circle, [])
+            if slots_max_para(p).get(circle, 0) <= 0 or not cooldowns:
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.calice_eter_sem_slot_gasto")})
+                return
+
         # ArremessÃ¡veis nÃ£o sÃ£o "usados" por use_item â€” clientes antigos/cacheados
         # ainda roteiam clique de bolsa por aqui; sem esta guarda o tail comum
         # (p["bag"].remove) apagaria o frasco sem efeito nenhum.
@@ -38654,7 +39818,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         # SÃ³ efeitos listados como aÃ§Ã£o bÃ´nus consomem esse limite; comida Ã© livre.
         if effect in self.BONUS_ACTION_EFFECTS and effect not in {"food", "meal_survival"}:
-            ok = await self._executar_acao_bonus(p)
+            # Sem narração intermediária, o caminho do Cálice não cede o loop
+            # entre a validação do slot e o consumo/restauração do mesmo.
+            ok = await self._executar_acao_bonus(p, narrar=effect != "restore_spell_slot")
             if not ok:
                 return  # jÃ¡ usou aÃ§Ã£o bÃ´nus neste turno â€” abortar sem consumir o item
 
@@ -38664,6 +39830,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             vid = item.get("veneno_id")
             if not _veneno_id_valido(vid):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
+        if effect == "elemental_resistance_potion" and item.get("element") not in {
+                "fogo", "gelo", "eletricidade", "acido", "agua", "sagrado"}:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
 
         remove_item = True
         if source_location is not None:
@@ -38790,6 +39959,143 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 extra = " — seu próximo ataque tem **vantagem**!"
             await self.gm_say(
                 T("narracao.acende_a_e_a_luz_em_volta_e_sugada_fica", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), extra=extra))
+        elif effect == "reveal_traps_potion":
+            rodadas = max(1, int(val or 10))
+            # Uma vela por herói: reacender renova a duração, sem somar raios.
+            # O raio e a visibilidade são derivados ao montar o game_state, sem
+            # gravar descobertas temporárias em explored ou nas próprias traps.
+            p["vela_reveladora_expira_em"] = int(self.round_num or 1) + rodadas
+            await self.gm_say(T("narracao.acende_a_vela_reveladora",
+                               heroi=p["name"], item=nome_item(item), rodadas=rodadas))
+        elif effect == "arcane_vigilance_potion":
+            rodadas = max(1, int(val or 10))
+            p["lampada_vigilia_arcana_expira_em"] = int(self.round_num or 1) + rodadas
+            await self.gm_say(T("narracao.acende_lampada_vigilia_arcana",
+                               heroi=p["name"], item=nome_item(item), rodadas=rodadas))
+        elif effect == "disarm_traps_area":
+            quantidade = await self._solucao_mecanismo_desarmar_raio(p, raio=3)
+            await self.gm_say(T("narracao.usa_solucao_mecanismo",
+                               heroi=p["name"], quantidade=quantidade))
+        elif effect == "invisibility":
+            # A poção compartilha o mesmo estado, animação, duração e regras de
+            # quebra da magia. Seu valor é duração fixa, sem rolagem de dado.
+            magia_invisibilidade = {
+                **GRIMORIO["invisibilidade"],
+                "duracao": str(max(1, int(val or 6))),
+            }
+            await self._executar_invisibilidade(p, magia_invisibilidade, 0)
+        elif effect == "flight_potion":
+            dur = max(1, int(val or 10))
+            animation_id = f"voo_pocao_{p['id']}_{self.round_num}_{new_id()}"
+            pos = list(p.get("pos") or [0, 0])
+            altura_inicial = int(p.get("altura", ALTURA_MIN) or 0)
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "voo", "phase": "start",
+                "animation_id": animation_id, "caster_id": p["id"],
+                "target_id": p["id"], "origin": pos, "target": pos,
+                "from_altitude": altura_inicial, "travel_ms": 680, "impact_ms": 1080,
+            })
+            p["voo_pocao_rodadas"] = dur
+            self._atualizar_voo_heroi(p)
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "voo", "phase": "resolve",
+                "animation_id": animation_id, "caster_id": p["id"],
+                "target_id": p["id"], "target": pos,
+                "to_altitude": int(p.get("altura", ALTURA_INICIAL_VOO) or ALTURA_INICIAL_VOO),
+                "duration_rounds": dur, "success": True,
+            })
+            await self.gm_say(T("narracao.bebe_pocao_voo", heroi=p["name"], rodadas=dur))
+        elif effect == "speed":
+            # Reutiliza o executor da magia para manter ação extra, movimento,
+            # animação e expiração idênticos. A poção substitui o 1d4 por 1d4+1.
+            magia_velocidade = {
+                **GRIMORIO["velocidade"],
+                "duracao": str(val or "1d4+1"),
+            }
+            await self._executar_velocidade(p, magia_velocidade, 0)
+        elif effect == "darkness_mantle":
+            # A poção usa a duração do catálogo, sem slot nem bônus de Cajado
+            # Arcano; o restante do efeito é compartilhado com a magia.
+            magia_manto = {
+                **GRIMORIO["manto_escuridao"],
+                "duracao": str(val or "1d4"),
+            }
+            await self._executar_manto_escuridao(
+                p, magia_manto, 0, aplicar_bonus_cajado=False)
+        elif effect == "elemental_resistance_potion":
+            await self._executar_pocao_protecao_elemental(p, item)
+        elif effect == "arcane_barrier_potion":
+            # O executor da magia mantém redução, animação e expiração. A poção
+            # fixa o nível em zero e soma +1 ao 1d6 para durar exatamente 1d6+2.
+            magia_barreira = {
+                **GRIMORIO["barreira_arcana"],
+                "duracao": "1d6",
+                "duracao_por_nivel": 0,
+            }
+            await self._executar_barreira_arcana(p, magia_barreira, 1, 1)
+        elif effect == "strength_potion":
+            if int(p.get("gole_gigante_rodadas", 0) or 0) <= 0:
+                bonus_forca = max(1, int(self._rolar_dado(
+                    str(item.get("strength_bonus") or "1d4+1"))))
+                self._apply_attribute_delta(p, "str_", bonus_forca)
+                p["gole_gigante_bonus"] = bonus_forca
+            duracao = max(1, int(self._rolar_dado(str(val or "1d6+4"))))
+            p["gole_gigante_rodadas"] = duracao
+            await self.gm_say(T("narracao.bebe_gole_do_gigante", heroi=p["name"],
+                                bonus=p.get("gole_gigante_bonus", 0), rodadas=duracao))
+        elif effect == "dexterity_potion":
+            if int(p.get("bote_serpente_rodadas", 0) or 0) <= 0:
+                bonus_destreza = max(1, int(self._rolar_dado(
+                    str(item.get("dexterity_bonus") or "1d4+1"))))
+                self._apply_attribute_delta(p, "dex", bonus_destreza)
+                p["bote_serpente_bonus"] = bonus_destreza
+            duracao = max(1, int(self._rolar_dado(str(val or "1d6+4"))))
+            p["bote_serpente_rodadas"] = duracao
+            await self.gm_say(T("narracao.bebe_bote_da_serpente", heroi=p["name"],
+                                bonus=p.get("bote_serpente_bonus", 0), rodadas=duracao))
+        elif effect == "constitution_potion":
+            if int(p.get("elixir_cavalo_ferro_rodadas", 0) or 0) <= 0:
+                bonus_constituicao = max(1, int(self._rolar_dado(
+                    str(item.get("constitution_bonus") or "1d4+1"))))
+                con_antes = int(p.get("con_", 10))
+                self._apply_attribute_delta(p, "con_", bonus_constituicao)
+                p["elixir_cavalo_ferro_bonus"] = max(
+                    0, int(p.get("con_", con_antes)) - con_antes)
+            duracao = max(1, int(self._rolar_dado(str(val or "1d6+4"))))
+            p["elixir_cavalo_ferro_rodadas"] = duracao
+            await self.gm_say(T("narracao.bebe_elixir_cavalo_ferro", heroi=p["name"],
+                                bonus=p.get("elixir_cavalo_ferro_bonus", 0), rodadas=duracao))
+        elif effect == "intelligence_potion":
+            if int(p.get("sabedoria_liquida_rodadas", 0) or 0) <= 0:
+                bonus_inteligencia = max(1, int(self._rolar_dado(
+                    str(item.get("intelligence_bonus") or "1d4+1"))))
+                int_antes = int(p.get("int_", 10))
+                self._apply_attribute_delta(p, "int_", bonus_inteligencia)
+                p["sabedoria_liquida_bonus"] = max(
+                    0, int(p.get("int_", int_antes)) - int_antes)
+            duracao = max(1, int(self._rolar_dado(str(val or "1d6+4"))))
+            p["sabedoria_liquida_rodadas"] = duracao
+            await self.gm_say(T("narracao.bebe_sabedoria_liquida", heroi=p["name"],
+                                bonus=p.get("sabedoria_liquida_bonus", 0), rodadas=duracao))
+        elif effect == "restore_spell_slot":
+            # A ação bônus acima foi cobrada sem await; agora é seguro remover
+            # exatamente um cooldown sem disputa com outra ação concorrente.
+            self._slot_prune(p, "primeiro")
+            cooldowns = p["slots_cooldown"]["primeiro"]
+            cooldown_restaurado = max(int(ready_at) for ready_at in cooldowns)
+            cooldowns.remove(cooldown_restaurado)
+            await self.gm_say(T("narracao.bebe_calice_eter", heroi=p["name"],
+                                item=nome_item(item)))
+        elif effect == "archery_potion":
+            duracao = max(1, int(self._rolar_dado(str(val or "1d4+1"))))
+            p["mira_falcao_rodadas"] = duracao
+            await self.gm_say(T("narracao.bebe_mira_do_falcao", heroi=p["name"],
+                                rodadas=duracao))
+        elif effect == "ranged_range_potion":
+            duracao = max(1, int(self._rolar_dado(str(val or "1d6+2"))))
+            p["essencia_vento_rodadas"] = duracao
+            await self.gm_say(T("narracao.bebe_essencia_vento", heroi=p["name"],
+                                rodadas=duracao))
 
         await self._licao_evento(p, "usar_item", alvo=(item or {}).get("id"))
         if remove_item and source_location is None:
@@ -39092,12 +40398,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         MESMA limpeza — antes, Golpe Devastador e metamagias ficavam armados
         para sempre ali. Byte-idêntico ao bloco original para o jogo real."""
         pid = p["id"]
+        p["moved_this_turn"]   = False   # inicia o próximo turno antes de renovar terreno
         p["moves_left"]        = self._water_turn_moves(p, p["spd"])
         p["action_done"]       = False
         p["bonus_action_used"] = False
         p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
         self._limpar_improviso_pendente(p)   # Gaita: passos sem-alvo nÃ£o usados expiram
-        p["moved_this_turn"]   = False   # reabre o custo de sobrevivencia no novo turno
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0
         p["skill_bonus_dano"]   = 0
@@ -39502,6 +40808,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             passou, d20, bonus, total = self._testar_save(p, ab.get("save", "vontade"), dc, fonte=m)
             if not passou:
                 p["ciclope_ataque_penalty_ate"] = self.round_num + int(ab.get("duration_rounds", 1) or 1)
+                await self._enviar_trap_result(
+                    p, "Presença Aterradora", "😱", sucesso=False, dano=0, metade=False,
+                    descricao="", efeitos_extra=[], tipo="presenca_aterradora",
+                    tipo_id="presenca_aterradora", imagem="medo.png",
+                    duracao=int(ab.get("duration_rounds", 1) or 1),
+                    monstro=nome_criatura(m))
             resultado = T("narracao.resiste" if passou
                           else "narracao.falha_e_sofre_pen_ataque_1a_rodada")
             await self.gm_say(T("narracao.usa_presenca_aterradora_contra_vontade_v", monstro=nome_criatura(m), heroi=nome_criatura(p), resultado=resultado, total=total, dc=dc))
@@ -39537,10 +40849,22 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         passou, d20, bonus, total = self._testar_save(target, ab.get("save", "fortitude"), int(ab.get("dc", 17) or 17), fonte=m)
         if not passou and self._eh_jogador(target):
-            target["ciclope_perde_movimento"] = True
-        resultado = T("narracao.resiste" if passou
-                      else "narracao.perde_a_proxima_acao_de_movimento")
-        await self.gm_say(T("narracao.ao_golpe_esmagador_de_fortitude_vs_cd", alvo=nome_criatura(target), resultado=resultado, monstro=nome_criatura(m), total=total, int_ab_get_dc_17_or_17=int(ab.get('dc', 17) or 17)))
+            target["perde_turno"] = True
+            await self._enviar_resultado_atordoamento(
+                target,
+                f"O Golpe Esmagador de {nome_criatura(m)} deixou você atordoado.",
+                "1 rodada",
+                ["Você perde sua próxima rodada",
+                 "Não pode se mover, atacar nem usar habilidades durante esse turno"],
+            )
+            await self.gm_say(T("narracao.fica_atordoado_fortitude_vs_cd_e_perde_a",
+                                tgt_name=nome_criatura(target), stot=total,
+                                dc=int(ab.get("dc", 17) or 17)))
+        else:
+            await self.gm_say(T("narracao.ao_golpe_esmagador_de_fortitude_vs_cd",
+                                alvo=nome_criatura(target), resultado=T("narracao.resiste"),
+                                monstro=nome_criatura(m), total=total,
+                                int_ab_get_dc_17_or_17=int(ab.get("dc", 17) or 17)))
 
     async def _ai_ciclope(self, m, targets):
         await self._ciclope_presenca_aterradora(m)
@@ -40104,6 +41428,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Penalidade de acerto/dano por arma corroída. Armas com `corrosao_resistente`
         toleram N golpes a mais antes de começar a sofrer penalidade (ex.: Espada
         Curta de Ferro Serrilhado tolera +1)."""
+        if _weapon_nat1_wear(p.get("weapon")):
+            return self._penalidade_desgaste_arma((p.get("gear") or {}).get("weapon") or p["weapon"])
         c = self._corr(p)
         if c["arma_destruida"]:
             return 0                        # jÃ¡ desarmado (soco) â€” sem penalidade extra
@@ -40115,6 +41441,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return min(max(0, c["arma_lvl"] - 2), pen_niveis)
         extra = weapon.get("corrosao_resistente", 0)
         return min(max(0, c["arma_lvl"] - extra), pen_niveis)   # danificado -1, quebrado -2, ...
+
+    def _penalidade_desgaste_arma(self, item):
+        """Desgaste da arma arremessável acompanha a peça em qualquer mão."""
+        if not _weapon_nat1_wear(item):
+            return 0
+        _, penalidade = self._corrosao_nm_quebra(item, self._nivel_corrosao_item(item))
+        return penalidade
 
     async def _devorador_cura(self, m, dado):
         """Cura o devorador ao destruir/consumir um item (Absorver Matéria 1d4 /
@@ -40415,6 +41748,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _aplicar_corrosao_inicial(self, p, item, categoria):
         """Transfere o desgaste de um item achado já corroído ao estado de combate."""
+        if _weapon_nat1_wear(item):
+            # Não usa o cache da outra mão e não desaparece ao entrar numa masmorra.
+            return
         nivel = int(item.get("corrosao_inicial", 0) or 0)
         if nivel <= 0:
             return
@@ -41059,6 +42395,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Move o monstro 1 passo e aplica efeitos de pisar (fogueira)."""
         if m.get("cola_sem_movimento"):
             return False
+        if m.get("_piche_movimento_encerrado"):
+            return False
         if m.get("rodamoinho_preso") or m.get("rodamoinho_profundo_preso"):
             return False
         # Agarrado por outra criatura: só quem o segura o desloca (_arrastar_preso).
@@ -41067,6 +42405,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         old_x, old_y = m["pos"]
         old_facing = list(m.get("facing")) if isinstance(m.get("facing"), (list, tuple)) else None
         step_facing = [nx - old_x, ny - old_y]
+        estava_no_piche = self._criatura_em_piche(m, [old_x, old_y], old_facing)
         if not self._passo_seguro(m, [old_x, old_y], [nx, ny], step_facing):
             return False
         if step_facing in ([1, 0], [-1, 0], [0, 1], [0, -1]):
@@ -41106,6 +42445,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             m["_water_min_step_used"] = True
         else:
             m["_water_moves_left"] = max(0, m["_water_moves_left"] - step_cost)
+        if estava_no_piche or self._criatura_em_piche(m, m["pos"], step_facing):
+            m["_piche_movimento_encerrado"] = True
+            m["_water_moves_left"] = 0
+            if "master_moves_left" in m:
+                m["master_moves_left"] = 0
         if m.get("hp", 0) <= 0:
             return True
         self._apply_swamp_entry_penalty(m)
@@ -41166,7 +42510,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             chest_pending = bool(has_chest_trap and not d.get("chest_trap_disarmed")
                                  and (not d.get("chest_trap_triggered") or d.get("chest_trap_permanente")))
             if (not (regular_pending or chest_pending)
-                    or (apenas_revelada and not d.get("trap_revealed"))):
+                    or (apenas_revelada and not (
+                        d.get("trap_revealed") or
+                        (self._decor_tem_armadilha_pendente(d)
+                         and self._vela_reveladora_cobre_decor(d))))):
                 continue
             if self._adjacente_a_decor(pos, d):
                 return d
@@ -41445,7 +42792,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                     and (not d.get("chest_trap_triggered") or d.get("chest_trap_permanente"))),
                 "trap": bool(d.get("trap") and not d.get("trap_disarmed")
                              and (not d.get("trap_triggered") or d.get("trap", {}).get("permanente"))),
-                "trap_revealed": bool(d.get("trap_revealed")),
+                "trap_revealed": bool(d.get("trap_revealed") or self._decor_tem_armadilha_pendente(d)
+                                        and self._vela_reveladora_cobre_decor(d)),
+                "trap_revelada_vela": bool(self._decor_tem_armadilha_pendente(d)
+                                            and self._vela_reveladora_cobre_decor(d)),
                 "key_objective": bool(d.get("key_objective")),
                 # mecanismo que desliga armadilhas: o cliente o trata como objeto clicável
                 **({"interactive": True} if d.get("disable_trap_ids") else {}),
@@ -41715,11 +43065,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         entidades vivas, ignorando a própria m)."""
         sx, sy = m["pos"]
         prev = {(sx, sy): None}
+        if m.get("_piche_movimento_encerrado"):
+            return prev
+        piche_start = self._criatura_em_piche(m, [sx, sy], m.get("facing"))
         dist = {(sx, sy): 0}
         q = [(sx, sy)]; head = 0
         while head < len(q):
             q[head:] = sorted(q[head:], key=lambda pos: dist[pos])
             x, y = q[head]; head += 1
+            if dist[(x, y)] > 0 and (piche_start or self._criatura_em_piche(m, [x, y])):
+                continue
             if dist[(x, y)] >= budget:
                 continue
             for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
@@ -44864,6 +46219,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if effect == "perde_turno":
                 target["perde_turno"] = True
                 await self._aplicar_queda(target, "atordoamento", m.get("id"))
+                if ab_id == "disparo_teia":
+                    await self._enviar_resultado_prisao(target, "teia", 1)
                 await self.gm_say(T("narracao.esta_imobilizado_e_perdera_o_proximo_tur", tgt_name=nome_criatura(target)))
             elif effect == "petrificado":
                 if self._eh_jogador(target) and self._imune_a_status(target, "petrificacao"):
@@ -45231,6 +46588,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 sb_str = f"+{sb}" if sb >= 0 else str(sb)
                 if not save_ok:
                     target["moves_left"] = 0
+                    await self._enviar_resultado_derrubado(target, nome_criatura(m), "atual")
                     await self.gm_say(
                         T("narracao.foi_derrubado_d20_vs_cd_perde_o_moviment", target=nome_criatura(target), d20=d20, sb_str=sb_str, stot=stot, dc=dc))
                 else:
@@ -45375,6 +46733,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # o movimento atual não teria efeito. Esta flag é consumida no início
         # do próximo turno da vítima.
         target["derrubado_sem_movimento"] = True
+        await self._enviar_resultado_derrubado(target, nome_criatura(m), "proximo")
         await self.gm_say(T("narracao.tiranossauro_cauda_derruba", monstro=nome_criatura(m),
                             alvo=nome_criatura(target), d20=d20, bonus=f"{bonus:+d}",
                             total=total, dc=dc))
@@ -45559,6 +46918,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._matar_no_abismo(c, m.get("id"))
             await self.gm_say(T("narracao.arrasta", monstro=nome_criatura(m), c=nome_criatura(c)))
 
+    @staticmethod
+    def _dados_escape_agarrar(captor):
+        """Fonte comum para o teste de fuga e sua explicação na janela."""
+        grip = next((ab for ab in captor.get("special_abilities", [])
+                     if ab.get("id") in ("agarrar", "agarrar_aereo", "constricao", "agarrar_lacralion", "mandibulas_colossais", "tentaculos_imobilizar", "constricao_charcos", "onda_envolvente", "salto_selvagem")), None)
+        dc = grip.get("escape_dc", grip.get("dc", 12)) if grip else 12
+        saves = (grip.get("escape_saves") if grip else None) or ["fortitude", "reflexos"]
+        return dc, saves, grip
+
     async def _processar_escape_agarrar(self, p):
         """Tentativa de escape no início do turno do jogador. Os saves e a CD
         vêm da habilidade de agarrão do captor (crocodilo: FOR/REF CD 12;
@@ -45570,12 +46938,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         # Localiza a habilidade de agarrÃ£o do captor para CD e saves de escape.
-        grip = next((ab for ab in captor.get("special_abilities", [])
-                     if ab.get("id") in ("agarrar", "agarrar_aereo", "constricao", "agarrar_lacralion", "mandibulas_colossais", "tentaculos_imobilizar", "constricao_charcos", "onda_envolvente", "salto_selvagem")), None)
-        dc    = (grip.get("escape_dc", grip.get("dc", 12)) if grip else 12)
-        saves = grip.get("escape_saves") if grip else None
-        if not saves:
-            saves = ["fortitude", "reflexos"]   # padrÃ£o (compat. crocodilo)
+        dc, saves, grip = self._dados_escape_agarrar(captor)
 
         SAVE_LBL = {"fortitude": "FOR", "forca": "FOR", "força": "FOR", "reflexos": "REF", "vontade": "VON"}
         sucesso = False
@@ -46355,6 +47718,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if max(abs(p["pos"][0] - centro[0]), abs(p["pos"][1] - centro[1])) > 1:
                 continue
             self._set_mod_magia(p, debuff, dur); n += 1
+            duracao_ativa = p["mods_magia"]["rodadas"]
+            await self._enviar_trap_result(
+                p, T("ui.amaldicoar_xama.titulo"), "☠️", sucesso=False, dano=0, metade=False,
+                descricao=T("ui.amaldicoar_xama.descricao", monstro=nome_criatura(m)),
+                efeitos_extra=[
+                    T("ui.amaldicoar_xama.penalidades", **debuff),
+                    T("ui.amaldicoar_xama.duracao", n=duracao_ativa),
+                    T("ui.amaldicoar_xama.termino"),
+                ], tipo_id="amaldicoar_xama", imagem="amaldicoado.png", duracao=duracao_ativa)
         await self.gm_say(
             T("narracao.lanca_amaldicoar_em_heroi_s_1_ataque_dan", monstro=nome_criatura(m), n=n, dur=dur))
 
@@ -47815,6 +49187,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             passou, d20, sb, st = self._testar_save(vitima, ability.get("save", "reflexos"), cd, fonte=m)
             if not passou:
                 vitima["derrubado_sem_movimento"] = True
+                await self._enviar_resultado_derrubado(vitima, nome_criatura(m), "proximo")
             await self.gm_say(T("narracao.cauda_em_de_dano_reflexos_vs_cd", vitima=nome_criatura(vitima), dano=dano, e_derrubado_if_not_passo=' e derrubado' if not passou else '', st=st, cd=cd))
 
     async def _ai_grotao(self, m, targets):
@@ -48291,10 +49664,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if m.get("_rodamoinho_profundo_bloqueado_turno"):
                 continue
             await self._testar_rodamoinho_inicio_turno(m)
+            m["_moved_this_turn"] = False
             m["_water_moves_left"] = self._water_turn_moves(m, m.get("movement", 4))
             m["_runico_bonus_used"] = False
             m["_runico_passo_ativo"] = False
-            m["_moved_this_turn"] = False
             m["_garaloux_move_count"] = 0
             m["_garaloux_charge_consumed"] = False
             m["_molochus_move_count"] = 0
@@ -48523,10 +49896,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Restore moves for next round
         for pid2, p in self.players.items():
             if p["alive"]:
+                p["moved_this_turn"]   = False
                 p["moves_left"]        = self._water_turn_moves(p, self._moves_base(p))
                 p["action_done"]       = False
                 p["bonus_action_used"] = False
-                p["moved_this_turn"]   = False
                 # Animados recuperam movimento/aÃ§Ã£o a cada rodada (controle do dono)
                 for a in p.get("animados", []):
                     a["moves_left"] = self._water_turn_moves(a, a.get("movimento", 3))
@@ -49274,6 +50647,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 # O DICT, não o nome pronto: assim o nome_item o resolve no
                 # idioma de quem lê, em vez de cravar o português na frase.
                 itens_nomes.append(nome_item(idef))
+        await self._aplicar_renome_fato(obj)
         nome = obj.get("type", "objetivo")
         ganhos = []
         if xp_share:   ganhos.append(T("narracao.obj_xp", n=xp_share))
@@ -49282,6 +50656,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "narracao.objetivo_cumprido", nome=nome,
             ganhos=T("narracao.obj_ganhos", lista=ganhos) if ganhos else "",
             itens=T("narracao.obj_itens", lista=itens_nomes) if itens_nomes else ""))
+
+    async def _aplicar_renome_fato(self, obj):
+        """Soma o `renome` (delta com sinal, piso zero no total do grupo) e grava o `fato` de um
+        objetivo ou consequência. Objetivos antigos não têm os campos: nada muda."""
+        obj = obj or {}
+        delta = obj.get("renome")
+        if isinstance(delta, int) and not isinstance(delta, bool) and delta:
+            self.renome = max(0, self.renome + delta)
+            await self.gm_say(T("narracao.obj_renome", n=f"{delta:+d}"))
+        fato = obj.get("fato")
+        if isinstance(fato, str) and fato.strip():
+            self.fatos.add(fato.strip())
 
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
@@ -49338,6 +50724,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return "failed"
         return "done" if self._objetivo_cumprido(obj) else "pending"
 
+    def _objetivo_principal_efetivo(self):
+        """O objetivo que encerra a missão: o `alternativo` quando o resgate falhou e a masmorra
+        define um; senão o principal."""
+        objs = self.objectives or {}
+        alt = objs.get("alternativo")
+        if self.rescue_failed and isinstance(alt, dict):
+            return alt
+        return objs.get("primary")
+
     def _objetivo_payload(self, obj):
         """Status do objetivo p/ o cliente; salas_obrigatorias inclui progresso N/M."""
         d = {"type": (obj or {}).get("type"), "status": self._objetivo_status(obj)}
@@ -49384,7 +50779,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         entries = diario.setdefault("items", [])
         if not isinstance(entries, list):
             entries = diario["items"] = []
-        await self._aplicar_renome_fato(obj)
         if any(isinstance(entry, dict) and entry.get("item_id") == item_id for entry in entries):
             return False
         row = {"item_id": item_id}
@@ -49394,18 +50788,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return True
 
     def _required_route_exit_ids(self):
-    async def _aplicar_renome_fato(self, obj):
-        """Soma o `renome` (delta com sinal, piso zero no total do grupo) e grava o `fato` de um
-        objetivo ou consequência. Objetivos antigos não têm os campos: nada muda."""
-        obj = obj or {}
-        delta = obj.get("renome")
-        if isinstance(delta, int) and not isinstance(delta, bool) and delta:
-            self.renome = max(0, self.renome + delta)
-            await self.gm_say(T("narracao.obj_renome", n=f"{delta:+d}"))
-        fato = obj.get("fato")
-        if isinstance(fato, str) and fato.strip():
-            self.fatos.add(fato.strip())
-
         if not self._etapa_com_saidas():
             return []
         adventure = WORLD_ADVENTURES.get(self.world_adventure_id) or {}
@@ -49461,15 +50843,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _respawn_returned_route_monsters(self):
         """Reaparece somente o grupo de uma rota já visitada, após o retorno à cidade."""
         if not self._etapa_com_saidas():
-    def _objetivo_principal_efetivo(self):
-        """O objetivo que encerra a missão: o `alternativo` quando o resgate falhou e a masmorra
-        define um; senão o principal."""
-        objs = self.objectives or {}
-        alt = objs.get("alternativo")
-        if self.rescue_failed and isinstance(alt, dict):
-            return alt
-        return objs.get("primary")
-
             return
         progress = self._route_progress_state() or {}
         visited = set(progress.get("visited_route_ids") or [])
@@ -49535,6 +50908,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "primary": self._objetivo_payload(prim),
             "secondary": [self._objetivo_payload(s) for s in secs],
         }
+        alt = self.objectives.get("alternativo")
+        if isinstance(alt, dict):
+            self.objective_status["alternativo"] = self._objetivo_payload(alt)
+        efetivo = self._objetivo_principal_efetivo()
         if steps:
             self.objective_status["steps"] = step_status
         if (self.phase == "playing" and not self._objetivo_concluido
@@ -49546,6 +50923,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             loot = []
             await self._conceder_objetivo_reward(efetivo, is_primary=True, loot_acc=loot)
             for s in secs:
+                # Final alternativo: o secundário do mesmo tipo já foi "pago" pelo alternativo.
+                if efetivo is not prim and s.get("type") == efetivo.get("type"):
+                    continue
                 if self._objetivo_cumprido(s):
                     await self._conceder_objetivo_reward(s, is_primary=False, loot_acc=loot)
             if loot:
@@ -49645,10 +51025,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             story = None
             if self.mode == "campaign" and self.campaign:
                 fase = _fase_obj(self.campaign["dungeons"][self.campaign_phase])
-        alt = self.objectives.get("alternativo")
-        if isinstance(alt, dict):
-            self.objective_status["alternativo"] = self._objetivo_payload(alt)
-        efetivo = self._objetivo_principal_efetivo()
                 story = _story_beat(f"final:{self.campaign_phase}",
                                     [fase.get("outro"), self.campaign.get("outro")],
                                     self._requisito_do_slide)
@@ -49660,9 +51036,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         `_voltar_para_cidade`, não chamá-lo já entrega o 'nada se recupera' —
         HP, fome/sede, slots, recargas e status atravessam a emenda."""
         stages = list(adventure.get("dungeons") or [])
-                # Final alternativo: o secundário do mesmo tipo já foi "pago" pelo alternativo.
-                if efetivo is not prim and s.get("type") == efetivo.get("type"):
-                    continue
         anterior = _etapa_obj(stages[indice - 1])
         proxima  = _etapa_obj(stages[indice])
         defn = carregar_dungeon(proxima["file"])
@@ -49732,6 +51105,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 ultima_livre = list(pr["pos"])
             if not pr.get("alive") or self.prisoner is not pr:
                 break
+            if pr.get("_piche_movimento_encerrado"):
+                break
         if self.prisoner is not pr:
             await self._fechar_janela_sem_prisioneiro(pid)
             return
@@ -49751,6 +51126,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         pr = self.prisoner
         if not pr or not pr.get("freed") or not pr.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_prisioneiro_para_mover")}); return
+        if pr.get("_piche_movimento_encerrado"):
+            return
         if pr.get("rescuer_pid") != pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_controla_este_prisioneiro")}); return
         if pr.get("moves_left", 0) <= 0:
@@ -49769,6 +51146,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._tile_livre_para_animado(nx, ny, None, pr["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
+        estava_no_piche = self._criatura_em_piche(pr, old_pos)
         pr["pos"] = [nx, ny]
         pr["facing"] = [int(dx), int(dy)]
         if not pr.get("alive"):
@@ -49776,6 +51154,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         self._apply_water_entry_penalty(pr, nx, ny, old_pos)
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
+        if estava_no_piche or self._criatura_em_piche(pr, pr["pos"]):
+            pr["_piche_movimento_encerrado"] = True
+            pr["moves_left"] = 0
         self._apply_snow_entry_penalty(pr, old_pos, pr["pos"])
         await self._aplicar_lava_se_pisar(pr)
         await self._aplicar_prisao_chamas_se_pisar(pr)
@@ -49813,6 +51194,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         pr["alive"] = False
         self.rescue_failed = True
         await self.gm_say(T("narracao.o_prisioneiro_foi_morto_o_resgate_falhou"))
+        await self._aplicar_consequencia_refem()
+
+    async def _aplicar_consequencia_refem(self):
+        """`objectives.primary.se_falhar` ({renome, fato}): a perda de renome e o marcador entram na
+        hora, uma única vez, e a missão continua (o Ferrão ainda precisa cair ou o grupo fugir).
+        Só altera estado e narra: roda no meio do turno dos monstros."""
+        if self._consequencia_refem_aplicada:
+            return
+        self._consequencia_refem_aplicada = True
+        sf = ((self.objectives or {}).get("primary") or {}).get("se_falhar")
+        if isinstance(sf, dict):
+            await self._aplicar_renome_fato(sf)
+            if sf.get("renome") or sf.get("fato"):
+                await self.gm_say(T("narracao.refem_morto_consequencia"))
 
     async def _processar_prisioneiro_turno(self):
         """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO é
@@ -49931,20 +51326,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                # elas usam os destinos do Mapa do Mundo. O acesso indexado
                # anterior abortava o game_start antes da cena inicial.
                "total": len(stages),
-        await self._aplicar_consequencia_refem()
-
-    async def _aplicar_consequencia_refem(self):
-        """`objectives.primary.se_falhar` ({renome, fato}): a perda de renome e o marcador entram na
-        hora, uma única vez, e a missão continua (o Ferrão ainda precisa cair ou o grupo fugir).
-        Só altera estado e narra: roda no meio do turno dos monstros."""
-        if self._consequencia_refem_aplicada:
-            return
-        self._consequencia_refem_aplicada = True
-        sf = ((self.objectives or {}).get("primary") or {}).get("se_falhar")
-        if isinstance(sf, dict):
-            await self._aplicar_renome_fato(sf)
-            if sf.get("renome") or sf.get("fato"):
-                await self.gm_say(T("narracao.refem_morto_consequencia"))
                "story": None}
         # A abertura da fase é enviada em `game_state.story` antes da entrada e
         # aguarda a confirmação do anfitrião. Não a regenere já em `playing`.
@@ -50042,6 +51423,26 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             })
         return out
 
+    def _crystal_ball_skill(self, p):
+        """Ação temporária concedida pela Bola de Cristal equipada."""
+        item = (p.get("gear") or {}).get("off_hand") if isinstance(p, dict) else None
+        if not isinstance(item, dict) or item.get("effect") != "crystal_ball_clairvoyance":
+            return None
+        pronta_em = int(item.get("clarividencia_pronta_em", 0) or 0)
+        restante = max(0, pronta_em - int(self.round_num or 0))
+        return {
+            "id": "usar_bola_cristal",
+            "name": "Bola de Cristal da Clarividência",
+            "icon": "🔮",
+            "image": item.get("icon", BOLA_CRISTAL_CLARIVIDENCIA["icon"]),
+            "tipo": "acao_principal",
+            "target": "tile",
+            "description": item.get("descricao", BOLA_CRISTAL_CLARIVIDENCIA["descricao"]),
+            "recarga_rodadas": 10,
+            "cooldown_remaining": restante,
+            "granted_origem": "crystal_ball",
+        }
+
     def _game_state_payload(self, combat_damage_events=None, resistance_events=None,
                             positive_effect_events=None):
         """Dict de `game_state` desta sala. Puro: não faz await nem broadcast.
@@ -50060,9 +51461,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # clérigo. Fichas antigas/salvas podem não conter o id porque ele
             # foi adicionado depois do início da partida; inclua-o no estado
             # enviado para a carta aparecer e ficar utilizável imediatamente.
-            magias_conhecidas = list(p.get("magias_conhecidas", []) or [])
-            if p.get("class_id") == "cleric" and "tempestade_ciclones" not in magias_conhecidas:
-                magias_conhecidas.append("tempestade_ciclones")
+            magias_visiveis = self._magias_conhecidas_com_grimorio(p)
+            if p.get("class_id") == "cleric" and "tempestade_ciclones" not in magias_visiveis:
+                magias_visiveis.append("tempestade_ciclones")
+            magias_grimorio = _grimorio_magias_equipado(p)
+            granted_skills = self._granted_hero_skills(p) + self._weapon_throw_skills(p)
+            crystal_ball_skill = self._crystal_ball_skill(p)
+            if crystal_ball_skill:
+                granted_skills.append(crystal_ball_skill)
             # Metadado autoritativo para o HUD: a bomba de fumaça e o Manto
             # criam zonas no mapa, então o cliente não deve precisar inferir
             # sozinho se este personagem está dentro da área penalizada.
@@ -50073,13 +51479,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             duracoes_escuridao = [int(z.get("duracao", 0) or 0) for z in zonas_escuridao
                                   if int(z.get("duracao", 0) or 0) > 0]
             snapshot = dict(p,
-                            magias_conhecidas=magias_conhecidas,
+                            magias_conhecidas=magias_visiveis,
+                            magias_grimorio=magias_grimorio,
                             initiative=self.initiative_value(p),
                             queimando=self._queimando(p),
                             vision_radius=self._get_raio_visao(p),
                             percepcao=self._get_percepcao_heroi(p),
-                            granted_hero_skills=(self._granted_hero_skills(p)
-                                                 + self._weapon_throw_skills(p)),
+                            granted_hero_skills=granted_skills,
                             slots_max=slots_max_para(p),
                             slots_remaining=self._slots_restantes_payload(p),
                             slots_livres_treino=self._slots_livres_treino(p),
@@ -50094,7 +51500,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             # escuridão; não altera a resolução do combate.
                             escuridao_desvantagem=sofre_escuridao,
                             escuridao_rodadas=(min(duracoes_escuridao)
-                                               if duracoes_escuridao else 0))
+                                               if duracoes_escuridao else 0),
+                            vela_reveladora_rodadas=max(
+                                0, int(p.get("vela_reveladora_expira_em", 0) or 0)
+                                - int(self.round_num or 1)),
+                            lampada_vigilia_arcana_rodadas=max(
+                                0, int(p.get("lampada_vigilia_arcana_expira_em", 0) or 0)
+                                - int(self.round_num or 1)))
             for _privado in ("_metamorfose_original", "_teste_furia_consumida_round"):
                 snapshot.pop(_privado, None)
             players_state.append(snapshot)
@@ -50104,7 +51516,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                vision_radius=self._get_raio_visao_monstro(m),
                                percepcao=self._get_percepcao_monstro(m),
                                procurando=self._monstro_procurando(m, _alvos_hostis),
-                               queimando=self._queimando(m))
+                               queimando=self._queimando(m),
+                               revealed_by_arcane_vigilance=(
+                                   self._lampada_vigilia_arcana_revela_monstro(m)))
                           for m in self.monsters.values() if m["hp"] > 0]
         for snapshot in monsters_state:
             snapshot.pop("_metamorfose_original", None)
@@ -50158,7 +51572,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "monsters": monsters_state,
             "corpses": list(self.corpses.values()),
             "hero_corpses": list(self.hero_corpses.values()),
-            "traps": [t for t in self.traps if not t["triggered"] and tuple(t["pos"]) in self.explored],
+            "traps": [dict(t, vela_revelada=self._vela_reveladora_cobre_pos(t["pos"]))
+                      for t in self.traps if not t["triggered"]
+                      and (tuple(t["pos"]) in self.explored
+                           or self._vela_reveladora_cobre_pos(t["pos"]))],
             "armadilhas": self._serializar_armadilhas(),
             "zonas_especiais": [z for z in self.zonas_especiais if z.get("ativa")],
             "explored": [list(e) for e in self.explored],
@@ -50325,27 +51742,52 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             state = sem_repetidos(pid, state)
             marcadores = self._cooperative_markers_for_pid(pid)
             jogador = self.players.get(pid)
-            if not marcadores and not (self.training_mode and jogador):
+            tem_item_restrito = bool(jogador and any(
+                item.get("effect") == "grimoire" and _weapon_allowed_classes(item)
+                for chest in state.get("chests", []) for item in chest.get("items", [])))
+            if not marcadores and not (self.training_mode and jogador) and not tem_item_restrito:
                 return padrao(state)   # nada próprio: o broadcast reaproveita o JSON por (idioma, objeto)
             payload = {
                 **state,
                 "cooperative_markers": marcadores,
             }
-            if self.training_mode and jogador:
+            if jogador and (self.training_mode or tem_item_restrito):
                 classe = jogador.get("class_id")
-                def itens_bau_personalizados(chest):
+                def ocultos_para(heroi_pid, heroi, chest):
+                    """tutorial_hidden de cada item do baú para UM herói."""
+                    classe_h = (heroi or {}).get("class_id")
                     visiveis = {}
-                    items = []
+                    out = []
                     for item in chest.get("items", []):
-                        oculto = (item.get("tutorial_class") in LICAO_CLASSES
-                                  and item.get("tutorial_class") != classe)
+                        classes_item = _weapon_allowed_classes(item)
+                        oculto = bool(item.get("effect") == "grimoire"
+                                      and classes_item and classe_h not in classes_item)
+                        oculto = oculto or (self.training_mode
+                                            and item.get("tutorial_class") in LICAO_CLASSES
+                                            and item.get("tutorial_class") != classe_h)
                         provision_id = _tutorial_provision_id(item)
                         if provision_id:
-                            remaining = self._tutorial_provision_remaining(pid, item) or 0
+                            remaining = self._tutorial_provision_remaining(heroi_pid, item) or 0
                             count = visiveis.get(provision_id, 0)
                             oculto = oculto or count >= remaining
                             visiveis[provision_id] = count + 1
-                        items.append({**item, "tutorial_hidden": oculto})
+                        out.append(oculto)
+                    return out
+
+                # Solo com grupo: a conexão controla vários heróis e cada um tem a
+                # própria cota/classe; o cliente lê a visão do herói em foco.
+                extras = {q["id"]: q for q in self._herois_extras_de(pid)}
+
+                def itens_bau_personalizados(chest):
+                    proprio = ocultos_para(pid, jogador, chest)
+                    por_extra = {eid: ocultos_para(eid, q, chest) for eid, q in extras.items()}
+                    items = []
+                    for i, item in enumerate(chest.get("items", [])):
+                        novo = {**item, "tutorial_hidden": proprio[i]}
+                        if por_extra:
+                            novo["tutorial_hidden_por_heroi"] = {
+                                pid: proprio[i], **{eid: v[i] for eid, v in por_extra.items()}}
+                        items.append(novo)
                     return items
 
                 payload["chests"] = [
@@ -50364,6 +51806,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             skip=self._conexoes_fora(),
             personalize=personalizar_estado,
         )
+        await self._avisar_prisoes_aderentes()
+        await self._avisar_agarrados()
+        await self._avisar_silencio()
         # Avisos de condição são privados: somente o personagem afetado recebe
         # a tela, e a fila é limpa depois do envio para não repetir no próximo
         # broadcast.
@@ -51517,6 +52962,9 @@ async def handler(ws):
                     if room:
                         await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"),
                                                    msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"))
+
+                elif t == "use_crystal_ball":
+                    if room: await room.handle_use_crystal_ball(pid, msg)
 
                 elif t == "read_item":
                     if room:
@@ -53289,6 +54737,17 @@ def _weapon_uses_brutal_throw(weapon):
     return bool(weapon.get("granted_ability") == "arremesso_bruto"
                 or native.get("granted_ability") == "arremesso_bruto")
 
+def _weapon_nat1_wear(weapon):
+    """Níveis de dano de equipamento em um 1 natural (opt-in da arma)."""
+    if not isinstance(weapon, dict):
+        return 0
+    native = WEAPONS.get(weapon.get("id"), {})
+    return max(0, int(weapon.get("throw_nat1_damage_levels", native.get("throw_nat1_damage_levels", 0)) or 0))
+
+def _weapon_allowed_classes(item):
+    """A restrição nativa também vale para itens de saves/loot sem metadados."""
+    return item.get("allowed_classes") or WEAPONS.get(item.get("id"), {}).get("allowed_classes")
+
 WEAPON_GRANTED_ABILITIES = {"arremesso_bruto", "causar_sangramento"}
 
 def _granted_ability_valida(aid):
@@ -53429,6 +54888,9 @@ def _validate_custom_accessory(raw):
         "disponibilidade": {"loja": bool(disp.get("loja")), "baus": bool(disp.get("baus")),
                              "loot_monstro": bool(disp.get("loot_monstro"))},
     }
+    descricao = str(raw.get("descricao") or "").strip()[:600]
+    if descricao:
+        item["descricao"] = descricao
     if kind == "boots":
         item["corrosion_materials"] = [m for m in (raw.get("corrosion_materials") or []) if m in _ITEM_MATERIAIS]
         item["corrosao_resistente"] = max(0, _int0(raw.get("corrosao_resistente")))
@@ -53558,9 +55020,6 @@ def _validate_custom_poison(raw):
         if isinstance(v, int):
             return max(1, v)
         return str(v).lower() if _die_ok(v) else padrao
-    descricao = str(raw.get("descricao") or "").strip()[:600]
-    if descricao:
-        item["descricao"] = descricao
     def _pares(lista):
         out = []
         for par in (lista or []):
@@ -53760,6 +55219,8 @@ def _custom_accessory_inventory_dict(item):
            "price": item["price"], "bonuses": [dict(b) for b in item["bonuses"]],
            "granted_ability": item["granted_ability"], "maldicao_id": item.get("maldicao_id"),
            "maldicao_prende": bool(item.get("maldicao_prende"))}
+    if item.get("descricao"):
+        inv["descricao"] = item["descricao"]
     if item["kind"] == "boots":
         inv["corrosion_materials"] = list(item.get("corrosion_materials", []))
         inv["corrosao_resistente"] = item.get("corrosao_resistente", 0)
@@ -53889,8 +55350,6 @@ def _apply_custom_items(records):
     # Acessórios custom (anel/bota) vivem no mercador — nenhum outro bloco limpa SHOP_MERCHANT.
     SHOP_MERCHANT[:] = [i for i in SHOP_MERCHANT if not i.get("custom")]
     # Arremessáveis custom vivem no dict ARREMESSAVEIS (espelha o cleanup de WEAPONS).
-    if item.get("descricao"):
-        inv["descricao"] = item["descricao"]
     for k in [k for k, v in ARREMESSAVEIS.items() if v.get("custom")]:
         ARREMESSAVEIS.pop(k, None)
     # Venenos custom vivem no dict VENENOS (mesmo padrão de ARREMESSAVEIS).

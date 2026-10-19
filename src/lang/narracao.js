@@ -16,6 +16,70 @@ window.LANG_NARRACAO = {
     "en": "🛡️ **{alvo}**'s Arcane Barrier ends.",
     "pt": "🛡️ A Barreira Arcana de **{alvo}** termina."
   },
+  "narracao.bebe_gole_do_gigante": {
+    "en": "💪 **{heroi}** drinks the Giant's Draught and gains +{bonus} Strength for **{rodadas}** rounds!",
+    "pt": "💪 **{heroi}** bebe o Gole do Gigante e recebe +{bonus} de Força por **{rodadas}** rodadas!"
+  },
+  "narracao.gole_do_gigante_termina": {
+    "en": "💪 **{alvo}**'s Giant's Draught wears off.",
+    "pt": "💪 O efeito do Gole do Gigante de **{alvo}** termina."
+  },
+  "narracao.bebe_bote_da_serpente": {
+    "en": "🐍 **{heroi}** drinks the Serpent's Lunge and gains +{bonus} Dexterity for **{rodadas}** rounds!",
+    "pt": "🐍 **{heroi}** bebe o Bote da Serpente e recebe +{bonus} de Destreza por **{rodadas}** rodadas!"
+  },
+  "narracao.bote_da_serpente_termina": {
+    "en": "🐍 **{alvo}**'s Serpent's Lunge wears off.",
+    "pt": "🐍 O efeito do Bote da Serpente de **{alvo}** termina."
+  },
+  "narracao.bebe_elixir_cavalo_ferro": {
+    "en": "🐎 **{heroi}** drinks the Iron Horse Elixir and gains +{bonus} Constitution for **{rodadas}** rounds!",
+    "pt": "🐎 **{heroi}** bebe o Elixir do Cavalo de Ferro e recebe +{bonus} de Constituição por **{rodadas}** rodadas!"
+  },
+  "narracao.elixir_cavalo_ferro_termina": {
+    "en": "🐎 **{alvo}**'s Iron Horse Elixir wears off.",
+    "pt": "🐎 O efeito do Elixir do Cavalo de Ferro de **{alvo}** termina."
+  },
+  "narracao.bebe_sabedoria_liquida": {
+    "en": "🔮 **{heroi}** drinks Liquid Wisdom and gains +{bonus} Intelligence for **{rodadas}** rounds!",
+    "pt": "🔮 **{heroi}** bebe a Sabedoria Líquida e recebe +{bonus} de Inteligência por **{rodadas}** rodadas!"
+  },
+  "narracao.sabedoria_liquida_termina": {
+    "en": "🔮 **{alvo}**'s Liquid Wisdom wears off.",
+    "pt": "🔮 O efeito da Sabedoria Líquida de **{alvo}** termina."
+  },
+  "narracao.bebe_calice_eter": {
+    "en": "🏆 **{heroi}** drinks the {item} and restores one spent 1st-circle spell slot!",
+    "pt": "🏆 **{heroi}** bebe o {item} e recupera um espaço gasto de magia de 1º círculo!"
+  },
+  "narracao.bebe_mira_do_falcao": {
+    "en": "🏹 **{heroi}** drinks the Hawk's Aim Elixir and gains +2 to bow and thrown-weapon attacks for **{rodadas}** rounds!",
+    "pt": "🏹 **{heroi}** bebe o Elixir da Mira do Falcão e recebe +2 nos ataques com arcos e armas de arremesso por **{rodadas}** rodadas!"
+  },
+  "narracao.mira_do_falcao_termina": {
+    "en": "🏹 **{alvo}**'s Hawk's Aim Elixir wears off.",
+    "pt": "🏹 O efeito do Elixir da Mira do Falcão de **{alvo}** termina."
+  },
+  "narracao.bebe_essencia_vento": {
+    "en": "🍃 **{heroi}** drinks the Essence of Favorable Winds and gains +2 range on ranged weapons and thrown items for **{rodadas}** rounds!",
+    "pt": "🍃 **{heroi}** bebe a Essência do Vento Favorável e aumenta em +2 casas o alcance de armas à distância e itens arremessáveis por **{rodadas}** rodadas!"
+  },
+  "narracao.essencia_vento_termina": {
+    "en": "🍃 **{alvo}**'s Essence of Favorable Winds wears off.",
+    "pt": "🍃 O efeito da Essência do Vento Favorável de **{alvo}** termina."
+  },
+  "narracao.bebe_pocao_voo": {
+    "en": "🪽 **{heroi}** drinks the Flight Potion and takes to the air for **{rodadas}** rounds!",
+    "pt": "🪽 **{heroi}** bebe a Poção de Voo e ganha asas por **{rodadas}** rodadas!"
+  },
+  "narracao.pocao_voo_aviso": {
+    "en": "🪽 **{heroi}** feels the Flight Potion fading. It will end at the start of the next turn.",
+    "pt": "🪽 **{heroi}** sente a Poção de Voo perdendo força. O efeito termina no início do próximo turno."
+  },
+  "narracao.pocao_voo_pousa": {
+    "en": "🪽 **{heroi}** lands safely as the Flight Potion wears off.",
+    "pt": "🪽 **{heroi}** pousa em segurança quando o efeito da Poção de Voo termina."
+  },
   "narracao.encontra_o_rastro": {
     "en": "🐾 {monstro} picks up {heroi}'s trail!",
     "pt": "🐾 {monstro} encontra o rastro de {heroi}!"
@@ -143,6 +207,18 @@ window.LANG_NARRACAO = {
   "narracao.acende_a_e_a_luz_em_volta_e_sugada_fica": {
     "en": "{item_emoji} **{heroi}** lights the **{item}**, and the light around it is swallowed: **hidden** until the end of the turn{extra}",
     "pt": "{item_emoji} **{heroi}** acende a **{item}**, e a luz em volta é sugada: fica **oculto** até o fim do turno{extra}"
+  },
+  "narracao.acende_a_vela_reveladora": {
+    "en": "🕯️ **{heroi}** lights the **{item}**. Active traps within 3 squares are revealed to the party for **{rodadas}** rounds.",
+    "pt": "🕯️ **{heroi}** acende a **{item}**. As armadilhas ativas a até 3 casas ficam reveladas para o grupo por **{rodadas}** rodadas."
+  },
+  "narracao.acende_lampada_vigilia_arcana": {
+    "en": "🏮 **{heroi}** lights the **{item}**. Hidden creatures within 3 squares of an active hero are revealed to the party for **{rodadas}** rounds.",
+    "pt": "🏮 **{heroi}** acende a **{item}**. Criaturas ocultas a até 3 casas de um herói ativo ficam reveladas para o grupo por **{rodadas}** rodadas."
+  },
+  "narracao.usa_solucao_mecanismo": {
+    "en": "📦 **{heroi}** turns the key in the **Solution of the Mechanism**. The runes disable **{quantidade}** active trap(s) in the 3-square area.",
+    "pt": "📦 **{heroi}** gira a chave na **Solução do Mecanismo**. As runas desativam **{quantidade}** armadilha(s) ativa(s) na área de 3 casas."
   },
   "narracao.acerta_em_d20_vs_ca": {
     "en": "{defn_emoji} **{heroi}** hits **{target}** with **{defn}** (d20={roll}+{p_atk_bonus}={total} vs AC {target_ac})!",

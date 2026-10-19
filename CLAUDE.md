@@ -1,6 +1,139 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Aviso de Atordoamento por crítico de Bordão (2026-10-18)
+
+`_resolver_critico_bordao` mantém o efeito de atordoamento no alvo quando o 20
+natural falha em Fortitude. Só envia `_enviar_resultado_atordoamento` se o alvo
+afetado for herói; monstros não abrem popup e o atacante não recebe o aviso. A
+janela existente mostra `atordoado.png`, a perda da próxima rodada e as ações
+bloqueadas. Resistência em Fortitude não abre o aviso.
+
+### Aviso de Presença Aterradora (2026-10-18)
+
+Quando `_ciclope_presenca_aterradora` faz um herói falhar em Vontade, envia um
+`trap_result` privado `tipo: "presenca_aterradora"`, com a arte reutilizada
+`assets/armadilhas/medo.png`. O cliente mostra título, descrição, penalidade de
+−1 nos ataques e duração da primeira rodada em caixa própria, com PT/EN. A
+resistência não abre a janela; a regra e o prazo do modificador não mudam.
+
+### Golpe Esmagador do Ciclope atordoa (2026-10-18)
+
+Quando a Clava Gigante acerta e o herói falha em Fortitude, `_ciclope_golpe_esmagador`
+marca `perde_turno` e usa `_enviar_resultado_atordoamento`, o mesmo aviso com
+`atordoado.png` da condição Atordoado. O herói não se move, ataca nem usa
+habilidades durante a próxima rodada; o estado é consumido pelo fluxo normal de
+encerramento do turno. Sucesso em Fortitude não aplica a condição. A metadata e a
+descrição de `golpe_esmagador` também declaram `perde_turno` por uma rodada.
+
+### Janela ilustrada de Medo (2026-10-18)
+
+O resultado da magia Medo continua usando `mental_control_result` e a janela
+compartilhada de controle mental/armadilhas. `_enviar_resultado_controle_mental`
+inclui `imagem: "medo.png"` somente para Medo; o cliente já prioriza a imagem
+enviada no payload. `assets/armadilhas/medo.png` ilustra heróis fugindo da sombra
+gigante feita por um monstrinho junto à tocha. Descrição, instruções de fuga,
+penalidade de −1 no ataque e duração permanecem os valores fornecidos pelo
+executor da magia; nenhuma regra foi alterada.
+
+### Aviso de Amaldiçoar do xamã (2026-10-18)
+
+`_xama_amaldicoar` envia `trap_result` privado a cada herói atingido, com
+`tipo_id: "amaldicoar_xama"` e a arte existente `amaldicoado.png`. O payload
+traduzível inclui título, origem, −1 em ataque/dano/CA/resistências e duração
+de `mods_magia.rodadas` após a aplicação (preserva uma duração anterior maior).
+Explica o término automático; não usa o fluxo das maldições persistentes.
+O popup existente consome título/descrição/efeitos e `imagem` diretamente, sem
+novo ramo de interface. Testes: `tools/test_amaldicoar_xama_aviso.py`,
+`tools/test_prisao_aviso_cliente.js` e `tools/test_xama_goblin.py`.
+
+### Janela de Silêncio (2026-10-18)
+
+`_avisar_silencio`, após o envio do estado, usa `_em_silencio` para detectar
+entrada no efeito real (respeita `imune_silencio_ate`, bordas e áreas móveis).
+Abre `trap_result` privado com `tipo/tipo_id: "silencio"`, `duracao` e a arte
+`assets/armadilhas/silencio.png`. Texto PT/EN explica o bloqueio de magias,
+suspensão dos bônus da Canção Heroica e término ao sair da área. Sobreposições
+mostram a maior duração restante das áreas que contêm o herói; é preciso sair
+de todas. Uma janela por entrada no efeito, sem repetição nos ticks ou ao entrar
+em outra zona sobreposta. Se a imunidade expirar ainda dentro, o aviso dispara.
+`_silencio_avisados` é efêmero. Regressões: `tools/test_silencio_aviso.py`,
+`tools/test_prisao_aviso_cliente.js` e `tools/test_xama_goblin.py`.
+
+### Janela de Derrubado (2026-10-18)
+
+O derrube abre `_enviar_resultado_derrubado` no momento do golpe, apenas para
+heróis vivos. Reutiliza `trap_result` com `tipo/tipo_id: "derrubado"`, `fonte`,
+`turno_efeito: "atual" | "proximo"` e `assets/armadilhas/derrubado.png`. A mordida
+de lobo informa perda do movimento atual; Caudada Derrubadora e Cauda Varredora
+informam a perda do próximo movimento. O consumo de `derrubado_sem_movimento`
+no início do turno continua igual e não abre outra janela. Resistência ou erro
+no ataque não dispara aviso. Texto PT/EN preserva as ações disponíveis e
+explica quando o movimento retorna. Regressões: `tools/test_prisao_aviso.py`,
+`tools/test_prisao_aviso_cliente.js` e `tools/test_tirano.py`.
+
+### Janela de Agarrado (2026-10-18)
+
+`_avisar_agarrados`, após o envio do estado, abre um `trap_result` privado com
+`tipo/tipo_id: "agarrado"`, `captor`, `escape_dc`, `escape_saves` e a arte
+`assets/armadilhas/agarrado.png`. Detecta `preso` + captor vivo em qualquer origem
+(mordida, constrição, garras, tentáculos, salto e onda); não substitui os avisos
+de engolido, rede ou teia. Uma janela por par herói/captor enquanto persistir;
+ao sair do estado ou trocar o captor, o aviso pode disparar novamente.
+`_dados_escape_agarrar` é compartilhado pelo teste real e pela janela, preservando
+a seleção da habilidade e os saves existentes. Texto PT/EN: movimento impedido,
+−2 nos ataques, fuga automática no início do turno e duração até escapar ou o
+captor ser derrotado. Metadados dos avisos são efêmeros e não entram nos saves.
+Regressões: `tools/test_prisao_aviso.py`, `tools/test_prisao_aviso_cliente.js` e
+`tools/test_agarrao.py`.
+
+### Avisos de prisão por teia, cola e piche (2026-10-18)
+
+Reutilizam a fila/janela de armadilhas com `trap_result`, `tipo: "prisao"`,
+`prisao_id: "teia" | "cola" | "piche"` e a arte compartilhada
+`assets/armadilhas/preso.png`. O cliente traduz título, descrição e duração pela
+causa; a rede mantém sua janela/arte existente. A teia avisa somente na falha do
+save de `disparo_teia` (perde o próximo turno). `_avisar_prisoes_aderentes`, após
+o envio do estado, detecta entrada em `cola_sem_movimento` ou piche real (respeita
+voo/ponte) e não repete nos ticks. Cola exibe `mov_reduzido_rodadas`; piche explica
+o limite de uma casa por turno, preservando ações. Não cria novas aplicações de
+cola em heróis nem altera as regras de controle. Testes:
+`tools/test_prisao_aviso.py` e `tools/test_prisao_aviso_cliente.js`.
+
+### Lâmpada da Vigília Arcana (2026-10-18)
+
+Consumível universal de ação bônus, vendido por 60 moedas nos mercadores. Dura
+10 rodadas e revela ao grupo monstros `invisivel_sombras` em raio Chebyshev 3
+móvel ao redor de qualquer herói vivo dentro da masmorra. A revelação é um
+metadado derivado no `game_state`: não remove o estado de ocultação nem grava
+exploração. Ao sair do raio ou expirar, o monstro volta a ficar oculto; cliente
+2D/3D, realces de ataque e validação autoritativa do ataque usam essa mesma
+revelação. Ícone: `assets/itens/lampada_vigilia_arcana.png`; item nos estoques de
+mercador em `city_shops.json`. Regressões: `python -X utf8
+tools/test_lampada_vigilia_arcana.py` e `node
+tools/test_lampada_vigilia_arcana_cliente.js`.
+
+### Cálice de Éter (2026-10-18)
+
+Consumível de ação bônus, exclusivo de Mago e Clérigo, vendido por 220 moedas
+nos mercadores. Recupera exatamente um slot de 1º círculo em recarga; não
+aumenta o máximo e recusa sem consumir item ou ação quando não há slot gasto.
+O servidor valida classe e recarga antes do uso e restaura o cooldown mais
+longo, preservando a próxima recarga natural. Ícone transparente:
+`assets/itens/calice_eter.png`. Regressão:
+`python -X utf8 tools/test_calice_eter.py`.
+
 ## Visão Geral
+
+### Ambiente Bruma tenebrosa (2026-10-18)
+
+O preset autorado `bruma_tenebrosa` é cosmético e selecionável no editor de
+masmorras. `src/visualConfig.js` configura paleta fria, exposição e fog de cena
+no 3D; o cliente anima uma camada independente de bruma rasteira em 2D e um
+único `InstancedMesh` no 3D. Ambas as camadas usam apenas `terrainSet` já visível
+(inclusive respeitando cegueira) e não alteram visão, exploração, LOS ou estado
+autoritativo. O editor e `load_authored_dungeon` precisam aceitar o preset.
+Regressões: `node tools/test_bruma_tenebrosa.js` e
+`python -X utf8 tools/test_bruma_tenebrosa.py`.
 
 ### Ouro inicial dos heróis
 
@@ -399,7 +532,7 @@ resistência enquanto o herói permanecia na mesma sala.
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
 > ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 86 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> autoritativo `DECOR_TYPES` (server.py, 88 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
@@ -415,6 +548,11 @@ resistência enquanto o herói permanecia na mesma sala.
 > com ovos e usa miniaturas PNG/GLB próprias.
 > `cabana_rustica` ocupa 3×3, é alta e bloqueia passagem; tem troncos, varanda
 > coberta e chaminé, com miniaturas PNG/GLB próprias.
+> `choupana_palha_escura` ocupa 3×3, é alta, sólida e rotacionável; tem estrutura
+> elevada de madeira trançada e telhado de palha escura, com `.blend`, PNG e GLB próprios.
+> `cabana_palha_velha` também ocupa 3×3, é alta, sólida e rotacionável; tem planta
+> circular, parede de trama vegetal e telhado cônico de palha envelhecida, com
+> reparos aparentes e `.blend`, PNG e GLB próprios.
 > `lago_patos` ocupa 3×3 e bloqueia passagem sem ocluir visão; tem margem rasa
 > alinhada ao piso, água, pedras, juncos e patos-reais com formas mais naturais.
 > Usa miniaturas PNG/GLB próprias; `DECOR_GLB_GROUND_Y` enterra levemente a borda
@@ -981,6 +1119,28 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `guildCatalogFor/guildOwnedOf/guildEquipOf/tecnicaRestante` (os getters caem para
 > o player do `game_state` na masmorra, onde `cityState=null`; catálogo cacheado).
 > Teste do servidor: `tools/test_guilda.py`.
+
+> **Disparo Duplo:** especialização universal passiva da Guilda, preço 250. Só permite
+> equipar uma `hand_crossbow` na mão secundária quando outra Besta de Mão está na mão
+> principal e o personagem possui `disparo_duplo`. Depois do ataque principal, o
+> servidor tenta um segundo disparo no mesmo monstro como ação bônus; exige alvo vivo,
+> alcance ortogonal e linha de visão. Cada tiro gasta um virote mesmo quando erra; sem
+> munição secundária disponível não consome ação bônus. O disparo secundário usa o
+> cálculo normal de ataque/dano e os efeitos do virote escolhido. Trocar a arma principal
+> enquanto a besta secundária está equipada é recusado até desequipá-la. Cliente:
+> `GS.isOffhandWeapon/canPlaceItem` espelha a condição para evitar oferecer um slot
+> inválido. Cobertura: `tools/test_disparo_duplo.py`.
+
+> **Arremesso Rápido:** especialização universal passiva da Guilda, preço 250.
+> Permite arremessar até dois consumíveis cadastrados em `ARREMESSAVEIS` no turno:
+> o primeiro usa a ação principal e, após ele sair, o segundo pode usar a ação bônus.
+> Cada item mantém seu modo normal de resolução (ataque por DES contra CA para alvo
+> único; casa escolhida e saves para área), alcance e consumo; alvos/centros podem ser
+> diferentes. Falha no ataque consome o item, mas uma mira inválida não gasta item ou
+> ação. O limite é autoritativo por rodada e o contador é enviado no `game_state` para
+> a bolsa e a mira habilitarem o segundo uso somente com talento e ação bônus livres.
+> Armas equipadas arremessáveis ficam fora do talento. Cobertura:
+> `tools/test_arremesso_rapido.py` e `tools/test_arremesso_rapido_cliente.js`.
 
 > **Especializações do Guerreiro (Fase 1a):** upgrades permanentes sempre-ativos
 > (não ocupam slot; sempre válidos) que aprimoram as 3 habilidades-base. **Baseline
@@ -3749,9 +3909,12 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > em `_aplicar_lava_se_pisar`); ❄️ água rasa: `piso_congelado` por 3 rodadas, Reflexos, falha =
 > imobilizado 1 rodada; ❄️ lava (inclusive a da Ira, que é material): `lava_solidificada` (crosta)
 > por 3 rodadas, sem dano, aviso 1 rodada antes (`_rx_avisou_crosta`) e dano de lava normal ao
-> voltar. **Piche:** material (custo de movimento 2, como areia/lava; `custo_mov` é só metadado);
+> voltar. **Piche:** ao entrar numa casa coberta, o movimento termina nela; quem começa o turno
+> sobre o piche pode dar só um passo. Voo acima do chão e ponte preservam as exceções de terreno;
+> vale para heróis, monstros, servos e prisioneiro liberto. `custo_mov` é só metadado;
 > `frasco_piche` arremessável 3×3, 4 rodadas, sem dano, pelas camadas temporárias do Chamado do
-> Inverno. **Cliente:** `reacao_elemental {tipo, casas, origem}` (público, anima só casas visíveis;
+> Inverno; ícone explícito compartilhado entre loja e inventário em `assets/itens/frasco_piche.png`.
+> **Cliente:** `reacao_elemental {tipo, casas, origem}` (público, anima só casas visíveis;
 > `src/reacoesElementais.js` puro: `estilo`, `crostasAcabando`, `descreverCasa`), `terrenos_temp` no
 > `game_state` (camadas temporárias + crostas) e tooltip por material. Estado `_rx_*` é "efemero"
 > na foto; `_terrenos_inverno`/`zonas_especiais`/`materiais` já persistem. **Revisão final:** choque sem acerto
@@ -4134,3 +4297,164 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > ficam vermelhas e as que exigem movimento ficam verdes, filtradas pela visão.
 > Ficha do diário e inspetor não devem reimplementar os marcos nem mostrar campos
 > ocultos antes da autorização.
+
+### Grimório do Mago (2026-10-17)
+
+`effect: "grimoire"` ocupa `gear.off_hand`, aceita somente `mage` e guarda IDs
+fixos em `magic_ids`. O servidor une esses IDs às magias visíveis enquanto o
+livro está equipado, sem gravá-los em `magias_conhecidas`; `handle_magia` ainda
+exige círculo disponível, implementação ativa e um slot normal livre. A ficha
+marca as cartas de grimório e deixa desativadas as magias sem slot ou ainda em
+desenvolvimento. O mercador vende um livro de 1º círculo por magia de Mago, a
+75 moedas cada; grimórios de 2–3 magias são achados raros em baús (6% no baú
+procedural), com preço de referência de 75 moedas por magia de 1º círculo,
+dobrado a cada círculo. O molde `grimorio_bau` é materializado com conteúdo
+aleatório fixo ao criar o baú; o editor o recebe pelo catálogo exportado.
+Ícone: `assets/itens/grimorio.png`. Regressões: `tools/test_grimorio.py` e
+`tools/test_grimorio_cliente.js`.
+
+### Poção de Invisibilidade (2026-10-17)
+
+`pocao_invisibilidade` é vendida por 60 moedas nos quatro templos. Beber usa
+ação bônus e consome o frasco; a invisibilidade dura 6 rodadas fixas. O efeito
+usa `_executar_invisibilidade` e os mesmos estados/regras da magia: atacar ou
+lançar outra magia quebra a invisibilidade, e o efeito expira no início do
+sexto turno do usuário. Beber outra poção durante o efeito reinicia os 6 turnos,
+como recastar a magia. Ícone: `assets/itens/pocao_invisibilidade.png`.
+Regressão: `python -X utf8 tools/test_potions.py`.
+
+### Bote da Serpente (2026-10-17)
+
+`bote_da_serpente` é vendido por 150 moedas nos quatro templos e usa ação
+bônus. Qualquer herói recebe `1d4+1` de Destreza por `1d6+4` rodadas. O servidor
+usa `_apply_attribute_delta`, atualizando os derivados armazenados (CA, Reflexos
+e ataque das classes de Destreza); dano, finesse, iniciativa, visão e testes
+consultam a Destreza atual. A ordem de iniciativa da rodada já montada permanece
+fixa; a pontuação atualizada vale quando a iniciativa for calculada novamente.
+Ao expirar, o delta é removido. Repetir a poção renova a duração sem rerrolar
+nem acumular o bônus. Ícone transparente: `assets/itens/bote_da_serpente.png`.
+Regressão: `python -X utf8 tools/test_potions.py`.
+
+### Elixir do Cavalo de Ferro (2026-10-17)
+
+`elixir_cavalo_ferro` é vendido por 180 moedas nos quatro templos e usa ação
+bônus. Qualquer herói recebe `1d4+1` de Constituição por `1d6+4` rodadas. O
+servidor usa `_apply_attribute_delta`, atualizando Fortitude e PV máximos por
+nível; o aumento positivo do máximo pode repor PV atuais, salvo quando Último
+Esforço bloqueia esse top-up, e a expiração limita PV ao novo máximo. Repetir o
+elixir renova a duração sem rerrolar nem acumular o bônus. Ícone transparente:
+`assets/itens/elixir_cavalo_ferro.png`.
+Regressão: `python -X utf8 tools/test_potions.py`.
+
+### Sabedoria Líquida (2026-10-17)
+
+`sabedoria_liquida` é vendida por 200 moedas nos quatro templos e usa ação
+bônus. Qualquer herói recebe `1d4+1` de Inteligência por `1d6+4` rodadas. O
+servidor usa `_apply_attribute_delta`, atualizando Vontade; CD das magias,
+iniciativa, visão, curas que usam INT e slots de controle do Reviver quando
+aplicável consultam o atributo atual. A fila de iniciativa já montada permanece
+fixa até a próxima recalculação. Não concede slots normais nem magias
+conhecidas. Repetir a poção renova a duração sem rerrolar nem acumular o bônus.
+Ícone transparente: `assets/itens/sabedoria_liquida.png`. Regressão:
+`python -X utf8 tools/test_potions.py`.
+
+### Poção do Manto da Escuridão (2026-10-17)
+
+`pocao_manto_escuridao` é vendida por 90 moedas nos quatro templos, usa ação
+bônus e não gasta espaço de magia. Qualquer herói pode bebê-la; a duração é
+`1d4` rodadas. O executor compartilhado cria a zona de raio 3 que acompanha o
+usuário, concede visão no escuro a ele e usa a animação e expiração do Manto.
+A poção não recebe o bônus de área do Cajado Arcano. Ícone:
+`assets/itens/pocao_manto_escuridao.png`. Regressão:
+`python -X utf8 tools/test_potions.py`.
+
+### Poção de Velocidade (2026-10-17)
+
+`pocao_velocidade` é vendida por 120 moedas nos quatro templos e usa ação
+bônus. Ao beber, consome o frasco e chama `_executar_velocidade` com duração
+`1d4+1`, compartilhando com a magia o movimento dobrado, uma ação principal
+extra por turno, animação e expiração. A ação extra renova no turno seguinte;
+cada ação ainda paga seu custo normal. Ícone: `assets/itens/pocao_velocidade.png`.
+Regressão: `python -X utf8 tools/test_potions.py`.
+
+### Poção de Voo (2026-10-17)
+
+`pocao_voo` é vendida por 220 moedas nos quatro templos e usa ação bônus. Dá
+controle de voo até altura 10 por 10 rodadas e usa a animação existente de Voo.
+Ao expirar, se o herói mantiver o controle, pousa na casa segura mais próxima
+sem dano; se estiver sem controle ou não houver piso seguro, usa a tabela de
+queda existente. Magia Voo ou Bota Alada continuam sendo fontes independentes;
+o descanso encerra a duração da poção. O painel de status mostra as rodadas
+restantes. Ícone transparente: `assets/itens/pocao_voo.png`. Regressão:
+`python -X utf8 tools/test_potions.py`.
+
+### Poções de Resistência Elemental (2026-10-17)
+
+São seis frascos vendidos por 80 moedas nos quatro templos: fogo, gelo,
+eletricidade, ácido, água e sagrado. Qualquer herói pode beber por ação bônus;
+cada frasco absorve até 10 pontos do próprio elemento por rodada durante
+`1d6+4` rodadas. Elementos diferentes mantêm limites independentes; repetir o
+mesmo renova a duração sem restaurar o limite já gasto naquela rodada. Quando
+Proteção contra Energia cobre o mesmo elemento, magia e poção compartilham o
+limite de 10 por rodada. Os limites renovam no início do turno e cada duração
+expira separadamente. Ícones: `assets/itens/pocao_resistencia_<elemento>.png`.
+Regressão: `python -X utf8 tools/test_potions.py`.
+
+### Poção de Barreira Arcana (2026-10-17)
+
+`pocao_barreira_arcana` é vendida por 110 moedas nos quatro templos e usa ação
+bônus. Qualquer herói pode bebê-la; reduz 5 pontos de cada dano recebido por
+`1d6+2` rodadas, sem bônus de nível. O executor, animação e expiração são os da
+magia Barreira Arcana; consumir enquanto ela está ativa renova sua duração sem
+acumular a redução. Pode coexistir com uma poção elemental: primeiro aplica-se
+o limite elemental por rodada, depois a barreira reduz até 5 do dano restante.
+Ícone: `assets/itens/pocao_barreira_arcana.png`. Regressão:
+`python -X utf8 tools/test_potions.py`.
+
+### Elixir da Mira do Falcão (2026-10-17)
+
+`mira_do_falcao` é vendido por 120 moedas nos quatro templos e usa ação
+bônus. Dura `1d4+1` rodadas e concede +2 somente ao acerto com arcos e armas
+arremessadas; não aumenta dano nem afeta ataques corpo a corpo ou consumíveis
+arremessáveis. `_modificadores_ataque_heroi` aplica o bônus a projéteis de arco,
+e `_executar_arremesso` aos arremessos de armas equipadas. Beber outra poção
+renova a duração sem acumular bônus. A ficha mostra o efeito e as rodadas
+restantes. Ícone transparente: `assets/itens/mira_do_falcao.png`. Regressão:
+`python -X utf8 tools/test_potions.py`.
+
+### Essência do Vento Favorável (2026-10-17)
+
+`essencia_vento_favoravel` custa 100 moedas nos quatro templos e usa ação
+bônus. Aumenta em 2 casas o alcance de arcos/bestas, armas arremessadas e
+consumíveis arremessáveis por `1d6+2` rodadas. Não altera acerto ou dano; as
+regras de linha de tiro, diagonal e altura continuam valendo, e a escuridão
+continua limitando o alcance efetivo. Beber outra renova a duração sem acumular
+alcance. Servidor e cliente mostram o alcance ampliado nos ataques e nas miras.
+Ícone transparente: `assets/itens/essencia_vento_favoravel.png`. Regressões:
+`python -X utf8 tools/test_potions.py`,
+`node tools/test_essencia_vento_cliente.js` e
+`python -X utf8 tools/test_arremessaveis_tatico.py`.
+
+### Gole do Gigante (2026-10-17)
+
+`gole_do_gigante` é vendido por 150 moedas nos quatro templos e usa ação
+bônus. Qualquer herói recebe `1d4+1` de Força por `1d6+4` rodadas; o servidor
+aplica `_apply_attribute_delta`, então acerto, dano e testes que leem Força usam
+os modificadores normais enquanto a pontuação está aumentada. No início do
+turno, a duração cai; ao expirar, o delta é removido e os bônus derivados são
+restaurados. Beber outro durante o efeito renova a duração sem rerrolar nem
+acumular o aumento. O estado é independente das proteções elementais e pode
+coexistir com elas. Ícone transparente: `assets/itens/gole_do_gigante.png`.
+Regressão: `python -X utf8 tools/test_potions.py`.
+
+### Solução do Mecanismo (2026-10-18)
+
+`solucao_mecanismo` custa 250 moedas nos mercadores e usa ação bônus. Selecionar
+o item abre uma confirmação com o raio Chebyshev de 3 casas destacado em 2D/3D;
+cancelar preserva item e ação. Ao confirmar, o servidor desarma sem teste as
+armadilhas ativas dentro da área, incluindo as procedurais, colocáveis e as
+presas a decorações/baús. O desarme concede XP normal ao grupo (dobrado para
+armadilhas permanentes) e não recupera ouro nem dispara armadilhas. PNG:
+`assets/itens/solucao_mecanismo.png`. Regressões:
+`python tools/test_solucao_mecanismo.py` e
+`node tools/test_solucao_mecanismo_cliente.js`.

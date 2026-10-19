@@ -121,6 +121,10 @@ window.LANG_EDITOR = {
     "en": "Open air (bright)",
     "pt": "Ar livre (claro)"
   },
+  "ui.editor.topo.ambiente.bruma_tenebrosa": {
+    "en": "Haunted mist",
+    "pt": "Bruma tenebrosa"
+  },
   "ui.editor.topo.saida_escada": {
     "en": "🚪 exit by the stairs",
     "pt": "🚪 saída pela escada"

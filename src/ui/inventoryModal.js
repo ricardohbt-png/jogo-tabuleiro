@@ -446,7 +446,8 @@ const InventoryModal = (() => {
       podeUsar: isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
         && !bonusBloqueado,
       podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster && !player.action_done,
-      podeArremessar: isMyOwnDungeonTurn && isArremessavel && !player.action_done,
+      podeArremessar: isMyOwnDungeonTurn && isArremessavel
+        && (typeof GS.canThrowItem !== 'function' || GS.canThrowItem(player)),
     };
   }
 

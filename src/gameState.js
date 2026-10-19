@@ -501,6 +501,17 @@ const GS = (() => {
     staff:           { id:'staff',           nome:'Cajado Arcano',         tipo:'arma', loja:'mercado', preco:10, dano:'1d6', atributo:'forca', finesse:true, escudo:false, arremesso:false, duasMaos:false, staffSpellDamageBonus:2, staffAreaDimensionBonus:1, staffExtraSpellCircle:'primeiro', staffExtraSpellCooldown:20, permitidoPara:['pedro','lewis'] },
     espada_curta:    { id:'espada_curta',    nome:'Espada Curta',         tipo:'arma', loja:'ferreiro', preco:15, dano:'1d6', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     machado_basico:  { id:'machado_basico',  nome:'Machado de Ferro',      tipo:'arma', loja:'ferreiro', preco:0,  dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:2, duasMaos:false, permitidoPara:['victorCoiceBravo'] },
+    machadinha_arremesso_ana: {
+      id:'machadinha_arremesso_ana', nome:'Machadinha de Arremesso Anã',
+      emoji:'🪓', icon:'assets/itens/machadinha_arremesso_ana.png',
+      tipo:'arma', item_slot:'weapon', loja:'ferreiro', preco:35,
+      dano:'1d6', atributo:'forca', bonusAtaque:'forca', bonusDano:'forca',
+      categoria:'cortante', escudo:true, duasMaos:false,
+      off_hand_weapon:true, off_hand_stat:'str_', arremesso:true, alcanceArremesso:3,
+      granted_ability:'arremesso_bruto', throw_nat1_damage_levels:2, corrosion_max:3,
+      allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
+      descricao:'Exclusiva do Guerreiro Anão. 1d6 cortante + Força. Arremesso Bruto até 3 casas usa Força no acerto e no dano. Na mão do escudo, faz um ataque automático contra o mesmo alvo vivo e adjacente após o ataque principal, usando Força e a ação bônus (1 fome e 1 sede), uma vez por turno. Não combina com arma de duas mãos. Arremessar usa a ação principal ou, depois dela, a ação bônus disponível e retira a arma da mão. Possui 3 de vitalidade; cada nível de dano reduz acerto e dano em 1. Um 1 natural no arremesso causa 2 níveis: cai recuperável se sobreviver, é destruída no 3º nível. O desgaste permanece até o reparo no ferreiro. Crítico normal no 20; sem dano mágico ou retorno automático.',
+    },
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     lanca:           { id:'lanca',           nome:'Lança',                tipo:'arma', loja:'ferreiro', preco:14, dano:'1d8', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
@@ -529,6 +540,7 @@ const GS = (() => {
     escudo_pesado:   { id:'escudo_pesado',   nome:'Escudo Pesado',        tipo:'escudo', loja:'ferreiro', preco:25, bonusCA:2, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     tocha:           { id:'tocha',           nome:'Tocha',                tipo:'secundario', loja:'ferreiro', preco:5, bonusVisao:1, duracao:10, permitidoPara:['todos'] },
     vela_escuridao:  { id:'vela_escuridao',  nome:'Vela da Escuridão',     tipo:'consumivel', loja:'mercado', preco:50, effect:'veil_shadow', value:0, descricao:'Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo.', permitidoPara:['todos'] },
+    solucao_mecanismo:{ id:'solucao_mecanismo', nome:'Solução do Mecanismo', tipo:'consumivel', loja:'mercado', preco:250, icon:'assets/itens/solucao_mecanismo.png', item_slot:'bag', effect:'disarm_traps_area', value:3, descricao:'Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro.', permitidoPara:['todos'] },
 
     // ── FERREIRO — Munição ──
     flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
@@ -681,6 +693,7 @@ const GS = (() => {
     },
     frasco_piche: {
       id: 'frasco_piche', nome: 'Frasco de Piche', emoji: '🛢️',
+      icon: 'assets/itens/frasco_piche.png',
       tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'area',
       alcance: 4, areaRaio: 1, duracao: 4, permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). Espalha piche em 3×3 casas por 4 rodadas; ' +
@@ -1273,6 +1286,7 @@ const GS = (() => {
     const swampStart = !ignoraPantano && !_ponteEm(sx, sy, moveCtx?.state || gameState)
       && moveCtx?.materiais?.[`${sx},${sy}`] === 'pantano';
     const snowStart = _neveJaCobrada(moveCtx, sx, sy);
+    const picheStart = _picheLimitaPasso(moveCtx, sx, sy);
     // Cada nó carrega o TETO efetivo do caminho: entrar na neve divide pela
     // metade o movimento restante (espelha `_apply_snow_entry_penalty`), então
     // o teto passa a depender de quando a neve foi pisada. Por isso o melhor
@@ -1283,6 +1297,7 @@ const GS = (() => {
       q.sort((a,b) => a[2]-b[2]);
       const [x, y, s, swampUsed, snowUsed, cap] = q.shift();
       if ((x === sx && y === sy) || !occupied.aliados?.has(`${x},${y}`)) result.add(`${x},${y}`);
+      if (s > 0 && (picheStart || _picheLimitaPasso(moveCtx, x, y))) continue;
       if (s >= cap) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
@@ -1320,6 +1335,12 @@ const GS = (() => {
   function _neveJaCobrada(moveCtx, sx, sy) {
     return !!(moveCtx?.actor?._snow_movement_reduced) || _entraNaNeve(moveCtx, sx, sy);
   }
+  function _picheLimitaPasso(moveCtx, x, y) {
+    const actor = moveCtx?.actor || {};
+    return !(actor.voo && alturaDe(actor) > 0)
+      && !_ponteEm(x, y, moveCtx?.state || gameState)
+      && moveCtx?.materiais?.[`${x},${y}`] === 'piche';
+  }
 
   // ── Pure logic: BFS pathfinding — returns [[dx,dy],...] or null ────────────
   // Quando partial=true, se o alvo estiver além do orçamento ou separado por
@@ -1341,6 +1362,7 @@ const GS = (() => {
     const ignoraPantano = _ignoraPenalidadePantano(moveCtx);
     const swampStart = !ignoraPantano && moveCtx?.materiais?.[`${fx},${fy}`] === 'pantano';
     const snowStart = _neveJaCobrada(moveCtx, fx, fy);
+    const picheStart = _picheLimitaPasso(moveCtx, fx, fy);
     // Mesmo teto efetivo por caminho do bfsReachable (neve divide o restante):
     // é este algoritmo que dirige a caminhada, e um caminho que o servidor
     // interrompe no meio vale menos que nenhum.
@@ -1350,6 +1372,7 @@ const GS = (() => {
     while (q.length) {
       q.sort((a,b) => a[3]-b[3]);
       const [x, y, path, spent, swampUsed, snowUsed, cap] = q.shift();
+      if (path.length > 0 && (picheStart || _picheLimitaPasso(moveCtx, x, y))) continue;
       if (spent >= cap) continue;
       for (const [dx, dy] of [[0,-1],[0,1],[-1,0],[1,0]]) {
         const nx = x+dx, ny = y+dy, k = `${nx},${ny}`;
@@ -2449,6 +2472,7 @@ const GS = (() => {
     send({ type:'move_utility_belt_item', direction, gear_slot:gearSlot, pocket_index:pocketIndex, bag_index:bagIndex });
   }
   function useItem(id, sourceInfo) { send({ type: 'use_item', item_id: id, ..._itemSourceFields(sourceInfo) }); }
+  function useCrystalBall(tx, ty) { send({ type: 'use_crystal_ball', tx: Number(tx), ty: Number(ty) }); }
   function readItem(id, bagIndex = null) {
     const msg = { type: 'read_item', item_id: id };
     if (Number.isInteger(bagIndex) && bagIndex >= 0) msg.bag_index = bagIndex;
@@ -2762,6 +2786,15 @@ const GS = (() => {
     const gp = (gameState && gameState.players || []).find(p => p.id === pid);
     return (gp && gp.guild_owned) || { especializacoes: [], tecnicas: [] };
   }
+  function canThrowItem(player) {
+    if (!player) return false;
+    const hasTalent = (player.guild_owned?.especializacoes || []).includes('arremesso_rapido');
+    const sameRound = Number(player.arremesso_rapido_rodada) === Number(gameState?.round);
+    const used = hasTalent && sameRound ? Number(player.arremesso_rapido_usados) || 0 : 0;
+    if (hasTalent && used >= 2) return false;
+    if (!player.action_done) return true;
+    return hasTalent && used === 1 && !player.bonus_action_used;
+  }
   function guildEquipOf(pid) {
     const g = (cityState && cityState.guild) || null;
     const raw = (g && g.players && g.players[pid] && g.players[pid].equip)
@@ -2932,10 +2965,18 @@ const GS = (() => {
     return (iid.startsWith('dagger') || nm.includes('adaga')) && !!(item.die || item.dano);
   }
 
-  function isOffhandWeapon(item){
+  function hasDisparoDuplo(){
+    return (guildOwnedOf(myPid).especializacoes || []).includes('disparo_duplo');
+  }
+
+  function isOffhandWeapon(item, gearSnapshot){
     if(!item || !(item.die || item.dano)) return false;
     const iid = (item.id || '').toLowerCase();
     const nm = (item.name || '').toLowerCase();
+    if(iid === 'hand_crossbow'){
+      const gear = gearSnapshot || GS.me?.gear || {};
+      return hasDisparoDuplo() && gear.weapon?.id === 'hand_crossbow';
+    }
     return !!item.off_hand_weapon || isDagger(item) || iid === 'chicote' || nm.includes('chicote');
   }
 
@@ -2950,11 +2991,15 @@ const GS = (() => {
   // gearSnapshot = objeto gear atual (p/ checar conflito de arma de 2 mãos).
   function canPlaceItem(item, slotKey, gearSnapshot){
     if(!item || !slotKey) return false;
+    const allowed = item.allowed_classes || CATALOGO_ITENS[item.id]?.allowed_classes;
+    const cls = GS.me?.class_id;
+    if(allowed && cls && !allowed.includes(cls)) return false;
     const cat = _slotCategoryForItem(item);
     if(cat === 'bag') return false;   // consumível não equipa em slot nenhum
     const gear = gearSnapshot || {};
     if(slotKey === 'weapon'){
       if(cat !== 'weapon') return false;
+      if(gear.off_hand?.id === 'hand_crossbow' && item.id !== 'hand_crossbow') return false;
       if(item.two_handed){
         const off = gear.off_hand;
         const offOcupaMao = !!off && (off.kind === 'shield' || off.item_slot === 'shield' || !!off.die);
@@ -2964,7 +3009,7 @@ const GS = (() => {
     }
     if(slotKey === 'off_hand'){
       const isOffhandCat = cat === 'off_hand';
-      if(!isOffhandCat && !isOffhandWeapon(item)) return false;
+      if(!isOffhandCat && !isOffhandWeapon(item, gear)) return false;
       if(offHandBlockedByTwoHanded(gear)) return false;
       return true;
     }
@@ -3171,17 +3216,19 @@ const GS = (() => {
     const range = weapon.range;
     const dx = Math.abs(myP.pos[0] - tx), dy = Math.abs(myP.pos[1] - ty);
     if (range != null) {
+      const vento = weaponRangePotionBonus(myP, weapon);
       const alcance = Number(range) - custoVerticalTerreno(
         myP.pos, alturaDe(myP), [tx, ty], targetAltitude);
-      if (alcance < 1) return false;
+      const alcanceTotal = alcance + vento;
+      if (alcanceTotal < 1) return false;
       const distancia = Math.max(dx, dy);
       if (weapon.id === 'besta' || weapon.id === 'hand_crossbow')
-        return (dx === 0 || dy === 0) && distancia <= alcance;
+        return (dx === 0 || dy === 0) && distancia <= alcanceTotal;
       if (weapon.id === 'arco_curto' || weapon.id === 'longbow') {
-        const limite = (dx === 0 || dy === 0) ? alcance : Math.ceil(alcance / 2);
+        const limite = (dx === 0 || dy === 0) ? alcanceTotal : Math.ceil(alcanceTotal / 2);
         return distancia <= limite;
       }
-      return distancia <= alcance;
+      return distancia <= alcanceTotal;
     }
     if (diferencaVerticalTerreno(myP.pos, alturaDe(myP), [tx, ty], targetAltitude) > 1) return false;
     if (weapon.reach === 'lanca')
@@ -3199,7 +3246,8 @@ const GS = (() => {
     const verticalCost = ranged ? custoVerticalTerreno(
       myP.pos, attackerAltitude, [tx, ty], alvoAltitude) : 0;
     const horizontalDistance = Math.max(Math.abs((myP?.pos?.[0] || 0) - tx), Math.abs((myP?.pos?.[1] || 0) - ty));
-    const effectiveRange = ranged ? Number(weapon.range) - verticalCost : null;
+    const vento = ranged ? weaponRangePotionBonus(myP, weapon) : 0;
+    const effectiveRange = ranged ? Number(weapon.range) + vento - verticalCost : null;
     return {
       attackerAltitude,
       targetAltitude: alvoAltitude,
@@ -3210,11 +3258,19 @@ const GS = (() => {
     };
   }
 
+  function weaponRangePotionBonus(myP, weapon = myP?.weapon || {}) {
+    const hasProjectile = ['arco_curto', 'longbow', 'besta', 'hand_crossbow'].includes(weapon?.id)
+      || ['arrow', 'bolt'].includes(weapon?.projectile)
+      || ['flechas', 'virotes'].includes(weapon?.ammo);
+    return hasProjectile && Number(myP?.essencia_vento_rodadas || 0) > 0 ? 2 : 0;
+  }
+
   function resolveAttack() {
     if (!gameState) return null;
     const myP = gameState.players.find(p => p.id === myPid && p.alive);
     if (!myP) return null;
-    const wRange = myP.weapon?.range ?? null;
+    const baseRange = myP.weapon?.range ?? null;
+    const wRange = baseRange == null ? null : Number(baseRange) + weaponRangePotionBonus(myP);
     const adj = gameState.monsters.filter(m => {
       if (!m || m.hp <= 0) return false;
       if (myP.engolido && m.id === myP.engolido_por) return true;
@@ -3936,6 +3992,7 @@ const GS = (() => {
     setShortcut,
     shortcutActivated,
     useItem,
+    useCrystalBall,
     moveUtilityBeltItem,
     itemSourceFields: _itemSourceFields,
     readItem,
@@ -4064,6 +4121,7 @@ const GS = (() => {
     tentarMetamorfosePermanente,
     guildCatalogFor,
     guildOwnedOf,
+    canThrowItem,
     guildEquipOf,
     sorrateiroAtivo,
     tecnicaRestante,

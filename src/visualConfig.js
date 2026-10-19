@@ -12,7 +12,7 @@ window.VC = {
   // ── Ambientes de iluminação do 3D (masmorra) ──────────────────────────────
   // Cada masmorra escolhe um preset via campo `ambiente` no JSON (default
   // "masmorra"). O preset controla SÓ luz/fog/exposição dos tiles já explorados;
-  // a névoa de guerra (não-explorado = mesh oculto) é idêntica nos três.
+  // a névoa de guerra (não-explorado = mesh oculto) é idêntica em todos.
   // Brilho crescente: penumbra < masmorra < ar_livre.
   // Lido por init3D em game.js: VC.ambientes[state.ambiente] || .masmorra.
   // As posições das direcionais são iguais às históricas; só mudam cores/intensidades.
@@ -54,6 +54,19 @@ window.VC = {
         dirFill:  { color: 0xdfeaff, intensity: 1.10, pos: [-4.0,  6.0, -4.0] },
         rimLight: { color: 0xffe0b0, intensity: 0.40, pos: [ 0.0,  4.0, -7.0] },
         dirPawn:  { color: 0xfff8ee, intensity: 1.30, pos: [-5.0,  8.0, -5.0] },
+      },
+    },
+    // Bruma fria e rasteira: a fog normal dá profundidade no 3D, enquanto
+    // game.js desenha a névoa animada no chão em 2D e 3D. Tudo é cosmético.
+    bruma_tenebrosa: {
+      scene:    { bgColor: 0x111820, fogColor: 0x71818e, fogDensity: 0.009 },
+      exposure: 1.35,
+      lighting: {
+        ambient:  { color: 0xc2d1dc, intensity: 0.72 },
+        dirMain:  { color: 0xd8e2ea, intensity: 1.62, pos: [ 5.0, 10.0,  5.0] },
+        dirFill:  { color: 0x8299aa, intensity: 0.62, pos: [-4.0,  6.0, -4.0] },
+        rimLight: { color: 0xa7bac7, intensity: 0.31, pos: [ 0.0,  4.0, -7.0] },
+        dirPawn:  { color: 0xd2dbe2, intensity: 0.98, pos: [-5.0,  8.0, -5.0] },
       },
     },
   },

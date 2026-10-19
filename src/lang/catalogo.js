@@ -282,6 +282,10 @@ window.LANG_CATALOGO = {
     "en": "Wall Brazier",
     "pt": "Braseiro de parede"
   },
+  "cat.decor.cabana_palha_velha.nome": {
+    "en": "Old Thatch Hut",
+    "pt": "Cabana de palha velha"
+  },
   "cat.decor.cabana_rustica.nome": {
     "en": "Rustic Farm Cabin",
     "pt": "Cabana rústica de fazenda"
@@ -345,6 +349,10 @@ window.LANG_CATALOGO = {
   "cat.decor.chao.nome": {
     "en": "Ground (Grass)",
     "pt": "Chão (grama)"
+  },
+  "cat.decor.choupana_palha_escura.nome": {
+    "en": "Dark Thatch River Hut",
+    "pt": "Choupana de palha escura"
   },
   "cat.decor.coluna.nome": {
     "en": "Stone Column",
@@ -570,6 +578,14 @@ window.LANG_CATALOGO = {
     "en": "Temple Stained Glass",
     "pt": "Vitral de templo"
   },
+  "cat.guilda.arremesso_rapido.desc": {
+    "en": "",
+    "pt": "Passivo. Uma vez por turno, depois de arremessar um consumível arremessável com a ação principal, você pode arremessar um segundo com a ação bônus. Cada frasco mantém seu alcance e resolução normal e pode mirar um alvo ou local diferente; cada uso consome o item."
+  },
+  "cat.guilda.arremesso_rapido.nome": {
+    "en": "",
+    "pt": "Arremesso Rápido"
+  },
   "cat.guilda.bardo_cancao_acerto.desc": {
     "en": "The Heroic Song's Accuracy bonus rises from +1 to +2.",
     "pt": "O bônus de Acerto da Canção Heroica sobe de +1 para +2."
@@ -713,6 +729,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.clerigo_ressur_3.nome": {
     "en": "Resurrection III",
     "pt": "Ressurreição III"
+  },
+  "cat.guilda.disparo_duplo.desc": {
+    "en": "",
+    "pt": "Passivo. Com uma Besta de Mão em cada mão, ao atacar um inimigo dispara também a besta secundária contra o mesmo alvo como ação bônus. O alvo precisa continuar vivo, ao alcance e visível; cada disparo consome 1 virote, mesmo se errar. Uma vez por turno."
+  },
+  "cat.guilda.disparo_duplo.nome": {
+    "en": "",
+    "pt": "Disparo Duplo"
   },
   "cat.guilda.guarda_maxima.desc": {
     "en": "Passive. While equipped, doubles the armor bonus and damage reduction of all shields.",
@@ -2266,6 +2290,14 @@ window.LANG_CATALOGO = {
     "en": "Divine Blessing",
     "pt": "Bênção Divina"
   },
+  "cat.item.bola_cristal_clarividencia.desc": {
+    "en": "Main action. Casts Clairvoyance without spending a spell slot. Cooldown: 10 rounds. Mage and Cleric use the normal level scaling; other classes reveal a fixed 4×4 area.",
+    "pt": "Ação principal. Reproduz Clarividência sem consumir espaço de magia. Recarga: 10 rodadas. Mago e Clérigo usam a escala normal; outras classes revelam uma área fixa de 4×4 casas."
+  },
+  "cat.item.bola_cristal_clarividencia.nome": {
+    "en": "Crystal Ball of Clairvoyance",
+    "pt": "Bola de Cristal da Clarividência"
+  },
   "cat.item.bomba_fumaca.nome": {
     "en": "Smoke Bomb",
     "pt": "Bomba de Fumaça"
@@ -2306,6 +2338,14 @@ window.LANG_CATALOGO = {
     "en": "Boots of the Long Stride",
     "pt": "Bota dos passos largos"
   },
+  "cat.item.bote_da_serpente.desc": {
+    "en": "Bonus action. Increase Dexterity by 1d4+1 for 1d6+4 rounds, applying its normal modifiers to attacks, damage, AC, Reflex saves, initiative, vision radius, Dexterity checks, and Bard instrument ability DCs. Drinking another renews the duration without stacking the bonus.",
+    "pt": "Ação bônus. Aumenta a Destreza em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo. Beber outro renova a duração sem acumular o bônus."
+  },
+  "cat.item.bote_da_serpente.nome": {
+    "en": "Serpent's Lunge",
+    "pt": "Bote da Serpente"
+  },
   "cat.item.bronze_armor.nome": {
     "en": "Bronze Armor",
     "pt": "Armadura de Bronze"
@@ -2317,6 +2357,14 @@ window.LANG_CATALOGO = {
   "cat.item.cajado_madeira.nome": {
     "en": "Wooden Staff",
     "pt": "Cajado de Madeira"
+  },
+  "cat.item.calice_eter.desc": {
+    "en": "Bonus action. Restores one spent 1st-circle spell slot without exceeding the hero's maximum slots.",
+    "pt": "Ação bônus. Recupera um espaço gasto de magia de 1º círculo; não ultrapassa o máximo de espaços do herói."
+  },
+  "cat.item.calice_eter.nome": {
+    "en": "Ether Chalice",
+    "pt": "Cálice de Éter"
   },
   "cat.item.caneca_cerveja.nome": {
     "en": "Mug of Beer",
@@ -2418,6 +2466,14 @@ window.LANG_CATALOGO = {
     "en": "Elixir of Strength",
     "pt": "Elixir da Força"
   },
+  "cat.item.elixir_cavalo_ferro.desc": {
+    "en": "Bonus action. Increase Constitution by 1d4+1 for 1d6+4 rounds, adjusting Fortitude and maximum HP by level. The increased maximum may also restore current HP, unless Last Effort blocks that top-up; when the effect ends, current HP is capped at the updated maximum. Drinking another renews the duration without stacking the bonus.",
+    "pt": "Ação bônus. Aumenta a Constituição em 1d4+1 por 1d6+4 rodadas, ajustando Fortitude e PV máximos conforme o nível. O aumento do máximo pode repor PV atuais, exceto quando Último Esforço bloqueia esse top-up; ao expirar, os PV são limitados ao máximo atualizado. Beber outro renova a duração sem acumular o bônus."
+  },
+  "cat.item.elixir_cavalo_ferro.nome": {
+    "en": "Iron Horse Elixir",
+    "pt": "Elixir do Cavalo de Ferro"
+  },
   "cat.item.elixir_depurativo.desc": {
     "en": "Purges diseases from the body and protects for 1d4 rounds.",
     "pt": "Purga doenças do corpo e protege por 1d4 rodadas."
@@ -2474,6 +2530,18 @@ window.LANG_CATALOGO = {
     "en": "Colossal Longsword",
     "pt": "Espada Longa Colossal"
   },
+  "cat.item.essencia_vento_favoravel.desc": {
+    "en": "Bonus action. Increases the range of ranged weapons, thrown weapons, and throwable items by 2 squares for 1d6+2 rounds. Drinking another renews the duration without stacking range.",
+    "pt": "Ação bônus. Aumenta em 2 casas o alcance de armas à distância, armas arremessadas e itens arremessáveis por 1d6+2 rodadas. Beber outra renova a duração sem acumular alcance."
+  },
+  "cat.item.essencia_vento_favoravel.nome": {
+    "en": "Essence of Favorable Winds",
+    "pt": "Essência do Vento Favorável"
+  },
+  "cat.item.ferrao_do_brejo.nome": {
+    "en": "",
+    "pt": "Ferrão do Brejo"
+  },
   "cat.item.flecha_incendiaria.nome": {
     "en": "Incendiary Arrow",
     "pt": "Flecha Incendiária"
@@ -2518,6 +2586,14 @@ window.LANG_CATALOGO = {
     "en": "Bottle of Wine",
     "pt": "Garrafa de Vinho"
   },
+  "cat.item.gole_do_gigante.desc": {
+    "en": "Bonus action. Increase Strength by 1d4+1 for 1d6+4 rounds; its normal modifier applies to attacks, damage, and Strength checks. Drinking another renews the duration without stacking the bonus. Can coexist with elemental protections.",
+    "pt": "Ação bônus. Aumenta a Força em 1d4+1 por 1d6+4 rodadas, aplicando o modificador normal a ataques, dano e testes de Força. Beber outro renova a duração sem acumular o bônus; pode coexistir com proteções elementais."
+  },
+  "cat.item.gole_do_gigante.nome": {
+    "en": "Giant's Draught",
+    "pt": "Gole do Gigante"
+  },
   "cat.item.granada.nome": {
     "en": "Explosive Grenade",
     "pt": "Granada Explosiva"
@@ -2525,6 +2601,94 @@ window.LANG_CATALOGO = {
   "cat.item.granada_superior.nome": {
     "en": "Greater Grenade",
     "pt": "Granada Superior"
+  },
+  "cat.item.grimorio_barreira_arcana.desc": {
+    "en": "",
+    "pt": "Contém Barreira Arcana. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_barreira_arcana.nome": {
+    "en": "",
+    "pt": "Grimório: Barreira Arcana"
+  },
+  "cat.item.grimorio_bau.desc": {
+    "en": "",
+    "pt": "Livro raro de mago com duas ou três magias fixas. Só funciona equipado na mão do escudo e não concede espaços de magia."
+  },
+  "cat.item.grimorio_bau.nome": {
+    "en": "",
+    "pt": "Grimório Antigo"
+  },
+  "cat.item.grimorio_bola_fogo.desc": {
+    "en": "",
+    "pt": "Contém Bola de Fogo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_bola_fogo.nome": {
+    "en": "",
+    "pt": "Grimório: Bola de Fogo"
+  },
+  "cat.item.grimorio_clarividencia.desc": {
+    "en": "",
+    "pt": "Contém Clarividência. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_clarividencia.nome": {
+    "en": "",
+    "pt": "Grimório: Clarividência"
+  },
+  "cat.item.grimorio_comando.desc": {
+    "en": "",
+    "pt": "Contém Comando. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_comando.nome": {
+    "en": "",
+    "pt": "Grimório: Comando"
+  },
+  "cat.item.grimorio_contramagica.desc": {
+    "en": "",
+    "pt": "Contém Contramágica. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_contramagica.nome": {
+    "en": "",
+    "pt": "Grimório: Contramágica"
+  },
+  "cat.item.grimorio_medo.desc": {
+    "en": "",
+    "pt": "Contém Medo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_medo.nome": {
+    "en": "",
+    "pt": "Grimório: Medo"
+  },
+  "cat.item.grimorio_raio_congelante.desc": {
+    "en": "",
+    "pt": "Contém Raio Congelante. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_raio_congelante.nome": {
+    "en": "",
+    "pt": "Grimório: Raio Congelante"
+  },
+  "cat.item.grimorio_relampago.desc": {
+    "en": "",
+    "pt": "Contém Relâmpago. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_relampago.nome": {
+    "en": "",
+    "pt": "Grimório: Relâmpago"
+  },
+  "cat.item.grimorio_sono.desc": {
+    "en": "",
+    "pt": "Contém Sono. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_sono.nome": {
+    "en": "",
+    "pt": "Grimório: Sono"
+  },
+  "cat.item.grimorio_voo.desc": {
+    "en": "",
+    "pt": "Contém Voo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
+  },
+  "cat.item.grimorio_voo.nome": {
+    "en": "",
+    "pt": "Grimório: Voo"
   },
   "cat.item.hand_crossbow.desc": {
     "en": "Hand Crossbow: 1d4 piercing damage, using Dexterity. Range: 4 squares in a straight line.",
@@ -2718,6 +2882,14 @@ window.LANG_CATALOGO = {
     "en": "Wind Blade",
     "pt": "Lamina do Vento"
   },
+  "cat.item.lampada_vigilia_arcana.desc": {
+    "en": "Bonus action. For 10 rounds, reveals shadow-hidden creatures to the party within a moving radius of 3 squares around any active hero. The reveal does not end concealment; creatures are hidden again when they leave the radius or the duration ends.",
+    "pt": "Ação bônus. Por 10 rodadas, revela para o grupo criaturas ocultas nas sombras em um raio móvel de 3 casas ao redor de qualquer herói ativo. A revelação não encerra a ocultação; a criatura deixa de ser vista ao sair do raio ou ao fim da duração."
+  },
+  "cat.item.lampada_vigilia_arcana.nome": {
+    "en": "Arcane Vigil Lamp",
+    "pt": "Lâmpada da Vigília Arcana"
+  },
   "cat.item.lanca.desc": {
     "en": "Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares.",
     "pt": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
@@ -2810,11 +2982,11 @@ window.LANG_CATALOGO = {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
   },
-  "cat.item.machadinha_ana.desc": {
+  "cat.item.machadinha_arremesso_ana.desc": {
     "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
     "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
   },
-  "cat.item.machadinha_ana.nome": {
+  "cat.item.machadinha_arremesso_ana.nome": {
     "en": "Dwarven Throwing Hatchet",
     "pt": "Machadinha de Arremesso Anã"
   },
@@ -2930,6 +3102,14 @@ window.LANG_CATALOGO = {
     "en": "Colossal Rune Hammer",
     "pt": "Martelo Rúnico Colossal"
   },
+  "cat.item.mira_do_falcao.desc": {
+    "en": "Bonus action. Gain +2 to attacks with bows and thrown weapons for 1d4+1 rounds. Drinking another renews the duration without stacking the bonus. Does not increase damage.",
+    "pt": "Ação bônus. Concede +2 nos ataques com arcos e armas de arremesso por 1d4+1 rodadas. Beber outra renova a duração sem acumular bônus. Não aumenta o dano."
+  },
+  "cat.item.mira_do_falcao.nome": {
+    "en": "Hawk's Aim Elixir",
+    "pt": "Elixir da Mira do Falcão"
+  },
   "cat.item.monster_leather_plate.nome": {
     "en": "Monster Leather and Plate Armor",
     "pt": "Armadura de Couro de Monstro e Placas"
@@ -2949,6 +3129,94 @@ window.LANG_CATALOGO = {
   "cat.item.plate.nome": {
     "en": "Plate Armor",
     "pt": "Armadura de Placas"
+  },
+  "cat.item.pocao_barreira_arcana.desc": {
+    "en": "Bonus action. Reduces all damage received by 5 for 1d6+2 rounds. Can coexist with elemental protections.",
+    "pt": "Ação bônus. Reduz em 5 todo dano recebido por 1d6+2 rodadas. Pode coexistir com proteções elementais."
+  },
+  "cat.item.pocao_barreira_arcana.nome": {
+    "en": "Arcane Barrier Potion",
+    "pt": "Poção de Barreira Arcana"
+  },
+  "cat.item.pocao_invisibilidade.desc": {
+    "en": "Bonus action. Become invisible for 6 rounds; attacking or casting another spell ends the effect.",
+    "pt": "Ação bônus. Fica invisível por 6 rodadas; atacar ou lançar outra magia encerra o efeito."
+  },
+  "cat.item.pocao_invisibilidade.nome": {
+    "en": "Invisibility Potion",
+    "pt": "Poção de Invisibilidade"
+  },
+  "cat.item.pocao_manto_escuridao.desc": {
+    "en": "Bonus action. Creates a radius 3 darkness that follows you. You can see inside it for 1d4 rounds.",
+    "pt": "Ação bônus. Cria uma área de escuridão de raio 3 que acompanha você. Você enxerga dentro dela por 1d4 rodadas."
+  },
+  "cat.item.pocao_manto_escuridao.nome": {
+    "en": "Darkness Mantle Potion",
+    "pt": "Poção do Manto da Escuridão"
+  },
+  "cat.item.pocao_resistencia_acido.desc": {
+    "en": "Bonus action. Absorbs up to 10 acid damage per round for 1d6+4 rounds.",
+    "pt": "Ação bônus. Absorve até 10 de dano de ácido por rodada durante 1d6+4 rodadas."
+  },
+  "cat.item.pocao_resistencia_acido.nome": {
+    "en": "Acid Resistance Potion",
+    "pt": "Poção de Resistência ao Ácido"
+  },
+  "cat.item.pocao_resistencia_agua.desc": {
+    "en": "Bonus action. Absorbs up to 10 water damage per round for 1d6+4 rounds.",
+    "pt": "Ação bônus. Absorve até 10 de dano de água por rodada durante 1d6+4 rodadas."
+  },
+  "cat.item.pocao_resistencia_agua.nome": {
+    "en": "Water Resistance Potion",
+    "pt": "Poção de Resistência à Água"
+  },
+  "cat.item.pocao_resistencia_eletricidade.desc": {
+    "en": "Bonus action. Absorbs up to 10 lightning damage per round for 1d6+4 rounds.",
+    "pt": "Ação bônus. Absorve até 10 de dano elétrico por rodada durante 1d6+4 rodadas."
+  },
+  "cat.item.pocao_resistencia_eletricidade.nome": {
+    "en": "Lightning Resistance Potion",
+    "pt": "Poção de Resistência à Eletricidade"
+  },
+  "cat.item.pocao_resistencia_fogo.desc": {
+    "en": "Bonus action. Absorbs up to 10 fire damage per round for 1d6+4 rounds.",
+    "pt": "Ação bônus. Absorve até 10 de dano de fogo por rodada durante 1d6+4 rodadas."
+  },
+  "cat.item.pocao_resistencia_fogo.nome": {
+    "en": "Fire Resistance Potion",
+    "pt": "Poção de Resistência ao Fogo"
+  },
+  "cat.item.pocao_resistencia_gelo.desc": {
+    "en": "Bonus action. Absorbs up to 10 cold damage per round for 1d6+4 rounds.",
+    "pt": "Ação bônus. Absorve até 10 de dano de gelo por rodada durante 1d6+4 rodadas."
+  },
+  "cat.item.pocao_resistencia_gelo.nome": {
+    "en": "Ice Resistance Potion",
+    "pt": "Poção de Resistência ao Gelo"
+  },
+  "cat.item.pocao_resistencia_sagrado.desc": {
+    "en": "Bonus action. Absorbs up to 10 holy damage per round for 1d6+4 rounds.",
+    "pt": "Ação bônus. Absorve até 10 de dano sagrado por rodada durante 1d6+4 rodadas."
+  },
+  "cat.item.pocao_resistencia_sagrado.nome": {
+    "en": "Holy Resistance Potion",
+    "pt": "Poção de Resistência Sagrada"
+  },
+  "cat.item.pocao_velocidade.desc": {
+    "en": "Bonus action. Doubles movement and grants one extra main action per turn for 1d4+1 rounds. Each action keeps its normal cost.",
+    "pt": "Ação bônus. Dobra o movimento e concede uma ação principal extra por turno por 1d4+1 rodadas. Cada ação mantém seu custo normal."
+  },
+  "cat.item.pocao_velocidade.nome": {
+    "en": "Speed Potion",
+    "pt": "Poção de Velocidade"
+  },
+  "cat.item.pocao_voo.desc": {
+    "en": "Bonus action. Fly and control your altitude up to 10 for 10 rounds. When it expires, land on the nearest safe square; if you lose control or no safe floor is available, take normal falling damage.",
+    "pt": "Ação bônus. Permite voar e controlar a altura até 10 por 10 rodadas. Ao expirar, pousa na casa segura mais próxima; se perder o controle ou não houver piso seguro, sofre a queda normal."
+  },
+  "cat.item.pocao_voo.nome": {
+    "en": "Flight Potion",
+    "pt": "Poção de Voo"
   },
   "cat.item.racao_viagem.nome": {
     "en": "Travel Rations",
@@ -2982,6 +3250,14 @@ window.LANG_CATALOGO = {
     "en": "Ancestral Rune",
     "pt": "Runa Ancestral"
   },
+  "cat.item.sabedoria_liquida.desc": {
+    "en": "Bonus action. Increase Intelligence by 1d4+1 for 1d6+4 rounds, applying its normal modifiers to Will, spell save DCs, initiative when recalculated, vision, healing that uses INT, and the Reviver's control slots when applicable. It does not grant normal spell slots or known spells. Drinking another renews the duration without stacking the bonus.",
+    "pt": "Ação bônus. Aumenta a Inteligência em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a Vontade, CD das magias, iniciativa na próxima recalculação, visão, curas que usam INT e slots de controle do Reviver quando aplicável. Não concede slots normais nem magias conhecidas. Beber outra renova a duração sem acumular o bônus."
+  },
+  "cat.item.sabedoria_liquida.nome": {
+    "en": "Liquid Wisdom",
+    "pt": "Sabedoria Líquida"
+  },
   "cat.item.shortsword.desc": {
     "en": "Short Sword: 1d6 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
@@ -2997,6 +3273,14 @@ window.LANG_CATALOGO = {
   "cat.item.shortsword_prata.nome": {
     "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
+  },
+  "cat.item.solucao_mecanismo.desc": {
+    "en": "Bonus action. Before confirming, shows a 3-square radius around the hero. Automatically disarms every active trap in the area, including hidden traps and traps inside chests or objects. Grants normal disarm XP, doubled for permanent traps; does not recover gold.",
+    "pt": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."
+  },
+  "cat.item.solucao_mecanismo.nome": {
+    "en": "Mechanism Solution",
+    "pt": "Solução do Mecanismo"
   },
   "cat.item.staff.desc": {
     "en": "Arcane Staff: 1d6 bludgeoning damage, using Strength or Dexterity. Range: any adjacent square.",
@@ -3029,6 +3313,14 @@ window.LANG_CATALOGO = {
   "cat.item.vela_escuridao.nome": {
     "en": "Candle of Darkness",
     "pt": "Vela da Escuridão"
+  },
+  "cat.item.vela_reveladora.desc": {
+    "en": "",
+    "pt": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."
+  },
+  "cat.item.vela_reveladora.nome": {
+    "en": "",
+    "pt": "Vela Reveladora"
   },
   "cat.item.veneno_agonia_sufocante.nome": {
     "en": "Suffocating Agony",
