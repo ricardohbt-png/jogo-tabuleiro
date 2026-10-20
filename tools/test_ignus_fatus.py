@@ -370,6 +370,38 @@ async def main():
     check("depois da dissipação a IA volta a escolher heróis normalmente",
           selected and selected.get("kind") == "player" and selected["obj"] is player)
 
+    print("\n[7] Réplica do herói: classe, percepção entre salas e intenção de ataque")
+    room, player = setup_room()
+    player["class_id"] = "mage"
+    player["bag"] = [dict(server._DUNGEON_ITEM_CATALOG["ignus_fatus"])]
+    await room.handle_use_item("p1", "ignus_fatus", target_pos=[4, 3])
+    criada = next(iter(room.illusions.values()), None)
+    check("a ilusão criada guarda a classe do herói (a réplica mostra o próprio herói)",
+          criada is not None and criada.get("class_id") == "mage")
+
+    room, player = setup_room()
+    illusion = add_illusion(room, pos=[4, 3])
+    illusion["room_id"] = 1                       # ilusão numa sala...
+    monster = add_monster(room, pos=[7, 3], room_id=2)   # ...monstro em outra, mas com visão livre
+    room._monstro_ativo_em_combate = lambda _m: True
+    vistos = room._alvos_visiveis_para_monstro(monster, room._alvos_hostis_para_monstros())
+    check("o monstro que enxerga a ilusão a percebe mesmo estando em outra sala",
+          any(t.get("kind") == "illusion" for t in vistos))
+
+    room, player = setup_room()
+    player["pos"] = [1, 3]
+    illusion = add_illusion(room, pos=[4, 3])
+    monster = add_monster(room, pos=[7, 3], type="kobold_lanceiro", name="Kobold", ai_type="agressivo",
+                          attacks=[{"name": "Lança", "damage": "1d6", "atk_bonus": 2}])
+    room._monstro_ativo_em_combate = lambda _m: True
+    escolhido = room._get_monster_primary_target(
+        monster, room._alvos_visiveis_para_monstro(monster, room._alvos_hostis_para_monstros()))
+    check("com herói e ilusão à vista, o monstro escolhe a ilusão como escolheria um herói",
+          escolhido and escolhido.get("kind") == "illusion")
+    intencao = room._intent_de_monstro(monster, room._alvos_hostis_para_monstros())
+    check("a seta de intenção do monstro aponta para a casa da ilusão",
+          intencao is not None and intencao["alvo_pos"] == [4, 3] and intencao["alvo_id"] == illusion["id"])
+
     if FAIL:
         print(f"\n{FAIL} falha(s), {PASS} aprovação(ões)")
         raise SystemExit(1)

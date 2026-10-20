@@ -19406,9 +19406,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         candidatos = []
         for target in targets:
             obj = target.get("obj", {})
-            if (target.get("kind") == "illusion"
-                    and obj.get("room_id") != m.get("room_id")):
-                continue
+            # A ilusão é percebida como um herói: quem a vê (raio de visão + linha de
+            # visão, em _monstro_enxerga_alvo) a persegue, esteja ou não na mesma sala.
             if (target.get("kind") in {"player", "monster"}
                     and (obj.get("invisivel_sombras") or obj.get("invisivel_magico")
                          or obj.get("oculto_vela"))
@@ -40268,6 +40267,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "id": illusion_id,
                 "owner_pid": pid,
                 "room_id": p.get("room_id"),
+                "class_id": p.get("class_id"),      # a réplica mostra o herói de quem a criou
                 "kind": item_id,
                 "pos": [x, y],
                 "created_round": int(self.round_num or 1),
@@ -51800,7 +51800,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         except (TypeError, ValueError):
             remembered_recently = False
         if (illusion and remembered_recently
-                and seen.get("room_id") == monster.get("room_id")
                 and isinstance(seen.get("pos"), list)):
             return {"kind": "illusion", "obj": illusion,
                     "pursuit_pos": list(seen["pos"]), "remembered": True}

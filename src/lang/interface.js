@@ -8119,6 +8119,10 @@ window.LANG_INTERFACE = {
     "en": "Valid tile",
     "pt": "Casa válida"
   },
+  "ui.ilusao.alvo_tooltip": {
+    "en": "the illusion of {nome}",
+    "pt": "a ilusão de {nome}"
+  },
   "ui.ilusao.casa_invalida": {
     "en": "Choose a highlighted free tile.",
     "pt": "Escolha uma casa livre destacada."

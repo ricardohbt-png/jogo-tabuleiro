@@ -8567,7 +8567,11 @@ function _intencaoLinhaTooltip(monster){
   const it = (GS.intencoes ? GS.intencoes() : []).find(i => String(i.monstro_id) === String(monster?.id));
   if(!it) return '';
   const alvo = (GS.gameState?.players || []).find(p => p.id === it.alvo_id);
-  const nome = alvo ? _esc(alvo.name) : t('ui.intencao.um_aliado');
+  const ilusao = !alvo && (GS.gameState?.illusions || []).find(i => String(i.id) === String(it.alvo_id));
+  const donoIlusao = ilusao && (GS.gameState?.players || []).find(p => p.id === ilusao.owner_pid);
+  const nome = alvo ? _esc(alvo.name)
+    : ilusao ? t('ui.ilusao.alvo_tooltip', {nome: _esc(donoIlusao ? donoIlusao.name : '')})
+    : t('ui.intencao.um_aliado');
   const chave = it.acao === 'distancia' ? 'ui.intencao.tooltip.distancia'
               : it.acao === 'ameaca' ? 'ui.intencao.tooltip.ameaca' : 'ui.intencao.tooltip.corpo';
   const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
@@ -29121,13 +29125,30 @@ function _promptarMovimentoIlusao(state){
   _iniciarMiraIlusao('movement',illusion.id);
 }
 
-function _getIllusion2DImg(imageName){
-  if(!_illusion2DImages[imageName]){
-    const img=new Image();img.onload=()=>GS.gameState&&renderMap(GS.gameState);
-    img.src=_assetURL(`assets/itens/${imageName}`);_illusion2DImages[imageName]=img;
-  }
-  const img=_illusion2DImages[imageName];
-  return img.complete&&img.naturalWidth?img:null;
+// ── Réplica fantasma do herói (Ignus Fatus / Fata Morgana) ──────────────────
+// A ilusão é a imagem do PRÓPRIO herói de quem a criou (a mesma frente.png do peão),
+// translúcida e azulada; o Ignus Fatus é mais etéreo e a Fata Morgana, mais sólida.
+function _illusionClassId(illusion, state){
+  return illusion.class_id
+    || ((state?.players||[]).find(p=>p.id===illusion.owner_pid)||{}).class_id || null;
+}
+function _illusionGhostStyle(kind){
+  return kind==='ignus_fatus'
+    ? {alpha:.42, tint:'rgba(150,215,255,.55)', hex:0xb4e2ff, ring:'rgba(150,215,255,.75)'}
+    : {alpha:.8,  tint:'rgba(225,238,255,.32)', hex:0xe6f1ff, ring:'rgba(230,240,255,.85)'};
+}
+const _illusionGhostCache = {};
+function _illusionGhostCanvas(classId, kind){
+  const img=_getHero2DImg(classId);
+  if(!img||!img.complete||!img.naturalWidth) return null;
+  const key=`${classId}:${kind}`;
+  let c=_illusionGhostCache[key];
+  if(c) return c;
+  c=document.createElement('canvas');c.width=img.naturalWidth;c.height=img.naturalHeight;
+  const g=c.getContext('2d');g.drawImage(img,0,0);
+  g.globalCompositeOperation='source-atop';g.fillStyle=_illusionGhostStyle(kind).tint;
+  g.fillRect(0,0,c.width,c.height);
+  _illusionGhostCache[key]=c;return c;
 }
 
 function _drawIllusions2D(ctx,state,visionSet){
@@ -29135,11 +29156,18 @@ function _drawIllusions2D(ctx,state,visionSet){
     const [x,y]=illusion.pos||[];
     if(!Number.isFinite(x)||!Number.isFinite(y)
       ||(illusion.owner_pid!==GS.myPid&&!GS.isMaster()&&!visionSet.has(`${x},${y}`))) continue;
-    const image=_getIllusion2DImg(`${illusion.kind}.png`);
-    if(!image) continue;
-    const w=CELL*.88,h=w*(image.naturalHeight/image.naturalWidth);
-    ctx.save();ctx.globalAlpha=illusion.kind==='ignus_fatus'?.48:.96;
-    ctx.drawImage(image,x*CELL+(CELL-w)/2,(y+1)*CELL-h+CELL*.04,w,h);ctx.restore();
+    const st=_illusionGhostStyle(illusion.kind),classId=_illusionClassId(illusion,state);
+    const cx=x*CELL+CELL/2,feetY=y*CELL+CELL*.88;
+    ctx.save();
+    ctx.globalAlpha=st.alpha;ctx.strokeStyle=st.ring;ctx.lineWidth=Math.max(2,CELL*.05);
+    ctx.beginPath();ctx.ellipse(cx,feetY-CELL*.04,CELL*.34,CELL*.12,0,0,Math.PI*2);ctx.stroke();
+    const ghost=classId&&_illusionGhostCanvas(classId,illusion.kind);
+    if(ghost){
+      let h=CELL*1.55,w=h*(ghost.width/ghost.height);
+      const wMax=CELL*1.28;if(w>wMax){h*=wMax/w;w=wMax;}
+      ctx.drawImage(ghost,cx-w/2,feetY-h,w,h);
+    }
+    ctx.restore();
   }
 }
 
@@ -29151,22 +29179,40 @@ function _syncIllusions3D(state,visionSet){
     const [x,y]=illusion.pos||[],id=String(illusion.id);
     if(!Number.isFinite(x)||!Number.isFinite(y)
       ||(illusion.owner_pid!==GS.myPid&&!GS.isMaster()&&!visionSet.has(`${x},${y}`))) continue;
-    wanted.add(id);let sprite=g3.illusionSprites[id];
-    if(!sprite){
-      const file=`${illusion.kind}.png`;
-      let texture=_illusion3DTextures[file];
-      if(!texture){texture=new T.TextureLoader().load(_assetURL(`assets/itens/${file}`));
-        texture._shared=true;_illusion3DTextures[file]=texture;}
-      sprite=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,depthWrite:false,
-        opacity:illusion.kind==='ignus_fatus'?.48:.96}));
-      sprite.scale.set(.78,1.02,1);sprite.renderOrder=45;sprite.userData.noRay=true;
-      sprite.userData.illusionId=id;g3.scene.add(sprite);g3.illusionSprites[id]=sprite;
+    const classId=_illusionClassId(illusion,state),st=_illusionGhostStyle(illusion.kind),
+      base=topoSuperficie3D(state,x,y,.22);
+    wanted.add(id);let grp=g3.illusionSprites[id];
+    if(grp&&grp.userData.classId!==classId){ // classe do dono mudou/chegou depois: refaz
+      g3.scene.remove(grp);grp.traverse(o=>{o.material?.dispose?.();o.geometry?.dispose?.();});
+      delete g3.illusionSprites[id];grp=null;
     }
-    sprite.position.set(x,topoSuperficie3D(state,x,y,.22)+.52,y);
-    sprite.material.opacity=illusion.kind==='ignus_fatus'?.48:.96;
+    if(!grp){
+      grp=new T.Group();grp.userData={illusionId:id,classId,noRay:true};
+      const ring=new T.Mesh(new T.RingGeometry(.30,.38,32),
+        new T.MeshBasicMaterial({color:st.hex,transparent:true,opacity:st.alpha,depthWrite:false,side:T.DoubleSide}));
+      ring.rotation.x=-Math.PI/2;ring.position.y=.02;ring.renderOrder=44;ring.userData.noRay=true;grp.add(ring);
+      if(classId){
+        const file=`assets/pawns/${classId}/frente.png`;
+        let texture=_illusion3DTextures[file];
+        if(!texture){texture=new T.TextureLoader().load(_assetURL(file));texture._shared=true;_illusion3DTextures[file]=texture;}
+        const sprite=new T.Sprite(new T.SpriteMaterial({map:texture,color:st.hex,transparent:true,
+          depthWrite:false,opacity:st.alpha}));
+        sprite.center.set(.5,0);sprite.scale.set(.82,1.1,1);sprite.position.y=.02;sprite.renderOrder=45;
+        sprite.userData.noRay=true;sprite.userData.replica=true;grp.add(sprite);
+        const ajustar=()=>{const im=texture.image;if(!im||!im.width)return;
+          let h=1.12,w=h*(im.width/im.height);if(w>1.0){h*=1/w;w=1.0;}sprite.scale.set(w,h,1);};
+        // A imagem pode chegar depois do sprite: ajusta a proporção quando carregar.
+        const tentar=(n=0)=>{ if(texture.image&&texture.image.width) ajustar(); else if(n<50) setTimeout(()=>tentar(n+1),120); };
+        tentar();
+      }
+      g3.scene.add(grp);g3.illusionSprites[id]=grp;
+    }
+    grp.position.set(x,base,y);
+    grp.traverse(o=>{if(o.material){o.material.opacity=st.alpha;}});
   }
-  for(const [id,sprite] of Object.entries(g3.illusionSprites)) if(!wanted.has(id)){
-    g3.scene.remove(sprite);sprite.material?.dispose();delete g3.illusionSprites[id];
+  for(const [id,grp] of Object.entries(g3.illusionSprites)) if(!wanted.has(id)){
+    g3.scene.remove(grp);grp.traverse(o=>{o.material?.dispose?.();o.geometry?.dispose?.();});
+    delete g3.illusionSprites[id];
   }
 }
 

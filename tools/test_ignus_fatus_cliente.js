@@ -58,14 +58,20 @@ check('clique, teclado e gamepad usam o mesmo caminho de seleção',
     && body('_gamepadCancel').includes('_pularMovimentoIlusao'));
 
 console.log('\n[3] Arte e remoção da cena');
-check('2D desenha os PNGs dos itens com opacidade fantasmagórica no Ignus',
-  body('_getIllusion2DImg').includes('assets/itens/')
-    && body('_drawIllusions2D').includes('${illusion.kind}.png')
-    && body('_drawIllusions2D').includes('globalAlpha'));
-check('3D reconcilia os sprites pela lista de game_state.illusions',
-  body('_syncIllusions3D').includes('state.illusions')
-    && body('_syncIllusions3D').includes('assets/itens/')
+check('2D desenha a réplica do herói (frente.png da classe do dono), translúcida e mais etérea no Ignus',
+  body('_illusionClassId').includes('class_id')
+    && body('_illusionGhostCanvas').includes('_getHero2DImg')
+    && body('_drawIllusions2D').includes('_illusionGhostCanvas')
+    && body('_drawIllusions2D').includes('globalAlpha')
+    && body('_illusionGhostStyle').includes("'ignus_fatus'"));
+check('3D mostra o PNG do herói (assets/pawns/<classe>/frente.png), não o ícone do item',
+  body('_syncIllusions3D').includes('assets/pawns/')
+    && body('_syncIllusions3D').includes('frente.png')
+    && !body('_syncIllusions3D').includes('assets/itens/')
+    && body('_syncIllusions3D').includes('state.illusions')
     && body('_syncIllusions3D').includes('scene.remove'));
+check('a seta de intenção nomeia a ilusão (não "um aliado") quando o alvo é uma ilusão',
+  source.includes("t('ui.ilusao.alvo_tooltip'"));
 check('game_state inicia o aviso e encerra uma seleção quando o turno já avançou',
   body('handleGameState').includes('_promptarMovimentoIlusao')
     && body('handleGameState').includes('_aimEnd'));
