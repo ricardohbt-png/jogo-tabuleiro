@@ -3026,9 +3026,14 @@ function _guardarSelecaoLoja(itemId){
   const list = $('shop-items-list');
   if(!modal?.classList.contains('open') || !list) return;
   const rows = [...list.querySelectorAll('.shop-item')];
-  const focusedRow = _gamepadUi?.focusEl?.closest?.('.shop-item')
-    || document.activeElement?.closest?.('.shop-item')
-    || rows.find(row => row.dataset.shopItemId === String(itemId));
+  // A âncora é SEMPRE a linha do item comprado/vendido. O foco (mouse, teclado ou
+  // controle) só serve para desempatar linhas com o mesmo id: usá-lo como âncora
+  // fazia o scroll pular quando o foco ficava numa linha antiga (a de uma compra
+  // anterior), porque a posição era medida numa linha e reposta em outra.
+  const doItem = rows.filter(row => row.dataset.shopItemId === String(itemId));
+  const focada = _gamepadUi?.focusEl?.closest?.('.shop-item')
+    || document.activeElement?.closest?.('.shop-item');
+  const focusedRow = (focada && doItem.includes(focada)) ? focada : (doItem[0] || null);
   const rowIndex = focusedRow ? rows.indexOf(focusedRow) : -1;
   window._shopSelectionRestore = {
     shopId: GS.activeShop,
@@ -3036,7 +3041,10 @@ function _guardarSelecaoLoja(itemId){
     itemId: String(itemId),
     rowIndex,
     scrollTop: list.scrollTop,
-    relativeTop: focusedRow ? focusedRow.offsetTop - list.scrollTop : null
+    // Distância da linha ao topo VISÍVEL da lista (independe do offsetParent).
+    relativeTop: focusedRow
+      ? focusedRow.getBoundingClientRect().top - list.getBoundingClientRect().top
+      : null
   };
 }
 
@@ -3063,9 +3071,12 @@ function _restaurarSelecaoLoja(){
 
     // Repõe a mesma linha no mesmo ponto da lista, sem fazer a tela saltar
     // para o topo quando o city_state atualiza ouro/inventário.
-    list.scrollTop = restore.relativeTop == null
-      ? restore.scrollTop
-      : Math.max(0, row.offsetTop - restore.relativeTop);
+    if(restore.relativeTop == null){
+      list.scrollTop = restore.scrollTop;
+    } else {
+      const agora = row.getBoundingClientRect().top - list.getBoundingClientRect().top;
+      list.scrollTop = Math.max(0, list.scrollTop + (agora - restore.relativeTop));
+    }
     const button = [...row.querySelectorAll('.btn-buy')]
       .find(candidate => !candidate.disabled) || row.querySelector('.btn-buy');
     if(button){
