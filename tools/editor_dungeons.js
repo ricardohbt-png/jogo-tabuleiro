@@ -26990,7 +26990,7 @@ window.EDITOR_DUNGEONS = [
           "w": 12,
           "h": 12,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -27000,7 +27000,7 @@ window.EDITOR_DUNGEONS = [
           "w": 11,
           "h": 12,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -27010,7 +27010,7 @@ window.EDITOR_DUNGEONS = [
           "w": 9,
           "h": 12,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         }
       ],
@@ -33312,7 +33312,7 @@ window.EDITOR_DUNGEONS = [
           "w": 15,
           "h": 16,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -33322,7 +33322,7 @@ window.EDITOR_DUNGEONS = [
           "w": 11,
           "h": 16,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -33332,7 +33332,7 @@ window.EDITOR_DUNGEONS = [
           "w": 12,
           "h": 16,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         }
       ],
@@ -38730,7 +38730,7 @@ window.EDITOR_DUNGEONS = [
           "w": 14,
           "h": 16,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -38740,7 +38740,7 @@ window.EDITOR_DUNGEONS = [
           "w": 14,
           "h": 16,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -38750,7 +38750,7 @@ window.EDITOR_DUNGEONS = [
           "w": 12,
           "h": 16,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         }
       ],
@@ -55003,7 +55003,7 @@ window.EDITOR_DUNGEONS = [
           "w": 30,
           "h": 32,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -55013,7 +55013,7 @@ window.EDITOR_DUNGEONS = [
           "w": 11,
           "h": 12,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         }
       ],
