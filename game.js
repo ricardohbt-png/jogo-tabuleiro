@@ -29058,7 +29058,9 @@ function _iniciarMiraIlusao(kind, itemId){
     area:valid,
     confirm:placement?null:skip,
     confirmText:placement?'':t('ui.ilusao.pular'),
-    cleanup:()=>{ if(_illusionMode===mode) _illusionMode=null; },
+    cleanup:reason=>{ if(_illusionMode===mode) _illusionMode=null;
+      // Esc/cancelar: devolve o botão para a ordem poder ser dada depois (antes de mover o herói).
+      if(!placement&&reason==='cancel') _mostrarBotaoMoverIlusao(_ilusaoComOrdemDisponivel(GS.gameState)); },
   });
   _illusionMode=mode;
   const start=valid.values().next().value;
@@ -29105,21 +29107,46 @@ function _teclaModoIlusao(event){
 }
 document.addEventListener('keydown',_teclaModoIlusao,true);
 
-function _promptarMovimentoIlusao(state){
-  if(_illusionMode?.kind==='movement'){
-    const me=(state?.players||[]).find(p=>p.id===GS.myPid);
-    const stillEligible=state?.current_turn===GS.myPid&&GS.isMyTurn
-      &&!me?.moved_this_turn&&!me?.action_done;
-    if(!stillEligible) _aimEnd({silent:true,reason:'turn_changed'});
-  }
-  if(_illusionMode||!state||state.phase!=='playing'||!GS.isMyTurn
-    ||state.current_turn!==GS.myPid||state.animados_turn===GS.myPid) return;
+// A janela de movimento da Fata Morgana: no início do turno do dono, ANTES de ele mover
+// ou agir, uma ordem de até 6 casas por rodada (como um lacaio). O game_state traz a
+// rodada em `round` (o `round_num` só existe no servidor): ler o campo errado fazia o
+// aviso nunca abrir, porque `undefined !== undefined` era falso para a ilusão recém-criada.
+function _rodadaDoEstado(state){ return Number(state?.round ?? state?.round_num ?? 0) || 0; }
+
+function _ilusaoComOrdemDisponivel(state){
+  if(!state||state.phase!=='playing'||!GS.isMyTurn||state.current_turn!==GS.myPid
+    ||state.animados_turn===GS.myPid) return null;
   const me=(state.players||[]).find(p=>p.id===GS.myPid&&p.alive);
-  if(!me||me.moved_this_turn||me.action_done) return;
-  const illusion=(state.illusions||[]).find(i=>i.owner_pid===GS.myPid
-    &&i.kind==='fata_morgana'&&i.move_order_round!==state.round_num);
-  if(!illusion) return;
-  const key=`${illusion.id}:${state.round_num}`;
+  if(!me||me.moved_this_turn||me.action_done) return null;
+  const rodada=_rodadaDoEstado(state);
+  return (state.illusions||[]).find(i=>i.owner_pid===GS.myPid
+    &&i.kind==='fata_morgana'&&i.move_order_round!==rodada)||null;
+}
+
+// Botão para reabrir a ordem se ela foi fechada (Esc) antes de usada.
+function _mostrarBotaoMoverIlusao(illusion){
+  let btn=document.getElementById('ilusao-mover-btn');
+  if(!illusion||_illusionMode){ if(btn) btn.style.display='none'; return; }
+  if(!btn){
+    btn=document.createElement('button');btn.id='ilusao-mover-btn';btn.type='button';
+    btn.style.cssText='position:fixed;left:50%;bottom:150px;transform:translateX(-50%);z-index:1002;'
+      +"padding:8px 16px;border-radius:8px;border:1px solid #bca8ff;background:rgba(24,18,44,.94);"
+      +"color:#e6dcff;font:600 13px 'Cinzel',serif;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.5);";
+    document.body.appendChild(btn);
+  }
+  btn.textContent=t('ui.ilusao.botao_mover');
+  btn.dataset.illusionId=String(illusion.id);
+  btn.onclick=()=>{ btn.style.display='none'; _iniciarMiraIlusao('movement',illusion.id); };
+  btn.style.display='block';
+}
+
+function _promptarMovimentoIlusao(state){
+  if(_illusionMode?.kind==='movement' && !_ilusaoComOrdemDisponivel(state))
+    _aimEnd({silent:true,reason:'turn_changed'});
+  const illusion=_ilusaoComOrdemDisponivel(state);
+  _mostrarBotaoMoverIlusao(illusion);
+  if(_illusionMode||!illusion) return;
+  const key=`${illusion.id}:${_rodadaDoEstado(state)}`;
   if(_illusionPromptKey===key) return;
   _illusionPromptKey=key;
   _iniciarMiraIlusao('movement',illusion.id);

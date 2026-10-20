@@ -8129,6 +8129,10 @@ window.LANG_INTERFACE = {
   },
   "ui.ilusao.cancelado": {
     "en": "Phantom selection canceled.",
+  "ui.ilusao.botao_mover": {
+    "en": "🪞 Move the Fata Morgana (up to 6 tiles)",
+    "pt": "🪞 Mover a Fata Morgana (até 6 casas)"
+  },
     "pt": "Seleção da ilusão cancelada."
   },
   "ui.ilusao.pular": {

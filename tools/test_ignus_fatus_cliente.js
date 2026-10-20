@@ -42,9 +42,10 @@ check('clique inválido não envia item e Escape cancela a mira',
 
 console.log('\n[2] Movimento da Fata Morgana');
 check('o turno oferece mover ou pular somente antes do herói agir',
-  body('_promptarMovimentoIlusao').includes('current_turn')
-    && body('_promptarMovimentoIlusao').includes('move_order_round')
-    && body('_promptarMovimentoIlusao').includes('action_done')
+  body('_ilusaoComOrdemDisponivel').includes('current_turn')
+    && body('_ilusaoComOrdemDisponivel').includes('move_order_round')
+    && body('_ilusaoComOrdemDisponivel').includes('action_done')
+    && body('_promptarMovimentoIlusao').includes('_ilusaoComOrdemDisponivel')
     && body('_iniciarMiraIlusao').includes('confirmText'));
 check('a confirmação envia move_illusion com destino e o botão de pular envia destino nulo',
   body('_clickTileIlusao').includes("type:'move_illusion'")
@@ -90,6 +91,27 @@ check('as casas válidas vão no canal verde (area) e o alcance no vermelho (ran
   /area:\s*valid/.test(mira) && /range:\s*placement\s*\?\s*_illusionRangeTiles\(me\)/.test(mira));
 check('a mira recusa fora do turno ou sem ação bônus, como nos arremessáveis',
   /!GS\.isMyTurn\s*\|\|\s*me\.bonus_action_used/.test(mira));
+
+console.log('\n[6] Janela de movimento da Fata Morgana (antes de o herói mover/agir)');
+const vm = require('vm');
+const sbx = { GS: { isMyTurn: true, myPid: 'p1' } };
+vm.createContext(sbx);
+vm.runInContext(source.slice(source.indexOf('function _rodadaDoEstado('), source.indexOf('// Botão para reabrir a ordem')), sbx);
+const estado = (extra = {}, illusion = {}) => ({
+  phase: 'playing', current_turn: 'p1', round: 3,            // o game_state manda `round`, não `round_num`
+  players: [{ id: 'p1', alive: true, moved_this_turn: false, action_done: false, ...extra }],
+  illusions: [{ id: 'i1', owner_pid: 'p1', kind: 'fata_morgana', ...illusion }],
+});
+const disponivel = st => vm.runInContext('_ilusaoComOrdemDisponivel', sbx)(st);
+check('ilusão recém-criada (sem ordem na rodada) abre a janela com o campo `round` do estado',
+  disponivel(estado())?.id === 'i1');
+check('ordem já dada nesta rodada fecha a janela', disponivel(estado({}, { move_order_round: 3 })) === null);
+check('ordem de uma rodada anterior não impede a desta', disponivel(estado({}, { move_order_round: 2 }))?.id === 'i1');
+check('depois que o herói move, a janela fecha', disponivel(estado({ moved_this_turn: true })) === null);
+check('depois que o herói age, a janela fecha', disponivel(estado({ action_done: true })) === null);
+check('o Ignus Fatus nunca abre a janela', disponivel(estado({}, { kind: 'ignus_fatus' })) === null);
+check('existe o botão para reabrir a ordem depois de um Esc',
+  body('_mostrarBotaoMoverIlusao').includes('ilusao-mover-btn') && body('_iniciarMiraIlusao').includes("reason==='cancel'"));
 
 console.log(`\n=== ${pass} passaram, ${fail} falharam ===`);
 process.exit(fail ? 1 : 0);
