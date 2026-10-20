@@ -579,11 +579,11 @@ window.LANG_CATALOGO = {
     "pt": "Vitral de templo"
   },
   "cat.guilda.arremesso_rapido.desc": {
-    "en": "",
+    "en": "Passive. Once per turn, after throwing a throwable consumable with your main action, you can throw a second one with your bonus action. Each flask keeps its normal range and resolution and can target a different creature or location; each use consumes the item.",
     "pt": "Passivo. Uma vez por turno, depois de arremessar um consumível arremessável com a ação principal, você pode arremessar um segundo com a ação bônus. Cada frasco mantém seu alcance e resolução normal e pode mirar um alvo ou local diferente; cada uso consome o item."
   },
   "cat.guilda.arremesso_rapido.nome": {
-    "en": "",
+    "en": "Quick Throw",
     "pt": "Arremesso Rápido"
   },
   "cat.guilda.bardo_cancao_acerto.desc": {
@@ -731,11 +731,11 @@ window.LANG_CATALOGO = {
     "pt": "Ressurreição III"
   },
   "cat.guilda.disparo_duplo.desc": {
-    "en": "",
+    "en": "Passive. With a Hand Crossbow in each hand, when you attack an enemy you also fire the off-hand crossbow at the same target as a bonus action. The target must still be alive, in range and visible; each shot consumes 1 bolt, even on a miss. Once per turn.",
     "pt": "Passivo. Com uma Besta de Mão em cada mão, ao atacar um inimigo dispara também a besta secundária contra o mesmo alvo como ação bônus. O alvo precisa continuar vivo, ao alcance e visível; cada disparo consome 1 virote, mesmo se errar. Uma vez por turno."
   },
   "cat.guilda.disparo_duplo.nome": {
-    "en": "",
+    "en": "Double Shot",
     "pt": "Disparo Duplo"
   },
   "cat.guilda.guarda_maxima.desc": {
@@ -1347,11 +1347,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lobisomem"
   },
   "cat.guilda.lenda_lobisomem_alfa.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Alpha Werewolf.",
     "pt": "+1 de ataque e +1 nos saves contra Lobisomem Alfa."
   },
   "cat.guilda.lenda_lobisomem_alfa.nome": {
-    "en": "",
+    "en": "Lore: Alpha Werewolf",
     "pt": "Lenda: Lobisomem Alfa"
   },
   "cat.guilda.lenda_lobo_cinzento.desc": {
@@ -2435,7 +2435,7 @@ window.LANG_CATALOGO = {
     "pt": "Cola Alquímica"
   },
   "cat.item.cola_alquimica_superior.nome": {
-    "en": "",
+    "en": "Superior Alchemical Glue",
     "pt": "Cola Alquímica Superior"
   },
   "cat.item.dagger.desc": {
@@ -2547,7 +2547,7 @@ window.LANG_CATALOGO = {
     "pt": "Fata Morgana"
   },
   "cat.item.ferrao_do_brejo.nome": {
-    "en": "",
+    "en": "Marsh Stinger",
     "pt": "Ferrão do Brejo"
   },
   "cat.item.flecha_incendiaria.nome": {
@@ -3331,11 +3331,11 @@ window.LANG_CATALOGO = {
     "pt": "Vela da Escuridão"
   },
   "cat.item.vela_reveladora.desc": {
-    "en": "",
+    "en": "Bonus action. For 10 rounds, reveals to the whole group the active traps within 3 tiles of the hero. The radius follows the hero; the candle neither triggers nor disarms traps.",
     "pt": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."
   },
   "cat.item.vela_reveladora.nome": {
-    "en": "",
+    "en": "Revealing Candle",
     "pt": "Vela Reveladora"
   },
   "cat.item.veneno_agonia_sufocante.nome": {
@@ -3999,7 +3999,7 @@ window.LANG_CATALOGO = {
     "pt": "Lobisomem"
   },
   "cat.monstro.lobisomem_alfa.nome": {
-    "en": "",
+    "en": "Alpha Werewolf",
     "pt": "Lobisomem Alfa"
   },
   "cat.monstro.lobo_cinzento.nome": {
