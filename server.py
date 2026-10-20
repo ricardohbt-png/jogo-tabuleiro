@@ -50756,12 +50756,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""
         t = (obj or {}).get("type")
-        vivos = [m for m in self.monsters.values() if m["hp"] > 0]
+        # Troll/Lobisomem Alfa a 0 PV regenerando ainda NÃO morreram (só a morte definitiva conta).
+        def _caido_regenerando(m):
+            return bool(m.get("troll_regenerando") or m.get("lobisomem_alfa_regenerando"))
+        vivos = [m for m in self.monsters.values() if m["hp"] > 0 or _caido_regenerando(m)]
         if t == "kill_all":
             return len(vivos) == 0
         if t == "kill_target":
             alvos = [m for m in self.monsters.values() if m.get("authored_target")]
-            return bool(alvos) and all(m["hp"] <= 0 for m in alvos)
+            return bool(alvos) and all(m["hp"] <= 0 and not _caido_regenerando(m) for m in alvos)
         if t == "reach_exit":
             return self.exit_pos is not None and any(
                 p["pos"] == self.exit_pos for p in self.players.values() if p.get("alive"))
