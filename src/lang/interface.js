@@ -15,6 +15,13 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.reacao_fumaca.titulo": {"pt": "Reação: Bomba de Fumaça", "en": "Reaction: Smoke Bomb"},
+  "ui.reacao_fumaca.ataque": {"pt": "{inimigo} vai atacar {alvo}. Lançar uma Bomba de Fumaça?", "en": "{inimigo} is about to attack {alvo}. Throw a Smoke Bomb?"},
+  "ui.reacao_fumaca.efeito": {"pt": "O inimigo realiza este ataque com desvantagem. A fumaça permanece na área por 2 rodadas. Consome uma bomba, sem gastar suas ações.", "en": "The enemy makes this attack with disadvantage. Smoke stays in the area for 2 rounds. Consumes one bomb without spending your actions."},
+  "ui.reacao_fumaca.lancar": {"pt": "{heroi}: lançar bomba (estoque: {n})", "en": "{heroi}: throw bomb ({n} available)"},
+  "ui.reacao_fumaca.recusar": {"pt": "Não reagir", "en": "Do not react"},
+  "ui.reacao_fumaca.tempo": {"pt": "Tempo para reagir: {n}s", "en": "Time to react: {n}s"},
+  "ui.reacao_fumaca.aguardando": {"pt": "Aguardando a resolução da reação…", "en": "Waiting for the reaction to resolve…"},
   "ui.amaldicoar_xama.titulo": {"pt": "Amaldiçoado pelo xamã!", "en": "Cursed by the shaman!"},
   "ui.amaldicoar_xama.descricao": {"pt": "A magia de {monstro} enfraquece você temporariamente.", "en": "The magic of {monstro} temporarily weakens you."},
   "ui.amaldicoar_xama.penalidades": {"pt": "{ataque} em ataques, {dano} no dano, {ca} na CA e {resistencia} nos testes de resistência.", "en": "{ataque} to attack rolls, {dano} to damage, {ca} to AC and {resistencia} to saving throws."},

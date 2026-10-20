@@ -3623,6 +3623,7 @@ FOTO_SALA_CATEGORIAS = {
     "last_stand_pid": "janela", "last_stand_event": "janela",
     "last_stand_timer_task": "janela", "sorte_reacao": "janela",
     "_fire_prompt": "janela", "_pending_teleporte": "janela",
+    "_smoke_reaction": "janela", "_smoke_hold": "janela", "_smoke_command_task": "janela",
     "_pending_metamorfose": "janela", "_pending_dungeon_entry": "janela",
     "animados_phase_pid": "janela", "animados_order": "janela",
     "animados_done": "janela", "prisioneiro_done": "janela",
@@ -11960,6 +11961,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.last_stand_timer_task = None
         self.hero_corpses = {}     # pid -> lápide de herói morto
         self.sorte_reacao = None  # janela reativa: {pid, event, usar}
+        self._smoke_reaction = None
+        self._smoke_hold = None
+        self._smoke_command_task = None
         self.traps = []
         self.armadilhas = []    # armadilhas colocÃ¡veis (ver ARMADILHAS) â€” distintas de self.traps
         self._armadilha_seq = 0 # contador p/ ids Ãºnicos de armadilha
@@ -13130,6 +13134,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._iniciar_timer_turno()   # reativa o timer caso estivesse parado
             await self.push_state()
             await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
+        pending = self._smoke_reaction
+        if pending and time.monotonic() < pending["deadline"] and not pending["resolved"]:
+            fresh = self._smoke_reaction_candidates(pending["attacker"], pending["target_obj"])
+            initial = {c["hero_id"] for c in pending["candidates"]}
+            pending["candidates"] = [c for c in pending["candidates"] if c["connection_pid"] != pid] + [
+                c for c in fresh if c["connection_pid"] == pid and c["hero_id"] in initial]
+            await self._send_smoke_offer(pending, pid)
         return pid
 
     # ── Jogador novo com a partida em andamento ───────────────────────────
@@ -14983,6 +14994,198 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.gm_say(T("narracao.bordao_critico_fortitude",
                             heroi=nome_criatura(atacante), alvo=nome_criatura(alvo),
                             total=total, dc=dc, resultado=resultado))
+
+    SMOKE_REACTION_TIMEOUT = 12
+
+    def _smoke_reaction_item(self, hero):
+        item, source = self._resolve_consumable_source(hero, "bomba_fumaca")
+        if item:
+            return item, source
+        for slot in ("item1", "item2"):
+            belt = hero.get("gear", {}).get(slot) or {}
+            for index in range(self._utility_belt_capacity(belt)):
+                item, source = self._resolve_consumable_source(
+                    hero, "bomba_fumaca", "utility_belt", slot, index,
+                    belt.get("utility_belt_token"))
+                if item:
+                    return item, source
+        return None, None
+
+    def _smoke_reaction_candidates(self, attacker, target_obj):
+        if (self.phase != "playing" or self.active_scene
+                or target_obj.get("kind") != "player"
+                or not self._ativo(target_obj.get("obj"))
+                or attacker.get("hp", 0) <= 0):
+            return []
+        center = attacker.get("pos", [-1, -1])
+        if len(center) != 2 or min(center) < 0:
+            return []
+        candidates = []
+        for hero in self.players.values():
+            connection = self._conexao_de(hero["id"])
+            if (not self._ativo(hero) or connection not in self.connections
+                    or any(hero.get(k) for k in (
+                        "petrificado", "paralisado", "dormindo", "engolido",
+                        "bau_engolido", "perde_turno", "fosso_oculto",
+                        "rodamoinho_profundo_preso"))):
+                continue
+            pos = hero.get("pos", [-1, -1])
+            reach = ARREMESSAVEIS["bomba_fumaca"]["alcance"] + self._bonus_alcance_arremesso(hero)
+            if (len(pos) != 2 or min(pos) < 0
+                    or max(abs(pos[0] - center[0]), abs(pos[1] - center[1])) > reach
+                    or not self._tem_linha_de_visao(pos, center)):
+                continue
+            item, source = self._smoke_reaction_item(hero)
+            if item:
+                quantity = sum(1 for i in hero.get("bag", []) if i.get("id") == "bomba_fumaca")
+                for slot in ("item1", "item2"):
+                    belt = hero.get("gear", {}).get(slot) or {}
+                    for entry in belt.get("utility_belt_slots", []) or []:
+                        if isinstance(entry, dict) and (entry.get("item") or {}).get("id") == "bomba_fumaca":
+                            quantity += int(entry.get("quantity", 0) or 0)
+                candidates.append({"hero_id": hero["id"], "name": hero["name"],
+                                   "quantity": quantity, "connection_pid": connection})
+        return candidates
+
+    async def _send_smoke_offer(self, pending, connection):
+        choices = [{k: c[k] for k in ("hero_id", "name", "quantity")}
+                   for c in pending["candidates"] if c["connection_pid"] == connection]
+        if choices and connection not in pending["declined"]:
+            await self.send_to(connection, {
+                "type": "smoke_reaction_prompt", "request_id": pending["request_id"],
+                "attacker": pending["attacker_info"], "target": pending["target_info"],
+                "candidates": choices, "expires_at": pending["expires_at"]})
+
+    async def _await_smoke_reaction(self, attacker, target_obj):
+        candidates = self._smoke_reaction_candidates(attacker, target_obj)
+        if not candidates or self._smoke_reaction:
+            return None
+        target = target_obj["obj"]
+        pending = {"request_id": new_id(), "attacker": attacker, "target_obj": target_obj,
+                   "attacker_info": {"id": attacker["id"], "name": nome_criatura(attacker), "pos": list(attacker["pos"])},
+                   "target_info": {"id": target["id"], "name": target["name"], "pos": list(target["pos"])},
+                   "candidates": candidates, "declined": set(), "event": asyncio.Event(),
+                   "result": None, "resolved": False, "reason": "cancelled",
+                   "deadline": time.monotonic() + self.SMOKE_REACTION_TIMEOUT,
+                   "expires_at": int(time.time() * 1000 + self.SMOKE_REACTION_TIMEOUT * 1000)}
+        self._smoke_reaction = pending
+        try:
+            for connection in dict.fromkeys(c["connection_pid"] for c in candidates):
+                await self._send_smoke_offer(pending, connection)
+            try:
+                await asyncio.wait_for(pending["event"].wait(), max(0, pending["deadline"] - time.monotonic()))
+            except asyncio.TimeoutError:
+                pending["reason"] = "timeout"
+            return pending["result"]
+        finally:
+            if self._smoke_reaction is pending:
+                await self._close_smoke_reaction(pending["reason"])
+
+    async def handle_smoke_reaction_choice(self, connection_pid, data):
+        pending = self._smoke_reaction
+        if (not pending or pending["resolved"] or data.get("request_id") != pending["request_id"]
+                or time.monotonic() >= pending["deadline"]
+                or connection_pid in pending["declined"]
+                or not any(c["connection_pid"] == connection_pid for c in pending["candidates"])):
+            return
+        if data.get("usar") is not True:
+            pending["declined"].add(connection_pid)
+            await self.send_to(connection_pid, {"type": "smoke_reaction_closed",
+                               "request_id": pending["request_id"], "reason": "declined"})
+            if not any(c["connection_pid"] not in pending["declined"]
+                       and c["connection_pid"] in self.connections for c in pending["candidates"]):
+                pending["reason"] = "declined"
+                pending["event"].set()
+            return
+        hero_id = data.get("heroi")
+        allowed = next((c for c in pending["candidates"] if c["hero_id"] == hero_id
+                        and c["connection_pid"] == connection_pid), None)
+        fresh = self._smoke_reaction_candidates(pending["attacker"], pending["target_obj"])
+        if not allowed or not any(c["hero_id"] == hero_id for c in fresh):
+            return
+        hero = self.players[hero_id]
+        item, source = self._smoke_reaction_item(hero)
+        # No await between revalidation, exact consumption and claiming the winner.
+        if not item or not self._consume_action_item(hero, item, source):
+            return
+        pending["resolved"] = True
+        pending["reason"] = "used"
+        pending["result"] = {"hero_id": hero_id, "item": item, "source_location": source,
+                             "pos": list(pending["attacker_info"]["pos"]),
+                             "request_id": pending["request_id"]}
+        pending["event"].set()
+
+    async def _close_smoke_reaction(self, reason):
+        pending = self._smoke_reaction
+        if not pending:
+            return
+        self._smoke_reaction = None
+        pending["resolved"] = True
+        pending["reason"] = reason
+        pending["event"].set()
+        for connection in dict.fromkeys(c["connection_pid"] for c in pending["candidates"]):
+            if connection not in pending["declined"]:
+                await self.send_to(connection, {"type": "smoke_reaction_closed",
+                                   "request_id": pending["request_id"], "reason": reason})
+
+    async def _play_smoke_reaction(self, result):
+        hero = self.players[result["hero_id"]]
+        pos = result["pos"]
+        defn = ARREMESSAVEIS["bomba_fumaca"]
+        target = {"id": None, "name": "", "pos": pos}
+        feedback_id = await self._emitir_feedback_ataque(
+            "start", hero, target, defn["name"], "normal",
+            projectile={"kind": "item", "item_id": "bomba_fumaca", "item_emoji": "💨",
+                        "area": True, "area_raio": 1, "sem_dado": True})
+        await self._emitir_feedback_ataque("result", hero, target, defn["name"], "normal",
+                                         attack_id=feedback_id, hit=True, crit=False,
+                                         natural_critical=False, natural_fumble=False)
+        distance = max(abs(hero["pos"][0] - pos[0]), abs(hero["pos"][1] - pos[1]))
+        await asyncio.sleep((180 + max(220, min(900, max(1, distance) * 90))) / 1000)
+        await self._aplicar_escuridao(hero, raio=1, duracao=2, pos=pos,
+            visual_id=f"fumaca_{hero['id']}_{self.round_num}_{pos[0]}_{pos[1]}_{result['request_id']}")
+        await self.push_state()
+        # Let the existing puff visibly begin before the enemy's next scene.
+        await asyncio.sleep(.18)
+
+    async def _prepare_smoke_reaction(self, attacker, target_obj):
+        if self._smoke_hold or not self._smoke_reaction_candidates(attacker, target_obj):
+            return False
+        hold = {"started": time.monotonic(), "event": asyncio.Event(),
+                "turn_token": self.turn_token,
+                "manual": {k: getattr(self, k + "_mid", None) for k in
+                           ("master_manual", "command_control", "mind_control")}}
+        self._smoke_hold = hold
+        try:
+            result = await self._await_smoke_reaction(attacker, target_obj)
+            if result:
+                await self._play_smoke_reaction(result)
+            return bool(result)
+        finally:
+            elapsed = time.monotonic() - hold["started"]
+            for key, actor in hold["manual"].items():
+                if actor and getattr(self, key + "_mid", None) == actor:
+                    setattr(self, key + "_deadline", getattr(self, key + "_deadline") + elapsed)
+            if self.turn_token == hold["turn_token"] and self.turn_timer_started_ms is not None:
+                self.turn_timer_started_ms += int(elapsed * 1000)
+            self._smoke_hold = None
+            hold["event"].set()
+
+    async def _run_smoke_capable_command(self, coroutine, label):
+        # Commands without possible reactions retain their synchronous behavior.
+        if not any(self._ativo(p) and self._smoke_reaction_item(p)[0]
+                   for p in self.players.values()):
+            await coroutine
+            return None
+        async def run():
+            try:
+                await self._isolar(coroutine, label)
+            finally:
+                if self._smoke_command_task is asyncio.current_task():
+                    self._smoke_command_task = None
+        task = asyncio.create_task(run())
+        self._smoke_command_task = task
+        return task
 
     async def _oferecer_sorte(self, p, contexto):
         """Pausa a resolução para a reação passiva Sorte; True = rerrolar."""
@@ -18335,6 +18538,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _turn_timer_expira(self, pid, token):
         try:
             await asyncio.sleep(self.TURN_LIMIT_S)
+            while token == self.turn_token and self.phase == "playing" and self.current_pid() == pid:
+                if self._smoke_hold:
+                    await self._smoke_hold["event"].wait()
+                    continue
+                remaining = ((self.turn_timer_started_ms or 0) / 1000
+                             + self.TURN_LIMIT_S - time.time())
+                if remaining <= 0:
+                    break
+                await asyncio.sleep(remaining)
         except asyncio.CancelledError:
             return
         # Continua sendo o MESMO turno do MESMO jogador?
@@ -18450,6 +18662,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         self._clear_cooperative_markers_for_connection(self._conexao_de(pid))
         p["connected"] = False
+        pending = self._smoke_reaction
+        if pending:
+            remaining = self._smoke_reaction_candidates(pending["attacker"], pending["target_obj"])
+            if not any(c["connection_pid"] not in pending["declined"] for c in remaining):
+                await self._close_smoke_reaction("cancelled")
         if self.last_stand_pid == pid:
             await self._fechar_mini_turno_ultimo_esforco(pid, forcar_fim=True)
         # AnfitriÃ£o caiu â†’ passa o comando a outro jogador conectado.
@@ -24377,6 +24594,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _command_control_timeout(self, mid, pid):
         try:
             while True:
+                if self._smoke_hold:
+                    await self._smoke_hold["event"].wait()
+                    continue
                 restante = self.command_control_deadline - time.monotonic()
                 if restante <= 0:
                     break
@@ -24445,6 +24665,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _mind_control_timeout(self, mid, pid):
         try:
             while True:
+                if self._smoke_hold:
+                    await self._smoke_hold["event"].wait()
+                    continue
                 restante = self.mind_control_deadline - time.monotonic()
                 if restante <= 0:
                     break
@@ -24537,6 +24760,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         janela apenas fecha (senão o monstro ganhava um turno duplo)."""
         try:
             while True:
+                if self._smoke_hold:
+                    await self._smoke_hold["event"].wait()
+                    continue
                 restante = self.master_manual_deadline - time.monotonic()
                 if restante <= 0:
                     break
@@ -26461,6 +26687,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     # reação esperando resposta…). Com qualquer uma aberta a foto espera a
     # próxima virada de rodada.
     _FOTO_JANELAS = (
+        "_smoke_reaction", "_smoke_hold", "_smoke_command_task",
         "master_manual_mid", "command_control_mid", "mind_control_mid",
         "last_stand_pid", "sorte_reacao", "_fire_prompt", "_pending_teleporte",
         "_pending_metamorfose", "_pending_dungeon_entry", "animados_phase_pid",
@@ -44341,6 +44568,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._monster_attack_height_ok(m, target, atk_def):
             return False
 
+        smoke_disadvantage = await self._prepare_smoke_reaction(m, target_obj)
+        if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
+            return False
+
         attacker_hidden = bool(m.get("invisivel_sombras"))
         if attacker_hidden:
             m["invisivel_sombras"] = False
@@ -44404,6 +44635,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                        or ultimo_esforco_ativo)
         if vantagem and desvantagem:
             vantagem = desvantagem = False
+        if smoke_disadvantage:
+            vantagem, desvantagem = False, True
         if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
             m["provocado_turno_efeito"] = False
 
@@ -44980,12 +45213,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         damage_type = {"fogo": DMG_FIRE, "acido": DMG_ACID}.get(elemento, DMG_PHYSICAL)
         await self.gm_say(T("narracao.usa_3", defn_get_emoji=defn.get('emoji', '🧪'), monstro=nome_criatura(m), defn=nome_item(defn)))
         if defn.get("alvo") == "ataque_alvo":
+            smoke_disadvantage = await self._prepare_smoke_reaction(m, target_obj)
+            if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
+                return
             roll = random.randint(1, 20)
+            if smoke_disadvantage:
+                other = random.randint(1, 20)
+                discarded, roll = max(roll, other), min(roll, other)
+                await self.broadcast({"type": "dice_roll", "die": "d20", "value": discarded,
+                                      "label": T("dado.nome_descartado", nome=nome_criatura(m)), "discarded": True})
             atk = int(m.get("base_attack_bonus", 0)) + mod(m.get("dex", 10)) + m.get("equipment_attack_bonus", 0)
             ac = self._player_effective_ac(target) if is_player else target.get("ca", 10)
             hit = roll != 1 and (roll == 20 or roll + atk >= ac)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
-                                  "label": T("dado.nome_item", nome=nome_criatura(m), item=defn['name']), "hit": hit, "crit": roll == 20})
+                                  "label": T("dado.nome_item", nome=nome_criatura(m), item=defn['name']), "hit": hit, "crit": roll == 20,
+                                  "kept": bool(smoke_disadvantage)})
             # Aviso público (só som): frasco incendiário que acerta estoura em chamas.
             await self.broadcast({"type": "item_impacto", "item_id": item.get("id"),
                                   "pos": list(target["pos"]), "hit": hit})
@@ -49830,6 +50072,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # D20: monstros atacam sÃ³ de casas cardinalmente adjacentes
             if self._monster_attack_in_range(m, target["pos"]):
 
+                smoke_disadvantage = await self._prepare_smoke_reaction(m, tobj)
+                if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
+                    continue
+
                 if is_player:
                     gl_ca = (target.get("guerreiro_luz_bonus", {}).get("ca", 0)
                              if target.get("guerreiro_luz_ativo") else 0)
@@ -49858,6 +50104,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 vantagem    = esc == "vantagem"
                 if vantagem and desvantagem:
                     vantagem = desvantagem = False
+                if smoke_disadvantage:
+                    vantagem, desvantagem = False, True
                 if prov and not (self._provocador(m) and tem_espec(self._provocador(m), "bardo_provocacao_2")):
                     m["provocado_turno_efeito"] = False
                 if vantagem or desvantagem:
@@ -52337,6 +52585,15 @@ async def handler(ws):
 
             t = msg.get("type")
 
+            # Connection identity is still intact here, including Solo groups.
+            if room and t == "smoke_reaction_choice":
+                await room.handle_smoke_reaction_choice(pid, msg)
+                continue
+            if room and (room._smoke_hold or (room._smoke_command_task and not room._smoke_command_task.done())):
+                if t not in {"set_lang", "ping", "prever_ataque", "prever_intencoes",
+                             "pedir_metamorfose_catalog", "logout", "leave", "leave_room"}:
+                    continue
+
             if (room and t not in MENSAGENS_DA_CONEXAO
                     and not str(t).startswith(_PREFIXOS_DA_CONEXAO)):
                 ator = room.heroi_da_acao(pid, msg)
@@ -52895,18 +53152,18 @@ async def handler(ws):
                     if room: await room.handle_mestre_mover_monstro_para(pid, msg.get("monster_id"), msg.get("tx"), msg.get("ty"))
 
                 elif t == "mestre_atacar_monstro":
-                    if room: await room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"), msg.get("attack_index"))
+                    if room: await room._run_smoke_capable_command(room.handle_mestre_atacar_monstro(pid, msg.get("monster_id"), msg.get("target_id"), msg.get("attack_index")), "ataque manual com reação")
                 elif t == "mestre_usar_habilidade":
-                    if room: await room.handle_mestre_usar_habilidade(
+                    if room: await room._run_smoke_capable_command(room.handle_mestre_usar_habilidade(
                         pid, msg.get("monster_id"), msg.get("ability_id"), msg.get("target_id"),
-                        msg.get("tipo_esqueleto"), msg.get("atributos"))
+                        msg.get("tipo_esqueleto"), msg.get("atributos")), "habilidade manual com reação")
                 elif t == "mestre_usar_magia":
                     if room: await room.handle_mestre_usar_magia(
                         pid, msg.get("monster_id"), msg.get("spell_id"), msg.get("target_id"),
                         msg.get("tx"), msg.get("ty"), msg.get("dir"))
 
                 elif t == "mestre_usar_item":
-                    if room: await room.handle_mestre_usar_item(pid, msg.get("monster_id"), msg.get("item_id"), msg.get("target_id"), msg.get("tx"), msg.get("ty"))
+                    if room: await room._run_smoke_capable_command(room.handle_mestre_usar_item(pid, msg.get("monster_id"), msg.get("item_id"), msg.get("target_id"), msg.get("tx"), msg.get("ty")), "item manual com reação")
 
                 elif t == "mestre_encerrar_monstro":
                     if room: await room.handle_mestre_encerrar_monstro(pid, msg.get("monster_id"))
@@ -52932,8 +53189,8 @@ async def handler(ws):
                     if room: await room.handle_teste_escolher_magia_nivel(
                         pid, _key(msg.get("hero_id")), msg.get("magia_id"))
                 elif t == "teste_acao_heroi":
-                    if room: await room.handle_teste_acao_heroi(
-                        pid, _key(msg.get("hero_id")), msg.get("action"), msg.get("data"))
+                    if room: await room._run_smoke_capable_command(room.handle_teste_acao_heroi(
+                        pid, _key(msg.get("hero_id")), msg.get("action"), msg.get("data")), "ação de teste com reação")
 
                 elif t == "mestre_implantar_reforco":
                     if room: await room.handle_mestre_implantar_reforco(
@@ -53268,7 +53525,7 @@ async def handler(ws):
                     if room: await room.handle_take_all_from_chest(pid, _key(msg.get("chest_id")))
 
                 elif t == "interagir_decor":
-                    if room: await room.handle_interagir_decor(pid, msg.get("decor_id"))
+                    if room: await room._run_smoke_capable_command(room.handle_interagir_decor(pid, msg.get("decor_id")), "interação com reação")
 
                 elif t == "activate_decor_mechanism":
                     if room: await room.handle_activate_decor_mechanism(pid, msg.get("decor_id"))

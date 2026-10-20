@@ -28121,6 +28121,94 @@ function _ensureFireChoiceOverlay(){
   return overlay;
 }
 
+// SMOKE REACTION UI — rules and identity stay in GS/server.
+let _smokeReactionUi = null;
+function _closeSmokeReaction(requestId){
+  const ui = _smokeReactionUi;
+  if(!ui || (requestId && ui.requestId !== requestId)) return;
+  _smokeReactionUi = null;
+  clearInterval(ui.timer);
+  document.removeEventListener('keydown', ui.onKey, true);
+  ui.overlay.remove();
+  if(ui.previous?.isConnected){
+    ui.previous.focus();
+    _gamepadSetUiFocus(ui.previous);
+  }
+}
+function _showSmokeReaction(msg){
+  _closeSmokeReaction();
+  const overlay = document.createElement('div');
+  overlay.id = 'smoke-reaction-overlay';
+  overlay.className = 'open';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:100050;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.65);';
+  const panel = document.createElement('section');
+  panel.setAttribute('role','dialog');
+  panel.setAttribute('aria-modal','true');
+  panel.setAttribute('aria-labelledby','smoke-reaction-title');
+  panel.style.cssText = 'box-sizing:border-box;width:min(440px,100%);max-height:90vh;overflow:auto;padding:24px;border:2px solid #b6bec9;border-radius:14px;background:linear-gradient(145deg,#232833,#12151d);color:#f3f0e8;box-shadow:0 12px 70px #000;font-family:inherit;';
+  const title = document.createElement('h2');
+  title.id = 'smoke-reaction-title';
+  title.textContent = '💨 ' + t('ui.reacao_fumaca.titulo');
+  title.style.cssText = 'margin:0 0 14px;color:#e1d4ac;font-size:1.3rem;';
+  const text = document.createElement('p');
+  text.textContent = t('ui.reacao_fumaca.ataque',{inimigo:msg.attacker.name,alvo:msg.target.name});
+  const hint = document.createElement('p');
+  hint.textContent = t('ui.reacao_fumaca.efeito');
+  hint.style.cssText = 'color:#bcc4d2;font-size:.9rem;line-height:1.5;';
+  const countdown = document.createElement('p');
+  countdown.setAttribute('role','status');
+  countdown.style.cssText = 'color:#d7bb7a;font-size:.85rem;';
+  const buttons = [];
+  const ui = {overlay,requestId:msg.request_id,previous:document.activeElement,
+              submitted:false,onKey:null,timer:null};
+  const choose = (heroId,use) => {
+    if(ui.submitted || GS.smokeReaction?.request_id !== msg.request_id) return;
+    if(!GS.responderReacaoFumaca(msg.request_id,heroId,use)) return;
+    ui.submitted = true;
+    buttons.forEach(button => {button.disabled=true;});
+    countdown.textContent = t('ui.reacao_fumaca.aguardando');
+  };
+  const buttonFor = (label,heroId,use) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.setAttribute(use ? 'data-smoke-throw' : 'data-gamepad-cancel','');
+    button.style.cssText = 'display:block;width:100%;margin-top:10px;padding:12px;border:1px solid #8998a8;border-radius:8px;background:#374456;color:#fff;font:inherit;cursor:pointer;';
+    button.onclick = () => choose(heroId,use);
+    buttons.push(button);
+    panel.appendChild(button);
+  };
+  panel.append(title,text,hint,countdown);
+  for(const candidate of msg.candidates){
+    buttonFor(t('ui.reacao_fumaca.lancar',{heroi:candidate.name,n:candidate.quantity}),candidate.hero_id,true);
+  }
+  buttonFor(t('ui.reacao_fumaca.recusar'),null,false);
+  const refresh = () => {
+    if(!ui.submitted) countdown.textContent = t('ui.reacao_fumaca.tempo',{
+      n:Math.max(0,Math.ceil((msg.expires_at-Date.now())/1000))});
+  };
+  ui.onKey = e => {
+    if(e.key === 'Escape'){
+      e.preventDefault();e.stopImmediatePropagation();choose(null,false);
+    } else if(['Tab','ArrowDown','ArrowUp'].includes(e.key)){
+      e.preventDefault();e.stopImmediatePropagation();
+      const enabled=buttons.filter(b=>!b.disabled);
+      if(!enabled.length) return;
+      const step=(e.key==='ArrowUp'||(e.key==='Tab'&&e.shiftKey))?-1:1;
+      enabled[(enabled.indexOf(document.activeElement)+step+enabled.length)%enabled.length].focus();
+    }
+  };
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  _smokeReactionUi = ui;
+  refresh();
+  ui.timer = setInterval(refresh,200);
+  document.addEventListener('keydown',ui.onKey,true);
+  buttons[0]?.focus();
+  _gamepadSetUiFocus(buttons[0]);
+}
+// END SMOKE REACTION UI
+
 function _showFireChoice(msg){
   const overlay = _ensureFireChoiceOverlay();
   const water = overlay.querySelector('[data-fire-water]');
@@ -28909,6 +28997,12 @@ function _illusionTileOccupied(state, x, y){
   return (state.illusions||[]).some(i=>i.pos?.[0]===x&&i.pos?.[1]===y);
 }
 
+function _illusionRangeTiles(me){
+  const out=new Set();
+  _addCheb(me.pos[0],me.pos[1],6,out);
+  return out;
+}
+
 function _illusionPlacementTiles(state, me){
   const out = new Set();
   if(!state?.tiles || !me?.pos) return out;
@@ -29001,12 +29095,6 @@ function _teclaModoIlusao(event){
   }
   const dir={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]}[event.key];
   if(!dir) return;
-function _illusionRangeTiles(me){
-  const out=new Set();
-  _addCheb(me.pos[0],me.pos[1],6,out);
-  return out;
-}
-
   const state=GS.gameState,cursor=_gamepadEnsureCursor(state);
   if(cursor&&_aimGamepadStep(state,dir[0],dir[1])) event.preventDefault();
   event.stopImmediatePropagation();
@@ -31361,6 +31449,8 @@ function _gamepadLayerVisible(el){
 // e priorizamos o último modal aberto. Assim elementos recém-renderizados
 // também ficam navegáveis pelo direcional.
 function _gamepadUiScope(){
+  const reaction = document.getElementById('smoke-reaction-overlay');
+  if(reaction) return reaction;
   const open = [...document.querySelectorAll(
     '#pause-menu.open, [id$="-modal"].open, [id$="-overlay"].open, .ficha-cidade-panel.open,' +
     '#loja-overlay, #refugio-overlay, #quarto-overlay, #worldmap-overlay, #story-overlay, #city-tour-card,' +
@@ -32099,6 +32189,8 @@ function _gamepadToggleMainMenu(){
 }
 
 function _gamepadCancel(){
+  const reactionCancel = document.querySelector('#smoke-reaction-overlay [data-gamepad-cancel]');
+  if(reactionCancel){ reactionCancel.click(); return; }
   _clearGamepadEndTurnConfirm();
   _gamepadRumble('cancel');
   if(_illusionMode?.kind==='movement'){ _pularMovimentoIlusao(); return; }
@@ -59705,6 +59797,8 @@ GS.on('sorteReacao', msg => {
   const aceitar = window.confirm(t('ui.tecnica.sorte_confirm', {texto: msg.texto || t('ui.tecnica.usar_sorte')}));
   GS.responderSorteReacao(aceitar);
 });
+GS.on('smokeReactionPrompt', msg => _showSmokeReaction(msg));
+GS.on('smokeReactionClosed', msg => _closeSmokeReaction(msg.request_id));
 
 GS.on('trapResult',  msg  => { _receberAnimacaoArmadilha(msg); queueTrapResult(msg); });
 GS.on('trainingRockfall', msg => _receberQuedaDeRochasTreino(msg));
