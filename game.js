@@ -28942,6 +28942,7 @@ function _iniciarMiraIlusao(kind, itemId){
   const state=GS.gameState, me=state?.players?.find(p=>p.id===GS.myPid&&p.alive);
   if(!me) return;
   const placement=kind==='placement';
+  if(placement&&(!GS.isMyTurn||me.bonus_action_used)){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'),'var(--gold)'); return; }
   const illusion=placement?null:(state.illusions||[]).find(i=>String(i.id)===String(itemId));
   const valid=placement?_illusionPlacementTiles(state,me):_illusionReachableTiles(state,illusion);
   const mode={kind:placement?'placement':'movement',itemId,illusionId:illusion?.id,valid};
@@ -29039,7 +29040,6 @@ function _getIllusion2DImg(imageName){
   }
   const img=_illusion2DImages[imageName];
   return img.complete&&img.naturalWidth?img:null;
-  if(placement&&(!GS.isMyTurn||me.bonus_action_used)){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'),'var(--gold)'); return; }
 }
 
 function _drawIllusions2D(ctx,state,visionSet){
@@ -29089,6 +29089,9 @@ function useItem(itemId, targetId, sourceInfo){
       ? me?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
       : me && (me.bag || []).find(b => b.id === itemId);
     if(it?.effect==='illusion_lure'){
+      // Como nos arremessáveis, a bolsa fecha para o mapa ficar livre: com ela aberta
+      // o clique na casa cai no fundo do modal e cancela a mira.
+      if(typeof InventoryModal!=='undefined' && InventoryModal.isOpen?.()) InventoryModal.close();
       _iniciarMiraIlusao('placement',itemId);
       return;
     }
@@ -29177,9 +29180,6 @@ function _classeNome(player){
 
 function renderFichaCidadeBody(panel, player, editable){
   // Cabeçalho (foto + nome/classe/nível)
-      // Como nos arremessáveis, a bolsa fecha para o mapa ficar livre: com ela aberta
-      // o clique na casa cai no fundo do modal e cancela a mira.
-      if(typeof InventoryModal!=='undefined' && InventoryModal.isOpen?.()) InventoryModal.close();
   const heroiKey    = _classIdParaHeroiKey(player.class_id);
   const heroiStatic = (typeof HERO_DATA !== 'undefined' && HERO_DATA[heroiKey])
     || (GS.HERO_DATA && GS.HERO_DATA[heroiKey]) || {};
