@@ -34,11 +34,12 @@ const GS = (() => {
     smokeReaction = null;
     _emit('smokeReactionClosed', {request_id, reason:'cancelled'});
   }
-  function responderReacaoFumaca(requestId, heroId, usar) {
+  function responderReacaoFumaca(requestId, heroId, usar, itemId='bomba_fumaca') {
     if (!smokeReaction || smokeReaction.request_id !== requestId) return false;
-    if (usar && !smokeReaction.candidates.some(c => c.hero_id === heroId)) return false;
+    if (usar && !smokeReaction.candidates.some(c => c.hero_id === heroId
+        && (c.item_id || 'bomba_fumaca') === itemId)) return false;
     return send({type:'smoke_reaction_choice', request_id:requestId,
-      heroi:usar ? heroId : null, usar:!!usar});
+      heroi:usar ? heroId : null, usar:!!usar, item_id:usar ? itemId : null});
   }
   let myPid           = null;
   // Solo com grupo: `connPid` é a CONEXÃO; `myPid` passa a ser o herói EM FOCO
@@ -714,6 +715,14 @@ const GS = (() => {
       alcance: 4, areaRaio: 1, duracao: 2, permitidoPara:['todos'],
       descricao: 'Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia ' +
                  'a visão e cobre o recuo. Sem dano.',
+    },
+    bomba_flash: {
+      id: 'bomba_flash', nome: 'Bomba de Flash', emoji: '✨',
+      icon: 'assets/itens/bomba_flash.png',
+      tipo: 'consumivel', slot: 'bag', arremessavel: true, alvo: 'ataque_alvo',
+      alcance: 5, permitidoPara:['todos'],
+      descricao: 'Arremesso de alvo único (alcance 5, ataque por DES). Ao acertar, ' +
+        'o próximo ataque do alvo sofre −2 e desvantagem.',
     },
     frasco_piche: {
       id: 'frasco_piche', nome: 'Frasco de Piche', emoji: '🛢️',

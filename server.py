@@ -7382,6 +7382,7 @@ SHOP_MERCHANT = [
     {"id": "granada",           "name": "Granada Explosiva", "emoji": "💣", "price": 40, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "granada_superior",  "name": "Granada Superior",  "emoji": "💥", "price": 70, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "bomba_fumaca",      "name": "Bomba de Fumaça",   "emoji": "💨", "price": 30, "item_slot": "bag", "effect": "throwable", "value": 0},
+    {"id": "bomba_flash",       "name": "Bomba de Flash",    "emoji": "✨", "icon": "assets/itens/bomba_flash.png", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "frasco_acido",       "name": "Frasco de Ácido",       "emoji": "🧪", "price": 20, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "vidro_acido_grande", "name": "Vidro de Ácido Grande", "emoji": "🫙", "price": 50, "item_slot": "bag", "effect": "throwable", "value": 0},
     {"id": "cola_alquimica", "name": "Cola Alquímica", "emoji": "🍯", "price": 15, "item_slot": "bag", "effect": "throwable", "value": 0},
@@ -7490,6 +7491,12 @@ ARREMESSAVEIS = {
         "id": "bomba_fumaca", "name": "Bomba de Fumaça", "emoji": "💨",
         "alcance": 4, "alvo": "area", "area_raio": 1,
         "zona": {"tipo": "escuridao", "duracao": 2},
+    },
+    "bomba_flash": {
+        "id": "bomba_flash", "name": "Bomba de Flash", "emoji": "✨",
+        "icon": "assets/itens/bomba_flash.png",
+        "alcance": 5, "alvo": "ataque_alvo",
+        "controle": {"tipo": "flash_attack", "penalidade": 2},
     },
     "frasco_piche": {
         "id": "frasco_piche", "name": "Frasco de Piche", "emoji": "🛢️",
@@ -9905,6 +9912,7 @@ SHOP_TAVERN = [
     {"id": "caneca_cerveja", "name": "Caneca de Cerveja","emoji": "🍺", "price": 5,  "item_slot": "bag", "effect": "ale",  "value": 10},
     {"id": "garrafa_vinho",  "name": "Garrafa de Vinho", "emoji": "🍷", "price": 10, "item_slot": "bag", "effect": "wine", "value": 15},
     {"id": "racao_viagem",   "name": "Ração de Viagem",  "emoji": "🥩", "price": 20, "item_slot": "bag", "effect": "food", "fome": 20, "sede": 0},
+    {"id": "racao_completa", "name": "Ração Completa",   "emoji": "🥩", "icon": "assets/itens/racao.png", "price": 60, "item_slot": "bag", "effect": "food", "fome": 25, "sede": 25},
     {"id": "cantil_agua",    "name": "Cantil de Água",   "emoji": "🧴", "price": 25, "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 20},
     # Refeição portátil (a mesma dos baús do Campo de Treinamento): vai para a mochila e é
     # consumida depois; não tem o limite de 1×/visita do Banquete de balcão.
@@ -15197,15 +15205,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     SMOKE_REACTION_TIMEOUT = 12
 
-    def _smoke_reaction_item(self, hero):
-        item, source = self._resolve_consumable_source(hero, "bomba_fumaca")
+    def _smoke_reaction_item(self, hero, item_id="bomba_fumaca"):
+        item, source = self._resolve_consumable_source(hero, item_id)
         if item:
             return item, source
         for slot in ("item1", "item2"):
             belt = hero.get("gear", {}).get(slot) or {}
             for index in range(self._utility_belt_capacity(belt)):
                 item, source = self._resolve_consumable_source(
-                    hero, "bomba_fumaca", "utility_belt", slot, index,
+                    hero, item_id, "utility_belt", slot, index,
                     belt.get("utility_belt_token"))
                 if item:
                     return item, source
@@ -15230,25 +15238,31 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         "rodamoinho_profundo_preso"))):
                 continue
             pos = hero.get("pos", [-1, -1])
-            reach = ARREMESSAVEIS["bomba_fumaca"]["alcance"] + self._bonus_alcance_arremesso(hero)
-            if (len(pos) != 2 or min(pos) < 0
-                    or max(abs(pos[0] - center[0]), abs(pos[1] - center[1])) > reach
-                    or not self._tem_linha_de_visao(pos, center)):
+            if len(pos) != 2 or min(pos) < 0:
                 continue
-            item, source = self._smoke_reaction_item(hero)
-            if item:
-                quantity = sum(1 for i in hero.get("bag", []) if i.get("id") == "bomba_fumaca")
-                for slot in ("item1", "item2"):
-                    belt = hero.get("gear", {}).get(slot) or {}
-                    for entry in belt.get("utility_belt_slots", []) or []:
-                        if isinstance(entry, dict) and (entry.get("item") or {}).get("id") == "bomba_fumaca":
-                            quantity += int(entry.get("quantity", 0) or 0)
-                candidates.append({"hero_id": hero["id"], "name": hero["name"],
-                                   "quantity": quantity, "connection_pid": connection})
+            for item_id in ("bomba_fumaca", "bomba_flash"):
+                reach = ARREMESSAVEIS[item_id]["alcance"] + self._bonus_alcance_arremesso(hero)
+                if (max(abs(pos[0] - center[0]), abs(pos[1] - center[1])) > reach
+                        or not self._tem_linha_de_visao(pos, center)):
+                    continue
+                if (item_id == "bomba_flash"
+                        and not self._alcance_com_altura(hero, center, reach, destino=attacker)):
+                    continue
+                item, source = self._smoke_reaction_item(hero, item_id)
+                if item:
+                    quantity = sum(1 for i in hero.get("bag", []) if i.get("id") == item_id)
+                    for slot in ("item1", "item2"):
+                        belt = hero.get("gear", {}).get(slot) or {}
+                        for entry in belt.get("utility_belt_slots", []) or []:
+                            if isinstance(entry, dict) and (entry.get("item") or {}).get("id") == item_id:
+                                quantity += int(entry.get("quantity", 0) or 0)
+                    candidates.append({"hero_id": hero["id"], "name": hero["name"],
+                                       "item_id": item_id, "quantity": quantity,
+                                       "connection_pid": connection})
         return candidates
 
     async def _send_smoke_offer(self, pending, connection):
-        choices = [{k: c[k] for k in ("hero_id", "name", "quantity")}
+        choices = [{k: c[k] for k in ("hero_id", "name", "item_id", "quantity")}
                    for c in pending["candidates"] if c["connection_pid"] == connection]
         if choices and connection not in pending["declined"]:
             await self.send_to(connection, {
@@ -15298,13 +15312,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 pending["event"].set()
             return
         hero_id = data.get("heroi")
+        item_id = data.get("item_id", "bomba_fumaca")
         allowed = next((c for c in pending["candidates"] if c["hero_id"] == hero_id
+                        and c["item_id"] == item_id
                         and c["connection_pid"] == connection_pid), None)
         fresh = self._smoke_reaction_candidates(pending["attacker"], pending["target_obj"])
-        if not allowed or not any(c["hero_id"] == hero_id for c in fresh):
+        if not allowed or not any(c["hero_id"] == hero_id and c["item_id"] == item_id for c in fresh):
             return
         hero = self.players[hero_id]
-        item, source = self._smoke_reaction_item(hero)
+        item, source = self._smoke_reaction_item(hero, item_id)
         # No await between revalidation, exact consumption and claiming the winner.
         if not item or not self._consume_action_item(hero, item, source):
             return
@@ -15312,7 +15328,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         pending["reason"] = "used"
         pending["result"] = {"hero_id": hero_id, "item": item, "source_location": source,
                              "pos": list(pending["attacker_info"]["pos"]),
-                             "request_id": pending["request_id"]}
+                             "request_id": pending["request_id"],
+                             "item_id": item_id, "attacker": pending["attacker"]}
         pending["event"].set()
 
     async def _close_smoke_reaction(self, reason):
@@ -15331,6 +15348,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _play_smoke_reaction(self, result):
         hero = self.players[result["hero_id"]]
         pos = result["pos"]
+        if result.get("item_id") == "bomba_flash":
+            return await self._play_flash_reaction(hero, result["attacker"])
         defn = ARREMESSAVEIS["bomba_fumaca"]
         target = {"id": None, "name": "", "pos": pos}
         feedback_id = await self._emitir_feedback_ataque(
@@ -15348,6 +15367,40 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Let the existing puff visibly begin before the enemy's next scene.
         await asyncio.sleep(.18)
 
+    async def _play_flash_reaction(self, hero, attacker):
+        defn = ARREMESSAVEIS["bomba_flash"]
+        feedback_id = await self._emitir_feedback_ataque(
+            "start", hero, attacker, defn["name"], "normal",
+            projectile={"kind": "item", "item_id": "bomba_flash",
+                        "item_emoji": defn["emoji"]})
+        distance = max(abs(hero["pos"][0] - attacker["pos"][0]),
+                       abs(hero["pos"][1] - attacker["pos"][1]))
+        await asyncio.sleep((180 + max(220, min(900, max(1, distance) * 90))) / 1000)
+        roll = random.randint(1, 20)
+        attack_bonus = int(hero.get("atk_bonus", 0) or 0)
+        target_tile = self._target_tile(attacker, attacker.get("pos"))
+        target_ac = int(attacker.get("ac", attacker.get("ca", 10)) or 10)
+        target_ac = self._ponto_vulneravel_ac(
+            attacker, target_tile, target_ac, attacker_id=hero["id"])
+        cover = self._cobertura_baixa_bonus(hero, attacker, target_tile)
+        if cover:
+            target_ac += cover
+            await self.gm_say(T("narracao.cobertura_baixa",
+                                alvo=nome_criatura(attacker), bonus=cover))
+        hit = roll != 1 and (roll == 20 or roll + attack_bonus >= target_ac)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                              "label": T("dado.arremesso_de_item", item=defn["name"]),
+                              "hit": hit, "crit": roll == 20,
+                              "modifier": attack_bonus, "total": roll + attack_bonus})
+        await self._emitir_feedback_ataque(
+            "result", hero, attacker, defn["name"], "normal", attack_id=feedback_id,
+            roll=roll, total=roll + attack_bonus, hit=hit, crit=roll == 20,
+            natural=roll, natural_critical=roll == 20, natural_fumble=roll == 1)
+        await self.gm_say(T("narracao.bomba_flash_acerta" if hit else "narracao.bomba_flash_erra",
+                            heroi=hero["name"], monstro=nome_criatura(attacker)))
+        await asyncio.sleep(.18)
+        return {"disadvantage": hit, "attack_penalty": 2 if hit else 0}
+
     async def _prepare_smoke_reaction(self, attacker, target_obj):
         if self._smoke_hold or not self._smoke_reaction_candidates(attacker, target_obj):
             return False
@@ -15359,8 +15412,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         try:
             result = await self._await_smoke_reaction(attacker, target_obj)
             if result:
-                await self._play_smoke_reaction(result)
-            return bool(result)
+                effect = await self._play_smoke_reaction(result)
+                if effect is not None:
+                    return effect
+                return {"disadvantage": True, "attack_penalty": 0}
+            return {"disadvantage": False, "attack_penalty": 0}
         finally:
             elapsed = time.monotonic() - hold["started"]
             for key, actor in hold["manual"].items():
@@ -15373,7 +15429,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _run_smoke_capable_command(self, coroutine, label):
         # Commands without possible reactions retain their synchronous behavior.
-        if not any(self._ativo(p) and self._smoke_reaction_item(p)[0]
+        if not any(self._ativo(p) and any(self._smoke_reaction_item(p, iid)[0]
+                   for iid in ("bomba_fumaca", "bomba_flash"))
                    for p in self.players.values()):
             await coroutine
             return None
@@ -41994,6 +42051,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         `ctrl` vem do campo `controle` do catálogo ARREMESSAVEIS."""
         nome = alvo.get("name") or alvo.get("nome", "alvo")
         tipo = ctrl.get("tipo")
+        if tipo == "flash_attack":
+            alvo["_bomba_flash_ataque_pendente"] = max(
+                1, int(alvo.get("_bomba_flash_ataque_pendente", 0) or 0))
+            await self.gm_say(T("narracao.bomba_flash_proximo_ataque",
+                                monstro=nome_criatura(alvo)))
+            return
         if self._tem_habilidade(alvo, "inabalavel") and tipo in {"mov_reduzido", "enredado"}:
             await self.gm_say(T("narracao.e_inabalavel_e_ignora_a_imobilizacao", nome=nome_criatura(alvo)))
             return
@@ -42021,6 +42084,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvo["enredado_cd"]   = es["cd"]
             await self.gm_say(
                 T("narracao.fica_preso_na_rede_escapar_cd", nome=nome_criatura(alvo), es_tipo=es['tipo'], es_cd=es['cd']))
+
+    @staticmethod
+    def _consumir_bomba_flash_ataque(monstro):
+        if int(monstro.get("_bomba_flash_ataque_pendente", 0) or 0) <= 0:
+            return False
+        monstro.pop("_bomba_flash_ataque_pendente", None)
+        return True
 
     @staticmethod
     def _peca_corroivel(piece, ids_slot, materiais_devorador):
@@ -44778,9 +44848,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._monster_attack_height_ok(m, target, atk_def):
             return False
 
-        smoke_disadvantage = await self._prepare_smoke_reaction(m, target_obj)
+        reaction_effect = await self._prepare_smoke_reaction(m, target_obj)
         if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
             return False
+        smoke_disadvantage = (bool(reaction_effect.get("disadvantage"))
+                              if isinstance(reaction_effect, dict) else bool(reaction_effect))
+        flash_attack_penalty = int(reaction_effect.get("attack_penalty", 0) or 0) \
+            if isinstance(reaction_effect, dict) else 0
+        if self._consumir_bomba_flash_ataque(m):
+            flash_attack_penalty = max(flash_attack_penalty, 2)
+            smoke_disadvantage = True
 
         attacker_hidden = bool(m.get("invisivel_sombras"))
         if attacker_hidden:
@@ -44835,6 +44912,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                   + (int(ciclope_charge_active.get("attack_bonus", 2) or 2) if ciclope_charge_active else 0)
                   + gigante_mira_bonus
                   + self._monster_editor_passive_bonus(m))
+        if flash_attack_penalty:
+            m_atk -= flash_attack_penalty
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
         desvantagem = (prov or esc == "desvantagem"
@@ -45423,9 +45502,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         damage_type = {"fogo": DMG_FIRE, "acido": DMG_ACID}.get(elemento, DMG_PHYSICAL)
         await self.gm_say(T("narracao.usa_3", defn_get_emoji=defn.get('emoji', '🧪'), monstro=nome_criatura(m), defn=nome_item(defn)))
         if defn.get("alvo") == "ataque_alvo":
-            smoke_disadvantage = await self._prepare_smoke_reaction(m, target_obj)
+            reaction_effect = await self._prepare_smoke_reaction(m, target_obj)
             if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
                 return
+            smoke_disadvantage = (bool(reaction_effect.get("disadvantage"))
+                                  if isinstance(reaction_effect, dict) else bool(reaction_effect))
+            flash_attack_penalty = int(reaction_effect.get("attack_penalty", 0) or 0) \
+                if isinstance(reaction_effect, dict) else 0
+            if self._consumir_bomba_flash_ataque(m):
+                flash_attack_penalty = max(flash_attack_penalty, 2)
+                smoke_disadvantage = True
             roll = random.randint(1, 20)
             if smoke_disadvantage:
                 other = random.randint(1, 20)
@@ -45433,6 +45519,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": discarded,
                                       "label": T("dado.nome_descartado", nome=nome_criatura(m)), "discarded": True})
             atk = int(m.get("base_attack_bonus", 0)) + mod(m.get("dex", 10)) + m.get("equipment_attack_bonus", 0)
+            atk -= flash_attack_penalty
             ac = self._player_effective_ac(target) if is_player else target.get("ca", 10)
             hit = roll != 1 and (roll == 20 or roll + atk >= ac)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
@@ -50282,9 +50369,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # D20: monstros atacam sÃ³ de casas cardinalmente adjacentes
             if self._monster_attack_in_range(m, target["pos"]):
 
-                smoke_disadvantage = await self._prepare_smoke_reaction(m, tobj)
+                reaction_effect = await self._prepare_smoke_reaction(m, tobj)
                 if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
                     continue
+                smoke_disadvantage = (bool(reaction_effect.get("disadvantage"))
+                                      if isinstance(reaction_effect, dict) else bool(reaction_effect))
+                flash_attack_penalty = int(reaction_effect.get("attack_penalty", 0) or 0) \
+                    if isinstance(reaction_effect, dict) else 0
+                if self._consumir_bomba_flash_ataque(m):
+                    flash_attack_penalty = max(flash_attack_penalty, 2)
+                    smoke_disadvantage = True
 
                 if is_player:
                     gl_ca = (target.get("guerreiro_luz_bonus", {}).get("ca", 0)
@@ -50306,6 +50400,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          + self._consumir_penalidade_vinculo_dor(m)
                          + self._privacao_monstro_penalidade(m, "ataque")
                          + self._acorde_atk_pen(m))  # AmaldiÃ§oar / Desnutrição / Tambor RÃºnico
+                if flash_attack_penalty:
+                    m_atk -= flash_attack_penalty
                 # Desvantagem: ProvocaÃ§Ã£o OU atacar Ã s cegas na escuridÃ£o. Vantagem: ver na escuridÃ£o.
                 esc = self._verificar_escuridao(m, target)
                 prov = bool(m.get("provocado_turno_efeito"))

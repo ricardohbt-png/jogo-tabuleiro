@@ -1,5 +1,24 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Bomba de Flash e reação de item (2026-10-19)
+
+A Bomba de Flash é um consumível universal de 50 moedas no mercador, listado
+em `city_shops.json`. O arremesso normal usa alvo único, alcance 5, linha de
+visão e a jogada de ataque usual por DES. Um acerto marca somente o próximo
+ataque do monstro: −2 no bônus e desvantagem; erro consome o item sem aplicar
+efeito. O modificador é consumido na primeira tentativa de ataque.
+
+Durante um ataque inimigo direcionado com d20 contra um herói, a janela
+`smoke_reaction_prompt` também oferece Flash a quem tiver o item em alcance e
+linha de visão. A escolha envia `item_id` junto do herói. A Flash faz sua
+própria jogada antes do ataque pausado; se acertar, aplica −2 e desvantagem
+somente àquele ataque, inclusive contra vantagem natural. O arremesso e a
+reação consomem uma unidade sem gastar ação, bônus, fome ou sede. A reação usa
+`assets/itens/bomba_flash.png`; os textos ficam em `src/lang/`. Testes:
+`python -X utf8 tools/test_bomba_fumaca_reacao.py`,
+`node tools/test_bomba_fumaca_reacao_cliente.js` e
+`node tools/test_bomba_fumaca_reacao_ui.js`.
+
 ### Velocidade do turno dos inimigos (2026-10-20)
 
 O painel ⚙️ → "⏱️ Velocidade do turno dos inimigos" escolhe o ritmo, que é um

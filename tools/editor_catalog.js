@@ -12002,6 +12002,15 @@ window.EDITOR_CATALOG = {
       "value": 0
     },
     {
+      "id": "bomba_flash",
+      "name": "Bomba de Flash",
+      "emoji": "✨",
+      "icon": "assets/itens/bomba_flash.png",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0
+    },
+    {
       "id": "frasco_acido",
       "name": "Frasco de Ácido",
       "emoji": "🧪",
@@ -12407,6 +12416,14 @@ window.EDITOR_CATALOG = {
       "id": "racao_viagem",
       "name": "Ração de Viagem",
       "emoji": "🥩",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "racao_completa",
+      "name": "Ração Completa",
+      "emoji": "🥩",
+      "icon": "assets/itens/racao.png",
       "item_slot": "bag",
       "effect": "food"
     },

@@ -95,6 +95,7 @@
       "granada",
       "granada_superior",
       "bomba_fumaca",
+      "bomba_flash",
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
@@ -198,6 +199,7 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
+      "racao_completa",
       "cantil_agua",
       "banquete_viagem"
     ]
@@ -302,6 +304,7 @@
       "granada",
       "granada_superior",
       "bomba_fumaca",
+      "bomba_flash",
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
@@ -401,6 +404,7 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
+      "racao_completa",
       "cantil_agua",
       "banquete_viagem"
     ]
@@ -505,6 +509,7 @@
       "granada",
       "granada_superior",
       "bomba_fumaca",
+      "bomba_flash",
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
@@ -604,6 +609,7 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
+      "racao_completa",
       "cantil_agua",
       "banquete_viagem"
     ]
@@ -708,6 +714,7 @@
       "granada",
       "granada_superior",
       "bomba_fumaca",
+      "bomba_flash",
       "frasco_acido",
       "vidro_acido_grande",
       "cola_alquimica",
@@ -807,6 +814,7 @@
       "caneca_cerveja",
       "garrafa_vinho",
       "racao_viagem",
+      "racao_completa",
       "cantil_agua",
       "banquete_viagem"
     ]
@@ -821,6 +829,7 @@
       "suco_fruta",
       "garrafa_vinho",
       "racao_viagem",
+      "racao_completa",
       "cantil_agua",
       "banquete_viagem"
     ],

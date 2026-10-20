@@ -15,10 +15,12 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
-  "ui.reacao_fumaca.titulo": {"pt": "Reação: Bomba de Fumaça", "en": "Reaction: Smoke Bomb"},
-  "ui.reacao_fumaca.ataque": {"pt": "{inimigo} vai atacar {alvo}. Lançar uma Bomba de Fumaça?", "en": "{inimigo} is about to attack {alvo}. Throw a Smoke Bomb?"},
-  "ui.reacao_fumaca.efeito": {"pt": "O inimigo realiza este ataque com desvantagem. A fumaça permanece na área por 2 rodadas. Consome uma bomba, sem gastar suas ações.", "en": "The enemy makes this attack with disadvantage. Smoke stays in the area for 2 rounds. Consumes one bomb without spending your actions."},
-  "ui.reacao_fumaca.lancar": {"pt": "{heroi}: lançar bomba (estoque: {n})", "en": "{heroi}: throw bomb ({n} available)"},
+  "ui.reacao_fumaca.titulo": {"pt": "Reação: Itens Arremessáveis", "en": "Reaction: Throwable Items"},
+  "ui.reacao_fumaca.ataque": {"pt": "{inimigo} vai atacar {alvo}. Escolha um item para reagir:", "en": "{inimigo} is about to attack {alvo}. Choose an item to react:"},
+  "ui.reacao_fumaca.efeito_fumaca": {"pt": "A bomba de fumaça deixa o golpe anunciado com desvantagem e cria uma nuvem por 2 rodadas. Consome a bomba sem gastar ações.", "en": "The Smoke Bomb gives the announced attack disadvantage and creates a cloud for 2 rounds. It consumes the bomb without spending actions."},
+  "ui.reacao_fumaca.efeito_flash": {"pt": "A bomba de flash exige uma jogada de ataque. Se acertar, o golpe anunciado recebe −2 e desvantagem. Consome a bomba sem gastar ações.", "en": "The Flash Bomb requires an attack roll. On a hit, the announced attack gets −2 and disadvantage. It consumes the bomb without spending actions."},
+  "ui.reacao_fumaca.efeito_ambos": {"pt": "Fumaça: desvantagem no golpe anunciado e nuvem por 2 rodadas. Flash: exige acerto para impor −2 e desvantagem ao golpe anunciado. Itens consumidos sem gastar ações.", "en": "Smoke: disadvantage on the announced attack and a cloud for 2 rounds. Flash: must hit to give the announced attack −2 and disadvantage. Items are consumed without spending actions."},
+  "ui.reacao_fumaca.lancar": {"pt": "{heroi}: {item} (estoque: {n})", "en": "{heroi}: {item} ({n} available)"},
   "ui.reacao_fumaca.recusar": {"pt": "Não reagir", "en": "Do not react"},
   "ui.reacao_fumaca.tempo": {"pt": "Tempo para reagir: {n}s", "en": "Time to react: {n}s"},
   "ui.reacao_fumaca.aguardando": {"pt": "Aguardando a resolução da reação…", "en": "Waiting for the reaction to resolve…"},
@@ -5029,6 +5031,10 @@ window.LANG_INTERFACE = {
     "en": "Area (radius 1, range 4). Creates darkness for 2 rounds — blocks sight and covers the retreat. No damage.",
     "pt": "Área (raio 1, alcance 4). Cria escuridão por 2 rodadas — bloqueia a visão e cobre o recuo. Sem dano."
   },
+  "ui.item.bomba_flash.desc": {
+    "en": "Single-target throw (range 5, attack roll). On a hit, the target's next attack gets −2 and disadvantage.",
+    "pt": "Arremesso contra alvo único (alcance 5, jogada de ataque). Ao acertar, o próximo ataque do alvo recebe −2 e desvantagem."
+  },
   "ui.mira.reage.choque": {
     "en": "⚡ Shock: conducts through the water ({n} tiles)",
     "pt": "⚡ Choque: conduz pela água ({n} casas)"
@@ -8123,16 +8129,16 @@ window.LANG_INTERFACE = {
     "en": "the illusion of {nome}",
     "pt": "a ilusão de {nome}"
   },
+  "ui.ilusao.botao_mover": {
+    "en": "🪞 Move the Fata Morgana (up to 6 tiles)",
+    "pt": "🪞 Mover a Fata Morgana (até 6 casas)"
+  },
   "ui.ilusao.casa_invalida": {
     "en": "Choose a highlighted free tile.",
     "pt": "Escolha uma casa livre destacada."
   },
   "ui.ilusao.cancelado": {
     "en": "Phantom selection canceled.",
-  "ui.ilusao.botao_mover": {
-    "en": "🪞 Move the Fata Morgana (up to 6 tiles)",
-    "pt": "🪞 Mover a Fata Morgana (até 6 casas)"
-  },
     "pt": "Seleção da ilusão cancelada."
   },
   "ui.ilusao.pular": {

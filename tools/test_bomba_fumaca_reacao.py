@@ -50,6 +50,87 @@ class SmokeReactionTests(unittest.IsolatedAsyncioTestCase):
     async def test_api_exists(self):
         self.assertTrue(callable(getattr(self.r, '_await_smoke_reaction', None)))
 
+    async def test_flash_is_a_five_tile_single_target_market_throwable(self):
+        definition = S.ARREMESSAVEIS['bomba_flash']
+        market = next(i for i in S.SHOP_MERCHANT if i['id'] == 'bomba_flash')
+        self.assertEqual(definition['alcance'], 5)
+        self.assertEqual(definition['alvo'], 'ataque_alvo')
+        self.assertEqual(market['price'], 50)
+        self.assertEqual(market['effect'], 'throwable')
+        stocks = [city['mercador'] for city in S.CITY_SHOPS.values()
+                  if 'mercador' in city]
+        self.assertTrue(stocks)
+        self.assertTrue(all('bomba_flash' in stock for stock in stocks))
+
+    async def test_flash_reaction_candidate_uses_its_five_tile_range(self):
+        self.p['bag'] = [{'id': 'bomba_flash', 'name': 'Bomba de Flash'}]
+        self.m['pos'] = [7, 2]
+        candidates = self.r._smoke_reaction_candidates(self.m, self.target)
+        self.assertEqual([c['hero_id'] for c in candidates], ['p1'])
+        self.assertEqual(candidates[0]['item_id'], 'bomba_flash')
+
+    async def test_flash_hit_debuffs_the_announced_attack(self):
+        self.p['bag'] = [{'id': 'bomba_flash', 'name': 'Bomba de Flash'}]
+        self.p['ac'] = 100
+        self.m['pos'] = [3, 2]
+        task = asyncio.create_task(self.r._execute_one_monster_attack(
+            self.m, {'name': 'Adaga', 'atk_bonus': 4, 'damage': '1d4',
+                     'damage_types': ['physical']}, self.target))
+        await asyncio.wait_for(self.opened.wait(), 1)
+        reaction = self.r._smoke_reaction
+        await self.r.handle_smoke_reaction_choice('p1', {
+            'request_id': reaction['request_id'], 'heroi': 'p1', 'usar': True,
+            'item_id': 'bomba_flash'})
+        with patch.object(S.random, 'randint', side_effect=[20, 18, 3]):
+            await task
+        attack_roll = next(x for x in self.r._msgs
+                           if x.get('type') == 'dice_roll' and x.get('kept'))
+        self.assertEqual(attack_roll['value'], 3)
+        self.assertEqual(attack_roll['modifier'], 2)
+        self.assertTrue(any(x.get('type') == 'dice_roll' and x.get('discarded')
+                            and x.get('value') == 18 for x in self.r._msgs))
+        self.assertTrue(any(x.get('type') == 'attack_feedback'
+                            and x.get('projectile', {}).get('item_id') == 'bomba_flash'
+                            for x in self.r._msgs))
+        self.assertEqual(self.p['bag'], [])
+
+    async def test_normal_flash_throw_debuffs_monsters_next_attack_once(self):
+        self.p['bag'] = [{'id': 'bomba_flash', 'name': 'Bomba de Flash'}]
+        self.p['atk_bonus'] = 20
+        self.m['ac'] = 1
+        with patch.object(S.random, 'randint', return_value=20):
+            await self.r._throw_item_alvo_impl(
+                self.p, S.ARREMESSAVEIS['bomba_flash'], self.p['bag'][0], 'm1')
+        self.assertEqual(self.m.get('_bomba_flash_ataque_pendente'), 1)
+        self.p['ac'] = 100
+        with patch.object(S.random, 'randint', side_effect=[18, 3]):
+            await self.r._execute_one_monster_attack(
+                self.m, {'name': 'Adaga', 'atk_bonus': 4, 'damage': '1d4',
+                         'damage_types': ['physical']}, self.target)
+        attack_roll = next(x for x in self.r._msgs
+                           if x.get('type') == 'dice_roll' and x.get('kept'))
+        self.assertEqual((attack_roll['value'], attack_roll['modifier']), (3, 2))
+        self.assertNotIn('_bomba_flash_ataque_pendente', self.m)
+
+    async def test_flash_miss_consumes_item_without_debuffing_attack(self):
+        self.p['bag'] = [{'id': 'bomba_flash', 'name': 'Bomba de Flash'}]
+        self.p['atk_bonus'] = 20
+        self.m['ac'] = 1
+        with patch.object(S.random, 'randint', return_value=1):
+            await self.r._throw_item_alvo_impl(
+                self.p, S.ARREMESSAVEIS['bomba_flash'], self.p['bag'][0], 'm1')
+        self.assertEqual(self.p['bag'], [])
+        self.assertNotIn('_bomba_flash_ataque_pendente', self.m)
+        self.p['ac'] = 100
+        with patch.object(S.random, 'randint', return_value=4):
+            await self.r._execute_one_monster_attack(
+                self.m, {'name': 'Adaga', 'atk_bonus': 4, 'damage': '1d4',
+                         'damage_types': ['physical']}, self.target)
+        attack_roll = next(x for x in self.r._msgs
+                           if x.get('type') == 'dice_roll' and x.get('die') == 'd20'
+                           and x.get('value') == 4)
+        self.assertEqual((attack_roll['value'], attack_roll['modifier']), (4, 4))
+
     async def test_accept_consumes_once_without_actions_or_survival(self):
         before = [self.p.get(k) for k in ('action_done', 'bonus_action_used', 'fome', 'sede')]
         task, rid = await self.start()

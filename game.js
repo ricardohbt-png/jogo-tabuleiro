@@ -16372,6 +16372,8 @@ function _executarComandoCena(c){
   const now = performance.now();
   const tocouGolpe = !c.tardio && _somGolpe(c);
   if(!c.tardio) try{ _somExplosaoItem(c.item_id, c.targetPos, c.area || c.hit); _somAtaqueElemental(c); }catch(e){}
+  if(!c.tardio && c.item_id === 'bomba_flash' && c.hit && Array.isArray(c.targetPos))
+    _spawnPositiveBurst({pos:c.targetPos}, 'flash', 0, 'bomba_flash');
   if(!c.tardio){
     // O golpe aconteceu: agora o banner legado pode mostrar ACERTO/ERRO/CRÍTICO
     // e o cue de crítico/erro (adiado em _receiveAttackFeedback) toca junto.
@@ -16460,6 +16462,8 @@ function _receiveAttackFeedback(msg){
         targetPos: msg.target_pos, targetKey: _entityKeyById(msg.target_id) });
       try{ _somAtaqueElemental({ attackerKey: _entityKeyById(msg.attacker_id), targetPos: msg.target_pos }); }catch(e){}
       try{ _somExplosaoItem(f.itemId, msg.target_pos, f.area || !!msg.hit); }catch(e){}   // 2D: granada/incendiário
+      if(f.itemId === 'bomba_flash' && msg.hit && Array.isArray(msg.target_pos))
+        _spawnPositiveBurst({pos:msg.target_pos}, 'flash', 0, 'bomba_flash');
       if(!tocou && cue) _playCombatCue(cue.kind, cue.opts);
     }
     if(!_cenaAtiva()) _registrarEcoDuetoFantasma2D(f, now);
@@ -16992,15 +16996,16 @@ function _positiveEffectKind(id){
 function _positiveEffectColor(kind){
   return kind === 'regeneration' ? '#91ffbd'
     : kind === 'shield' ? '#76d8ff'
-    : kind === 'armor' ? '#ffd76b' : '#f4d98b';
+    : kind === 'armor' ? '#ffd76b'
+    : kind === 'flash' ? '#fff2a6' : '#f4d98b';
 }
 
 function _spawnPositiveBurst(entry, kind='heal', amount=0, source=''){
   if(!entry || !Array.isArray(entry.pos)) return;
   const burst = {
     pos:[Number(entry.pos[0]), Number(entry.pos[1])], kind, amount:Number(amount)||0,
-    source:String(source || ''), start:performance.now(), duration:_animationProgressDuration(920),
-    group:null, ring:null, particles:[],
+    source:String(source || ''), start:performance.now(), duration:_animationProgressDuration(kind === 'flash' ? 680 : 920),
+    group:null, ring:null, core:null, particles:[],
   };
   _positiveBursts.push(burst);
   if(mode3D && g3) _buildPositiveBurst3D(burst);
@@ -17014,6 +17019,12 @@ function _buildPositiveBurst3D(b){
   const mat = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
   b.ring = new T.Mesh(new T.TorusGeometry(.22, .025, 8, 28), mat);
   b.ring.rotation.x = Math.PI / 2; b.ring.renderOrder = 126; group.add(b.ring);
+  if(b.kind === 'flash'){
+    const coreMat = new T.MeshBasicMaterial({color:0xfffbe8, transparent:true, opacity:0,
+      depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+    b.core = new T.Mesh(new T.SphereGeometry(.20, 12, 10), coreMat);
+    b.core.position.y = .88; b.core.renderOrder = 127; group.add(b.core);
+  }
   for(let i=0;i<11;i++){
     const pm = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
     const mote = new T.Mesh(new T.SphereGeometry(.025 + (i%3)*.010, 7, 5), pm);
@@ -17038,11 +17049,18 @@ function _updatePositiveBursts3D(now){
     const fade = q < .55 ? 1 : Math.max(0, 1 - (q - .55) / .45);
     const x = b.pos[0], z = b.pos[1];
     b.ring.position.set(x, .34 + q * .12, z);
-    b.ring.scale.setScalar(.7 + q * 1.45); b.ring.material.opacity = .72 * fade;
+    b.ring.scale.setScalar(b.kind === 'flash' ? .35 + q * 2.0 : .7 + q * 1.45);
+    b.ring.material.opacity = (b.kind === 'flash' ? .94 : .72) * fade;
+    if(b.core){
+      const pulse = q < .22 ? .68 + q * 2.4 : Math.max(.12, 1.2 - q * 1.35);
+      b.core.position.set(x, .88, z); b.core.scale.setScalar(pulse);
+      b.core.material.opacity = .92 * fade;
+    }
     for(const mote of b.particles){
       const i = mote.userData.i, a = i * Math.PI * 2 / b.particles.length;
-      const radius = .08 + q * (.30 + (i%3)*.05);
-      mote.position.set(x + Math.cos(a) * radius, .40 + q * (0.82 + (i%4)*.11), z + Math.sin(a) * radius);
+      const radius = .08 + q * ((b.kind === 'flash' ? .50 : .30) + (i%3)*.05);
+      const y = b.kind === 'flash' ? .88 + Math.sin(a) * radius * .72 : .40 + q * (0.82 + (i%4)*.11);
+      mote.position.set(x + Math.cos(a) * radius, y, z + Math.sin(a) * radius);
       mote.material.opacity = (.60 + .25 * Math.sin(now / 120 + i) ** 2) * fade;
     }
   }
@@ -17056,6 +17074,35 @@ function _drawPositiveBursts2D(ctx, state, now){
     const x = b.pos[0] * CELL + CELL/2, y = b.pos[1] * CELL + CELL/2;
     const color = _positiveEffectColor(b.kind);
     ctx.save(); ctx.globalAlpha = fade; ctx.globalCompositeOperation = 'lighter';
+    if(b.kind === 'flash'){
+      const radius = CELL * (.12 + q * .58);
+      const core = Math.max(0, 1 - q * 3.2);
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      glow.addColorStop(0, `rgba(255,255,246,${(.88 * core).toFixed(3)})`);
+      glow.addColorStop(.26, `rgba(255,238,153,${(.54 * fade).toFixed(3)})`);
+      glow.addColorStop(1, 'rgba(255,207,76,0)');
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI*2); ctx.fill();
+      ctx.strokeStyle = '#fff3b0'; ctx.shadowColor = '#fff6cf'; ctx.shadowBlur = CELL * .24;
+      ctx.lineWidth = Math.max(2, CELL * .045); ctx.beginPath();
+      ctx.arc(x, y, CELL * (.12 + q * .48), 0, Math.PI * 2); ctx.stroke();
+      for(let i=0;i<8;i++){
+        const a = i * Math.PI / 4 + .18, travel = CELL * (.18 + q * .48);
+        const sx=x+Math.cos(a)*travel, sy=y+Math.sin(a)*travel;
+        const len=CELL*(.07*(1-q*.45));
+        ctx.strokeStyle=i%2?'#fff8d8':'#ffd34d'; ctx.lineWidth=Math.max(1.5,CELL*.025);
+        ctx.beginPath(); ctx.moveTo(sx-Math.cos(a)*len,sy-Math.sin(a)*len);
+        ctx.lineTo(sx+Math.cos(a)*len,sy+Math.sin(a)*len); ctx.stroke();
+      }
+      if(q < .56){
+        ctx.font=`900 ${Math.max(15,CELL*.23)}px Arial, sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#fff8c9';
+        ctx.shadowColor='#fff1a6'; ctx.shadowBlur=CELL*.18;
+        ctx.fillText('✦',x-CELL*.18,y-CELL*(.36+q*.16));
+        ctx.fillText('✦',x+CELL*.18,y-CELL*(.34+q*.20));
+      }
+      ctx.restore();
+      continue;
+    }
     ctx.strokeStyle = color; ctx.shadowColor = color; ctx.shadowBlur = CELL * .16;
     ctx.lineWidth = Math.max(2, CELL * .035); ctx.beginPath();
     ctx.arc(x, y, CELL * (.18 + q * .34), 0, Math.PI * 2); ctx.stroke();
@@ -28311,12 +28358,16 @@ function _showSmokeReaction(msg){
   panel.style.cssText = 'box-sizing:border-box;width:min(440px,100%);max-height:90vh;overflow:auto;padding:24px;border:2px solid #b6bec9;border-radius:14px;background:linear-gradient(145deg,#232833,#12151d);color:#f3f0e8;box-shadow:0 12px 70px #000;font-family:inherit;';
   const title = document.createElement('h2');
   title.id = 'smoke-reaction-title';
-  title.textContent = '💨 ' + t('ui.reacao_fumaca.titulo');
+  title.textContent = '⚡ ' + t('ui.reacao_fumaca.titulo');
   title.style.cssText = 'margin:0 0 14px;color:#e1d4ac;font-size:1.3rem;';
   const text = document.createElement('p');
   text.textContent = t('ui.reacao_fumaca.ataque',{inimigo:msg.attacker.name,alvo:msg.target.name});
   const hint = document.createElement('p');
-  hint.textContent = t('ui.reacao_fumaca.efeito');
+  const hasSmoke=msg.candidates.some(c=>(c.item_id||'bomba_fumaca')==='bomba_fumaca');
+  const hasFlash=msg.candidates.some(c=>c.item_id==='bomba_flash');
+  const effectKey=hasSmoke&&hasFlash?'ui.reacao_fumaca.efeito_ambos'
+    :hasFlash?'ui.reacao_fumaca.efeito_flash':'ui.reacao_fumaca.efeito_fumaca';
+  hint.textContent = t(effectKey);
   hint.style.cssText = 'color:#bcc4d2;font-size:.9rem;line-height:1.5;';
   const countdown = document.createElement('p');
   countdown.setAttribute('role','status');
@@ -28324,26 +28375,29 @@ function _showSmokeReaction(msg){
   const buttons = [];
   const ui = {overlay,requestId:msg.request_id,previous:document.activeElement,
               submitted:false,onKey:null,timer:null};
-  const choose = (heroId,use) => {
+  const choose = (heroId,use,itemId=null) => {
     if(ui.submitted || GS.smokeReaction?.request_id !== msg.request_id) return;
-    if(!GS.responderReacaoFumaca(msg.request_id,heroId,use)) return;
+    if(!GS.responderReacaoFumaca(msg.request_id,heroId,use,itemId||'bomba_fumaca')) return;
     ui.submitted = true;
     buttons.forEach(button => {button.disabled=true;});
     countdown.textContent = t('ui.reacao_fumaca.aguardando');
   };
-  const buttonFor = (label,heroId,use) => {
+  const buttonFor = (label,heroId,use,itemId=null) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = label;
     button.setAttribute(use ? 'data-smoke-throw' : 'data-gamepad-cancel','');
     button.style.cssText = 'display:block;width:100%;margin-top:10px;padding:12px;border:1px solid #8998a8;border-radius:8px;background:#374456;color:#fff;font:inherit;cursor:pointer;';
-    button.onclick = () => choose(heroId,use);
+    button.onclick = () => choose(heroId,use,itemId);
     buttons.push(button);
     panel.appendChild(button);
   };
   panel.append(title,text,hint,countdown);
   for(const candidate of msg.candidates){
-    buttonFor(t('ui.reacao_fumaca.lancar',{heroi:candidate.name,n:candidate.quantity}),candidate.hero_id,true);
+    const itemId=candidate.item_id||'bomba_fumaca';
+    const itemName=t('cat.item.'+itemId+'.nome');
+    buttonFor(t('ui.reacao_fumaca.lancar',{heroi:candidate.name,item:itemName,n:candidate.quantity}),
+      candidate.hero_id,true,itemId);
   }
   buttonFor(t('ui.reacao_fumaca.recusar'),null,false);
   const refresh = () => {

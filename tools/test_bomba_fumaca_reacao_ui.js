@@ -27,19 +27,27 @@ const context={document:doc,Date,Math,GS:{smokeReaction:null,
 vm.createContext(context);vm.runInContext(code.slice(start,end),context);
 const offer=id=>({request_id:id,expires_at:Date.now()+12000,
   attacker:{name:'<img onerror=alert(1)>'},target:{name:'Ally'},
-  candidates:[{hero_id:'p1',name:'One',quantity:1},{hero_id:'p2',name:'Two',quantity:2}]});
+  candidates:[{hero_id:'p1',name:'One',item_id:'bomba_fumaca',quantity:1},
+    {hero_id:'p2',name:'Two',item_id:'bomba_fumaca',quantity:2},
+    {hero_id:'p2',name:'Two',item_id:'bomba_flash',quantity:1}]});
 function show(id){const msg=offer(id);context.GS.smokeReaction=msg;context._showSmokeReaction(msg);}
 show('r1');
 let buttons=doc.body.querySelectorAll('button');
-assert.equal(buttons.length,3);
+assert.equal(buttons.length,4);
 buttons[1].onclick();buttons[1].onclick();
-assert.deepEqual(replies[0],['r1','p2',true]);
+assert.deepEqual(replies[0],['r1','p2',true,'bomba_fumaca']);
 assert.equal(replies.length,1,'double click sends once');
 show('r2');context._closeSmokeReaction('r1');
 assert.equal(doc.body.children.length,1,'old closure cannot close new offer');
 listeners.get('keydown')({key:'Escape',preventDefault(){},stopImmediatePropagation(){}});
-assert.deepEqual(replies.at(-1),['r2',null,false]);
+assert.deepEqual(replies.at(-1),['r2',null,false,'bomba_fumaca']);
 context._closeSmokeReaction('r2');
+assert.equal(doc.body.children.length,0);
+show('rflash');
+buttons=doc.body.querySelectorAll('button');
+buttons[2].onclick();
+assert.deepEqual(replies.at(-1),['rflash','p2',true,'bomba_flash']);
+context._closeSmokeReaction('rflash');
 assert.equal(doc.body.children.length,0);
 assert.equal(listeners.size,0);
 assert.equal(intervalCount,0);

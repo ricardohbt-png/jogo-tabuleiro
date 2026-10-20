@@ -2298,6 +2298,10 @@ window.LANG_CATALOGO = {
     "en": "Crystal Ball of Clairvoyance",
     "pt": "Bola de Cristal da Clarividência"
   },
+  "cat.item.bomba_flash.nome": {
+    "en": "Flash Bomb",
+    "pt": "Bomba de Flash"
+  },
   "cat.item.bomba_fumaca.nome": {
     "en": "Smoke Bomb",
     "pt": "Bomba de Fumaça"
@@ -3237,6 +3241,10 @@ window.LANG_CATALOGO = {
   "cat.item.racao_viagem.nome": {
     "en": "Travel Rations",
     "pt": "Ração de Viagem"
+  },
+  "cat.item.racao_completa.nome": {
+    "en": "Complete Rations",
+    "pt": "Ração Completa"
   },
   "cat.item.rede_arremesso.nome": {
     "en": "Net",

@@ -384,6 +384,18 @@ window.LANG_NARRACAO = {
     "en": "⚠️ **{monstro}** attacks with **{modo}** ({join_motivos}) — d20 **{roll}** used, ~~{discarded}~~ discarded.",
     "pt": "⚠️ **{monstro}** ataca com **{modo}** ({join_motivos}) — d20 **{roll}** usado, ~~{discarded}~~ descartado."
   },
+  "narracao.bomba_flash_acerta": {
+    "en": "✨ **{heroi}** hits **{monstro}** with a Flash Bomb. Its announced attack has −2 and disadvantage.",
+    "pt": "✨ **{heroi}** acerta **{monstro}** com a Bomba de Flash. O ataque anunciado sofre −2 e desvantagem."
+  },
+  "narracao.bomba_flash_erra": {
+    "en": "✨ **{heroi}** misses **{monstro}** with a Flash Bomb.",
+    "pt": "✨ **{heroi}** erra **{monstro}** com a Bomba de Flash."
+  },
+  "narracao.bomba_flash_proximo_ataque": {
+    "en": "✨ The Flash Bomb leaves **{monstro}**'s next attack at −2 and disadvantage.",
+    "pt": "✨ A Bomba de Flash impõe −2 e desvantagem ao próximo ataque de **{monstro}**."
+  },
   "narracao.ataca_com_d20_vs_ca_dano": {
     "en": "⚔️ **{heroi}** attacks **{target}** with {weapon_name} (d20={roll}+{eff_atk}={total} vs AC {target_ac}):{crit_str} damage {dmg_detail}{holy_detail}{furtivo_detail} = **{dmg}**!",
     "pt": "⚔️ **{heroi}** ataca **{target}** com {weapon_name} (d20={roll}+{eff_atk}={total} vs CA {target_ac}):{crit_str} dano {dmg_detail}{holy_detail}{furtivo_detail} = **{dmg}**!"
