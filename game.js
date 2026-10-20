@@ -3390,8 +3390,15 @@ function _itemDesc(item){
     return t('ui.item.desc.cura_total');
   if(item.effect==='veil_shadow')
     return item.descricao || t('ui.item.acao_bonus_fica_oculto_ate_o_fim_do_turno');
+  const rotuloEfeito=_rotulo(item.effect, 'ui.item.efeito', '');
+  if(!rotuloEfeito){
+    // Efeito sem rótulo traduzido: mostrar o id técnico (ex.: ILLUSION_LURE) vazaria
+    // inglês na lista da loja. Prefere a descrição do item e depois a do catálogo.
+    const descricao=item.descricao || ((typeof GS!=='undefined' && GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {}).descricao;
+    if(descricao) return descricao;
+  }
   const v=item.value?` ${item.value}`:'';
-  return _rotulo(item.effect, 'ui.item.efeito', item.effect||'')+v;
+  return (rotuloEfeito || item.effect || '')+v;
 }
 
 function buyItem(shop, itemId){
