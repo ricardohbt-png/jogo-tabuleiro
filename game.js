@@ -8649,13 +8649,15 @@ function _anelInimigo3D(){
     if(!anel){
       if(agindo){
         anel = new T.Mesh(new T.RingGeometry(0.40, 0.50, 48),
-          new T.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.9, depthWrite: false, side: T.DoubleSide }));
+          new T.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.95, depthWrite: false,
+            side: T.DoubleSide, toneMapped: false }));   // sem tone mapping: o ACES desbotava o vermelho
         anel.rotation.x = -Math.PI / 2;
       } else {
         const pts = [];
         for(let k = 0; k < 48; k++){ const a = k / 48 * Math.PI * 2; pts.push(new T.Vector3(Math.cos(a) * 0.46, 0, Math.sin(a) * 0.46)); }
         anel = new T.LineLoop(new T.BufferGeometry().setFromPoints(pts),
-          new T.LineDashedMaterial({ color: 0xebebeb, dashSize: 0.08, gapSize: 0.06, transparent: true, opacity: 0.8, depthWrite: false }));
+          new T.LineDashedMaterial({ color: 0xebebeb, dashSize: 0.08, gapSize: 0.06, transparent: true, opacity: 0.8,
+            depthWrite: false, toneMapped: false }));
         anel.computeLineDistances();
       }
       anel.userData = { estilo, noRay: true };

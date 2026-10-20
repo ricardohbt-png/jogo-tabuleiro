@@ -55,6 +55,7 @@ check('2D: a animação agenda redesenho enquanto há monstro agindo', body('_an
 const a3 = body('_anelInimigo3D');
 check('3D: anel por monstro, sincronizado no laço de render', !!a3 && a3.includes('getMonsterMesh') && source.includes('_anelInimigo3D();'));
 check('3D: limpa os anéis fora do turno', a3.includes('scene.remove'));
+check('3D: o anel não passa pelo tone mapping (senão o vermelho desbota)', (a3.match(/toneMapped: false/g) || []).length === 2);
 check('o anel acompanha o tamanho do monstro grande e fica no centro do peão',
   body('_anelInimigo2D').includes('logicalW') && a3.includes('_monsterFootprintSize') && a3.includes('fig.position.x'));
 

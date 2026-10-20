@@ -1,5 +1,48 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Velocidade do turno dos inimigos (2026-10-20)
+
+O painel ⚙️ → "⏱️ Velocidade do turno dos inimigos" escolhe o ritmo, que é um
+campo da sala (`velocidade_inimigos`, `ritmo_auto_segundos`; salvo no jogo,
+enviado no `game_state`/`city_state` junto de `ritmo_passo_permitido`). Níveis:
+`atual` (padrão: nenhuma mensagem nova, nenhuma espera — byte-idêntico),
+`lento` (~3 s), `muito_lento` (~6 s) e `passo` (espera o clique; **só no Solo**,
+recusado por `handle_set_velocidade_inimigos` via `_jogo_salvo_solo`). Só o
+anfitrião muda; no Solo é sempre o jogador. Constantes: `RITMO_NIVEIS`,
+`RITMO_SEGUNDOS`, `RITMO_AUTO_OPCOES` (0/3/6/10 s do tempo automático do passo a
+passo) e `RITMO_TETO_CLIQUE_S` (90 s: nenhuma espera por clique é eterna).
+
+O servidor segura a fila: em `_activate_initiative_actor`, o `monster_step` roda
+`_ritmo_antes` (anel e coletor), o turno, `_ritmo_depois` (faixa + espera) e só
+então `_advance_initiative`; cada passo vai dentro de `_isolar`, então falha na
+espera nunca congela a iniciativa. O coletor (`_ritmo_iniciar`/`_ritmo_registrar`/
+`_ritmo_finalizar`) é alimentado por `_emitir_feedback_ataque` e só registra os
+ataques do monstro que age; o dano da faixa é a **perda de PV do alvo** entre o
+`start` do ataque e o seguinte (não vem no `attack_feedback`), o tipo é o
+`impacto` do `start`, e "habilidade" é o `attack_name` (habilidade sem ataque
+não gera faixa). Monstro dormente, que só andou, em Comando/Dominar Mente ou no
+modo Manual do Mestre fica fora (`_ritmo_ativo_para`). Mensagens do servidor:
+`turno_inimigo_agindo {monstro_id, proximos}`, `resumo_ataque_inimigo` e
+`resumo_inimigo_fechado`; do cliente: `set_velocidade_inimigos {nivel,
+auto_segundos}` e `continuar_turno_inimigo`. A espera termina por tempo, clique,
+teto, queda do jogador (`handle_disconnect_em_jogo`), troca de nível ou fim de
+jogo. O anel só apaga **depois** da faixa. `broadcast(personalize=...)` agora
+aceita `None` para negar a mensagem a um destinatário.
+
+Visibilidade (`_ritmo_visao_para`): o Mestre e quem vê o monstro recebem a faixa
+completa; quem não o vê e é o alvo recebe uma faixa **genérica** ("Um inimigo
+atacou X": sem nome do monstro, ataque nem tipo); os demais não recebem nada e
+o anel não aponta o monstro. Cliente: `GS.turnoInimigo()`, `GS.velocidadeInimigos`,
+`GS.setVelocidadeInimigos`, `GS.continuarTurnoInimigo` (limpa a faixa na hora);
+`game.js` desenha a faixa fixa no alto (`_renderFaixaInimigo`, por DOM), o anel
+vermelho no monstro agindo e tracejado nos próximos (`_anelInimigo2D`/
+`_anelInimigo3D`; o 3D usa `toneMapped:false`, senão o ACES desbota o vermelho),
+e Enter/Espaço/botão de confirmar do controle continuam o passo a passo. Um
+`GS.on` por evento. Testes: `python -X utf8 tools/test_velocidade_inimigos.py`,
+`python -X utf8 tools/test_velocidade_inimigos_fila.py`,
+`node tools/test_turno_inimigo_cliente.js` e `node tools/test_turno_inimigo_ui.js`.
+Spec/plano em `docs/superpowers/{specs,plans}/2026-10-20-velocidade-turno-inimigos*`.
+
 ### Iscas de ilusão: Ignus Fatus e Fata Morgana (2026-10-18)
 
 Os consumíveis de ação bônus ficam no catálogo `SHOP_MERCHANT` e nas listas de

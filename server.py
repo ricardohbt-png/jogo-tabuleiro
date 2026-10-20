@@ -3589,7 +3589,7 @@ FOTO_SALA_CATEGORIAS = {
     "hero_rooms": "jogo_salvo", "turn_timer_enabled": "jogo_salvo",
     "visao_compartilhada_permitida": "jogo_salvo", "atravessar_aliados": "jogo_salvo",
     "velocidade_inimigos": "jogo_salvo", "ritmo_auto_segundos": "jogo_salvo",
-    "_ritmo_coletor": "efemero", "_ritmo_evento": "efemero",
+    "_ritmo_coletor": "efemero", "_ritmo_evento": "efemero", "_ritmo_anel_ligado": "efemero",
     "savegame": "jogo_salvo", "savegame_id": "jogo_salvo", "master_name": "jogo_salvo",
     "shop_scrolls": "jogo_salvo",
     # derivados
@@ -12028,6 +12028,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.ritmo_auto_segundos = 0
         self._ritmo_coletor = None    # ataques do monstro que age agora (efêmero)
         self._ritmo_evento = None     # espera pendente da faixa (efêmero)
+        self._ritmo_anel_ligado = False   # há anel aceso no cliente (efêmero)
         self._ultima_foto = None   # última foto da masmorra gravada (Etapa 2 do salvamento)
         self._foto_pendente = None  # foto lida do jogo salvo, aplicada no start_game
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
@@ -13957,8 +13958,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _ritmo_enviar_agindo(self, m):
         """Anel vermelho no monstro que age (m=None apaga). Sem visão, sem anel."""
         if m is None:
+            self._ritmo_anel_ligado = False
             await self.broadcast({"type": "turno_inimigo_agindo", "monstro_id": None, "proximos": []})
             return
+        self._ritmo_anel_ligado = True
         atual = self.initiative_index % len(self.initiative_order)
         proximos = [e["id"] for e in self.initiative_order[atual + 1:]
                     if e["kind"] == "monster" and e["id"] in self.monsters
@@ -13983,9 +13986,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         m = self.monsters.get(mid)
         entradas = [e for e in self._ritmo_finalizar() if e["acertou"] is not None]
-        await self._ritmo_enviar_agindo(None)
         nivel = self.velocidade_inimigos
         if not entradas or nivel == "atual" or self.phase != "playing":
+            await self._ritmo_enviar_agindo(None)
             return
         clique = nivel == "passo"
         segundos = (self.ritmo_auto_segundos if clique else RITMO_SEGUNDOS[nivel])
@@ -14013,6 +14016,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         finally:
             self._ritmo_evento = None
         await self.broadcast({"type": "resumo_inimigo_fechado"})
+        await self._ritmo_enviar_agindo(None)    # o anel só apaga depois da faixa
 
     def _ritmo_liberar(self):
         """Solta a espera pendente da faixa de resumo (se houver)."""
@@ -18573,6 +18577,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._isolar(monster_corpo(mid), f"turno do monstro {mid}")
             await self._isolar(self._ritmo_depois(mid), f"ritmo (resumo) do monstro {mid}")
             self._ritmo_coletor = None
+            if self._ritmo_anel_ligado:      # rede de segurança: o anel nunca fica preso
+                await self._isolar(self._ritmo_enviar_agindo(None), f"ritmo (anel) do monstro {mid}")
             await self._advance_initiative()
         self.initiative_task = asyncio.create_task(monster_step(actor["id"]))
 

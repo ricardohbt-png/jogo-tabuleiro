@@ -104,6 +104,9 @@ async def main():
     check("anel acende no monstro e apaga no fim",
           ag[0][1]["p1"]["monstro_id"] == "m1" and ag[-1][1]["p1"]["monstro_id"] is None)
     check("o tracejado lista só monstros que ainda vão agir", ag[0][1]["p1"]["proximos"] == [], ag[0][1]["p1"])
+    check("o anel fica aceso durante a faixa e só apaga depois dela",
+          o.index("resumo_ataque_inimigo") < o.index("resumo_inimigo_fechado")
+          < len(o) - 1 - o[::-1].index("turno_inimigo_agindo") < o.index("avancou"), o)
     r, ev = await fila("muito_lento")
     t0 = time.monotonic(); await rodar_turno(r); dt = time.monotonic() - t0
     check("muito lento espera mais", dt >= 0.29, dt)
@@ -176,6 +179,7 @@ async def main():
     with contextlib.redirect_stderr(io.StringIO()):
         await rodar_turno(r)
     check("a iniciativa avança mesmo assim", ev["avancos"] == 1)
+    check("e o anel não fica preso aceso", tipos(ev, "turno_inimigo_agindo")[-1][1]["p1"]["monstro_id"] is None)
 
     print("\n[6] Visibilidade")
     r, ev = await fila("lento", vistos=False)
