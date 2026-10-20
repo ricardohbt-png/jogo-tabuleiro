@@ -579,11 +579,11 @@ window.LANG_CATALOGO = {
     "pt": "Vitral de templo"
   },
   "cat.guilda.arremesso_rapido.desc": {
-    "en": "",
+    "en": "Passive. Once per turn, after throwing a throwable consumable with your main action, you can throw a second one with your bonus action. Each flask keeps its normal range and resolution and can target a different creature or location; each use consumes the item.",
     "pt": "Passivo. Uma vez por turno, depois de arremessar um consumível arremessável com a ação principal, você pode arremessar um segundo com a ação bônus. Cada frasco mantém seu alcance e resolução normal e pode mirar um alvo ou local diferente; cada uso consome o item."
   },
   "cat.guilda.arremesso_rapido.nome": {
-    "en": "",
+    "en": "Quick Throw",
     "pt": "Arremesso Rápido"
   },
   "cat.guilda.bardo_cancao_acerto.desc": {
@@ -731,11 +731,11 @@ window.LANG_CATALOGO = {
     "pt": "Ressurreição III"
   },
   "cat.guilda.disparo_duplo.desc": {
-    "en": "",
+    "en": "Passive. With a Hand Crossbow in each hand, when you attack an enemy you also fire the off-hand crossbow at the same target as a bonus action. The target must still be alive, in range and visible; each shot consumes 1 bolt, even on a miss. Once per turn.",
     "pt": "Passivo. Com uma Besta de Mão em cada mão, ao atacar um inimigo dispara também a besta secundária contra o mesmo alvo como ação bônus. O alvo precisa continuar vivo, ao alcance e visível; cada disparo consome 1 virote, mesmo se errar. Uma vez por turno."
   },
   "cat.guilda.disparo_duplo.nome": {
-    "en": "",
+    "en": "Double Shot",
     "pt": "Disparo Duplo"
   },
   "cat.guilda.guarda_maxima.desc": {
@@ -1347,11 +1347,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Lobisomem"
   },
   "cat.guilda.lenda_lobisomem_alfa.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Alpha Werewolf.",
     "pt": "+1 de ataque e +1 nos saves contra Lobisomem Alfa."
   },
   "cat.guilda.lenda_lobisomem_alfa.nome": {
-    "en": "",
+    "en": "Lore: Alpha Werewolf",
     "pt": "Lenda: Lobisomem Alfa"
   },
   "cat.guilda.lenda_lobo_cinzento.desc": {
@@ -2435,7 +2435,7 @@ window.LANG_CATALOGO = {
     "pt": "Cola Alquímica"
   },
   "cat.item.cola_alquimica_superior.nome": {
-    "en": "",
+    "en": "Superior Alchemical Glue",
     "pt": "Cola Alquímica Superior"
   },
   "cat.item.dagger.desc": {
@@ -2538,8 +2538,16 @@ window.LANG_CATALOGO = {
     "en": "Essence of Favorable Winds",
     "pt": "Essência do Vento Favorável"
   },
+  "cat.item.fata_morgana.desc": {
+    "en": "Bonus action. Creates a lifelike image of the hero on a free, visible square within 6 squares. Automatic monsters that perceive it pursue it. Lasts 4 rounds; before the hero's actions, it can move up to 6 squares once per turn. Its first attack dissipates it without harming the hero. You can have only one active illusion at a time.",
+    "pt": "Ação bônus. Cria uma imagem realista do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 4 rodadas; antes das ações do herói, pode mover até 6 casas uma vez por turno. O primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."
+  },
+  "cat.item.fata_morgana.nome": {
+    "en": "Fata Morgana",
+    "pt": "Fata Morgana"
+  },
   "cat.item.ferrao_do_brejo.nome": {
-    "en": "",
+    "en": "Marsh Stinger",
     "pt": "Ferrão do Brejo"
   },
   "cat.item.flecha_incendiaria.nome": {
@@ -2603,91 +2611,91 @@ window.LANG_CATALOGO = {
     "pt": "Granada Superior"
   },
   "cat.item.grimorio_barreira_arcana.desc": {
-    "en": "",
+    "en": "Contains Arcane Barrier. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Barreira Arcana. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_barreira_arcana.nome": {
-    "en": "",
+    "en": "Grimoire: Arcane Barrier",
     "pt": "Grimório: Barreira Arcana"
   },
   "cat.item.grimorio_bau.desc": {
-    "en": "",
+    "en": "A rare mage's book with two or three fixed spells. It only works equipped in the shield hand and grants no spell slots.",
     "pt": "Livro raro de mago com duas ou três magias fixas. Só funciona equipado na mão do escudo e não concede espaços de magia."
   },
   "cat.item.grimorio_bau.nome": {
-    "en": "",
+    "en": "Ancient Grimoire",
     "pt": "Grimório Antigo"
   },
   "cat.item.grimorio_bola_fogo.desc": {
-    "en": "",
+    "en": "Contains Fireball. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Bola de Fogo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_bola_fogo.nome": {
-    "en": "",
+    "en": "Grimoire: Fireball",
     "pt": "Grimório: Bola de Fogo"
   },
   "cat.item.grimorio_clarividencia.desc": {
-    "en": "",
+    "en": "Contains Clairvoyance. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Clarividência. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_clarividencia.nome": {
-    "en": "",
+    "en": "Grimoire: Clairvoyance",
     "pt": "Grimório: Clarividência"
   },
   "cat.item.grimorio_comando.desc": {
-    "en": "",
+    "en": "Contains Command. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Comando. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_comando.nome": {
-    "en": "",
+    "en": "Grimoire: Command",
     "pt": "Grimório: Comando"
   },
   "cat.item.grimorio_contramagica.desc": {
-    "en": "",
+    "en": "Contains Counterspell. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Contramágica. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_contramagica.nome": {
-    "en": "",
+    "en": "Grimoire: Counterspell",
     "pt": "Grimório: Contramágica"
   },
   "cat.item.grimorio_medo.desc": {
-    "en": "",
+    "en": "Contains Fear. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Medo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_medo.nome": {
-    "en": "",
+    "en": "Grimoire: Fear",
     "pt": "Grimório: Medo"
   },
   "cat.item.grimorio_raio_congelante.desc": {
-    "en": "",
+    "en": "Contains Ray of Frost. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Raio Congelante. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_raio_congelante.nome": {
-    "en": "",
+    "en": "Grimoire: Ray of Frost",
     "pt": "Grimório: Raio Congelante"
   },
   "cat.item.grimorio_relampago.desc": {
-    "en": "",
+    "en": "Contains Lightning Bolt. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Relâmpago. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_relampago.nome": {
-    "en": "",
+    "en": "Grimoire: Lightning Bolt",
     "pt": "Grimório: Relâmpago"
   },
   "cat.item.grimorio_sono.desc": {
-    "en": "",
+    "en": "Contains Sleep. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Sono. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_sono.nome": {
-    "en": "",
+    "en": "Grimoire: Sleep",
     "pt": "Grimório: Sono"
   },
   "cat.item.grimorio_voo.desc": {
-    "en": "",
+    "en": "Contains Flight. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Voo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_voo.nome": {
-    "en": "",
+    "en": "Grimoire: Flight",
     "pt": "Grimório: Voo"
   },
   "cat.item.hand_crossbow.desc": {
@@ -2717,6 +2725,14 @@ window.LANG_CATALOGO = {
   "cat.item.helm_iron.nome": {
     "en": "Iron Helm",
     "pt": "Elmo de Ferro"
+  },
+  "cat.item.ignus_fatus.desc": {
+    "en": "Bonus action. Creates a ghostly, stationary image of the hero on a free, visible square within 6 squares. Automatic monsters that perceive it pursue it. Lasts 2 rounds; its first attack dissipates it without harming the hero. You can have only one active illusion at a time.",
+    "pt": "Ação bônus. Cria uma imagem fantasmagórica imóvel do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 2 rodadas; o primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."
+  },
+  "cat.item.ignus_fatus.nome": {
+    "en": "Ignus Fatus",
+    "pt": "Ignus Fatus"
   },
   "cat.item.instrumento.desc": {
     "en": "Musical Instrument: — physical damage, using Dexterity.",
@@ -2982,14 +2998,6 @@ window.LANG_CATALOGO = {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
   },
-  "cat.item.machadinha_arremesso_ana.desc": {
-    "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
-    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
-  },
-  "cat.item.machadinha_arremesso_ana.nome": {
-    "en": "Dwarven Throwing Hatchet",
-    "pt": "Machadinha de Arremesso Anã"
-  },
   "cat.item.machadinha_ana_prata.desc": {
     "en": "Silver Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength. Silver: withstands 5 levels of corrosion, the first 2 without penalty, and can hurt enemies resistant to normal weapons.",
     "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -2997,6 +3005,14 @@ window.LANG_CATALOGO = {
   "cat.item.machadinha_ana_prata.nome": {
     "en": "Silver Dwarven Throwing Hatchet",
     "pt": "Machadinha de Arremesso Anã de Prata"
+  },
+  "cat.item.machadinha_arremesso_ana.desc": {
+    "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
+    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
+  },
+  "cat.item.machadinha_arremesso_ana.nome": {
+    "en": "Dwarven Throwing Hatchet",
+    "pt": "Machadinha de Arremesso Anã"
   },
   "cat.item.machado_basico.desc": {
     "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",
@@ -3315,11 +3331,11 @@ window.LANG_CATALOGO = {
     "pt": "Vela da Escuridão"
   },
   "cat.item.vela_reveladora.desc": {
-    "en": "",
+    "en": "Bonus action. For 10 rounds, reveals to the whole group the active traps within 3 tiles of the hero. The radius follows the hero; the candle neither triggers nor disarms traps.",
     "pt": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."
   },
   "cat.item.vela_reveladora.nome": {
-    "en": "",
+    "en": "Revealing Candle",
     "pt": "Vela Reveladora"
   },
   "cat.item.veneno_agonia_sufocante.nome": {
@@ -3983,7 +3999,7 @@ window.LANG_CATALOGO = {
     "pt": "Lobisomem"
   },
   "cat.monstro.lobisomem_alfa.nome": {
-    "en": "",
+    "en": "Alpha Werewolf",
     "pt": "Lobisomem Alfa"
   },
   "cat.monstro.lobo_cinzento.nome": {

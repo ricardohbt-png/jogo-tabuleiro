@@ -7310,6 +7310,10 @@ SHOP_MERCHANT = [
      "descricao": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."},
     {"id": "lampada_vigilia_arcana", "name": "Lâmpada da Vigília Arcana", "emoji": "🏮", "icon": "assets/itens/lampada_vigilia_arcana.png", "price": 60, "item_slot": "bag", "effect": "arcane_vigilance_potion", "value": 10, "radius": 3,
      "descricao": "Ação bônus. Por 10 rodadas, revela para o grupo criaturas ocultas nas sombras em um raio móvel de 3 casas ao redor de qualquer herói ativo. A revelação não encerra a ocultação; a criatura deixa de ser vista ao sair do raio ou ao fim da duração."},
+    {"id": "ignus_fatus", "name": "Ignus Fatus", "emoji": "👻", "icon": "assets/itens/ignus_fatus.png", "price": 45, "item_slot": "bag", "effect": "illusion_lure", "value": 2,
+     "descricao": "Ação bônus. Cria uma imagem fantasmagórica imóvel do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 2 rodadas; o primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."},
+    {"id": "fata_morgana", "name": "Fata Morgana", "emoji": "🪞", "icon": "assets/itens/fata_morgana.png", "price": 120, "item_slot": "bag", "effect": "illusion_lure", "value": 4,
+     "descricao": "Ação bônus. Cria uma imagem realista do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 4 rodadas; antes das ações do herói, pode mover até 6 casas uma vez por turno. O primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."},
     {"id": "solucao_mecanismo", "name": "Solução do Mecanismo", "emoji": "📦", "icon": "assets/itens/solucao_mecanismo.png", "price": 250, "item_slot": "bag", "effect": "disarm_traps_area", "value": 3,
      "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
@@ -11848,6 +11852,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.code = code
         self.connections = {}   # pid -> websocket
         self.players = {}       # pid -> player dict
+        self.illusions = {}     # ilusões temporárias de isca, fora dos saves de campanha
         self.master_pid = None     # pid do mestre humano (Modo Mestre) ou None
         self.master_name = None    # nome do mestre (p/ rejoin)
         self.master_manual_mid = None       # id do monstro na janela Manual (ou None)
@@ -19184,6 +19189,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         candidatos = []
         for target in targets:
             obj = target.get("obj", {})
+            if (target.get("kind") == "illusion"
+                    and obj.get("room_id") != m.get("room_id")):
+                continue
             if (target.get("kind") in {"player", "monster"}
                     and (obj.get("invisivel_sombras") or obj.get("invisivel_magico")
                          or obj.get("oculto_vela"))
@@ -19202,12 +19210,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         limites naturais da coordenação.
         """
         visiveis = [t for t in targets
-                    if t.get("kind") in {"player", "animado"}
+                    if t.get("kind") in {"player", "animado", "illusion"}
                     and t.get("obj", {}).get("pos")]
         if not visiveis or not m.get("pos"):
             return
 
-        escolhido = min(visiveis, key=lambda t: self._monster_target_score(m, t))
+        ilusoes_visiveis = [t for t in visiveis if t.get("kind") == "illusion"]
+        escolhido = min(ilusoes_visiveis or visiveis,
+                        key=lambda t: self._monster_target_score(m, t))
         alvo = escolhido["obj"]
         memoria = {
             "target_id": alvo.get("id"),
@@ -22807,6 +22817,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for a in self._all_animados()
             if not a.get("dominado_por_monstro")
         )
+        self._expire_illusions()
+        alvos.extend({"kind": "illusion", "obj": illusion}
+                     for illusion in self.illusions.values())
         return alvos
 
     def _monster_hostility_matches(self, attacker, target):
@@ -28544,7 +28557,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Efeitos de item que contam como aÃ§Ã£o bÃ´nus (mÃ¡x. 1 por turno).
     BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison",
-                            "veil_shadow", "reveal_traps_potion", "arcane_vigilance_potion", "disarm_traps_area", "invisibility", "speed", "darkness_mantle", "elemental_resistance_potion", "arcane_barrier_potion", "strength_potion", "dexterity_potion", "cure_poison", "cure_petrification", "cure_disease",
+                            "veil_shadow", "reveal_traps_potion", "arcane_vigilance_potion", "illusion_lure", "disarm_traps_area", "invisibility", "speed", "darkness_mantle", "elemental_resistance_potion", "arcane_barrier_potion", "strength_potion", "dexterity_potion", "cure_poison", "cure_petrification", "cure_disease",
                             "constitution_potion", "intelligence_potion", "flight_potion", "archery_potion", "ranged_range_potion", "restore_spell_slot", "meal_survival"}
 
     def _consumir_recursos(self, player, tipo_acao):
@@ -39703,7 +39716,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             slots[pocket_index] = None
         return True
 
-    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None):
+    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None, target_pos=None):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -39730,6 +39743,55 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         effect, val = item["effect"], item.get("value", 0)
+
+        if effect == "illusion_lure":
+            self._expire_illusions()
+            if item_id not in {"ignus_fatus", "fata_morgana"}:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+                return
+            if any(illusion.get("owner_pid") == pid
+                   for illusion in self.illusions.values()):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.uma_ilusao_sua_ainda_esta_ativa")})
+                return
+            pos = p.get("pos") or []
+            try:
+                if (not isinstance(target_pos, (list, tuple)) or len(target_pos) != 2
+                        or any(isinstance(value, bool) for value in target_pos)):
+                    raise ValueError
+                x, y = int(target_pos[0]), int(target_pos[1])
+                if [x, y] != list(target_pos):
+                    raise ValueError
+            except (TypeError, ValueError):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.destino_invalido_casa_livre_ate", alcance=6)})
+                return
+            dentro = (0 <= y < len(self.tiles or [])
+                      and 0 <= x < len(self.tiles[y]))
+            distancia = (max(abs(x - pos[0]), abs(y - pos[1]))
+                         if len(pos) >= 2 else 999)
+            bloqueada = (not dentro or self.tiles[y][x] == WALL
+                         or self._is_closed_door(x, y)
+                         or self._blocks_tile(x, y)) if dentro else True
+            ocupada = (any(alvo.get("id") != pid and alvo.get("alive")
+                           and alvo.get("pos") == [x, y]
+                           for alvo in self.players.values())
+                       or any(monstro.get("hp", 0) > 0
+                              and monstro.get("pos") == [x, y]
+                              for monstro in self.monsters.values())
+                       or any(animado.get("vida_atual", 0) > 0
+                              and animado.get("pos") == [x, y]
+                              for animado in self._all_animados())
+                       or any(illusion.get("pos") == [x, y]
+                              for illusion in self.illusions.values()))
+            los = (dentro and distancia <= 6 and distancia > 0
+                   and self._tem_linha_de_visao(pos, [x, y])
+                   and not self._tall_oclui_caminho(pos[0], pos[1], x, y))
+            if (not dentro or distancia > 6 or distancia <= 0 or bloqueada
+                    or ocupada or not los):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.destino_invalido_casa_livre_ate", alcance=6)})
+                return
 
         # O Cálice só recupera um slot que ainda esteja em recarga. Validar
         # classe e cooldown antes de cobrar ação ou consumir o item evita uso
@@ -39972,6 +40034,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p["lampada_vigilia_arcana_expira_em"] = int(self.round_num or 1) + rodadas
             await self.gm_say(T("narracao.acende_lampada_vigilia_arcana",
                                heroi=p["name"], item=nome_item(item), rodadas=rodadas))
+        elif effect == "illusion_lure":
+            rodadas = max(1, int(val or 1))
+            illusion_id = f"{item_id}_{pid}_{new_id()}"
+            illusion = {
+                "id": illusion_id,
+                "owner_pid": pid,
+                "room_id": p.get("room_id"),
+                "kind": item_id,
+                "pos": [x, y],
+                "created_round": int(self.round_num or 1),
+                "expires_round": int(self.round_num or 1) + rodadas,
+            }
+            self.illusions[illusion_id] = illusion
+            chave = "narracao.usa_ignus_fatus" if item_id == "ignus_fatus" else "narracao.usa_fata_morgana"
+            await self.gm_say(T(chave, heroi=p["name"], rodadas=rodadas))
         elif effect == "disarm_traps_area":
             quantidade = await self._solucao_mecanismo_desarmar_raio(p, raio=3)
             await self.gm_say(T("narracao.usa_solucao_mecanismo",
@@ -43835,6 +43912,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Seleciona o alvo: compulsão > foco coletivo > presa vulnerável > distância."""
         if not targets:
             return None
+        illusion = self._monster_illusion_target(m, targets)
+        if illusion:
+            return illusion
         presente = lambda obj: any(t["obj"] is obj for t in targets)
         rb = self._requiem_forca_bardo(m)
         if rb and presente(rb):
@@ -49628,6 +49708,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def gm_phase(self, only_monster=None):
         """Executa todos os monstros (modo legado) ou somente um, para iniciativa."""
+        self._expire_illusions()
         all_alive_monsters = [m for m in self.monsters.values()
                               if m["hp"] > 0 or self._monster_regenerando_a_zero(m)]
         alive_monsters = ([only_monster] if only_monster is not None else
@@ -49635,7 +49716,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alive_players = [p for p in self.players.values() if self._ativo(p)]
         alive_minions = [a for a in self._all_animados()
                          if not a.get("dominado_por_monstro")]
-        if not alive_monsters or not (alive_players or alive_minions or any(
+        if not alive_monsters or not (alive_players or alive_minions or self.illusions or any(
                 self._monster_retaliation_target(m)
                 or any(self._monster_hostility_matches(m, other)
                        and other.get("room_id") == m.get("room_id")
@@ -49687,6 +49768,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not self._monstro_ativo_em_combate(m):
                 continue
             if not await self._upkeep_inicio_turno_monstro(m, alive_monsters):
+                continue
+            if await self._monster_illusion_turn(m):
+                m.pop("turbilhao_perde_movimento", None)
                 continue
             if await self._monster_search_retaliation(m):
                 m.pop("turbilhao_perde_movimento", None)
@@ -51443,11 +51527,163 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "granted_origem": "crystal_ball",
         }
 
+    def _monster_illusion_target(self, monster, targets=None):
+        """Retorna a isca visível mais próxima para monstros automáticos."""
+        if not monster or monster.get("control_mode") == "manual":
+            return None
+        candidates = targets if targets is not None else self._alvos_hostis_para_monstros()
+        visible = self._alvos_visiveis_para_monstro(monster, candidates)
+        illusions = [target for target in visible
+                     if target.get("kind") == "illusion"]
+        if illusions:
+            target = min(illusions, key=lambda entry: (
+                max(abs(entry["obj"]["pos"][0] - monster["pos"][0]),
+                    abs(entry["obj"]["pos"][1] - monster["pos"][1])),
+                str(entry["obj"].get("id", ""))))
+            target["pursuit_pos"] = list(target["obj"]["pos"])
+            return target
+        seen = monster.get("ai_last_seen") or {}
+        illusion = self.illusions.get(str(seen.get("target_id")))
+        try:
+            remembered_recently = int(self.round_num) - int(seen.get("round", -1)) <= 3
+        except (TypeError, ValueError):
+            remembered_recently = False
+        if (illusion and remembered_recently
+                and seen.get("room_id") == monster.get("room_id")
+                and isinstance(seen.get("pos"), list)):
+            return {"kind": "illusion", "obj": illusion,
+                    "pursuit_pos": list(seen["pos"]), "remembered": True}
+        return None
+
+    async def _monster_illusion_turn(self, monster):
+        """Pursue an illusion; an attack attempt consumes this monster's turn."""
+        target = self._monster_illusion_target(monster)
+        if not target:
+            return False
+        illusion = target["obj"]
+        if not target.get("remembered"):
+            self._monster_remember_visible_targets(monster, [target])
+        attacks = monster.get("attacks") or [{}]
+        can_attack = (not target.get("remembered") and any(
+            self._monster_attack_in_range(monster, illusion.get("pos", []), attack)
+            for attack in attacks))
+        if can_attack:
+            self._remove_illusion(illusion.get("id"))
+            await self.gm_say(T("narracao.monstro_ataca_a_ilusao", monstro=nome_criatura(monster)))
+            await self.push_state()
+            return True
+
+        goal = (list(target.get("pursuit_pos") or illusion["pos"])
+                if target.get("remembered") else self._monster_melee_goal(monster, target))
+        if goal:
+            await self._monster_move_to_goal(monster, goal)
+        else:
+            await self._monster_move_to_goal(monster, list(illusion["pos"]))
+        return True
+
+    async def handle_move_illusion(self, pid, illusion_id, target_pos=None):
+        """Apply the owner's one Fata Morgana movement order for this round."""
+        self._expire_illusions()
+        illusion = self.illusions.get(str(illusion_id))
+        player = self.players.get(pid)
+        if (not player or not self._ativo(player) or not self._is_turn(pid)
+                or not illusion or illusion.get("owner_pid") != pid
+                or illusion.get("kind") != "fata_morgana"
+                or player.get("moved_this_turn") or player.get("action_done")
+                or illusion.get("move_order_round") == self.round_num):
+            if player:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+            return False
+
+        if target_pos is not None:
+            try:
+                if (not isinstance(target_pos, (list, tuple)) or len(target_pos) != 2
+                        or any(isinstance(value, bool) for value in target_pos)):
+                    raise ValueError
+                x, y = int(target_pos[0]), int(target_pos[1])
+                if [x, y] != list(target_pos):
+                    raise ValueError
+            except (TypeError, ValueError):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+                return False
+
+            start = tuple(illusion.get("pos", []))
+            goal = (x, y)
+            if (len(start) != 2 or not (0 <= x < self.map_w and 0 <= y < self.map_h)
+                    or goal == start):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+                return False
+
+            def blocked(px, py):
+                if (self._blocks_tile(px, py) or self._is_closed_door(px, py)):
+                    return True
+                if any(other.get("alive") and other.get("room_id") == illusion.get("room_id")
+                       and other.get("pos") == [px, py]
+                       for other in self.players.values()):
+                    return True
+                if any(other.get("hp", 0) > 0
+                       and other.get("room_id") == illusion.get("room_id")
+                       and (px, py) in {tuple(tile) for tile in self._monster_tiles(other)}
+                       for other in self.monsters.values()):
+                    return True
+                return False
+
+            queue = [start]
+            previous = {start: None}
+            for current in queue:
+                if current == goal:
+                    break
+                for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                    nxt = (current[0] + dx, current[1] + dy)
+                    if (nxt in previous or not (0 <= nxt[0] < self.map_w
+                                                 and 0 <= nxt[1] < self.map_h)
+                            or blocked(*nxt)):
+                        continue
+                    previous[nxt] = current
+                    queue.append(nxt)
+            if goal not in previous:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+                return False
+            path = []
+            step = goal
+            while step != start:
+                path.append(step)
+                step = previous[step]
+            if len(path) > 6:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")})
+                return False
+            illusion["pos"] = [x, y]
+
+        illusion["move_order_round"] = int(self.round_num)
+        await self.push_state()
+        return True
+
+    def _remove_illusion(self, illusion_id):
+        illusion = self.illusions.pop(illusion_id, None)
+        if not illusion:
+            return None
+        for monster in self.monsters.values():
+            seen = monster.get("ai_last_seen")
+            if isinstance(seen, dict) and str(seen.get("target_id")) == str(illusion_id):
+                monster.pop("ai_last_seen", None)
+        return illusion
+
+    def _expire_illusions(self):
+        round_num = int(getattr(self, "round_num", 1) or 1)
+        for illusion_id, illusion in list(self.illusions.items()):
+            try:
+                expires_round = int(illusion.get("expires_round", 0) or 0)
+            except (TypeError, ValueError):
+                expires_round = 0
+            if expires_round <= round_num:
+                self._remove_illusion(illusion_id)
+
     def _game_state_payload(self, combat_damage_events=None, resistance_events=None,
                             positive_effect_events=None):
         """Dict de `game_state` desta sala. Puro: não faz await nem broadcast.
         Espelha o par _city_state_payload/broadcast_city_state. A prévia do
         editor consome este payload sem passar por nenhum jogador."""
+        self._expire_illusions()
         self._atualizar_zonas_moveis()
         self._ensure_utility_belt_tokens()
         # Slots cuja rodada de recarga já chegou não devem continuar ocupando
@@ -51570,6 +51806,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "door_conditions": self._serializar_condicoes_portas(),
             "players": players_state,
             "monsters": monsters_state,
+            "illusions": [dict(illusion, pos=list(illusion.get("pos") or []))
+                          for illusion in self.illusions.values()],
             "corpses": list(self.corpses.values()),
             "hero_corpses": list(self.hero_corpses.values()),
             "traps": [dict(t, vela_revelada=self._vela_reveladora_cobre_pos(t["pos"]))
@@ -52961,7 +53199,12 @@ async def handler(ws):
                 elif t == "use_item":
                     if room:
                         await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"),
-                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"))
+                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"), msg.get("target_pos"))
+
+                elif t == "move_illusion":
+                    if room:
+                        await room.handle_move_illusion(pid, msg.get("illusion_id"),
+                                                        msg.get("target_pos"))
 
                 elif t == "use_crystal_ball":
                     if room: await room.handle_use_crystal_ball(pid, msg)

@@ -3654,6 +3654,10 @@ window.LANG_INTERFACE = {
     "en": "🌪️ Create whirlpools",
     "pt": "🌪️ Criar redemoinhos"
   },
+  "ui.hud.preparando": {
+    "en": "PREPARING",
+    "pt": "PREPARANDO"
+  },
   "ui.hud.critico": {
     "en": "CRITICAL!",
     "pt": "CRÍTICO!"
@@ -8088,6 +8092,38 @@ window.LANG_INTERFACE = {
     "en": "Trap disarm cancelled.",
     "pt": "Desarme de armadilha cancelado."
   },
+  "ui.ilusao.colocar_titulo": {
+    "en": "PLACE PHANTOM",
+    "pt": "POSICIONAR ILUSÃO"
+  },
+  "ui.ilusao.colocar_instrucao": {
+    "en": "Choose a free, visible tile within 6 squares.",
+    "pt": "Escolha uma casa livre e visível a até 6 quadrados."
+  },
+  "ui.ilusao.mover_titulo": {
+    "en": "MOVE FATA MORGANA",
+    "pt": "MOVER FATA MORGANA"
+  },
+  "ui.ilusao.mover_instrucao": {
+    "en": "Choose a reachable tile up to 6 steps away, or skip.",
+    "pt": "Escolha uma casa alcançável a até 6 passos ou pule o movimento."
+  },
+  "ui.ilusao.casa_valida": {
+    "en": "Valid tile",
+    "pt": "Casa válida"
+  },
+  "ui.ilusao.casa_invalida": {
+    "en": "Choose a highlighted free tile.",
+    "pt": "Escolha uma casa livre destacada."
+  },
+  "ui.ilusao.cancelado": {
+    "en": "Phantom selection canceled.",
+    "pt": "Seleção da ilusão cancelada."
+  },
+  "ui.ilusao.pular": {
+    "en": "Stay still",
+    "pt": "Ficar parada"
+  },
   "ui.mira.esc_cancelar": {
     "en": "ESC · CANCEL",
     "pt": "ESC · CANCELAR"
@@ -11099,6 +11135,22 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.antes_de_fundir": {
     "en": "Before merging the sequel",
     "pt": "Antes de juntar a continuação"
+  },
+  "ui.grimorio.selo": {
+    "en": "GRIMOIRE",
+    "pt": "GRIMÓRIO"
+  },
+  "ui.grimorio.selo_titulo": {
+    "en": "Spell granted by the equipped grimoire",
+    "pt": "Magia concedida pelo grimório equipado"
+  },
+  "ui.grimorio.magias_fixas": {
+    "en": "Fixed spells: {nomes}.",
+    "pt": "Magias fixas: {nomes}."
+  },
+  "ui.magia.sem_slot_circulo": {
+    "en": "no slot of this circle",
+    "pt": "sem slot deste círculo"
   },
   "ui.save.ponto.manual": {
     "en": "Save · {local}",

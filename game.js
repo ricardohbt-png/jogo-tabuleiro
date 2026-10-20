@@ -3295,7 +3295,7 @@ function _renderRepairItems(){
 function _itemDesc(item){
   if(item.effect === 'grimoire'){
     const nomes = (item.magic_ids || []).map(id => GRIMORIO_CLIENT[id]?.nome || id);
-    return item.descricao || (nomes.length ? `Magias fixas: ${nomes.join(', ')}.` : item.name || '');
+    return item.descricao || (nomes.length ? t('ui.grimorio.magias_fixas', {nomes: nomes.join(', ')}) : item.name || '');
   }
   if(item.effect === 'learn_spell'){
     const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
@@ -3390,8 +3390,15 @@ function _itemDesc(item){
     return t('ui.item.desc.cura_total');
   if(item.effect==='veil_shadow')
     return item.descricao || t('ui.item.acao_bonus_fica_oculto_ate_o_fim_do_turno');
+  const rotuloEfeito=_rotulo(item.effect, 'ui.item.efeito', '');
+  if(!rotuloEfeito){
+    // Efeito sem rótulo traduzido: mostrar o id técnico (ex.: ILLUSION_LURE) vazaria
+    // inglês na lista da loja. Prefere a descrição do item e depois a do catálogo.
+    const descricao=item.descricao || ((typeof GS!=='undefined' && GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {}).descricao;
+    if(descricao) return descricao;
+  }
   const v=item.value?` ${item.value}`:'';
-  return _rotulo(item.effect, 'ui.item.efeito', item.effect||'')+v;
+  return (rotuloEfeito || item.effect || '')+v;
 }
 
 function buyItem(shop, itemId){
@@ -5635,6 +5642,7 @@ function handleGameState(msg){
   _start2DHighlightLoop();
   renderStory();   // Fase 4b: abertura da fase (sobre o tabuleiro; não bloqueia)
   if(typeof InventoryModal !== 'undefined') InventoryModal.refresh();
+  _promptarMovimentoIlusao(msg);
 }
 
 let _cooperativeMarkerMode = null;
@@ -12750,6 +12758,8 @@ function renderMap(state){
   _protetorDraw2D(ctx, state, visionSet, false, performance.now());
   _desenharEcosDolorososAura2D(ctx, state, performance.now(), exploredSet);
 
+  _drawIllusions2D(ctx,state,visionSet);
+
   // ── Players: base disc then hero sprite
   // 2D-PLAYERS
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -15340,7 +15350,7 @@ function _attackFeedbackTargetName(msg){
 }
 
 function _attackFeedbackResultLabel(f){
-  if(!f.result || _attackFeedbackAguardaGolpe(f)) return 'PREPARANDO';
+  if(!f.result || _attackFeedbackAguardaGolpe(f)) return t('ui.hud.preparando');
   if(f.area) return t('ui.hud.resultado_area');
   if(f.natural_critical) return t('ui.hud.20_natural_critico');
   if(f.natural_fumble) return t('ui.hud.1_natural_falha');
@@ -21146,7 +21156,7 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo, origemGr
       <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; line-height:1; overflow:hidden; border-radius:3px;">${usada ? '💤' : magiaIconFill(m)}</div>
       <div style="position:absolute; top:3px; right:3px; width:8px; height:8px; border-radius:50%; background:${cor}; opacity:${usada ? 0.3 : 1}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>
       ${selecionada ? `<div style="position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:${cor}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>` : ''}
-      ${origemGrimorio ? `<span title="Magia concedida pelo grimório equipado" style="position:absolute; left:2px; bottom:2px; padding:1px 3px; border-radius:2px; background:#172438e8; color:#9fc9ff; font:7px sans-serif; z-index:3;">GRIMÓRIO</span>` : ''}
+      ${origemGrimorio ? `<span title="${t('ui.grimorio.selo_titulo')}" style="position:absolute; left:2px; bottom:2px; padding:1px 3px; border-radius:2px; background:#172438e8; color:#9fc9ff; font:7px sans-serif; z-index:3;">${t('ui.grimorio.selo')}</span>` : ''}
     </div>
   `;
 }
@@ -21621,7 +21631,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       <div style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
-          <span style="color:${limite === 0 && temMagiaDoLivro ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${limite === 0 && temMagiaDoLivro ? 'sem slot deste círculo' : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
+          <span style="color:${limite === 0 && temMagiaDoLivro ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${limite === 0 && temMagiaDoLivro ? t('ui.magia.sem_slot_circulo') : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
@@ -23125,6 +23135,12 @@ function _aimPreviewNone() {
 // o movimento/tooltip normal do tabuleiro).
 function _aimPreviewAt(tx, ty, { event = null, tip = null } = {}) {
   const dica = tip || document.getElementById('tooltip');
+  if(_illusionMode){
+    const valid=_illusionMode.valid?.has(`${tx},${ty}`);
+    _aimSetHover(tx,ty,valid?'valid':'blocked');
+    _aimSetStatus(valid?t('ui.ilusao.casa_valida'):t('ui.ilusao.casa_invalida'),valid?'#94dfb0':'#ff9aa2');
+    return true;
+  }
   if (window._modoDirecaoInstrumento) {
     const mode=window._modoDirecaoInstrumento;
     _aimSetHoverFromSets(tx, ty);
@@ -28853,12 +28869,208 @@ function _syncSolucaoMecanismoPreview3D(state){
   }
 }
 
+let _illusionMode = null;
+let _illusionPromptKey = null;
+const _illusion2DImages = {};
+const _illusion3DTextures = {};
+
+function _illusionWalkable(state, x, y){
+  const H = state?.tiles?.length || 0, W = state?.tiles?.[0]?.length || 0;
+  if(x < 0 || y < 0 || x >= W || y >= H) return false;
+  const tile = state.tiles[y][x], key = `${x},${y}`;
+  if(tile === GS.TILE_FLOOR) return true;
+  if(tile !== GS.TILE_DOOR || (GS.doorSets(state).closed || new Set()).has(key)) return false;
+  return true;
+}
+
+function _illusionTileBlocked(state, x, y){
+  const key=`${x},${y}`;
+  if(state.materiais?.[key]==='entulho') return true;
+  return (state.decorations||[]).some(d=>d&&d.special!=='wall'&&!d.pisavel&&!d.queimando
+    &&(GS.decorTilesOf(d)||[]).some(([tx,ty])=>tx===x&&ty===y));
+}
+
+function _illusionTileOccupied(state, x, y){
+  if((state.players||[]).some(p=>p.alive && p.pos?.[0]===x && p.pos?.[1]===y)) return true;
+  if((state.monsters||[]).some(m=>m.hp>0
+    && (GS.monsterTiles(m)||[]).some(([tx,ty])=>tx===x&&ty===y))) return true;
+  if((state.players||[]).some(p=>(p.animados||[]).some(a=>a.vida_atual>0&&a.pos?.[0]===x&&a.pos?.[1]===y))) return true;
+  return (state.illusions||[]).some(i=>i.pos?.[0]===x&&i.pos?.[1]===y);
+}
+
+function _illusionPlacementTiles(state, me){
+  const out = new Set();
+  if(!state?.tiles || !me?.pos) return out;
+  for(let y=0;y<state.tiles.length;y++) for(let x=0;x<(state.tiles[y]?.length||0);x++){
+    const distance = Math.max(Math.abs(x-me.pos[0]),Math.abs(y-me.pos[1]));
+    if(distance<1 || distance>6 || !_illusionWalkable(state,x,y)
+      || _illusionTileBlocked(state,x,y)||_illusionTileOccupied(state,x,y)
+      || !GS.hasLineOfSight(state,me.pos[0],me.pos[1],x,y,me)) continue;
+    out.add(`${x},${y}`);
+  }
+  return out;
+}
+
+function _illusionReachableTiles(state, illusion){
+  const out = new Set(), start = illusion?.pos;
+  if(!state?.tiles || !Array.isArray(start)) return out;
+  const queue = [{x:start[0],y:start[1],steps:0}], seen = new Set([`${start[0]},${start[1]}`]);
+  for(let i=0;i<queue.length;i++){
+    const cur=queue[i];
+    for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
+      const x=cur.x+dx,y=cur.y+dy,key=`${x},${y}`;
+      if(seen.has(key)||cur.steps>=6||!_illusionWalkable(state,x,y)
+        ||_illusionTileBlocked(state,x,y)||_illusionTileOccupied(state,x,y)) continue;
+      seen.add(key);out.add(key);queue.push({x,y,steps:cur.steps+1});
+    }
+  }
+  return out;
+}
+
+function _iniciarMiraIlusao(kind, itemId){
+  const state=GS.gameState, me=state?.players?.find(p=>p.id===GS.myPid&&p.alive);
+  if(!me) return;
+  const placement=kind==='placement';
+  const illusion=placement?null:(state.illusions||[]).find(i=>String(i.id)===String(itemId));
+  const valid=placement?_illusionPlacementTiles(state,me):_illusionReachableTiles(state,illusion);
+  const mode={kind:placement?'placement':'movement',itemId,illusionId:illusion?.id,valid};
+  const skip=()=>_pularMovimentoIlusao();
+  _aimStart({
+    kind:placement?'illusion_placement':'illusion_movement',
+    title:t(placement?'ui.ilusao.colocar_titulo':'ui.ilusao.mover_titulo'),
+    instruction:t(placement?'ui.ilusao.colocar_instrucao':'ui.ilusao.mover_instrucao'),
+    color:placement?'#bca8ff':'#d4c6ff',
+    targetLabel:t('ui.ilusao.casa_valida'),
+    cancelText:t('ui.ilusao.cancelado'),
+    range:valid,
+    confirm:placement?null:skip,
+    confirmText:placement?'':t('ui.ilusao.pular'),
+    cleanup:()=>{ if(_illusionMode===mode) _illusionMode=null; },
+  });
+  _illusionMode=mode;
+  const start=valid.values().next().value;
+  if(start){ const [x,y]=start.split(',').map(Number); _aimSetHover(x,y,'valid'); }
+}
+
+function _clickTileIlusao(x,y){
+  const mode=_illusionMode, key=`${x},${y}`;
+  if(!mode) return false;
+  if(!mode.valid?.has(key)){
+    _aimSetHover(x,y,'blocked');
+    _aimSetStatus(t('ui.ilusao.casa_invalida'),'#ff9aa2');
+    return true;
+  }
+  if(mode.kind==='placement') send({type:'use_item',item_id:mode.itemId,target_pos:[x,y]});
+  else send({type:'move_illusion',illusion_id:mode.illusionId,target_pos:[x,y]});
+  _aimEnd({silent:true,reason:'confirmed'});
+  return true;
+}
+
+function _pularMovimentoIlusao(){
+  if(_illusionMode?.kind!=='movement') return false;
+  send({type:'move_illusion',illusion_id:_illusionMode.illusionId,target_pos:null});
+  _aimEnd({silent:true,reason:'skipped'});
+  return true;
+}
+
+function _teclaModoIlusao(event){
+  if(!_illusionMode) return;
+  if(event.key==='Escape'){ _aimEnd({silent:true}); event.preventDefault(); event.stopImmediatePropagation(); return; }
+  if(event.key===' ' && _illusionMode.kind==='movement'){
+    _pularMovimentoIlusao(); event.preventDefault(); event.stopImmediatePropagation(); return;
+  }
+  if(event.key==='Enter'){
+    const cursor=window._spellHL?.hover?.key?.split(',').map(Number)||_gamepadEnsureCursor(GS.gameState);
+    if(cursor) _clickTileIlusao(cursor[0],cursor[1]);
+    event.preventDefault(); event.stopImmediatePropagation(); return;
+  }
+  const dir={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]}[event.key];
+  if(!dir) return;
+  const state=GS.gameState,cursor=_gamepadEnsureCursor(state);
+  if(cursor&&_aimGamepadStep(state,dir[0],dir[1])) event.preventDefault();
+  event.stopImmediatePropagation();
+}
+document.addEventListener('keydown',_teclaModoIlusao,true);
+
+function _promptarMovimentoIlusao(state){
+  if(_illusionMode?.kind==='movement'){
+    const me=(state?.players||[]).find(p=>p.id===GS.myPid);
+    const stillEligible=state?.current_turn===GS.myPid&&GS.isMyTurn
+      &&!me?.moved_this_turn&&!me?.action_done;
+    if(!stillEligible) _aimEnd({silent:true,reason:'turn_changed'});
+  }
+  if(_illusionMode||!state||state.phase!=='playing'||!GS.isMyTurn
+    ||state.current_turn!==GS.myPid||state.animados_turn===GS.myPid) return;
+  const me=(state.players||[]).find(p=>p.id===GS.myPid&&p.alive);
+  if(!me||me.moved_this_turn||me.action_done) return;
+  const illusion=(state.illusions||[]).find(i=>i.owner_pid===GS.myPid
+    &&i.kind==='fata_morgana'&&i.move_order_round!==state.round_num);
+  if(!illusion) return;
+  const key=`${illusion.id}:${state.round_num}`;
+  if(_illusionPromptKey===key) return;
+  _illusionPromptKey=key;
+  _iniciarMiraIlusao('movement',illusion.id);
+}
+
+function _getIllusion2DImg(imageName){
+  if(!_illusion2DImages[imageName]){
+    const img=new Image();img.onload=()=>GS.gameState&&renderMap(GS.gameState);
+    img.src=_assetURL(`assets/itens/${imageName}`);_illusion2DImages[imageName]=img;
+  }
+  const img=_illusion2DImages[imageName];
+  return img.complete&&img.naturalWidth?img:null;
+}
+
+function _drawIllusions2D(ctx,state,visionSet){
+  for(const illusion of state.illusions||[]){
+    const [x,y]=illusion.pos||[];
+    if(!Number.isFinite(x)||!Number.isFinite(y)
+      ||(illusion.owner_pid!==GS.myPid&&!GS.isMaster()&&!visionSet.has(`${x},${y}`))) continue;
+    const image=_getIllusion2DImg(`${illusion.kind}.png`);
+    if(!image) continue;
+    const w=CELL*.88,h=w*(image.naturalHeight/image.naturalWidth);
+    ctx.save();ctx.globalAlpha=illusion.kind==='ignus_fatus'?.48:.96;
+    ctx.drawImage(image,x*CELL+(CELL-w)/2,(y+1)*CELL-h+CELL*.04,w,h);ctx.restore();
+  }
+}
+
+function _syncIllusions3D(state,visionSet){
+  if(!g3?.scene||!g3.T) return;
+  if(!g3.illusionSprites) g3.illusionSprites={};
+  const wanted=new Set(),T=g3.T;
+  for(const illusion of state.illusions||[]){
+    const [x,y]=illusion.pos||[],id=String(illusion.id);
+    if(!Number.isFinite(x)||!Number.isFinite(y)
+      ||(illusion.owner_pid!==GS.myPid&&!GS.isMaster()&&!visionSet.has(`${x},${y}`))) continue;
+    wanted.add(id);let sprite=g3.illusionSprites[id];
+    if(!sprite){
+      const file=`${illusion.kind}.png`;
+      let texture=_illusion3DTextures[file];
+      if(!texture){texture=new T.TextureLoader().load(_assetURL(`assets/itens/${file}`));
+        texture._shared=true;_illusion3DTextures[file]=texture;}
+      sprite=new T.Sprite(new T.SpriteMaterial({map:texture,transparent:true,depthWrite:false,
+        opacity:illusion.kind==='ignus_fatus'?.48:.96}));
+      sprite.scale.set(.78,1.02,1);sprite.renderOrder=45;sprite.userData.noRay=true;
+      sprite.userData.illusionId=id;g3.scene.add(sprite);g3.illusionSprites[id]=sprite;
+    }
+    sprite.position.set(x,topoSuperficie3D(state,x,y,.22)+.52,y);
+    sprite.material.opacity=illusion.kind==='ignus_fatus'?.48:.96;
+  }
+  for(const [id,sprite] of Object.entries(g3.illusionSprites)) if(!wanted.has(id)){
+    g3.scene.remove(sprite);sprite.material?.dispose();delete g3.illusionSprites[id];
+  }
+}
+
 function useItem(itemId, targetId, sourceInfo){
   if(targetId === undefined){
     const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
     const it = sourceInfo?.source === 'utility_belt'
       ? me?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
       : me && (me.bag || []).find(b => b.id === itemId);
+    if(it?.effect==='illusion_lure'){
+      _iniciarMiraIlusao('placement',itemId);
+      return;
+    }
     if(it?.effect === 'disarm_traps_area'){
       _iniciarPreviewSolucaoMecanismo(itemId, sourceInfo);
       return;
@@ -31865,6 +32077,7 @@ function _gamepadToggleMainMenu(){
 function _gamepadCancel(){
   _clearGamepadEndTurnConfirm();
   _gamepadRumble('cancel');
+  if(_illusionMode?.kind==='movement'){ _pularMovimentoIlusao(); return; }
   if(_cancelCooperativeMarkerTarget()){ _gamepadSetUiFocus($('cooperative-marker-toggle')); return; }
   if(_sidePanelClose()) return;
   if(_gmLogPanelClose()) return;
@@ -49855,6 +50068,7 @@ function renderMap3D(state){
     exploredSet = new Set(visionSet);
     terrainSet = new Set(visionSet);
   }
+  _syncIllusions3D(state,visionSet);   // depois de visionSet existir (TDZ)
   _syncBruma3D(terrainSet);
 
   // Reachable tiles (movement highlight)
@@ -55499,6 +55713,7 @@ function handleTileClick(tx, ty){
   if(_cooperativeMarkerMode){ _handleCooperativeMarkerTarget(tx, ty); return; }
   getAudioContext();
   if(!podeReceberInput()) return;   // bloqueia input durante a animação de movimento
+  if(_illusionMode){ _clickTileIlusao(tx,ty); return; }
   if(window._modoPlacementArmadilha){ onClickTileParaArmadilha(tx, ty); return; }
   // Durante a mira de uma magia do herói-teste, o clique pertence à magia
   // mesmo que caia sobre um monstro/peão; o painel do Mestre só pode capturar
