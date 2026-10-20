@@ -3588,6 +3588,8 @@ FOTO_SALA_CATEGORIAS = {
     "location_scene_trigger": "jogo_salvo", "refugio_state": "jogo_salvo",
     "hero_rooms": "jogo_salvo", "turn_timer_enabled": "jogo_salvo",
     "visao_compartilhada_permitida": "jogo_salvo", "atravessar_aliados": "jogo_salvo",
+    "velocidade_inimigos": "jogo_salvo", "ritmo_auto_segundos": "jogo_salvo",
+    "_ritmo_coletor": "efemero", "_ritmo_evento": "efemero",
     "savegame": "jogo_salvo", "savegame_id": "jogo_salvo", "master_name": "jogo_salvo",
     "shop_scrolls": "jogo_salvo",
     # derivados
@@ -3731,6 +3733,26 @@ def _conta_participa(sg, conta):
                          or conta in (sg.get("members") or {})
                          or sg.get("master_account") == conta)
 
+# Velocidade do turno dos inimigos: "atual" não muda nada; "lento"/"muito_lento"
+# seguram a fila por alguns segundos depois de cada monstro que atacou; "passo"
+# (só no Solo) espera o clique do jogador, com um teto para nunca travar.
+RITMO_NIVEIS = ("atual", "lento", "muito_lento", "passo")
+RITMO_SEGUNDOS = {"lento": 3, "muito_lento": 6}
+RITMO_AUTO_OPCOES = (0, 3, 6, 10)
+RITMO_TETO_CLIQUE_S = 90
+
+
+def _ritmo_de_save(sg):
+    """(nível, tempo automático) lidos de um jogo salvo; valor ruim cai no padrão."""
+    nivel = (sg or {}).get("velocidade_inimigos", "atual")
+    if nivel not in RITMO_NIVEIS:
+        return "atual", 0
+    auto = (sg or {}).get("ritmo_auto_segundos", 0)
+    if nivel != "passo" or auto not in RITMO_AUTO_OPCOES:
+        auto = 0
+    return nivel, auto
+
+
 def try_open_savegame_room(account, sid, rooms):
     """Abre uma GameRoom retomando um savegame. Retorna (room, None) ou (None, erro)."""
     if not account:
@@ -3768,6 +3790,7 @@ def try_open_savegame_room(account, sid, rooms):
     room.turn_timer_enabled = sg.get("turn_timer_enabled", True) is not False
     room.visao_compartilhada_permitida = sg.get("visao_compartilhada_permitida", True) is not False
     room.atravessar_aliados = sg.get("atravessar_aliados", False) is True
+    room.velocidade_inimigos, room.ritmo_auto_segundos = _ritmo_de_save(sg)
     room.world_location = sg.get("world_location", "alva_e_luz") if sg.get("world_location") in WORLD_LOCATIONS else "alva_e_luz"
     try: room.renome = max(0, int(sg.get("renome", 0)))
     except (TypeError, ValueError): room.renome = 0
@@ -11995,6 +12018,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # pode passar pela casa de herói/servo/prisioneiro liberto, mas nunca
         # terminar nela (handle_move_path e irmãos).
         self.atravessar_aliados = False
+        # Ritmo do turno dos inimigos (só o anfitrião muda; ver RITMO_NIVEIS).
+        self.velocidade_inimigos = "atual"
+        self.ritmo_auto_segundos = 0
+        self._ritmo_coletor = None    # ataques do monstro que age agora (efêmero)
+        self._ritmo_evento = None     # espera pendente da faixa (efêmero)
         self._ultima_foto = None   # última foto da masmorra gravada (Etapa 2 do salvamento)
         self._foto_pendente = None  # foto lida do jogo salvo, aplicada no start_game
         self.MASTER_MANUAL_MOVE = 5       # passos por turno de um monstro em modo Manual
@@ -13322,6 +13350,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
             "atravessar_aliados": self.atravessar_aliados,
+            "velocidade_inimigos": self.velocidade_inimigos,
+            "ritmo_auto_segundos": self.ritmo_auto_segundos,
             "tem_jogo_salvo": self.savegame is not None,
             "players": players_city,
             "world": {
@@ -13829,6 +13859,36 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._checkpoint_savegame()
         if self.phase == "playing": await self.push_state()
         elif self.phase == "city": await self.broadcast_city_state()
+
+    async def handle_set_velocidade_inimigos(self, pid, nivel, auto_segundos=0):
+        """Anfitrião escolhe o ritmo do turno dos inimigos (regra da sala).
+        O passo a passo (espera o clique) só existe no Solo, para nunca travar
+        um grupo; o tempo automático só vale nele."""
+        if not self._eh_anfitriao(pid):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.somente_o_anfitriao_pode_alterar_velocidade")}); return
+        if nivel not in RITMO_NIVEIS:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.velocidade_invalida")}); return
+        if nivel == "passo" and not self._jogo_salvo_solo():
+            await self.send_to(pid, {"type": "error", "msg": T("erro.passo_a_passo_so_no_solo")}); return
+        auto = auto_segundos if (nivel == "passo" and auto_segundos in RITMO_AUTO_OPCOES) else 0
+        self.velocidade_inimigos = nivel
+        self.ritmo_auto_segundos = auto
+        self._ritmo_liberar()    # mudar o nível solta uma espera em andamento
+        self._checkpoint_savegame()
+        if self.phase == "playing": await self.push_state()
+        elif self.phase == "city": await self.broadcast_city_state()
+
+    def _ritmo_liberar(self):
+        """Solta a espera pendente da faixa de resumo (se houver)."""
+        ev = getattr(self, "_ritmo_evento", None)
+        if ev is not None:
+            ev.set()
+
+    async def handle_continuar_turno_inimigo(self, pid):
+        """Clique em 'Continuar' da faixa de resumo (só vale no passo a passo)."""
+        if self.velocidade_inimigos != "passo" or pid not in self.connections:
+            return
+        self._ritmo_liberar()
 
     def _gerar_loja_pergaminhos(self):
         """Renova o estoque de pergaminhos do mercador: uma MISTURA de básicos
@@ -26625,6 +26685,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.savegame["turn_timer_enabled"] = self.turn_timer_enabled
         self.savegame["visao_compartilhada_permitida"] = self.visao_compartilhada_permitida
         self.savegame["atravessar_aliados"] = self.atravessar_aliados
+        self.savegame["velocidade_inimigos"] = self.velocidade_inimigos
+        self.savegame["ritmo_auto_segundos"] = self.ritmo_auto_segundos
         self.savegame["refugio"] = deepcopy(self.refugio_state)
         self.savegame["hero_rooms"] = deepcopy(self.hero_rooms)
         write_savegame(self.savegame)
@@ -52025,6 +52087,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
             "atravessar_aliados": self.atravessar_aliados,
+            "velocidade_inimigos": self.velocidade_inimigos,
+            "ritmo_auto_segundos": self.ritmo_auto_segundos,
             "tem_jogo_salvo": self.savegame is not None,
             "master_manual_mid": self.master_manual_mid or self.command_control_mid or self.mind_control_mid,
             "master_manual_reach": (
@@ -52548,6 +52612,7 @@ MENSAGENS_DA_CONEXAO = frozenset({
     "salvar_e_sair", "salvar_ponto", "set_turn_timer", "set_visao_compartilhada",
     "cooperative_vision_preference",
     "set_atravessar_aliados", "start_scene",
+    "set_velocidade_inimigos", "continuar_turno_inimigo",
     "carregar_ponto", "apagar_ponto", "novo_capitulo", "arquivar_jogo",
 })
 _PREFIXOS_DA_CONEXAO = ("mestre_", "teste_", "upload_", "save_", "load_")
@@ -53588,6 +53653,12 @@ async def handler(ws):
 
                 elif t == "set_atravessar_aliados":
                     if room: await room.handle_set_atravessar_aliados(pid, msg.get("enabled") is True)
+
+                elif t == "set_velocidade_inimigos":
+                    if room: await room.handle_set_velocidade_inimigos(pid, msg.get("nivel"), msg.get("auto_segundos", 0))
+
+                elif t == "continuar_turno_inimigo":
+                    if room: await room.handle_continuar_turno_inimigo(pid)
 
                 elif t == "salvar_e_sair":
                     if room: await room.handle_salvar_e_sair(pid)

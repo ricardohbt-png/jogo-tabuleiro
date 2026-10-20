@@ -2153,6 +2153,18 @@ window.LANG_ERROS = {
     "en": "Only the host can change passing through allies.",
     "pt": "Somente o anfitrião pode alterar a passagem por aliados."
   },
+  "erro.somente_o_anfitriao_pode_alterar_velocidade": {
+    "en": "Only the host can change the enemy turn speed.",
+    "pt": "Somente o anfitrião pode alterar a velocidade do turno dos inimigos."
+  },
+  "erro.velocidade_invalida": {
+    "en": "Invalid enemy turn speed.",
+    "pt": "Velocidade do turno dos inimigos inválida."
+  },
+  "erro.passo_a_passo_so_no_solo": {
+    "en": "Step-by-step enemy turns are only available in solo games.",
+    "pt": "O turno dos inimigos passo a passo só existe em jogos solo."
+  },
   "erro.voce_nao_faz_parte_deste_jogo": {
     "en": "You are not part of this game.",
     "pt": "Você não faz parte deste jogo."
