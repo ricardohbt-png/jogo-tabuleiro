@@ -13359,6 +13359,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "atravessar_aliados": self.atravessar_aliados,
             "velocidade_inimigos": self.velocidade_inimigos,
             "ritmo_auto_segundos": self.ritmo_auto_segundos,
+            "ritmo_passo_permitido": bool(self._jogo_salvo_solo()),
             "tem_jogo_salvo": self.savegame is not None,
             "players": players_city,
             "world": {
@@ -52231,6 +52232,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "atravessar_aliados": self.atravessar_aliados,
             "velocidade_inimigos": self.velocidade_inimigos,
             "ritmo_auto_segundos": self.ritmo_auto_segundos,
+            "ritmo_passo_permitido": bool(self._jogo_salvo_solo()),
             "tem_jogo_salvo": self.savegame is not None,
             "master_manual_mid": self.master_manual_mid or self.command_control_mid or self.mind_control_mid,
             "master_manual_reach": (

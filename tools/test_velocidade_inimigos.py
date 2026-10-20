@@ -91,6 +91,9 @@ async def main():
     r2 = await sala(solo=True)
     r2.phase = "city"
     check("vai no city_state", r2._city_state_payload().get("velocidade_inimigos") == "atual")
+    check("payloads dizem se o passo a passo é permitido (Solo)",
+          r2._city_state_payload().get("ritmo_passo_permitido") is True
+          and (await sala(solo=False))._game_state_payload().get("ritmo_passo_permitido") is False)
 
     print("\n[5] Mensagens da conexão e despacho")
     check("set_velocidade_inimigos fala pela conexão", "set_velocidade_inimigos" in S.MENSAGENS_DA_CONEXAO)

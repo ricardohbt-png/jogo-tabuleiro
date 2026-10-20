@@ -10991,6 +10991,102 @@ window.LANG_INTERFACE = {
     "en": "Rule chosen by the host.",
     "pt": "Regra escolhida pelo anfitrião."
   },
+  "ui.menu.ritmo_titulo": {
+    "en": "⏱️ Enemy turn speed",
+    "pt": "⏱️ Velocidade do turno dos inimigos"
+  },
+  "ui.menu.ritmo_atual": {
+    "en": "Current (no pauses)",
+    "pt": "Atual (sem pausas)"
+  },
+  "ui.menu.ritmo_lento": {
+    "en": "Slow (about 3 s per attack)",
+    "pt": "Lento (cerca de 3 s por ataque)"
+  },
+  "ui.menu.ritmo_muito_lento": {
+    "en": "Very slow (about 6 s per attack)",
+    "pt": "Muito lento (cerca de 6 s por ataque)"
+  },
+  "ui.menu.ritmo_passo": {
+    "en": "Step by step (click to continue)",
+    "pt": "Passo a passo (clique para continuar)"
+  },
+  "ui.menu.ritmo_auto_off": {
+    "en": "Wait for my click",
+    "pt": "Esperar o meu clique"
+  },
+  "ui.menu.ritmo_auto_n": {
+    "en": "Continue by itself after {n} s",
+    "pt": "Continuar sozinho após {n} s"
+  },
+  "ui.menu.ritmo_so_host": {
+    "en": "Only the host can change this.",
+    "pt": "Só o anfitrião pode alterar isto."
+  },
+  "ui.menu.ritmo_nota_host": {
+    "en": "After each enemy that attacks, a summary appears at the top of the screen.",
+    "pt": "Depois de cada inimigo que ataca, um resumo aparece no alto da tela."
+  },
+  "ui.menu.ritmo_nota_outro": {
+    "en": "Speed chosen by the host.",
+    "pt": "Velocidade escolhida pelo anfitrião."
+  },
+  "ui.turno_inimigo.atacou": {
+    "en": "{atacante} → {alvo}",
+    "pt": "{atacante} → {alvo}"
+  },
+  "ui.turno_inimigo.atacou_generico": {
+    "en": "An enemy attacked {alvo}",
+    "pt": "Um inimigo atacou {alvo}"
+  },
+  "ui.turno_inimigo.acertou": {
+    "en": "hit ({total})",
+    "pt": "acertou ({total})"
+  },
+  "ui.turno_inimigo.acertou_critico": {
+    "en": "critical hit ({total})",
+    "pt": "acerto crítico ({total})"
+  },
+  "ui.turno_inimigo.errou": {
+    "en": "missed ({total})",
+    "pt": "errou ({total})"
+  },
+  "ui.turno_inimigo.dano": {
+    "en": "{n} damage",
+    "pt": "{n} de dano"
+  },
+  "ui.turno_inimigo.dano_tipo": {
+    "en": "{n} {tipo} damage",
+    "pt": "{n} de dano {tipo}"
+  },
+  "ui.turno_inimigo.sem_dano": {
+    "en": "no damage",
+    "pt": "sem dano"
+  },
+  "ui.turno_inimigo.tipo_cortante": {
+    "en": "slashing",
+    "pt": "cortante"
+  },
+  "ui.turno_inimigo.tipo_perfurante": {
+    "en": "piercing",
+    "pt": "perfurante"
+  },
+  "ui.turno_inimigo.tipo_contundente": {
+    "en": "bludgeoning",
+    "pt": "contundente"
+  },
+  "ui.turno_inimigo.tipo_natural": {
+    "en": "natural",
+    "pt": "natural"
+  },
+  "ui.turno_inimigo.continuar": {
+    "en": "Continue",
+    "pt": "Continuar"
+  },
+  "ui.turno_inimigo.fecha_sozinho": {
+    "en": "Closes by itself in {n} s",
+    "pt": "Fecha sozinho em {n} s"
+  },
   "ui.selecao.adicionar_ao_grupo": {
     "en": "➕ Add to party",
     "pt": "➕ Adicionar ao grupo"

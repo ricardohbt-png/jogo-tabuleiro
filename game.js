@@ -8517,6 +8517,162 @@ function _intencoesVisiveis(state, visionSet){
     return m && m.hp > 0 && pode(m.pos[0], m.pos[1]);
   });
 }
+// ── Turno dos inimigos: faixa de resumo no alto e anel no monstro que age ──
+// O servidor segura a fila (nível Lento/Muito lento/Passo a passo) e manda
+// `turno_inimigo_agindo` e `resumo_ataque_inimigo`; aqui só se desenha.
+let _faixaInimigoEl = null;
+const _IMPACTOS_INIMIGO = ['cortante', 'perfurante', 'contundente', 'natural'];
+function _faixaInimigoAberta(){
+  const r = GS.turnoInimigo().resumo;
+  return !!(r && r.espera === 'clique' && _faixaInimigoEl && _faixaInimigoEl.isConnected);
+}
+function _textoAtaqueInimigo(a){
+  const partes = [];
+  if(a.ataque) partes.push(a.ataque);
+  const total = a.total != null ? a.total : '?';
+  partes.push(t(a.acertou ? (a.critico ? 'ui.turno_inimigo.acertou_critico' : 'ui.turno_inimigo.acertou')
+                          : 'ui.turno_inimigo.errou', { total }));
+  if(a.acertou){
+    const n = Number(a.dano) || 0;
+    if(n <= 0) partes.push(t('ui.turno_inimigo.sem_dano'));
+    else if(_IMPACTOS_INIMIGO.includes(a.impacto))
+      partes.push(t('ui.turno_inimigo.dano_tipo', { n, tipo: t('ui.turno_inimigo.tipo_' + a.impacto) }));
+    else partes.push(t('ui.turno_inimigo.dano', { n }));
+  }
+  return partes.join(' · ');
+}
+function _renderFaixaInimigo(){
+  const r = GS.turnoInimigo().resumo;
+  if(!r){
+    if(_faixaInimigoEl){ _faixaInimigoEl.remove(); _faixaInimigoEl = null; }
+    return;
+  }
+  let el = _faixaInimigoEl;
+  if(!el || !el.isConnected){
+    el = document.createElement('div');
+    el.id = 'faixa-inimigo';
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.style.cssText = 'position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:9000;'
+      + 'max-width:min(92vw,720px);background:rgba(28,12,12,.94);border:1px solid #c0392b;border-radius:8px;'
+      + 'color:#f6e3e0;padding:8px 14px;font-size:.88rem;line-height:1.5;box-shadow:0 4px 18px rgba(0,0,0,.55);'
+      + 'display:flex;gap:12px;align-items:center;';
+    document.body.appendChild(el);
+    _faixaInimigoEl = el;
+  }
+  el.textContent = '';
+  const lista = document.createElement('div');
+  lista.style.cssText = 'flex:1;min-width:0;';
+  for(const a of r.ataques || []){
+    const lin = document.createElement('div');
+    const tit = document.createElement('b');
+    tit.textContent = r.generico
+      ? t('ui.turno_inimigo.atacou_generico', { alvo: a.alvo_nome })
+      : t('ui.turno_inimigo.atacou', { atacante: r.atacante_nome, alvo: a.alvo_nome });
+    lin.appendChild(tit);
+    lin.appendChild(document.createTextNode(' · ' + _textoAtaqueInimigo(a)));
+    lista.appendChild(lin);
+  }
+  el.appendChild(lista);
+  if(r.espera === 'clique'){
+    const col = document.createElement('div');
+    col.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:2px;';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = t('ui.turno_inimigo.continuar');
+    btn.style.cssText = 'padding:5px 12px;background:#a93226;border:1px solid #e74c3c;border-radius:6px;'
+      + 'color:#fff;font-family:inherit;font-size:.82rem;cursor:pointer;';
+    btn.onclick = () => GS.continuarTurnoInimigo();
+    col.appendChild(btn);
+    if(r.segundos > 0){
+      const dica = document.createElement('small');
+      dica.style.cssText = 'opacity:.7;font-size:.7rem;';
+      dica.textContent = t('ui.turno_inimigo.fecha_sozinho', { n: r.segundos });
+      col.appendChild(dica);
+    }
+    el.appendChild(col);
+  }
+}
+// Enter/Espaço continuam a faixa do passo a passo (não rouba a digitação em campos).
+function _teclaFaixaInimigo(e){
+  if(!_faixaInimigoAberta()) return false;
+  if(e.key !== 'Enter' && e.key !== ' ') return false;
+  const alvo = e.target, tag = alvo && alvo.tagName;
+  if(tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (alvo && alvo.isContentEditable)) return false;
+  e.preventDefault(); e.stopPropagation();
+  GS.continuarTurnoInimigo();
+  return true;
+}
+document.addEventListener('keydown', (e) => { _teclaFaixaInimigo(e); }, true);
+GS.on('turnoInimigo', () => { if(!(mode3D && g3) && GS.gameState) _agendarChamas2D(); });
+GS.on('resumoInimigo', () => { _renderFaixaInimigo(); });
+
+// Anel vermelho no monstro que age; tracejado cinza nos que ainda vão agir.
+function _anelInimigo2D(ctx, cx, cy, fp, m, now){
+  const ti = GS.turnoInimigo(), id = String(m.id);
+  const agindo = ti.agindo != null && String(ti.agindo) === id;
+  const proximo = !agindo && ti.proximos.some(p => String(p) === id);
+  if(!agindo && !proximo) return;
+  const r = Math.max(fp.logicalW, fp.logicalH) * CELL * 0.5 - 2;
+  ctx.save();
+  if(agindo){
+    ctx.strokeStyle = '#ff3b30'; ctx.lineWidth = 4;
+    ctx.globalAlpha = 0.75 + 0.25 * Math.sin(now / 180);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    _agendarChamas2D();   // mantém o pulso animado enquanto ele age
+  } else {
+    ctx.strokeStyle = 'rgba(235,235,235,.75)'; ctx.lineWidth = 2;
+    ctx.setLineDash([CELL * 0.12, CELL * 0.1]);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.restore();
+}
+function _anelInimigo3D(){
+  if(!g3?.scene || !g3.T) return;
+  if(!g3.aneisInimigo) g3.aneisInimigo = {};
+  const T = g3.T, st = GS.gameState, ti = GS.turnoInimigo(), wanted = new Set();
+  const agora = performance.now();
+  for(const m of (st && st.monsters) || []){
+    const id = String(m.id);
+    const agindo = ti.agindo != null && String(ti.agindo) === id;
+    const proximo = !agindo && ti.proximos.some(p => String(p) === id);
+    if((!agindo && !proximo) || !(m.hp > 0) || !Array.isArray(m.pos)) continue;
+    const fig = getMonsterMesh(m.id);
+    if(!fig || fig.visible === false) continue;
+    wanted.add(id);
+    const estilo = agindo ? 'a' : 'p';
+    let anel = g3.aneisInimigo[id];
+    if(anel && anel.userData.estilo !== estilo){
+      g3.scene.remove(anel); anel.geometry?.dispose?.(); anel.material?.dispose?.();
+      delete g3.aneisInimigo[id]; anel = null;
+    }
+    if(!anel){
+      if(agindo){
+        anel = new T.Mesh(new T.RingGeometry(0.40, 0.50, 48),
+          new T.MeshBasicMaterial({ color: 0xff3b30, transparent: true, opacity: 0.9, depthWrite: false, side: T.DoubleSide }));
+        anel.rotation.x = -Math.PI / 2;
+      } else {
+        const pts = [];
+        for(let k = 0; k < 48; k++){ const a = k / 48 * Math.PI * 2; pts.push(new T.Vector3(Math.cos(a) * 0.46, 0, Math.sin(a) * 0.46)); }
+        anel = new T.LineLoop(new T.BufferGeometry().setFromPoints(pts),
+          new T.LineDashedMaterial({ color: 0xebebeb, dashSize: 0.08, gapSize: 0.06, transparent: true, opacity: 0.8, depthWrite: false }));
+        anel.computeLineDistances();
+      }
+      anel.userData = { estilo, noRay: true };
+      anel.renderOrder = 46;
+      g3.scene.add(anel); g3.aneisInimigo[id] = anel;
+    }
+    const fp = _monsterFootprintSize(m);
+    const esc = Math.max(fp.logicalW, fp.logicalH) * (agindo ? 1 + 0.06 * Math.sin(agora / 180) : 1);
+    anel.scale.set(esc, esc, esc);
+    anel.position.set(fig.position.x, topoSuperficie3D(st, m.pos[0], m.pos[1], 0.22), fig.position.z);
+  }
+  for(const [id, anel] of Object.entries(g3.aneisInimigo)) if(!wanted.has(id)){
+    g3.scene.remove(anel); anel.geometry?.dispose?.(); anel.material?.dispose?.();
+    delete g3.aneisInimigo[id];
+  }
+}
+
 function _intencoesDesenhar2D(ctx, state, visionSet){
   const itens = _intencoesVisiveis(state, visionSet);
   if(!itens.length) return;
@@ -12584,6 +12740,7 @@ function renderMap(state){
       _drawProvocacaoBadge2D(ctx, cx, cy, fp, performance.now());
     if(m.procurando)
       _drawProcurandoBadge2D(ctx, cx, cy, fp, performance.now(), _provocadoAtivo ? CELL * 0.30 : 0);
+    _anelInimigo2D(ctx, cx, cy, fp, m, performance.now());
     // Ícones de magias em monstros são exclusivos do simulador do mestre.
     // O jogo normal continua exibindo somente os indicadores de condição
     // existentes acima, sem expor efeitos fora do modo de teste.
@@ -32511,6 +32668,10 @@ function _gamepadInteractAtCursor(state){
 }
 
 function _gamepadAccept(state){
+  if(_faixaInimigoAberta()){          // passo a passo: A continua o turno dos inimigos
+    GS.continuarTurnoInimigo(); _gamepadRumble('confirm');
+    return;
+  }
   if(_cooperativeMarkerMode){
     const cursor = _cooperativeMarkerCursor || _gamepadEnsureCursor(state);
     if(cursor){ _cooperativeMarkerCursor=[...cursor]; _handleCooperativeMarkerTarget(cursor[0],cursor[1]); _gamepadRumble('confirm'); }
@@ -35463,7 +35624,8 @@ function _setLang(code){
   _i18nApply(document.body);
   _gamepadRenderPrefs();
   _syncMouseAltitudeControl(GS.gameState);
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();          // rótulos montados em JS, não por data-i18n
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption(); _refreshVelocidadeInimigosOption();          // rótulos montados em JS, não por data-i18n
+  _renderFaixaInimigo();              // idem: a faixa do turno dos inimigos é montada por texto
   _refreshBtnReconectar();            // idem: o texto leva código e nome da sala
   _refreshCityHotspots();             // idem: a cidade é montada UMA vez (initCityImage)
   _refreshClassSelectLang();          // idem: o nome do herói é TEXTURA no peão 3D
@@ -35571,6 +35733,12 @@ function _audioPanelEnsure(){
     +     '<small data-i18n="ui.menu.atravessar_dica" style="display:block;margin:5px 0 2px;opacity:.7;font-size:.7rem;">Os caminhos podem cruzar as casas de heróis, servos e do prisioneiro liberto, mas nunca terminar nelas.</small>'
     +     '<small id="cfg-atravessar-note" style="display:block;margin-top:3px;opacity:.72;"></small>'
     +   '</div>'
+    +   '<div id="cfg-ritmo" style="border-top:1px solid #2a4a2a;margin-top:12px;padding-top:10px;display:none;">'
+    +     '<div data-i18n="ui.menu.ritmo_titulo" style="font-size:.78rem;margin-bottom:4px;">⏱️ Velocidade do turno dos inimigos</div>'
+    +     '<select id="cfg-ritmo-nivel" style="width:100%;background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:4px 5px;font-family:inherit;font-size:.78rem;"></select>'
+    +     '<select id="cfg-ritmo-auto" style="display:none;width:100%;margin-top:6px;background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:4px 5px;font-family:inherit;font-size:.78rem;"></select>'
+    +     '<small id="cfg-ritmo-note" style="display:block;margin-top:4px;opacity:.72;"></small>'
+    +   '</div>'
     +   '</section>'
     +   '<div class="cfg-access-title" data-i18n="ui.menu.desempenho">🖥️ Desempenho</div>'
     +   '<label class="cfg-access-line cfg-speed-line"><span data-i18n="ui.menu.qualidade">⚙ Qualidade</span><select id="perf-nivel" style="background:rgba(13,26,13,.9);color:#cfe9cf;border:1px solid #2a4a2a;border-radius:5px;padding:3px 5px;font-family:inherit;font-size:.78rem;"><option value="alta" data-i18n="ui.menu.qual_alta">Alta</option><option value="media" data-i18n="ui.menu.qual_media">Média</option><option value="baixa" data-i18n="ui.menu.qual_baixa">Baixa</option></select></label>'
@@ -35612,7 +35780,7 @@ function _audioPanelEnsure(){
     if(salvarSair) salvarSair.style.display = podeSalvar ? 'block' : 'none';
     const salvarPonto = wrap.querySelector('#cfg-salvar-ponto');
     if(salvarPonto) salvarPonto.style.display = podeSalvar ? 'block' : 'none';
-    _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
+    _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption(); _refreshVelocidadeInimigosOption();
     pop.style.display = abrir ? 'block' : 'none';
   };
   wrap.querySelector('#cfg-voltar-inicio').onclick = () => { pop.style.display='none'; returnToInitialMenu(); };
@@ -35651,10 +35819,19 @@ function _audioPanelEnsure(){
   };
   wrap.querySelector('#cfg-visao-chk').onchange = (e) => {
     _setVisaoCompPref(e.target.checked);
-    _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
+    _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption(); _refreshVelocidadeInimigosOption();
   };
   wrap.querySelector('#cfg-intencao-sel').value = _intencaoModo;
   wrap.querySelector('#cfg-intencao-sel').onchange = (e) => { _setIntencaoModo(e.target.value); };
+  const _enviarRitmo = () => {
+    const state=GS.gameState||GS.cityState;
+    if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.ritmo_so_host'),'var(--red)'); _refreshVelocidadeInimigosOption(); return; }
+    const nivel = wrap.querySelector('#cfg-ritmo-nivel').value;
+    const auto = nivel === 'passo' ? Number(wrap.querySelector('#cfg-ritmo-auto').value) || 0 : 0;
+    GS.setVelocidadeInimigos(nivel, auto);
+  };
+  wrap.querySelector('#cfg-ritmo-nivel').onchange = _enviarRitmo;
+  wrap.querySelector('#cfg-ritmo-auto').onchange = _enviarRitmo;
   wrap.querySelector('#cfg-atravessar-btn').onclick = () => {
     const state=GS.gameState||GS.cityState;
     if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.atravessar_so_host'),'var(--red)'); return; }
@@ -35823,6 +36000,36 @@ function _refreshAtravessarOption(){
   note.textContent = t(host ? 'ui.menu.atravessar_nota_host' : 'ui.menu.atravessar_nota_outro');
 }
 
+// Bloco "⏱️ Velocidade do turno dos inimigos" do painel ⚙️: o anfitrião escolhe
+// (no Solo, sempre você); "Passo a passo" só aparece quando o servidor permite.
+function _refreshVelocidadeInimigosOption(){
+  const box=document.getElementById('cfg-ritmo'), sel=document.getElementById('cfg-ritmo-nivel'),
+    auto=document.getElementById('cfg-ritmo-auto'), note=document.getElementById('cfg-ritmo-note');
+  if(!box||!sel||!auto||!note) return;
+  const state=GS.gameState||GS.cityState;
+  if(!state){ box.style.display='none'; return; }
+  box.style.display='block';
+  const host = GS.souAnfitriao(state.host);
+  const passoOk = state.ritmo_passo_permitido === true;
+  const atual = GS.velocidadeInimigos;
+  const niveis = ['atual','lento','muito_lento'].concat(passoOk ? ['passo'] : []);
+  sel.textContent='';
+  for(const n of niveis){
+    const o=document.createElement('option'); o.value=n; o.textContent=t('ui.menu.ritmo_'+n); sel.appendChild(o);
+  }
+  sel.value = niveis.includes(atual) ? atual : 'atual';
+  auto.textContent='';
+  for(const s of [0,3,6,10]){
+    const o=document.createElement('option'); o.value=String(s);
+    o.textContent = s ? t('ui.menu.ritmo_auto_n',{n:s}) : t('ui.menu.ritmo_auto_off'); auto.appendChild(o);
+  }
+  auto.value = String(GS.ritmoAutoSegundos || 0);
+  auto.style.display = (sel.value==='passo') ? 'block' : 'none';
+  sel.disabled = auto.disabled = !host;
+  sel.style.opacity = auto.style.opacity = host ? '1' : '.55';
+  note.textContent = t(host ? 'ui.menu.ritmo_nota_host' : 'ui.menu.ritmo_nota_outro');
+}
+
 // Abre/fecha o painel ⚙️ por programa (usado pelo Esc, que unifica o antigo
 // menu de pausa com as configurações). force=true abre, false fecha, undefined alterna.
 function _toggleConfigPop(force){
@@ -35834,7 +36041,7 @@ function _toggleConfigPop(force){
   const emJogo = ['screen-game','screen-city','screen-class-select']
     .includes((document.querySelector('.screen.active')||{}).id);
   if(saida) saida.style.display = emJogo ? 'block' : 'none';
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption(); _refreshVelocidadeInimigosOption();
   pop.style.display = abrir ? 'block' : 'none';
 }
 window._toggleConfigPop = _toggleConfigPop;
@@ -47916,6 +48123,7 @@ function startLoop3D(){
     }
     _guiaAtualizar3D();
     _intencoesAtualizar3D();
+    _anelInimigo3D();
     _reacoes3DAtualizar();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
@@ -56670,7 +56878,7 @@ GS.on('cityState', msg => {
   _renderAtalhos();
   _renderEfeitosAtivos(null);
   _atualizarMenuMagiasSeAberto();
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption(); _refreshVelocidadeInimigosOption();
   _renderBannerForaMasmorra();
   // ── Sincroniza o herói do overlay com o estado autoritativo do servidor ──
   const meSrv = (msg.players || []).find(p => p.id === GS.myPid);
@@ -56974,7 +57182,7 @@ GS.on('gameState', msg => {
   _garantirLoopRaioGelo();  // mantém a camada de gelo enquanto a paralisia existir
   _garantirLoopJatoAr();     // mantém o cone visível até o impacto terminar
   _atualizarMenuMagiasSeAberto();
-  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption();
+  _refreshTurnTimerOption(); _refreshVisaoCompartilhadaOption(); _refreshAtravessarOption(); _refreshVelocidadeInimigosOption();
   _atualizarFichaFab();    // mantém o Mapa de CR disponível apenas ao mestre
   // Sincroniza os animados autoritativos do servidor no registro do Pedro,
   // para a ficha refletir HP/pó durante o combate.
