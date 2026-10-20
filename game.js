@@ -28953,7 +28953,10 @@ function _iniciarMiraIlusao(kind, itemId){
     color:placement?'#bca8ff':'#d4c6ff',
     targetLabel:t('ui.ilusao.casa_valida'),
     cancelText:t('ui.ilusao.cancelado'),
-    range:valid,
+    // Alcance em vermelho (raio 6 ao redor do herói) e, por cima, as casas onde a
+    // ilusão pode nascer/ir em verde: o mesmo par de realces dos arremessáveis.
+    range:placement?_illusionRangeTiles(me):new Set(),
+    area:valid,
     confirm:placement?null:skip,
     confirmText:placement?'':t('ui.ilusao.pular'),
     cleanup:()=>{ if(_illusionMode===mode) _illusionMode=null; },
@@ -28997,6 +29000,12 @@ function _teclaModoIlusao(event){
   }
   const dir={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]}[event.key];
   if(!dir) return;
+function _illusionRangeTiles(me){
+  const out=new Set();
+  _addCheb(me.pos[0],me.pos[1],6,out);
+  return out;
+}
+
   const state=GS.gameState,cursor=_gamepadEnsureCursor(state);
   if(cursor&&_aimGamepadStep(state,dir[0],dir[1])) event.preventDefault();
   event.stopImmediatePropagation();
@@ -29030,6 +29039,7 @@ function _getIllusion2DImg(imageName){
   }
   const img=_illusion2DImages[imageName];
   return img.complete&&img.naturalWidth?img:null;
+  if(placement&&(!GS.isMyTurn||me.bonus_action_used)){ toast(t('ui.hud.fora_de_turno_ou_acao_usada'),'var(--gold)'); return; }
 }
 
 function _drawIllusions2D(ctx,state,visionSet){
@@ -29167,6 +29177,9 @@ function _classeNome(player){
 
 function renderFichaCidadeBody(panel, player, editable){
   // Cabeçalho (foto + nome/classe/nível)
+      // Como nos arremessáveis, a bolsa fecha para o mapa ficar livre: com ela aberta
+      // o clique na casa cai no fundo do modal e cancela a mira.
+      if(typeof InventoryModal!=='undefined' && InventoryModal.isOpen?.()) InventoryModal.close();
   const heroiKey    = _classIdParaHeroiKey(player.class_id);
   const heroiStatic = (typeof HERO_DATA !== 'undefined' && HERO_DATA[heroiKey])
     || (GS.HERO_DATA && GS.HERO_DATA[heroiKey]) || {};

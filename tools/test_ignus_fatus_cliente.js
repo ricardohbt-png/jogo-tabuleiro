@@ -75,5 +75,15 @@ const r3d = body('renderMap3D');
 check('_syncIllusions3D vem depois de "let visionSet"',
   r3d.indexOf('let visionSet') >= 0 && r3d.indexOf('_syncIllusions3D(state,visionSet)') > r3d.indexOf('let visionSet'));
 
+console.log('\n[5] Uso pela bolsa: fecha o inventário e pinta as casas válidas de verde');
+const usar = body('useItem');
+check('useItem fecha a bolsa antes da mira de ilusão (senão o clique no mapa cai no modal e cancela)',
+  /illusion_lure[\s\S]{0,400}InventoryModal\.close\(\)[\s\S]{0,120}_iniciarMiraIlusao\('placement'/.test(usar));
+const mira = body('_iniciarMiraIlusao');
+check('as casas válidas vão no canal verde (area) e o alcance no vermelho (range)',
+  /area:\s*valid/.test(mira) && /range:\s*placement\s*\?\s*_illusionRangeTiles\(me\)/.test(mira));
+check('a mira recusa fora do turno ou sem ação bônus, como nos arremessáveis',
+  /!GS\.isMyTurn\s*\|\|\s*me\.bonus_action_used/.test(mira));
+
 console.log(`\n=== ${pass} passaram, ${fail} falharam ===`);
 process.exit(fail ? 1 : 0);
