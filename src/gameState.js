@@ -78,6 +78,17 @@ const GS = (() => {
   function on(ev, fn)           { _handlers[ev] = fn; }
   function _emit(ev, ...args)   { const h = _handlers[ev]; if (h) h(...args); }
 
+  // Turno dos inimigos: monstro agindo (anel), os que ainda vão agir (tracejado)
+  // e o resumo do último ataque (faixa). Efêmero: some ao sair da masmorra.
+  let _turnoInimigo = { agindo: null, proximos: [], resumo: null };
+  function _limparTurnoInimigo() {
+    _turnoInimigo = { agindo: null, proximos: [], resumo: null };
+  }
+  function _ritmoDoEstado(campo, padrao) {
+    const st = gameState || cityState;
+    return (st && st[campo] != null) ? st[campo] : padrao;
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // SISTEMA DE FOME E SEDE (Sobrevivência)
   // ───────────────────────────────────────────────────────────────────────────
@@ -1844,6 +1855,7 @@ const GS = (() => {
         break;
 
       case 'city_state':
+        _limparTurnoInimigo();
         _clearSmokeReaction();
         cityState = msg;
         pendingMove = null;
@@ -1893,6 +1905,7 @@ const GS = (() => {
         break;
 
       case 'enter_dungeon':
+        _limparTurnoInimigo();
         _clearSmokeReaction();
         _resetSurvivalAll(true);    // pós-taverna/cidade → fome/sede = 100
         cityState = null;           // (após reset, p/ ler o roster da cidade)
@@ -2069,6 +2082,7 @@ const GS = (() => {
         break;
 
       case 'game_over':
+        _limparTurnoInimigo();
         _clearSmokeReaction();
         clearSession();   // aventura encerrada — não tentar reconectar depois
         _captarStory(msg);
@@ -2308,6 +2322,22 @@ const GS = (() => {
         _emit('salvoParaSair', msg);
         break;
 
+      case 'turno_inimigo_agindo':
+        _turnoInimigo = { ..._turnoInimigo, agindo: msg.monstro_id || null,
+                          proximos: Array.isArray(msg.proximos) ? msg.proximos : [] };
+        _emit('turnoInimigo', msg);
+        break;
+
+      case 'resumo_ataque_inimigo':
+        _turnoInimigo = { ..._turnoInimigo, resumo: msg };
+        _emit('resumoInimigo', msg);
+        break;
+
+      case 'resumo_inimigo_fechado':
+        _turnoInimigo = { ..._turnoInimigo, resumo: null };
+        _emit('resumoInimigo', null);
+        break;
+
       case 'saved':
         // O jogo salvo foi gravado (checkpoint na cidade ou 1ª foto da
         // masmorra); o renderer mostra o aviso discreto.
@@ -2474,6 +2504,15 @@ const GS = (() => {
     return false;
   }
   function setAtravessarAliados(enabled) { send({ type:'set_atravessar_aliados', enabled:!!enabled }); }
+  // Ritmo do turno dos inimigos (só o anfitrião; "passo" só no Solo — o servidor decide).
+  function setVelocidadeInimigos(nivel, autoSegundos) {
+    send({ type:'set_velocidade_inimigos', nivel, auto_segundos: autoSegundos || 0 });
+  }
+  function continuarTurnoInimigo() {
+    _turnoInimigo = { ..._turnoInimigo, resumo: null };   // a faixa some já; o servidor confirma
+    _emit('resumoInimigo', null);
+    send({ type:'continuar_turno_inimigo' });
+  }
   function salvarESair() { send({ type:'salvar_e_sair' }); }
   // Visão compartilhada: heróis cuja visão SOMA à do jogador. `ativa` = escolha
   // local do jogador E permissão do anfitrião (decidida por quem chama). Fica de
@@ -4077,6 +4116,11 @@ const GS = (() => {
     moverAnimadoCaminho,
     moverPrisioneiroCaminho,
     setAtravessarAliados,
+    setVelocidadeInimigos,
+    continuarTurnoInimigo,
+    turnoInimigo: () => _turnoInimigo,
+    get velocidadeInimigos() { return _ritmoDoEstado('velocidade_inimigos', 'atual'); },
+    get ritmoAutoSegundos()  { return _ritmoDoEstado('ritmo_auto_segundos', 0); },
     salvarESair,
     atacarAnimado,
     usarHabilidadeAnimado,
