@@ -48776,6 +48776,8 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   helm_iron: {path: 'assets/itens/elmo.glb', footprint: 0.68},
   fullplate: {path: 'assets/itens/armadura_completa.glb', footprint: 0.82},
   bronze_armor: {path: 'assets/itens/bronze_armor.glb', footprint: 0.82},
+  // O escudo redondo já está deitado no plano XZ, com a face voltada para cima.
+  escudo_p: {path: 'assets/itens/escudo_redondo.glb', footprint: 0.78},
   flechas: {path: 'assets/itens/flechas.glb', footprint: 0.78},
   chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
@@ -48832,8 +48834,16 @@ function _groundItemGlbConfig(gi){
   return _GROUND_ITEM_GLB_MODELS[itemId]
     || (instrumentBase === 'harpa'
       ? {path: 'assets/itens/harpa.glb', footprint: 0.78} : null)
+    || (instrumentBase === 'tambor'
+      ? {path: 'assets/itens/tambor.glb', footprint: 0.78} : null)
+    || (instrumentBase === 'sino'
+      ? {path: 'assets/itens/sino.glb', footprint: 0.78} : null)
+    || (instrumentBase === 'violino'
+      ? {path: 'assets/itens/violino.glb', rotationX: -Math.PI / 2, footprint: 0.78} : null)
     || (instrumentBase === 'alaude'
       ? {path: 'assets/itens/alaude.glb', footprint: 0.78} : null)
+    || (itemId === 'grimorio' || itemId.startsWith('grimorio_')
+      ? {path: 'assets/itens/grimorio.glb', rotationX: -Math.PI / 2, footprint: 0.78} : null)
     || (itemId.startsWith('machado_') ? _GROUND_ITEM_GLB_MODELS.machado : null)
     || ((itemId === 'staff' || itemId.startsWith('staff_')
       || itemId === 'bordao' || itemId.startsWith('bordao_')
@@ -48892,6 +48902,8 @@ function buildGroundItem3D(T, gi, animateDrop=false){
         else if(originalSize.x >= originalSize.y && originalSize.x >= originalSize.z)
           inst.rotation.y = Math.PI / 2;
       }
+      if(Number.isFinite(modelConfig.rotationX))
+        inst.rotation.x += modelConfig.rotationX;
       inst.updateMatrixWorld(true);
       const bounds = new T.Box3().setFromObject(inst);
       const size = bounds.getSize(new T.Vector3());
