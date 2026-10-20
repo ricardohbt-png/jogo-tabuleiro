@@ -3742,6 +3742,11 @@ RITMO_AUTO_OPCOES = (0, 3, 6, 10)
 RITMO_TETO_CLIQUE_S = 90
 
 
+def _hp_de(alvo):
+    """PV atuais de herói, monstro ou servo animado (que usa `vida_atual`)."""
+    return alvo["hp"] if "hp" in alvo else alvo.get("vida_atual", 0)
+
+
 def _ritmo_de_save(sg):
     """(nível, tempo automático) lidos de um jogo salvo; valor ruim cai no padrão."""
     nivel = (sg or {}).get("velocidade_inimigos", "atual")
@@ -13877,6 +13882,48 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._checkpoint_savegame()
         if self.phase == "playing": await self.push_state()
         elif self.phase == "city": await self.broadcast_city_state()
+
+    # -- Ritmo do turno dos inimigos: coletor de ataques ---------------------
+    def _ritmo_iniciar(self, monstro):
+        """Passa a registrar os ataques de UM monstro (o que está agindo)."""
+        self._ritmo_coletor = {"monstro_id": monstro.get("id"), "entradas": [], "aberta": None}
+
+    def _ritmo_fechar_aberta(self):
+        """Fecha a entrada em curso: dano = PV que o alvo perdeu desde o início dela."""
+        col = self._ritmo_coletor
+        e = col["aberta"] if col else None
+        if e:
+            e["dano"] = max(0, e.pop("_hp_antes") - _hp_de(e.pop("_alvo")))
+            col["aberta"] = None
+
+    def _ritmo_registrar(self, fase, atacante, alvo, nome_alvo, ataque, ataque_id, resultado):
+        col = self._ritmo_coletor
+        if not col or atacante.get("id") != col["monstro_id"] or alvo.get("id") is None:
+            return
+        if fase == "start":
+            self._ritmo_fechar_aberta()
+            dono = alvo.get("owner") or alvo.get("controlador") or alvo.get("id")
+            e = {"attack_id": ataque_id, "alvo_id": alvo.get("id"), "alvo_nome": nome_alvo,
+                 "alvo_pid": dono if (alvo.get("id") in self.players or alvo.get("owner")) else None,
+                 "ataque": ataque, "impacto": resultado.get("impacto"),
+                 "acertou": None, "critico": False, "rolagem": None, "total": None,
+                 "dano": 0, "_hp_antes": _hp_de(alvo), "_alvo": alvo}
+            col["entradas"].append(e)
+            col["aberta"] = e
+        else:
+            for e in reversed(col["entradas"]):
+                if e["attack_id"] == ataque_id:
+                    e["acertou"] = bool(resultado.get("hit"))
+                    e["critico"] = bool(resultado.get("crit"))
+                    e["rolagem"] = resultado.get("roll")
+                    e["total"] = resultado.get("total")
+                    break
+
+    def _ritmo_finalizar(self):
+        """Encerra o registro e devolve as entradas do turno (lista simples)."""
+        self._ritmo_fechar_aberta()
+        col, self._ritmo_coletor = self._ritmo_coletor, None
+        return [{k: v for k, v in e.items() if k != "attack_id"} for e in (col["entradas"] if col else [])]
 
     def _ritmo_liberar(self):
         """Solta a espera pendente da faixa de resumo (se houver)."""
@@ -32071,6 +32118,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             resultado.pop("impacto", None)          # sem impacto: payload idêntico ao antigo
         # Alvo sintético de área (sem id) não ganha o nome falso "Alvo".
         nome_alvo = (alvo.get("name") or alvo.get("nome") or "Alvo") if alvo.get("id") is not None else ""
+        if self._ritmo_coletor is not None:
+            self._ritmo_registrar(fase, atacante, alvo, nome_alvo, ataque, ataque_id, resultado)
         await self.broadcast({
             "type": "attack_feedback", "phase": fase,
             "attack_id": ataque_id,

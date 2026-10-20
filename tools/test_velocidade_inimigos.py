@@ -96,6 +96,55 @@ async def main():
     check("set_velocidade_inimigos fala pela conexão", "set_velocidade_inimigos" in S.MENSAGENS_DA_CONEXAO)
     check("continuar_turno_inimigo fala pela conexão", "continuar_turno_inimigo" in S.MENSAGENS_DA_CONEXAO)
 
+    print("\n[6] Coletor de ataques do monstro")
+    r = await sala()
+    enviados = []
+    async def bc(msg, skip=None, personalize=None): enviados.append(msg)
+    r.broadcast = bc
+    orc = {"id": "m1", "name": "Orc", "pos": [3, 3], "hp": 10}
+    outro = {"id": "m2", "name": "Goblin", "pos": [4, 3], "hp": 5}
+    ana = r.players["p1"]; ana.update({"hp": 20, "pos": [2, 3]})
+    bia = r.players["p2"]; bia.update({"hp": 15, "pos": [2, 4]})
+
+    await r._emitir_feedback_ataque("start", orc, ana, "Machado", "normal", impacto="cortante")
+    check("sem coletor nada é registrado e o feedback sai igual",
+          r._ritmo_coletor is None and enviados[-1]["phase"] == "start"
+          and enviados[-1]["attack_name"] == "Machado" and enviados[-1]["impacto"] == "cortante")
+
+    r._ritmo_iniciar(orc)
+    check("coletor guarda o id do monstro", r._ritmo_coletor["monstro_id"] == "m1")
+    aid = await r._emitir_feedback_ataque("start", orc, ana, "Machado", "normal", impacto="cortante")
+    await r._emitir_feedback_ataque("result", orc, ana, "Machado", "normal", attack_id=aid,
+                                    roll=14, total=18, hit=True, crit=False)
+    ana["hp"] = 15
+    aid2 = await r._emitir_feedback_ataque("start", orc, bia, "Pancada", "normal")
+    await r._emitir_feedback_ataque("result", orc, bia, "Pancada", "normal", attack_id=aid2,
+                                    roll=3, total=7, hit=False, crit=False)
+    # alvo sem id (área) e outro atacante não entram
+    await r._emitir_feedback_ataque("start", orc, {"id": None, "pos": [1, 1]}, "Sopro", "normal")
+    await r._emitir_feedback_ataque("start", outro, ana, "Mordida", "normal")
+    bia["hp"] = 15
+    ent = r._ritmo_finalizar()
+    check("duas entradas (área e outro monstro ficam de fora)", len(ent) == 2, ent)
+    e1, e2 = ent[0], ent[1]
+    check("1º ataque: alvo, nome, tipo", e1["alvo_nome"] == "Ana" and e1["ataque"] == "Machado"
+          and e1["impacto"] == "cortante")
+    check("1º ataque: acertou, rolagem e total", e1["acertou"] is True and e1["critico"] is False
+          and e1["rolagem"] == 14 and e1["total"] == 18)
+    check("1º ataque: dano = PV perdidos até o próximo ataque", e1["dano"] == 5, e1)
+    check("2º ataque errou e não causou dano (fecha no fim do turno)",
+          e2["acertou"] is False and e2["dano"] == 0 and e2["alvo_nome"] == "Bia", e2)
+    check("entrada traz o dono do alvo", e1["alvo_pid"] == "p1" and e2["alvo_pid"] == "p2")
+    check("finalizar zera o coletor", r._ritmo_coletor is None)
+
+    r._ritmo_iniciar(orc)
+    aid = await r._emitir_feedback_ataque("start", orc, ana, "Machado", "normal")
+    await r._emitir_feedback_ataque("result", orc, ana, "Machado", "normal", attack_id=aid, hit=True, crit=True, roll=20, total=25)
+    ana["hp"] = 0
+    ent = r._ritmo_finalizar()
+    check("dano de ataque que mata não passa dos PV que o alvo tinha", ent[0]["dano"] == 15 and ent[0]["critico"] is True, ent)
+    check("sem ataque o coletor devolve lista vazia", (r._ritmo_iniciar(orc), r._ritmo_finalizar())[1] == [])
+
     print(f"\n=== {PASS} passaram, {FAIL} falharam ===")
     return FAIL
 
