@@ -48775,6 +48775,8 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   ring_vita: {path: 'assets/itens/anel.glb', footprint: 0.42},
   helm_iron: {path: 'assets/itens/elmo.glb', footprint: 0.68},
   fullplate: {path: 'assets/itens/armadura_completa.glb', footprint: 0.82},
+  bronze_armor: {path: 'assets/itens/bronze_armor.glb', footprint: 0.82},
+  flechas: {path: 'assets/itens/flechas.glb', footprint: 0.78},
   chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   dagger: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
