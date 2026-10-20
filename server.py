@@ -3918,6 +3918,7 @@ GUILD_CATALOG = {
     },
     "disparo_duplo": {
         "id": "disparo_duplo", "categoria": "especializacao", "classe": None,
+        "secao": "tecnica",   # só a LISTAGEM (faixa de recarga zero); segue passiva e sem slot
         "linha": None, "nivel": None, "requer": None, "exclusiva": False,
         "preco": 250, "custo_fome": 0, "custo_sede": 0, "recarga_rodadas": 0,
         "nome": "Disparo Duplo", "icon": "🏹",
@@ -3929,6 +3930,7 @@ GUILD_CATALOG = {
     },
     "arremesso_rapido": {
         "id": "arremesso_rapido", "categoria": "especializacao", "classe": None,
+        "secao": "tecnica",   # só a LISTAGEM (faixa de recarga zero); segue passiva e sem slot
         "linha": None, "nivel": None, "requer": None, "exclusiva": False,
         "preco": 250, "custo_fome": 0, "custo_sede": 0, "recarga_rodadas": 0,
         "nome": "Arremesso Rápido", "icon": "🧪",

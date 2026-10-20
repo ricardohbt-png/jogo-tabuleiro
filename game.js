@@ -3561,8 +3561,10 @@ function _renderGuild(){
   if(!me) return;
   const owned   = GS.guildOwnedOf(GS.myPid);
   const catalog = GS.guildCatalogFor(me.class_id);
-  const specs = catalog.filter(i => i.categoria === 'especializacao');
-  const tecs  = catalog.filter(i => i.categoria === 'tecnica');
+  // `secao: 'tecnica'` lista uma passiva (ex.: Disparo Duplo) entre as Técnicas, na
+  // faixa de recarga zero; a categoria dela (compra, sem equipar) não muda.
+  const specs = catalog.filter(i => i.categoria === 'especializacao' && i.secao !== 'tecnica');
+  const tecs  = catalog.filter(i => i.categoria === 'tecnica' || i.secao === 'tecnica');
   const goldEl = $('guild-gold'); if(goldEl) goldEl.textContent = me.gold || 0;
   const sec = (arr) => arr.length
     ? arr.map(i => _guildItemRow(i, owned, me)).join('')
@@ -3570,7 +3572,8 @@ function _renderGuild(){
   const specEl = $('guild-list-spec'); if(specEl) specEl.innerHTML = _guildSpecHtml(specs, owned, me);
   // Técnicas agrupadas por faixa de recarga (3/5/8/10 rodadas) — quanto maior a
   // recarga, mais forte a técnica; deixa o trade-off recarga×poder×preço visível.
-  const _faixaLabel = { 3:t('ui.hud.recarga_curta_3_rodadas'), 5:t('ui.guilda.recarga_media'),
+  const _faixaLabel = { 0:t('ui.guilda.recarga_zero'),
+                        3:t('ui.hud.recarga_curta_3_rodadas'), 5:t('ui.guilda.recarga_media'),
                         8:t('ui.hud.recarga_longa_8_rodadas'), 10:t('ui.hud.recarga_muito_longa_10_rodadas') };
   const _secTecnicas = (arr) => {
     if(!arr.length) return `<div class="guild-empty">— em breve —</div>`;

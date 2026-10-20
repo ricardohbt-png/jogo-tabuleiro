@@ -2971,6 +2971,10 @@ window.LANG_INTERFACE = {
     "en": "Legends",
     "pt": "Lendas"
   },
+  "ui.guilda.recarga_zero": {
+    "en": "No Recharge (always active)",
+    "pt": "Sem Recarga (sempre ativas)"
+  },
   "ui.guilda.recarga_media": {
     "en": "Medium Recharge (5 rounds)",
     "pt": "Recarga Média (5 rodadas)"
