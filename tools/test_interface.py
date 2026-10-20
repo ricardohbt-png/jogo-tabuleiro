@@ -404,8 +404,11 @@ def _rodar_verificacoes():
     # verifica é que ele também aplica o i18n.
     check("o observador do body também aplica _i18nApply",
           bool(re.search(r"new MutationObserver\([\s\S]{0,600}?_i18nApply", GAME)))
-    check("continua havendo UM observador do body, não dois",
-          len(re.findall(r"observe\(\s*document\.body", GAME)) == 1)
+    # Só conta o observador PERMANENTE (declarado no nível do módulo, coluna 0).
+    # O do tooltip de item (_ligarTooltipItem) é temporário: nasce no hover e é
+    # desconectado em esconderTooltip, então não é um segundo observador de i18n.
+    check("continua havendo UM observador permanente do body, não dois",
+          len(re.findall(r"^\w[^\n]*\.observe\(\s*document\.body", GAME, re.M)) == 1)
     check("o ícone de habilidade é achado por data-ability-id",
           "data-ability-id" in GAME and "dataset.abilityId" in GAME)
 
