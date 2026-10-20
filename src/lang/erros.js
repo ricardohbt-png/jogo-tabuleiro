@@ -1993,6 +1993,10 @@ window.LANG_ERROS = {
     "en": "You're already stealthed — the Candle of Darkness doesn't stack with another stealth effect.",
     "pt": "Você já está furtivo — a vela não acumula com outro efeito de furtividade."
   },
+  "erro.uma_ilusao_sua_ainda_esta_ativa": {
+    "en": "You already have an active illusion.",
+    "pt": "Você já tem uma ilusão ativa."
+  },
   "erro.voce_ja_mantem_uma_criatura_sob_metamorf": {
     "en": "You are already maintaining a creature under Polymorph.",
     "pt": "Você já mantém uma criatura sob Metamorfose."

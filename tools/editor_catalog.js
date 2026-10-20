@@ -4789,8 +4789,9 @@ window.EDITOR_CATALOG = {
           "attack_index": 0,
           "dc": 17,
           "save": "fortitude",
-          "effect": "perde_movimento",
-          "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento."
+          "effect": "perde_turno",
+          "effect_duration": 1,
+          "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: fica atordoado e perde a próxima rodada."
         },
         {
           "id": "investida_colossal",
@@ -7388,8 +7389,9 @@ window.EDITOR_CATALOG = {
       "attack_index": 0,
       "dc": 17,
       "save": "fortitude",
-      "effect": "perde_movimento",
-      "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: perde a próxima ação de movimento.",
+      "effect": "perde_turno",
+      "effect_duration": 1,
+      "descricao": "Ao acertar a Clava Gigante, Fortitude CD 17; falha: fica atordoado e perde a próxima rodada.",
       "source": "monstro"
     },
     {
@@ -11769,6 +11771,26 @@ window.EDITOR_CATALOG = {
       "effect": "arcane_vigilance_potion",
       "value": 10,
       "descricao": "Ação bônus. Por 10 rodadas, revela para o grupo criaturas ocultas nas sombras em um raio móvel de 3 casas ao redor de qualquer herói ativo. A revelação não encerra a ocultação; a criatura deixa de ser vista ao sair do raio ou ao fim da duração."
+    },
+    {
+      "id": "ignus_fatus",
+      "name": "Ignus Fatus",
+      "emoji": "👻",
+      "icon": "assets/itens/ignus_fatus.png",
+      "item_slot": "bag",
+      "effect": "illusion_lure",
+      "value": 2,
+      "descricao": "Ação bônus. Cria uma imagem fantasmagórica imóvel do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 2 rodadas; o primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."
+    },
+    {
+      "id": "fata_morgana",
+      "name": "Fata Morgana",
+      "emoji": "🪞",
+      "icon": "assets/itens/fata_morgana.png",
+      "item_slot": "bag",
+      "effect": "illusion_lure",
+      "value": 4,
+      "descricao": "Ação bônus. Cria uma imagem realista do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 4 rodadas; antes das ações do herói, pode mover até 6 casas uma vez por turno. O primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."
     },
     {
       "id": "solucao_mecanismo",

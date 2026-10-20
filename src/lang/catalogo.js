@@ -2538,6 +2538,14 @@ window.LANG_CATALOGO = {
     "en": "Essence of Favorable Winds",
     "pt": "Essência do Vento Favorável"
   },
+  "cat.item.fata_morgana.desc": {
+    "en": "Bonus action. Creates a lifelike image of the hero on a free, visible square within 6 squares. Automatic monsters that perceive it pursue it. Lasts 4 rounds; before the hero's actions, it can move up to 6 squares once per turn. Its first attack dissipates it without harming the hero. You can have only one active illusion at a time.",
+    "pt": "Ação bônus. Cria uma imagem realista do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 4 rodadas; antes das ações do herói, pode mover até 6 casas uma vez por turno. O primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."
+  },
+  "cat.item.fata_morgana.nome": {
+    "en": "Fata Morgana",
+    "pt": "Fata Morgana"
+  },
   "cat.item.ferrao_do_brejo.nome": {
     "en": "",
     "pt": "Ferrão do Brejo"
@@ -2717,6 +2725,14 @@ window.LANG_CATALOGO = {
   "cat.item.helm_iron.nome": {
     "en": "Iron Helm",
     "pt": "Elmo de Ferro"
+  },
+  "cat.item.ignus_fatus.desc": {
+    "en": "Bonus action. Creates a ghostly, stationary image of the hero on a free, visible square within 6 squares. Automatic monsters that perceive it pursue it. Lasts 2 rounds; its first attack dissipates it without harming the hero. You can have only one active illusion at a time.",
+    "pt": "Ação bônus. Cria uma imagem fantasmagórica imóvel do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 2 rodadas; o primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."
+  },
+  "cat.item.ignus_fatus.nome": {
+    "en": "Ignus Fatus",
+    "pt": "Ignus Fatus"
   },
   "cat.item.instrumento.desc": {
     "en": "Musical Instrument: — physical damage, using Dexterity.",
@@ -2982,14 +2998,6 @@ window.LANG_CATALOGO = {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
   },
-  "cat.item.machadinha_arremesso_ana.desc": {
-    "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
-    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
-  },
-  "cat.item.machadinha_arremesso_ana.nome": {
-    "en": "Dwarven Throwing Hatchet",
-    "pt": "Machadinha de Arremesso Anã"
-  },
   "cat.item.machadinha_ana_prata.desc": {
     "en": "Silver Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength. Silver: withstands 5 levels of corrosion, the first 2 without penalty, and can hurt enemies resistant to normal weapons.",
     "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -2997,6 +3005,14 @@ window.LANG_CATALOGO = {
   "cat.item.machadinha_ana_prata.nome": {
     "en": "Silver Dwarven Throwing Hatchet",
     "pt": "Machadinha de Arremesso Anã de Prata"
+  },
+  "cat.item.machadinha_arremesso_ana.desc": {
+    "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
+    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
+  },
+  "cat.item.machadinha_arremesso_ana.nome": {
+    "en": "Dwarven Throwing Hatchet",
+    "pt": "Machadinha de Arremesso Anã"
   },
   "cat.item.machado_basico.desc": {
     "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",

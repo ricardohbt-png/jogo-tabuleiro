@@ -1,5 +1,28 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Iscas de ilusão: Ignus Fatus e Fata Morgana (2026-10-18)
+
+Os consumíveis de ação bônus ficam no catálogo `SHOP_MERCHANT` e nas listas de
+mercadores de `city_shops.json`: Ignus Fatus (45 moedas, 2 rodadas, imagem
+fantasmagórica imóvel) e Fata Morgana (120 moedas, 4 rodadas, imagem realista).
+Cada herói mantém no máximo uma ilusão. O servidor valida posição livre e
+visível a até 6 casas antes de consumir o item e a ação; a Fata Morgana aceita
+uma ordem de até 6 passos por rodada do dono antes de ele se mover ou agir, ou
+uma ordem nula para permanecer parada. O caminho é recalculado no servidor e
+não reduz `moves_left` do herói.
+
+`GameRoom.illusions` é estado temporário da sala e vai para `game_state`, nunca
+para saves de campanha. Monstros automáticos na mesma sala que percebem a isca
+passam a persegui-la; a última posição conhecida dura até 3 rodadas e é limpa
+quando a isca expira ou é atacada. Monstros em controle manual mantêm os
+comandos do Mestre. O primeiro ataque direto em alcance dissipa a ilusão antes
+do dano e encerra o turno daquele monstro. A apresentação usa
+`assets/itens/ignus_fatus.png` e `assets/itens/fata_morgana.png`, com opacidade
+reduzida para o Ignus Fatus em 2D/3D. Regressões:
+`python -X utf8 tools/test_ignus_fatus.py`,
+`node tools/test_ignus_fatus_cliente.js`, `python -X utf8
+tools/test_vocabulario.py` e `python -X utf8 tools/test_export_catalog.py`.
+
 ### Aviso de Atordoamento por crítico de Bordão (2026-10-18)
 
 `_resolver_critico_bordao` mantém o efeito de atordoamento no alvo quando o 20

@@ -4,6 +4,10 @@
 // Mantido À MÃO: depois da migração o server.py não contém mais o texto
 // em português, só a chave. A chave é o slug do texto SEM as interpolações.
 window.LANG_NARRACAO = {
+  "narracao.monstro_ataca_a_ilusao": {
+    "en": "👻 **{monstro}** attacks the phantom image, and it vanishes.",
+    "pt": "👻 **{monstro}** ataca a imagem fantasma, que desaparece."
+  },
   "narracao.chamas_apagadas_na_agua": {
     "en": "🌊 {nome} plunges into the water and the flames go out.",
     "pt": "🌊 {nome} mergulha na água e as chamas se apagam."
@@ -215,6 +219,14 @@ window.LANG_NARRACAO = {
   "narracao.acende_lampada_vigilia_arcana": {
     "en": "🏮 **{heroi}** lights the **{item}**. Hidden creatures within 3 squares of an active hero are revealed to the party for **{rodadas}** rounds.",
     "pt": "🏮 **{heroi}** acende a **{item}**. Criaturas ocultas a até 3 casas de um herói ativo ficam reveladas para o grupo por **{rodadas}** rodadas."
+  },
+  "narracao.usa_ignus_fatus": {
+    "en": "👻 **{heroi}** conjures a ghostly Ignus Fatus decoy for **{rodadas}** rounds.",
+    "pt": "👻 **{heroi}** cria uma isca fantasmagórica de Ignus Fatus por **{rodadas}** rodadas."
+  },
+  "narracao.usa_fata_morgana": {
+    "en": "🪞 **{heroi}** conjures a lifelike Fata Morgana decoy for **{rodadas}** rounds.",
+    "pt": "🪞 **{heroi}** cria uma isca realista de Fata Morgana por **{rodadas}** rodadas."
   },
   "narracao.usa_solucao_mecanismo": {
     "en": "📦 **{heroi}** turns the key in the **Solution of the Mechanism**. The runes disable **{quantidade}** active trap(s) in the 3-square area.",

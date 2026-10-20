@@ -8088,6 +8088,38 @@ window.LANG_INTERFACE = {
     "en": "Trap disarm cancelled.",
     "pt": "Desarme de armadilha cancelado."
   },
+  "ui.ilusao.colocar_titulo": {
+    "en": "PLACE PHANTOM",
+    "pt": "POSICIONAR ILUSÃO"
+  },
+  "ui.ilusao.colocar_instrucao": {
+    "en": "Choose a free, visible tile within 6 squares.",
+    "pt": "Escolha uma casa livre e visível a até 6 quadrados."
+  },
+  "ui.ilusao.mover_titulo": {
+    "en": "MOVE FATA MORGANA",
+    "pt": "MOVER FATA MORGANA"
+  },
+  "ui.ilusao.mover_instrucao": {
+    "en": "Choose a reachable tile up to 6 steps away, or skip.",
+    "pt": "Escolha uma casa alcançável a até 6 passos ou pule o movimento."
+  },
+  "ui.ilusao.casa_valida": {
+    "en": "Valid tile",
+    "pt": "Casa válida"
+  },
+  "ui.ilusao.casa_invalida": {
+    "en": "Choose a highlighted free tile.",
+    "pt": "Escolha uma casa livre destacada."
+  },
+  "ui.ilusao.cancelado": {
+    "en": "Phantom selection canceled.",
+    "pt": "Seleção da ilusão cancelada."
+  },
+  "ui.ilusao.pular": {
+    "en": "Stay still",
+    "pt": "Ficar parada"
+  },
   "ui.mira.esc_cancelar": {
     "en": "ESC · CANCEL",
     "pt": "ESC · CANCELAR"
