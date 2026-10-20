@@ -12125,6 +12125,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Destinatários que recebem o MESMO objeto (o próprio `msg` ou um derivado
             # compartilhado, como o estado sem os campos diferidos) dividem um JSON por idioma.
             recipient_msg = personalize(pid, msg) if personalize else msg
+            if recipient_msg is None:
+                continue          # personalize pode negar a mensagem a este destinatário
             chave = (lang, id(recipient_msg))
             data = por_idioma.get(chave)
             if data is None:
@@ -13924,6 +13926,92 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._ritmo_fechar_aberta()
         col, self._ritmo_coletor = self._ritmo_coletor, None
         return [{k: v for k, v in e.items() if k != "attack_id"} for e in (col["entradas"] if col else [])]
+
+    def _ritmo_ativo_para(self, m):
+        """O ritmo escolhido vale para o turno AUTOMÁTICO deste monstro em combate?
+        Dormente, sob Comando/Dominar Mente ou no modo Manual do Mestre ficam fora."""
+        if not m or self.velocidade_inimigos == "atual":
+            return False
+        if self.phase != "playing" or getattr(self, "test_mode", False):
+            return False
+        if not (m.get("hp", 0) > 0 or self._monster_regenerando_a_zero(m)):
+            return False
+        if m.get("comando_pendente_pid") or m.get("dominio_mente_pendente_pid"):
+            return False
+        if self._mestre_ativo() and m.get("control_mode", "auto") == "manual":
+            return False
+        return bool(self._monstro_ativo_em_combate(m))
+
+    def _ritmo_visao_para(self, pid, m):
+        """'completo' se o destinatário (Mestre, ou algum herói dele) vê o monstro;
+        senão 'generico' (sem nome nem habilidade, para não revelar a névoa)."""
+        if pid == self.master_pid:
+            return "completo"
+        for q, h in self.players.items():
+            if (q == pid or h.get("controlador") == pid) and self._ativo(h) \
+                    and self._heroi_enxerga_monstro(h, m):
+                return "completo"
+        return "generico"
+
+    async def _ritmo_enviar_agindo(self, m):
+        """Anel vermelho no monstro que age (m=None apaga). Sem visão, sem anel."""
+        if m is None:
+            await self.broadcast({"type": "turno_inimigo_agindo", "monstro_id": None, "proximos": []})
+            return
+        atual = self.initiative_index % len(self.initiative_order)
+        proximos = [e["id"] for e in self.initiative_order[atual + 1:]
+                    if e["kind"] == "monster" and e["id"] in self.monsters
+                    and self.monsters[e["id"]].get("hp", 0) > 0
+                    and self._monstro_ativo_em_combate(self.monsters[e["id"]])]
+        cheia = {"type": "turno_inimigo_agindo", "monstro_id": m.get("id"), "proximos": proximos}
+        oculta = {"type": "turno_inimigo_agindo", "monstro_id": None, "proximos": []}
+        await self.broadcast(cheia, personalize=lambda pid, msg: (
+            msg if self._ritmo_visao_para(pid, m) == "completo" else oculta))
+
+    async def _ritmo_antes(self, mid):
+        m = self.monsters.get(mid)
+        if not self._ritmo_ativo_para(m):
+            return
+        self._ritmo_iniciar(m)
+        await self._ritmo_enviar_agindo(m)
+
+    async def _ritmo_depois(self, mid):
+        """Fim do turno do monstro: apaga o anel e, se ele atacou, mostra a faixa
+        e segura a fila (tempo, ou clique no passo a passo)."""
+        if self._ritmo_coletor is None:
+            return
+        m = self.monsters.get(mid)
+        entradas = [e for e in self._ritmo_finalizar() if e["acertou"] is not None]
+        await self._ritmo_enviar_agindo(None)
+        nivel = self.velocidade_inimigos
+        if not entradas or nivel == "atual" or self.phase != "playing":
+            return
+        clique = nivel == "passo"
+        segundos = (self.ritmo_auto_segundos if clique else RITMO_SEGUNDOS[nivel])
+        campos = ("alvo_nome", "ataque", "impacto", "acertou", "critico", "rolagem", "total", "dano")
+        completo = {"type": "resumo_ataque_inimigo", "monstro_id": mid, "generico": False,
+                    "atacante_nome": nome_criatura(m) if m else None,
+                    "ataques": [{k: e[k] for k in campos} for e in entradas],
+                    "espera": "clique" if clique else "tempo", "segundos": segundos}
+        def pers(pid, msg):
+            if m is None or self._ritmo_visao_para(pid, m) == "completo":
+                return completo
+            meus = [{**{k: e[k] for k in campos}, "ataque": None, "impacto": None}
+                    for e in entradas if e["alvo_pid"] == pid]
+            if not meus:
+                return None
+            return {**completo, "generico": True, "atacante_nome": None, "ataques": meus}
+        await self.broadcast(completo, personalize=pers)
+        ev = asyncio.Event()
+        self._ritmo_evento = ev
+        espera = (self.ritmo_auto_segundos or RITMO_TETO_CLIQUE_S) if clique else RITMO_SEGUNDOS[nivel]
+        try:
+            await asyncio.wait_for(ev.wait(), timeout=espera)
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            self._ritmo_evento = None
+        await self.broadcast({"type": "resumo_inimigo_fechado"})
 
     def _ritmo_liberar(self):
         """Solta a espera pendente da faixa de resumo (se houver)."""
@@ -18480,7 +18568,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         async def monster_step(mid):
             # Este _advance_initiative e o UNICO elo da cadeia de turnos: se a
             # IA estourar, ele ainda precisa rodar, senao ninguem recebe a vez.
+            await self._isolar(self._ritmo_antes(mid), f"ritmo (início) do monstro {mid}")
             await self._isolar(monster_corpo(mid), f"turno do monstro {mid}")
+            await self._isolar(self._ritmo_depois(mid), f"ritmo (resumo) do monstro {mid}")
+            self._ritmo_coletor = None
             await self._advance_initiative()
         self.initiative_task = asyncio.create_task(monster_step(actor["id"]))
 
@@ -18769,6 +18860,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         self._clear_cooperative_markers_for_connection(self._conexao_de(pid))
         p["connected"] = False
+        self._ritmo_liberar()    # a faixa de resumo não segura a fila de quem caiu
         pending = self._smoke_reaction
         if pending:
             remaining = self._smoke_reaction_candidates(pending["attacker"], pending["target_obj"])
@@ -51705,6 +51797,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._cooperative_marker_last_at.clear()
         self.cooperative_vision_preferences.clear()
         self.phase = "ended"
+        self._ritmo_liberar()
         self._cancelar_timer_turno()
         self._cancelar_intro_masmorra()
         self.dungeon_intro_active = False
