@@ -3295,7 +3295,7 @@ function _renderRepairItems(){
 function _itemDesc(item){
   if(item.effect === 'grimoire'){
     const nomes = (item.magic_ids || []).map(id => GRIMORIO_CLIENT[id]?.nome || id);
-    return item.descricao || (nomes.length ? `Magias fixas: ${nomes.join(', ')}.` : item.name || '');
+    return item.descricao || (nomes.length ? t('ui.grimorio.magias_fixas', {nomes: nomes.join(', ')}) : item.name || '');
   }
   if(item.effect === 'learn_spell'){
     const mg = (typeof GRIMORIO_CLIENT !== 'undefined') ? GRIMORIO_CLIENT[item.magia_id] : null;
@@ -21149,7 +21149,7 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo, origemGr
       <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:30px; line-height:1; overflow:hidden; border-radius:3px;">${usada ? '💤' : magiaIconFill(m)}</div>
       <div style="position:absolute; top:3px; right:3px; width:8px; height:8px; border-radius:50%; background:${cor}; opacity:${usada ? 0.3 : 1}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>
       ${selecionada ? `<div style="position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:6px; height:6px; border-radius:50%; background:${cor}; z-index:2; box-shadow:0 0 3px rgba(0,0,0,0.85);"></div>` : ''}
-      ${origemGrimorio ? `<span title="Magia concedida pelo grimório equipado" style="position:absolute; left:2px; bottom:2px; padding:1px 3px; border-radius:2px; background:#172438e8; color:#9fc9ff; font:7px sans-serif; z-index:3;">GRIMÓRIO</span>` : ''}
+      ${origemGrimorio ? `<span title="${t('ui.grimorio.selo_titulo')}" style="position:absolute; left:2px; bottom:2px; padding:1px 3px; border-radius:2px; background:#172438e8; color:#9fc9ff; font:7px sans-serif; z-index:3;">${t('ui.grimorio.selo')}</span>` : ''}
     </div>
   `;
 }
@@ -21624,7 +21624,7 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       <div style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
-          <span style="color:${limite === 0 && temMagiaDoLivro ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${limite === 0 && temMagiaDoLivro ? 'sem slot deste círculo' : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
+          <span style="color:${limite === 0 && temMagiaDoLivro ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${limite === 0 && temMagiaDoLivro ? t('ui.magia.sem_slot_circulo') : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">

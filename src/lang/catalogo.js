@@ -2611,91 +2611,91 @@ window.LANG_CATALOGO = {
     "pt": "Granada Superior"
   },
   "cat.item.grimorio_barreira_arcana.desc": {
-    "en": "",
+    "en": "Contains Arcane Barrier. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Barreira Arcana. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_barreira_arcana.nome": {
-    "en": "",
+    "en": "Grimoire: Arcane Barrier",
     "pt": "Grimório: Barreira Arcana"
   },
   "cat.item.grimorio_bau.desc": {
-    "en": "",
+    "en": "A rare mage's book with two or three fixed spells. It only works equipped in the shield hand and grants no spell slots.",
     "pt": "Livro raro de mago com duas ou três magias fixas. Só funciona equipado na mão do escudo e não concede espaços de magia."
   },
   "cat.item.grimorio_bau.nome": {
-    "en": "",
+    "en": "Ancient Grimoire",
     "pt": "Grimório Antigo"
   },
   "cat.item.grimorio_bola_fogo.desc": {
-    "en": "",
+    "en": "Contains Fireball. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Bola de Fogo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_bola_fogo.nome": {
-    "en": "",
+    "en": "Grimoire: Fireball",
     "pt": "Grimório: Bola de Fogo"
   },
   "cat.item.grimorio_clarividencia.desc": {
-    "en": "",
+    "en": "Contains Clairvoyance. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Clarividência. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_clarividencia.nome": {
-    "en": "",
+    "en": "Grimoire: Clairvoyance",
     "pt": "Grimório: Clarividência"
   },
   "cat.item.grimorio_comando.desc": {
-    "en": "",
+    "en": "Contains Command. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Comando. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_comando.nome": {
-    "en": "",
+    "en": "Grimoire: Command",
     "pt": "Grimório: Comando"
   },
   "cat.item.grimorio_contramagica.desc": {
-    "en": "",
+    "en": "Contains Counterspell. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Contramágica. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_contramagica.nome": {
-    "en": "",
+    "en": "Grimoire: Counterspell",
     "pt": "Grimório: Contramágica"
   },
   "cat.item.grimorio_medo.desc": {
-    "en": "",
+    "en": "Contains Fear. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Medo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_medo.nome": {
-    "en": "",
+    "en": "Grimoire: Fear",
     "pt": "Grimório: Medo"
   },
   "cat.item.grimorio_raio_congelante.desc": {
-    "en": "",
+    "en": "Contains Ray of Frost. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Raio Congelante. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_raio_congelante.nome": {
-    "en": "",
+    "en": "Grimoire: Ray of Frost",
     "pt": "Grimório: Raio Congelante"
   },
   "cat.item.grimorio_relampago.desc": {
-    "en": "",
+    "en": "Contains Lightning Bolt. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Relâmpago. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_relampago.nome": {
-    "en": "",
+    "en": "Grimoire: Lightning Bolt",
     "pt": "Grimório: Relâmpago"
   },
   "cat.item.grimorio_sono.desc": {
-    "en": "",
+    "en": "Contains Sleep. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Sono. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_sono.nome": {
-    "en": "",
+    "en": "Grimoire: Sleep",
     "pt": "Grimório: Sono"
   },
   "cat.item.grimorio_voo.desc": {
-    "en": "",
+    "en": "Contains Flight. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
     "pt": "Contém Voo. Magias fixas: não podem ser trocadas. Só pode ser usado pelo Mago equipado na mão do escudo. Cada conjuração consome um espaço normal do círculo; o grimório não concede espaços nem conjurações."
   },
   "cat.item.grimorio_voo.nome": {
-    "en": "",
+    "en": "Grimoire: Flight",
     "pt": "Grimório: Voo"
   },
   "cat.item.hand_crossbow.desc": {

@@ -11132,6 +11132,22 @@ window.LANG_INTERFACE = {
     "en": "Before merging the sequel",
     "pt": "Antes de juntar a continuação"
   },
+  "ui.grimorio.selo": {
+    "en": "GRIMOIRE",
+    "pt": "GRIMÓRIO"
+  },
+  "ui.grimorio.selo_titulo": {
+    "en": "Spell granted by the equipped grimoire",
+    "pt": "Magia concedida pelo grimório equipado"
+  },
+  "ui.grimorio.magias_fixas": {
+    "en": "Fixed spells: {nomes}.",
+    "pt": "Magias fixas: {nomes}."
+  },
+  "ui.magia.sem_slot_circulo": {
+    "en": "no slot of this circle",
+    "pt": "sem slot deste círculo"
+  },
   "ui.save.ponto.manual": {
     "en": "Save · {local}",
     "pt": "Salvamento · {local}"

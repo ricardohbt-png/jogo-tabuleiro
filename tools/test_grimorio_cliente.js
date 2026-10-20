@@ -48,9 +48,9 @@ let html = sandbox.renderMagiasFichaEmJogo({
   class_id: 'mage', magias_conhecidas: [], magias_grimorio: ['jato_ar'],
   slots_max: {primeiro: 2, segundo: 0}, slots_remaining: {}, level: 1,
 }, 'mage');
-check('a carta aparece marcada como magia do grimório', html.includes('data-magia-id="jato_ar"') && html.includes('GRIMÓRIO'));
+check('a carta aparece marcada como magia do grimório', html.includes('data-magia-id="jato_ar"') && html.includes('ui.grimorio.selo'));
 check('a carta fica visível, sem slot e sem ação de clique',
-  html.includes('sem slot deste círculo') && html.includes('cursor:not-allowed') && !html.includes("castarMagia('jato_ar')"));
+  html.includes('ui.magia.sem_slot_circulo') && html.includes('cursor:not-allowed') && !html.includes("castarMagia('jato_ar')"));
 
 console.log('\n[3] Magia com slot e suporte ativo');
 html = sandbox.renderMagiasFichaEmJogo({
@@ -66,5 +66,5 @@ html = sandbox.renderMagiasFichaEmJogo({
   slots_max: {primeiro: 2, segundo: 1}, slots_remaining: {}, level: 3,
 }, 'mage');
 check('a carta continua visível e marcada, mas desativada',
-  html.includes('data-magia-id="jato_ar"') && html.includes('GRIMÓRIO')
+  html.includes('data-magia-id="jato_ar"') && html.includes('ui.grimorio.selo')
   && html.includes('cursor:not-allowed') && !html.includes("castarMagia('jato_ar')"));
