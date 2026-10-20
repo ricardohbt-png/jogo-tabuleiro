@@ -15343,7 +15343,7 @@ function _attackFeedbackTargetName(msg){
 }
 
 function _attackFeedbackResultLabel(f){
-  if(!f.result || _attackFeedbackAguardaGolpe(f)) return 'PREPARANDO';
+  if(!f.result || _attackFeedbackAguardaGolpe(f)) return t('ui.hud.preparando');
   if(f.area) return t('ui.hud.resultado_area');
   if(f.natural_critical) return t('ui.hud.20_natural_critico');
   if(f.natural_fumble) return t('ui.hud.1_natural_falha');

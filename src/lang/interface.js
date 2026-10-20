@@ -3654,6 +3654,10 @@ window.LANG_INTERFACE = {
     "en": "🌪️ Create whirlpools",
     "pt": "🌪️ Criar redemoinhos"
   },
+  "ui.hud.preparando": {
+    "en": "PREPARING",
+    "pt": "PREPARANDO"
+  },
   "ui.hud.critico": {
     "en": "CRITICAL!",
     "pt": "CRÍTICO!"
