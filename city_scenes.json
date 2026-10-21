@@ -1518,7 +1518,7 @@
                 "item_id": "",
                 "fato": "",
                 "sem_fato": "charcos_criancas_mortas",
-                "aventura_id": "charcos_aldeia"
+                "aventura_id": "charcos_mare"
               },
               "efeito": {
                 "renome": 0,
@@ -1703,14 +1703,14 @@
             },
             {
               "id": "zumbra_ferrao",
-              "texto": "Pisaram na Travessia e ainda respiram. Então sabem que o pior espera na aldeia: um ferrão do tamanho de uma lança, preso por quem não o controla. Ele odeia fogo e não aprende com a dor, só com o medo. Eu não vendo coragem, mas vendo luzes que enganam. Uma isca bem posta faz até aquele bicho olhar para o lado errado.",
+              "texto": "Se vão mesmo atrás das crianças, saibam o que espera na aldeia: um ferrão do tamanho de uma lança, preso por quem não o controla. Ele odeia fogo e não aprende com a dor, só com o medo. Eu não vendo coragem, mas vendo luzes que enganam. Levem uma isca antes de ir: lá dentro não há volta à vila para buscar, e uma isca bem posta faz até aquele bicho olhar para o lado errado.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "",
+                "fato": "charcos_criancas_sumidas",
                 "sem_fato": "charcos_criancas_mortas",
-                "aventura_id": "charcos_travessia"
+                "aventura_id": ""
               },
               "efeito": {
                 "renome": 0,

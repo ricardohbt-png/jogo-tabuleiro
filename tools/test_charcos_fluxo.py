@@ -37,7 +37,7 @@ def sala():
     r.phase = "playing"
     for rm in r.rooms:
         rm["locked"] = False
-    r.world_adventure_id = "charcos_aldeia"; r.world_adventure_index = 1
+    r.world_adventure_id = G.AVENTURA; r.world_adventure_index = 4
     p["pos"] = [5, 18]
     return r, p
 
@@ -151,7 +151,7 @@ class CriancasTests(unittest.TestCase):
         run(r._prisioneiro_morre())
         run(r._check_objectives())
         self.assertFalse(r._objetivo_concluido)
-        self.assertEqual(r.world_adventure_progress.get("charcos_aldeia", 0), 0)
+        self.assertEqual(r.world_adventure_progress.get(G.AVENTURA, 0), 0)
         self.assertIn(G.FATO_MORTE, r.fatos)
 
     def test_nova_tentativa_restaura_as_criancas_mas_nao_o_renome(self):
@@ -203,14 +203,11 @@ class VilaTests(unittest.TestCase):
         try:
             r = self.cidade(set())
             visivel = lambda aid: r._aventura_visivel(S.WORLD_ADVENTURES[aid])
-            self.assertFalse(visivel("charcos_bordas"))
+            self.assertFalse(visivel(G.AVENTURA))
             r.fatos.add(G.FATO_GANCHO)
-            self.assertTrue(visivel("charcos_bordas"))
-            self.assertFalse(visivel("charcos_palafitas"))
-            for anterior, atual in (("charcos_bordas", "charcos_palafitas"), ("charcos_palafitas", "charcos_travessia"),
-                                    ("charcos_travessia", "charcos_aldeia")):
-                r.world_adventure_progress[anterior] = len(S.WORLD_ADVENTURES[anterior]["dungeons"])
-                self.assertTrue(visivel(atual), atual)
+            self.assertTrue(visivel(G.AVENTURA))
+            r.world_adventure_progress[G.AVENTURA] = len(S.WORLD_ADVENTURES[G.AVENTURA]["dungeons"])
+            self.assertFalse(visivel(G.AVENTURA), "concluída a cadeia, o destino some do mapa")
         finally:
             for k in G.destinos():
                 S.WORLD_ADVENTURES.pop(k, None)

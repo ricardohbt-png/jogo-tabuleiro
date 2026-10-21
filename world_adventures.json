@@ -669,17 +669,17 @@
     },
     "renome_recompensa": 1
   },
-  "charcos_bordas": {
-    "id": "charcos_bordas",
-    "nome": "Bordas da Mata",
+  "charcos_mare": {
+    "id": "charcos_mare",
+    "nome": "A Maré do Charco",
     "x": 63.62,
     "y": 69.57,
-    "fome": 1,
-    "sede": 1,
+    "fome": 8,
+    "sede": 8,
     "dungeons": [
       {
         "file": "charcos_1_bordas.json",
-        "encadear": false,
+        "encadear": true,
         "intro": {
           "slides": [
             {
@@ -688,6 +688,10 @@
             },
             {
               "text": "Atrás de cada tronco, olhos que acompanham os heróis sem piscar.",
+              "fit": "contain"
+            },
+            {
+              "text": "Daqui até o fim os lugares se emendam: não há descanso, e o que for gasto não se recupera. Só a primeira trilha ainda deixa voltar à vila.",
               "fit": "contain"
             }
           ],
@@ -701,37 +705,10 @@
             }
           ]
         }
-      }
-    ],
-    "espera_retorno": {
-      "modo": "fixa",
-      "rodadas": 0,
-      "dados": ""
-    },
-    "oculto_ate_liberar": true,
-    "revisitavel": false,
-    "outro_rota": "",
-    "requisito": {
-      "renome_min": 0,
-      "nivel_grupo_min": 0,
-      "item_id": "",
-      "fato": "charcos_criancas_sumidas",
-      "sem_fato": "",
-      "aventura_id": ""
-    },
-    "renome_recompensa": 1
-  },
-  "charcos_palafitas": {
-    "id": "charcos_palafitas",
-    "nome": "Palafitas dos Pescadores",
-    "x": 68.62,
-    "y": 73.57,
-    "fome": 2,
-    "sede": 2,
-    "dungeons": [
+      },
       {
         "file": "charcos_2_palafitas.json",
-        "encadear": false,
+        "encadear": true,
         "intro": {
           "slides": [
             {
@@ -749,37 +726,10 @@
             }
           ]
         }
-      }
-    ],
-    "espera_retorno": {
-      "modo": "fixa",
-      "rodadas": 0,
-      "dados": ""
-    },
-    "oculto_ate_liberar": true,
-    "revisitavel": false,
-    "outro_rota": "",
-    "requisito": {
-      "renome_min": 0,
-      "nivel_grupo_min": 0,
-      "item_id": "",
-      "fato": "",
-      "sem_fato": "",
-      "aventura_id": "charcos_bordas"
-    },
-    "renome_recompensa": 1
-  },
-  "charcos_travessia": {
-    "id": "charcos_travessia",
-    "nome": "Travessia do Pântano",
-    "x": 73.62,
-    "y": 77.57,
-    "fome": 2,
-    "sede": 2,
-    "dungeons": [
+      },
       {
         "file": "charcos_3_travessia.json",
-        "encadear": false,
+        "encadear": true,
         "intro": {
           "slides": [
             {
@@ -797,34 +747,7 @@
             }
           ]
         }
-      }
-    ],
-    "espera_retorno": {
-      "modo": "fixa",
-      "rodadas": 0,
-      "dados": ""
-    },
-    "oculto_ate_liberar": true,
-    "revisitavel": false,
-    "outro_rota": "",
-    "requisito": {
-      "renome_min": 0,
-      "nivel_grupo_min": 0,
-      "item_id": "",
-      "fato": "",
-      "sem_fato": "",
-      "aventura_id": "charcos_palafitas"
-    },
-    "renome_recompensa": 1
-  },
-  "charcos_aldeia": {
-    "id": "charcos_aldeia",
-    "nome": "Aldeia dos Bruxos",
-    "x": 78.62,
-    "y": 81.57,
-    "fome": 3,
-    "sede": 3,
-    "dungeons": [
+      },
       {
         "file": "charcos_4a_arredores.json",
         "encadear": true,
@@ -832,10 +755,6 @@
           "slides": [
             {
               "text": "Vigias de osso andam pelo caminho de tábuas. Os bruxos dos charcos não deixam os mortos descansarem.",
-              "fit": "contain"
-            },
-            {
-              "text": "Daqui até o fim os lugares se emendam: o que for gasto não se recupera.",
               "fit": "contain"
             }
           ],
@@ -883,6 +802,7 @@
     },
     "oculto_ate_liberar": true,
     "revisitavel": false,
+    "ocultar_apos_concluir": true,
     "outro_rota": {
       "slides": [
         {
@@ -906,18 +826,6 @@
             "item_id": "",
             "fato": "charcos_ferrao_morto",
             "sem_fato": "charcos_criancas_mortas",
-            "aventura_id": ""
-          }
-        },
-        {
-          "text": "A fera ficou para trás, e o rugido seguiu os heróis até o rio. Dizem que ela ainda espera no charco. A vila agradece as crianças — e teme o que ficou vivo lá dentro.",
-          "fit": "contain",
-          "requisito": {
-            "renome_min": 0,
-            "nivel_grupo_min": 0,
-            "item_id": "",
-            "fato": "",
-            "sem_fato": "charcos_ferrao_morto",
             "aventura_id": ""
           }
         },
@@ -951,10 +859,10 @@
       "renome_min": 0,
       "nivel_grupo_min": 0,
       "item_id": "",
-      "fato": "",
+      "fato": "charcos_criancas_sumidas",
       "sem_fato": "",
-      "aventura_id": "charcos_travessia"
+      "aventura_id": ""
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 5
   }
 }

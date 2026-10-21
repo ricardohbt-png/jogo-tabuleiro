@@ -42,6 +42,8 @@ ARQUIVOS = ("charcos_1_bordas.json", "charcos_2_palafitas.json", "charcos_3_trav
 FATO_GANCHO = "charcos_criancas_sumidas"
 FATO_MORTE = "charcos_criancas_mortas"
 FATO_FERRAO = "charcos_ferrao_morto"
+AVENTURA = "charcos_mare"      # a cadeia inteira: 5 etapas emendadas, sem descanso entre elas
+ANTIGAS = ("charcos_bordas", "charcos_palafitas", "charcos_travessia", "charcos_aldeia")   # ids de antes da cadeia
 ITEM_TROFEU = "ferrao_do_brejo"
 CIDADE = "vila_dos_charcos"
 ASSINATURAS = os.path.join(RAIZ, "tools", ".charcos_assinaturas.json")
@@ -85,6 +87,9 @@ def destinos():
          "mata fechada ao entardecer, pegadas pequenas na lama"),
         ("Atrás de cada tronco, olhos que acompanham os heróis sem piscar.",
          "olhos brilhando entre árvores e capim alto"),
+        ("Daqui até o fim os lugares se emendam: não há descanso, e o que for gasto não se recupera. "
+         "Só a primeira trilha ainda deixa voltar à vila.",
+         "portão de troncos entreaberto, fogo vermelho lá dentro"),
     ], MUSICA_ABERTURA)
     bordas_outro = historia("bordas.outro", [
         ("Ossos roídos, marcas de arrasto e um sapatinho enlameado. Ninguém ali — mas o rastro "
@@ -112,8 +117,6 @@ def destinos():
     arredores_intro = historia("arredores.intro", [
         ("Vigias de osso andam pelo caminho de tábuas. Os bruxos dos charcos não deixam os mortos "
          "descansarem.", "esqueletos e zumbis vigiando uma paliçada"),
-        ("Daqui até o fim os lugares se emendam: o que for gasto não se recupera.",
-         "portão de troncos entreaberto, fogo vermelho lá dentro"),
     ], MUSICA_ABERTURA)
     arredores_outro = historia("arredores.outro", [
         ("O portão cede. Dentro, a praça dos bruxos: totens, caldeirões e, ao fundo, um cercado "
@@ -138,10 +141,6 @@ def destinos():
          "vai de boca em boca, e o ferrão da fera passa a ser troféu de quem o venceu.",
          "o Ferrão caído em meio ao fogo, bruxos fugindo",
          {"requisito": _req(fato=FATO_FERRAO, sem_fato=FATO_MORTE)}),
-        ("A fera ficou para trás, e o rugido seguiu os heróis até o rio. Dizem que ela ainda "
-         "espera no charco. A vila agradece as crianças — e teme o que ficou vivo lá dentro.",
-         "heróis cruzando um rio ao amanhecer com as crianças, silhueta enorme na névoa",
-         {"requisito": _req(sem_fato=FATO_FERRAO)}),
         ("O Ferrão tomba, mas as crianças não vão voltar. A vila vira o rosto para o grupo; nas "
          "portas, o silêncio pesa mais que qualquer grito.",
          "heróis de cabeça baixa diante de uma vila de portas fechadas",
@@ -151,27 +150,20 @@ def destinos():
          {"requisito": _req(sem_fato=FATO_MORTE)}),
     ])
 
-    def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota=""):
-        x, y = perto(dx, dy)
-        return {"id": did, "nome": nome, "x": x, "y": y, "fome": custo, "sede": custo,
-                "dungeons": etapas, "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
-                "oculto_ate_liberar": True, "revisitavel": False, "outro_rota": outro_rota,
-                "requisito": S._clean_requirement(requisito), "renome_recompensa": renome}
-
+    x, y = perto(5, 3)
+    etapas = [_etapa("charcos_1_bordas.json", bordas_intro, bordas_outro, encadear=True),
+              _etapa("charcos_2_palafitas.json", palafitas_intro, palafitas_outro, encadear=True),
+              _etapa("charcos_3_travessia.json", travessia_intro, travessia_outro, encadear=True),
+              _etapa("charcos_4a_arredores.json", arredores_intro, arredores_outro, encadear=True),
+              _etapa("charcos_4b_aldeia.json", aldeia_intro, aldeia_outro)]
     return {
-        "charcos_bordas": destino("charcos_bordas", "Bordas da Mata", 5, 3, 1,
-                                  [_etapa("charcos_1_bordas.json", bordas_intro, bordas_outro)],
-                                  {"fato": FATO_GANCHO}, 1),
-        "charcos_palafitas": destino("charcos_palafitas", "Palafitas dos Pescadores", 10, 7, 2,
-                                     [_etapa("charcos_2_palafitas.json", palafitas_intro, palafitas_outro)],
-                                     {"aventura_id": "charcos_bordas"}, 1),
-        "charcos_travessia": destino("charcos_travessia", "Travessia do Pântano", 15, 11, 2,
-                                     [_etapa("charcos_3_travessia.json", travessia_intro, travessia_outro)],
-                                     {"aventura_id": "charcos_palafitas"}, 1),
-        "charcos_aldeia": destino("charcos_aldeia", "Aldeia dos Bruxos", 20, 15, 3,
-                                  [_etapa("charcos_4a_arredores.json", arredores_intro, arredores_outro, encadear=True),
-                                   _etapa("charcos_4b_aldeia.json", aldeia_intro, aldeia_outro)],
-                                  {"aventura_id": "charcos_travessia"}, 2, outro_rota=fim_rota),
+        # Uma só aventura: as etapas se emendam (nada se recupera entre elas) e o destino some do
+        # mapa-múndi quando a cadeia acaba. Custo = soma dos antigos (1+2+2+3).
+        AVENTURA: {"id": AVENTURA, "nome": "A Maré do Charco", "x": x, "y": y, "fome": 8, "sede": 8,
+                   "dungeons": etapas, "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
+                   "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
+                   "outro_rota": fim_rota, "requisito": S._clean_requirement({"fato": FATO_GANCHO}),
+                   "renome_recompensa": 5},
     }
 
 
@@ -192,7 +184,7 @@ def conversas_taverna():
                       {"sem_fato": FATO_MORTE}, {"renome": 0, "fato": FATO_GANCHO, "item_id": ""}),
             _conversa("charcos_gratidao",
                       "Minha Lia dorme em casa de novo. Não sei como agradecer. A vila inteira fala de vocês.",
-                      {"sem_fato": FATO_MORTE, "aventura_id": "charcos_aldeia"}),
+                      {"sem_fato": FATO_MORTE, "aventura_id": AVENTURA}),
             _conversa("charcos_hostil_ysa",
                       "Saiam da minha frente. Prometeram trazê-las de volta. Prometeram.",
                       {"fato": FATO_MORTE}, uma_vez=False),
@@ -238,9 +230,41 @@ def masmorras(so_dados=False):
     if so_dados:
         return {}
     import charcos_mapas as M
-    return {"charcos_1_bordas.json": M.masmorra_bordas(), "charcos_2_palafitas.json": M.masmorra_palafitas(),
-            "charcos_3_travessia.json": M.masmorra_travessia(), "charcos_4a_arredores.json": M.masmorra_arredores(),
-            "charcos_4b_aldeia.json": M.masmorra_aldeia()}
+    gerados = {"charcos_1_bordas.json": M.masmorra_bordas(), "charcos_2_palafitas.json": M.masmorra_palafitas(),
+               "charcos_3_travessia.json": M.masmorra_travessia(), "charcos_4a_arredores.json": M.masmorra_arredores(),
+               "charcos_4b_aldeia.json": M.masmorra_aldeia()}
+    return {a: aplicar_cadeia(d, a) for a, d in gerados.items()}
+
+
+def aplicar_cadeia(defn, arquivo):
+    """Pântano/mata não têm escada: a entrada é um poste. Só a 1ª etapa deixa voltar à vila; nas
+    outras a saída pela escada é bloqueada (a cadeia não dá descanso). Mantém a ordem das chaves
+    (`marcador_entrada` logo depois de `saida_permitida`) e é idempotente."""
+    out = {}
+    for k, v in defn.items():
+        if k == "marcador_entrada":
+            continue
+        out[k] = v
+        if k == "saida_permitida":
+            out[k] = arquivo == ARQUIVOS[0]
+            out["marcador_entrada"] = "poste"
+    return out
+
+
+def ajustar_arquivos_existentes(dungeons_dir):
+    """Aplica a cadeia nas 5 masmorras JÁ gravadas (o autor as edita à mão: não se regrava o mapa,
+    só os dois campos). Devolve os arquivos que mudaram."""
+    mudou = []
+    for a in ARQUIVOS:
+        caminho = os.path.join(dungeons_dir, a)
+        atual = _ler_json(caminho, None)
+        if atual is None:
+            continue
+        novo = aplicar_cadeia(atual, a)
+        if novo != atual or list(novo) != list(atual):
+            _gravar_json(caminho, novo)
+            mudou.append(a)
+    return mudou
 
 
 # ─── Montagem e gravação ─────────────────────────────────────────────────────
@@ -307,7 +331,14 @@ def aplicar(artefatos, caminhos=None, forcar=False, regen_editor=True):
     _gravar_json(c["assinaturas"], assin)
 
     aventuras = _ler_json(c["adventures"], {})
+    # A posição no mapa-múndi é do autor (arraste no editor): vale a da própria aventura, senão a
+    # da 1ª trilha antiga (Bordas), senão a do gerador.
+    ponto = aventuras.get(AVENTURA) or aventuras.get(ANTIGAS[0]) or {}
+    for antigo in ANTIGAS:
+        aventuras.pop(antigo, None)
     for did, dest in artefatos["destinos"].items():
+        if "x" in ponto and "y" in ponto:
+            dest["x"], dest["y"] = ponto["x"], ponto["y"]
         aventuras[did] = dest
     _gravar_json(c["adventures"], aventuras)
 
@@ -390,6 +421,9 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Gera a campanha A Maré do Charco.")
     ap.add_argument("--simular", action="store_true", help="só relata, não grava")
     ap.add_argument("--forcar", action="store_true", help="regrava masmorra editada à mão")
+    ap.add_argument("--cadeia", action="store_true",
+                    help="não regrava os mapas: só aplica poste/saída nas 5 masmorras já gravadas "
+                         "(preserva a edição à mão) e grava o resto da campanha")
     args = ap.parse_args(argv)
     try:
         artefatos = preparar()
@@ -400,11 +434,15 @@ def main(argv=None):
     if args.simular:
         return 0
     try:
+        if args.cadeia:
+            artefatos["masmorras"] = {}
+            mudou = ajustar_arquivos_existentes(caminhos_padrao()["dungeons_dir"])
+            print(f"cadeia aplicada em: {', '.join(mudou) or 'nenhuma (já estava)'}")
         aplicar(artefatos, forcar=args.forcar)
     except (Conflito, ValueError) as e:
         print(f"RECUSADO: {e}  (nada foi gravado)")
         return 2
-    print("OK: 5 masmorras, 4 destinos, conversas da taverna, modificador de preço e troféu gravados.")
+    print("OK: 5 masmorras, 1 destino (A Maré do Charco), conversas da taverna, modificador de preço e troféu gravados.")
     return 0
 
 

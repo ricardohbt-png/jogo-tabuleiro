@@ -19,22 +19,18 @@ class DadosTests(unittest.TestCase):
     def setUpClass(cls):
         cls.dst = G.destinos()
 
-    def test_ids_e_cadeia_de_requisitos(self):
-        self.assertEqual(set(self.dst), {"charcos_bordas", "charcos_palafitas", "charcos_travessia", "charcos_aldeia"})
-        self.assertEqual(self.dst["charcos_bordas"]["requisito"]["fato"], G.FATO_GANCHO)
-        self.assertEqual(self.dst["charcos_palafitas"]["requisito"]["aventura_id"], "charcos_bordas")
-        self.assertEqual(self.dst["charcos_travessia"]["requisito"]["aventura_id"], "charcos_palafitas")
-        self.assertEqual(self.dst["charcos_aldeia"]["requisito"]["aventura_id"], "charcos_travessia")
+    def test_um_unico_destino_liberado_pelo_gancho(self):
+        self.assertEqual(set(self.dst), {G.AVENTURA})
+        self.assertEqual(self.dst[G.AVENTURA]["requisito"]["fato"], G.FATO_GANCHO)
 
     def test_destinos_ocultos_ate_liberar(self):
         for d in self.dst.values():
             self.assertTrue(d["oculto_ate_liberar"], d["id"])
 
-    def test_ultimo_destino_tem_duas_etapas_emendadas(self):
-        et = self.dst["charcos_aldeia"]["dungeons"]
-        self.assertEqual([e["file"] for e in et], ["charcos_4a_arredores.json", "charcos_4b_aldeia.json"])
-        self.assertTrue(et[0]["encadear"])
-        self.assertFalse(et[1]["encadear"])
+    def test_cinco_etapas_emendadas(self):
+        et = self.dst[G.AVENTURA]["dungeons"]
+        self.assertEqual([e["file"] for e in et], list(G.ARQUIVOS))
+        self.assertEqual([e["encadear"] for e in et], [True, True, True, True, False])
 
     def test_arquivos_batem_com_os_destinos(self):
         usados = [e["file"] for d in self.dst.values() for e in d["dungeons"]]
@@ -57,7 +53,7 @@ class DadosTests(unittest.TestCase):
     def test_conversa_calorosa_so_sem_tragedia_e_com_rota(self):
         c = next(c for c in G.conversas_taverna()["npc_ms42peq8"] if c["id"] == "charcos_gratidao")
         self.assertEqual(c["requisito"]["sem_fato"], G.FATO_MORTE)
-        self.assertEqual(c["requisito"]["aventura_id"], "charcos_aldeia")
+        self.assertEqual(c["requisito"]["aventura_id"], G.AVENTURA)
 
     def test_modificador_da_vila_so_para_o_marcador_da_morte(self):
         self.assertEqual(G.modificadores(), {"vila_dos_charcos": [{"fato": G.FATO_MORTE, "preco_mult": 1.5}]})
@@ -71,12 +67,12 @@ class DadosTests(unittest.TestCase):
         self.assertFalse(item["disponibilidade"]["loja"])
 
     def test_final_tem_slides_condicionais_por_marcador(self):
-        slides = self.dst["charcos_aldeia"]["outro_rota"]["slides"]
+        slides = self.dst[G.AVENTURA]["outro_rota"]["slides"]
         reqs = [(s.get("requisito") or {}, bool(s.get("negar"))) for s in slides]
 
         def texto(fatos):
             r = S.GameRoom("FIM"); r.fatos = set(fatos)
-            beat = S._story_beat("fim:x", [self.dst["charcos_aldeia"]["outro_rota"]], r._requisito_do_slide)
+            beat = S._story_beat("fim:x", [self.dst[G.AVENTURA]["outro_rota"]], r._requisito_do_slide)
             return " ".join(s["text"] for s in beat["slides"])
 
         vitoria = texto({G.FATO_FERRAO})

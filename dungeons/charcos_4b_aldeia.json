@@ -3,7 +3,8 @@
   "id": "charcos_4b_aldeia",
   "name": "A Aldeia dos Bruxos",
   "ambiente": "bruma_tenebrosa",
-  "saida_permitida": true,
+  "saida_permitida": false,
+  "marcador_entrada": "poste",
   "start_mode": "entrance",
   "grid": {
     "w": 56,
