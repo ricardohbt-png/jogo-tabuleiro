@@ -1649,7 +1649,7 @@
     },
     "raizes_do_brejo": {
       "nome": "Zumbra",
-      "background": "assets/tavern/taverna_charco.png",
+      "background": "assets/cenas/fundos/loja_bruxo_charcos.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
