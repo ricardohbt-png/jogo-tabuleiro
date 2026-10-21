@@ -2467,6 +2467,19 @@ function showWorldAdventurePreview(world, adventure){
   _gamepadFocusMapPoint('.worldmap-travel:not([disabled])', '.worldmap-back');
 }
 
+// Destino cuja rota inteira já foi cumprida (mesma regra de _adventureInfo).
+function _destinoConcluido(adventure){
+  const n = (adventure.dungeons || []).length;
+  return n > 0 && Math.max(0, Number(adventure.progresso || 0)) >= n;
+}
+// Preferência local: esconder do mapa-múndi os destinos concluídos.
+function _mapaOcultaConcluidas(){
+  try{ return localStorage.getItem('lfh_mapa_ocultar_concluidas') === '1'; }catch(e){ return false; }
+}
+function _mapaDefineOcultaConcluidas(v){
+  try{ localStorage.setItem('lfh_mapa_ocultar_concluidas', v ? '1' : '0'); }catch(e){}
+}
+
 function showWorldMap(){
   const world = _worldOfCityState();
   if(!world) return;
@@ -2493,6 +2506,14 @@ function showWorldMap(){
       showWorldMap();
     };
     frame.appendChild(edit);
+  }
+  const concluidos = (world.adventures || []).filter(a => !a.so_na_cidade && _destinoConcluido(a)).length;
+  if(!editing && concluidos){
+    const oculta = _mapaOcultaConcluidas();
+    const hide = document.createElement('button'); hide.type = 'button'; hide.className = 'worldmap-hide-done';
+    hide.textContent = t(oculta ? 'ui.mundo.mostrar_concluidas' : 'ui.mundo.ocultar_concluidas', {n: concluidos});
+    hide.onclick = () => { _mapaDefineOcultaConcluidas(!oculta); showWorldMap(); };
+    frame.appendChild(hide);
   }
   const info = document.createElement('div'); info.className = 'worldmap-info';
   const current = (world.locations || []).find(l => l.id === world.location);
@@ -2548,7 +2569,7 @@ function showWorldMap(){
   });
   // Destino "só na cidade" (ex.: Campo de Treinamento) entra pelo ponto da
   // ilustração da cidade; no mapa-múndi ele não vira marcador.
-  if(!editing) (world.adventures || []).filter(a => !a.so_na_cidade).forEach(adventure => {
+  if(!editing) (world.adventures || []).filter(a => !a.so_na_cidade && !(_mapaOcultaConcluidas() && _destinoConcluido(a))).forEach(adventure => {
     const marker = document.createElement('button'); marker.type = 'button';
     marker.className = 'worldmap-marker adventure'; marker.style.left = adventure.x + '%'; marker.style.top = adventure.y + '%';
     marker.dataset.worldName = adventure.nome; marker.setAttribute('aria-label', adventure.nome); marker.title = adventure.nome;

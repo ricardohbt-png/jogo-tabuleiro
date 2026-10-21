@@ -8453,6 +8453,14 @@ window.LANG_INTERFACE = {
     "en": "← Back",
     "pt": "← Voltar"
   },
+  "ui.mundo.ocultar_concluidas": {
+    "en": "👁 Hide completed ({n})",
+    "pt": "👁 Ocultar concluídas ({n})"
+  },
+  "ui.mundo.mostrar_concluidas": {
+    "en": "👁 Show completed ({n})",
+    "pt": "👁 Mostrar concluídas ({n})"
+  },
   "ui.mundo.voltar_cidade": {
     "en": "← Back to the city",
     "pt": "← Voltar à cidade"
