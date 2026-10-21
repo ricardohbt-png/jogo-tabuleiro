@@ -287,6 +287,27 @@ class TransacaoViagemTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(r.world_location, "alva_e_luz")
         self.assertIsNone(r.pending_world_travel)
 
+    async def test_destino_so_na_cidade_nunca_sofre_emboscada(self):
+        """Campo de Treinamento (entra-se pelo ponto da cidade): nem com a rolagem mais baixa."""
+        adventure_id = "treino_sem_emboscada_teste"
+        S.WORLD_ADVENTURES[adventure_id] = {
+            "id": adventure_id, "nome": "Treino", "fome": 0, "sede": 0, "so_na_cidade": True,
+            "dungeons": [{"file": "amostra.json"}],
+        }
+        try:
+            r = self.sala()
+            r.players["p1"]["class_id"] = "warrior"
+            r.world_adventure_progress = {}
+            r._avaliar_requisito = lambda _req: (True, [])
+            r._iniciar_encontro_viagem = AsyncMock()
+            r._continuar_entrada_pendente = AsyncMock()
+            with patch.object(S.random, "random", return_value=0.0):
+                await r.handle_world_adventure("p1", adventure_id)
+            r._iniciar_encontro_viagem.assert_not_awaited()
+            self.assertEqual(r.world_adventure_id, adventure_id)
+        finally:
+            S.WORLD_ADVENTURES.pop(adventure_id, None)
+
 
 if __name__ == "__main__":
     unittest.main()
