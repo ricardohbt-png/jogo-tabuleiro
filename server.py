@@ -3544,6 +3544,7 @@ FOTO_SALA_CATEGORIAS = {
     "door_conditions": "foto", "door_condition_activated": "foto",
     "decorations": "foto", "ambiente": "foto", "transicao_altura": "foto",
     "saida_permitida": "foto", "start_mode": "foto", "hero_spawns": "foto",
+    "marcador_entrada": "foto",
     "expected_party": "foto",
     # exploração
     "explored": "foto", "magic_reveal": "foto", "salas_visitadas": "foto",
@@ -3734,6 +3735,9 @@ def _conta_participa(sg, conta):
     return bool(sg) and (sg.get("owner") == conta
                          or conta in (sg.get("members") or {})
                          or sg.get("master_account") == conta)
+
+# Como a casa de entrada da masmorra aparece (campo autoral `marcador_entrada`).
+MARCADORES_ENTRADA = ("escada", "poste")
 
 # Velocidade do turno dos inimigos: "atual" não muda nada; "lento"/"muito_lento"
 # seguram a fila por alguns segundos depois de cada monstro que atacou; "passo"
@@ -8294,6 +8298,10 @@ def validar_dungeon(defn):
     if sp is not None and not isinstance(sp, bool):
         return False, f"saida_permitida inválido: {sp!r} (booleano)."
 
+    me = defn.get("marcador_entrada")
+    if me is not None and me not in MARCADORES_ENTRADA:
+        return False, f"marcador_entrada inválido: {me!r} ({'|'.join(MARCADORES_ENTRADA)})."
+
     _rooms_req = [r for r in (defn.get("rooms") or []) if isinstance(r, dict) and r.get("required")]
     for _r in (defn.get("rooms") or []):
         if isinstance(_r, dict) and _r.get("required_mode") not in (None, "visit", "clear"):
@@ -11930,6 +11938,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.master_reserve = {}   # Camada B: typeâ†’count restante de reforÃ§os do mestre
         self.expected_party = {"heroes": 4, "level": 1}   # Camada C: grupo esperado (referÃªncia)
         self.saida_permitida = True   # masmorra permite sair pela escada de entrada
+        self.marcador_entrada = "escada"   # como a entrada aparece: "escada" | "poste"
         self._story_encadeada = None   # beat de emenda entre etapas (consumido pelo cliente)
         self._emendando = False        # True durante _emendar_proxima_etapa
         self.player_order = []  # list of pid in turn order
@@ -17043,6 +17052,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ent = defn.get("entrance")
         self.stairs_pos = ([ent["x"], ent["y"]]
                            if self.start_mode == "entrance" and ent else None)
+        # Só a APRESENTAÇÃO da casa de entrada: escada (padrão) ou poste. A saída
+        # pela escada e `saida_permitida` não dependem disto.
+        marcador = defn.get("marcador_entrada")
+        self.marcador_entrada = marcador if marcador in MARCADORES_ENTRADA else "escada"
 
         # Fase 3: instancia o que estava inerte.
         ex = defn.get("exit")
@@ -52397,6 +52410,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "explored": [list(e) for e in self.explored],
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # ClarividÃªncia + visÃ£o ao vivo dos minions
             "stairs_pos": self.stairs_pos,
+            "marcador_entrada": self.marcador_entrada,
             "start_mode": self.start_mode,
             "hero_spawns": [dict(s, pos=list(s["pos"])) for s in self.hero_spawns],
             # Saída individual: o cliente confirma o custo antes de enviar exit_dungeon.
