@@ -4,6 +4,7 @@
   "name": "Bordas da Mata",
   "ambiente": "ar_livre",
   "saida_permitida": true,
+  "marcador_entrada": "poste",
   "start_mode": "entrance",
   "grid": {
     "w": 48,

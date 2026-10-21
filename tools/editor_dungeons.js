@@ -26165,6 +26165,7 @@ window.EDITOR_DUNGEONS = [
       "name": "Bordas da Mata",
       "ambiente": "ar_livre",
       "saida_permitida": true,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 48,
@@ -32186,7 +32187,8 @@ window.EDITOR_DUNGEONS = [
       "id": "charcos_2_palafitas",
       "name": "Palafitas dos Pescadores",
       "ambiente": "ar_livre",
-      "saida_permitida": true,
+      "saida_permitida": false,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 53,
@@ -37564,7 +37566,8 @@ window.EDITOR_DUNGEONS = [
       "id": "charcos_3_travessia",
       "name": "Travessia do Pântano",
       "ambiente": "ar_livre",
-      "saida_permitida": true,
+      "saida_permitida": false,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 55,
@@ -45423,7 +45426,8 @@ window.EDITOR_DUNGEONS = [
       "id": "charcos_4a_arredores",
       "name": "Arredores da Aldeia",
       "ambiente": "ar_livre",
-      "saida_permitida": true,
+      "saida_permitida": false,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 47,
@@ -52889,7 +52893,8 @@ window.EDITOR_DUNGEONS = [
       "id": "charcos_4b_aldeia",
       "name": "A Aldeia dos Bruxos",
       "ambiente": "bruma_tenebrosa",
-      "saida_permitida": true,
+      "saida_permitida": false,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 56,

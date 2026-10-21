@@ -35,6 +35,12 @@
       <label title="Se desmarcado, os heróis não podem deixar a masmorra pela escada de entrada" data-i18n-title="ui.editor.topo.saida_escada_dica">
         <input type="checkbox" id="m-saida" checked> <span data-i18n="ui.editor.topo.saida_escada">🚪 saída pela escada</span>
       </label>
+      <label title="Como a entrada da masmorra é marcada no chão" data-i18n-title="ui.editor.topo.marcador_dica"><span data-i18n="ui.editor.topo.marcador">entrada</span>
+        <select id="m-marcador">
+          <option value="escada" data-i18n="ui.editor.topo.marcador.escada">Escada</option>
+          <option value="poste" data-i18n="ui.editor.topo.marcador.poste">Poste</option>
+        </select>
+      </label>
       <label>grid
         <input id="g-w" type="number" min="1" max="60" value="16" style="width:46px">×
         <input id="g-h" type="number" min="1" max="60" value="12" style="width:46px">

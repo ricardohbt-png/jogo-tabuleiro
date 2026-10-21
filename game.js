@@ -6137,6 +6137,54 @@ window.encerrarMissaoConfirm = encerrarMissaoConfirm;
 
 // A confirmação de saída precisa ser HTML do jogo, não window.confirm():
 // diálogos nativos não permitem foco/click pela Gamepad API.
+// ── Marcador de entrada: escada (padrão) ou poste (pântanos e florestas) ──────
+function _entradaEhPoste(st){ return !!st && st.marcador_entrada === 'poste'; }
+function _nomeMarcadorEntrada(st){
+  return _entradaEhPoste(st) ? t('ui.tabuleiro.poste_entrada') : t('ui.tabuleiro.escada_saida');
+}
+function _dicaEntradaHTML(st){
+  if(_entradaEhPoste(st)){
+    const volta = st.saida_permitida === false ? t('ui.tabuleiro.poste_sem_retorno') : t('ui.tabuleiro.clique_voltar_cidade');
+    return `🚩 <b>${t('ui.tabuleiro.poste_entrada')}</b><br><span style="color:#ffd040">${volta}</span>`;
+  }
+  return `🪜 <b>${t('ui.tabuleiro.escada_saida')}</b><br><span style="color:#ffd040">${t('ui.tabuleiro.clique_voltar_cidade')}</span>`;
+}
+function _desenharPoste2D(ctx, X, Y2){
+  const cx = X + CELL/2;
+  // pedras da base
+  ctx.fillStyle='rgba(70,60,48,0.80)';
+  ctx.beginPath(); ctx.ellipse(cx, Y2+CELL*0.84, CELL*0.26, CELL*0.09, 0, 0, Math.PI*2); ctx.fill();
+  // mastro
+  ctx.fillStyle='rgb(112,78,40)'; ctx.fillRect(cx-CELL*0.035, Y2+CELL*0.14, CELL*0.07, CELL*0.70);
+  ctx.strokeStyle='rgba(40,26,10,0.9)'; ctx.lineWidth=1; ctx.strokeRect(cx-CELL*0.035, Y2+CELL*0.14, CELL*0.07, CELL*0.70);
+  // pano
+  ctx.fillStyle='rgb(176,48,40)';
+  ctx.beginPath(); ctx.moveTo(cx+CELL*0.035, Y2+CELL*0.16); ctx.lineTo(cx+CELL*0.34, Y2+CELL*0.26);
+  ctx.lineTo(cx+CELL*0.035, Y2+CELL*0.38); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='rgba(255,210,100,0.75)'; ctx.stroke();
+}
+function _montarPoste3D(T, grupo, sx, sb, sy){
+  const madeira = new T.MeshStandardMaterial({color:0x6e4a26, roughness:0.88, metalness:0.05});
+  const pedra   = new T.MeshStandardMaterial({color:0x4a4640, roughness:0.92, metalness:0.05});
+  const pano    = new T.MeshStandardMaterial({color:0xb03028, roughness:0.70, metalness:0.05, side:T.DoubleSide});
+  const ouro = new T.MeshStandardMaterial({
+    color:new T.Color(0xffd060), emissive:new T.Color(0xffd060),
+    emissiveIntensity:0.55, roughness:0.25, metalness:0.90
+  });
+  const base = new T.Mesh(new T.CylinderGeometry(0.26,0.32,0.07,10), pedra);
+  base.position.set(sx, sb+0.035, sy); base.castShadow=base.receiveShadow=true; grupo.add(base);
+  const mastro = new T.Mesh(new T.CylinderGeometry(0.030,0.040,1.15,8), madeira);
+  mastro.position.set(sx, sb+0.07+0.575, sy); mastro.castShadow=true; grupo.add(mastro);
+  const bandeira = new T.Mesh(new T.PlaneGeometry(0.42,0.26), pano);
+  bandeira.position.set(sx+0.23, sb+1.02, sy); bandeira.castShadow=true; grupo.add(bandeira);
+  const ponta = new T.Mesh(new T.SphereGeometry(0.05,10,8), ouro);
+  ponta.position.set(sx, sb+1.25, sy); ponta.userData.isStairGlow=true; grupo.add(ponta);
+  const anel = new T.Mesh(new T.TorusGeometry(0.40,0.022,6,28), ouro);
+  anel.rotation.x=Math.PI/2; anel.position.set(sx,sb+0.005,sy); anel.userData.isStairGlow=true; grupo.add(anel);
+  const luz = new T.PointLight(0xffd080,1.0,3.5);
+  luz.position.set(sx,sb+1.0,sy); grupo.add(luz);
+}
+
 function confirmarSaidaMasmorra(custo, espera){
   if(document.getElementById('exit-dungeon-overlay')) return;
   const ov = document.createElement('div');
@@ -6147,7 +6195,7 @@ function confirmarSaidaMasmorra(custo, espera){
   const aviso = t('ui.tabuleiro.confirmar_saida', {f:custo.fome, s:custo.sede, n:espera});
   ov.innerHTML = '<div style="background:rgba(28,20,6,.98);border:1px solid var(--gold,#ffcc44);'
     + 'border-radius:12px;padding:22px 24px;max-width:340px;text-align:center;box-shadow:0 8px 30px #000b;">'
-    + '<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;">🪜 ' + t('ui.tabuleiro.escada_saida') + '</div>'
+    + '<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;">' + (_entradaEhPoste(GS.gameState) ? '🚩 ' : '🪜 ') + _nomeMarcadorEntrada(GS.gameState) + '</div>'
     + '<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:16px;">' + aviso + '</div>'
     + '<div style="display:flex;gap:10px;">'
     + '<button data-gamepad-cancel style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;background:rgba(40,32,16,.9);color:#cbbe9c;font-weight:700;cursor:pointer;">' + t('ui.geral.cancelar') + '</button>'
@@ -12411,7 +12459,9 @@ function renderMap(state){
     const [sx,sy]=state.stairs_pos;
     if(exploredSet.has(`${sx},${sy}`)){
       const X=sx*CELL, Y2=sy*CELL;
+      const _poste = _entradaEhPoste(state);
       // Stone step tones
+      if(!_poste){
       ctx.fillStyle='rgba(60,42,18,0.72)'; ctx.fillRect(X+3,Y2+3,CELL-6,CELL-6);
       ctx.strokeStyle='rgba(180,130,40,0.55)'; ctx.lineWidth=1;
       const steps=4, sh=(CELL-14)/steps;
@@ -12421,6 +12471,7 @@ function renderMap(state){
         ctx.fillRect(X+6+s*3,sy2,CELL-14-s*6,sh-1);
         ctx.strokeRect(X+6+s*3+0.5,sy2+0.5,CELL-15-s*6,sh-2);
       }
+      }
       // Persistent gold glow (staircase is always interactive)
       const gst=ctx.createRadialGradient(X+CELL/2,Y2+CELL/2,0,X+CELL/2,Y2+CELL/2,CELL*0.75);
       gst.addColorStop(0,'rgba(255,210,60,0.28)');
@@ -12428,11 +12479,11 @@ function renderMap(state){
       ctx.fillStyle=gst; ctx.fillRect(X-CELL/4,Y2-CELL/4,CELL*1.5,CELL*1.5);
       // Icon
       ctx.font=`${Math.round(CELL*0.45)}px serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText('🪜',X+CELL/2,Y2+CELL/2);
+      if(_poste) _desenharPoste2D(ctx, X, Y2); else ctx.fillText('🪜',X+CELL/2,Y2+CELL/2);
       // Small label
       ctx.font=`bold ${Math.round(CELL*0.16)}px monospace`; ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.fillStyle='rgba(255,220,80,0.90)';
-      ctx.fillText(t('ui.tabuleiro.saida'),X+CELL/2,Y2+CELL-14);
+      ctx.fillText(t(_poste ? 'ui.tabuleiro.poste_rotulo' : 'ui.tabuleiro.saida'),X+CELL/2,Y2+CELL-14);
     }
   }
 
@@ -33335,7 +33386,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
   if(GS.gameState.stairs_pos){
     const [sx,sy]=GS.gameState.stairs_pos;
     if(tx===sx&&ty===sy){
-      tip.innerHTML=`🪜 <b>${t('ui.tabuleiro.escada_saida')}</b><br><span style="color:#ffd040">${t('ui.tabuleiro.clique_voltar_cidade')}</span>`;
+      tip.innerHTML=_dicaEntradaHTML(GS.gameState);
       tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
       $('dungeon-canvas').style.cursor='pointer'; return;
     }
@@ -46874,6 +46925,11 @@ function init3D(state){
     // Assenta no topo do terreno (platô/ponte), como as portas.
     const sb = topoSuperficie3D(state, sx, sy, TH);
     stairGroup = new T.Group();
+    if(_entradaEhPoste(state)){
+      _montarPoste3D(T, stairGroup, sx, sb, sy);
+      stairGroup.visible=false;
+      scene.add(stairGroup);
+    } else {
     const sMat  = new T.MeshStandardMaterial({color:0x4a3620, roughness:0.86, metalness:0.10});
     const sEdge = new T.MeshStandardMaterial({color:0x6a5030, roughness:0.72, metalness:0.15});
     const sGold = new T.MeshStandardMaterial({
@@ -46901,6 +46957,7 @@ function init3D(state){
     stairLight.position.set(sx,sb+0.9,sy); stairGroup.add(stairLight);
     stairGroup.visible=false;
     scene.add(stairGroup);
+    }
   }
 
   // Marcadores 3D das posições iniciais por herói (mapas sem escada).
@@ -56042,7 +56099,7 @@ function on3DMouseMove(e){
   if(GS.gameState.stairs_pos){
     const [sx,sy]=GS.gameState.stairs_pos;
     if(tx===sx&&ty===sy){
-      tip.innerHTML=`🪜 <b>${t('ui.tabuleiro.escada_saida')}</b><br><span style="color:#ffd040">${t('ui.tabuleiro.clique_voltar_cidade')}</span>`;
+      tip.innerHTML=_dicaEntradaHTML(GS.gameState);
       tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
       el.style.cursor='pointer';
       g3.hoveredPos=null;   // don't hover-lift the tile as if it were a figure

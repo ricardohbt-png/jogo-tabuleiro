@@ -3,7 +3,8 @@
   "id": "charcos_2_palafitas",
   "name": "Palafitas dos Pescadores",
   "ambiente": "ar_livre",
-  "saida_permitida": true,
+  "saida_permitida": false,
+  "marcador_entrada": "poste",
   "start_mode": "entrance",
   "grid": {
     "w": 53,

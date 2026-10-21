@@ -10393,6 +10393,18 @@ window.LANG_INTERFACE = {
     "en": "Not enough provisions: the trip costs 🍖{f} and 💧{s}.",
     "pt": "Provisões insuficientes: a viagem custa 🍖{f} e 💧{s}."
   },
+  "ui.tabuleiro.poste_entrada": {
+    "en": "Entry Post",
+    "pt": "Poste de Entrada"
+  },
+  "ui.tabuleiro.poste_sem_retorno": {
+    "en": "No way back from here",
+    "pt": "Não há retorno por aqui"
+  },
+  "ui.tabuleiro.poste_rotulo": {
+    "en": "ENTRY",
+    "pt": "ENTRADA"
+  },
   "ui.tabuleiro.saida": {
     "en": "EXIT",
     "pt": "SAÍDA"

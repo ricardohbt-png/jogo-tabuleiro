@@ -35,7 +35,6 @@ RETRATO_PROVISORIO = "assets/tavern/homem_misterioso.png"
 FATO_GANCHO = "charcos_criancas_sumidas"
 FATO_MORTE = "charcos_criancas_mortas"
 FATO_FERRAO = "charcos_ferrao_morto"
-AVENTURA_TRAVESSIA = "charcos_travessia"
 
 
 def estoque():
@@ -74,11 +73,12 @@ def conversas():
             _req(fato=FATO_GANCHO, sem_fato=FATO_MORTE), fato="zumbra_avisou"),
         _conversa(
             "zumbra_ferrao",
-            "Pisaram na Travessia e ainda respiram. Então sabem que o pior espera na aldeia: um "
-            "ferrão do tamanho de uma lança, preso por quem não o controla. Ele odeia fogo e não "
-            "aprende com a dor, só com o medo. Eu não vendo coragem, mas vendo luzes que enganam. "
-            "Uma isca bem posta faz até aquele bicho olhar para o lado errado.",
-            _req(aventura_id=AVENTURA_TRAVESSIA, sem_fato=FATO_MORTE)),
+            "Se vão mesmo atrás das crianças, saibam o que espera na aldeia: um ferrão do tamanho "
+            "de uma lança, preso por quem não o controla. Ele odeia fogo e não aprende com a dor, "
+            "só com o medo. Eu não vendo coragem, mas vendo luzes que enganam. Levem uma isca antes "
+            "de ir: lá dentro não há volta à vila para buscar, e uma isca bem posta faz até aquele "
+            "bicho olhar para o lado errado.",
+            _req(fato=FATO_GANCHO, sem_fato=FATO_MORTE)),
         _conversa(
             "zumbra_ferrao_morto",
             "Então o ferrão caiu, e vocês continuam inteiros. Eu sempre soube que alguém faria "

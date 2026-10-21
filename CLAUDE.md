@@ -1,5 +1,35 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Marcador de entrada e a Maré do Charco em cadeia (2026-10-21)
+
+Campo novo da masmorra, **`marcador_entrada`**: `"escada"` (padrão; ausente = escada) ou `"poste"` (poste de
+madeira com pano vermelho, para pântano e mata onde escada não faz sentido). É só apresentação: a casa de
+entrada, a saída por ela e `saida_permitida` não mudam. Validado em `validar_dungeon`, lido em
+`load_authored_dungeon` (`GameRoom.marcador_entrada`), categoria `foto`, enviado no `game_state`. Editor: seletor
+`m-marcador` ao lado de "saída pela escada" (`buildJSON` só grava quando é poste). Cliente: `_entradaEhPoste`,
+`_desenharPoste2D`, `_montarPoste3D`, dica "Poste de Entrada" (com "Não há retorno por aqui" quando
+`saida_permitida === false`). Testes: `python -X utf8 tools/test_marcador_entrada.py`,
+`node tools/test_marcador_entrada_editor.js`, `node tools/test_marcador_entrada_cliente.js`.
+
+As quatro aventuras dos Charcos viraram **uma só**, `charcos_mare` ("A Maré do Charco"): 5 etapas emendadas
+(`encadear`), então nada se recupera entre elas e só se volta à vila no fim. Só a 1ª masmorra (Bordas) mantém a
+saída pela escada; as outras quatro têm `saida_permitida: false`; as cinco usam poste. O destino tem
+`ocultar_apos_concluir` (some do mapa-múndi ao terminar a cadeia), fome/sede 8 (soma dos antigos), renome +5 no
+fim, e o aviso "os lugares se emendam" abre a 1ª etapa. O final de **fuga** não existe mais (a Aldeia bloqueia a
+saída). A dica do Ferrão da Zumbra agora é pré-expedição (só pede o gancho). Gerador:
+`tools/gerar_campanha_charcos.py --cadeia` NÃO regrava os mapas (o autor os edita à mão): só aplica poste/saída
+nas masmorras já gravadas (`ajustar_arquivos_existentes`) e regrava destino, conversas e preços; preserva a
+posição do destino no mapa-múndi.
+
+**Migração do save** (`migrar_charcos_cadeia(doc)` em `server.py`, pura e idempotente; roda em
+`ensure_campaign_schema`, em `carregar_ponto_no_jogo` e, na foto, em `_foto_aplicar_sala` via
+`charcos_remapear_sala`): progresso por prefixo contínuo (bordas→palafitas→travessia→aldeia, a aldeia conta até
+2 etapas), progresso de rota, diário, slides vistos (`aventura|encadeada|fim:<id>:<i>`) e a foto da masmorra
+(reempacotada mantendo resumo e `gravado_em`). Etapas antigas: bordas 0, palafitas 1, travessia 2, aldeia 3–4.
+Efeito aceito: quem já ganhou +1 de renome por etapa antiga ganha +5 de novo no fim. Testes:
+`python -X utf8 tools/test_charcos_cadeia.py` e `python -X utf8 tools/test_charcos_migracao.py`. Plano:
+`docs/superpowers/plans/2026-10-21-charcos-cadeia-sem-descanso.md`.
+
 ### Raízes do Brejo e a bruxa Zumbra (2026-10-20)
 
 Loja e cena de conversa na Vila dos Charcos, geradas por `tools/gerar_zumbra_charcos.py`

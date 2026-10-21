@@ -2434,6 +2434,111 @@ def _migrar_chaves_conversa(raw):
         elif len(partes) == 3: saida.add(f"{partes[0]}:taverna:{partes[1]}:{partes[2]}")
     return saida
 
+# ── Charcos: os 4 destinos antigos viraram UMA cadeia (`charcos_mare`, 5 etapas) ─────────────
+# Cada id antigo vira (id novo, deslocamento do índice de etapa). A Aldeia tinha duas etapas
+# (Arredores + Aldeia), por isso começa na 4ª posição da cadeia.
+CHARCOS_CADEIA = "charcos_mare"
+CHARCOS_ANTIGOS = {"charcos_bordas": 0, "charcos_palafitas": 1, "charcos_travessia": 2, "charcos_aldeia": 3}
+_CHARCOS_ORDEM = ("charcos_bordas", "charcos_palafitas", "charcos_travessia", "charcos_aldeia")
+_CHARCOS_ETAPAS = {"charcos_bordas": 1, "charcos_palafitas": 1, "charcos_travessia": 1, "charcos_aldeia": 2}
+_CHARCOS_BEAT_RE = re.compile(r"(aventura|encadeada|fim):(charcos_[a-z]+):(\d+)")
+
+
+def _charcos_novo(aid, idx):
+    """(id, índice) antigo → (id, índice) da cadeia; None se não for dos Charcos antigos."""
+    if aid not in CHARCOS_ANTIGOS:
+        return None
+    try:
+        return CHARCOS_CADEIA, CHARCOS_ANTIGOS[aid] + int(idx)
+    except (TypeError, ValueError):
+        return None
+
+
+def charcos_remapear_sala(sala):
+    """Campos de aventura de uma sala/foto antiga → ids da cadeia. Devolve se mudou."""
+    if not isinstance(sala, dict):
+        return False
+    novo = _charcos_novo(sala.get("world_adventure_id"), sala.get("world_adventure_index", 0) or 0)
+    if not novo:
+        return False
+    sala["world_adventure_id"], sala["world_adventure_index"] = novo
+    return True
+
+
+def _charcos_migrar_foto(registro):
+    """Foto empacotada com aventura antiga → foto com os ids novos (resumo e hora preservados)."""
+    corpo = foto_desempacotar(registro)
+    if not corpo or not charcos_remapear_sala(corpo.get("sala")):
+        return None
+    resumo = {k: v for k, v in registro.items() if k not in ("versao", "gravado_em", "dados")}
+    novo = foto_empacotar(corpo, **resumo)
+    novo["gravado_em"] = registro.get("gravado_em", novo["gravado_em"])
+    return novo
+
+
+def migrar_charcos_cadeia(doc):
+    """Passa o progresso dos 4 destinos antigos dos Charcos para a cadeia `charcos_mare`.
+
+    Vale para o jogo salvo e para o `estado` de um ponto de salvamento. Pura e idempotente: sem os
+    ids antigos não toca em nada. Devolve se alterou."""
+    if not isinstance(doc, dict):
+        return False
+    mudou = False
+    prog = doc.get("world_adventure_progress")
+    if isinstance(prog, dict) and any(k in prog for k in CHARCOS_ANTIGOS):
+        feitas = 0
+        for aid in _CHARCOS_ORDEM:
+            try:
+                n = max(0, int(prog.get(aid, 0) or 0))
+            except (TypeError, ValueError):
+                n = 0
+            if n < _CHARCOS_ETAPAS[aid]:
+                feitas += n if aid == "charcos_aldeia" and feitas == 3 else 0
+                break
+            feitas += _CHARCOS_ETAPAS[aid]
+        for aid in CHARCOS_ANTIGOS:
+            prog.pop(aid, None)
+        if feitas:
+            prog[CHARCOS_CADEIA] = max(int(prog.get(CHARCOS_CADEIA, 0) or 0), feitas)
+        mudou = True
+    rota = doc.get("world_adventure_route_progress")
+    if isinstance(rota, dict):
+        for chave in [k for k in rota if str(k).split(":")[0] in CHARCOS_ANTIGOS]:
+            aid, _, idx = str(chave).partition(":")
+            novo = _charcos_novo(aid, idx)
+            valor = rota.pop(chave)
+            if novo:
+                rota.setdefault(f"{novo[0]}:{novo[1]}", valor)
+            mudou = True
+    diario = doc.get("adventurer_journal")
+    if isinstance(diario, dict) and isinstance(diario.get("missions"), list):
+        for m in diario["missions"]:
+            if isinstance(m, dict) and (novo := _charcos_novo(m.get("adventure_id"), m.get("stage_index", 0))):
+                m["adventure_id"], m["stage_index"] = novo
+                mudou = True
+    beats = doc.get("story_beats_done")
+    if isinstance(beats, list):
+        vistos = []
+        for b in beats:
+            m = _CHARCOS_BEAT_RE.fullmatch(str(b))
+            if m and m.group(2) in CHARCOS_ANTIGOS:
+                tipo, idx = m.group(1), CHARCOS_ANTIGOS[m.group(2)] + int(m.group(3))
+                if tipo != "aventura":      # no encadeamento, só a última etapa fecha com "fim"
+                    tipo = "fim" if idx >= 4 else "encadeada"
+                b = f"{tipo}:{CHARCOS_CADEIA}:{idx}"
+                mudou = True
+            if b not in vistos:
+                vistos.append(b)
+        doc["story_beats_done"] = vistos
+    foto = doc.get("dungeon_snapshot")
+    if isinstance(foto, dict):
+        novo = _charcos_migrar_foto(foto)
+        if novo:
+            doc["dungeon_snapshot"] = novo
+            mudou = True
+    return mudou
+
+
 def ensure_campaign_schema(sg):
     """Migra saves anteriores para campanha + grupo sem descartar o save atual."""
     if not isinstance(sg, dict):
@@ -2482,6 +2587,8 @@ def ensure_campaign_schema(sg):
         sg["world_adventure_progress"] = {}; changed = True
     if not isinstance(sg.get("world_adventure_route_progress"), dict):
         sg["world_adventure_route_progress"] = {}; changed = True
+    if migrar_charcos_cadeia(sg):
+        changed = True
     if _normalizar_diario_aventureiros(sg):
         changed = True
     if not isinstance(sg.get("dungeon_snapshots"), dict):
@@ -2990,6 +3097,7 @@ def carregar_ponto_no_jogo(sg, ptid):
             sg[k] = deepcopy(estado[k])
         else:
             sg.pop(k, None)
+    migrar_charcos_cadeia(sg)           # ponto gravado antes da cadeia dos Charcos
     sg["capitulo_atual"] = doc.get("capitulo") or cap["n"]
     sg["status"] = "active"
     return None
@@ -3544,6 +3652,7 @@ FOTO_SALA_CATEGORIAS = {
     "door_conditions": "foto", "door_condition_activated": "foto",
     "decorations": "foto", "ambiente": "foto", "transicao_altura": "foto",
     "saida_permitida": "foto", "start_mode": "foto", "hero_spawns": "foto",
+    "marcador_entrada": "foto",
     "expected_party": "foto",
     # exploração
     "explored": "foto", "magic_reveal": "foto", "salas_visitadas": "foto",
@@ -3734,6 +3843,9 @@ def _conta_participa(sg, conta):
     return bool(sg) and (sg.get("owner") == conta
                          or conta in (sg.get("members") or {})
                          or sg.get("master_account") == conta)
+
+# Como a casa de entrada da masmorra aparece (campo autoral `marcador_entrada`).
+MARCADORES_ENTRADA = ("escada", "poste")
 
 # Velocidade do turno dos inimigos: "atual" não muda nada; "lento"/"muito_lento"
 # seguram a fila por alguns segundos depois de cada monstro que atacou; "passo"
@@ -8294,6 +8406,10 @@ def validar_dungeon(defn):
     if sp is not None and not isinstance(sp, bool):
         return False, f"saida_permitida inválido: {sp!r} (booleano)."
 
+    me = defn.get("marcador_entrada")
+    if me is not None and me not in MARCADORES_ENTRADA:
+        return False, f"marcador_entrada inválido: {me!r} ({'|'.join(MARCADORES_ENTRADA)})."
+
     _rooms_req = [r for r in (defn.get("rooms") or []) if isinstance(r, dict) and r.get("required")]
     for _r in (defn.get("rooms") or []):
         if isinstance(_r, dict) and _r.get("required_mode") not in (None, "visit", "clear"):
@@ -11930,6 +12046,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.master_reserve = {}   # Camada B: typeâ†’count restante de reforÃ§os do mestre
         self.expected_party = {"heroes": 4, "level": 1}   # Camada C: grupo esperado (referÃªncia)
         self.saida_permitida = True   # masmorra permite sair pela escada de entrada
+        self.marcador_entrada = "escada"   # como a entrada aparece: "escada" | "poste"
         self._story_encadeada = None   # beat de emenda entre etapas (consumido pelo cliente)
         self._emendando = False        # True durante _emendar_proxima_etapa
         self.player_order = []  # list of pid in turn order
@@ -17043,6 +17160,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ent = defn.get("entrance")
         self.stairs_pos = ([ent["x"], ent["y"]]
                            if self.start_mode == "entrance" and ent else None)
+        # Só a APRESENTAÇÃO da casa de entrada: escada (padrão) ou poste. A saída
+        # pela escada e `saida_permitida` não dependem disto.
+        marcador = defn.get("marcador_entrada")
+        self.marcador_entrada = marcador if marcador in MARCADORES_ENTRADA else "escada"
 
         # Fase 3: instancia o que estava inerte.
         ex = defn.get("exit")
@@ -27198,6 +27319,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                      if cid in destino}
         corpo, _ = foto_renomear_ids(corpo, mapa_fixo, new_id)
         sala = corpo["sala"]
+        charcos_remapear_sala(sala)     # foto gravada antes da cadeia dos Charcos
         for campo in foto_campos_sala("foto") + foto_campos_sala("foto_pid"):
             if campo in sala:
                 setattr(self, campo, sala[campo])
@@ -52397,6 +52519,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "explored": [list(e) for e in self.explored],
             "revealed": [list(k) for k in self._live_reveal_tiles()],   # ClarividÃªncia + visÃ£o ao vivo dos minions
             "stairs_pos": self.stairs_pos,
+            "marcador_entrada": self.marcador_entrada,
             "start_mode": self.start_mode,
             "hero_spawns": [dict(s, pos=list(s["pos"])) for s in self.hero_spawns],
             # Saída individual: o cliente confirma o custo antes de enviar exit_dungeon.

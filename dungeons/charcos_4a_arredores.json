@@ -3,7 +3,8 @@
   "id": "charcos_4a_arredores",
   "name": "Arredores da Aldeia",
   "ambiente": "ar_livre",
-  "saida_permitida": true,
+  "saida_permitida": false,
+  "marcador_entrada": "poste",
   "start_mode": "entrance",
   "grid": {
     "w": 47,

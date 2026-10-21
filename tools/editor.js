@@ -374,7 +374,7 @@
   const heroSpawnMeta = (id) => HERO_SPAWN_META.find(h => h.id === id) || { id, emoji: "⚔️", mark: "H" };
 
   const S = {
-    meta: { schema_version: 1, id: "nova_masmorra", name: t("ui.editor.masmorra.nome_padrao"), ambiente: "masmorra", saida_permitida: true },
+    meta: { schema_version: 1, id: "nova_masmorra", name: t("ui.editor.masmorra.nome_padrao"), ambiente: "masmorra", saida_permitida: true, marcador_entrada: "escada" },
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
@@ -4274,6 +4274,8 @@
     return {
       schema_version: 1, id: S.meta.id, name: S.meta.name, ambiente: S.meta.ambiente || "masmorra",
       saida_permitida: S.startMode !== "hero_spawns" && S.meta.saida_permitida !== false,
+      // Só grava quando é poste: masmorras antigas continuam idênticas (ausente = escada).
+      ...((document.getElementById("m-marcador") ? document.getElementById("m-marcador").value : S.meta.marcador_entrada) === "poste" ? { marcador_entrada: "poste" } : {}),
       start_mode: S.startMode,
       ...(S.trainingMode ? { tutorial_training: true } : {}),
       grid: { w: S.grid.w, h: S.grid.h },
@@ -4780,7 +4782,8 @@
     S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || t("ui.editor.masmorra.salvar.nome_padrao"),
                ambiente: ["penumbra", "masmorra", "ar_livre", "bruma_tenebrosa"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
-               saida_permitida: obj.saida_permitida !== false };
+               saida_permitida: obj.saida_permitida !== false,
+               marcador_entrada: obj.marcador_entrada === "poste" ? "poste" : "escada" };
     S.trainingMode = obj.tutorial_training === true;
     S.grid = { w: obj.grid.w, h: obj.grid.h };
     S.tiles = obj.tiles.map(row => row.slice());
@@ -5035,6 +5038,7 @@
     document.getElementById("m-name").value = S.meta.name;
     document.getElementById("m-ambiente").value = S.meta.ambiente || "masmorra";
     document.getElementById("m-saida").checked = S.meta.saida_permitida !== false;
+    document.getElementById("m-marcador").value = S.meta.marcador_entrada;
     document.getElementById("g-w").value = S.grid.w;
     document.getElementById("g-h").value = S.grid.h;
     render(); renderPanel();
@@ -5067,6 +5071,7 @@
     S.meta.name = document.getElementById("m-name").value.trim() || t("ui.editor.masmorra.salvar.nome_padrao");
     S.meta.ambiente = document.getElementById("m-ambiente").value || "masmorra";
     S.meta.saida_permitida = document.getElementById("m-saida").checked;
+    S.meta.marcador_entrada = document.getElementById("m-marcador").value === "poste" ? "poste" : "escada";
     const v = updateStatus();
     if (!v.ok) { alert(t("ui.editor.masmorra.salvar.invalida", { lista: v.erros.join("\n- ") })); return; }
     const defn = buildJSON();
