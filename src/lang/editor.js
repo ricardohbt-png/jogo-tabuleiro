@@ -129,6 +129,22 @@ window.LANG_EDITOR = {
     "en": "🚪 exit by the stairs",
     "pt": "🚪 saída pela escada"
   },
+  "ui.editor.topo.marcador": {
+    "en": "entrance",
+    "pt": "entrada"
+  },
+  "ui.editor.topo.marcador_dica": {
+    "en": "How the dungeon entrance is marked on the ground (stairs, or a post for swamps and forests)",
+    "pt": "Como a entrada da masmorra é marcada no chão (escada, ou poste para pântanos e florestas)"
+  },
+  "ui.editor.topo.marcador.escada": {
+    "en": "Stairs",
+    "pt": "Escada"
+  },
+  "ui.editor.topo.marcador.poste": {
+    "en": "Post",
+    "pt": "Poste"
+  },
   "ui.editor.topo.saida_escada_dica": {
     "en": "If unchecked, heroes cannot leave the dungeon through the entrance stairs",
     "pt": "Se desmarcado, os heróis não podem deixar a masmorra pela escada de entrada"
