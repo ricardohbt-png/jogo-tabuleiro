@@ -18084,7 +18084,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for p in self.players.values():
                 p["fome"] -= fome; p["sede"] -= sede
             chance = chance_encontro(fome, sede)
-            if random.random() * 100 < chance:
+            # Destino "só na cidade" (Campo de Treinamento) é dentro da cidade: não há estrada.
+            if not adventure.get("so_na_cidade") and random.random() * 100 < chance:
                 categoria = random.choice(tuple(_COMPOSICOES_ENCONTRO_VIAGEM))
                 grupo = [p for p in self.players.values()
                          if not p.get("is_master") and p.get("alive", True) and p.get("hp", 1) > 0]
