@@ -1,5 +1,30 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Raízes do Brejo e a bruxa Zumbra (2026-10-20)
+
+Loja e cena de conversa na Vila dos Charcos, geradas por `tools/gerar_zumbra_charcos.py`
+(idempotente; `--simular` só relata; só toca na lista `mercador` da vila, no ponto e na cena
+`raizes_do_brejo`, e numa cena já existente só reescreve as conversas `zumbra_*`). O ponto é do
+tipo Mercador, na cabana isolada da borda oeste, e abre a cena **junto** da loja (primeira aba
+"💬 Zumbra"). O estoque é grimórios, Ignus Fatus, Fata Morgana, poções mágicas e o estoque
+rotativo de pergaminhos do mercador. Como cada loja só vende o que a **fonte do seu tipo**
+contém e as poções moram no Templo, `POCOES_TAMBEM_NO_MERCADOR` as estende também na fonte do
+Mercador (mesmos dicts, mesmo preço); isso só amplia o que PODE ser vendido, e o estoque das
+outras cidades segue sendo a lista explícita de ids delas.
+
+Campo novo do ponto: **`titulo_loja`** (texto autoral, até 60 caracteres), preservado pelo
+carregador e pelo save do editor; `openShop` o usa no lugar do rótulo do tipo
+(`textContent`, nunca HTML). Ainda não há campo para ele no formulário do editor de cidades:
+edite pelo JSON ou pelo gerador. A Zumbra tem 7 conversas que reagem aos fatos da campanha dos
+Charcos (apresentação, dica das crianças e do sino/corrente, dica do Ferrão com o gancho das
+iscas de ilusão, reação ao Ferrão morto com `pocao_barreira_arcana` e renome +1, confiança,
+luto quando as crianças morrem e rumor). Só conversas por enquanto: side quest com masmorra
+própria exige mapa novo. **Arte provisória:** fundo e retrato são reaproveitados de
+`assets/tavern/` até o autor subir a arte da Zumbra pelo editor (Cenas e NPCs). O modificador
+de preço da vila (+50% após a morte das crianças) vale para esta loja também, e a fala de luto
+já diz isso. Testes: `python -X utf8 tools/test_zumbra_charcos.py` e
+`node tools/test_zumbra_titulo_cliente.js`.
+
 ### Bomba de Flash e reação de item (2026-10-19)
 
 A Bomba de Flash é um consumível universal de 50 moedas no mercador, listado

@@ -812,6 +812,8 @@ def _load_city_map_points():
                         item["type"] = point["type"]
                     if isinstance(point.get("name"), str): item["name"] = point["name"][:60]
                     if isinstance(point.get("emoji"), str): item["emoji"] = point["emoji"][:8]
+                    if isinstance(point.get("titulo_loja"), str) and point["titulo_loja"].strip():
+                        item["titulo_loja"] = point["titulo_loja"].strip()[:60]   # título próprio da loja
                     # O mapa é carregado antes das cenas; portanto só preserva
                     # a referência válida aqui. A existência da cena é resolvida
                     # depois, quando CITY_SCENES estiver disponível.
@@ -9921,6 +9923,20 @@ SHOP_TAVERN = [
     {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗", "price": 100, "item_slot": "bag",
      "effect": "meal_survival", "fome": 40, "sede": 40, "icon": "assets/itens/banquete.png"},
 ]
+# Poções mágicas à venda também no Mercador: a Raízes do Brejo (Vila dos Charcos) vende
+# poções junto de grimórios e iscas, e cada loja só vende o que a fonte do seu tipo
+# contém. São os MESMOS dicts do Templo (mesmo preço e efeito). Só estende a FONTE: o
+# estoque de cada cidade continua sendo a lista de ids dela (Alva e Luz tem lista explícita).
+POCOES_TAMBEM_NO_MERCADOR = (
+    "pocao_invisibilidade", "pocao_velocidade", "pocao_voo", "pocao_manto_escuridao",
+    "pocao_resistencia_fogo", "pocao_resistencia_gelo", "pocao_resistencia_eletricidade",
+    "pocao_resistencia_acido", "pocao_resistencia_agua", "pocao_resistencia_sagrado",
+    "pocao_barreira_arcana", "elixir_cavalo_ferro", "regeneration_potion",
+)
+_ids_na_fonte_do_mercador = {_i["id"] for _i in SHOP_MERCHANT}
+SHOP_MERCHANT.extend(_i for _i in SHOP_TEMPLE
+                     if _i["id"] in POCOES_TAMBEM_NO_MERCADOR and _i["id"] not in _ids_na_fonte_do_mercador)
+
 # Estoque por cidade: a configuração guarda IDs, enquanto as definições completas
 # continuam nos catálogos. Editar uma loja, portanto, não duplica regras de itens.
 CITY_SHOPS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "city_shops.json")
@@ -56338,6 +56354,8 @@ def _save_city_shops_upload(raw, scenes=None, raw_city_points=None):
                 if name: item["name"] = name[:60]
                 emoji = str(point.get("emoji") or "").strip()
                 if emoji: item["emoji"] = emoji[:8]
+                titulo_loja = str(point.get("titulo_loja") or "").strip()
+                if titulo_loja: item["titulo_loja"] = titulo_loja[:60]
                 scene_ref = str(point.get("scene") or "").strip().lower()
                 if scene_ref and scene_ref in CITY_SCENES.get(city_id, {}):
                     item["scene"] = scene_ref

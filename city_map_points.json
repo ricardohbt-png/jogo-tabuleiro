@@ -210,6 +210,17 @@
       "name": "Taverna",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": false
+    },
+    "raizes_do_brejo": {
+      "x": 23.1,
+      "y": 33.7,
+      "type": "mercador",
+      "name": "Raízes do Brejo",
+      "titulo_loja": "Raízes do Brejo",
+      "emoji": "🌿",
+      "scene": "raizes_do_brejo",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": false
     }
   }
 }

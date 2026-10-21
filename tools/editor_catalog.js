@@ -12376,104 +12376,6 @@ window.EDITOR_CATALOG = {
       "item_slot": "instrumento"
     },
     {
-      "id": "pao",
-      "name": "Pão",
-      "emoji": "🥖",
-      "item_slot": "bag",
-      "effect": "food"
-    },
-    {
-      "id": "garrafa_agua",
-      "name": "Garrafa de Água",
-      "emoji": "💧",
-      "item_slot": "bag",
-      "effect": "food"
-    },
-    {
-      "id": "suco_fruta",
-      "name": "Suco de Fruta",
-      "emoji": "🧃",
-      "item_slot": "bag",
-      "effect": "food"
-    },
-    {
-      "id": "caneca_cerveja",
-      "name": "Caneca de Cerveja",
-      "emoji": "🍺",
-      "item_slot": "bag",
-      "effect": "ale",
-      "value": 10
-    },
-    {
-      "id": "garrafa_vinho",
-      "name": "Garrafa de Vinho",
-      "emoji": "🍷",
-      "item_slot": "bag",
-      "effect": "wine",
-      "value": 15
-    },
-    {
-      "id": "racao_viagem",
-      "name": "Ração de Viagem",
-      "emoji": "🥩",
-      "item_slot": "bag",
-      "effect": "food"
-    },
-    {
-      "id": "racao_completa",
-      "name": "Ração Completa",
-      "emoji": "🥩",
-      "icon": "assets/itens/racao.png",
-      "item_slot": "bag",
-      "effect": "food"
-    },
-    {
-      "id": "cantil_agua",
-      "name": "Cantil de Água",
-      "emoji": "🧴",
-      "item_slot": "bag",
-      "effect": "food"
-    },
-    {
-      "id": "agua_benta",
-      "name": "Água Benta",
-      "emoji": "💧✝️",
-      "item_slot": "bag",
-      "effect": "throwable"
-    },
-    {
-      "id": "health_potion",
-      "name": "Poção de Cura",
-      "emoji": "🧪",
-      "item_slot": "bag",
-      "effect": "heal",
-      "value": 10
-    },
-    {
-      "id": "health_potion_small",
-      "name": "Poção de Cura Pequena",
-      "emoji": "🧪",
-      "item_slot": "bag",
-      "effect": "heal",
-      "value": 5
-    },
-    {
-      "id": "health_potion_concentrated",
-      "name": "Poção de Cura Concentrada",
-      "emoji": "🧪",
-      "item_slot": "bag",
-      "effect": "heal",
-      "value": 10
-    },
-    {
-      "id": "health_potion_improved",
-      "name": "Poção de Cura Aprimorada",
-      "emoji": "🧪",
-      "item_slot": "bag",
-      "effect": "heal",
-      "value": 20
-    },
-    {
       "id": "regeneration_potion",
       "name": "Poção de Regeneração",
       "emoji": "🌿",
@@ -12592,6 +12494,114 @@ window.EDITOR_CATALOG = {
       "descricao": "Ação bônus. Reduz em 5 todo dano recebido por 1d6+2 rodadas. Pode coexistir com proteções elementais."
     },
     {
+      "id": "elixir_cavalo_ferro",
+      "name": "Elixir do Cavalo de Ferro",
+      "emoji": "🧪",
+      "icon": "assets/itens/elixir_cavalo_ferro.png",
+      "item_slot": "bag",
+      "effect": "constitution_potion",
+      "value": "1d6+4",
+      "descricao": "Ação bônus. Aumenta a Constituição em 1d4+1 por 1d6+4 rodadas, ajustando Fortitude e PV máximos conforme o nível. O aumento do máximo pode repor PV atuais, exceto quando Último Esforço bloqueia esse top-up; ao expirar, os PV são limitados ao máximo atualizado. Beber outro renova a duração sem acumular o bônus."
+    },
+    {
+      "id": "pao",
+      "name": "Pão",
+      "emoji": "🥖",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "garrafa_agua",
+      "name": "Garrafa de Água",
+      "emoji": "💧",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "suco_fruta",
+      "name": "Suco de Fruta",
+      "emoji": "🧃",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "caneca_cerveja",
+      "name": "Caneca de Cerveja",
+      "emoji": "🍺",
+      "item_slot": "bag",
+      "effect": "ale",
+      "value": 10
+    },
+    {
+      "id": "garrafa_vinho",
+      "name": "Garrafa de Vinho",
+      "emoji": "🍷",
+      "item_slot": "bag",
+      "effect": "wine",
+      "value": 15
+    },
+    {
+      "id": "racao_viagem",
+      "name": "Ração de Viagem",
+      "emoji": "🥩",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "racao_completa",
+      "name": "Ração Completa",
+      "emoji": "🥩",
+      "icon": "assets/itens/racao.png",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "cantil_agua",
+      "name": "Cantil de Água",
+      "emoji": "🧴",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "agua_benta",
+      "name": "Água Benta",
+      "emoji": "💧✝️",
+      "item_slot": "bag",
+      "effect": "throwable"
+    },
+    {
+      "id": "health_potion",
+      "name": "Poção de Cura",
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 10
+    },
+    {
+      "id": "health_potion_small",
+      "name": "Poção de Cura Pequena",
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 5
+    },
+    {
+      "id": "health_potion_concentrated",
+      "name": "Poção de Cura Concentrada",
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 10
+    },
+    {
+      "id": "health_potion_improved",
+      "name": "Poção de Cura Aprimorada",
+      "emoji": "🧪",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 20
+    },
+    {
       "id": "mira_do_falcao",
       "name": "Elixir da Mira do Falcão",
       "emoji": "🧪",
@@ -12630,16 +12640,6 @@ window.EDITOR_CATALOG = {
       "effect": "dexterity_potion",
       "value": "1d6+4",
       "descricao": "Ação bônus. Aumenta a Destreza em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo. Beber outro renova a duração sem acumular o bônus."
-    },
-    {
-      "id": "elixir_cavalo_ferro",
-      "name": "Elixir do Cavalo de Ferro",
-      "emoji": "🧪",
-      "icon": "assets/itens/elixir_cavalo_ferro.png",
-      "item_slot": "bag",
-      "effect": "constitution_potion",
-      "value": "1d6+4",
-      "descricao": "Ação bônus. Aumenta a Constituição em 1d4+1 por 1d6+4 rodadas, ajustando Fortitude e PV máximos conforme o nível. O aumento do máximo pode repor PV atuais, exceto quando Último Esforço bloqueia esse top-up; ao expirar, os PV são limitados ao máximo atualizado. Beber outro renova a duração sem acumular o bônus."
     },
     {
       "id": "sabedoria_liquida",

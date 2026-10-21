@@ -1646,6 +1646,154 @@
           ]
         }
       ]
+    },
+    "raizes_do_brejo": {
+      "nome": "Zumbra",
+      "background": "assets/tavern/taverna_charco.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": [
+        {
+          "id": "npc_zumbra",
+          "name": "Zumbra",
+          "image": "assets/tavern/homem_misterioso.png",
+          "x": 35.0,
+          "y": 30.3,
+          "w": 30.0,
+          "h": 69.7,
+          "z": 1.0,
+          "dialog": "",
+          "conversations": [
+            {
+              "id": "zumbra_chegada",
+              "texto": "Então a vila não mandou ninguém. Vocês vieram por conta própria, e vieram até a minha porta. Isso diz alguma coisa. Olhem o que quiserem, mas não toquem no que não pagaram: as raízes daqui aprenderam a cobrar.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "charcos_criancas_mortas",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "zumbra_conhecida",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "zumbra_criancas",
+              "texto": "As crianças. Eu senti quando sumiram: o brejo ficou quieto demais, e ele só silencia assim quando alguém o paga. Procurem onde a água é velha. E quando chegarem aos encapuzados, lembrem: o que prende uma criança nunca é só ferro. Onde há um sino, alguém o toca. Onde há uma corrente, alguém a solta. Se puderem escolher, deixem a corrente em paz.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "charcos_criancas_sumidas",
+                "sem_fato": "charcos_criancas_mortas",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "zumbra_avisou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "zumbra_ferrao",
+              "texto": "Pisaram na Travessia e ainda respiram. Então sabem que o pior espera na aldeia: um ferrão do tamanho de uma lança, preso por quem não o controla. Ele odeia fogo e não aprende com a dor, só com o medo. Eu não vendo coragem, mas vendo luzes que enganam. Uma isca bem posta faz até aquele bicho olhar para o lado errado.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "charcos_criancas_mortas",
+                "aventura_id": "charcos_travessia"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "zumbra_ferrao_morto",
+              "texto": "Então o ferrão caiu, e vocês continuam inteiros. Eu sempre soube que alguém faria isso. Só não sabia que alguém teria o estômago. Fico em dívida. Levem isto: não é presente, é pagamento adiantado pelo que ainda virá.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "charcos_ferrao_morto",
+                "sem_fato": "charcos_criancas_mortas",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 1,
+                "fato": "zumbra_confia",
+                "item_id": "pocao_barreira_arcana"
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "zumbra_confia",
+              "texto": "Voltem quando o brejo estiver quieto. Há coisas debaixo da água que ainda não terminaram de acordar, e quando eu souber o que são, vocês serão os primeiros a ouvir. Até lá, fiquem com o que as raízes podem dar.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "zumbra_confia",
+                "sem_fato": "charcos_criancas_mortas",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "zumbra_luto",
+              "texto": "Não me peçam consolo. O brejo cobra caro de quem promete e não cumpre, e hoje a conta chegou para vocês. A vila vai virar as costas, eu sei. Eu nunca esperei nada de ninguém. Se precisam de alguma coisa, os preços subiram para todos, e não fui eu quem decidiu.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "charcos_criancas_mortas",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "zumbra_rumor",
+              "texto": "Todo encanto custa alguma coisa. Às vezes é ouro. Às vezes é uma pergunta que você não vai querer responder.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "charcos_criancas_mortas",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            }
+          ]
+        }
+      ]
     }
   }
 }

@@ -2829,7 +2829,11 @@ function openShop(pointId, type, sceneOverride){
   modal.classList.toggle('shop-taverna', shopId==='taverna');
   modal.classList.add('open');
   // Ponto sem loja (tipo `cena`): título/subtítulo vêm da própria cena.
-  $('shop-title').textContent = _rotulo(shopId, 'ui.loja.titulo', '💬 ' + (scene ? (scene.nome || '') : ''));
+  // Ponto com `titulo_loja` (nome autoral, como "Raízes do Brejo") usa esse título
+  // no lugar do rótulo do tipo; o texto vai por textContent, nunca como HTML.
+  const _pontoLoja = (GS.cityPoints() || {})[pointId];
+  const tituloProprio = _pontoLoja && typeof _pontoLoja.titulo_loja === 'string' ? _pontoLoja.titulo_loja.trim() : '';
+  $('shop-title').textContent = tituloProprio || _rotulo(shopId, 'ui.loja.titulo', '💬 ' + (scene ? (scene.nome || '') : ''));
   $('shop-subtitle').textContent = _rotulo(shopId, 'ui.loja.subtitulo', '');
   // Tabs
   const tabsEl=$('shop-tabs'); tabsEl.innerHTML='';

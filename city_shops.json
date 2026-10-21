@@ -899,6 +899,33 @@
       "virotes_prata",
       "virote_incendiario",
       "flecha_incendiaria"
+    ],
+    "mercador": [
+      "grimorio_bola_fogo",
+      "grimorio_relampago",
+      "grimorio_raio_congelante",
+      "grimorio_voo",
+      "grimorio_sono",
+      "grimorio_comando",
+      "grimorio_medo",
+      "grimorio_clarividencia",
+      "grimorio_barreira_arcana",
+      "grimorio_contramagica",
+      "ignus_fatus",
+      "fata_morgana",
+      "pocao_invisibilidade",
+      "pocao_velocidade",
+      "pocao_voo",
+      "pocao_manto_escuridao",
+      "pocao_resistencia_fogo",
+      "pocao_resistencia_gelo",
+      "pocao_resistencia_eletricidade",
+      "pocao_resistencia_acido",
+      "pocao_resistencia_agua",
+      "pocao_resistencia_sagrado",
+      "pocao_barreira_arcana",
+      "elixir_cavalo_ferro",
+      "regeneration_potion"
     ]
   }
 }

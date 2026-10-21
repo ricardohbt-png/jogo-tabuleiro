@@ -95,7 +95,7 @@ async def main():
     merchant_cities = [city for city, shops in CITY_SHOPS.items()
                        if isinstance(shops.get("mercador"), list)]
     check("os dois itens aparecem em todos os mercadores cadastrados",
-          len(merchant_cities) == 4 and all(
+          len(merchant_cities) >= 4 and all(
               {item["id"] for item in _city_shop_items(city, "mercador")}
               >= set(ids) for city in merchant_cities))
 
