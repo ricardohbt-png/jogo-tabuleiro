@@ -34,6 +34,8 @@ ASSINATURAS = os.path.join(RAIZ, "tools", ".elara_gilo_assinaturas.json")
 # Fatos (contrato com o plano 4: nomes estáveis)
 F_RAMO_B = "elara_ramo_b"
 F_CHEGADA = "elara_corvin_chegada"
+F_PISTA = "elara_pista_graciero"       # grava o objetivo do confronto com o Gilo
+F_RUMO_GRACIERO = "elara_rumo_graciero"   # contrato com o plano 4: o grupo decidiu seguir para Graciero
 
 
 def _req(**campos):
@@ -56,6 +58,10 @@ def conversas():
                       "Um sujeito de botas fundas de lama passou por aqui duas noites atrás. Pagou caro por um "
                       "quarto que não usou e saiu antes do galo. Perguntou pela estrada de Graciero.",
                       ramo, fato=F_CHEGADA, uma_vez=True),
+            _conversa("elara_corvin_rumo_graciero",
+                      "A carta do curtume não deixa dúvida: o Gilo foi vender a pedra e as encomendas em "
+                      "Graciero. Vocês pagam a conta e partem na mesma noite, atrás da fumaça.",
+                      _req(fato=F_PISTA), fato=F_RUMO_GRACIERO, uma_vez=True),
         ],
         "npc_ms2e74bw": [
             _conversa("elara_corvin_garconete",

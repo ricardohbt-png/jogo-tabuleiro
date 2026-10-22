@@ -48,6 +48,7 @@ F_FINAL = "elara_bardo_final"
 F_VILA_ABALADA = "elara_vila_abalada"
 F_LEONEL_CAUTELOSO = "elara_leonel_cauteloso"
 F_MOCAS = M.F_MOCAS
+F_RUMO_GRACIERO = "elara_rumo_graciero"   # contrato com o plano 4: o grupo decidiu seguir para Graciero
 
 
 def _req(**campos):
@@ -77,6 +78,10 @@ def conversas():
                       "Vocês o entregam à vila. Arrastam-no até a praça sob gritos e pedras. Ele olha para "
                       "vocês como quem não esquece um rosto.",
                       _req(fato=F_POUPADO, sem_fato=F_FINAL), fato=F_MALTRATADO, fatos=[F_FINAL], uma_vez=True),
+            _conversa("elara_riacho_rumo_graciero",
+                      "As moças do celeiro estão a salvo, mas a irmã do mago já seguiu viagem. Vocês acertam as "
+                      "contas na taverna e tomam a estrada de Graciero antes que a notícia chegue lá.",
+                      _req(fato=F_MOCAS), fato=F_RUMO_GRACIERO, uma_vez=True),
         ],
         "patrono_fundo": [
             _conversa("elara_riacho_mesa",
