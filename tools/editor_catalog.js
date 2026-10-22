@@ -12895,6 +12895,15 @@ window.EDITOR_CATALOG = {
       "effect": "atk",
       "value": 0,
       "descricao": "Ferrão do Brejo: 1d6 de dano perfurante, usando Força ou Destreza."
+    },
+    {
+      "id": "olho_de_arveluz",
+      "name": "Olho de Arveluz",
+      "emoji": "👁️",
+      "granted_ability": null,
+      "kind": "ring",
+      "item_slot": "ring",
+      "descricao": "Uma relíquia pesada do Templo de Alva e Luz. Está quente ao toque."
     }
   ],
   "traps": [

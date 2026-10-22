@@ -3862,6 +3862,10 @@ window.LANG_CATALOGO = {
     "en": "Stone Scorpion",
     "pt": "Escorpião de Pedra"
   },
+  "cat.monstro.escorpiao_gigante.nome": {
+    "en": "Giant Scorpion",
+    "pt": "Escorpião Gigante"
+  },
   "cat.monstro.escorpiao_pedra.nome": {
     "en": "Stone Scorpion",
     "pt": "Escorpião de Pedra"
@@ -4005,6 +4009,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.lagarto_carniceiro.nome": {
     "en": "Carrion Lizard",
     "pt": "Lagarto Carniceiro"
+  },
+  "cat.monstro.leonel.nome": {
+    "en": "Leonel",
+    "pt": "Leonel"
   },
   "cat.monstro.lobisomem.nome": {
     "en": "Werewolf",

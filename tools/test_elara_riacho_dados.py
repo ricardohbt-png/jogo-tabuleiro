@@ -30,7 +30,7 @@ class DadosTests(unittest.TestCase):
     def test_so_aparece_com_o_ramo_a(self):
         for cid, (_slot, c) in todas().items():
             req = c["requisito"]
-            ramo = req.get("fato") == R.F_RAMO_A or req.get("fato") in (R.F_EXPOSTO, R.F_POUPADO)
+            ramo = req.get("fato") == R.F_RAMO_A or req.get("fato") in (R.F_EXPOSTO, R.F_POUPADO, R.F_MOCAS)
             self.assertTrue(ramo, f"{cid} precisa depender (direta ou indiretamente) do ramo A")
         for cid in ("elara_riacho_barman", "elara_riacho_mesa", "elara_t1_gentil", "elara_t1_ameaca", "elara_t1_ignorou"):
             self.assertEqual(todas()[cid][1]["requisito"]["fato"], R.F_RAMO_A)

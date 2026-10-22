@@ -22,7 +22,7 @@
   // Um slide tem condição quando o requisito traz algum campo preenchido.
   function condicaoAtiva(s) {
     const r = s && s.requisito;
-    return !!r && ["item_id", "fato", "sem_fato", "aventura_id", "heroi_no_grupo"].some(k => r[k]) ||
+    return !!r && ["item_id", "fato", "sem_fato", "aventura_id", "heroi_no_grupo", "tambem_fato"].some(k => r[k]) ||
       !!r && (+r.renome_min > 0 || +r.nivel_grupo_min > 0);
   }
   // -> string (1 slide só-texto, sem áudio) | objeto | undefined (vazio)
@@ -151,7 +151,7 @@
       const aplicarCondicao = () => {
         const id = condItem.value.trim();
         if (!condModo.value || !id) { s.requisito = null; s.negar = false; return; }
-        s.requisito = Object.assign({ renome_min: 0, nivel_grupo_min: 0, fato: "", sem_fato: "", aventura_id: "", heroi_no_grupo: "" }, s.requisito || {}, { item_id: id });
+        s.requisito = Object.assign({ renome_min: 0, nivel_grupo_min: 0, fato: "", sem_fato: "", aventura_id: "", heroi_no_grupo: "", tambem_fato: "" }, s.requisito || {}, { item_id: id });
         s.negar = condModo.value === "nao";
       };
       condModo.onchange = aplicarCondicao; condItem.oninput = aplicarCondicao;
