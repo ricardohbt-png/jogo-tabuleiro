@@ -653,6 +653,10 @@ def _world_adventures_editor_payload():
         "map_image": "assets/city/varluzia - Copia.png",
     }
 
+# Ids de classe aceitos em `heroi_no_grupo` (CLASSES ainda não existe quando o requisito é limpo no boot).
+_CLASSES_REQUISITO = ("warrior", "mage", "rogue", "cleric", "paladin", "bard")
+
+
 def _clean_requirement(raw):
     """Normaliza a trava comum de conversas e destinos.
 
@@ -665,9 +669,14 @@ def _clean_requirement(raw):
     except (TypeError, ValueError): renome = 0
     try: nivel = max(0, min(99, int(raw.get("nivel_grupo_min", 0))))
     except (TypeError, ValueError): nivel = 0
-    return {"renome_min": renome, "nivel_grupo_min": nivel,
-            "item_id": text("item_id"), "fato": text("fato"),
-            "sem_fato": text("sem_fato"), "aventura_id": text("aventura_id")}
+    limpo = {"renome_min": renome, "nivel_grupo_min": nivel,
+             "item_id": text("item_id"), "fato": text("fato"),
+             "sem_fato": text("sem_fato"), "aventura_id": text("aventura_id")}
+    # Só entra quando preenchido: requisitos já gravados continuam idênticos byte a byte.
+    heroi = text("heroi_no_grupo")
+    if heroi in _CLASSES_REQUISITO:
+        limpo["heroi_no_grupo"] = heroi
+    return limpo
 
 def _save_world_adventures_upload(raw_locations, raw_adventures):
     """Valida e grava cidades e entradas de aventura criadas no editor."""
@@ -8479,6 +8488,8 @@ def validar_dungeon(defn):
             return False, f"fala com gatilho inválido: {_tg!r} (proximidade|sala|manual)."
         if not in_grid(_f.get("pos")):
             return False, f"fala em casa inválida: {_f.get('pos')}."
+        if _f.get("requisito") is not None and not isinstance(_f.get("requisito"), dict):
+            return False, "requisito da fala deve ser um objeto."
         _speaker = _f.get("falante")
         if isinstance(_speaker, dict):
             for _key, _prefix in (("retrato", "assets/portraits/"),
@@ -17648,6 +17659,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             reasons.append(T("erro.requisito.informacao", fato=req["fato"]))
         if req["sem_fato"] and req["sem_fato"] in self.fatos:
             reasons.append(T("erro.requisito.sem_informacao", fato=req["sem_fato"]))
+        if req.get("heroi_no_grupo") and not any(
+                p.get("class_id") == req["heroi_no_grupo"] and not p.get("is_master")
+                for p in self.players.values()):
+            reasons.append(T("erro.requisito.heroi_no_grupo", heroi=req["heroi_no_grupo"]))
         if req["aventura_id"]:
             adventure = WORLD_ADVENTURES.get(req["aventura_id"])
             if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
@@ -20992,7 +21007,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _fala_elegivel(self, p, fala):
         """Se esta fala pode disparar agora para este jogador."""
         if not _e_licao(fala):
-            return not fala.get("disparada")
+            return (not fala.get("disparada")
+                    and self._avaliar_requisito(fala.get("requisito"))[0])
         if not self._licao_candidata(p, fala):
             return False
         if fala.get("tarefa") and p.get("licao_atual"):

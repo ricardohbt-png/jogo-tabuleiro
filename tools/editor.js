@@ -4401,6 +4401,7 @@
         const out = { id: f.id, pos: f.pos.slice(), falante, texto: f.texto || "", trigger: trig };
         if (f.classe) out.classe = f.classe;
         for (const key of ["requisitos", "sala_exclusiva"]) if (f[key]) out[key] = JSON.parse(JSON.stringify(f[key]));
+        if (f.requisito) out.requisito = JSON.parse(JSON.stringify(f.requisito));
         if (Array.isArray(f.continua_sem) && f.continua_sem.length)
           out.continua_sem = f.continua_sem.filter(id => typeof id === "string" && id.trim());
         if (Array.isArray(f.continua_sem_ativas) && f.continua_sem_ativas.length)
@@ -4979,6 +4980,7 @@
                continua_sem: Array.isArray(f.continua_sem) ? f.continua_sem.filter(id => typeof id === "string") : [],
                continua_sem_ativas: Array.isArray(f.continua_sem_ativas) ? f.continua_sem_ativas.filter(id => typeof id === "string") : [],
                requisitos: f.requisitos ? JSON.parse(JSON.stringify(f.requisitos)) : null, sala_exclusiva: !!f.sala_exclusiva,
+               requisito: f.requisito ? JSON.parse(JSON.stringify(f.requisito)) : null,
                efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null,
                guia: EDITOR_GUIA.carregar(f.guia) };
     });

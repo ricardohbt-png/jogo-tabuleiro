@@ -1573,6 +1573,10 @@ window.LANG_ERROS = {
     "en": "information: {fato}",
     "pt": "informação: {fato}"
   },
+  "erro.requisito.heroi_no_grupo": {
+    "en": "needs the hero in the party: {heroi}",
+    "pt": "precisa do herói no grupo: {heroi}"
+  },
   "erro.requisito.sem_informacao": {
     "en": "no longer applies: {fato}",
     "pt": "não pode ter acontecido: {fato}"
