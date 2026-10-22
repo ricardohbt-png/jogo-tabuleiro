@@ -676,6 +676,9 @@ def _clean_requirement(raw):
     heroi = text("heroi_no_grupo")
     if heroi in _CLASSES_REQUISITO:
         limpo["heroi_no_grupo"] = heroi
+    tambem = text("tambem_fato")          # segundo fato exigido (AND com `fato`); mesma regra: só quando preenchido
+    if tambem:
+        limpo["tambem_fato"] = tambem
     return limpo
 
 def _save_world_adventures_upload(raw_locations, raw_adventures):
@@ -743,7 +746,7 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                     etapa["completion_mode"] = "route_exits"
                     etapa["required_exit_ids"] = list(dict.fromkeys(str(x) for x in et.get("required_exit_ids", [])))
                 req_etapa = _clean_requirement(et.get("requisito"))
-                if any((req_etapa["renome_min"], req_etapa["nivel_grupo_min"], req_etapa["item_id"], req_etapa["fato"], req_etapa["aventura_id"])):
+                if any((req_etapa["renome_min"], req_etapa["nivel_grupo_min"], req_etapa["item_id"], req_etapa["fato"], req_etapa["aventura_id"], req_etapa.get("tambem_fato"))):
                     etapa["requisito"] = req_etapa
                 trigger = _clean_location_scene_trigger(et.get("scene_trigger"))
                 if trigger:
@@ -8502,6 +8505,10 @@ def validar_dungeon(defn):
         _ft = _ob.get("fato")
         if _ft is not None and (not isinstance(_ft, str) or len(_ft) > 100):
             return False, "fato do objetivo deve ser um texto de até 100 caracteres."
+        _fts = _ob.get("fatos")
+        if _fts is not None and (not isinstance(_fts, list) or len(_fts) > 6 or any(
+                not isinstance(x, str) or not x.strip() or len(x) > 100 for x in _fts)):
+            return False, "fatos do objetivo deve ser uma lista de até 6 textos de até 100 caracteres."
     for _ob in _objs:
         if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
@@ -17717,6 +17724,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             reasons.append(T("erro.requisito.item_chave", item=req["item_id"]))
         if req["fato"] and req["fato"] not in self.fatos:
             reasons.append(T("erro.requisito.informacao", fato=req["fato"]))
+        if req.get("tambem_fato") and req["tambem_fato"] not in self.fatos:
+            reasons.append(T("erro.requisito.informacao", fato=req["tambem_fato"]))
         if req["sem_fato"] and req["sem_fato"] in self.fatos:
             reasons.append(T("erro.requisito.sem_informacao", fato=req["sem_fato"]))
         if req.get("heroi_no_grupo") and not any(
@@ -51573,6 +51582,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         fato = obj.get("fato")
         if isinstance(fato, str) and fato.strip():
             self.fatos.add(fato.strip())
+        for extra in (obj.get("fatos") if isinstance(obj.get("fatos"), list) else []):
+            if isinstance(extra, str) and extra.strip():
+                self.fatos.add(extra.strip())
 
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""

@@ -1744,6 +1744,10 @@ window.LANG_EDITOR = {
     "en": "renown (+/−)",
     "pt": "renome (+/−)"
   },
+  "ui.editor.masmorra.recompensa.fatos": {
+    "en": "extra markers (facts, comma-separated)",
+    "pt": "marcadores extras (fatos, separados por vírgula)"
+  },
   "ui.editor.masmorra.recompensa.fato": {
     "en": "marker (fact)",
     "pt": "marcador (fato)"

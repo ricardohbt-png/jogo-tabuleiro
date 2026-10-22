@@ -2470,6 +2470,7 @@
     const x = {};
     if (Number.isInteger(obj.renome) && obj.renome) x.renome = obj.renome;
     if (typeof obj.fato === "string" && obj.fato.trim()) x.fato = obj.fato.trim();
+    if (Array.isArray(obj.fatos)) { const f = obj.fatos.filter(v => typeof v === "string" && v.trim()).map(v => v.trim()); if (f.length) x.fatos = f; }
     return x;
   }
   function objSerializar(obj) {
@@ -2488,6 +2489,7 @@
       <label>${t(K_REC + "ouro")} <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
       <label>${t(K_REC + "renome")} <input id="${pfx}-renome" type="number" value="${obj.renome | 0}"></label>
       <label>${t(K_REC + "fato")} <input id="${pfx}-fato" value="${(obj.fato || "").replace(/"/g, "&quot;")}"></label>
+      <label>${t(K_REC + "fatos")} <input id="${pfx}-fatos" value="${(Array.isArray(obj.fatos) ? obj.fatos.join(", ") : "").replace(/"/g, "&quot;")}"></label>
       <label>${t(K_REC + "itens")}</label>
       <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
       <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) })), "", o => o.v + " — " + o.name)}</select>
@@ -2498,6 +2500,7 @@
     document.getElementById(`${pfx}-gold`).onchange = e => { obj.reward.gold = Math.max(0, Number(e.target.value) | 0); };
     document.getElementById(`${pfx}-renome`).onchange = e => { const n = Math.trunc(Number(e.target.value)) || 0; if (n) obj.renome = n; else delete obj.renome; };
     document.getElementById(`${pfx}-fato`).onchange = e => { const v = e.target.value.trim(); if (v) obj.fato = v; else delete obj.fato; };
+    document.getElementById(`${pfx}-fatos`).onchange = e => { const v = e.target.value.split(",").map(x => x.trim()).filter(Boolean); if (v.length) obj.fatos = v; else delete obj.fatos; };
     document.getElementById(`${pfx}-additem`).onclick = () => { const id = document.getElementById(`${pfx}-add`).value; if (id) obj.reward.items.push({ id }); renderPanel(); };
     panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
   }
