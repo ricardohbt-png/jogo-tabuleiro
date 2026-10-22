@@ -45,6 +45,7 @@ F_LENTO = "elara_graciero_lento"
 F_GILO_MORREU = "elara_gilo_morreu"
 F_DICA_MONTANHA = "elara_dica_montanha"
 F_OLHO = "elara_olho_recuperado"
+F_LEONEL_VENCIDO = "elara_leonel_vencido"
 F_PEDRO = "elara_graciero_pedro_falou"
 F_HENRIQUE = "elara_graciero_henrique_falou"
 
@@ -108,6 +109,10 @@ def conversas():
             _conversa("elara_graciero_elfo",
                       "O elfo desvia o olhar: \"Há quem pague bem para que as coisas sumam. E há quem, no norte, "
                       "pague melhor para que elas cheguem.\"", rumo),
+            _conversa("elara_graciero_serra",
+                      "O elfo fala sem mexer os lábios: \"Uma caravana subiu a serra com uma carga que ninguém "
+                      "queria ver. Ainda dá tempo de alcançá-la, se não demorarem demais por aqui.\"",
+                      _req(fato=F_DICA_MONTANHA, tambem_fato=F_RAMO_A, sem_fato=F_LEONEL_VENCIDO)),
         ],
     }
 

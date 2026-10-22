@@ -22,7 +22,7 @@ class DadosTests(unittest.TestCase):
                     "elara_graciero_bardo_ajuda": "npc_ms2ee41a", "elara_graciero_bardo_traicao": "npc_ms2ee41a",
                     "elara_graciero_nobre": "npc_ms2egify", "elara_graciero_henrique": "npc_ms2egify",
                     "elara_graciero_gnomo": "npc_ms2ej3o7", "elara_graciero_pedro": "npc_ms2ej3o7",
-                    "elara_graciero_elfo": "npc_ms2ef8oi"}
+                    "elara_graciero_elfo": "npc_ms2ef8oi", "elara_graciero_serra": "npc_ms2ef8oi"}
         t = todas()
         for cid, slot in esperado.items():
             self.assertEqual(t[cid][0], slot, cid)

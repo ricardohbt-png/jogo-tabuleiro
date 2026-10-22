@@ -1,5 +1,23 @@
 # Legends for Hire — Regras de Arquitetura
 
+### O Resgate de Elara — rota do Olho (2026-10-22)
+
+Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte5-olho.md`. Fecha a campanha (planos 1–5). Gerador
+`tools/gerar_elara_montanha.py` (idempotente, `--simular`, `--forcar`, assinaturas em `tools/.elara_montanha_assinaturas.json`):
+o destino `elara_montanha` (3 etapas emendadas: Trilha do Contrabando, Desfiladeiro e Caravana, nível 5, a rota mais difícil),
+as fichas `assassino_da_caravana` e `bardo_da_caravana` (`tools/elara_montanha_fichas.py`) e os mapas
+(`tools/elara_montanha_mapas.py`). Nenhuma peça de motor nova. **Quando aparece:** `fato elara_dica_montanha` (vinda da Praça
+viva ou do bardo que ajuda) + `tambem_fato elara_ramo_a` (o ramo B também ganha a dica da Praça viva, mas já tem o Olho) +
+`sem_fato elara_leonel_vencido` (a rota some quando o final é jogado). A conversa-dica `elara_graciero_serra` (Elfo Suspeito)
+mora em `gerar_elara_graciero.py`. **Duas vias no mesmo mapa:** as falas levam `requisito`: com `elara_bardo_ajudou` o bardo guia
+e, no desfiladeiro, é morto por uma flecha de ponta tingida com uma moeda de prata sem cunho (cena só de falas, sem teste nem
+reação possível: "não houve tempo"); sem ele, o grupo segue riscos de faca do Gilo e acha o rastro de quem foi calado antes.
+**Olho:** é item de recompensa do objetivo principal da Caravana (`kill_target` do assassino, que tem `fuga_chefe` e foge ao
+ser vencido, sem cadáver nem loot); o objetivo grava `elara_rota_olho_vencida` e `elara_olho_recuperado` por `fatos`. Com o Olho
+na bolsa, o slide "O Olho volta ao Templo" do final de Graciero substitui "O Olho não está aqui". Testes:
+`python -X utf8 tools/test_elara_montanha_fichas.py`, `test_elara_montanha_mapas.py`, `test_elara_montanha_dados.py` e
+`test_elara_montanha_fluxo.py`. **Fica para o autor:** arte das cenas e dos novos monstros, texto final e calibragem por jogo.
+
 ### O Resgate de Elara — Graciero (2026-10-22)
 
 Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte4-graciero.md`. **Motor:** requisito `tambem_fato` (segundo fato

@@ -3774,6 +3774,14 @@ window.LANG_CATALOGO = {
     "en": "Shadow Spider",
     "pt": "Aranha Sombria"
   },
+  "cat.monstro.assassino_da_caravana.nome": {
+    "en": "The Mountain Assassin",
+    "pt": "O Assassino da Serra"
+  },
+  "cat.monstro.bardo_da_caravana.nome": {
+    "en": "Caravan Bard",
+    "pt": "Bardo da Caravana"
+  },
   "cat.monstro.boneco_furia.nome": {
     "en": "Fury Target",
     "pt": "Alvo de Fúria"
