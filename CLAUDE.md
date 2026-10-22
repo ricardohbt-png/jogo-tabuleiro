@@ -1,5 +1,27 @@
 # Legends for Hire — Regras de Arquitetura
 
+### O Resgate de Elara — Graciero (2026-10-22)
+
+Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte4-graciero.md`. **Motor:** requisito `tambem_fato` (segundo fato
+exigido, AND com `fato`; só entra no dict quando preenchido; vale em conversa, destino e slide; os editores de mundo, cidade e
+história o conservam) e `fatos` no objetivo (lista de até 6, gravada com `fato` por `_aplicar_renome_fato`; o painel de
+objetivo do editor o edita). **Ponte:** as conversas `elara_riacho_rumo_graciero` (após `elara_mocas_salvas`) e
+`elara_corvin_rumo_graciero` (após `elara_pista_graciero`) gravam `elara_rumo_graciero`, que libera Graciero. Gerador
+`tools/gerar_elara_graciero.py` (idempotente, `--simular`, `--forcar`, assinaturas em `tools/.elara_graciero_assinaturas.json`):
+rumores e conversas por herói/bardo nos slots ativos da taverna, os destinos e os sete mapas (`tools/elara_graciero_mapas.py`),
+as fichas `escorpiao_gigante` e `leonel` e o item `olho_de_arveluz` (anel sem bônus; só no catálogo). **Fluxo:** Becos →
+Cais (relógio `elara_graciero`, limite 30, fato `elara_graciero_lento`) → Praça dos Escorpiões, viva (relógio dentro do limite:
+fala com as últimas palavras do Gilo; grava `elara_gilo_morreu`, `elara_viu_gilo_morrer` e `elara_dica_montanha`) ou morta
+(só o corpo; grava `elara_gilo_morreu`) → Casa de Leilões/Porões do Leonel, normal ou **alerta** (`elara_leonel_cauteloso`,
+vinda do bardo morto ou da traição do bardo maltratado: mais guardas e uma armadilha, sem deslocar o resto). A morte do Gilo é
+**narrada** (o validador força movimento 6 em ficha personalizada, então um Gilo ferido não ficaria parado). O ramo B recebe o
+Olho na conversa `elara_gilo_pertences` (`sem_fato elara_ramo_a`); o ramo A nunca. A Elara é o baú-chave da cela
+(`elara_elara_salva`, objetivo secundário): o final sempre a diz salva. O `outro_rota` dos dois destinos do Leonel é uma
+matriz de slides condicionais (ramo, moças, Olho, bardo, Pedro/Henrique) que sempre fecha com o mistério. **Plano 5 (rota do
+Olho):** abre com `elara_dica_montanha` + `elara_ramo_a`. Testes: `python -X utf8 tools/test_tambem_fato.py`,
+`node tools/test_tambem_fato_editor.js`, `test_elara_graciero_fichas.py`, `test_elara_graciero_mapas.py`,
+`test_elara_graciero_dados.py`, `test_elara_graciero_fluxo.py` e `test_elara_ponte.py`.
+
 ### O Resgate de Elara — Ramo B (Gilo: Adhadal e Corvin) (2026-10-22)
 
 Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte3-gilo.md`. Gerador idempotente
