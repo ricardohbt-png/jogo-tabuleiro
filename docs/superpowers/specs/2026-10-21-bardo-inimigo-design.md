@@ -42,7 +42,7 @@ Adicionar ao Bestiário um monstro Bardo baseado no personagem Bardo do jogo. El
 
 ## Nível de Desafio e saque
 
-- ND inicial proposto: 2, sujeito a ajuste após revisar os valores finais e o orçamento de habilidades do monstro.
+- ND inicial: 1, alinhado aos valores básicos do Bardo e ao patamar do Bandido; os efeitos de suporte entram na avaliação do encontro em grupo.
 - Saque de ouro: `5–15` (inclusive), distribuído uniformemente.
 - O monstro usará o registro de imagem `bardo` para renderizar a miniatura no tabuleiro.
 
