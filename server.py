@@ -918,8 +918,15 @@ def _clean_scene_conversations(raw, fallback=""):
         except (TypeError, ValueError): bonus = 0
         item = str(effect.get("item_id") or "").strip()[:100]
         fact = str(effect.get("fato") or "").strip()[:100]
+        efeito = {"renome":bonus, "fato":fact, "item_id":item}
+        # Fatos adicionais (opcional): a chave só existe quando há algum, então conversas antigas
+        # ficam idênticas byte a byte.
+        extras = [str(x).strip() for x in (effect.get("fatos") if isinstance(effect.get("fatos"), list) else [])
+                  if isinstance(x, str) and str(x).strip() and len(str(x).strip()) <= 100][:6]
+        if extras:
+            efeito["fatos"] = extras
         cleaned.append({"id":cid, "texto":text, "requisito":_clean_requirement(row.get("requisito")),
-                        "efeito":{"renome":bonus, "fato":fact, "item_id":item},
+                        "efeito":efeito,
                         "uma_vez": bool(row.get("uma_vez", True))})
     if not cleaned and fallback:
         cleaned.append({"id":"inicial", "texto":str(fallback)[:1200], "requisito":_clean_requirement({}),
@@ -18071,6 +18078,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.renome = max(0, self.renome + bonus)
         fact = str(effect.get("fato") or "").strip()
         if fact: self.fatos.add(fact)
+        for extra in (effect.get("fatos") or []):
+            if isinstance(extra, str) and extra.strip():
+                self.fatos.add(extra.strip())
         item_id = str(effect.get("item_id") or "").strip()
         item_note = ""
         item_acquired = False
