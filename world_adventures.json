@@ -904,5 +904,73 @@
       "aventura_id": ""
     },
     "renome_recompensa": 1
+  },
+  "elara_riacho_casa": {
+    "id": "elara_riacho_casa",
+    "nome": "A Casa do Tomé",
+    "x": 72.4,
+    "y": 46.5,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_riacho_casa.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_ramo_a",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 0
+  },
+  "elara_riacho_celeiro": {
+    "id": "elara_riacho_celeiro",
+    "nome": "O Celeiro do Heitor",
+    "x": 75.4,
+    "y": 47.5,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_riacho_celeiro.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_bardo_decidido",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
   }
 }
