@@ -1,5 +1,27 @@
 # Legends for Hire — Regras de Arquitetura
 
+### O Resgate de Elara — Ramo A (Vila do Riacho) (2026-10-21)
+
+Plano `docs/superpowers/plans/2026-10-21-campanha-elara-parte2-riacho.md`. Peça de motor: conversa de cena
+com **`efeito.fatos`** (lista de até 6 textos de até 100 caracteres, gravados junto de `efeito.fato`;
+a chave só existe quando há itens; campo "Fatos adicionais" no editor de cidades). O gerador
+`tools/gerar_elara_riacho.py` (idempotente, `--simular`, `--forcar`) grava conversas `elara_*` nos slots
+ativos da taverna do Riacho (`barman`, `patrono_fundo`, `npc_ms254rwd` e `cartas`, o bardo; recusa slot
+`removed`, e as conversas do autor ficam), os destinos `elara_riacho_casa` (liberado por `elara_ramo_a`) e
+`elara_riacho_celeiro` (liberado por `elara_bardo_decidido`) e os mapas `elara_riacho_casa.json` /
+`elara_riacho_celeiro.json` (construtor determinístico em `tools/elara_riacho_mapas.py`; protegidos por
+assinatura em `tools/.elara_riacho_assinaturas.json`; `TIPO_BANDIDO` único para trocar pelo monstro
+`bandido`). Casa: objetivo `open_key_chest` grava `elara_bardo_exposto`; celeiro: `rescue_prisoner` grava
+`elara_mocas_salvas`. **Fatos (contrato com Graciero):** 1º encontro com o bardo (`elara_t1_gentil`,
+`elara_t1_ameaca`, `elara_t1_ignorou`, mais `elara_t1_feito`; gentil grava também `elara_bardo_gentil` e
+ameaça `elara_bardo_maltratado`); confronto (`elara_bardo_morto` + `elara_leonel_cauteloso`,
+`elara_bardo_interrogado` + `elara_vila_abalada` ou `elara_bardo_poupado`, sempre com
+`elara_bardo_decidido`); ações finais do poupado (`elara_bardo_gentil` ou `elara_bardo_maltratado`, com
+`elara_bardo_final`). Leitura em Graciero: ajuda = poupado + gentil sem maltratado; trai = maltratado;
+nenhum dos dois = hesita. As "ações no mundo" do bardo são escolhas de conversa (não uma cena física).
+Testes: `python -X utf8 tools/test_conversa_fatos.py`, `test_elara_riacho_mapas.py`,
+`test_elara_riacho_dados.py`, `test_elara_riacho_fluxo.py` e `node tools/test_conversa_fatos_editor.js`.
+
 ### O Resgate de Elara — Parte 1 e peças de motor (2026-10-21)
 
 Campanha longa (spec `docs/superpowers/specs/2026-10-21-campanha-resgate-de-elara-design.md`; plano
