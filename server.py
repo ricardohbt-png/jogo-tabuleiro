@@ -18906,7 +18906,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.relogios[rel["id"]] = depois
         for aviso in rel.get("avisos") or []:
             if antes < int(aviso["em"]) <= depois:
-                await self.gm_say(str(aviso["texto"]))
+                await self.gm_say(T("narracao.autoral", texto=str(aviso["texto"])))
         if depois > int(rel["limite"]) and rel.get("fato_ao_passar"):
             self.fatos.add(str(rel["fato_ao_passar"]))
 
@@ -51113,7 +51113,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if m.get("fuga_chefe") and not m.get("fugiu"):
             m["fugiu"] = True
             fuga = m["fuga_chefe"]
-            await self.gm_say(str(fuga["texto"]))
+            await self.gm_say(T("narracao.autoral", texto=str(fuga["texto"])))
             self.fatos.add(str(fuga["fato"]))
             mroom_f = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
             if mroom_f and not any(mm.get("room_id") == mroom_f["id"] and mm.get("hp", 0) > 0

@@ -23165,9 +23165,29 @@ window.EDITOR_DUNGEONS = [
           "reward": {
             "gold": 0,
             "items": []
-          }
+          },
+          "fato": "elara_casa_vencida"
         },
         "secondary": []
+      },
+      "relogio": {
+        "id": "elara_p1",
+        "limite": 60,
+        "fato_ao_passar": "elara_lento",
+        "avisos": [
+          {
+            "em": 25,
+            "texto": "O sino do Templo ecoa ao longe. A patrulha da estrada já saiu."
+          },
+          {
+            "em": 45,
+            "texto": "A noite avança. As moças devem estar cada vez mais longe."
+          },
+          {
+            "em": 60,
+            "texto": "O tempo está quase esgotado."
+          }
+        ]
       }
     }
   },
@@ -71299,9 +71319,29 @@ window.EDITOR_DUNGEONS = [
           "reward": {
             "gold": 0,
             "items": []
-          }
+          },
+          "fato": "elara_fazenda_vencida"
         },
         "secondary": []
+      },
+      "relogio": {
+        "id": "elara_p1",
+        "limite": 60,
+        "fato_ao_passar": "elara_lento",
+        "avisos": [
+          {
+            "em": 25,
+            "texto": "O sino do Templo ecoa ao longe. A patrulha da estrada já saiu."
+          },
+          {
+            "em": 45,
+            "texto": "A noite avança. As moças devem estar cada vez mais longe."
+          },
+          {
+            "em": 60,
+            "texto": "O tempo está quase esgotado."
+          }
+        ]
       }
     }
   },
