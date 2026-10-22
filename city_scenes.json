@@ -374,6 +374,156 @@
       "mode": "individual",
       "mask": "",
       "slots": []
+    },
+    "templo_alva": {
+      "nome": "Templo de Alva e Luz",
+      "background": "assets/cenas/fundos/alva_e_luz_fundo.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": [
+        {
+          "id": "npc_exequiel",
+          "name": "Exequiel",
+          "image": "assets/tavern/nobre2.png",
+          "x": 35.0,
+          "y": 30.3,
+          "w": 30.0,
+          "h": 69.7,
+          "z": 1.0,
+          "dialog": "",
+          "conversations": [
+            {
+              "id": "elara_pedido",
+              "texto": "Servas do Templo foram levadas esta noite, mais de uma dezena, entre elas Elara, irmã do mago Pedro. Os sequestradores usaram uma casa aqui em Alva e Luz, dizem os vizinhos. Tragam-nas de volta e o Templo paga bem. Rápido: cada hora conta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_pediu",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_pediu",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_pedro_irma",
+              "texto": "Pedro, a Elara falou de você ontem mesmo. Disse que o irmão ainda ia ficar famoso. Encontre-a, e diga-lhe isso pessoalmente.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_pediu",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_henrique_pilheria",
+              "texto": "Bardo, deixe a graça para depois que as moças estiverem a salvo. E sim, a irmã do mago é mais bonita do que ele. Não digo mais nada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_pediu",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "bard"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_pos_fazenda_rapido",
+              "texto": "Vocês voltaram depressa, e isso pode fazer toda a diferença. A fazenda era uma distração: as moças seguem pela estrada e, ao mesmo tempo, alguém esteve aqui no Templo esta noite e levou uma relíquia. Não posso dizer o que ela é. Com rapidez ainda podem tentar as duas coisas.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_fazenda_vencida",
+                "sem_fato": "elara_lento",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_templo_pressionou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_pos_fazenda_lento",
+              "texto": "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela estrada e a relíquia que guardávamos foi roubada esta noite. Não posso dizer o que ela é, só que não pode ficar em mãos erradas. Já não há tempo para as duas coisas: escolham.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_lento",
+                "sem_fato": "",
+                "aventura_id": "elara_parte1"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_templo_pressionou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_escolher_mocas",
+              "texto": "Vamos atrás das moças: a estrada leva à Vila do Riacho.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_templo_pressionou",
+                "sem_fato": "elara_ramo_b",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_ramo_a",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_escolher_gilo",
+              "texto": "Vamos atrás do ladrão da relíquia: ele fugiu rumo à Floresta de Adhadal.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_templo_pressionou",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_ramo_b",
+                "item_id": ""
+              },
+              "uma_vez": true
+            }
+          ]
+        }
+      ]
     }
   },
   "vila_riacho": {
@@ -427,6 +577,84 @@
                 "item_id": ""
               },
               "uma_vez": false
+            },
+            {
+              "id": "elara_riacho_barman",
+              "texto": "Ninguém aqui viu nada, e é assim que a gente continua inteiro. Se querem saber de forasteiros, falem com quem toca à noite: ele ouve tudo antes de qualquer um.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_bardo_escoltar",
+              "texto": "Vocês levam o bardo para fora do povoado, pela estrada, sem que ninguém o toque. Ele agradece com um aceno curto e não olha para trás.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_poupado",
+                "sem_fato": "elara_bardo_final",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_gentil",
+                "item_id": "",
+                "fatos": [
+                  "elara_bardo_final"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_bardo_entregar",
+              "texto": "Vocês o entregam à vila. Arrastam-no até a praça sob gritos e pedras. Ele olha para vocês como quem não esquece um rosto.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_poupado",
+                "sem_fato": "elara_bardo_final",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_maltratado",
+                "item_id": "",
+                "fatos": [
+                  "elara_bardo_final"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_riacho_rumo_graciero",
+              "texto": "As moças do celeiro estão a salvo, mas a irmã do mago já seguiu viagem. Vocês acertam as contas na taverna e tomam a estrada de Graciero antes que a notícia chegue lá.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_mocas_salvas",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_rumo_graciero",
+                "item_id": ""
+              },
+              "uma_vez": true
             }
           ],
           "z": 1.0
@@ -471,6 +699,24 @@
               "efeito": {
                 "renome": 0,
                 "fato": "cunhado desaparecido",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_riacho_mesa",
+              "texto": "O Tomé anda com a bolsa cheia desde a lua passada, e não faz serviço nenhum. Mora na casa de janela fechada, no fim da rua. Eu não disse nada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
                 "item_id": ""
               },
               "uma_vez": false
@@ -519,6 +765,136 @@
                 "renome": 0,
                 "fato": "",
                 "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_t1_gentil",
+              "texto": "Você paga uma caneca ao bardo e puxa conversa. Ele se esquiva das perguntas, mas agradece o gesto com um sorriso que dura um segundo a mais.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "elara_t1_feito",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_t1_gentil",
+                "item_id": "",
+                "fatos": [
+                  "elara_t1_feito",
+                  "elara_bardo_gentil"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_t1_ameaca",
+              "texto": "Você o prende pelo colarinho e sussurra o que fará se ele mentir. Ele sorri sem os olhos, e a melodia que toca muda de tom.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "elara_t1_feito",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_t1_ameaca",
+                "item_id": "",
+                "fatos": [
+                  "elara_t1_feito",
+                  "elara_bardo_maltratado"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_t1_ignorou",
+              "texto": "Você deixa o bardo tocar em paz. Ele parece aliviado... e atento a cada passo de vocês até a porta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "elara_t1_feito",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_t1_ignorou",
+                "item_id": "",
+                "fatos": [
+                  "elara_t1_feito"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_bardo_matar",
+              "texto": "Vocês o executam ali mesmo. O silêncio na taverna é de quem entendeu o recado, e alguém, lá fora, vai ficar sabendo antes do amanhecer.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_exposto",
+                "sem_fato": "elara_bardo_decidido",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_morto",
+                "item_id": "",
+                "fatos": [
+                  "elara_bardo_decidido",
+                  "elara_leonel_cauteloso"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_bardo_interrogar",
+              "texto": "Ele canta tudo, tremendo, diante da taverna inteira. A vila ouve cada nome e vira o rosto para vocês: ninguém gosta de quem os expõe.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_exposto",
+                "sem_fato": "elara_bardo_decidido",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_interrogado",
+                "item_id": "",
+                "fatos": [
+                  "elara_bardo_decidido",
+                  "elara_vila_abalada"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_bardo_poupar",
+              "texto": "Vocês deixam o bardo vivo. Ele jura silêncio e escuta com atenção o que vocês querem dele. O que acontecer depois dependerá do que fizerem com ele.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_exposto",
+                "sem_fato": "elara_bardo_decidido",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_poupado",
+                "item_id": "",
+                "fatos": [
+                  "elara_bardo_decidido"
+                ]
               },
               "uma_vez": true
             }
@@ -690,7 +1066,26 @@
           "h": 52.1,
           "z": 0.0,
           "dialog": "",
-          "conversations": []
+          "conversations": [
+            {
+              "id": "elara_riacho_serva",
+              "texto": "Tem uns tropeiros no celeiro do Heitor desde ontem. Mas tropeiro não traz carroça tão cheia, de noite, e com tanta gente calada dentro.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_exposto",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            }
+          ]
         }
       ]
     }
@@ -729,6 +1124,42 @@
                 "item_id": ""
               },
               "uma_vez": false
+            },
+            {
+              "id": "elara_corvin_barman",
+              "texto": "Um sujeito de botas fundas de lama passou por aqui duas noites atrás. Pagou caro por um quarto que não usou e saiu antes do galo. Perguntou pela estrada de Graciero.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_b",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_corvin_chegada",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_corvin_rumo_graciero",
+              "texto": "A carta do curtume não deixa dúvida: o Gilo foi vender a pedra e as encomendas em Graciero. Vocês pagam a conta e partem na mesma noite, atrás da fumaça.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_pista_graciero",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_rumo_graciero",
+                "item_id": ""
+              },
+              "uma_vez": true
             }
           ],
           "z": 1.0
@@ -751,6 +1182,24 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_corvin_bardo",
+              "texto": "O bardo dedilha uma melodia estridente e finge não ouvir a pergunta. \"Não vi ninguém. Ninguém passa por aqui que valha uma canção.\" Mas a música muda de tom quando vocês se afastam.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_b",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -976,6 +1425,24 @@
                 "item_id": ""
               },
               "uma_vez": false
+            },
+            {
+              "id": "elara_corvin_garconete",
+              "texto": "Ele tinha os dedos pretos de tinta e de lama, e uma pedra embrulhada num pano que não largava nem para comer. Não era dali, mas conhecia o caminho do curtume.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_b",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
             }
           ]
         },
@@ -998,6 +1465,24 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_corvin_sombrio",
+              "texto": "O homem sombrio não levanta os olhos da caneca. \"Quem procura o Gilo chega tarde ou não chega. Ele nunca está sozinho, mesmo quando parece.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_b",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1078,6 +1563,24 @@
                 "renome": 0,
                 "fato": "segredo3",
                 "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_gilo_pertences",
+              "texto": "Os guardas da cidade, ainda pálidos por causa dos escorpiões, entregam ao grupo o que acharam entre os ossos do mercenário: um embrulho de pano que pesa mais do que devia. Está quente ao toque.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_gilo_morreu",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_olho_recuperado",
+                "item_id": "olho_de_arveluz"
               },
               "uma_vez": true
             }
@@ -1311,7 +1814,70 @@
           "h": 58.3,
           "z": 2.0,
           "dialog": "",
-          "conversations": []
+          "conversations": [
+            {
+              "id": "elara_graciero_garconete",
+              "texto": "Anda correndo que um senhor de casaca compra esposas pelo cais, e que as moças somem das ruas na noite de sexta. Eu só trago a bebida.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_rumo_graciero",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_graciero_bardo_ajuda",
+              "texto": "O bardo que vocês pouparam está encostado no balcão, de mão no instrumento. \"Não esqueci. A caravana subiu a serra, rumo ao norte. Levem isto: é o que eu sei.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_poupado",
+                "sem_fato": "elara_bardo_maltratado",
+                "aventura_id": "",
+                "tambem_fato": "elara_bardo_gentil"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_ajudou",
+                "item_id": "",
+                "fatos": [
+                  "elara_dica_montanha"
+                ]
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_graciero_bardo_traicao",
+              "texto": "Um assobio estridente corta a taverna. O bardo que vocês pouparam sorri de longe e some pela porta dos fundos. Em pouco tempo, alguém na cidade já sabe que vocês chegaram.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_poupado",
+                "sem_fato": "",
+                "aventura_id": "",
+                "tambem_fato": "elara_bardo_maltratado"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_bardo_traiu",
+                "item_id": "",
+                "fatos": [
+                  "elara_leonel_cauteloso"
+                ]
+              },
+              "uma_vez": true
+            }
+          ]
         },
         {
           "id": "npc_ms2ef8oi",
@@ -1442,6 +2008,43 @@
                 "item_id": ""
               },
               "uma_vez": true
+            },
+            {
+              "id": "elara_graciero_elfo",
+              "texto": "O elfo desvia o olhar: \"Há quem pague bem para que as coisas sumam. E há quem, no norte, pague melhor para que elas cheguem.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_rumo_graciero",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_graciero_serra",
+              "texto": "O elfo fala sem mexer os lábios: \"Uma caravana subiu a serra com uma carga que ninguém queria ver. Ainda dá tempo de alcançá-la, se não demorarem demais por aqui.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_dica_montanha",
+                "sem_fato": "elara_leonel_vencido",
+                "aventura_id": "",
+                "tambem_fato": "elara_ramo_a"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
             }
           ]
         },
@@ -1455,7 +2058,45 @@
           "h": 58.4,
           "z": 4.0,
           "dialog": "",
-          "conversations": []
+          "conversations": [
+            {
+              "id": "elara_graciero_nobre",
+              "texto": "Um homem de casaca limpa fala sem olhar para vocês: \"Em Graciero, os respeitáveis dormem tranquilos. Os que perguntam demais dormem menos.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_rumo_graciero",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_graciero_henrique",
+              "texto": "O bardo do grupo faz uma mesura exagerada para a garçonete e cochicha, rindo, que a irmã do mago \"deve ser tão feia quanto ele\". Alguém na mesa ao lado ouve e não gosta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_rumo_graciero",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "bard"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_graciero_henrique_falou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            }
+          ]
         },
         {
           "id": "npc_ms2ej3o7",
@@ -1467,7 +2108,45 @@
           "h": 17.9,
           "z": 5.0,
           "dialog": "",
-          "conversations": []
+          "conversations": [
+            {
+              "id": "elara_graciero_gnomo",
+              "texto": "O gnomo balança as perninhas no banco alto: \"Nas docas se fala baixinho de uma casa de leilões. Quem entra por lá nem sempre sai pela mesma porta.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_rumo_graciero",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": false
+            },
+            {
+              "id": "elara_graciero_pedro",
+              "texto": "O mago olha o fundo da caneca sem beber. \"Ela escreveu todo mês, até parar. Se tocaram nela, vão todos pagar.\" Ninguém ri.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_rumo_graciero",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_graciero_pedro_falou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            }
+          ]
         }
       ]
     }

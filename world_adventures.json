@@ -864,5 +864,699 @@
       "aventura_id": ""
     },
     "renome_recompensa": 5
+  },
+  "elara_parte1": {
+    "id": "elara_parte1",
+    "nome": "O Resgate de Elara",
+    "x": 68.5,
+    "y": 54.41,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "casa_secreta.json",
+        "encadear": true,
+        "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
+        "outro": ""
+      },
+      {
+        "file": "fazenda.json",
+        "encadear": false,
+        "intro": "",
+        "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que estivesse ali já cumpriu a sua parte. Voltem ao Templo."
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_pediu",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "elara_riacho_casa": {
+    "id": "elara_riacho_casa",
+    "nome": "A Casa do Tomé",
+    "x": 72.4,
+    "y": 46.5,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_riacho_casa.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_ramo_a",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 0
+  },
+  "elara_riacho_celeiro": {
+    "id": "elara_riacho_celeiro",
+    "nome": "O Celeiro do Heitor",
+    "x": 75.4,
+    "y": 47.5,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_riacho_celeiro.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_bardo_decidido",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "elara_adhadal": {
+    "id": "elara_adhadal",
+    "nome": "A Floresta de Adhadal",
+    "x": 73.95,
+    "y": 40.84,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "elara_adhadal_1.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_adhadal_2.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_ramo_b",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "elara_corvin": {
+    "id": "elara_corvin",
+    "nome": "O Curtume de Corvin",
+    "x": 86.91,
+    "y": 32.76,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_corvin_cacada.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_corvin_gilo.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "",
+      "aventura_id": "elara_adhadal"
+    },
+    "renome_recompensa": 2
+  },
+  "elara_graciero_beco": {
+    "id": "elara_graciero_beco",
+    "nome": "Os Becos de Graciero",
+    "x": 61.06,
+    "y": 30.27,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_graciero_beco.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_rumo_graciero",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "elara_graciero_cais": {
+    "id": "elara_graciero_cais",
+    "nome": "O Cais dos Leilões",
+    "x": 64.56,
+    "y": 30.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_graciero_cais.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "",
+      "aventura_id": "elara_graciero_beco"
+    },
+    "renome_recompensa": 1
+  },
+  "elara_graciero_praca_viva": {
+    "id": "elara_graciero_praca_viva",
+    "nome": "A Praça dos Escorpiões",
+    "x": 66.06,
+    "y": 28.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_graciero_praca_viva.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "elara_graciero_lento",
+      "aventura_id": "elara_graciero_cais"
+    },
+    "renome_recompensa": 2
+  },
+  "elara_graciero_praca_morta": {
+    "id": "elara_graciero_praca_morta",
+    "nome": "A Praça dos Escorpiões",
+    "x": 66.06,
+    "y": 28.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_graciero_praca_morta.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_graciero_lento",
+      "sem_fato": "",
+      "aventura_id": "elara_graciero_cais"
+    },
+    "renome_recompensa": 2
+  },
+  "elara_leonel_casa": {
+    "id": "elara_leonel_casa",
+    "nome": "A Casa de Leilões",
+    "x": 63.56,
+    "y": 25.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_leonel_1.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_leonel_2.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": {
+      "slides": [
+        {
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
+        },
+        {
+          "text": "O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "mage"
+          }
+        },
+        {
+          "text": "O bardo faz uma reverência elaborada diante da Elara e ouve dela, seca, que já ouviu a piada sobre ela e não achou graça.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "bard"
+          }
+        },
+        {
+          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, sem acreditar que a luz do dia é para elas.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_mocas_salvas",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_ramo_b",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O Olho de Arveluz volta ao Templo pesado e quente. O sacerdote o toma sem agradecer e o esconde debaixo do manto, olhando para longe.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "olho_de_arveluz",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O Olho de Arveluz não está aqui. Ele sobe a serra, para o norte, numa caravana que não pede licença a ninguém.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "olho_de_arveluz",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": ""
+          },
+          "negar": true
+        },
+        {
+          "text": "O bardo que vocês pouparam, de longe, ergue o chapéu uma última vez. Sem ele, a cidade teria sido bem mais difícil.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_bardo_ajudou",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O bardo que vocês pouparam também ergue o chapéu, mas para outro lado. Alguém soube cedo demais da chegada do grupo.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_bardo_traiu",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Fica no ar uma sensação ruim. O Gilo era pequeno demais para tudo isso. Alguma coisa muito maior, muito irritada, continua se movendo longe daqui."
+        }
+      ]
+    },
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_gilo_morreu",
+      "sem_fato": "elara_leonel_cauteloso",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 3
+  },
+  "elara_leonel_casa_alerta": {
+    "id": "elara_leonel_casa_alerta",
+    "nome": "A Casa de Leilões",
+    "x": 63.56,
+    "y": 25.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_leonel_1_alerta.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_leonel_2.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": {
+      "slides": [
+        {
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
+        },
+        {
+          "text": "O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "mage"
+          }
+        },
+        {
+          "text": "O bardo faz uma reverência elaborada diante da Elara e ouve dela, seca, que já ouviu a piada sobre ela e não achou graça.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "bard"
+          }
+        },
+        {
+          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, sem acreditar que a luz do dia é para elas.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_mocas_salvas",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_ramo_b",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O Olho de Arveluz volta ao Templo pesado e quente. O sacerdote o toma sem agradecer e o esconde debaixo do manto, olhando para longe.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "olho_de_arveluz",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O Olho de Arveluz não está aqui. Ele sobe a serra, para o norte, numa caravana que não pede licença a ninguém.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "olho_de_arveluz",
+            "fato": "",
+            "sem_fato": "",
+            "aventura_id": ""
+          },
+          "negar": true
+        },
+        {
+          "text": "O bardo que vocês pouparam, de longe, ergue o chapéu uma última vez. Sem ele, a cidade teria sido bem mais difícil.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_bardo_ajudou",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O bardo que vocês pouparam também ergue o chapéu, mas para outro lado. Alguém soube cedo demais da chegada do grupo.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_bardo_traiu",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Fica no ar uma sensação ruim. O Gilo era pequeno demais para tudo isso. Alguma coisa muito maior, muito irritada, continua se movendo longe daqui."
+        }
+      ]
+    },
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_gilo_morreu",
+      "sem_fato": "",
+      "aventura_id": "",
+      "tambem_fato": "elara_leonel_cauteloso"
+    },
+    "renome_recompensa": 3
+  },
+  "elara_montanha": {
+    "id": "elara_montanha",
+    "nome": "As Montanhas de Graciero",
+    "x": 63.06,
+    "y": 22.27,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "elara_montanha_1.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_montanha_2.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_montanha_3.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": {
+      "slides": [
+        {
+          "text": "A caravana está cercada, os guardas caídos ou em fuga. No fundo da última carroça, o baú de ferro cede: dentro dele, o Olho de Arveluz, pesado e quente, como se ainda soubesse o próprio nome."
+        },
+        {
+          "text": "Antes de descer, vocês cobrem o guia com uma pilha de pedras. Sem ele, ninguém teria achado o desfiladeiro a tempo.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_bardo_ajudou",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Vocês subiram sozinhos, guiados por riscos de faca nas pedras. Descem sozinhos, mais cansados do que da última vez que olharam para trás.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "elara_bardo_ajudou",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Do assassino, restou uma moeda de prata sem cunho no chão. Alguém que sabia o caminho de volta desapareceu pela serra.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_assassino_fugiu",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Resta descer a Graciero, onde a cidade ainda espera e o Leonel não sabe o que subiu atrás dele."
+        }
+      ]
+    },
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_dica_montanha",
+      "sem_fato": "elara_leonel_vencido",
+      "aventura_id": "",
+      "tambem_fato": "elara_ramo_a"
+    },
+    "renome_recompensa": 2
   }
 }

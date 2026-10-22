@@ -1,5 +1,115 @@
 # Legends for Hire — Regras de Arquitetura
 
+### O Resgate de Elara — rota do Olho (2026-10-22)
+
+Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte5-olho.md`. Fecha a campanha (planos 1–5). Gerador
+`tools/gerar_elara_montanha.py` (idempotente, `--simular`, `--forcar`, assinaturas em `tools/.elara_montanha_assinaturas.json`):
+o destino `elara_montanha` (3 etapas emendadas: Trilha do Contrabando, Desfiladeiro e Caravana, nível 5, a rota mais difícil),
+as fichas `assassino_da_caravana` e `bardo_da_caravana` (`tools/elara_montanha_fichas.py`) e os mapas
+(`tools/elara_montanha_mapas.py`). Nenhuma peça de motor nova. **Quando aparece:** `fato elara_dica_montanha` (vinda da Praça
+viva ou do bardo que ajuda) + `tambem_fato elara_ramo_a` (o ramo B também ganha a dica da Praça viva, mas já tem o Olho) +
+`sem_fato elara_leonel_vencido` (a rota some quando o final é jogado). A conversa-dica `elara_graciero_serra` (Elfo Suspeito)
+mora em `gerar_elara_graciero.py`. **Duas vias no mesmo mapa:** as falas levam `requisito`: com `elara_bardo_ajudou` o bardo guia
+e, no desfiladeiro, é morto por uma flecha de ponta tingida com uma moeda de prata sem cunho (cena só de falas, sem teste nem
+reação possível: "não houve tempo"); sem ele, o grupo segue riscos de faca do Gilo e acha o rastro de quem foi calado antes.
+**Olho:** é item de recompensa do objetivo principal da Caravana (`kill_target` do assassino, que tem `fuga_chefe` e foge ao
+ser vencido, sem cadáver nem loot); o objetivo grava `elara_rota_olho_vencida` e `elara_olho_recuperado` por `fatos`. Com o Olho
+na bolsa, o slide "O Olho volta ao Templo" do final de Graciero substitui "O Olho não está aqui". Testes:
+`python -X utf8 tools/test_elara_montanha_fichas.py`, `test_elara_montanha_mapas.py`, `test_elara_montanha_dados.py` e
+`test_elara_montanha_fluxo.py`. **Fica para o autor:** arte das cenas e dos novos monstros, texto final e calibragem por jogo.
+
+### O Resgate de Elara — Graciero (2026-10-22)
+
+Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte4-graciero.md`. **Motor:** requisito `tambem_fato` (segundo fato
+exigido, AND com `fato`; só entra no dict quando preenchido; vale em conversa, destino e slide; os editores de mundo, cidade e
+história o conservam) e `fatos` no objetivo (lista de até 6, gravada com `fato` por `_aplicar_renome_fato`; o painel de
+objetivo do editor o edita). **Ponte:** as conversas `elara_riacho_rumo_graciero` (após `elara_mocas_salvas`) e
+`elara_corvin_rumo_graciero` (após `elara_pista_graciero`) gravam `elara_rumo_graciero`, que libera Graciero. Gerador
+`tools/gerar_elara_graciero.py` (idempotente, `--simular`, `--forcar`, assinaturas em `tools/.elara_graciero_assinaturas.json`):
+rumores e conversas por herói/bardo nos slots ativos da taverna, os destinos e os sete mapas (`tools/elara_graciero_mapas.py`),
+as fichas `escorpiao_gigante` e `leonel` e o item `olho_de_arveluz` (anel sem bônus; só no catálogo). **Fluxo:** Becos →
+Cais (relógio `elara_graciero`, limite 30, fato `elara_graciero_lento`) → Praça dos Escorpiões, viva (relógio dentro do limite:
+fala com as últimas palavras do Gilo; grava `elara_gilo_morreu`, `elara_viu_gilo_morrer` e `elara_dica_montanha`) ou morta
+(só o corpo; grava `elara_gilo_morreu`) → Casa de Leilões/Porões do Leonel, normal ou **alerta** (`elara_leonel_cauteloso`,
+vinda do bardo morto ou da traição do bardo maltratado: mais guardas e uma armadilha, sem deslocar o resto). A morte do Gilo é
+**narrada** (o validador força movimento 6 em ficha personalizada, então um Gilo ferido não ficaria parado). O ramo B recebe o
+Olho na conversa `elara_gilo_pertences` (`sem_fato elara_ramo_a`); o ramo A nunca. A Elara é o baú-chave da cela
+(`elara_elara_salva`, objetivo secundário): o final sempre a diz salva. O `outro_rota` dos dois destinos do Leonel é uma
+matriz de slides condicionais (ramo, moças, Olho, bardo, Pedro/Henrique) que sempre fecha com o mistério. **Plano 5 (rota do
+Olho):** abre com `elara_dica_montanha` + `elara_ramo_a`. Testes: `python -X utf8 tools/test_tambem_fato.py`,
+`node tools/test_tambem_fato_editor.js`, `test_elara_graciero_fichas.py`, `test_elara_graciero_mapas.py`,
+`test_elara_graciero_dados.py`, `test_elara_graciero_fluxo.py` e `test_elara_ponte.py`.
+
+### O Resgate de Elara — Ramo B (Gilo: Adhadal e Corvin) (2026-10-22)
+
+Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte3-gilo.md`. Gerador idempotente
+`tools/gerar_elara_gilo.py` (`--simular`, `--forcar`; assinaturas em `tools/.elara_gilo_assinaturas.json`). Só toca nas
+conversas `elara_*` dos slots ativos `barman`, `patrono_fundo`, `npc_ms2e74bw` e `npc_ms2e85ew` da taverna de Corvin
+(todas com requisito `elara_ramo_b`), nos destinos `elara_adhadal` e `elara_corvin`, na ficha `gilo_dedos_sujos`
+(`tools/elara_gilo_ficha.py`, derivada do `soldado`, ND 2, gravada pelo caminho do editor) e nos quatro mapas.
+**Adhadal** são cópias ajustadas dos protótipos do autor (`floresta.json` e `floresta_2.json`, que nunca mudam):
+poste, grupo esperado 4×nível 3, armadilhas de caça e falas de rastro; a 2ª etapa é desbastada (ND ≤ 10,8), ganha uma
+`exit` autorada alcançável por BFS e `saida_permitida: false`; as duas etapas são emendadas. **Corvin**: a caçada
+(arredores, baú-chave) e o Esconderijo do Gilo, onde o `gilo_dedos_sujos` (`target`) tem `fuga_chefe`: derrotado por
+qualquer dano, vence o combate (XP e objetivo) mas foge sem cadáver nem loot, com um bardo (sem nome nem rede). O
+destino de Corvin só aparece ao concluir Adhadal (`aventura_id`) e não depende de ter conversado em Corvin.
+Fatos para o plano 4 (Graciero): `elara_adhadal_vencida`, `elara_corvin_chegada` (conversa do bartender),
+`elara_cacada_vencida`, `elara_gilo_fugiu` (fuga) e `elara_pista_graciero` (objetivo do confronto); o Gilo chega a
+Graciero com o Olho quando valem ramo B + `elara_gilo_fugiu` + `elara_pista_graciero`. Testes:
+`python -X utf8 tools/test_elara_gilo_ficha.py`, `test_elara_gilo_mapas.py`, `test_elara_gilo_dados.py` e
+`test_elara_gilo_fluxo.py`.
+
+### O Resgate de Elara — Ramo A (Vila do Riacho) (2026-10-21)
+
+Plano `docs/superpowers/plans/2026-10-21-campanha-elara-parte2-riacho.md`. Peça de motor: conversa de cena
+com **`efeito.fatos`** (lista de até 6 textos de até 100 caracteres, gravados junto de `efeito.fato`;
+a chave só existe quando há itens; campo "Fatos adicionais" no editor de cidades). O gerador
+`tools/gerar_elara_riacho.py` (idempotente, `--simular`, `--forcar`) grava conversas `elara_*` nos slots
+ativos da taverna do Riacho (`barman`, `patrono_fundo`, `npc_ms254rwd` e `cartas`, o bardo; recusa slot
+`removed`, e as conversas do autor ficam), os destinos `elara_riacho_casa` (liberado por `elara_ramo_a`) e
+`elara_riacho_celeiro` (liberado por `elara_bardo_decidido`) e os mapas `elara_riacho_casa.json` /
+`elara_riacho_celeiro.json` (construtor determinístico em `tools/elara_riacho_mapas.py`; protegidos por
+assinatura em `tools/.elara_riacho_assinaturas.json`; `TIPO_BANDIDO` único para trocar pelo monstro
+`bandido`). Casa: objetivo `open_key_chest` grava `elara_bardo_exposto`; celeiro: `rescue_prisoner` grava
+`elara_mocas_salvas`. **Fatos (contrato com Graciero):** 1º encontro com o bardo (`elara_t1_gentil`,
+`elara_t1_ameaca`, `elara_t1_ignorou`, mais `elara_t1_feito`; gentil grava também `elara_bardo_gentil` e
+ameaça `elara_bardo_maltratado`); confronto (`elara_bardo_morto` + `elara_leonel_cauteloso`,
+`elara_bardo_interrogado` + `elara_vila_abalada` ou `elara_bardo_poupado`, sempre com
+`elara_bardo_decidido`); ações finais do poupado (`elara_bardo_gentil` ou `elara_bardo_maltratado`, com
+`elara_bardo_final`). Leitura em Graciero: ajuda = poupado + gentil sem maltratado; trai = maltratado;
+nenhum dos dois = hesita. As "ações no mundo" do bardo são escolhas de conversa (não uma cena física).
+Testes: `python -X utf8 tools/test_conversa_fatos.py`, `test_elara_riacho_mapas.py`,
+`test_elara_riacho_dados.py`, `test_elara_riacho_fluxo.py` e `node tools/test_conversa_fatos_editor.js`.
+
+### O Resgate de Elara — Parte 1 e peças de motor (2026-10-21)
+
+Campanha longa (spec `docs/superpowers/specs/2026-10-21-campanha-resgate-de-elara-design.md`; plano
+`docs/superpowers/plans/2026-10-21-campanha-elara-parte1-motor.md`). Esta etapa entrega três peças de
+motor e a **Parte 1** (Alva e Luz); Riacho, Adhadal/Corvin, Graciero e a rota das montanhas vêm em planos
+próprios. **Peças de motor:** (1) requisito **`heroi_no_grupo`** (id de classe; `mage`=Pedro, `bard`=Henrique)
+em `_clean_requirement`/`_avaliar_requisito` — a chave só entra no dicionário quando preenchida, para os
+requisitos já gravados ficarem idênticos; vale em conversas de cena, destinos, slides, portas e **falas de
+masmorra** (`falas[].requisito`, `_fala_elegivel`); os editores de mapa-múndi, cena e slide têm o seletor e o
+editor de masmorras preserva o campo da fala (sem UI de edição dele ainda). (2) **Relógio de rodadas:**
+campo da masmorra `relogio {id, limite, fato_ao_passar, avisos:[{em,texto}]}`; `GameRoom.relogios` (jogo
+salvo, `CAMPOS_DO_PONTO`) soma as rodadas entre masmorras que usam o mesmo `id`; `_relogio_tick` roda em
+`_virada_de_rodada`, narra cada aviso ao cruzá-lo (`T("narracao.autoral")`) e grava `fato_ao_passar` ao
+ultrapassar o limite; passagem secreta aceita `relogio_desconto` (uma vez, ao abrir, `_passagem_aberta`).
+Painel "relógio da campanha" no editor. (3) **Fuga do chefe:** monstro colocado com
+`fuga_chefe {fato, texto}` foge no golpe que o mataria (`_monster_dies_impl`): vence o combate (XP e
+objetivo contam) mas sem cadáver, loot ou ouro, grava o fato e fica com `fugiu`; funciona por qualquer
+caminho de dano. **Parte 1 (`tools/gerar_campanha_elara.py`, idempotente, `--simular`):** cena
+`templo_alva` do ponto `templo` de Alva e Luz (NPC Exequiel, arte provisória), destino `elara_parte1`
+(`casa_secreta.json` → `fazenda.json`, emendados, oculto até o fato `elara_pediu`) e, **só nos dois mapas
+do autor**, o campo `relogio` e o `fato` do objetivo principal (recusa reescrever arquivo com formatação
+diferente da do editor). Fatos: `elara_pediu`, `elara_casa_vencida`, `elara_fazenda_vencida`, `elara_lento`
+(relógio passou de 60 rodadas; ausente = rápido), `elara_templo_pressionou`, `elara_ramo_a` (moças),
+`elara_ramo_b` (Gilo, exclusivo). Os mapas ainda precisam dos ajustes do autor (armadilhas, corpo do bardo,
+bandidos, bandido ferido): ver `docs/superpowers/specs/2026-10-21-elara-auditoria-prototipos.md`. Testes:
+`python -X utf8 tools/test_requisito_heroi.py`, `test_relogio_campanha.py`, `test_fuga_chefe.py`,
+`test_campanha_elara_parte1.py`, `test_elara_fluxo.py` e `node tools/test_requisito_heroi_editor.js`,
+`test_relogio_editor.js`, `test_fuga_chefe_editor.js`.
+
 ### Marcador de entrada e a Maré do Charco em cadeia (2026-10-21)
 
 Campo novo da masmorra, **`marcador_entrada`**: `"escada"` (padrão; ausente = escada) ou `"poste"` (poste de

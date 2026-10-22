@@ -592,6 +592,54 @@ window.LANG_EDITOR = {
     "en": "secondary",
     "pt": "secundário"
   },
+  "ui.editor.masmorra.relogio.titulo": {
+    "en": "campaign clock (rounds)",
+    "pt": "relógio da campanha (rodadas)"
+  },
+  "ui.editor.masmorra.relogio.id": {
+    "en": "clock id (shared between dungeons)",
+    "pt": "id do relógio (igual nas masmorras que somam)"
+  },
+  "ui.editor.masmorra.relogio.limite": {
+    "en": "limit: past this, the slow fact is set",
+    "pt": "limite: acima dele grava o fato de lentidão"
+  },
+  "ui.editor.masmorra.relogio.fato": {
+    "en": "fact set when the limit is passed",
+    "pt": "fato gravado ao passar do limite"
+  },
+  "ui.editor.masmorra.relogio.avisos": {
+    "en": "warnings (round and text)",
+    "pt": "avisos (rodada e texto)"
+  },
+  "ui.editor.masmorra.relogio.aviso_em": {
+    "en": "fires when the clock reaches this round",
+    "pt": "dispara quando o relógio chega a esta rodada"
+  },
+  "ui.editor.masmorra.relogio.aviso_texto": {
+    "en": "warning text",
+    "pt": "texto do aviso"
+  },
+  "ui.editor.masmorra.relogio.adicionar_aviso": {
+    "en": "add warning",
+    "pt": "adicionar aviso"
+  },
+  "ui.editor.masmorra.relogio.desconto": {
+    "en": "clock discount when opened (rounds)",
+    "pt": "desconto no relógio ao abrir (rodadas)"
+  },
+  "ui.editor.masmorra.fuga.titulo": {
+    "en": "flees when defeated (boss escape)",
+    "pt": "foge ao ser derrotado (fuga do chefe)"
+  },
+  "ui.editor.masmorra.fuga.fato": {
+    "en": "fact set when he escapes",
+    "pt": "fato gravado quando ele foge"
+  },
+  "ui.editor.masmorra.fuga.texto": {
+    "en": "narration when he escapes",
+    "pt": "narração da fuga"
+  },
   "ui.editor.masmorra.painel.reforcos_mestre": {
     "en": "master's reinforcements",
     "pt": "reforços do mestre"
@@ -1695,6 +1743,10 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.recompensa.renome": {
     "en": "renown (+/−)",
     "pt": "renome (+/−)"
+  },
+  "ui.editor.masmorra.recompensa.fatos": {
+    "en": "extra markers (facts, comma-separated)",
+    "pt": "marcadores extras (fatos, separados por vírgula)"
   },
   "ui.editor.masmorra.recompensa.fato": {
     "en": "marker (fact)",

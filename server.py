@@ -653,6 +653,10 @@ def _world_adventures_editor_payload():
         "map_image": "assets/city/varluzia - Copia.png",
     }
 
+# Ids de classe aceitos em `heroi_no_grupo` (CLASSES ainda não existe quando o requisito é limpo no boot).
+_CLASSES_REQUISITO = ("warrior", "mage", "rogue", "cleric", "paladin", "bard")
+
+
 def _clean_requirement(raw):
     """Normaliza a trava comum de conversas e destinos.
 
@@ -665,9 +669,17 @@ def _clean_requirement(raw):
     except (TypeError, ValueError): renome = 0
     try: nivel = max(0, min(99, int(raw.get("nivel_grupo_min", 0))))
     except (TypeError, ValueError): nivel = 0
-    return {"renome_min": renome, "nivel_grupo_min": nivel,
-            "item_id": text("item_id"), "fato": text("fato"),
-            "sem_fato": text("sem_fato"), "aventura_id": text("aventura_id")}
+    limpo = {"renome_min": renome, "nivel_grupo_min": nivel,
+             "item_id": text("item_id"), "fato": text("fato"),
+             "sem_fato": text("sem_fato"), "aventura_id": text("aventura_id")}
+    # Só entra quando preenchido: requisitos já gravados continuam idênticos byte a byte.
+    heroi = text("heroi_no_grupo")
+    if heroi in _CLASSES_REQUISITO:
+        limpo["heroi_no_grupo"] = heroi
+    tambem = text("tambem_fato")          # segundo fato exigido (AND com `fato`); mesma regra: só quando preenchido
+    if tambem:
+        limpo["tambem_fato"] = tambem
+    return limpo
 
 def _save_world_adventures_upload(raw_locations, raw_adventures):
     """Valida e grava cidades e entradas de aventura criadas no editor."""
@@ -734,7 +746,7 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                     etapa["completion_mode"] = "route_exits"
                     etapa["required_exit_ids"] = list(dict.fromkeys(str(x) for x in et.get("required_exit_ids", [])))
                 req_etapa = _clean_requirement(et.get("requisito"))
-                if any((req_etapa["renome_min"], req_etapa["nivel_grupo_min"], req_etapa["item_id"], req_etapa["fato"], req_etapa["aventura_id"])):
+                if any((req_etapa["renome_min"], req_etapa["nivel_grupo_min"], req_etapa["item_id"], req_etapa["fato"], req_etapa["aventura_id"], req_etapa.get("tambem_fato"))):
                     etapa["requisito"] = req_etapa
                 trigger = _clean_location_scene_trigger(et.get("scene_trigger"))
                 if trigger:
@@ -909,8 +921,15 @@ def _clean_scene_conversations(raw, fallback=""):
         except (TypeError, ValueError): bonus = 0
         item = str(effect.get("item_id") or "").strip()[:100]
         fact = str(effect.get("fato") or "").strip()[:100]
+        efeito = {"renome":bonus, "fato":fact, "item_id":item}
+        # Fatos adicionais (opcional): a chave só existe quando há algum, então conversas antigas
+        # ficam idênticas byte a byte.
+        extras = [str(x).strip() for x in (effect.get("fatos") if isinstance(effect.get("fatos"), list) else [])
+                  if isinstance(x, str) and str(x).strip() and len(str(x).strip()) <= 100][:6]
+        if extras:
+            efeito["fatos"] = extras
         cleaned.append({"id":cid, "texto":text, "requisito":_clean_requirement(row.get("requisito")),
-                        "efeito":{"renome":bonus, "fato":fact, "item_id":item},
+                        "efeito":efeito,
                         "uma_vez": bool(row.get("uma_vez", True))})
     if not cleaned and fallback:
         cleaned.append({"id":"inicial", "texto":str(fallback)[:1200], "requisito":_clean_requirement({}),
@@ -2539,6 +2558,19 @@ def migrar_charcos_cadeia(doc):
     return mudou
 
 
+def _relogios_de_save(sg):
+    """{id: rodadas} do jogo salvo; valor ruim some e negativo vira zero (save antigo = vazio)."""
+    bruto = (sg or {}).get("relogios")
+    saida = {}
+    if isinstance(bruto, dict):
+        for k, v in bruto.items():
+            try:
+                saida[str(k)[:40]] = max(0, int(v))
+            except (TypeError, ValueError):
+                continue
+    return saida
+
+
 def ensure_campaign_schema(sg):
     """Migra saves anteriores para campanha + grupo sem descartar o save atual."""
     if not isinstance(sg, dict):
@@ -2950,7 +2982,7 @@ CAMPOS_DO_PONTO = (
     "renome", "fatos", "scene_conversations_done", "scene_triggers_done",
     "story_beats_done", "active_scene", "scene_variables", "adventurer_journal", "members",
     "characters", "slots", "shortcut_slots", "refugio", "hero_rooms",
-    "dungeon_snapshot",
+    "dungeon_snapshot", "relogios",
 )
 
 
@@ -3694,6 +3726,7 @@ FOTO_SALA_CATEGORIAS = {
     "world_adventure_progress": "jogo_salvo",
     "world_adventure_route_progress": "jogo_salvo",
     "renome": "jogo_salvo", "fatos": "jogo_salvo", "story_beats_done": "jogo_salvo",
+    "relogios": "jogo_salvo", "relogio_def": "foto",
     "scene_conversations_done": "jogo_salvo", "scene_triggers_done": "jogo_salvo",
     "scene_variables": "jogo_salvo", "active_scene": "jogo_salvo",
     "location_scene_trigger": "jogo_salvo", "refugio_state": "jogo_salvo",
@@ -3920,6 +3953,7 @@ def try_open_savegame_room(account, sid, rooms):
         sg.get("scene_conversations_done") or sg.get("tavern_conversations_done") or [])
     room.scene_triggers_done = {str(x) for x in (sg.get("scene_triggers_done") or []) if str(x)}
     room.story_beats_done = {str(x) for x in (sg.get("story_beats_done") or []) if str(x)}
+    room.relogios = _relogios_de_save(sg)
     if isinstance(sg.get("active_scene"), dict):
         room.active_scene = deepcopy(sg["active_scene"])
     if isinstance(sg.get("scene_variables"), dict):
@@ -8178,6 +8212,14 @@ def validar_dungeon(defn):
                 mo.get("type"), mo.get("hostility_override"))
             if not ok:
                 return False, f"hostilidade do monstro {mo.get('type')!r} inválida: {override}."
+        if "fuga_chefe" in mo:
+            _fg = mo["fuga_chefe"]
+            if (not isinstance(_fg, dict) or not isinstance(_fg.get("fato"), str)
+                    or not _fg["fato"].strip() or len(_fg["fato"]) > 100
+                    or not isinstance(_fg.get("texto"), str) or not _fg["texto"].strip()
+                    or len(_fg["texto"]) > 300):
+                return False, ("fuga_chefe do monstro precisa de fato (até 100) e texto (até 300 "
+                               "caracteres).")
         if not in_grid(mo.get("pos")) or tile_at(mo["pos"]) == WALL:
             return False, f"monstro em casa inválida: {mo.get('pos')}."
         # room_id vazio/None Ã© vÃ¡lido (monstro "sem sala") â€” espelha o editor.
@@ -8564,6 +8606,10 @@ def validar_dungeon(defn):
         _ft = _ob.get("fato")
         if _ft is not None and (not isinstance(_ft, str) or len(_ft) > 100):
             return False, "fato do objetivo deve ser um texto de até 100 caracteres."
+        _fts = _ob.get("fatos")
+        if _fts is not None and (not isinstance(_fts, list) or len(_fts) > 6 or any(
+                not isinstance(x, str) or not x.strip() or len(x) > 100 for x in _fts)):
+            return False, "fatos do objetivo deve ser uma lista de até 6 textos de até 100 caracteres."
     for _ob in _objs:
         if isinstance(_ob, dict) and _ob.get("type") == "salas_obrigatorias" and not _rooms_req:
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
@@ -8580,6 +8626,8 @@ def validar_dungeon(defn):
             return False, f"fala com gatilho inválido: {_tg!r} (proximidade|sala|manual)."
         if not in_grid(_f.get("pos")):
             return False, f"fala em casa inválida: {_f.get('pos')}."
+        if _f.get("requisito") is not None and not isinstance(_f.get("requisito"), dict):
+            return False, "requisito da fala deve ser um objeto."
         _speaker = _f.get("falante")
         if isinstance(_speaker, dict):
             for _key, _prefix in (("retrato", "assets/portraits/"),
@@ -8680,6 +8728,26 @@ def validar_dungeon(defn):
                            f"{_chave[0] or 'todas as classes'}.")
         _ordens_vistas.add(_chave)
 
+    _rel = defn.get("relogio")
+    if _rel is not None:
+        if not isinstance(_rel, dict):
+            return False, "relogio deve ser um objeto."
+        if not isinstance(_rel.get("id"), str) or not re.fullmatch(r"[a-z0-9_]{1,40}", _rel["id"]):
+            return False, "relogio.id deve ter 1 a 40 caracteres [a-z0-9_]."
+        if not isinstance(_rel.get("limite"), int) or isinstance(_rel.get("limite"), bool) or _rel["limite"] < 1:
+            return False, "relogio.limite deve ser um inteiro >= 1."
+        if not isinstance(_rel.get("fato_ao_passar", ""), str) or len(_rel.get("fato_ao_passar", "")) > 100:
+            return False, "relogio.fato_ao_passar deve ser um texto de até 100 caracteres."
+        _avs = _rel.get("avisos", [])
+        if not isinstance(_avs, list) or len(_avs) > 20:
+            return False, "relogio.avisos deve ser uma lista de até 20 itens."
+        for _av in _avs:
+            if (not isinstance(_av, dict) or not isinstance(_av.get("em"), int)
+                    or isinstance(_av.get("em"), bool) or _av["em"] < 1
+                    or not isinstance(_av.get("texto"), str) or not _av["texto"].strip()
+                    or len(_av["texto"]) > 300):
+                return False, "cada aviso do relogio precisa de em >= 1 e texto de até 300 caracteres."
+
     # Passagens autoradas: a mecÃ¢nica permanece uma parede atÃ© ser ativada;
     # a ilusÃ³ria continua WALL no mapa, mas o movimento de herÃ³is a atravessa.
     passages = defn.get("secret_passages", [])
@@ -8718,6 +8786,9 @@ def validar_dungeon(defn):
             return False, "passagem mecânica exige ao menos uma decoração-chave."
         if sp.get("keys_mode", "any") not in ("any", "all"):
             return False, "keys_mode deve ser any ou all."
+        _rd = sp.get("relogio_desconto")
+        if _rd is not None and (not isinstance(_rd, int) or isinstance(_rd, bool) or _rd < 0 or _rd > 999):
+            return False, "relogio_desconto deve ser um inteiro entre 0 e 999."
 
     # Condicoes opcionais de portas: ausencia preserva o comportamento legado.
     door_conditions = defn.get("door_conditions") or {}
@@ -12301,6 +12372,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.scene_conversations_done = set()
         self.scene_triggers_done = set()  # gatilhos narrativos da campanha já consumidos
         self.story_beats_done = set()     # slides narrativos já concluídos pelo anfitrião
+        self.relogios = {}                # relógios de rodadas da campanha {id: rodadas} (jogo salvo)
+        self.relogio_def = None           # relógio da masmorra carregada (derivado do arquivo)
         self.location_scene_trigger = None # cena da entrada atual do mapa-múndi
         self._pending_dungeon_entry = None  # entrada aguardando fim da cena narrativa
         # Preset de iluminaÃ§Ã£o do 3D no cliente ("penumbra"|"masmorra"|"ar_livre").
@@ -17261,6 +17334,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     m["hostility_override"] = override
             if mo.get("autonomous_hostility") is True:
                 m["autonomous_hostility"] = True
+            if isinstance(mo.get("fuga_chefe"), dict):
+                m["fuga_chefe"] = {"fato": str(mo["fuga_chefe"]["fato"]),
+                                   "texto": str(mo["fuga_chefe"]["texto"])}
             if m.get("voo"):
                 if "altura_max" in mo:
                     m["altura_max"] = normalizar_altura(mo["altura_max"])
@@ -17374,11 +17450,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "key_decor_ids": list(sp.get("key_decor_ids") or []),
                 "keys_mode": sp.get("keys_mode", "any"),
                 "activated_decor_ids": [], "opened": False,
+                "relogio_desconto": max(0, int(sp.get("relogio_desconto") or 0)),
                 # Clarividência revela o segredo temporariamente, sem abri-lo.
                 "revealed_by_clarividencia_until": 0,
             })
 
         self._carregar_licoes(defn)
+        self.relogio_def = deepcopy(defn["relogio"]) if isinstance(defn.get("relogio"), dict) else None
 
         # Mapas tradicionais têm uma escada única. O modo hero_spawns não tem
         # escada física de entrada/saída; a saída autorada continua sendo exit.
@@ -17871,8 +17949,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             reasons.append(T("erro.requisito.item_chave", item=req["item_id"]))
         if req["fato"] and req["fato"] not in self.fatos:
             reasons.append(T("erro.requisito.informacao", fato=req["fato"]))
+        if req.get("tambem_fato") and req["tambem_fato"] not in self.fatos:
+            reasons.append(T("erro.requisito.informacao", fato=req["tambem_fato"]))
         if req["sem_fato"] and req["sem_fato"] in self.fatos:
             reasons.append(T("erro.requisito.sem_informacao", fato=req["sem_fato"]))
+        if req.get("heroi_no_grupo") and not any(
+                p.get("class_id") == req["heroi_no_grupo"] and not p.get("is_master")
+                for p in self.players.values()):
+            reasons.append(T("erro.requisito.heroi_no_grupo", heroi=req["heroi_no_grupo"]))
         if req["aventura_id"]:
             adventure = WORLD_ADVENTURES.get(req["aventura_id"])
             if not adventure or self.world_adventure_progress.get(req["aventura_id"], 0) < len(adventure.get("dungeons") or []):
@@ -18228,6 +18312,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.renome = max(0, self.renome + bonus)
         fact = str(effect.get("fato") or "").strip()
         if fact: self.fatos.add(fact)
+        for extra in (effect.get("fatos") or []):
+            if isinstance(extra, str) and extra.strip():
+                self.fatos.add(extra.strip())
         item_id = str(effect.get("item_id") or "").strip()
         item_note = ""
         item_acquired = False
@@ -19137,6 +19224,36 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._relatar_falha(rotulo)
             return False
 
+    def _passagem_aberta(self, sp):
+        """Marca a passagem como aberta; o desconto de relógio vale uma vez só."""
+        if sp.get("opened"):
+            return
+        sp["opened"] = True
+        if sp.get("relogio_desconto"):
+            self._relogio_descontar(sp["relogio_desconto"])
+
+    def _relogio_descontar(self, n):
+        """Tira `n` rodadas do relógio da masmorra atual (piso zero)."""
+        rel = self.relogio_def
+        if not rel:
+            return
+        self.relogios[rel["id"]] = max(0, int(self.relogios.get(rel["id"], 0)) - max(0, int(n)))
+
+    async def _relogio_tick(self):
+        """+1 rodada no relógio da masmorra atual: avisa ao cruzar cada marco e grava o fato
+        `fato_ao_passar` ao ultrapassar o limite. Sem `relogio` na masmorra, não faz nada."""
+        rel = self.relogio_def
+        if not rel:
+            return
+        antes = int(self.relogios.get(rel["id"], 0))
+        depois = antes + 1
+        self.relogios[rel["id"]] = depois
+        for aviso in rel.get("avisos") or []:
+            if antes < int(aviso["em"]) <= depois:
+                await self.gm_say(T("narracao.autoral", texto=str(aviso["texto"])))
+        if depois > int(rel["limite"]) and rel.get("fato_ao_passar"):
+            self.fatos.add(str(rel["fato_ao_passar"]))
+
     async def _virada_de_rodada(self):
         """Passos comuns ao fechar uma rodada: contador, recarga de slots,
         expiração das revelações mágicas e os ticks por rodada (armadilhas,
@@ -19161,6 +19278,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                       self._processar_acido_residual_turno,
                       self._processar_zonas_turno,
                       self._aplicar_exaustao_rodada,
+                      self._relogio_tick,
                       self._tick_retorno_masmorra):
             await self._isolar(passo(), f"virada de rodada: {passo.__name__}")
 
@@ -21317,7 +21435,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _fala_elegivel(self, p, fala):
         """Se esta fala pode disparar agora para este jogador."""
         if not _e_licao(fala):
-            return not fala.get("disparada")
+            return (not fala.get("disparada")
+                    and self._avaliar_requisito(fala.get("requisito"))[0])
         if not self._licao_candidata(p, fala):
             return False
         if fala.get("tarefa") and p.get("licao_atual"):
@@ -27348,6 +27467,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.savegame["scene_conversations_done"] = sorted(self.scene_conversations_done)
         self.savegame["scene_triggers_done"] = sorted(self.scene_triggers_done)
         self.savegame["story_beats_done"] = sorted(self.story_beats_done)
+        self.savegame["relogios"] = dict(self.relogios)
         self.savegame["active_scene"] = deepcopy(self.active_scene)
         self.savegame["scene_variables"] = deepcopy(self.scene_variables)
         self.savegame["turn_timer_enabled"] = self.turn_timer_enabled
@@ -43722,7 +43842,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             keys = sp["key_decor_ids"]
             ready = sp["keys_mode"] == "any" or all(k in sp["activated_decor_ids"] for k in keys)
             if ready:
-                sp["opened"] = True
+                self._passagem_aberta(sp)
                 x, y = sp["pos"]
                 self.tiles[y][x] = FLOOR
                 opened.append(sp)
@@ -51521,6 +51641,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             m.pop("paralisado", None)
             return
         if m["hp"] > 0: return
+        if m.get("fugiu") and not force:
+            return          # já fugiu: não repete a narração nem o prêmio
 
         # A queda a 0 PV inicia um estado de regeneração. O Troll só morre
         # definitivamente se o último dano foi fogo, ou se ácido já bloqueou
@@ -51678,7 +51800,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         cr = m.get("cr", m.get("tier", 1))
         nivel_animado = 1 if cr <= 0.5 else max(1, round(cr))
 
-        if not m.get("boss") and not m.get("undead"):
+        if not m.get("boss") and not m.get("undead") and not m.get("fuga_chefe"):
             # Mortos-vivos destruÃ­dos nÃ£o deixam cadÃ¡ver reanimÃ¡vel
             primeiro_ataque = (m.get("attacks") or [{}])[0]
             self.corpses[m["id"]] = {
@@ -51741,6 +51863,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 mroom["cleared"] = True
             if m.get("boss"):
                 await self.end_game(victory=True)
+            return
+
+        # Chefe com fuga: venceu o combate (XP e objetivo contam), mas escapa levando tudo —
+        # sem cadáver, sem loot e sem ouro.
+        if m.get("fuga_chefe") and not m.get("fugiu"):
+            m["fugiu"] = True
+            fuga = m["fuga_chefe"]
+            await self.gm_say(T("narracao.autoral", texto=str(fuga["texto"])))
+            self.fatos.add(str(fuga["fato"]))
+            mroom_f = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
+            if mroom_f and not any(mm.get("room_id") == mroom_f["id"] and mm.get("hp", 0) > 0
+                                   for mm in self.monsters.values()):
+                mroom_f["cleared"] = True
             return
 
         # Loot: monstros novos tÃªm tabela prÃ³pria por monstro; legados usam sala+65%
@@ -52190,6 +52325,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         fato = obj.get("fato")
         if isinstance(fato, str) and fato.strip():
             self.fatos.add(fato.strip())
+        for extra in (obj.get("fatos") if isinstance(obj.get("fatos"), list) else []):
+            if isinstance(extra, str) and extra.strip():
+                self.fatos.add(extra.strip())
 
     def _objetivo_cumprido(self, obj):
         """True se o objetivo `obj` está cumprido no estado atual (só autorado)."""

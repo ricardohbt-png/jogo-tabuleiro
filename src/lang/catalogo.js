@@ -3238,13 +3238,13 @@ window.LANG_CATALOGO = {
     "en": "Flight Potion",
     "pt": "Poção de Voo"
   },
-  "cat.item.racao_viagem.nome": {
-    "en": "Travel Rations",
-    "pt": "Ração de Viagem"
-  },
   "cat.item.racao_completa.nome": {
     "en": "Complete Rations",
     "pt": "Ração Completa"
+  },
+  "cat.item.racao_viagem.nome": {
+    "en": "Travel Rations",
+    "pt": "Ração de Viagem"
   },
   "cat.item.rede_arremesso.nome": {
     "en": "Net",
@@ -3774,6 +3774,14 @@ window.LANG_CATALOGO = {
     "en": "Shadow Spider",
     "pt": "Aranha Sombria"
   },
+  "cat.monstro.assassino_da_caravana.nome": {
+    "en": "The Mountain Assassin",
+    "pt": "O Assassino da Serra"
+  },
+  "cat.monstro.bardo_da_caravana.nome": {
+    "en": "Caravan Bard",
+    "pt": "Bardo da Caravana"
+  },
   "cat.monstro.boneco_furia.nome": {
     "en": "Fury Target",
     "pt": "Alvo de Fúria"
@@ -3862,6 +3870,10 @@ window.LANG_CATALOGO = {
     "en": "Stone Scorpion",
     "pt": "Escorpião de Pedra"
   },
+  "cat.monstro.escorpiao_gigante.nome": {
+    "en": "Giant Scorpion",
+    "pt": "Escorpião Gigante"
+  },
   "cat.monstro.escorpiao_pedra.nome": {
     "en": "Stone Scorpion",
     "pt": "Escorpião de Pedra"
@@ -3929,6 +3941,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.gigante_runico.nome": {
     "en": "Runic Giant",
     "pt": "Gigante Rúnico"
+  },
+  "cat.monstro.gilo_dedos_sujos.nome": {
+    "en": "Gilo Dirty-Fingers",
+    "pt": "Gilo Dedos Sujos"
   },
   "cat.monstro.goblin.nome": {
     "en": "Goblin",
@@ -4005,6 +4021,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.lagarto_carniceiro.nome": {
     "en": "Carrion Lizard",
     "pt": "Lagarto Carniceiro"
+  },
+  "cat.monstro.leonel.nome": {
+    "en": "Leonel",
+    "pt": "Leonel"
   },
   "cat.monstro.lobisomem.nome": {
     "en": "Werewolf",

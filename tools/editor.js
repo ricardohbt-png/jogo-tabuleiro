@@ -384,6 +384,7 @@
     chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextTrapId: 0, nextPassageId: 0, nextFalaId: 0,
     routeExitRouteId: "",
     masterReinforcements: [],
+    relogio: null,
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [], steps: [] },
     tool: "wall", sel: null,
@@ -2469,6 +2470,7 @@
     const x = {};
     if (Number.isInteger(obj.renome) && obj.renome) x.renome = obj.renome;
     if (typeof obj.fato === "string" && obj.fato.trim()) x.fato = obj.fato.trim();
+    if (Array.isArray(obj.fatos)) { const f = obj.fatos.filter(v => typeof v === "string" && v.trim()).map(v => v.trim()); if (f.length) x.fatos = f; }
     return x;
   }
   function objSerializar(obj) {
@@ -2487,6 +2489,7 @@
       <label>${t(K_REC + "ouro")} <input id="${pfx}-gold" type="number" min="0" value="${obj.reward.gold}"></label>
       <label>${t(K_REC + "renome")} <input id="${pfx}-renome" type="number" value="${obj.renome | 0}"></label>
       <label>${t(K_REC + "fato")} <input id="${pfx}-fato" value="${(obj.fato || "").replace(/"/g, "&quot;")}"></label>
+      <label>${t(K_REC + "fatos")} <input id="${pfx}-fatos" value="${(Array.isArray(obj.fatos) ? obj.fatos.join(", ") : "").replace(/"/g, "&quot;")}"></label>
       <label>${t(K_REC + "itens")}</label>
       <div id="${pfx}-items">${obj.reward.items.map((it, i) => `<div>${it.id} <button data-i="${i}" class="${pfx}-rm">×</button></div>`).join("")}</div>
       <select id="${pfx}-add">${opt(CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) })), "", o => o.v + " — " + o.name)}</select>
@@ -2497,6 +2500,7 @@
     document.getElementById(`${pfx}-gold`).onchange = e => { obj.reward.gold = Math.max(0, Number(e.target.value) | 0); };
     document.getElementById(`${pfx}-renome`).onchange = e => { const n = Math.trunc(Number(e.target.value)) || 0; if (n) obj.renome = n; else delete obj.renome; };
     document.getElementById(`${pfx}-fato`).onchange = e => { const v = e.target.value.trim(); if (v) obj.fato = v; else delete obj.fato; };
+    document.getElementById(`${pfx}-fatos`).onchange = e => { const v = e.target.value.split(",").map(x => x.trim()).filter(Boolean); if (v.length) obj.fatos = v; else delete obj.fatos; };
     document.getElementById(`${pfx}-additem`).onclick = () => { const id = document.getElementById(`${pfx}-add`).value; if (id) obj.reward.items.push({ id }); renderPanel(); };
     panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
   }
@@ -2779,6 +2783,23 @@
     </div>`;
   }
 
+  function _monsterFugaPanelHTML(ref) {
+    const f = ref.fuga_chefe && typeof ref.fuga_chefe === "object" ? ref.fuga_chefe : { fato: "", texto: "" };
+    return `<div style="margin-top:8px"><b>🏃 ${t("ui.editor.masmorra.fuga.titulo")}</b>
+      <input id="p-fuga-fato" value="${_hostilityHtml(f.fato)}" placeholder="${t("ui.editor.masmorra.fuga.fato")}" style="width:100%;margin-top:4px">
+      <textarea id="p-fuga-texto" placeholder="${t("ui.editor.masmorra.fuga.texto")}" style="width:100%;margin-top:4px">${_hostilityHtml(f.texto)}</textarea></div>`;
+  }
+
+  function _bindMonsterFugaPanel(ref) {
+    const fatoEl = document.getElementById("p-fuga-fato"), textoEl = document.getElementById("p-fuga-texto");
+    if (!fatoEl || !textoEl) return;
+    const salvar = () => {
+      const fato = fatoEl.value.trim(), texto = textoEl.value.trim();
+      if (fato && texto) ref.fuga_chefe = { fato, texto }; else delete ref.fuga_chefe;
+    };
+    fatoEl.onchange = salvar; textoEl.onchange = salvar;
+  }
+
   function _bindMonsterHostilityPanel(ref) {
     const modeEl = document.getElementById("p-hostility-mode");
     if (!modeEl) return;
@@ -2875,6 +2896,19 @@
         </div>`).join("")}</div>
         <button type="button" id="o-step-add">+ ${t("ui.editor.masmorra.etapas.adicionar")}</button>
         <hr style="border-color:#3a3022;margin:10px 0">
+        <label>⏳ ${t("ui.editor.masmorra.relogio.titulo")}</label>
+        <div id="rel-box" style="font-size:12px">
+          <input id="rel-id" value="${escStep(S.relogio ? S.relogio.id : "")}" placeholder="${t("ui.editor.masmorra.relogio.id")}" style="width:100%;margin-top:4px">
+          <input id="rel-limite" type="number" min="1" value="${S.relogio ? S.relogio.limite : 10}" title="${t("ui.editor.masmorra.relogio.limite")}" style="width:100%;margin-top:4px">
+          <input id="rel-fato" value="${escStep(S.relogio ? S.relogio.fato_ao_passar : "")}" placeholder="${t("ui.editor.masmorra.relogio.fato")}" style="width:100%;margin-top:4px">
+          <small>${t("ui.editor.masmorra.relogio.avisos")}</small>
+          ${(S.relogio ? S.relogio.avisos : []).map((a, i) => `<div style="display:flex;gap:4px;margin-top:4px">
+            <input class="rel-aviso-em" data-i="${i}" type="number" min="1" value="${a.em}" title="${t("ui.editor.masmorra.relogio.aviso_em")}" style="width:52px">
+            <input class="rel-aviso-texto" data-i="${i}" value="${escStep(a.texto)}" placeholder="${t("ui.editor.masmorra.relogio.aviso_texto")}" style="flex:1">
+            <button type="button" class="rel-aviso-rm" data-i="${i}">×</button></div>`).join("")}
+          <button type="button" id="rel-aviso-add">+ ${t("ui.editor.masmorra.relogio.adicionar_aviso")}</button>
+        </div>
+        <hr style="border-color:#3a3022;margin:10px 0">
         <label>⚠️ ${t("ui.editor.masmorra.painel.reforcos_mestre")}</label>
         <div id="reinforce-list">${S.masterReinforcements.map((r, i) => {
           const meta = CAT.monsters.find(m => m.type === r.type) || {};
@@ -2957,6 +2991,23 @@
         renderPanel();
       });
       o.secondary.forEach((s, i) => wireRewardFields(s, "o-sec" + i + "-rw"));
+      const relLer = () => {
+        const id = document.getElementById("rel-id").value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+        if (!id) { S.relogio = null; return; }
+        S.relogio = S.relogio || { id, limite: 10, fato_ao_passar: "", avisos: [] };
+        S.relogio.id = id;
+        S.relogio.limite = Math.max(1, parseInt(document.getElementById("rel-limite").value, 10) || 1);
+        S.relogio.fato_ao_passar = document.getElementById("rel-fato").value.trim();
+      };
+      for (const el of ["rel-id", "rel-limite", "rel-fato"]) document.getElementById(el).onchange = () => { relLer(); renderPanel(); };
+      document.getElementById("rel-aviso-add").onclick = () => {
+        relLer();
+        if (!S.relogio) return;
+        S.relogio.avisos.push({ em: 1, texto: "" }); renderPanel();
+      };
+      panel.querySelectorAll(".rel-aviso-rm").forEach(b => b.onclick = () => { S.relogio.avisos.splice(Number(b.dataset.i), 1); renderPanel(); });
+      panel.querySelectorAll(".rel-aviso-em").forEach(el => el.onchange = () => { S.relogio.avisos[Number(el.dataset.i)].em = Math.max(1, parseInt(el.value, 10) || 1); });
+      panel.querySelectorAll(".rel-aviso-texto").forEach(el => el.onchange = () => { S.relogio.avisos[Number(el.dataset.i)].texto = el.value; });
       document.getElementById("reinforce-add-btn").onclick = () => {
         const type = document.getElementById("reinforce-type").value;
         const count = Math.max(1, Number(document.getElementById("reinforce-count").value) | 0);
@@ -3101,6 +3152,7 @@
         <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> ${t("ui.editor.masmorra.painel.chefe_boss")}</label>
         <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> ${t("ui.editor.masmorra.painel.alvo_objetivo")}</label>
         ${_monsterHostilityPanelHTML(ref)}
+        ${_monsterFugaPanelHTML(ref)}
         ${isFlying ? `<div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>🪽 ${t("ui.editor.masmorra.painel.voo_altitude")}</b>
           <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.altura_escala_hint")}</div>
@@ -3131,6 +3183,7 @@
       document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
       document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
       _bindMonsterHostilityPanel(ref);
+      _bindMonsterFugaPanel(ref);
       const applyMonsterScale = () => {
         const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsx").value) || 1));
         const sy = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsy").value) || 1));
@@ -3568,8 +3621,10 @@
       panel.innerHTML = `<b>${ref.type === "illusion" ? t("ui.editor.masmorra.painel.parede_ilusoria") : t("ui.editor.masmorra.painel.passagem_secreta")}</b>
         <div style="font-size:11px;color:#8a7a5a;margin:6px 0">${ref.type === "illusion" ? t("ui.editor.masmorra.painel.parede_ilusoria_hint") : t("ui.editor.masmorra.painel.passagem_secreta_hint")}</div>
         <label>${t("ui.editor.masmorra.painel.textura_parede")}<select id="sp-wall-material">${wallMaterialOptions}</select></label>
+        <label>${t("ui.editor.masmorra.relogio.desconto")}<input id="sp-relogio" type="number" min="0" value="${ref.relogio_desconto || 0}"></label>
         ${ref.type === "mechanism" ? `<label>${t("ui.editor.masmorra.painel.ativacao")}</label><select id="sp-mode"><option value="any"${ref.keys_mode === "any" ? " selected" : ""}>${t("ui.editor.masmorra.painel.qualquer_chave")}</option><option value="all"${ref.keys_mode === "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.todas_chaves")}</option></select><label>${t("ui.editor.masmorra.painel.decoracoes_chave")}</label><div id="sp-keys">${keys.length ? keys.map(d => `<label style="display:block"><input type="checkbox" value="${d.id}"${ref.key_decor_ids.includes(d.id) ? " checked" : ""}> ${nomeCat("decor", d.type, decorMeta(d.type)?.nome || d.type)} (${d.pos[0]},${d.pos[1]})</label>`).join("") : `<small>${t("ui.editor.masmorra.painel.marque_decor_chave_primeiro")}</small>`}</div>` : ""}`;
       document.getElementById("sp-wall-material").onchange = e => { ref.wall_material = e.target.value; render(); };
+      document.getElementById("sp-relogio").onchange = e => { ref.relogio_desconto = Math.max(0, parseInt(e.target.value, 10) || 0); };
       if (ref.type === "mechanism") {
         document.getElementById("sp-mode").onchange = e => { ref.keys_mode = e.target.value; };
         panel.querySelectorAll("#sp-keys input").forEach(el => el.onchange = () => {
@@ -4309,6 +4364,8 @@
         if (m.hostility_override && typeof m.hostility_override === "object")
           o.hostility_override = JSON.parse(JSON.stringify(m.hostility_override));
         if (m.autonomous_hostility === true) o.autonomous_hostility = true;
+        if (m.fuga_chefe && m.fuga_chefe.fato && m.fuga_chefe.texto)
+          o.fuga_chefe = { fato: m.fuga_chefe.fato, texto: m.fuga_chefe.texto };
         if (Array.isArray(m.vscale) && (m.vscale[0] !== 1 || m.vscale[1] !== 1)) o.vscale = [m.vscale[0], m.vscale[1]];
         if (monsterCanFly(m)) {
           const meta = monsterFlightMeta(m) || {};
@@ -4390,6 +4447,7 @@
         id: p.id, type: p.type, pos: p.pos.slice(),
         ...(WALL_MATERIAL_IDS.has(p.wall_material) ? { wall_material: p.wall_material } : {}),
         key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode,
+        ...(p.relogio_desconto > 0 ? { relogio_desconto: p.relogio_desconto } : {}),
       })),
       falas: S.falas.map(f => {
         const tg = f.trigger || {};
@@ -4401,6 +4459,7 @@
         const out = { id: f.id, pos: f.pos.slice(), falante, texto: f.texto || "", trigger: trig };
         if (f.classe) out.classe = f.classe;
         for (const key of ["requisitos", "sala_exclusiva"]) if (f[key]) out[key] = JSON.parse(JSON.stringify(f[key]));
+        if (f.requisito) out.requisito = JSON.parse(JSON.stringify(f.requisito));
         if (Array.isArray(f.continua_sem) && f.continua_sem.length)
           out.continua_sem = f.continua_sem.filter(id => typeof id === "string" && id.trim());
         if (Array.isArray(f.continua_sem_ativas) && f.continua_sem_ativas.length)
@@ -4427,6 +4486,8 @@
         return out;
       }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
+      ...(S.relogio && S.relogio.id ? { relogio: { id: S.relogio.id, limite: S.relogio.limite, ...(S.relogio.fato_ao_passar ? { fato_ao_passar: S.relogio.fato_ao_passar } : {}),
+        avisos: S.relogio.avisos.filter(a => a.texto && a.texto.trim()).map(a => ({ em: a.em, texto: a.texto.trim() })) } } : {}),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}) } : null,
       materiais: { ...S.materiais },
@@ -4844,6 +4905,7 @@
       ...(m.hostility_override && typeof m.hostility_override === "object"
         ? { hostility_override: JSON.parse(JSON.stringify(m.hostility_override)) } : {}),
       ...(m.autonomous_hostility === true ? { autonomous_hostility: true } : {}),
+      ...(m.fuga_chefe && m.fuga_chefe.fato && m.fuga_chefe.texto ? { fuga_chefe: { fato: String(m.fuga_chefe.fato), texto: String(m.fuga_chefe.texto) } } : {}),
       ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
       ...(m.altura !== undefined ? { altura: altitudeClamp(m.altura, 2) } : {}),
       ...(m.altura_max !== undefined ? { altura_max: altitudeClamp(m.altura_max, 10) } : {}),
@@ -4956,6 +5018,7 @@
       ...(WALL_MATERIAL_IDS.has(p.wall_material) ? { wall_material: p.wall_material } : {}),
       key_decor_ids: (p.key_decor_ids || []).slice(),
       keys_mode: p.keys_mode === "all" ? "all" : "any",
+      relogio_desconto: Math.max(0, parseInt(p.relogio_desconto, 10) || 0),
     }));
     S.nextPassageId = S.secretPassages.length;
     S.falas = (obj.falas || []).map((f, i) => {
@@ -4979,10 +5042,16 @@
                continua_sem: Array.isArray(f.continua_sem) ? f.continua_sem.filter(id => typeof id === "string") : [],
                continua_sem_ativas: Array.isArray(f.continua_sem_ativas) ? f.continua_sem_ativas.filter(id => typeof id === "string") : [],
                requisitos: f.requisitos ? JSON.parse(JSON.stringify(f.requisitos)) : null, sala_exclusiva: !!f.sala_exclusiva,
+               requisito: f.requisito ? JSON.parse(JSON.stringify(f.requisito)) : null,
                efeito: (f.efeito && typeof f.efeito === "object") ? { ...f.efeito } : null,
                guia: EDITOR_GUIA.carregar(f.guia) };
     });
     S.nextFalaId = S.falas.length;
+    S.relogio = obj.relogio && typeof obj.relogio === "object" && obj.relogio.id ? {
+      id: String(obj.relogio.id), limite: Math.max(1, parseInt(obj.relogio.limite, 10) || 1),
+      fato_ao_passar: String(obj.relogio.fato_ao_passar || ""),
+      avisos: (obj.relogio.avisos || []).map(a => ({ em: Math.max(1, parseInt(a.em, 10) || 1), texto: String(a.texto || "") })),
+    } : null;
     S.masterReinforcements = (obj.master_reinforcements || [])
       .filter(r => r && r.type)
       .map(r => ({ type: r.type, count: Math.max(1, parseInt(r.count, 10) || 1) }));
