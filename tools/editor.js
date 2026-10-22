@@ -384,6 +384,7 @@
     chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextTrapId: 0, nextPassageId: 0, nextFalaId: 0,
     routeExitRouteId: "",
     masterReinforcements: [],
+    relogio: null,
     expectedParty: { heroes: 4, level: 1 },
     objectives: { primary: { type: "kill_all" }, secondary: [], steps: [] },
     tool: "wall", sel: null,
@@ -2875,6 +2876,19 @@
         </div>`).join("")}</div>
         <button type="button" id="o-step-add">+ ${t("ui.editor.masmorra.etapas.adicionar")}</button>
         <hr style="border-color:#3a3022;margin:10px 0">
+        <label>⏳ ${t("ui.editor.masmorra.relogio.titulo")}</label>
+        <div id="rel-box" style="font-size:12px">
+          <input id="rel-id" value="${escStep(S.relogio ? S.relogio.id : "")}" placeholder="${t("ui.editor.masmorra.relogio.id")}" style="width:100%;margin-top:4px">
+          <input id="rel-limite" type="number" min="1" value="${S.relogio ? S.relogio.limite : 10}" title="${t("ui.editor.masmorra.relogio.limite")}" style="width:100%;margin-top:4px">
+          <input id="rel-fato" value="${escStep(S.relogio ? S.relogio.fato_ao_passar : "")}" placeholder="${t("ui.editor.masmorra.relogio.fato")}" style="width:100%;margin-top:4px">
+          <small>${t("ui.editor.masmorra.relogio.avisos")}</small>
+          ${(S.relogio ? S.relogio.avisos : []).map((a, i) => `<div style="display:flex;gap:4px;margin-top:4px">
+            <input class="rel-aviso-em" data-i="${i}" type="number" min="1" value="${a.em}" title="${t("ui.editor.masmorra.relogio.aviso_em")}" style="width:52px">
+            <input class="rel-aviso-texto" data-i="${i}" value="${escStep(a.texto)}" placeholder="${t("ui.editor.masmorra.relogio.aviso_texto")}" style="flex:1">
+            <button type="button" class="rel-aviso-rm" data-i="${i}">×</button></div>`).join("")}
+          <button type="button" id="rel-aviso-add">+ ${t("ui.editor.masmorra.relogio.adicionar_aviso")}</button>
+        </div>
+        <hr style="border-color:#3a3022;margin:10px 0">
         <label>⚠️ ${t("ui.editor.masmorra.painel.reforcos_mestre")}</label>
         <div id="reinforce-list">${S.masterReinforcements.map((r, i) => {
           const meta = CAT.monsters.find(m => m.type === r.type) || {};
@@ -2957,6 +2971,23 @@
         renderPanel();
       });
       o.secondary.forEach((s, i) => wireRewardFields(s, "o-sec" + i + "-rw"));
+      const relLer = () => {
+        const id = document.getElementById("rel-id").value.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_");
+        if (!id) { S.relogio = null; return; }
+        S.relogio = S.relogio || { id, limite: 10, fato_ao_passar: "", avisos: [] };
+        S.relogio.id = id;
+        S.relogio.limite = Math.max(1, parseInt(document.getElementById("rel-limite").value, 10) || 1);
+        S.relogio.fato_ao_passar = document.getElementById("rel-fato").value.trim();
+      };
+      for (const el of ["rel-id", "rel-limite", "rel-fato"]) document.getElementById(el).onchange = () => { relLer(); renderPanel(); };
+      document.getElementById("rel-aviso-add").onclick = () => {
+        relLer();
+        if (!S.relogio) return;
+        S.relogio.avisos.push({ em: 1, texto: "" }); renderPanel();
+      };
+      panel.querySelectorAll(".rel-aviso-rm").forEach(b => b.onclick = () => { S.relogio.avisos.splice(Number(b.dataset.i), 1); renderPanel(); });
+      panel.querySelectorAll(".rel-aviso-em").forEach(el => el.onchange = () => { S.relogio.avisos[Number(el.dataset.i)].em = Math.max(1, parseInt(el.value, 10) || 1); });
+      panel.querySelectorAll(".rel-aviso-texto").forEach(el => el.onchange = () => { S.relogio.avisos[Number(el.dataset.i)].texto = el.value; });
       document.getElementById("reinforce-add-btn").onclick = () => {
         const type = document.getElementById("reinforce-type").value;
         const count = Math.max(1, Number(document.getElementById("reinforce-count").value) | 0);
@@ -3568,8 +3599,10 @@
       panel.innerHTML = `<b>${ref.type === "illusion" ? t("ui.editor.masmorra.painel.parede_ilusoria") : t("ui.editor.masmorra.painel.passagem_secreta")}</b>
         <div style="font-size:11px;color:#8a7a5a;margin:6px 0">${ref.type === "illusion" ? t("ui.editor.masmorra.painel.parede_ilusoria_hint") : t("ui.editor.masmorra.painel.passagem_secreta_hint")}</div>
         <label>${t("ui.editor.masmorra.painel.textura_parede")}<select id="sp-wall-material">${wallMaterialOptions}</select></label>
+        <label>${t("ui.editor.masmorra.relogio.desconto")}<input id="sp-relogio" type="number" min="0" value="${ref.relogio_desconto || 0}"></label>
         ${ref.type === "mechanism" ? `<label>${t("ui.editor.masmorra.painel.ativacao")}</label><select id="sp-mode"><option value="any"${ref.keys_mode === "any" ? " selected" : ""}>${t("ui.editor.masmorra.painel.qualquer_chave")}</option><option value="all"${ref.keys_mode === "all" ? " selected" : ""}>${t("ui.editor.masmorra.painel.todas_chaves")}</option></select><label>${t("ui.editor.masmorra.painel.decoracoes_chave")}</label><div id="sp-keys">${keys.length ? keys.map(d => `<label style="display:block"><input type="checkbox" value="${d.id}"${ref.key_decor_ids.includes(d.id) ? " checked" : ""}> ${nomeCat("decor", d.type, decorMeta(d.type)?.nome || d.type)} (${d.pos[0]},${d.pos[1]})</label>`).join("") : `<small>${t("ui.editor.masmorra.painel.marque_decor_chave_primeiro")}</small>`}</div>` : ""}`;
       document.getElementById("sp-wall-material").onchange = e => { ref.wall_material = e.target.value; render(); };
+      document.getElementById("sp-relogio").onchange = e => { ref.relogio_desconto = Math.max(0, parseInt(e.target.value, 10) || 0); };
       if (ref.type === "mechanism") {
         document.getElementById("sp-mode").onchange = e => { ref.keys_mode = e.target.value; };
         panel.querySelectorAll("#sp-keys input").forEach(el => el.onchange = () => {
@@ -4390,6 +4423,7 @@
         id: p.id, type: p.type, pos: p.pos.slice(),
         ...(WALL_MATERIAL_IDS.has(p.wall_material) ? { wall_material: p.wall_material } : {}),
         key_decor_ids: p.key_decor_ids.slice(), keys_mode: p.keys_mode,
+        ...(p.relogio_desconto > 0 ? { relogio_desconto: p.relogio_desconto } : {}),
       })),
       falas: S.falas.map(f => {
         const tg = f.trigger || {};
@@ -4428,6 +4462,8 @@
         return out;
       }),
       master_reinforcements: S.masterReinforcements.map(r => ({ type: r.type, count: r.count })),
+      ...(S.relogio && S.relogio.id ? { relogio: { id: S.relogio.id, limite: S.relogio.limite, ...(S.relogio.fato_ao_passar ? { fato_ao_passar: S.relogio.fato_ao_passar } : {}),
+        avisos: S.relogio.avisos.filter(a => a.texto && a.texto.trim()).map(a => ({ em: a.em, texto: a.texto.trim() })) } } : {}),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
       prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}) } : null,
       materiais: { ...S.materiais },
@@ -4957,6 +4993,7 @@
       ...(WALL_MATERIAL_IDS.has(p.wall_material) ? { wall_material: p.wall_material } : {}),
       key_decor_ids: (p.key_decor_ids || []).slice(),
       keys_mode: p.keys_mode === "all" ? "all" : "any",
+      relogio_desconto: Math.max(0, parseInt(p.relogio_desconto, 10) || 0),
     }));
     S.nextPassageId = S.secretPassages.length;
     S.falas = (obj.falas || []).map((f, i) => {
@@ -4985,6 +5022,11 @@
                guia: EDITOR_GUIA.carregar(f.guia) };
     });
     S.nextFalaId = S.falas.length;
+    S.relogio = obj.relogio && typeof obj.relogio === "object" && obj.relogio.id ? {
+      id: String(obj.relogio.id), limite: Math.max(1, parseInt(obj.relogio.limite, 10) || 1),
+      fato_ao_passar: String(obj.relogio.fato_ao_passar || ""),
+      avisos: (obj.relogio.avisos || []).map(a => ({ em: Math.max(1, parseInt(a.em, 10) || 1), texto: String(a.texto || "") })),
+    } : null;
     S.masterReinforcements = (obj.master_reinforcements || [])
       .filter(r => r && r.type)
       .map(r => ({ type: r.type, count: Math.max(1, parseInt(r.count, 10) || 1) }));
