@@ -1469,5 +1469,94 @@
       "tambem_fato": "elara_leonel_cauteloso"
     },
     "renome_recompensa": 3
+  },
+  "elara_montanha": {
+    "id": "elara_montanha",
+    "nome": "As Montanhas de Graciero",
+    "x": 63.06,
+    "y": 22.27,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "elara_montanha_1.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_montanha_2.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_montanha_3.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": {
+      "slides": [
+        {
+          "text": "A caravana está cercada, os guardas caídos ou em fuga. No fundo da última carroça, o baú de ferro cede: dentro dele, o Olho de Arveluz, pesado e quente, como se ainda soubesse o próprio nome."
+        },
+        {
+          "text": "Antes de descer, vocês cobrem o guia com uma pilha de pedras. Sem ele, ninguém teria achado o desfiladeiro a tempo.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_bardo_ajudou",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Vocês subiram sozinhos, guiados por riscos de faca nas pedras. Descem sozinhos, mais cansados do que da última vez que olharam para trás.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "elara_bardo_ajudou",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Do assassino, restou uma moeda de prata sem cunho no chão. Alguém que sabia o caminho de volta desapareceu pela serra.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_assassino_fugiu",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Resta descer a Graciero, onde a cidade ainda espera e o Leonel não sabe o que subiu atrás dele."
+        }
+      ]
+    },
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_dica_montanha",
+      "sem_fato": "elara_leonel_vencido",
+      "aventura_id": "",
+      "tambem_fato": "elara_ramo_a"
+    },
+    "renome_recompensa": 2
   }
 }
