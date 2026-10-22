@@ -55,6 +55,13 @@ class MapasTests(unittest.TestCase):
             for rid, nd in nd_por_sala(d).items():
                 self.assertNotEqual(faixa(nd, poder), "mortal", f"{d['id']} sala {rid} ND {nd}")
 
+    def test_nao_e_um_passeio(self):
+        for d in (self.casa, self.celeiro):
+            poder = d["expected_party"]["heroes"] * d["expected_party"]["level"]
+            nds = [nd for nd in nd_por_sala(d).values() if nd > 0]
+            faixas = [faixa(nd, poder) for nd in nds]
+            self.assertGreaterEqual(sum(1 for f in faixas if f != "facil"), len(faixas) // 2, d["id"])
+
     def test_deterministico(self):
         self.assertEqual(json.dumps(M.masmorra_casa(), sort_keys=True), json.dumps(self.casa, sort_keys=True))
         self.assertEqual(json.dumps(M.masmorra_celeiro(), sort_keys=True), json.dumps(self.celeiro, sort_keys=True))

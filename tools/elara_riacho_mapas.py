@@ -16,6 +16,7 @@ from charcos_mapas import Cena, montar_fila, obj  # noqa: E402
 TIPO_BANDIDO = "goblin_combatente"     # bandido comum
 TIPO_CAPANGA = "soldado"               # capanga mais forte
 TIPO_ARQUEIRO = "goblin_arqueiro"
+TIPO_VALENTAO = "goblin_dual"           # o mais perigoso dos subordinados (ND 1)
 
 F_BARDO_EXPOSTO = "elara_bardo_exposto"
 F_MOCAS = "elara_mocas_salvas"
@@ -33,14 +34,17 @@ def masmorra_casa():
     c.proteger(ent, sai)
     # 0 · Sala da frente
     c.mon(TIPO_BANDIDO, 0, 7, 2); c.mon(TIPO_BANDIDO, 0, 7, 6)
+    c.mon_livre(TIPO_CAPANGA, 0, 2)
     c.deco("mesa_cadeiras", 0, 4, 3); c.espalha("barril", 0, 2); c.espalha("estante", 0, 1)
     c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 5, 1)})
     # 1 · Quarto
     c.mon(TIPO_CAPANGA, 1, 7, 3); c.mon(TIPO_ARQUEIRO, 1, 7, 6)
+    c.mon_livre(TIPO_VALENTAO, 1, 2)
     c.deco("cama_casal", 1, 2, 2); c.espalha("estante", 1, 1); c.espalha("barril", 1, 1)
     c.armadilhas.append({"tipo": "armadilha_dardos_envenenados", "pos": m.em(1, 4, 5), "veneno_id": "veneno_escorpiao_pedra"})
     # 2 · Porão
     c.mon(TIPO_BANDIDO, 2, 6, 3, alvo=False); c.mon(TIPO_ARQUEIRO, 2, 6, 6)
+    c.mon_livre(TIPO_CAPANGA, 2, 2); c.mon_livre(TIPO_VALENTAO, 2, 1)
     c.espalha("barril", 2, 3); c.espalha("estante_armas", 2, 1)
     c.armadilhas.append({"tipo": "rede", "pos": m.em(2, 4, 4)})
     c.bau(m.em(2, 8, 3), 25, [CARTA])
@@ -63,15 +67,18 @@ def masmorra_celeiro():
     c.proteger(ent, sai)
     # 0 · Pátio
     c.mon(TIPO_BANDIDO, 0, 9, 2); c.mon(TIPO_BANDIDO, 0, 9, 7)
+    c.mon_livre(TIPO_CAPANGA, 0, 2); c.mon_livre(TIPO_ARQUEIRO, 0, 1)
     c.espalha("cerca_reta", 0, 3); c.espalha("barril", 0, 2); c.deco("carroca", 0, 4, 4)
     c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 6, 1)})
     # 1 · Curral
     c.mon(TIPO_CAPANGA, 1, 8, 3); c.mon(TIPO_ARQUEIRO, 1, 8, 7)
+    c.mon_livre(TIPO_VALENTAO, 1, 2); c.mon_livre(TIPO_CAPANGA, 1, 1)
     c.espalha("monte_feno", 1, 3); c.espalha("cerca_reta", 1, 3)
     c.armadilhas.append({"tipo": "rede", "pos": m.em(1, 5, 5)})
     # 2 · Celeiro (as moças ficam no fundo)
     chefe = c.mon(TIPO_CAPANGA, 2, 4, 4, alvo=True)
     c.mon(TIPO_BANDIDO, 2, 4, 7); c.mon(TIPO_BANDIDO, 2, 7, 5)
+    c.mon_livre(TIPO_VALENTAO, 2, 2); c.mon_livre(TIPO_CAPANGA, 2, 2)
     c.espalha("monte_feno", 2, 4); c.espalha("barril", 2, 2)
     c.armadilhas.append({"tipo": "armadilha_dardos_envenenados", "pos": m.em(2, 3, 3), "veneno_id": "veneno_escorpiao_pedra"})
     refens = m.em(2, 10, 4)
