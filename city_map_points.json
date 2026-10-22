@@ -13,7 +13,8 @@
       "y": 35.0,
       "type": "templo",
       "oculto_ate_liberar": false,
-      "ocultar_apos_concluir": false
+      "ocultar_apos_concluir": false,
+      "scene": "templo_alva"
     },
     "ferreiro": {
       "x": 83.0,

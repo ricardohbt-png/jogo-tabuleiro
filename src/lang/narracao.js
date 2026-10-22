@@ -2112,6 +2112,10 @@ window.LANG_NARRACAO = {
     "en": "💔 The news will spread. The hostage's death will be remembered.",
     "pt": "💔 A notícia vai se espalhar. A morte do refém será lembrada."
   },
+  "narracao.autoral": {
+    "en": "{texto}",
+    "pt": "{texto}"
+  },
   "narracao.obj_renome": {
     "en": "🏅 Renown {n}.",
     "pt": "🏅 Renome {n}."

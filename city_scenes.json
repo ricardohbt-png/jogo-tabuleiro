@@ -374,6 +374,156 @@
       "mode": "individual",
       "mask": "",
       "slots": []
+    },
+    "templo_alva": {
+      "nome": "Templo de Alva e Luz",
+      "background": "assets/cenas/fundos/alva_e_luz_fundo.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": [
+        {
+          "id": "npc_exequiel",
+          "name": "Exequiel",
+          "image": "assets/tavern/nobre2.png",
+          "x": 35.0,
+          "y": 30.3,
+          "w": 30.0,
+          "h": 69.7,
+          "z": 1.0,
+          "dialog": "",
+          "conversations": [
+            {
+              "id": "elara_pedido",
+              "texto": "Servas do Templo foram levadas esta noite, mais de uma dezena, entre elas Elara, irmã do mago Pedro. Os sequestradores usaram uma casa aqui em Alva e Luz, dizem os vizinhos. Tragam-nas de volta e o Templo paga bem. Rápido: cada hora conta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_pediu",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_pediu",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_pedro_irma",
+              "texto": "Pedro, a Elara falou de você ontem mesmo. Disse que o irmão ainda ia ficar famoso. Encontre-a, e diga-lhe isso pessoalmente.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_pediu",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_henrique_pilheria",
+              "texto": "Bardo, deixe a graça para depois que as moças estiverem a salvo. E sim, a irmã do mago é mais bonita do que ele. Não digo mais nada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_pediu",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "bard"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_pos_fazenda_rapido",
+              "texto": "Vocês voltaram depressa, e isso pode fazer toda a diferença. A fazenda era uma distração: as moças seguem pela estrada e, ao mesmo tempo, alguém esteve aqui no Templo esta noite e levou uma relíquia. Não posso dizer o que ela é. Com rapidez ainda podem tentar as duas coisas.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_fazenda_vencida",
+                "sem_fato": "elara_lento",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_templo_pressionou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_pos_fazenda_lento",
+              "texto": "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela estrada e a relíquia que guardávamos foi roubada esta noite. Não posso dizer o que ela é, só que não pode ficar em mãos erradas. Já não há tempo para as duas coisas: escolham.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_lento",
+                "sem_fato": "",
+                "aventura_id": "elara_parte1"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_templo_pressionou",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_escolher_mocas",
+              "texto": "Vamos atrás das moças: a estrada leva à Vila do Riacho.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_templo_pressionou",
+                "sem_fato": "elara_ramo_b",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_ramo_a",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_escolher_gilo",
+              "texto": "Vamos atrás do ladrão da relíquia: ele fugiu rumo à Floresta de Adhadal.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_templo_pressionou",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_ramo_b",
+                "item_id": ""
+              },
+              "uma_vez": true
+            }
+          ]
+        }
+      ]
     }
   },
   "vila_riacho": {

@@ -1,5 +1,34 @@
 # Legends for Hire — Regras de Arquitetura
 
+### O Resgate de Elara — Parte 1 e peças de motor (2026-10-21)
+
+Campanha longa (spec `docs/superpowers/specs/2026-10-21-campanha-resgate-de-elara-design.md`; plano
+`docs/superpowers/plans/2026-10-21-campanha-elara-parte1-motor.md`). Esta etapa entrega três peças de
+motor e a **Parte 1** (Alva e Luz); Riacho, Adhadal/Corvin, Graciero e a rota das montanhas vêm em planos
+próprios. **Peças de motor:** (1) requisito **`heroi_no_grupo`** (id de classe; `mage`=Pedro, `bard`=Henrique)
+em `_clean_requirement`/`_avaliar_requisito` — a chave só entra no dicionário quando preenchida, para os
+requisitos já gravados ficarem idênticos; vale em conversas de cena, destinos, slides, portas e **falas de
+masmorra** (`falas[].requisito`, `_fala_elegivel`); os editores de mapa-múndi, cena e slide têm o seletor e o
+editor de masmorras preserva o campo da fala (sem UI de edição dele ainda). (2) **Relógio de rodadas:**
+campo da masmorra `relogio {id, limite, fato_ao_passar, avisos:[{em,texto}]}`; `GameRoom.relogios` (jogo
+salvo, `CAMPOS_DO_PONTO`) soma as rodadas entre masmorras que usam o mesmo `id`; `_relogio_tick` roda em
+`_virada_de_rodada`, narra cada aviso ao cruzá-lo (`T("narracao.autoral")`) e grava `fato_ao_passar` ao
+ultrapassar o limite; passagem secreta aceita `relogio_desconto` (uma vez, ao abrir, `_passagem_aberta`).
+Painel "relógio da campanha" no editor. (3) **Fuga do chefe:** monstro colocado com
+`fuga_chefe {fato, texto}` foge no golpe que o mataria (`_monster_dies_impl`): vence o combate (XP e
+objetivo contam) mas sem cadáver, loot ou ouro, grava o fato e fica com `fugiu`; funciona por qualquer
+caminho de dano. **Parte 1 (`tools/gerar_campanha_elara.py`, idempotente, `--simular`):** cena
+`templo_alva` do ponto `templo` de Alva e Luz (NPC Exequiel, arte provisória), destino `elara_parte1`
+(`casa_secreta.json` → `fazenda.json`, emendados, oculto até o fato `elara_pediu`) e, **só nos dois mapas
+do autor**, o campo `relogio` e o `fato` do objetivo principal (recusa reescrever arquivo com formatação
+diferente da do editor). Fatos: `elara_pediu`, `elara_casa_vencida`, `elara_fazenda_vencida`, `elara_lento`
+(relógio passou de 60 rodadas; ausente = rápido), `elara_templo_pressionou`, `elara_ramo_a` (moças),
+`elara_ramo_b` (Gilo, exclusivo). Os mapas ainda precisam dos ajustes do autor (armadilhas, corpo do bardo,
+bandidos, bandido ferido): ver `docs/superpowers/specs/2026-10-21-elara-auditoria-prototipos.md`. Testes:
+`python -X utf8 tools/test_requisito_heroi.py`, `test_relogio_campanha.py`, `test_fuga_chefe.py`,
+`test_campanha_elara_parte1.py`, `test_elara_fluxo.py` e `node tools/test_requisito_heroi_editor.js`,
+`test_relogio_editor.js`, `test_fuga_chefe_editor.js`.
+
 ### Marcador de entrada e a Maré do Charco em cadeia (2026-10-21)
 
 Campo novo da masmorra, **`marcador_entrada`**: `"escada"` (padrão; ausente = escada) ou `"poste"` (poste de

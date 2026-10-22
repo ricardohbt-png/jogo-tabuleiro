@@ -864,5 +864,45 @@
       "aventura_id": ""
     },
     "renome_recompensa": 5
+  },
+  "elara_parte1": {
+    "id": "elara_parte1",
+    "nome": "O Resgate de Elara",
+    "x": 68.5,
+    "y": 54.41,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "casa_secreta.json",
+        "encadear": true,
+        "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
+        "outro": ""
+      },
+      {
+        "file": "fazenda.json",
+        "encadear": false,
+        "intro": "",
+        "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que estivesse ali já cumpriu a sua parte. Voltem ao Templo."
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_pediu",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
   }
 }
