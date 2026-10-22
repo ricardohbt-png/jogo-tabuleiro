@@ -1657,7 +1657,7 @@
         {
           "id": "npc_zumbra",
           "name": "Zumbra",
-          "image": "assets/tavern/homem_misterioso.png",
+          "image": "assets/cenas/personagens/zumbra.png",
           "x": 35.0,
           "y": 30.3,
           "w": 30.0,

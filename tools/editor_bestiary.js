@@ -307,12 +307,18 @@
   function spellPower(m) {
     const byId = new Map(spellLibrary().map(s => [s.id, s]));
     const casterLevel = Math.max(1, Number(m.caster_level || m.level || 1));
-    const base = monsterSpells(m).reduce((sum, cfg) => {
+    const configs = monsterSpells(m);
+    const sharedUses = m.spell_slots_per_combat != null
+      ? Math.max(0, Number(m.spell_slots_per_combat)) / Math.max(1, configs.length)
+      : null;
+    const base = configs.reduce((sum, cfg) => {
       const s = byId.get(cfg.id); if (!s) return sum;
       const circle = ({primeiro:.42, segundo:.72, terceiro:1.05})[s.circulo] || .4;
+      const uses = Math.max(1, Number(cfg.uses_per_combat || 1));
+      const effectiveUses = sharedUses == null ? uses : Math.min(uses, sharedUses);
       const availability = cfg.limit_mode === "cooldown"
         ? Math.min(1.35, .55 + .18 / Math.max(1, Number(cfg.cooldown_turns || 1)))
-        : Math.min(1.5, .5 + .25 * Math.max(1, Number(cfg.uses_per_combat || 1)));
+        : Math.min(1.5, .5 + .25 * effectiveUses);
       const effect = (s.save ? .10 : 0) + (s.area_raio || s.area_lado ? .16 : 0)
         + (s.dano || s.dano_base || s.dano_por_nivel ? .18 : 0)
         + (s.buff || s.debuff ? .12 : 0);
@@ -505,7 +511,11 @@
       }).join(", ");
       const odds = randomEquipment.weapons.length === 6 ? "1 em 6 (≈16,7% cada)" : "chances iguais";
       rows.push(`Arma principal sorteada a cada criação (${odds}): ${weapons}.`);
-      rows.push("A linha de ataque ‘Espada Curta’ e a miniatura acima são referências da ficha. Em jogo, a aparência acompanha a arma sorteada; cada arma mantém suas propriedades próprias.");
+      if (Number(randomEquipment.secondary_dagger_chance) > 0)
+        rows.push(`Com adaga principal: ${Number(randomEquipment.secondary_dagger_chance)}% de chance de uma segunda adaga equipada.`);
+      rows.push(m.type === "bandido"
+        ? "A miniatura é uma referência visual; a arma equipada acompanha o sorteio e conserva suas propriedades próprias."
+        : "A linha de ataque ‘Espada Curta’ e a miniatura acima são referências da ficha. Em jogo, a aparência acompanha a arma sorteada; cada arma mantém suas propriedades próprias.");
     }
     if (randomEquipment && randomEquipment.shield) {
       const shield = randomEquipment.shield;
@@ -518,6 +528,34 @@
         rows.push(`${itemName(consumable.id)}: ${Number(consumable.chance || 0)}% de chance. A IA usa quando está com ${threshold}% dos PV ou menos${consumable.loot_if_unused ? "; se não usar, pode deixá-la como loot" : ""}.`);
       }
     }
+    if (randomEquipment && Array.isArray(randomEquipment.rings)) {
+      for (const ring of randomEquipment.rings) {
+        const item = itemCatalog.get(ring.id) || {};
+        const bonus = item.effect === "maxhp" ? ` (+${Number(item.value || 0)} PV)` : "";
+        rows.push(`${itemName(ring.id)}: ${Number(ring.chance || 0)}% de chance de surgir equipado${bonus}.`);
+      }
+    }
+    if (m.type === "bardo" && randomEquipment) {
+      const armorIds = randomEquipment.armors || [];
+      if (armorIds.length)
+        rows.push(`Armadura sorteada com chances iguais: ${armorIds.map(itemName).join(", ")}.`);
+      const instrumentIds = randomEquipment.instruments || [];
+      if (instrumentIds.length)
+        rows.push(`Instrumento sorteado com chances iguais: ${instrumentIds.map(pretty).join(", ")}.`);
+      const qualities = randomEquipment.instrument_qualities || [];
+      if (qualities.length)
+        rows.push(`Qualidade do instrumento: ${qualities.map(q => `${pretty(q.id)} ${Number(q.chance)}%`).join(", ")}.`);
+      const origins = randomEquipment.instrument_origins || [];
+      if (origins.length)
+        rows.push(`Origem do instrumento: ${origins.map(o => `${pretty(o.id)} ${Number(o.chance)}%`).join(", ")}.`);
+      const ammo = randomEquipment.ammunition || {};
+      const incendiary = ammo.incendiary_chance || {};
+      rows.push(`Bestas: ${Number(ammo.count || 20)} virotes; chance de o conjunto inteiro ser incendiário: besta de mão ${Number(incendiary.hand_crossbow || 0)}%, besta ${Number(incendiary.besta || 0)}%.`);
+    }
+    if (randomEquipment && Array.isArray(randomEquipment.scrolls)) {
+      for (const scroll of randomEquipment.scrolls)
+        rows.push(`Pergaminho aleatório de ${pretty(scroll.circle || 1)} círculo: ${Number(scroll.chance || 0)}% de chance; pode ser usado sem gastar os espaços de magia.`);
+    }
     if (Array.isArray(m.weapon_options) && m.weapon_options.length) {
       rows.push(`Armas disponíveis: ${m.weapon_options.map(w => `${w.name || w.id} (${w.damage || "dano não definido"})`).join(", ")}`);
     }
@@ -528,8 +566,9 @@
     if (equipped && (Array.isArray(equipped) ? equipped.length : true)) rows.push(`${m.equipment_enabled ? "Equipado e ativo" : "Equipamento"}: ${Array.isArray(equipped) ? equipped.map(pretty).join(", ") : pretty(equipped)}`);
     if (m.guaranteed_loot) rows.push(`Garantido: ${Array.isArray(m.guaranteed_loot) ? m.guaranteed_loot.map(x => pretty(x.name || x.id || x)).join(", ") : pretty(m.guaranteed_loot.name || m.guaranteed_loot.id || m.guaranteed_loot)}`);
     if (m.loot_drops && m.loot_drops.length) rows.push(`Drops: ${m.loot_drops.map(d => d.kind === "gold" ? `${d.amount} ouro (${d.chance}%)` : `${pretty(d.item_id)} (${d.chance}%)`).join(", ")}`);
+    if (Array.isArray(m.gold_range) && m.gold_range.length === 2) rows.push(`Ouro: ${m.gold_range[0]}–${m.gold_range[1]} PO`);
     if (m.gold != null) rows.push(`${m.gold} ouro`);
-    if (m.loot_table) rows.push("Tesouro variável (tabela de loot)");
+    if (m.loot_table && !m.gold_range) rows.push("Tesouro variável (tabela de loot)");
     return rows.length ? rows.map(esc).join("<br>") : "Nenhum tesouro definido.";
   }
   function ensureHostilityLoaded() {
@@ -640,7 +679,7 @@
       <div class="best-saves"><div><b>Fortitude</b><span>${esc(m.fort != null ? (m.fort >= 0 ? "+" : "") + m.fort : "—")}</span><small>CON</small></div><div><b>Reflexos</b><span>${esc(m.ref_ != null ? (m.ref_ >= 0 ? "+" : "") + m.ref_ : "—")}</span><small>DES</small></div><div><b>Vontade</b><span>${esc(m.will != null ? (m.will >= 0 ? "+" : "") + m.will : "—")}</span><small>INT</small></div></div>
       <div class="best-grid"><section><h2>Ataques</h2><table><thead><tr><th>Ataque</th><th>Base</th><th>Acerto</th><th>Dano</th><th>Qtd.</th></tr></thead><tbody>${attacks.map(a => { const attr=a.attack_attribute || (a.range ? "dex" : "str_"); const special=[a.extra_damage ? `+ ${a.extra_damage} ${pretty((a.extra_damage_types||[])[0])}` : "", a.on_hit ? `Veneno CD ${a.poison_dc || 10}` : ""].filter(Boolean).join(" · "); return `<tr><td>${esc(a.name || "Ataque")}${special ? `<small>${esc(special)}</small>` : ""}</td><td>${esc(attr === "dex" ? "Destreza" : "Força")}</td><td>+${esc(attackBonus(m, a))}</td><td>${esc(attackDamageText(m, a))}</td><td>${esc(a.num_attacks || 1)}</td></tr>`; }).join("")}</tbody></table></section>
       <section><h2>Habilidades especiais</h2><div class="best-abilities">${abilities.length ? abilities.map(a => `<div><strong>${esc(a.name || pretty(a.id))}</strong><small>${esc(pretty(a.action_type))} · ${esc(cooldown(a))}${a.dc ? ` · CD ${esc(a.dc)} (${esc(pretty(a.save))})` : ""}</small>${a.descricao ? `<p>${esc(a.descricao)}</p>` : ""}</div>`).join("") : "<p>Sem habilidades especiais definidas.</p>"}</div></section>
-      <section><h2>Magias</h2><p><b>Nível de conjurador:</b> ${esc(m.caster_level || m.level || 1)}</p><div class="best-abilities">${spells.length ? spells.map(s => `<div><strong>${esc(s.icone || "✦")} ${esc(s.nome || pretty(s.id))}</strong><small>${esc(pretty(s.circulo))} círculo · ${s.limit_mode === "cooldown" ? `recarga: ${esc(s.cooldown_turns || 1)} rodada(s)` : `${esc(s.uses_per_combat || 1)}× por encontro`}</small>${s.descricao ? `<p>${esc(s.descricao)}</p>` : ""}</div>`).join("") : "<p>Não conhece magias.</p>"}</div></section>
+      <section><h2>Magias</h2><p><b>Nível de conjurador:</b> ${esc(m.caster_level || m.level || 1)}${m.spell_slots_per_combat ? ` · <b>Espaços:</b> ${esc(m.spell_slots_per_combat)} por encontro, compartilhados entre as magias` : ""}</p><div class="best-abilities">${spells.length ? spells.map(s => `<div><strong>${esc(s.icone || "✦")} ${esc(s.nome || pretty(s.id))}</strong><small>${esc(pretty(s.circulo))} círculo · ${m.spell_slots_per_combat ? "magia conhecida; cada conjuração consome 1 espaço compartilhado" : (s.limit_mode === "cooldown" ? `recarga: ${esc(s.cooldown_turns || 1)} rodada(s)` : `${esc(s.uses_per_combat || 1)}× por encontro`)}</small>${s.descricao ? `<p>${esc(s.descricao)}</p>` : ""}</div>`).join("") : "<p>Não conhece magias.</p>"}</div></section>
       <section><h2>Defesas e fraquezas</h2><p><b>Imunidades:</b> ${esc((m.immunities || []).map(pretty).join(", ") || "Nenhuma definida")}</p><p><b>Resistências:</b> ${esc((m.resistances || []).map(resistanceText).join(", ") || "Nenhuma definida")}</p><p><b>Fraquezas:</b> ${esc(weaknesses)}</p></section>
       <section><h2>Equipamento e tesouro</h2><p>${loot(m)}</p><p class="best-note">Recompensa base: ${esc(m.xp != null ? m.xp + " XP" : "não definida")}</p></section></div>
       <footer class="best-method">ND estimado: calculado separadamente para grupos de 2, 4 e 6 heróis, nos níveis 1, 3 e 5. A primeira linha inclui as habilidades dos heróis; a segunda remove apenas essas habilidades, mantendo as habilidades e magias do monstro. Grupos de monstros devem ser avaliados como encontro combinado.</footer>

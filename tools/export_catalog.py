@@ -85,14 +85,14 @@ def build_catalog():
         # já definidos no servidor. Mantemos o catálogo em JSON, sem estado de jogo.
         fields = (
             "type", "name", "emoji", "boss", "tier", "cr", "hp", "ac", "natural_armor",
-            "movement", "movement_exception", "vision_base", "percepcao", "size", "oriented", "porte", "image", "atk_bonus", "damage",
-            "base_attack_bonus", "base_hp", "caster_level", "str_", "dex", "con_", "int_",
+            "movement", "movement_exception", "vision_base", "percepcao", "size", "oriented", "porte", "image", "portrait", "atk_bonus", "damage",
+            "base_attack_bonus", "base_hp", "caster_level", "spell_slots_per_combat", "str_", "dex", "con_", "int_",
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base", "save_bonuses", "save_penalties",
             "crit_vulnerability_min_nat_roll",
             "weapon_options", "shield_option", "random_equipment",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
             "resistances",
-            "loot_table", "loot_drops", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "xp",
+            "loot_table", "loot_drops", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "gold_range", "xp",
             "ai_type", "undead", "subtipo", "darkvision_range",
             "voo", "altura_inicial", "altura_max", "pode_alterar_altura",
             "custo_mov_altura", "ignora_obstaculos_voo",

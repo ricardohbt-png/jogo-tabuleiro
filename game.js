@@ -48863,9 +48863,9 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   flechas: {path: 'assets/itens/flechas.glb', footprint: 0.78},
   chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
-  dagger: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
-  adaga: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
-  adaga_secundaria: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.78},
+  dagger: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.39},
+  adaga: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.39},
+  adaga_secundaria: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.39},
   // Variantes de machado compartilham o mesmo modelo 3D do Machado Duplo.
   // A família é resolvida abaixo para também cobrir prata e futuros machados.
   machado: {path: 'assets/itens/machado.glb', layFlat: true, footprint: 0.78},
@@ -51846,6 +51846,7 @@ const _heroGLBQueue  = {};   // classId -> [callbacks]
 const _MONSTER_GLB_MODELS = Object.freeze({
   // Identificadores de `image` do bestiário.
   goblin_assassino: 'assets/models3d/monstros/assassino_goblin.glb',
+  bandido:           'assets/models3d/monstros/bandido.glb',
   goblinArqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
   goblinCombatente:  'assets/models3d/monstros/goblin_combatente.glb',
   // Variantes por instância: a mesma chave de `image` seleciona PNG e GLB.

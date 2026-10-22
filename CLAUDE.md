@@ -2170,6 +2170,18 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > alvo ignoram o monstro escondido para os jogadores; o servidor também recusa um
 > ataque direto enviado para esse alvo.
 
+> **Bandido (ND 1):** ficha nativa `bandido` com IA própria, PV 9, CA 15
+> (CA base 14 + Manto), movimento 7, atributos e salvamentos do Ladino e ataque
+> +4. Cada exemplar sorteia adaga ou bordão; com adaga, tem 50% de chance de
+> uma segunda adaga. A IA usa Esconder-se e Ataque Furtivo 1 (+2d4 no primeiro
+> golpe ao sair das sombras), ambos conforme suas regras; prepara a fórmula
+> sorteada entre `lamina_escondida`, `armadilha_incendiaria` e `rede`, com 3
+> rodadas de recarga, evitando a própria armadilha. Há 20% de chance de carregar
+> 1–2 frascos de Fungo Acre, consumidos no acerto após envenenar a arma. Ao
+> morrer, deixa 2–10 PO. Retrato e miniatura usam `image="bandido"` e
+> `portrait="bandido"` (`assets/retratos/monstros/bandido.png` e
+> `assets/pawns/monstros/bandido/bandido.png`).
+
 > **Editor de Itens — Fase 1 (Armas):** nova aba "Editor de itens" no editor de
 > masmorras (`tools/editor.html` + `tools/editor_items_editor.js`); sub-aba
 > **Armas** funcional, as outras 7 (armaduras/escudos/anéis/botas/poções/

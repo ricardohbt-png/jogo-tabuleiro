@@ -3942,6 +3942,10 @@ window.LANG_CATALOGO = {
     "en": "Goblin Assassin",
     "pt": "Assassino Goblin"
   },
+  "cat.monstro.bandido.nome": {
+    "en": "Bandit",
+    "pt": "Bandido"
+  },
   "cat.monstro.goblin_combatente.nome": {
     "en": "Goblin Fighter",
     "pt": "Goblin Combatente"

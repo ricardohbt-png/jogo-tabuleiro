@@ -195,18 +195,240 @@ window.EDITOR_CATALOG = {
       "type": "dark_mage",
       "name": "Mago das Trevas",
       "emoji": "🧟",
+      "boss": false,
       "tier": 2,
-      "cr": 0.5,
-      "hp": 12,
-      "ac": 12,
+      "cr": 1,
+      "hp": 7,
+      "ac": 11,
+      "natural_armor": 0,
       "movement": 6,
       "vision_base": 0,
-      "atk_bonus": 4,
-      "damage": "1d6",
-      "gold": 20,
-      "xp": 30,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "dark_mage",
+      "base_attack_bonus": 0,
+      "caster_level": 1,
+      "spell_slots_per_combat": 3,
+      "str_": 10,
+      "dex": 12,
+      "con_": 12,
+      "int_": 14,
+      "fort": 2,
+      "ref_": 2,
+      "will": 3,
+      "random_equipment": {
+        "rings": [
+          {
+            "id": "ring_vita",
+            "chance": 10
+          }
+        ],
+        "scrolls": [
+          {
+            "circle": 1,
+            "class": "mage",
+            "chance": 10
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Cajado de Madeira",
+          "atk_bonus": 0,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [],
+      "monster_spells": [
+        {
+          "id": "relampago",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        },
+        {
+          "id": "barreira_arcana",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        },
+        {
+          "id": "sono",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        },
+        {
+          "id": "maldicao_corpo_pesado",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "equipped_items": [
+        "cloak",
+        "cajado_madeira"
+      ],
+      "gold_range": [
+        4,
+        12
+      ],
+      "undead": false,
       "subtipo": "raca_padrao",
       "percepcao": 13
+    },
+    {
+      "type": "bardo",
+      "name": "Bardo",
+      "emoji": "🎻",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 9,
+      "ac": 13,
+      "natural_armor": 0,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "bardo",
+      "portrait": "bardo",
+      "base_attack_bonus": 0,
+      "str_": 10,
+      "dex": 16,
+      "con_": 12,
+      "int_": 12,
+      "fort": 0,
+      "ref_": 2,
+      "will": 2,
+      "random_equipment": {
+        "armors": [
+          "cloak",
+          "leather",
+          "leather_plate"
+        ],
+        "weapons": [
+          "hand_crossbow",
+          "bordao",
+          "cajado_madeira",
+          "chicote",
+          "dagger",
+          "besta"
+        ],
+        "instruments": [
+          "harpa",
+          "tambor",
+          "sino",
+          "alaude",
+          "trompa",
+          "lira",
+          "flauta",
+          "violino",
+          "gaita"
+        ],
+        "instrument_qualities": [
+          {
+            "id": "velho",
+            "chance": 40
+          },
+          {
+            "id": "rustico",
+            "chance": 30
+          },
+          {
+            "id": "padrao",
+            "chance": 25
+          },
+          {
+            "id": "refinado",
+            "chance": 5
+          }
+        ],
+        "instrument_origins": [
+          {
+            "id": "humana",
+            "chance": 99
+          },
+          {
+            "id": "elfica",
+            "chance": 0.5
+          },
+          {
+            "id": "ana",
+            "chance": 0.5
+          }
+        ],
+        "ammunition": {
+          "count": 20,
+          "incendiary_chance": {
+            "hand_crossbow": 10,
+            "besta": 5
+          }
+        }
+      },
+      "attacks": [
+        {
+          "name": "Arma equipada",
+          "atk_bonus": 3,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "dex",
+          "damage_attribute": "dex",
+          "apply_attribute_damage": true,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "hero_bard_cancao_heroica",
+          "name": "Canção Heroica",
+          "source": "heroi",
+          "uses_per_combat": 1,
+          "duration_rounds": 4,
+          "action_type": "acao",
+          "descricao": "Uma vez por combate, concede +1 em 1d4+1 atributos aos monstros aliados em até 5 casas por 1d4+2 rodadas."
+        },
+        {
+          "id": "bardo_provocacao",
+          "name": "Provocação",
+          "cooldown_turns": 4,
+          "action_type": "acao_bonus",
+          "descricao": "Um herói a até 3 casas testa Vontade CD 11 por até 3 turnos; a falha força aproximação e ataque ao bardo."
+        },
+        {
+          "id": "bardo_habilidade_instrumento",
+          "name": "Habilidade do Instrumento",
+          "cooldown_turns": 4,
+          "action_type": "acao",
+          "descricao": "Ativa a habilidade do instrumento equipado. Recarga de 4 rodadas."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "gold_range": [
+        5,
+        15
+      ],
+      "ai_type": "bardo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
     },
     {
       "type": "troll",
@@ -1000,6 +1222,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "medio",
       "image": "jacare",
+      "portrait": "jacare",
       "str_": 18,
       "dex": 10,
       "con_": 16,
@@ -1894,6 +2117,106 @@ window.EDITOR_CATALOG = {
       "undead": false,
       "subtipo": "raca_padrao",
       "percepcao": 13
+    },
+    {
+      "type": "bandido",
+      "name": "Bandido",
+      "emoji": "🗡️",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 9,
+      "ac": 14,
+      "natural_armor": 0,
+      "movement": 7,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "bandido",
+      "portrait": "bandido",
+      "atk_bonus": 4,
+      "base_attack_bonus": 0,
+      "str_": 10,
+      "dex": 18,
+      "con_": 12,
+      "int_": 10,
+      "fort": 0,
+      "ref_": 2,
+      "will": 0,
+      "random_equipment": {
+        "weapons": [
+          "dagger",
+          "bordao"
+        ],
+        "secondary_dagger_chance": 50
+      },
+      "attacks": [
+        {
+          "name": "Arma principal",
+          "atk_bonus": 4,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "dex",
+          "damage_attribute": "dex",
+          "apply_attribute_damage": true,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "hero_rogue_ataque_furtivo",
+          "name": "Ataque Furtivo 1",
+          "action_type": "passiva",
+          "hero_level": 1,
+          "requires_hidden": true,
+          "descricao": "O primeiro ataque ao sair das sombras tem vantagem e causa +2d4 de dano."
+        },
+        {
+          "id": "bandido_esconder_se",
+          "name": "Esconder-se 1",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 3,
+          "descricao": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar."
+        },
+        {
+          "id": "bandido_preparar_armadilha",
+          "name": "Preparar Armadilha",
+          "action_type": "acao",
+          "cooldown_turns": 3,
+          "descricao": "Cada bandido sorteia lâmina escondida, armadilha incendiária ou rede. Prepara sua fórmula conhecida em uma casa livre adjacente; a preparação substitui o ataque do turno. Recarga de 3 rodadas."
+        },
+        {
+          "id": "envenenar_arma",
+          "name": "Envenenar Arma",
+          "action_type": "passiva",
+          "descricao": "20% de chance de carregar 1–2 frascos de Fungo Acre. Pode consumir um para envenenar a arma; o próximo acerto consome a dose."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "guaranteed_loot": [],
+      "equipment": [
+        "cloak",
+        "dagger",
+        "bordao"
+      ],
+      "equipment_enabled": true,
+      "equipped_items": [
+        "cloak"
+      ],
+      "gold": "2–10",
+      "ai_type": "bandido",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
     },
     {
       "type": "kobold_lanceiro",
@@ -4733,6 +5056,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "enorme",
       "image": "ciclope",
+      "portrait": "ciclope",
       "str_": 24,
       "dex": 10,
       "con_": 18,
@@ -4920,6 +5244,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "enorme",
       "image": "gigante_guerreiro",
+      "portrait": "gigante_guerreiro",
       "str_": 22,
       "dex": 14,
       "con_": 20,
@@ -5138,6 +5463,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "enorme",
       "image": "gigante_runas",
+      "portrait": "gigante_runas",
       "caster_level": 6,
       "str_": 20,
       "dex": 12,
@@ -6376,6 +6702,34 @@ window.EDITOR_CATALOG = {
       "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
     },
     {
+      "id": "hero_bard_cancao_heroica",
+      "source": "heroi",
+      "source_id": "cancao_heroica",
+      "source_class": "bard",
+      "name": "Canção Heroica",
+      "icon": "🎵",
+      "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true
+    },
+    {
+      "id": "bardo_provocacao",
+      "name": "Provocação",
+      "cooldown_turns": 4,
+      "action_type": "acao_bonus",
+      "descricao": "Um herói a até 3 casas testa Vontade CD 11 por até 3 turnos; a falha força aproximação e ataque ao bardo.",
+      "source": "monstro"
+    },
+    {
+      "id": "bardo_habilidade_instrumento",
+      "name": "Habilidade do Instrumento",
+      "cooldown_turns": 4,
+      "action_type": "acao",
+      "descricao": "Ativa a habilidade do instrumento equipado. Recarga de 4 rodadas.",
+      "source": "monstro"
+    },
+    {
       "id": "regeneracao_troll",
       "name": "Regeneração Troll",
       "action_type": "passiva",
@@ -6717,6 +7071,22 @@ window.EDITOR_CATALOG = {
           "description": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
         }
       ]
+    },
+    {
+      "id": "bandido_esconder_se",
+      "name": "Esconder-se 1",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 3,
+      "descricao": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar.",
+      "source": "monstro"
+    },
+    {
+      "id": "bandido_preparar_armadilha",
+      "name": "Preparar Armadilha",
+      "action_type": "acao",
+      "cooldown_turns": 3,
+      "descricao": "Cada bandido sorteia lâmina escondida, armadilha incendiária ou rede. Prepara sua fórmula conhecida em uma casa livre adjacente; a preparação substitui o ataque do turno. Recarga de 3 rodadas.",
+      "source": "monstro"
     },
     {
       "id": "covardia_kobold",
@@ -7881,18 +8251,6 @@ window.EDITOR_CATALOG = {
           "description": "Estender Magia dá +3 rodadas de duração."
         }
       ]
-    },
-    {
-      "id": "hero_bard_cancao_heroica",
-      "source": "heroi",
-      "source_id": "cancao_heroica",
-      "source_class": "bard",
-      "name": "Canção Heroica",
-      "icon": "🎵",
-      "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "monster_maintenance": true
     },
     {
       "id": "guild_tecnica_grito_guerra",
@@ -9427,6 +9785,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_bardo",
+      "source": "guilda",
+      "source_id": "lenda_bardo",
+      "name": "Lenda: Bardo",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bardo.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_troll",
       "source": "guilda",
       "source_id": "lenda_troll",
@@ -9653,6 +10022,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Assassino Goblin",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Assassino Goblin.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_bandido",
+      "source": "guilda",
+      "source_id": "lenda_bandido",
+      "name": "Lenda: Bandido",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bandido.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
