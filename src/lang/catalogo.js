@@ -986,6 +986,22 @@ window.LANG_CATALOGO = {
     "en": "Lore: Shadow Spider",
     "pt": "Lenda: Aranha Sombria"
   },
+  "cat.guilda.lenda_bandido.desc": {
+    "en": "+1 attack and +1 saves against Bandit.",
+    "pt": "+1 de ataque e +1 nos saves contra Bandido."
+  },
+  "cat.guilda.lenda_bandido.nome": {
+    "en": "Legend: Bandit",
+    "pt": "Lenda: Bandido"
+  },
+  "cat.guilda.lenda_bardo.desc": {
+    "en": "+1 attack and +1 saves against Bard.",
+    "pt": "+1 de ataque e +1 nos saves contra Bardo."
+  },
+  "cat.guilda.lenda_bardo.nome": {
+    "en": "Legend: Bard",
+    "pt": "Lenda: Bardo"
+  },
   "cat.guilda.lenda_bugbear_sombras.desc": {
     "en": "+1 to attack and +1 to saving throws against Bugbear — Boogeyman of the Shadows.",
     "pt": "+1 de ataque e +1 nos saves contra Bugbear — Bicho-Papão das Sombras."
@@ -3778,6 +3794,14 @@ window.LANG_CATALOGO = {
     "en": "The Mountain Assassin",
     "pt": "O Assassino da Serra"
   },
+  "cat.monstro.bandido.nome": {
+    "en": "Bandit",
+    "pt": "Bandido"
+  },
+  "cat.monstro.bardo.nome": {
+    "en": "Bard",
+    "pt": "Bardo"
+  },
   "cat.monstro.bardo_da_caravana.nome": {
     "en": "Caravan Bard",
     "pt": "Bardo da Caravana"
@@ -3957,10 +3981,6 @@ window.LANG_CATALOGO = {
   "cat.monstro.goblin_assassino.nome": {
     "en": "Goblin Assassin",
     "pt": "Assassino Goblin"
-  },
-  "cat.monstro.bandido.nome": {
-    "en": "Bandit",
-    "pt": "Bandido"
   },
   "cat.monstro.goblin_combatente.nome": {
     "en": "Goblin Fighter",
