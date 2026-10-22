@@ -18,7 +18,7 @@ def todas():
 
 class DadosTests(unittest.TestCase):
     def test_conversas_nos_slots_certos(self):
-        esperado = {"elara_corvin_barman": "barman", "elara_corvin_garconete": "npc_ms2e74bw",
+        esperado = {"elara_corvin_barman": "barman", "elara_corvin_rumo_graciero": "barman", "elara_corvin_garconete": "npc_ms2e74bw",
                     "elara_corvin_bardo": "patrono_fundo", "elara_corvin_sombrio": "npc_ms2e85ew"}
         t = todas()
         for cid, slot in esperado.items():
@@ -26,8 +26,10 @@ class DadosTests(unittest.TestCase):
 
     def test_so_com_o_ramo_b(self):
         for cid, (_s, c) in todas().items():
-            self.assertEqual(c["requisito"]["fato"], R.F_RAMO_B, cid)
+            esperado = R.F_PISTA if cid == "elara_corvin_rumo_graciero" else R.F_RAMO_B
+            self.assertEqual(c["requisito"]["fato"], esperado, cid)
         self.assertEqual(todas()["elara_corvin_barman"][1]["efeito"]["fato"], R.F_CHEGADA)
+        self.assertEqual(todas()["elara_corvin_rumo_graciero"][1]["efeito"]["fato"], R.F_RUMO_GRACIERO)
 
     def test_destinos(self):
         d = R.destinos()
