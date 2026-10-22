@@ -43,8 +43,9 @@ def ficha_leonel():
 
 
 def item_olho():
-    """Relíquia de missão: não dá bônus, não vai à loja, aos baús nem ao loot."""
+    """Relíquia de missão: sem bônus, fora da loja e do loot. `baus` só o põe no catálogo (a conversa que o concede
+    só acha itens de lá); baús aleatórios não sorteiam por isso."""
     return {"id": ID_OLHO, "name": "Olho de Arveluz", "emoji": "👁️", "item_type": "ring", "bonuses": [],
             "allowed_classes": [], "price": 0,
             "descricao": "Uma relíquia pesada do Templo de Alva e Luz. Está quente ao toque.",
-            "disponibilidade": {"loja": False, "baus": False, "loot_monstro": False}}
+            "disponibilidade": {"loja": False, "baus": True, "loot_monstro": False}}

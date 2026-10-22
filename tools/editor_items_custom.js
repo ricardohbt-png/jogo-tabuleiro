@@ -184,6 +184,27 @@ window.EDITOR_CUSTOM_ITEMS = [
       "baus": true,
       "loot_monstro": false
     }
+  },
+  {
+    "id": "olho_de_arveluz",
+    "name": "Olho de Arveluz",
+    "emoji": "👁️",
+    "item_type": "ring",
+    "kind": "ring",
+    "item_slot": "ring",
+    "custom": true,
+    "bonuses": [],
+    "granted_ability": null,
+    "maldicao_id": null,
+    "maldicao_prende": false,
+    "allowed_classes": [],
+    "price": 0,
+    "disponibilidade": {
+      "loja": false,
+      "baus": true,
+      "loot_monstro": false
+    },
+    "descricao": "Uma relíquia pesada do Templo de Alva e Luz. Está quente ao toque."
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de itens.

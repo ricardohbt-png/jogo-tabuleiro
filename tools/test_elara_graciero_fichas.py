@@ -26,10 +26,10 @@ class FichasTests(unittest.TestCase):
         ok, n = S._validate_custom_monster(F.ficha_escorpiao_gigante())
         self.assertEqual(n["attacks"][0]["damage"], "1d8")
 
-    def test_olho_valida_e_nao_vai_a_loja_bau_ou_loot(self):
+    def test_olho_valida_e_nao_vai_a_loja_nem_ao_loot(self):
         ok, item = S._validate_custom_item(F.item_olho())
         self.assertTrue(ok, item)
-        self.assertEqual(item["disponibilidade"], {"loja": False, "baus": False, "loot_monstro": False})
+        self.assertEqual(item["disponibilidade"], {"loja": False, "baus": True, "loot_monstro": False})
         self.assertEqual(item.get("bonuses"), [])
 
     def test_nada_da_rede_por_nome(self):
