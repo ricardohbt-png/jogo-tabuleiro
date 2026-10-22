@@ -3238,13 +3238,13 @@ window.LANG_CATALOGO = {
     "en": "Flight Potion",
     "pt": "Poção de Voo"
   },
-  "cat.item.racao_viagem.nome": {
-    "en": "Travel Rations",
-    "pt": "Ração de Viagem"
-  },
   "cat.item.racao_completa.nome": {
     "en": "Complete Rations",
     "pt": "Ração Completa"
+  },
+  "cat.item.racao_viagem.nome": {
+    "en": "Travel Rations",
+    "pt": "Ração de Viagem"
   },
   "cat.item.rede_arremesso.nome": {
     "en": "Net",
@@ -3929,6 +3929,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.gigante_runico.nome": {
     "en": "Runic Giant",
     "pt": "Gigante Rúnico"
+  },
+  "cat.monstro.gilo_dedos_sujos.nome": {
+    "en": "Gilo Dirty-Fingers",
+    "pt": "Gilo Dedos Sujos"
   },
   "cat.monstro.goblin.nome": {
     "en": "Goblin",
