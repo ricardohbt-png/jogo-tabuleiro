@@ -972,5 +972,85 @@
       "aventura_id": ""
     },
     "renome_recompensa": 1
+  },
+  "elara_adhadal": {
+    "id": "elara_adhadal",
+    "nome": "A Floresta de Adhadal",
+    "x": 73.95,
+    "y": 40.84,
+    "fome": 2,
+    "sede": 2,
+    "dungeons": [
+      {
+        "file": "elara_adhadal_1.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_adhadal_2.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_ramo_b",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
+  },
+  "elara_corvin": {
+    "id": "elara_corvin",
+    "nome": "O Curtume de Corvin",
+    "x": 86.91,
+    "y": 32.76,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_corvin_cacada.json",
+        "encadear": true,
+        "intro": "",
+        "outro": ""
+      },
+      {
+        "file": "elara_corvin_gilo.json",
+        "encadear": false,
+        "intro": "",
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "",
+      "sem_fato": "",
+      "aventura_id": "elara_adhadal"
+    },
+    "renome_recompensa": 2
   }
 }

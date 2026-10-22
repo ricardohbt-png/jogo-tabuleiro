@@ -1,5 +1,24 @@
 # Legends for Hire — Regras de Arquitetura
 
+### O Resgate de Elara — Ramo B (Gilo: Adhadal e Corvin) (2026-10-22)
+
+Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte3-gilo.md`. Gerador idempotente
+`tools/gerar_elara_gilo.py` (`--simular`, `--forcar`; assinaturas em `tools/.elara_gilo_assinaturas.json`). Só toca nas
+conversas `elara_*` dos slots ativos `barman`, `patrono_fundo`, `npc_ms2e74bw` e `npc_ms2e85ew` da taverna de Corvin
+(todas com requisito `elara_ramo_b`), nos destinos `elara_adhadal` e `elara_corvin`, na ficha `gilo_dedos_sujos`
+(`tools/elara_gilo_ficha.py`, derivada do `soldado`, ND 2, gravada pelo caminho do editor) e nos quatro mapas.
+**Adhadal** são cópias ajustadas dos protótipos do autor (`floresta.json` e `floresta_2.json`, que nunca mudam):
+poste, grupo esperado 4×nível 3, armadilhas de caça e falas de rastro; a 2ª etapa é desbastada (ND ≤ 10,8), ganha uma
+`exit` autorada alcançável por BFS e `saida_permitida: false`; as duas etapas são emendadas. **Corvin**: a caçada
+(arredores, baú-chave) e o Esconderijo do Gilo, onde o `gilo_dedos_sujos` (`target`) tem `fuga_chefe`: derrotado por
+qualquer dano, vence o combate (XP e objetivo) mas foge sem cadáver nem loot, com um bardo (sem nome nem rede). O
+destino de Corvin só aparece ao concluir Adhadal (`aventura_id`) e não depende de ter conversado em Corvin.
+Fatos para o plano 4 (Graciero): `elara_adhadal_vencida`, `elara_corvin_chegada` (conversa do bartender),
+`elara_cacada_vencida`, `elara_gilo_fugiu` (fuga) e `elara_pista_graciero` (objetivo do confronto); o Gilo chega a
+Graciero com o Olho quando valem ramo B + `elara_gilo_fugiu` + `elara_pista_graciero`. Testes:
+`python -X utf8 tools/test_elara_gilo_ficha.py`, `test_elara_gilo_mapas.py`, `test_elara_gilo_dados.py` e
+`test_elara_gilo_fluxo.py`.
+
 ### O Resgate de Elara — Ramo A (Vila do Riacho) (2026-10-21)
 
 Plano `docs/superpowers/plans/2026-10-21-campanha-elara-parte2-riacho.md`. Peça de motor: conversa de cena
