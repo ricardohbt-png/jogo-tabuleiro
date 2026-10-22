@@ -2780,6 +2780,23 @@
     </div>`;
   }
 
+  function _monsterFugaPanelHTML(ref) {
+    const f = ref.fuga_chefe && typeof ref.fuga_chefe === "object" ? ref.fuga_chefe : { fato: "", texto: "" };
+    return `<div style="margin-top:8px"><b>🏃 ${t("ui.editor.masmorra.fuga.titulo")}</b>
+      <input id="p-fuga-fato" value="${_hostilityHtml(f.fato)}" placeholder="${t("ui.editor.masmorra.fuga.fato")}" style="width:100%;margin-top:4px">
+      <textarea id="p-fuga-texto" placeholder="${t("ui.editor.masmorra.fuga.texto")}" style="width:100%;margin-top:4px">${_hostilityHtml(f.texto)}</textarea></div>`;
+  }
+
+  function _bindMonsterFugaPanel(ref) {
+    const fatoEl = document.getElementById("p-fuga-fato"), textoEl = document.getElementById("p-fuga-texto");
+    if (!fatoEl || !textoEl) return;
+    const salvar = () => {
+      const fato = fatoEl.value.trim(), texto = textoEl.value.trim();
+      if (fato && texto) ref.fuga_chefe = { fato, texto }; else delete ref.fuga_chefe;
+    };
+    fatoEl.onchange = salvar; textoEl.onchange = salvar;
+  }
+
   function _bindMonsterHostilityPanel(ref) {
     const modeEl = document.getElementById("p-hostility-mode");
     if (!modeEl) return;
@@ -3132,6 +3149,7 @@
         <label><input type="checkbox" id="p-boss" ${ref.boss ? "checked" : ""}> ${t("ui.editor.masmorra.painel.chefe_boss")}</label>
         <label><input type="checkbox" id="p-target" ${ref.target ? "checked" : ""}> ${t("ui.editor.masmorra.painel.alvo_objetivo")}</label>
         ${_monsterHostilityPanelHTML(ref)}
+        ${_monsterFugaPanelHTML(ref)}
         ${isFlying ? `<div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>🪽 ${t("ui.editor.masmorra.painel.voo_altitude")}</b>
           <div style="font-size:11px;color:#8a7a5a">${t("ui.editor.masmorra.painel.altura_escala_hint")}</div>
@@ -3162,6 +3180,7 @@
       document.getElementById("p-boss").onchange = e => { ref.boss = e.target.checked; };
       document.getElementById("p-target").onchange = e => { ref.target = e.target.checked; };
       _bindMonsterHostilityPanel(ref);
+      _bindMonsterFugaPanel(ref);
       const applyMonsterScale = () => {
         const sx = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsx").value) || 1));
         const sy = Math.max(0.2, Math.min(4, Number(document.getElementById("p-vsy").value) || 1));
@@ -4342,6 +4361,8 @@
         if (m.hostility_override && typeof m.hostility_override === "object")
           o.hostility_override = JSON.parse(JSON.stringify(m.hostility_override));
         if (m.autonomous_hostility === true) o.autonomous_hostility = true;
+        if (m.fuga_chefe && m.fuga_chefe.fato && m.fuga_chefe.texto)
+          o.fuga_chefe = { fato: m.fuga_chefe.fato, texto: m.fuga_chefe.texto };
         if (Array.isArray(m.vscale) && (m.vscale[0] !== 1 || m.vscale[1] !== 1)) o.vscale = [m.vscale[0], m.vscale[1]];
         if (monsterCanFly(m)) {
           const meta = monsterFlightMeta(m) || {};
@@ -4881,6 +4902,7 @@
       ...(m.hostility_override && typeof m.hostility_override === "object"
         ? { hostility_override: JSON.parse(JSON.stringify(m.hostility_override)) } : {}),
       ...(m.autonomous_hostility === true ? { autonomous_hostility: true } : {}),
+      ...(m.fuga_chefe && m.fuga_chefe.fato && m.fuga_chefe.texto ? { fuga_chefe: { fato: String(m.fuga_chefe.fato), texto: String(m.fuga_chefe.texto) } } : {}),
       ...(Array.isArray(m.vscale) && m.vscale.length === 2 ? { vscale: [Number(m.vscale[0]), Number(m.vscale[1])] } : {}),
       ...(m.altura !== undefined ? { altura: altitudeClamp(m.altura, 2) } : {}),
       ...(m.altura_max !== undefined ? { altura_max: altitudeClamp(m.altura_max, 10) } : {}),

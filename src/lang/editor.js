@@ -628,6 +628,18 @@ window.LANG_EDITOR = {
     "en": "clock discount when opened (rounds)",
     "pt": "desconto no relógio ao abrir (rodadas)"
   },
+  "ui.editor.masmorra.fuga.titulo": {
+    "en": "flees when defeated (boss escape)",
+    "pt": "foge ao ser derrotado (fuga do chefe)"
+  },
+  "ui.editor.masmorra.fuga.fato": {
+    "en": "fact set when he escapes",
+    "pt": "fato gravado quando ele foge"
+  },
+  "ui.editor.masmorra.fuga.texto": {
+    "en": "narration when he escapes",
+    "pt": "narração da fuga"
+  },
   "ui.editor.masmorra.painel.reforcos_mestre": {
     "en": "master's reinforcements",
     "pt": "reforços do mestre"

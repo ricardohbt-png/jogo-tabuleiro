@@ -8101,6 +8101,14 @@ def validar_dungeon(defn):
                 mo.get("type"), mo.get("hostility_override"))
             if not ok:
                 return False, f"hostilidade do monstro {mo.get('type')!r} inválida: {override}."
+        if "fuga_chefe" in mo:
+            _fg = mo["fuga_chefe"]
+            if (not isinstance(_fg, dict) or not isinstance(_fg.get("fato"), str)
+                    or not _fg["fato"].strip() or len(_fg["fato"]) > 100
+                    or not isinstance(_fg.get("texto"), str) or not _fg["texto"].strip()
+                    or len(_fg["texto"]) > 300):
+                return False, ("fuga_chefe do monstro precisa de fato (até 100) e texto (até 300 "
+                               "caracteres).")
         if not in_grid(mo.get("pos")) or tile_at(mo["pos"]) == WALL:
             return False, f"monstro em casa inválida: {mo.get('pos')}."
         # room_id vazio/None Ã© vÃ¡lido (monstro "sem sala") â€” espelha o editor.
@@ -17087,6 +17095,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     m["hostility_override"] = override
             if mo.get("autonomous_hostility") is True:
                 m["autonomous_hostility"] = True
+            if isinstance(mo.get("fuga_chefe"), dict):
+                m["fuga_chefe"] = {"fato": str(mo["fuga_chefe"]["fato"]),
+                                   "texto": str(mo["fuga_chefe"]["texto"])}
             if m.get("voo"):
                 if "altura_max" in mo:
                     m["altura_max"] = normalizar_altura(mo["altura_max"])
@@ -50873,6 +50884,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             m.pop("paralisado", None)
             return
         if m["hp"] > 0: return
+        if m.get("fugiu") and not force:
+            return          # já fugiu: não repete a narração nem o prêmio
 
         # A queda a 0 PV inicia um estado de regeneração. O Troll só morre
         # definitivamente se o último dano foi fogo, ou se ácido já bloqueou
@@ -51030,7 +51043,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         cr = m.get("cr", m.get("tier", 1))
         nivel_animado = 1 if cr <= 0.5 else max(1, round(cr))
 
-        if not m.get("boss") and not m.get("undead"):
+        if not m.get("boss") and not m.get("undead") and not m.get("fuga_chefe"):
             # Mortos-vivos destruÃ­dos nÃ£o deixam cadÃ¡ver reanimÃ¡vel
             primeiro_ataque = (m.get("attacks") or [{}])[0]
             self.corpses[m["id"]] = {
@@ -51093,6 +51106,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 mroom["cleared"] = True
             if m.get("boss"):
                 await self.end_game(victory=True)
+            return
+
+        # Chefe com fuga: venceu o combate (XP e objetivo contam), mas escapa levando tudo —
+        # sem cadáver, sem loot e sem ouro.
+        if m.get("fuga_chefe") and not m.get("fugiu"):
+            m["fugiu"] = True
+            fuga = m["fuga_chefe"]
+            await self.gm_say(str(fuga["texto"]))
+            self.fatos.add(str(fuga["fato"]))
+            mroom_f = next((r for r in self.rooms if r["id"] == m.get("room_id")), None)
+            if mroom_f and not any(mm.get("room_id") == mroom_f["id"] and mm.get("hp", 0) > 0
+                                   for mm in self.monsters.values()):
+                mroom_f["cleared"] = True
             return
 
         # Loot: monstros novos tÃªm tabela prÃ³pria por monstro; legados usam sala+65%
