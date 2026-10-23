@@ -5809,41 +5809,13 @@ window.LANG_INTERFACE = {
     "en": "🪤 SET TRAP",
     "pt": "🪤 CRIAR ARMADILHA"
   },
-  "ui.ladino.dois_venenos": {
-    "en": "up to 2 different poisons in sequence",
-    "pt": "até 2 venenos diferentes em sequência"
-  },
-  "ui.ladino.dura_golpes_certeiros": {
-    "en": "lasts {n} successful hit(s){extra}",
-    "pt": "dura {n} golpe(s) certeiro(s){extra}"
-  },
-  "ui.ladino.dura_disparos": {
-    "en": "lasts {n} shot(s) per poison{extra}",
-    "pt": "dura {n} disparo(s) por veneno{extra}"
-  },
-  "ui.ladino.disparos_restantes_trocar": {
-    "en": "{n} poisoned shot(s) remaining{extra} — click to change",
-    "pt": "{n} disparo(s) envenenado(s) restante(s){extra} — clique p/ trocar"
-  },
-  "ui.ladino.dois_venenos_disparos": {
-    "en": "up to 2 simultaneous poisons, 3 shots each",
-    "pt": "até 2 venenos simultâneos, 3 disparos cada"
-  },
   "ui.ladino.esconder_desc": {
     "en": "Stealth check{b} — bonus action",
     "pt": "Teste de furtividade{b} — ação bônus"
   },
-  "ui.ladino.golpes_restantes_trocar": {
-    "en": "{hits}/{max} hit(s) left{extra} — click to swap",
-    "pt": "{hits}/{max} golpe(s) restante(s){extra} — clique p/ trocar"
-  },
   "ui.ladino.habilidade_cancelada": {
     "en": "Ability cancelled.",
     "pt": "Habilidade cancelada."
-  },
-  "ui.ladino.pode_aplicar_segundo_veneno": {
-    "en": " · can apply a 2nd poison",
-    "pt": " · pode aplicar um 2º veneno"
   },
   "ui.ladino.requer_veneno_falta": {
     "en": "⚠️ No poison in the inventory",
@@ -5856,10 +5828,6 @@ window.LANG_INTERFACE = {
   "ui.ladino.sede_insuficiente": {
     "en": "❌ Not enough thirst 💧-1",
     "pt": "❌ Sede insuficiente 💧-1"
-  },
-  "ui.ladino.segundo_veneno_golpes": {
-    "en": " + 2nd poison ({n} hit(s))",
-    "pt": " + 2º veneno ({n} golpe(s))"
   },
   "ui.ladino.selecione_uma_casa_adjacente_para_desarmar": {
     "en": "Select an adjacent square to disarm.",
@@ -5890,15 +5858,7 @@ window.LANG_INTERFACE = {
     "en": "Bonus action · consumes each selected vial and its unused dose",
     "pt": "Ação bônus · consome cada frasco escolhido e a dose não utilizada"
   },
-  "ui.ladino.prepara_municao_desc": {
-    "en": "One vial coats up to {n} projectiles; Veneno Rápido III can apply {venenos} poisons to each",
-    "pt": "Um frasco envenena até {n} projéteis; Veneno Rápido III pode aplicar {venenos} venenos em cada um"
-  },
   "ui.ladino.custo_por_frasco": {"en": "💧1 per vial", "pt": "💧1 por frasco"},
-  "ui.ladino.veneno_legado_terminar": {
-    "en": "Use the old poison charges on this weapon before coating ammunition.",
-    "pt": "Use as cargas antigas de veneno desta arma antes de envenenar munição."
-  },
   "ui.ladino.escolha_municao": {"en": "Choose ammunition", "pt": "Escolha a munição"},
   "ui.ladino.quantidade_municao": {"en": "Projectile count (up to {n})", "pt": "Quantidade de projéteis (até {n})"},
   "ui.ladino.mao_esquerda": {"en": "Off hand", "pt": "Mão esquerda"},
@@ -11366,6 +11326,11 @@ window.LANG_INTERFACE = {
   "ui.veneno.municao_parcial": {"en":"one vial covers {max} at most","pt":"um frasco cobre no máximo {max}"},
   "ui.veneno.legado": {"en":"Finish the old poison charges on this weapon first.","pt":"Termine antes as cargas de veneno antigas desta arma."},
   "ui.veneno.sem_alvo": {"en":"No compatible weapon or ammunition equipped.","pt":"Nenhuma arma ou munição compatível equipada."},
+  "ui.veneno.hud_desc_livre": {"en":"Free action. Coats a weapon ({golpes} hits) or prepares up to {max} arrows/bolts.","pt":"Ação livre. Unta uma arma ({golpes} golpes) ou prepara até {max} flechas/virotes."},
+  "ui.veneno.hud_clique": {"en":"Click to reinforce or swap the poison.","pt":"Clique para reforçar ou trocar o veneno."},
+  "ui.veneno.hud_estado": {"en":"{rotulo}: {nomes} ×{n}","pt":"{rotulo}: {nomes} ×{n}"},
+  "ui.veneno.hud_municao": {"en":"Poisoned ammo: {n}","pt":"Munição envenenada: {n}"},
+  "ui.veneno.hud_sem_alvo": {"en":"Equip a weapon or carry compatible ammunition.","pt":"Equipe uma arma ou leve munição compatível."},
   "ui.ladino.cargas_veneno": {"en":"{n} poison charges","pt":"{n} cargas de veneno"},
   "ui.mestre.veneno_ativo": {"en":"Poison already applied","pt":"Veneno já aplicado"}
 };

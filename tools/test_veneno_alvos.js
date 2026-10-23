@@ -80,5 +80,16 @@ check('sem munição: nenhum cartão', r.municoes.length, 0);
 r = alvos({ gear: {}, bag: [flechas(5)] });
 check('sem arma: sem alvos', [r.armas.length, r.municoes.length], [0, 0]);
 
+// 11. Fiação do painel no game.js: ele precisa se desenhar ao abrir, e o HUD do Ladino
+// não pode chamar `desenhar()` (um trecho solto já quebrou o botão de Detectar Armadilhas).
+const fonte = fs.readFileSync(path.join(root, 'game.js'), 'utf8').split('\r\n').join('\n');
+const ini = fonte.indexOf('function abrirPainelEnvenenar(');
+const corpo = fonte.slice(ini, fonte.indexOf('\n}\n', ini) + 3);
+check('painel declara desenhar()', corpo.includes('const desenhar=()=>'), true);
+check('painel chama desenhar() ao abrir', corpo.endsWith('\n  desenhar();\n}\n'), true);
+const iniLadino = fonte.indexOf('function _rogueSkillBtn(');
+const ladino = fonte.slice(iniLadino, fonte.indexOf('\n}\n', iniLadino));
+check('_rogueSkillBtn não chama desenhar()', /(^|[^\w.])desenhar\(/.test(ladino), false);
+
 if(falhas){ console.log(`\n${falhas} falha(s)`); process.exit(1); }
 console.log('\ntudo ok');

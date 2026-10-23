@@ -20620,6 +20620,7 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
       lista.innerHTML=`<div style="color:#b8704a;font-size:11px;padding:6px 0">${t('ui.veneno.sem_alvo')}</div>`;
     }
   };
+  desenhar();
 }
 
 // ── Botões de habilidade do ladino (padrão skill-btn, como _paladinSkillBtn) ──
@@ -20659,7 +20660,6 @@ function _rogueSkillBtn(me, sk){
              t('ui.hud.detectar_desc'), `manut. 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'detectar_armadilhas'}), true);
     } else {
-  desenhar();
       const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>` : '';
       setBtn(`🔍 ${sk.name}${aviso}`, sk.description || sk.desc || '', 'manut. 💧1',
              !(myTurnPlay && !me.bonus_action_used), () => send({type:'detectar_armadilhas'}), false);
@@ -20682,65 +20682,32 @@ function _rogueSkillBtn(me, sk){
     }
 
   } else if(sk.id === 'veneno_rapido'){
+    // O botão só resume o estado e abre o painel único "Envenenar" (abrirPainelEnvenenar).
     const venenos = _venenosNaBolsa(me);
-    const maxHits = GS.ladinoVenenoMaxHits ? GS.ladinoVenenoMaxHits() : 1;
+    const maxHits = GS.ladinoVenenoMaxHits ? GS.ladinoVenenoMaxHits() : 3;
     const doisSlots = GS.ladinoVeneno2Slots ? GS.ladinoVeneno2Slots() : false;
-    const weaponId = me.weapon?.id || me.gear?.weapon?.id;
-    const rangedWeapon = ['arco_curto','longbow','besta','hand_crossbow'].includes(weaponId);
-    if(rangedWeapon){
-      const compatibleAmmo=weaponId==='arco_curto'||weaponId==='longbow'
-        ? ['flechas','flechas_incendiarias','flechas_prata']
-        : ['virotes','virotes_incendiarios','virotes_prata'];
-      const legacySlots = Array.isArray(me.weapon?.poison_slots) ? me.weapon.poison_slots
-        : Array.isArray(me.gear?.weapon?.poison_slots) ? me.gear.weapon.poison_slots : [];
-      const availableAmmo=(me.bag||[]).some(i=>i?.effect==='ammo'&&compatibleAmmo.includes(i.ammo_type)
-          &&(!Array.isArray(i.poison_ids)||i.poison_ids.length===0)&&(i.ammo_count||0)>0)
-        || (me.gear?.off_hand?.effect==='ammo'&&compatibleAmmo.includes(me.gear.off_hand.ammo_type)
-          &&(!Array.isArray(me.gear.off_hand.poison_ids)||me.gear.off_hand.poison_ids.length===0)
-          &&(me.gear.off_hand.ammo_count||0)>0);
-      const blocked=legacySlots.length>0;
-      const canUse=myTurnPlay&&venenos.length>0&&availableAmmo&&(blocked||(me.sede||0)>=1);
-      const maxPerVial=maxHits>3?20:10;
-      const desc=blocked?t('ui.ladino.veneno_legado_terminar'):t('ui.ladino.prepara_municao_desc',{n:maxPerVial,venenos:doisSlots?2:1});
-      setBtn(`☠️ ${sk.name}${venenos.length===0?' <small style="color:var(--red)">'+t('ui.hud.sem_venenos')+'</small>':''}`,
-        desc, t('ui.ladino.custo_por_frasco'), !canUse||blocked,
-        () => abrirPainelVenenoRapido(), false);
-      return btn;
-    }
-    const crossbow = weaponId === 'besta' || weaponId === 'hand_crossbow';
-    const crossbowSlots = Array.isArray(me.weapon?.poison_slots) ? me.weapon.poison_slots
-      : Array.isArray(me.gear?.weapon?.poison_slots) ? me.gear.weapon.poison_slots : [];
-    const meleeSlots = Array.isArray(me.gear?.weapon?.poison_slots) ? me.gear.weapon.poison_slots
-      : Array.isArray(me.weapon?.poison_slots) ? me.weapon.poison_slots : [];
-    const poisonActive = crossbow ? crossbowSlots.length > 0 : (meleeSlots.length > 0 || !!me.weapon_poison);
-    if(poisonActive){
-      if(crossbow){
-        const extra = doisSlots ? t('ui.ladino.dois_venenos_disparos') : '';
-        setBtn(`☠️ ${sk.name} <small style="color:#cc44ff;font-size:.65rem;">● ${t('ui.hud.arma_envenenada')}</small>`,
-               t('ui.ladino.disparos_restantes_trocar', {n: crossbowSlots.length, extra}), costStr,
-               !(myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0),
-               () => abrirPainelVenenoRapido(), true);
-        return;
-      }
-      const firstVenom=meleeSlots[0]||me.weapon_poison;
-      const firstCount=firstVenom?meleeSlots.slice(0,meleeSlots.findIndex(v=>v!==firstVenom)<0?meleeSlots.length:meleeSlots.findIndex(v=>v!==firstVenom)).length:0;
-      const secondCount=firstVenom?meleeSlots.slice(firstCount).filter(v=>v!==firstVenom).length:0;
-      const hits=firstCount||me.weapon_poison_hits||0;
-      const slot2=secondCount?t('ui.ladino.segundo_veneno_golpes',{n:secondCount})
-        :(doisSlots?t('ui.ladino.pode_aplicar_segundo_veneno'):'');
-      setBtn(`☠️ ${sk.name} <small style="color:#cc44ff;font-size:.65rem;">● ${t('ui.hud.arma_envenenada')}</small>`,
-             t('ui.ladino.golpes_restantes_trocar', {hits, max: maxHits, extra: slot2}), costStr,
-             !(myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0),
-             () => abrirPainelVenenoRapido(), true);
-    } else {
-      const pode  = myTurnPlay && (me.sede ?? 0) >= scst && venenos.length > 0;
-      const aviso = venenos.length === 0 ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_venenos')+'</small>' : '';
-      const descricao = crossbow
-        ? t('ui.ladino.dura_disparos', {n: 3, extra: doisSlots?' · '+t('ui.ladino.dois_venenos_disparos'):''})
-        : t('ui.ladino.dura_golpes_certeiros', {n: maxHits, extra: doisSlots?' · '+t('ui.ladino.dois_venenos'):''});
-      setBtn(`☠️ ${sk.name}${aviso}`, descricao, costStr, !pode,
-             () => abrirPainelVenenoRapido(), false);
-    }
+    const maxMunicao = maxHits > 3 ? 20 : 10;
+    const alvos = GS.venenoAlvos(me, {metodo:'veneno_rapido', doisVenenos:doisSlots, maxPorFrasco:maxMunicao});
+    const temAlvo = alvos.armas.length > 0 || alvos.municoes.length > 0;
+    const estado = [{slot:'weapon', item:me.gear?.weapon || me.weapon}, {slot:'off_hand', item:me.gear?.off_hand}]
+      .filter(x => Array.isArray(x.item?.poison_slots) && x.item.poison_slots.length)
+      .map(x => t('ui.veneno.hud_estado', {
+        rotulo: t(x.slot === 'off_hand' ? 'ui.ladino.mao_secundaria' : 'ui.ladino.arma_principal'),
+        nomes: [...new Set(x.item.poison_slots)].map(_nomeVenenoPorId).join(' + '),
+        n: x.item.poison_slots.length}));
+    const municaoEnvenenada = [me.gear?.off_hand, ...(me.bag || [])]
+      .filter(i => i?.effect === 'ammo' && Array.isArray(i.poison_ids) && i.poison_ids.length)
+      .reduce((n, i) => n + (i.ammo_count || 0), 0);
+    if(municaoEnvenenada) estado.push(t('ui.veneno.hud_municao', {n:municaoEnvenenada}));
+    const ativo = estado.length > 0;
+    const pode = myTurnPlay && venenos.length > 0 && temAlvo && (me.sede ?? 0) >= scst;
+    const aviso = venenos.length === 0
+      ? ' <small style="color:var(--red);font-size:.62rem;">'+t('ui.hud.sem_venenos')+'</small>' : '';
+    const ajuda = !temAlvo ? t('ui.veneno.hud_sem_alvo')
+      : t(ativo ? 'ui.veneno.hud_clique' : 'ui.veneno.hud_desc_livre', {golpes:maxHits, max:maxMunicao});
+    setBtn(`☠️ ${sk.name}${ativo ? ` <small style="color:#cc44ff;font-size:.65rem;">● ${t('ui.hud.arma_envenenada')}</small>` : aviso}`,
+           (ativo ? _esc(estado.join(' · ')) + '<br>' : '') + ajuda,
+           t('ui.ladino.custo_por_frasco'), !pode, () => abrirPainelVenenoRapido(), ativo);
 
   } else if(sk.id === 'criar_armadilha'){
     const pode  = myTurnPlay && !me.action_done;
