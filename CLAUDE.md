@@ -1,5 +1,17 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Painel único "Envenenar" (2026-10-23)
+
+Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo
+painel, `abrirPainelEnvenenar({metodo, venenoId, vialSource})` em `game.js`: escolhe o(s) veneno(s)
+(chips; até 2 com `ladino_veneno_3`, o frasco clicado fica fixo) e **um clique** num cartão aplica — arma da
+mão principal/secundária ou pilha de munição. Cada cartão mostra o veneno atual, quanto rende e, quando
+bloqueado, o motivo (outro veneno, cargas antigas, sem sede, ação bônus usada). Munição: pilhas iguais
+da mão e da bolsa viram um cartão (o servidor já as junta) e a dose parcial aparece no texto, sem
+`confirm()`. A decisão de quais alvos existem é `GS.venenoAlvos(me, opts)` (pura, em `gameState.js`);
+o **protocolo e o servidor não mudaram** (`use_item`, `veneno_rapido`, `envenenar_municao`). Chaves
+`ui.veneno.*`. Teste: `node tools/test_veneno_alvos.js`.
+
 ### O Resgate de Elara — rota do Olho (2026-10-22)
 
 Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte5-olho.md`. Fecha a campanha (planos 1–5). Gerador

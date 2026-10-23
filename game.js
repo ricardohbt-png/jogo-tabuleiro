@@ -20473,29 +20473,32 @@ function onClickTileParaArmadilha(tx, ty){
   _cancelarPlacementArmadilha();
 }
 
-// ── Painel: Veneno Rápido (ação livre) ──────────────────────────────────────
+// ── Painel único: Envenenar (frasco da bolsa ou Veneno Rápido) ──────────────
+// Uma tela só para os dois caminhos: escolhe o(s) veneno(s) e clica no que receber
+// o veneno (arma da mão principal/secundária ou uma pilha de munição). Um clique aplica.
+// A decisão de quais alvos existem mora em GS.venenoAlvos (testável); o servidor valida.
 function abrirPainelVenenoRapido(){
-  abrirPainelEnvenenarMunicao('veneno_rapido');
+  abrirPainelEnvenenar({metodo:'veneno_rapido'});
 }
 
-function _venenoCabeNaArma(item, venenoId){
-  const active=Array.isArray(item?.poison_slots)?item.poison_slots
-    :(item?.veneno_id?[item.veneno_id]:[]);
-  if(active.includes(venenoId))return true;
-  const maxDistinct=GS.ladinoVeneno2Slots?.()?2:1;
-  return new Set(active).size<maxDistinct;
+function _nomeVenenoPorId(id){
+  const cat=(window.GS&&GS.CATALOGO_ITENS)?GS.CATALOGO_ITENS:{};
+  return cat[id]?.nome||id;
 }
 
-function abrirPainelEnvenenarMunicao(method='veneno_rapido', selectedPoisonId=null, selectedVialSource=null, forceAmmo=false, weaponSlot='weapon'){
-  const existente = document.getElementById('painel-veneno-rapido');
-  if(existente){ existente.remove(); return; }
-
-  const me = GS.me;
-  if(!me || (method==='veneno_rapido' && me.class_id !== 'rogue')) return;
-  if(!_rogueMyTurn(me)){ toast(t('ui.hud.so_no_seu_turno'), 'var(--orange)'); return; }
-  const venenos = _venenosNaBolsa(me);
-  if(method==='frasco'&&selectedVialSource?.source==='utility_belt'){
-    const beltVial=me.gear?.[selectedVialSource.gearSlot]?.utility_belt_slots?.[selectedVialSource.pocketIndex]?.item;
+function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=null}={}){
+  const existente=document.getElementById('painel-veneno-rapido');
+  if(existente){
+    const mesmo=existente.dataset.metodo===metodo&&!venenoId;
+    existente.remove();
+    if(mesmo)return;   // o botão do HUD abre e fecha o painel
+  }
+  const me=GS.me;
+  if(!me||(metodo==='veneno_rapido'&&me.class_id!=='rogue'))return;
+  if(!_rogueMyTurn(me)){toast(t('ui.hud.so_no_seu_turno'),'var(--orange)');return;}
+  const venenos=_venenosNaBolsa(me);
+  if(metodo==='frasco'&&vialSource?.source==='utility_belt'){
+    const beltVial=me.gear?.[vialSource.gearSlot]?.utility_belt_slots?.[vialSource.pocketIndex]?.item;
     if(beltVial){
       const cat=(window.GS&&GS.CATALOGO_ITENS)?GS.CATALOGO_ITENS:{};
       const c=cat[beltVial.id]||(beltVial.veneno_id?cat[beltVial.veneno_id]:null);
@@ -20506,118 +20509,116 @@ function abrirPainelEnvenenarMunicao(method='veneno_rapido', selectedPoisonId=nu
       });
     }
   }
-  if(venenos.length === 0){ GS.adicionarLog(t('ui.ladino.sem_venenos')); return; }
-  const weaponId=weaponSlot==='off_hand'?me.gear?.off_hand?.id:(me.weapon?.id||me.gear?.weapon?.id);
-  const rangedIds=['arco_curto','longbow','besta','hand_crossbow'];
-  const offhandId=me.gear?.off_hand?.id;
-  const hasOffhandCoatable=!!(me.gear?.off_hand?.die
-    &&(!rangedIds.includes(offhandId)||offhandId==='hand_crossbow'));
-  if(method==='veneno_rapido'&&!forceAmmo
-      &&(!rangedIds.includes(weaponId)||hasOffhandCoatable)){
-    if((me.sede||0)<1){GS.adicionarLog(t('ui.ladino.sede_insuficiente'));return;}
-    const weaponOptions=[
-      {slot:'weapon',item:me.gear?.weapon||me.weapon,label:t('ui.ladino.arma_principal')},
-      {slot:'off_hand',item:me.gear?.off_hand,label:t('ui.ladino.mao_secundaria')}
-    ].filter(x=>x.item?.die&&(!rangedIds.includes(x.item?.id)
-      ||(x.slot==='off_hand'&&x.item?.id==='hand_crossbow')));
-    if(!weaponOptions.length){GS.adicionarLog(t('erro.nao_foi_possivel_envenenar_a_arma'));return;}
-    const meleePanel=document.createElement('div');
-    meleePanel.id='painel-veneno-rapido';
-    meleePanel.style.cssText='position:fixed;bottom:180px;left:50%;transform:translateX(-50%);background:rgba(10,8,5,.97);border:1px solid #9900cc;width:min(320px,90vw);z-index:200;padding:16px;font-family:Cinzel,serif';
-    const rangedChoice=rangedIds.includes(weaponId)?`<button data-ammo="1" style="display:block;width:100%;margin:4px 0;padding:8px;background:#17120d;color:#ddd;border:1px solid #66502c">${t('ui.ladino.envenenar_municao_arma_principal')}</button>`:'';
-    meleePanel.innerHTML=`<div style="color:#cc44ff;text-align:center;margin-bottom:10px">${t('ui.ladino.veneno_rapido_titulo')}</div><label style="display:block;color:#c8b89a;font-size:10px;margin-bottom:5px">${t('ui.ladino.escolha_arma_veneno')}</label><select id="veneno-arma-slot" style="width:100%;padding:7px;background:#17120d;color:#eee;border:1px solid #66502c">${weaponOptions.map(x=>`<option value="${x.slot}">${x.label} — ${_itemLabel(x.item)} (${t('ui.ladino.cargas_veneno',{n:x.item.poison_slots?.length||0})})</option>`).join('')}</select>${rangedChoice}${venenos.map(v=>`<button style="display:block;width:100%;margin:4px 0;padding:9px;background:#17120d;color:#ddd;border:1px solid #66502c" data-veneno="${_esc(v.id)}">${v.icone} ${_esc(v.nome)}</button>`).join('')}<button onclick="document.getElementById('painel-veneno-rapido').remove()" style="width:100%;margin-top:6px">${t('ui.geral.cancelar_caixa')}</button>`;
-    meleePanel.querySelector('button[data-ammo]')?.addEventListener('click',()=>{meleePanel.remove();abrirPainelEnvenenarMunicao(method,selectedPoisonId,selectedVialSource,true,'weapon');});
-    meleePanel.querySelectorAll('button[data-veneno]').forEach(btn=>btn.addEventListener('click',()=>{
-      const slot=document.getElementById('veneno-arma-slot')?.value||'weapon';
-      const target=weaponOptions.find(x=>x.slot===slot)?.item;
-      if(!_venenoCabeNaArma(target,btn.dataset.veneno)){
-        toast(t('erro.veneno_arma_limite'),'var(--orange)');return;
-      }
-      send({type:'veneno_rapido',veneno_id:btn.dataset.veneno,weapon_slot:slot});
-      meleePanel.remove();
-    }));
-    document.body.appendChild(meleePanel);
-    return;
-  }
-  const validTypes=weaponId==='arco_curto'||weaponId==='longbow'
-    ? ['flechas','flechas_incendiarias','flechas_prata']
-    : ['virotes','virotes_incendiarios','virotes_prata'];
-  const maxPerVial=10*(GS.ladinoVenenoMaxHits&&GS.ladinoVenenoMaxHits()>3?2:1);
-  const ammoSignature=item=>JSON.stringify([
-    item?.id,item?.ammo_type||item?.id,
-    ...['damage_bonus','silver','extra_damage','extra_damage_types','damage_type','ammo_bonus','special_effect']
-      .filter(k=>Object.prototype.hasOwnProperty.call(item||{},k)).map(k=>[k,item[k]])
-  ]);
-  const unpoisoned=item=>Array.isArray(item?.poison_ids)&&item.poison_ids.length===0
-    || item?.poison_ids==null;
-  const ammo=[];
-  const off=me.gear?.off_hand;
-  if(off?.effect==='ammo'&&validTypes.includes(off.ammo_type)&&unpoisoned(off)&&(off.ammo_count||0)>0)
-    ammo.push({source:'off_hand',index:0,item:off});
-  (me.bag||[]).forEach((item,index)=>{
-    if(item?.effect==='ammo'&&validTypes.includes(item.ammo_type)&&unpoisoned(item)&&(item.ammo_count||0)>0)
-      ammo.push({source:'bag',index,item});
-  });
-  if(!ammo.length){ GS.adicionarLog(t('ui.ladino.sem_municao_compativel')); return; }
+  if(venenos.length===0){GS.adicionarLog(t('ui.ladino.sem_venenos'));return;}
+
   const podeDois=!!(GS.ladinoVeneno2Slots&&GS.ladinoVeneno2Slots());
-  const selected=venenos.find(v=>v.id===selectedPoisonId)?.id||venenos[0].id;
-  const compatibleCount=base=>ammo.filter(a=>ammoSignature(a.item)===ammoSignature(base.item))
-    .reduce((n,a)=>n+Math.max(0,Number(a.item.ammo_count)||0),0);
-  const initialQuantity=Math.min(maxPerVial,compatibleCount(ammo[0]));
-  if(method==='veneno_rapido'&&(me.sede||0)<1){ GS.adicionarLog(t('ui.ladino.sede_insuficiente')); return; }
+  const maxHits=GS.ladinoVenenoMaxHits?GS.ladinoVenenoMaxHits():3;
+  const maxFrasco=10*(maxHits>3?2:1);
+  const fixo=metodo==='frasco'?venenoId:null;   // o frasco clicado sempre entra
+  let escolhidos=[fixo&&venenos.some(v=>v.id===fixo)?fixo:venenos[0].id];
 
-  const painel = document.createElement('div');
-  painel.id = 'painel-veneno-rapido';
-  painel.style.cssText = `position:fixed; bottom:180px; left:50%; transform:translateX(-50%);
-    background:rgba(10,8,5,0.97); border:1px solid #9900cc; width:min(360px,90vw); z-index:200; padding:16px;
-    font-family:'Cinzel',serif;`;
-  painel.innerHTML = `
-    <div style="font-family:'Cinzel Decorative',serif; color:#cc44ff; font-size:13px; margin-bottom:12px; text-align:center;">${t(method==='veneno_rapido'?'ui.ladino.veneno_rapido_titulo':'ui.ladino.veneno_municao_titulo')}</div>
-    <div style="color:#8a7a5a; font-size:9px; margin-bottom:8px; text-align:center;">${t(method==='veneno_rapido'?'ui.ladino.custo_veneno_rapido_municao':'ui.ladino.custo_frasco_municao',{n:maxPerVial})}</div>
-    <label style="display:block;color:#c8b89a;font-size:10px;margin:8px 0 4px">${t('ui.ladino.escolha_municao')}</label>
-    <select id="veneno-municao-stack" style="width:100%;padding:7px;background:#17120d;color:#eee;border:1px solid #66502c">${ammo.map((a,i)=>`<option value="${i}">${a.source==='off_hand'?t('ui.ladino.mao_esquerda'):`${t('ui.ladino.bolsa')} #${a.index+1}`} — ${_itemLabel(a.item)}</option>`).join('')}</select>
-    <label style="display:block;color:#c8b89a;font-size:10px;margin:8px 0 4px">${t('ui.ladino.quantidade_municao',{n:maxPerVial})}</label>
-    <input id="veneno-municao-qtd" type="number" min="1" max="${Math.min(maxPerVial,compatibleCount(ammo[0]))}" value="${initialQuantity}" style="width:100%;box-sizing:border-box;padding:7px;background:#17120d;color:#eee;border:1px solid #66502c">
-    <label style="display:block;color:#c8b89a;font-size:10px;margin:8px 0 4px">${t('ui.ladino.veneno')}</label>
-    <select id="veneno-municao-id1" style="width:100%;padding:7px;background:#17120d;color:#eee;border:1px solid #66502c">${venenos.map(v=>`<option value="${v.id}" ${v.id===selected?'selected':''}>${v.icone} ${v.nome}</option>`).join('')}</select>
-    ${podeDois?`<label style="display:block;color:#c8b89a;font-size:10px;margin:8px 0 4px">${t('ui.ladino.segundo_veneno_opcional')}</label><select id="veneno-municao-id2" style="width:100%;padding:7px;background:#17120d;color:#eee;border:1px solid #66502c"><option value="">${t('ui.ladino.nenhum')}</option>${venenos.filter(v=>v.id!==selected).map(v=>`<option value="${v.id}">${v.icone} ${v.nome}</option>`).join('')}</select>`:''}
-    <button onclick="confirmarVenenoRapido()" style="width:100%;margin-top:10px;padding:8px;background:#28152e;border:1px solid #9900cc;color:#eee">${t('ui.ladino.aplicar_veneno')}</button>
-    <button onclick="document.getElementById('painel-veneno-rapido').remove()" style="width:100%; margin-top:6px; padding:8px; background:transparent; border:1px solid #4a4a4a; color:#8a7a5a; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>`;
-  document.body.appendChild(painel);
-  const stackSelect=document.getElementById('veneno-municao-stack');
-  const quantityInput=document.getElementById('veneno-municao-qtd');
-  const updateAmmoLimit=()=>{
-    const stack=ammo[Number(stackSelect?.value)||0];
-    const available=stack?compatibleCount(stack):0;
-    const max=Math.min(maxPerVial,available);
-    quantityInput.max=String(max);
-    quantityInput.value=String(Math.min(max,Math.max(1,Number(quantityInput.value)||1)));
-  };
-  stackSelect?.addEventListener('change',updateAmmoLimit);
-
-  window.confirmarVenenoRapido = function(){
-    const stack=ammo[Number(document.getElementById('veneno-municao-stack')?.value)||0];
-    const qty=Number(document.getElementById('veneno-municao-qtd')?.value);
-    const ids=[document.getElementById('veneno-municao-id1')?.value,
-      document.getElementById('veneno-municao-id2')?.value].filter(Boolean);
-    const available=stack?compatibleCount(stack):0;
-    if(!stack||!Number.isInteger(qty)||qty<1||qty>maxPerVial||qty>available||ids.length>(podeDois?2:1)){
-      toast(t('ui.ladino.selecao_municao_invalida'),'var(--red)');return;
+  const alternar=id=>{
+    if(id===escolhidos[0]&&fixo)return;
+    if(escolhidos.includes(id)){
+      if(escolhidos.length>1)escolhidos=escolhidos.filter(x=>x!==id);
+      return;
     }
-    if(new Set(ids).size!==ids.length){toast(t('ui.ladino.venenos_precisam_ser_diferentes'),'var(--red)');return;}
-    if(method==='frasco'&&!ids.includes(selectedPoisonId)){toast(t('ui.ladino.fraco_selecionado_deve_ser_usado'),'var(--red)');return;}
-    const vialCount=ids.length;
-    if((method==='veneno_rapido'&&(me.sede||0)<vialCount)){toast(t('ui.ladino.sede_insuficiente'));return;}
-    if(qty<maxPerVial&&!window.confirm(t('ui.ladino.confirmar_municao_envenenada',{
-      n:qty,frascos:vialCount,perdida:maxPerVial-qty
-    })))return;
-    send({type:'envenenar_municao',method,ammo_source:stack.source,ammo_index:stack.index,
-      quantity:qty,poison_ids:ids,item_id:method==='frasco'?selectedPoisonId:null,
-      weapon_slot:weaponSlot,
-      ...(method==='frasco'&&selectedVialSource?.source==='utility_belt'
-        ? {vial_item_id:selectedVialSource.itemId,vial_source:GS.itemSourceFields(selectedVialSource)} : {}),
-      confirmed_partial:qty<maxPerVial});
-    document.getElementById('painel-veneno-rapido')?.remove();
+    if(!podeDois){ if(!fixo)escolhidos=[id]; return; }
+    escolhidos=[...escolhidos,id];
+    if(escolhidos.length>2)escolhidos.splice(fixo?1:0,1);
+  };
+
+  const painel=document.createElement('div');
+  painel.id='painel-veneno-rapido';
+  painel.dataset.metodo=metodo;
+  painel.style.cssText=`position:fixed;bottom:150px;left:50%;transform:translateX(-50%);
+    background:rgba(10,8,5,.97);border:1px solid #9900cc;width:min(380px,92vw);max-height:70vh;overflow:auto;
+    z-index:1200;padding:14px;font-family:'Cinzel',serif;`;
+  document.body.appendChild(painel);
+
+  const fecharPainel=()=>painel.remove();
+  const estiloCartao=(ativo,bloqueado)=>`display:block;width:100%;text-align:left;margin:5px 0;padding:8px 10px;
+    background:${bloqueado?'#100d09':'#17120d'};color:${bloqueado?'#6c6252':'#e6dcc6'};
+    border:1px solid ${bloqueado?'#3a3226':(ativo?'#cc44ff':'#66502c')};cursor:${bloqueado?'not-allowed':'pointer'};
+    font-family:inherit;font-size:11px;line-height:1.35`;
+
+  const desenhar=()=>{
+    const alvos=GS.venenoAlvos(me,{metodo,venenoId:escolhidos[0],doisVenenos:podeDois,maxPorFrasco:maxFrasco});
+    const bonusUsado=metodo==='frasco'&&!!me.bonus_action_used;
+    const semSedeArma=metodo==='veneno_rapido'&&(me.sede||0)<1;
+    const semSedeMunicao=metodo==='veneno_rapido'&&(me.sede||0)<escolhidos.length;
+    const nomesEscolhidos=escolhidos.map(_nomeVenenoPorId).join(' + ');
+    const chips=venenos.map(v=>{
+      const on=escolhidos.includes(v.id);
+      const travado=!podeDois&&!!fixo&&v.id!==escolhidos[0];
+      return `<button type="button" data-chip="${_esc(v.id)}" ${travado?'disabled':''}
+        style="padding:5px 8px;margin:2px;background:${on?'#3a1a4a':'#17120d'};color:${travado?'#6c6252':'#e6dcc6'};
+        border:1px solid ${on?'#cc44ff':'#66502c'};font-family:inherit;font-size:10px;cursor:${travado?'not-allowed':'pointer'}">${on?'✔ ':''}${_esc(v.icone)} ${_esc(v.nome)}</button>`;
+    }).join('');
+    const dica=podeDois?`<div style="color:#8a7a5a;font-size:9px;margin-top:3px">${t('ui.veneno.dica_dois')}</div>`:'';
+    const custo=metodo==='frasco'?t('ui.veneno.custo_frasco'):t('ui.veneno.custo_rapido');
+    const aviso=bonusUsado?`<div style="color:var(--red);font-size:10px;margin:6px 0">${t('ui.veneno.bonus_usado')}</div>`:'';
+    painel.innerHTML=`
+      <div style="color:#cc44ff;text-align:center;font-family:'Cinzel Decorative',serif;font-size:13px">${t('ui.veneno.titulo')}</div>
+      <div style="color:#8a7a5a;font-size:9px;text-align:center;margin:3px 0 8px">${custo}</div>
+      <div style="color:#c8b89a;font-size:10px;margin-bottom:3px">${t('ui.veneno.passo_veneno')}</div>
+      <div>${chips}</div>${dica}${aviso}
+      <div style="color:#c8b89a;font-size:10px;margin:10px 0 2px">${t('ui.veneno.passo_alvo')}</div>
+      <div id="veneno-alvos"></div>
+      <button type="button" data-fechar style="width:100%;margin-top:8px;padding:7px;background:transparent;border:1px solid #4a4a4a;color:#8a7a5a;font-family:inherit;font-size:10px;letter-spacing:2px;cursor:pointer">${t('ui.geral.cancelar_caixa')}</button>`;
+    painel.querySelectorAll('button[data-chip]').forEach(b=>b.addEventListener('click',()=>{alternar(b.dataset.chip);desenhar();}));
+    painel.querySelector('button[data-fechar]').addEventListener('click',fecharPainel);
+
+    const lista=painel.querySelector('#veneno-alvos');
+    const addCartao=({html,bloqueado,motivo,ao})=>{
+      const b=document.createElement('button');
+      b.type='button';b.disabled=!!bloqueado;
+      b.style.cssText=estiloCartao(false,!!bloqueado);
+      b.innerHTML=html+(motivo?`<div style="color:${bloqueado?'#b8704a':'#9fc48a'};font-size:10px">${motivo}</div>`:'');
+      if(!bloqueado)b.addEventListener('click',()=>{ao();fecharPainel();});
+      lista.appendChild(b);
+    };
+    const rotuloSlot=s=>t(s==='off_hand'?'ui.ladino.mao_secundaria':'ui.ladino.arma_principal');
+
+    for(const a of alvos.armas){
+      const ativos=a.ativos.length
+        ?t('ui.veneno.arma_com',{nomes:[...new Set(a.ativos)].map(_nomeVenenoPorId).join(' + '),n:a.ativos.length})
+        :t('ui.veneno.arma_limpa');
+      const bloqueio=bonusUsado?t('ui.veneno.bonus_usado'):semSedeArma?t('ui.ladino.sede_insuficiente')
+        :!a.cabe?t('ui.veneno.nao_cabe',{n:a.limite}):'';
+      const rende=a.ranged?3:maxHits;
+      addCartao({
+        html:`<b>⚔️ ${_esc(rotuloSlot(a.slot))}</b> — ${_esc(_itemLabel(a.item))}<div style="color:#a99a7c;font-size:10px">${_esc(ativos)}</div>`,
+        bloqueado:!!bloqueio,
+        motivo:bloqueio||t(a.ranged?'ui.veneno.rende_disparos':'ui.veneno.rende_golpes',{n:rende,veneno:_esc(_nomeVenenoPorId(escolhidos[0]))}),
+        ao:()=>{
+          if(metodo==='frasco')send({type:'use_item',item_id:escolhidos[0],target_id:null,weapon_slot:a.slot,...GS.itemSourceFields(vialSource)});
+          else send({type:'veneno_rapido',veneno_id:escolhidos[0],weapon_slot:a.slot});
+        }
+      });
+    }
+    for(const m of alvos.municoes){
+      const origem=m.source==='off_hand'?t('ui.ladino.mao_esquerda'):`${t('ui.ladino.bolsa')} #${m.index+1}`;
+      const bloqueio=bonusUsado?t('ui.veneno.bonus_usado'):semSedeMunicao?t('ui.ladino.sede_insuficiente')
+        :m.legado?t('ui.veneno.legado'):'';
+      const parcial=m.parcial?` · ${t('ui.veneno.municao_parcial',{max:m.maxFrasco})}`:'';
+      addCartao({
+        html:`<b>🏹 ${_esc(m.item.emoji||'')} ${_esc(m.item.name||m.item.id)} ×${m.total}</b>
+          <span style="color:#a99a7c;font-size:10px"> (${_esc(origem)})</span>
+          <div style="color:#a99a7c;font-size:10px">${_esc(nomesEscolhidos)}</div>`,
+        bloqueado:!!bloqueio,
+        motivo:bloqueio||(t('ui.veneno.municao_rende',{n:m.qtd,total:m.total})+parcial),
+        ao:()=>send({type:'envenenar_municao',method:metodo,ammo_source:m.source,ammo_index:m.index,
+          quantity:m.qtd,poison_ids:[...escolhidos],item_id:metodo==='frasco'?escolhidos[0]:null,
+          weapon_slot:m.weaponSlot,
+          ...(metodo==='frasco'&&vialSource?.source==='utility_belt'
+            ?{vial_item_id:vialSource.itemId,vial_source:GS.itemSourceFields(vialSource)}:{}),
+          confirmed_partial:m.parcial})
+      });
+    }
+    if(!alvos.armas.length&&!alvos.municoes.length){
+      lista.innerHTML=`<div style="color:#b8704a;font-size:11px;padding:6px 0">${t('ui.veneno.sem_alvo')}</div>`;
+    }
   };
 }
 
@@ -20658,6 +20659,7 @@ function _rogueSkillBtn(me, sk){
              t('ui.hud.detectar_desc'), `manut. 💧1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
              false, () => send({type:'detectar_armadilhas'}), true);
     } else {
+  desenhar();
       const aviso = me.bonus_action_used ? ` <small style="color:var(--text2);font-size:.62rem;">${t('ui.hud.bonus_usado')}</small>` : '';
       setBtn(`🔍 ${sk.name}${aviso}`, sk.description || sk.desc || '', 'manut. 💧1',
              !(myTurnPlay && !me.bonus_action_used), () => send({type:'detectar_armadilhas'}), false);
@@ -29737,44 +29739,8 @@ function _syncIllusions3D(state,visionSet){
 }
 
 function _abrirPainelAplicarVenenoArma(itemId, sourceInfo){
-  const state=GS.gameState;
-  const me=state?.players?.find(p=>p.id===GS.myPid);
-  if(!me)return;
-  const rangedIds=['arco_curto','longbow','besta','hand_crossbow'];
-  const weapons=[
-    {slot:'weapon',item:me.gear?.weapon||me.weapon,label:t('ui.ladino.arma_principal')},
-    {slot:'off_hand',item:me.gear?.off_hand,label:t('ui.ladino.mao_secundaria')}
-  ].filter(x=>x.item?.die&&!rangedIds.includes(x.item?.id));
-  const rangedWeapons=[
-    {slot:'weapon',item:me.gear?.weapon||me.weapon,label:t('ui.ladino.arma_principal')},
-    {slot:'off_hand',item:me.gear?.off_hand,label:t('ui.ladino.mao_secundaria')}
-  ].filter(x=>rangedIds.includes(x.item?.id));
-  if(!weapons.length&&!rangedWeapons.length){toast(t('erro.nao_foi_possivel_envenenar_a_arma'),'var(--orange)');return;}
-  const old=document.getElementById('painel-aplicar-veneno-arma');old?.remove();
-  const panel=document.createElement('div');panel.id='painel-aplicar-veneno-arma';
-  panel.style.cssText='position:fixed;bottom:180px;left:50%;transform:translateX(-50%);background:rgba(10,8,5,.97);border:1px solid #9900cc;width:min(340px,90vw);z-index:200;padding:16px;font-family:Cinzel,serif';
-  const ammoOptions=rangedWeapons.map(x=>`<button data-ammo-slot="${x.slot}" style="display:block;width:100%;margin:5px 0;padding:8px;background:#17120d;color:#ddd;border:1px solid #66502c">${_esc(x.label)} — ${t('ui.ladino.envenenar_municao_arma_principal')}</button>`).join('');
-  panel.innerHTML=`<div style="color:#cc44ff;text-align:center;margin-bottom:10px">${t('ui.ladino.escolha_arma_veneno')}</div>${ammoOptions}${weapons.map(x=>`<button data-slot="${x.slot}" style="display:block;width:100%;margin:5px 0;padding:8px;background:#17120d;color:#ddd;border:1px solid #66502c">${_esc(x.label)} — ${_esc(_itemLabel(x.item))} (${t('ui.ladino.cargas_veneno',{n:x.item.poison_slots?.length||0})})</button>`).join('')}<button data-cancel="1" style="width:100%;margin-top:6px">${t('ui.geral.cancelar_caixa')}</button>`;
-  panel.querySelectorAll('button[data-slot]').forEach(btn=>btn.addEventListener('click',()=>{
-    const player=GS.gameState?.players?.find(p=>p.id===GS.myPid);
-    const target=btn.dataset.slot==='off_hand'?player?.gear?.off_hand:(player?.gear?.weapon||player?.weapon);
-    const vial=sourceInfo?.source==='utility_belt'
-      ?player?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
-      :player?.bag?.find(item=>item.id===itemId);
-    const vialId=vial?.veneno_id||vial?.id||itemId;
-    if(!_venenoCabeNaArma(target,vialId)){
-      toast(t('erro.veneno_arma_limite'),'var(--orange)');return;
-    }
-    send({type:'use_item',item_id:itemId,target_id:null,weapon_slot:btn.dataset.slot,...GS.itemSourceFields(sourceInfo)});
-    panel.remove();
-  }));
-  panel.querySelectorAll('button[data-ammo-slot]').forEach(btn=>btn.addEventListener('click',()=>{
-    panel.remove();
-    abrirPainelEnvenenarMunicao('frasco',itemId,
-      sourceInfo?.source==='utility_belt'?{...sourceInfo,itemId}:sourceInfo,false,btn.dataset.ammoSlot);
-  }));
-  panel.querySelector('button[data-cancel]')?.addEventListener('click',()=>panel.remove());
-  document.body.appendChild(panel);
+  abrirPainelEnvenenar({metodo:'frasco',venenoId:itemId,
+    vialSource:sourceInfo?.source==='utility_belt'?{...sourceInfo,itemId}:sourceInfo});
 }
 
 function useItem(itemId, targetId, sourceInfo){

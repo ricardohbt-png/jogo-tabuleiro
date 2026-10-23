@@ -3621,6 +3621,75 @@ const GS = (() => {
   function ladinoVeneno2Slots() {
     return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_veneno_3');
   }
+  // Alvos do painel único "Envenenar": armas que recebem o veneno direto e pilhas de
+  // munição que o servidor aceita preparar. Puro (só lê `me` e `opts`); o servidor
+  // continua sendo quem valida. opts: {metodo:'frasco'|'veneno_rapido', venenoId,
+  // doisVenenos, maxPorFrasco}.
+  function venenoAlvos(me, opts) {
+    opts = opts || {};
+    const metodo = opts.metodo || 'frasco';
+    const maxFrasco = Number(opts.maxPorFrasco) || 10;
+    const limiteDistintos = opts.doisVenenos ? 2 : 1;
+    const MUNICAO = {
+      arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata'],
+      longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata'],
+      besta: ['virotes', 'virotes_incendiarios', 'virotes_prata'],
+      hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata'],
+    };
+    const gear = (me && me.gear) || {};
+    const slots = [
+      { slot: 'weapon', item: gear.weapon || (me && me.weapon) || null },
+      { slot: 'off_hand', item: gear.off_hand || null },
+    ];
+    const semVeneno = (it) => !Array.isArray(it && it.poison_ids) || it.poison_ids.length === 0;
+    const assinatura = (it) => JSON.stringify([
+      it && it.id, (it && (it.ammo_type || it.id)),
+      ...['damage_bonus', 'silver', 'extra_damage', 'extra_damage_types', 'damage_type', 'ammo_bonus', 'special_effect']
+        .filter(k => it && Object.prototype.hasOwnProperty.call(it, k)).map(k => [k, it[k]]),
+    ]);
+
+    const armas = [];
+    for (const { slot, item } of slots) {
+      if (!item || !item.die) continue;
+      const ranged = Object.prototype.hasOwnProperty.call(MUNICAO, item.id);
+      // Arco e besta recebem veneno pela munição; só a besta de mão na mão secundária
+      // aceita o veneno direto, e apenas pelo Veneno Rápido (o frasco exige munição).
+      if (ranged && !(slot === 'off_hand' && item.id === 'hand_crossbow' && metodo === 'veneno_rapido')) continue;
+      const ativos = Array.isArray(item.poison_slots) ? item.poison_slots : [];
+      const cabe = !opts.venenoId || ativos.includes(opts.venenoId) || new Set(ativos).size < limiteDistintos;
+      armas.push({ tipo: 'arma', slot, item, ativos, cabe, limite: limiteDistintos, ranged });
+    }
+
+    const municoes = [];
+    for (const { slot, item } of slots) {
+      if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, item.id)) continue;
+      const validos = MUNICAO[item.id];
+      const legado = Array.isArray(item.poison_slots) && item.poison_slots.length > 0;
+      const pilhas = [];
+      const off = gear.off_hand;
+      if (slot !== 'off_hand' && off && off.effect === 'ammo' && validos.includes(off.ammo_type)
+          && semVeneno(off) && (off.ammo_count || 0) > 0) pilhas.push({ source: 'off_hand', index: 0, item: off });
+      ((me && me.bag) || []).forEach((it, index) => {
+        if (it && it.effect === 'ammo' && validos.includes(it.ammo_type) && semVeneno(it) && (it.ammo_count || 0) > 0)
+          pilhas.push({ source: 'bag', index, item: it });
+      });
+      const grupos = new Map();
+      for (const pilha of pilhas) {
+        const chave = assinatura(pilha.item);
+        if (!grupos.has(chave)) grupos.set(chave, { primeira: pilha, total: 0 });
+        grupos.get(chave).total += Math.max(0, Number(pilha.item.ammo_count) || 0);
+      }
+      for (const g of grupos.values()) {
+        const qtd = Math.min(maxFrasco, g.total);
+        municoes.push({
+          tipo: 'municao', weaponSlot: slot, arma: item, source: g.primeira.source, index: g.primeira.index,
+          item: g.primeira.item, total: g.total, qtd, sobra: g.total - qtd, parcial: qtd < maxFrasco,
+          maxFrasco, legado,
+        });
+      }
+    }
+    return { armas, municoes };
+  }
   function ladinoEsconderBonus() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
     return (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
@@ -4268,6 +4337,7 @@ const GS = (() => {
     ladinoDesarmeRecupera,
     ladinoVenenoMaxHits,
     ladinoVeneno2Slots,
+    venenoAlvos,
     ladinoEsconderBonus,
     ladinoEsconderLivre,
     ladinoEsconderRevelaCA,
