@@ -292,6 +292,14 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{heroi}** applies **{venenos_vid_nome}** to the weapon (free action) — {desc_veneno}! 💧-{custo_sede}",
     "pt": "☠️ **{heroi}** aplica **{venenos_vid_nome}** na arma (ação livre) — {desc_veneno}! 💧-{custo_sede}"
   },
+  "narracao.veneno_golpes_desc": {
+    "en": "the next {n} successful melee hits carry the poison",
+    "pt": "os próximos {n} golpes corpo a corpo certeiros carregam o veneno"
+  },
+  "narracao.municao_envenenada": {
+    "en": "☠️ **{heroi}** prepares poisoned ammunition for **{quantidade} projectile(s)** with **{venenos}** ({frascos} vial(s) consumed).",
+    "pt": "☠️ **{heroi}** prepara munição envenenada para **{quantidade} projétil(is)** com **{venenos}** ({frascos} frasco(s) consumido(s))."
+  },
   "narracao.aprendeu": {
     "en": "📖 **{heroi}** learned **{m_nome}**!",
     "pt": "📖 **{heroi}** aprendeu **{m_nome}**!"
@@ -3295,6 +3303,7 @@ window.LANG_NARRACAO = {
   "narracao.mecanismo_desliga_armadilha": {
     "en": "⚙️ **{heroi}** activated the mechanism: a trap has been switched off!",
     "pt": "⚙️ **{heroi}** ativou o mecanismo: uma armadilha foi desligada!"
-  }
+  },
+  "narracao.unta_ataque_monstro": {"en":"☠️ **{m_get_name_o_monstro}** uses **{item}** to poison **{attack_name}**.","pt":"☠️ **{m_get_name_o_monstro}** usa **{item}** para envenenar **{attack_name}**."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

@@ -72,6 +72,9 @@ const InventoryModal = (() => {
   ];
   // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
   const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);
+  const _itemDisplayName = item => Array.isArray(item?.poison_ids) && item.poison_ids.length
+    ? (window._nomeMuncaoEnvenenada?.(item) || item.name || item.id || 'Item')
+    : (item?.name || item?.nome || item?.id || 'Item');
 
   // Instrumentos do Bardo (Fase 1): o instrumento vive na MÃO DO ESCUDO (o slot
   // off_hand do GEAR_LAYOUT), não em um slot próprio — não há 10º slot.
@@ -549,10 +552,10 @@ const InventoryModal = (() => {
         slot.tabIndex = 0;
         slot.dataset.inventorySlot = 'gear';
         slot.setAttribute('role', 'button');
-        slot.setAttribute('aria-label', item ? `${_slotLabel(cfg.key)}: ${item.name}` : _slotLabel(cfg.key));
+        slot.setAttribute('aria-label', item ? `${_slotLabel(cfg.key)}: ${_itemDisplayName(item)}` : _slotLabel(cfg.key));
       }
       slot.title = blocked ? t('ui.inv.bloqueado_duas_maos')
-                 : item ? item.name : _slotLabel(cfg.key);
+                 : item ? _itemDisplayName(item) : _slotLabel(cfg.key);
       slot.innerHTML = blocked
         ? `<span class="inv-slot-blocked-x">✕</span>`
         : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>${_ammoCountBadgeHTML(item)}`
@@ -719,7 +722,7 @@ const InventoryModal = (() => {
         const slot = document.createElement('div');
         slot.className = 'inv-bagslot inv-belt-pocket' + (item ? ' filled' : ' empty');
         slot.dataset.gearSlot = gearSlot; slot.dataset.pocketIndex = String(pocketIndex);
-        slot.title = item ? `${item.name} ×${entry.quantity}` : t('ui.inv.cinto_bolso_vazio', {n:pocketIndex + 1});
+        slot.title = item ? `${_itemDisplayName(item)} ×${entry.quantity}` : t('ui.inv.cinto_bolso_vazio', {n:pocketIndex + 1});
         slot.setAttribute('aria-label', slot.title);
         if(item){
           slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🧪')}</span><span class="inv-belt-count">${entry.quantity}</span>`;
@@ -774,9 +777,9 @@ const InventoryModal = (() => {
         slot.tabIndex = 0;
         slot.dataset.inventorySlot = 'bag';
         slot.setAttribute('role', 'button');
-        slot.setAttribute('aria-label', item ? item.name : t('ui.inv.espaco_vazio'));
+        slot.setAttribute('aria-label', item ? _itemDisplayName(item) : t('ui.inv.espaco_vazio'));
       }
-      slot.title = item ? item.name : 'Vazio';
+      slot.title = item ? _itemDisplayName(item) : 'Vazio';
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}` : '';
       const action = _bagActionState(item, player);
       const { isScroll, isConsumable, isArremessavel, podeUsar, podeConjurar, podeArremessar } = action;
@@ -1135,7 +1138,7 @@ const InventoryModal = (() => {
     if(!itemId) return;
     let pressTimer = null;
     const item = itemInstance || GS.CATALOGO_ITENS[itemId] || {};
-    _ligarTooltipItem(el, item.name || item.nome || itemId, () => {
+    _ligarTooltipItem(el, _itemDisplayName(item), () => {
       _showInventoryTooltip(itemId, comparisonItemId, null, itemInstance);
     });
     el.addEventListener('touchstart', (e) => {
@@ -1197,14 +1200,14 @@ const InventoryModal = (() => {
       slot.setAttribute('role', 'button');
       slot.setAttribute('data-gamepad-action', 'activate');
       slot.setAttribute('aria-label', item
-        ? `${item.name || item.id || t('ui.bau.slot.padrao')} — ${t('ui.refugio.retirar')}`
+        ? `${_itemDisplayName(item)} — ${t('ui.refugio.retirar')}`
         : `${t('ui.inv.espaco_vazio')} — ${t('ui.refugio.guardar')}`);
-      slot.title = item ? (item.name || item.id || t('ui.bau.slot.padrao')) : t('ui.inv.espaco_vazio');
+      slot.title = item ? _itemDisplayName(item) : t('ui.inv.espaco_vazio');
       slot.innerHTML = item
         ? `<span class="storage-slot-icon">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}<small></small>`
         : '<span class="storage-slot-plus">+</span>';
       if(item){
-        slot.querySelector('small').textContent = item.name || item.id || 'Item';
+        slot.querySelector('small').textContent = _itemDisplayName(item);
         _wireTooltip(slot, item.id, null, item);
         slot.draggable = true;
         slot.addEventListener('dragstart', (e) => {

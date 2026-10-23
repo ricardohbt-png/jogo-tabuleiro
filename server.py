@@ -1951,6 +1951,17 @@ def nome_item(it):
     if it.get("ammo_count"):
         curto = f"cat.item.{ident}.nome_curto"
         base = T(curto) if curto in LANG_STRINGS else nome
+        poison_ids = _ammo_stack_poison_ids(it) or ()
+        if poison_ids:
+            ammo_type = str(it.get("ammo_type") or ident)
+            poisoned_names = {
+                "flechas_prata": "cat.item.flechas_prata_envenenadas.nome",
+                "flechas_incendiarias": "cat.item.flechas_incendiarias_envenenadas.nome",
+                "virotes_prata": "cat.item.virotes_prata_envenenados.nome",
+                "virotes_incendiarios": "cat.item.virotes_incendiarios_envenenados.nome",
+            }
+            key = poisoned_names.get(ammo_type, "cat.item.virote_envenenado.nome" if "virote" in ammo_type else "cat.item.flecha_envenenada.nome")
+            base = T("cat.item.municao_envenenada", nome=T(key))
         return T("cat.item.municao_x", nome=base, n=it["ammo_count"])
     base = nome_cat("item", ident, nome)
     if it.get("corrosao_inicial"):
@@ -4626,10 +4637,10 @@ GUILD_CATALOG = {
         "nome":"Desarme III","icon":"🔧","desc":"Chance extra de recuperar o ouro da armadilha desarmada." },
     "ladino_veneno_2": { "id":"ladino_veneno_2","categoria":"especializacao","classe":"rogue",
         "linha":"ladino_veneno","nivel":2,"requer":None,"exclusiva":False,"preco":150,
-        "nome":"Veneno Rápido II","icon":"☠️","desc":"O veneno na arma (corpo a corpo) dura 2 golpes certeiros." },
+        "nome":"Veneno Rápido II","icon":"☠️","desc":"Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes." },
     "ladino_veneno_3": { "id":"ladino_veneno_3","categoria":"especializacao","classe":"rogue",
         "linha":"ladino_veneno","nivel":3,"requer":"ladino_veneno_2","exclusiva":False,"preco":200,
-        "nome":"Veneno Rápido III","icon":"☠️","desc":"Pode manter 2 venenos diferentes na arma ao mesmo tempo." },
+        "nome":"Veneno Rápido III","icon":"☠️","desc":"Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo." },
     "ladino_esconder_2": { "id":"ladino_esconder_2","categoria":"especializacao","classe":"rogue",
         "linha":"ladino_esconder","nivel":2,"requer":None,"exclusiva":False,"preco":150,
         "nome":"Esconder nas Sombras II","icon":"🌑","desc":"+2 na chance de se esconder nas sombras." },
@@ -7928,6 +7939,42 @@ def _veneno_com_melhorias(veneno_id):
 def _veneno_id_valido(veneno_id):
     """Aceita ids de venenos base e variantes validadas pelo formato de melhoria."""
     return _veneno_com_melhorias(veneno_id) is not None
+
+
+_AMMO_STACK_FIELDS = (
+    "ammo_type", "damage_bonus", "silver", "extra_damage",
+    "extra_damage_types", "damage_type", "ammo_bonus", "special_effect",
+)
+
+
+def _ammo_stack_poison_ids(item):
+    """Normaliza os venenos de uma pilha, rejeitando metadados inválidos."""
+    raw = item.get("poison_ids", []) if isinstance(item, dict) else []
+    if raw is None:
+        raw = []
+    if not isinstance(raw, (list, tuple)) or len(raw) > 2:
+        return None
+    ids = []
+    for veneno_id in raw:
+        if not isinstance(veneno_id, str) or not _veneno_id_valido(veneno_id) or veneno_id in ids:
+            return None
+        ids.append(veneno_id)
+    return tuple(sorted(ids))
+
+
+def _ammo_stack_key(item):
+    """Identidade de pilha: munição, propriedades do disparo e venenos."""
+    if not isinstance(item, dict) or not (item.get("effect") == "ammo" or item.get("item_slot") == "ammo"):
+        return None
+    poison_ids = _ammo_stack_poison_ids(item)
+    if poison_ids is None:
+        return None
+    return (
+        item.get("id"), item.get("ammo_type") or item.get("id"),
+        tuple((field, tuple(item[field]) if isinstance(item.get(field), list) else item.get(field))
+              for field in _AMMO_STACK_FIELDS if field in item),
+        poison_ids,
+    )
 
 def _preparar_item_veneno(item, upgrades):
     """Valida melhorias e monta preço, nome, descrição e id persistente do frasco."""
@@ -16987,8 +17034,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 ammo_type  = item["ammo_type"]
                 ammo_count = item.get("ammo_count", 10)
                 off = p["gear"].get("off_hand")
-                if off and off.get("effect") == "ammo" and off.get("ammo_type") == ammo_type \
-                        and off.get("ammo_count", 0) < MAX_AMMO_STACK:
+                if off and _ammo_stack_key(off) == _ammo_stack_key(item) \
+                        and off.get("ammo_count", 0) + ammo_count <= MAX_AMMO_STACK:
                     # Mesmo tipo jÃ¡ equipado e com espaÃ§o: adiciona ao contador
                     space = MAX_AMMO_STACK - off.get("ammo_count", 0)
                     add   = min(ammo_count, space)
@@ -17002,8 +17049,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     # Off-hand ocupado ou mesmo tipo lotado: empilha na bolsa (mÃ¡x MAX_AMMO_STACK)
                     existing_bag = next(
                         (b for b in p["bag"]
-                         if b.get("effect") == "ammo" and b.get("ammo_type") == ammo_type
-                         and b.get("ammo_count", 0) < MAX_AMMO_STACK), None)
+                         if _ammo_stack_key(b) == _ammo_stack_key(item)
+                         and b.get("ammo_count", 0) + ammo_count <= MAX_AMMO_STACK), None)
                     if existing_bag:
                         add = min(ammo_count, MAX_AMMO_STACK - existing_bag.get("ammo_count", 0))
                         existing_bag["ammo_count"] = existing_bag.get("ammo_count", 0) + add
@@ -18084,11 +18131,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         item = deepcopy(item)
         if item.get("effect") == "ammo" or item.get("item_slot") == "ammo":
             original_items = deepcopy(container.setdefault("items", []))
-            tipo = item.get("ammo_type") or item.get("id")
+            chave = _ammo_stack_key(item)
             restante = max(1, int(item.get("ammo_count", 1) or 1))
             for atual in container.setdefault("items", []):
-                if (atual.get("effect") == "ammo" or atual.get("item_slot") == "ammo") and \
-                   (atual.get("ammo_type") or atual.get("id")) == tipo and int(atual.get("ammo_count", 0) or 0) < MAX_AMMO_STACK:
+                if chave is not None and _ammo_stack_key(atual) == chave and int(atual.get("ammo_count", 0) or 0) < MAX_AMMO_STACK:
                     cabe = MAX_AMMO_STACK - int(atual.get("ammo_count", 0) or 0)
                     usa = min(cabe, restante); atual["ammo_count"] = int(atual.get("ammo_count", 0) or 0) + usa; restante -= usa
                     if restante <= 0: return True
@@ -18115,6 +18161,41 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         items = container.setdefault("items", [])
         if index < 0 or index >= len(items): return None, "Espaço do baú inválido."
         item = items[index]
+        if item.get("effect") == "ammo" or item.get("item_slot") == "ammo":
+            bag = p.setdefault("bag", [])
+            chave = _ammo_stack_key(item)
+            restante = max(1, int(item.get("ammo_count", 1) or 1))
+            destinos = []
+            off = p.get("gear", {}).get("off_hand")
+            if chave is not None and isinstance(off, dict) and _ammo_stack_key(off) == chave:
+                destinos.append(off)
+            if chave is not None:
+                destinos.extend(atual for atual in bag
+                                if isinstance(atual, dict) and _ammo_stack_key(atual) == chave)
+            alteracoes = []
+            for destino in destinos:
+                quantidade = max(0, int(destino.get("ammo_count", 0) or 0))
+                cabe = max(0, MAX_AMMO_STACK - quantidade)
+                usa = min(cabe, restante)
+                if usa:
+                    alteracoes.append((destino, quantidade + usa))
+                    restante -= usa
+                if restante <= 0:
+                    break
+            novos = []
+            while restante > 0 and len(bag) + len(novos) < p.get("bag_size", 6):
+                novo = deepcopy(item)
+                novo["ammo_count"] = min(MAX_AMMO_STACK, restante)
+                novos.append(novo)
+                restante -= novo["ammo_count"]
+            if restante > 0:
+                return None, "A bolsa está cheia."
+            # The whole withdrawal is now guaranteed to fit; commit it atomically.
+            items.pop(index)
+            for destino, quantidade in alteracoes:
+                destino["ammo_count"] = quantidade
+            bag.extend(novos)
+            return item, None
         slot_key = self._free_equip_slot_for(p, item)
         if slot_key is None and len(p.get("bag", [])) >= p.get("bag_size", 6):
             return None, "A bolsa está cheia."
@@ -21853,95 +21934,143 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _desarme_bonus(self, p):
         return 2 if (tem_espec(p, "ladino_desarme_2") or tem_espec(p, "ladino_desarme_3")) else 0
 
-    def _weapon_poison_slots(self, p):
-        """Retorna as cargas da arma principal equipada.
-
-        Elas vivem no item da arma, para acompanhá-lo ao trocar/desequipar. O
-        pequeno bloco de migração conserva venenos de partidas salvas antes
-        desta regra, que os armazenavam diretamente no jogador.
-        """
-        weapon = p.get("weapon") or {}
-        gear_weapon = (p.get("gear") or {}).get("weapon")
-        # O item equipado Ã© a fonte de verdade. A cÃ³pia p["weapon"] existe
-        # apenas para os cÃ¡lculos de combate; nunca pode fazer uma carga de uma
-        # arma antiga "vazar" para a arma que tomou seu lugar no slot.
-        slots = gear_weapon.get("poison_slots") if isinstance(gear_weapon, dict) else None
-        if not isinstance(slots, list):
-            slots = weapon.get("poison_slots")
-        if not isinstance(slots, list):
+    def _poison_slots_do_item(self, p, slot="weapon"):
+        """Retorna a fila FIFO de veneno da arma equipada no slot pedido."""
+        if slot not in {"weapon", "off_hand"}:
+            return []
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        combat_weapon = p.get("weapon") if slot == "weapon" else None
+        gear_item = gear.get(slot)
+        item = gear_item if isinstance(gear_item, dict) else combat_weapon
+        if not isinstance(item, dict):
+            return []
+        slots = item.get("poison_slots")
+        if (not isinstance(slots, list) and slot == "weapon"
+                and isinstance(combat_weapon, dict)
+                and isinstance(combat_weapon.get("poison_slots"), list)):
+            slots = combat_weapon["poison_slots"]
+            self._set_poison_slots_do_item(p, slot, slots)
+        if not isinstance(slots, list) and slot == "weapon":
+            # Migra saves antigos uma única vez. A mão secundária nunca herda
+            # estado legado da principal.
             legacy_id = p.get("weapon_poison")
             legacy_hits = max(0, int(p.get("weapon_poison_hits", 0) or 0))
             slots = [legacy_id] * legacy_hits if _veneno_id_valido(legacy_id) else []
-            # O modelo antigo permitia dois venenos somente ao ladino. Agora a
-            # miniatura fÃ­sica da arma aceita no mÃ¡ximo um marcador corpo a corpo.
             p.pop("weapon_poison", None)
             p.pop("weapon_poison_hits", None)
             p.pop("weapon_poison_2", None)
             p.pop("weapon_poison_2_hits", None)
-            self._set_weapon_poison_slots(p, slots)
-        active_weapon_id = (gear_weapon or weapon).get("id", "")
-        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else self._capacidade_poison_melee(p)
-        valid_slots = [veneno_id for veneno_id in slots if _veneno_id_valido(veneno_id)][:capacity]
+            self._set_poison_slots_do_item(p, slot, slots)
+        if not isinstance(slots, list):
+            slots = []
+        capacity = self._capacidade_poison_arma(p, item.get("id", ""))
+        valid_slots = [vid for vid in slots if _veneno_id_valido(vid)][:capacity]
         if valid_slots != slots:
-            self._set_weapon_poison_slots(p, valid_slots)
+            self._set_poison_slots_do_item(p, slot, valid_slots)
         return valid_slots
 
+    def _set_poison_slots_do_item(self, p, slot, slots):
+        """Grava as cargas no item escolhido e espelha a cópia principal."""
+        if slot not in {"weapon", "off_hand"}:
+            return
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        gear_item = gear.get(slot)
+        combat_weapon = p.get("weapon") if slot == "weapon" else None
+        item = gear_item if isinstance(gear_item, dict) else combat_weapon
+        if not isinstance(item, dict):
+            return
+        capacity = self._capacidade_poison_arma(p, item.get("id", ""))
+        slots = [vid for vid in slots if _veneno_id_valido(vid)][:capacity]
+        item["poison_slots"] = list(slots)
+        if (slot == "weapon" and isinstance(combat_weapon, dict)
+                and (not isinstance(gear_item, dict) or combat_weapon.get("id") == gear_item.get("id"))):
+            combat_weapon["poison_slots"] = list(slots)
+
+    def _weapon_poison_slots(self, p):
+        """Compatibilidade para caminhos existentes que usam a arma principal."""
+        return self._poison_slots_do_item(p, "weapon")
+
     def _set_weapon_poison_slots(self, p, slots):
-        """Grava as cargas tanto na cópia de combate quanto no item equipado."""
-        weapon = p.get("weapon")
-        gear_weapon = (p.get("gear") or {}).get("weapon")
-        active_weapon_id = (gear_weapon or weapon or {}).get("id", "")
-        capacity = VENENO_CARGAS if active_weapon_id in RANGED_AMMO else self._capacidade_poison_melee(p)
-        slots = [veneno_id for veneno_id in slots if _veneno_id_valido(veneno_id)][:capacity]
-        if isinstance(gear_weapon, dict):
-            gear_weapon["poison_slots"] = list(slots)
-        # SÃ³ espelha na cÃ³pia de combate se ela representa a mesma arma. Isso
-        # protege a arma recÃ©m-equipada de uma cÃ³pia antiga durante uma troca.
-        if isinstance(weapon, dict) and (
-                not isinstance(gear_weapon, dict) or weapon.get("id") == gear_weapon.get("id")):
-            weapon["poison_slots"] = list(slots)
+        self._set_poison_slots_do_item(p, "weapon", slots)
 
     def _capacidade_poison_melee(self, p):
-        """Cargas máximas de veneno numa arma corpo a corpo. Base: 1 marcador
-        (regra da 'miniatura física'). O Ladino sobe esse teto pelas specs da
-        Guilda: veneno_2 → 2 cargas por veneno (dura 2 golpes); veneno_3 → um 2º
-        veneno DIFERENTE ao mesmo tempo (até 2 distintos). Combinadas: 2×2=4."""
-        if p.get("class_id") != "rogue":
-            return 1
-        cargas = 2 if tem_espec(p, "ladino_veneno_2") else 1
+        """Cargas corpo a corpo: 3 por veneno; Veneno II dobra para 6.
+        Veneno III permite manter dois venenos distintos em sequência FIFO."""
+        cargas = 3 * (2 if tem_espec(p, "ladino_veneno_2") else 1)
         distintos = 2 if tem_espec(p, "ladino_veneno_3") else 1
         return cargas * distintos
 
-    def _aplicar_veneno_na_arma(self, p, veneno_id):
-        """Unta a arma equipada. Arcos/bestas recebem VENENO_CARGAS projéteis
-        (substitui as cargas). Corpo a corpo tem 1 marcador por padrão; as specs
-        do Ladino ampliam: veneno_2 → 2 cargas do mesmo veneno (dura 2 golpes);
-        veneno_3 → soma um 2º veneno DIFERENTE mantendo o anterior (máx. 2
+    def _capacidade_poison_arma(self, p, weapon_id):
+        """Bestas de mão e bestas aceitam dois venenos de três disparos com
+        Veneno Rápido III; os demais ataques à distância mantêm três cargas."""
+        if weapon_id in RANGED_AMMO:
+            if weapon_id in ("besta", "hand_crossbow") and tem_espec(p, "ladino_veneno_3"):
+                return VENENO_CARGAS * 2
+            return VENENO_CARGAS
+        return self._capacidade_poison_melee(p)
+
+    def _validar_aplicacao_veneno_arma(self, p, veneno_id, slot="weapon"):
+        """Valida alvo e limite de venenos distintos sem alterar estado."""
+        if slot not in {"weapon", "off_hand"} or not _veneno_id_valido(veneno_id):
+            return False
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        item = gear.get(slot)
+        if not isinstance(item, dict) and slot == "weapon":
+            item = p.get("weapon") or {}
+        if not isinstance(item, dict) or not (item.get("die") or item.get("id") in RANGED_AMMO):
+            return False
+        weapon_id = item.get("id", "")
+        allows_two = (tem_espec(p, "ladino_veneno_3")
+                      and (weapon_id not in RANGED_AMMO
+                           or weapon_id in ("besta", "hand_crossbow")))
+        distinct_limit = 2 if allows_two else 1
+        active = self._poison_slots_do_item(p, slot)
+        # Reaplicar o veneno presente renova apenas essa dose. Um novo veneno
+        # distinto só entra enquanto houver uma vaga; nunca apaga a fila velha.
+        if veneno_id in active:
+            return True
+        return len(set(active)) < distinct_limit
+
+    def _aplicar_veneno_na_arma(self, p, veneno_id, slot="weapon"):
+        """Unta a arma equipada. Arcos recebem VENENO_CARGAS projéteis
+        (substitui as cargas). Bestas com Veneno Rápido III podem manter dois
+        venenos distintos, cada um com VENENO_CARGAS disparos em FIFO. Corpo a
+        corpo recebe 3 cargas por veneno; Veneno II dobra para 6 e Veneno III
+        permite somar um 2º veneno DIFERENTE mantendo o anterior (máx. 2
         distintos, FIFO — o mais antigo é gasto primeiro; reaplicar o mesmo
         veneno recarrega suas cargas e o move para o fim).
         """
-        is_ranged = (p.get("weapon") or {}).get("id", "") in RANGED_AMMO
+        if not self._validar_aplicacao_veneno_arma(p, veneno_id, slot):
+            return False, 0
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        item = gear.get(slot)
+        if not isinstance(item, dict) and slot == "weapon":
+            item = p.get("weapon") or {}
+        if not isinstance(item, dict) or not (item.get("die") or item.get("id") in RANGED_AMMO):
+            return False, 0
+        weapon_id = item.get("id", "")
+        is_ranged = weapon_id in RANGED_AMMO
         if is_ranged:
             cargas = VENENO_CARGAS
-            self._set_weapon_poison_slots(p, [veneno_id] * cargas)
+            if weapon_id in ("besta", "hand_crossbow") and tem_espec(p, "ladino_veneno_3"):
+                # Reaplicar o mesmo veneno recarrega suas três cargas e o move
+                # para o fim; um segundo veneno mantém as cargas restantes do
+                # primeiro e é consumido depois, um disparo por vez.
+                anteriores = [v for v in self._poison_slots_do_item(p, slot) if v != veneno_id]
+                slots = anteriores + [veneno_id] * cargas
+            else:
+                slots = [veneno_id] * cargas
+            self._set_poison_slots_do_item(p, slot, slots)
             return is_ranged, cargas
-        cargas = 2 if tem_espec(p, "ladino_veneno_2") else 1
+        cargas = 3 * (2 if tem_espec(p, "ladino_veneno_2") else 1)
         if tem_espec(p, "ladino_veneno_3"):
-            # MantÃ©m o veneno anterior distinto e soma o novo no fim. Reaplicar o
-            # mesmo veneno remove suas cargas antigas antes de recarregar. Teto de
-            # 2 venenos distintos: se jÃ¡ hÃ¡ outro distinto, mantÃ©m sÃ³ o mais recente.
-            anteriores = [v for v in self._weapon_poison_slots(p) if v != veneno_id]
-            distintos = []
-            for v in anteriores:
-                if v not in distintos:
-                    distintos.append(v)
-            if distintos:
-                manter = distintos[-1]
-                anteriores = [v for v in anteriores if v == manter]
+            # Mantém a fila FIFO. A validação acima impede uma terceira dose
+            # distinta antes que ela descarte cargas ainda ativas.
+            anteriores = [v for v in self._poison_slots_do_item(p, slot) if v != veneno_id]
             slots = anteriores + [veneno_id] * cargas
         else:
             slots = [veneno_id] * cargas
-        self._set_weapon_poison_slots(p, slots)
+        self._set_poison_slots_do_item(p, slot, slots)
         return is_ranged, cargas
 
     def _esconder_bonus(self, p):
@@ -22200,6 +22329,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ammo_silver = bool(projectile.get("silver"))
         ammo_extra = projectile.get("extra_damage")
         ammo_extra_types = projectile.get("extra_damage_types", [])
+        ammo_poison_ids = list(_ammo_stack_poison_ids(projectile) or ())
         projectile["ammo_count"] = int(projectile.get("ammo_count", 1) or 1) - 1
         if projectile["ammo_count"] <= 0:
             p["bag"].remove(projectile)
@@ -22242,6 +22372,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                 ototal=total, tgt_ac=target["ac"]))
             return True
 
+        offhand_poison_slots = self._poison_slots_do_item(p, "off_hand")
+        offhand_poison_vid = offhand_poison_slots.pop(0) if offhand_poison_slots else None
+        if offhand_poison_vid:
+            self._set_poison_slots_do_item(p, "off_hand", offhand_poison_slots)
         damage_weapon = dict(off)
         if ammo_silver:
             damage_weapon["silver"] = True
@@ -22285,6 +22419,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._rx_registrar(
                     _NORM_ELEMENTO.get(str(extra_type).lower(), extra_type),
                     self._rx_tiles_da(target), dano=extra, atingidos={target.get("id")})
+        if target.get("hp", 0) > 0 and offhand_poison_vid:
+            await self._aplicar_veneno(target, offhand_poison_vid, fonte="ataque")
+        if target.get("hp", 0) > 0 and ammo_poison_ids:
+            for venom_id in ammo_poison_ids:
+                await self._aplicar_veneno(target, venom_id, fonte="ataque")
         if target.get("hp", 0) <= 0:
             await self._monster_dies(target, pid)
         return True
@@ -22672,12 +22811,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             _ammo_extra_types = []
             _ammo_damage_bonus = 0      # bÃ´nus fixo do projÃ©til (ex.: prata)
             _ammo_silver = False
+            _ammo_poison_list = []
             if _valid_ammo and _ammo_source:
                 _ammo_slot, _ammo_item = _ammo_source
                 _ammo_extra_dmg   = _ammo_item.get("extra_damage")
                 _ammo_extra_types = _ammo_item.get("extra_damage_types", [])
                 _ammo_damage_bonus = int(_ammo_item.get("damage_bonus", 0) or 0)
                 _ammo_silver = bool(_ammo_item.get("silver"))
+                _ammo_poison_list = list(_ammo_stack_poison_ids(_ammo_item) or ())
                 _ammo_item["ammo_count"] = _ammo_item.get("ammo_count", 1) - 1
                 if _ammo_item["ammo_count"] <= 0:
                     if _ammo_slot == "off_hand":
@@ -22697,11 +22838,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # A carga Ã© da arma equipada. Assim, trocar de arma nÃ£o transfere o
             # veneno e guardar a arma mantÃ©m exatamente suas cargas restantes.
             _ranged_poison_vid = None
-            if _valid_ammo:
-                _poison_slots = self._weapon_poison_slots(p)
-                if _poison_slots:
-                    _ranged_poison_vid = _poison_slots.pop(0)
-                    self._set_weapon_poison_slots(p, _poison_slots)
 
             if p.get("invisivel_magico"):
                 p["invisivel_magico"] = False; p.pop("invisivel_magico_rodadas", None)
@@ -22859,11 +22995,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 # inclusive se este golpe jÃ¡ derrotar o alvo. O efeito do veneno
                 # sÃ³ precisa ser aplicado enquanto o alvo ainda estÃ¡ vivo.
                 _melee_poison_vid = None
-                if not _valid_ammo:
-                    _poison_slots = self._weapon_poison_slots(p)
-                    if _poison_slots:
-                        _melee_poison_vid = _poison_slots.pop(0)
-                        self._set_weapon_poison_slots(p, _poison_slots)
+                _poison_slots = self._weapon_poison_slots(p)
+                if _poison_slots:
+                    _weapon_poison_vid = _poison_slots.pop(0)
+                    self._set_weapon_poison_slots(p, _poison_slots)
+                    if _valid_ammo:
+                        _ranged_poison_vid = _weapon_poison_vid
+                    else:
+                        _melee_poison_vid = _weapon_poison_vid
                 if dano_interno:
                     p["fome"] = max(0, p.get("fome", 0) - 1)
                     await self.push_state()
@@ -22886,6 +23025,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     if _ranged_poison_vid:
                         # Ranged: carga jÃ¡ consumida antes do roll; aplica efeito no acerto.
                         await self._aplicar_veneno(target, _ranged_poison_vid, fonte="ataque")
+                    elif _ammo_poison_list:
+                        for _ammo_veneno_id in _ammo_poison_list:
+                            await self._aplicar_veneno(target, _ammo_veneno_id, fonte="ataque")
                     elif _melee_poison_vid:
                         await self._aplicar_veneno(target, _melee_poison_vid, fonte="ataque")
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
@@ -22967,6 +23109,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                        "label": T("dado.ataque_mao_secundaria"), "hit": ohit, "crit": ocrit,
                                        "offhand": True})
                 if ohit:
+                    _offhand_poison_slots = self._poison_slots_do_item(p, "off_hand")
+                    _offhand_poison_vid = (_offhand_poison_slots.pop(0)
+                                           if _offhand_poison_slots else None)
+                    if _offhand_poison_vid:
+                        self._set_poison_slots_do_item(p, "off_hand", _offhand_poison_slots)
                     if (off.get("causa_sangramento")
                             or off.get("granted_ability") == "causar_sangramento"):
                         sangramento = self._aplicar_sangramento(tgt)
@@ -22991,6 +23138,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.gm_say(
                         T("narracao.desfere_golpe_de_mao_secundaria_com_acao", heroi=p['name'], off=nome_item(off), oroll=oroll, offhand_atk=offhand_atk, ototal=ototal, tgt_ac=tgt['ac'], ocrit_str=ocrit_str, off_die=off['die'], oraw=oraw, osb=osb, ostat=ostat, odmg=odmg))
                     await self._dano_retaliacao(tgt, p, True, odmg)
+                    if _offhand_poison_vid and tgt.get("hp", 0) > 0:
+                        await self._aplicar_veneno(tgt, _offhand_poison_vid, fonte="ataque")
                     if tgt["hp"] <= 0:
                         await self._monster_dies(tgt, pid)
                 else:
@@ -25119,7 +25268,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Mordida Corrosiva do Devorador de Metal.
         if m.get("type") in {"lobo_cinzento", "lobo_cinzento_customizado"} and idx == 0:
             atk_def = await self._lobo_bando_atk(m, alvo, dict(atk_def))
-        hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo})
+        hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo}, attack_index=idx)
         if m.get("type") in {"lobo_cinzento", "lobo_cinzento_customizado"}:
             await self._lobo_derrubar(m, {"kind": alvo_kind, "obj": alvo}, hit)
         if (hit and m.get("type") == "devorador_metal" and idx == 0
@@ -29137,10 +29286,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # MuniÃ§Ã£o: empilha no mesmo tipo; senÃ£o substitui o off_hand
             if item.get("effect") == "ammo":
                 off = p["gear"].get("off_hand")
-                if off and off.get("effect") == "ammo" and off.get("ammo_type") == item.get("ammo_type") \
+                if off and _ammo_stack_key(off) == _ammo_stack_key(item) \
                         and off.get("ammo_count", 0) < MAX_AMMO_STACK:
                     qty = min(item.get("ammo_count", 1), MAX_AMMO_STACK - off.get("ammo_count", 0))
                     off["ammo_count"] = off.get("ammo_count", 0) + qty
+                    restante = int(item.get("ammo_count", 1) or 1) - qty
+                    if restante > 0:
+                        sobra = deepcopy(item)
+                        sobra["ammo_count"] = restante
+                        p["bag"].append(sobra)
                     log = f"🏹 **{p['name']}** recarregou **{item['name']}** (+{qty} → {off['ammo_count']} total)!"
                 else:
                     log = self._equip_into_slot(p, item, "off_hand", "🏹")
@@ -29447,22 +29601,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 ammo_type = item.get("ammo_type")
                 qty       = item.get("ammo_count", 1)
                 off = p["gear"].get("off_hand")
-                if off and off.get("effect") == "ammo" and off.get("ammo_type") == ammo_type \
+                if off and _ammo_stack_key(off) == _ammo_stack_key(item) \
                         and off.get("ammo_count", 0) < MAX_AMMO_STACK:
                     add = min(qty, MAX_AMMO_STACK - off.get("ammo_count", 0))
                     off["ammo_count"] = off.get("ammo_count", 0) + add
-                    chest["items"].pop(idx)
+                    if add >= qty:
+                        chest["items"].pop(idx)
+                    else:
+                        item["ammo_count"] = qty - add
                     await self.gm_say(
                         T("narracao.recarregou_do_bau_no_slot", heroi=p['name'], item=nome_item(item), add=add, off_ammo_count=off['ammo_count']))
                 else:
                     existing = next(
                         (b for b in p["bag"]
-                         if b.get("effect") == "ammo" and b.get("ammo_type") == ammo_type
+                         if _ammo_stack_key(b) == _ammo_stack_key(item)
                          and b.get("ammo_count", 0) < MAX_AMMO_STACK), None)
                     if existing:
                         add = min(qty, MAX_AMMO_STACK - existing.get("ammo_count", 0))
                         existing["ammo_count"] = existing.get("ammo_count", 0) + add
-                        chest["items"].pop(idx)
+                        if add >= qty:
+                            chest["items"].pop(idx)
+                        else:
+                            item["ammo_count"] = qty - add
                         await self.gm_say(
                             T("narracao.guardou_na_bolsa_total", heroi=p['name'], item=nome_item(item), existing_ammo_count=existing['ammo_count']))
                     else:
@@ -40553,42 +40713,265 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["sede"] = max(0, p["sede"] - 1)
 
     async def handle_veneno_rapido(self, pid, msg):
-        """Veneno Rápido (ação livre): unta um veneno da bolsa na arma. Reusa o
-        sistema weapon_poison/VENENO_CARGAS — os próximos golpes certeiros envenenam.
-        Custa apenas 💧-1 (não consome ação principal nem bônus)."""
+        """Compatibilidade do comando antigo; prepara munição pelo fluxo novo."""
+        await self.handle_envenenar_municao(pid, msg, method_override="veneno_rapido")
+
+    def _planejar_preparo_municao(self, p, ammo_source, ammo_index, quantity, poison_ids):
+        """Calcula cópias finais de munição sem alterar o inventário."""
+        bag = p.get("bag") if isinstance(p.get("bag"), list) else []
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        off_hand = gear.get("off_hand")
+        if ammo_source == "off_hand":
+            selected = off_hand
+        elif ammo_source == "bag" and type(ammo_index) is int and 0 <= ammo_index < len(bag):
+            selected = bag[ammo_index]
+        else:
+            return None
+        selected_key = _ammo_stack_key(selected)
+        if (selected_key is None or _ammo_stack_poison_ids(selected) != ()
+                or int(selected.get("ammo_count", 0) or 0) > MAX_AMMO_STACK
+                or selected.get("ammo_type") not in RANGED_AMMO.get((p.get("weapon") or {}).get("id", ""), ())):
+            return None
+        if type(quantity) is not int or quantity < 1:
+            return None
+        ids = _ammo_stack_poison_ids({"poison_ids": poison_ids})
+        if not ids or len(ids) != len(poison_ids):
+            return None
+
+        candidates = [(ammo_source, ammo_index if ammo_source == "bag" else None, selected)]
+        if ammo_source != "off_hand" and isinstance(off_hand, dict) and _ammo_stack_key(off_hand) == selected_key \
+                and _ammo_stack_poison_ids(off_hand) == () \
+                and 0 < int(off_hand.get("ammo_count", 0) or 0) <= MAX_AMMO_STACK:
+            candidates.append(("off_hand", None, off_hand))
+        for idx, item in enumerate(bag):
+            if ammo_source == "bag" and idx == ammo_index:
+                continue
+            if isinstance(item, dict) and _ammo_stack_key(item) == selected_key \
+                    and _ammo_stack_poison_ids(item) == () \
+                    and 0 < int(item.get("ammo_count", 0) or 0) <= MAX_AMMO_STACK:
+                candidates.append(("bag", idx, item))
+
+        available = sum(max(0, int(item.get("ammo_count", 0) or 0)) for _, _, item in candidates)
+        if available < quantity:
+            return None
+
+        takes = {}
+        restante_para_preparo = quantity
+        for source, idx, item in candidates:
+            take = min(restante_para_preparo, max(0, int(item.get("ammo_count", 0) or 0)))
+            takes[(source, idx)] = take
+            restante_para_preparo -= take
+            if restante_para_preparo == 0:
+                break
+
+        prepared = []
+        pending = quantity
+        while pending:
+            stack = deepcopy(selected)
+            stack["ammo_count"] = min(MAX_AMMO_STACK, pending)
+            stack["poison_ids"] = list(ids)
+            prepared.append(stack)
+            pending -= stack["ammo_count"]
+
+        planned_bag = []
+        selected_inserted = False
+        for idx, item in enumerate(bag):
+            is_selected = ammo_source == "bag" and idx == ammo_index
+            take = takes.get(("bag", idx), 0)
+            if is_selected:
+                planned_bag.extend(deepcopy(prepared))
+                selected_inserted = True
+            left = max(0, int(item.get("ammo_count", 0) or 0) - take) if take else None
+            if take and left == 0:
+                continue
+            if take and left:
+                remainder = deepcopy(item)
+                remainder["ammo_count"] = left
+                planned_bag.append(remainder)
+            else:
+                planned_bag.append(deepcopy(item))
+        planned_off_hand = deepcopy(off_hand) if isinstance(off_hand, dict) else off_hand
+        off_take = takes.get(("off_hand", None), 0)
+        if off_take:
+            left = max(0, int(off_hand.get("ammo_count", 0) or 0) - off_take)
+            if left:
+                planned_off_hand["ammo_count"] = left
+            else:
+                planned_off_hand = None
+        if ammo_source == "off_hand":
+            planned_bag.extend(deepcopy(prepared))
+        if not selected_inserted and ammo_source == "bag":
+            return None
+        return planned_bag, planned_off_hand
+
+    async def handle_envenenar_municao(self, pid, msg, method_override=None):
+        """Valida e aplica de uma só vez os frascos à pilha escolhida."""
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         p = self.players.get(pid)
         if not p or not p["alive"]: return
-        if not _pode_hab_heroi(p, "rogue", "hero_rogue_veneno_rapido"):
-            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_veneno_rapido")}); return
         if p.get("petrificado"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")}); return
+        method = method_override or msg.get("method", "frasco")
+        if method not in ("veneno_rapido", "frasco"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+        if method == "veneno_rapido" and not _pode_hab_heroi(p, "rogue", "hero_rogue_veneno_rapido"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_veneno_rapido")}); return
 
-        custo_sede = 1
-        if p["sede"] < custo_sede:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.sede_insuficiente_parenteses", sede=custo_sede)}); return
+        weapon_slot = msg.get("weapon_slot", "weapon")
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        selected_weapon = gear.get(weapon_slot) if weapon_slot in {"weapon", "off_hand"} else None
+        if not isinstance(selected_weapon, dict) and weapon_slot == "weapon":
+            selected_weapon = p.get("weapon") or {}
+        weapon_id = selected_weapon.get("id", "") if isinstance(selected_weapon, dict) else ""
+        if (method == "veneno_rapido"
+                and (weapon_id not in RANGED_AMMO or weapon_slot == "off_hand")):
+            if not isinstance(selected_weapon, dict) or not (selected_weapon.get("die") or selected_weapon.get("id") in RANGED_AMMO):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
+            venom_id = msg.get("veneno_id")
+            vial = next((item for item in p.get("bag", [])
+                         if (item.get("veneno_id") or item.get("id")) == venom_id
+                         and _veneno_id_valido(item.get("veneno_id") or item.get("id"))), None)
+            if not vial:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
+            if p.get("sede", 0) < 1:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.sede_insuficiente_parenteses", sede=1)}); return
+            if (not _veneno_id_valido(venom_id)
+                    or not (selected_weapon.get("die") or selected_weapon.get("id") in RANGED_AMMO)):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
+            if not self._validar_aplicacao_veneno_arma(p, venom_id, weapon_slot):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_arma_limite")}); return
+            if self.training_mode and vial.get("tutorial_loan"):
+                self.training_state.setdefault(p["class_id"], {})["loan_poison"] = venom_id
+            p["bag"].remove(vial)
+            p["sede"] = max(0, p.get("sede", 0) - 1)
+            _ranged, cargas = self._aplicar_veneno_na_arma(p, venom_id, weapon_slot)
+            meta = _veneno_com_melhorias(venom_id)
+            await self.gm_say(T("narracao.aplica_na_arma_acao_livre", heroi=p["name"],
+                                venenos_vid_nome=meta["nome"],
+                                desc_veneno=T("narracao.veneno_golpes_desc", n=cargas), custo_sede=1))
+            await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
+            await self.push_state()
+            return
 
-        veneno_id = msg.get("veneno_id")
-        frasco = next((i for i in p["bag"]
-                       if (i.get("veneno_id") == veneno_id or i.get("id") == veneno_id)
-                       and _veneno_id_valido(i.get("veneno_id"))), None)
-        if not frasco:
+        poison_ids = msg.get("poison_ids")
+        if not isinstance(poison_ids, list) or not 1 <= len(poison_ids) <= 2:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
+        ids_norm = _ammo_stack_poison_ids({"poison_ids": poison_ids})
+        if ids_norm is None or len(ids_norm) != len(poison_ids):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
+        poison_ids = list(ids_norm)
+        if len(poison_ids) == 2 and (not tem_espec(p, "ladino_veneno_3") or poison_ids[0] == poison_ids[1]):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_desconhecido")}); return
+
+        try:
+            quantity = msg.get("quantity")
+            max_per_vial = MAX_AMMO_STACK * (2 if tem_espec(p, "ladino_veneno_2") else 1)
+            if type(quantity) is not int or not 1 <= quantity <= max_per_vial:
+                raise ValueError
+            source = msg.get("ammo_source")
+            ammo_index = msg.get("ammo_index")
+            if type(ammo_index) is not int or ammo_index < 0:
+                raise ValueError
+        except (TypeError, ValueError):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+        if quantity < max_per_vial and msg.get("confirmed_partial") is not True:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+
+        valid_ammo = RANGED_AMMO.get(weapon_id)
+        if not valid_ammo:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
+        legacy_slots = self._poison_slots_do_item(p, weapon_slot)
+        if legacy_slots:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_municao_cargas_legadas")}); return
+        if source == "off_hand":
+            ammo = (p.get("gear") or {}).get("off_hand")
+        elif source == "bag" and ammo_index < len(p.get("bag", [])):
+            ammo = p["bag"][ammo_index]
+        else:
+            ammo = None
+        if (not isinstance(ammo, dict) or ammo.get("effect") != "ammo"
+                or ammo.get("ammo_type") not in valid_ammo
+                or int(ammo.get("ammo_count", 0) or 0) <= 0):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+        if _ammo_stack_poison_ids(ammo) is None or _ammo_stack_poison_ids(ammo):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.municao_ja_envenenada")}); return
+
+        # Resolve every vial before any action, resource or inventory mutation.
+        vials = []
+        remaining_bag = list(p.get("bag", []))
+        for venom_id in poison_ids:
+            vial_location = None
+            vial_source = msg.get("vial_source")
+            if (method == "frasco" and venom_id == msg.get("item_id")
+                    and isinstance(vial_source, dict) and vial_source.get("source") == "utility_belt"):
+                vial_item_id = msg.get("vial_item_id")
+                vial, vial_location = self._resolve_consumable_source(
+                    p, vial_item_id, vial_source.get("source"), vial_source.get("gear_slot"),
+                    vial_source.get("pocket_index"), vial_source.get("belt_token"))
+                if (not vial or (vial.get("veneno_id") or vial.get("id")) != venom_id
+                        or not _veneno_id_valido(vial.get("veneno_id") or vial.get("id"))):
+                    vial = None
+            else:
+                vial = next((item for item in remaining_bag
+                             if (item.get("veneno_id") or item.get("id")) == venom_id
+                             and _veneno_id_valido(item.get("veneno_id") or item.get("id"))), None)
+            if vial is None:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
+            vials.append((vial, vial_location))
+            if vial_location is None:
+                remaining_bag.remove(vial)
+        if method == "frasco" and msg.get("item_id") not in poison_ids:
             await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
+        if method == "veneno_rapido" and p.get("sede", 0) < len(vials):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sede_insuficiente_parenteses", sede=len(vials))}); return
 
-        vid = frasco["veneno_id"]
-        if self.training_mode and frasco.get("tutorial_loan"):
-            self.training_state.setdefault(p["class_id"], {})["loan_poison"] = vid
-        p["bag"].remove(frasco)
-        p["sede"] = max(0, p["sede"] - custo_sede)
-        _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
-        desc_veneno = (f"os próximos {VENENO_CARGAS} disparos (acerto ou erro) transferem o veneno"
-                       if _is_ranged
-                       else "o próximo golpe certeiro envenena o alvo")
-        await self.gm_say(
-            T("narracao.aplica_na_arma_acao_livre", heroi=p['name'], venenos_vid_nome=_veneno_com_melhorias(vid)['nome'], desc_veneno=desc_veneno, custo_sede=custo_sede))
-        await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
+        ammo_plan = self._planejar_preparo_municao(p, source, ammo_index, quantity, poison_ids)
+        if ammo_plan is None:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+        planned_bag, planned_off_hand = ammo_plan
+        # Remove from the planned copy the bag vials that the same transaction
+        # consumes; identical vials are interchangeable, so first matching item
+        # gives the exact resulting inventory count.
+        for vial, vial_location in vials:
+            if vial_location is None:
+                vial_copy = next((item for item in planned_bag if item == vial), None)
+                if vial_copy is None:
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.item_invalido")}); return
+                planned_bag.remove(vial_copy)
+        bag_size = int(p.get("bag_size", 6) or 6)
+        if len(planned_bag) > bag_size:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_max_itens", max_itens=bag_size)}); return
+
+        if method == "frasco":
+            if "coat_poison" in self.BONUS_ACTION_EFFECTS:
+                # Defer the narration until the vial/ammo transaction is fully
+                # committed; the narrated helper yields to concurrent actions.
+                ok = await self._executar_acao_bonus(p, narrar=False)
+                if not ok: return
+        else:
+            p["sede"] = max(0, p.get("sede", 0) - len(vials))
+
+        for vial, vial_location in vials:
+            if self.training_mode and vial.get("tutorial_loan"):
+                self.training_state.setdefault(p["class_id"], {})["loan_poison"] = vial.get("veneno_id") or vial.get("id")
+            if vial_location is None:
+                continue
+            elif not self._consume_action_item(p, vial, vial_location):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_nao_encontrado_na_bolsa")}); return
+        p["bag"] = planned_bag
+        if not isinstance(p.get("gear"), dict):
+            p["gear"] = {}
+        p["gear"]["off_hand"] = planned_off_hand
+        if method == "veneno_rapido":
+            await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
+        nomes = ", ".join(_veneno_com_melhorias(vid)["nome"] for vid in poison_ids)
+        if method == "frasco" and "coat_poison" in self.BONUS_ACTION_EFFECTS:
+            await self.gm_say(T("narracao.usou_acao_bonus_fome_sede", heroi=p["name"],
+                                fome=f"{p['fome']:.1f}", sede=f"{p['sede']:.1f}"))
+        await self.gm_say(T("narracao.municao_envenenada", heroi=p["name"], quantidade=quantity,
+                            venenos=nomes, frascos=len(vials)))
         await self.push_state()
 
     async def _processar_inicio_turno_luccas(self, p):
@@ -40795,7 +41178,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             slots[pocket_index] = None
         return True
 
-    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None, target_pos=None):
+    async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None, target_pos=None, weapon_slot="weapon"):
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -40822,6 +41205,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         effect, val = item["effect"], item.get("value", 0)
+
+        # Valida alvo e frasco antes da ação bônus, sede ou retirada do item.
+        poison_weapon = None
+        if effect == "coat_poison":
+            if weapon_slot not in {"weapon", "off_hand"}:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
+            poison_weapon = ((p.get("gear") or {}).get(weapon_slot)
+                             if isinstance(p.get("gear"), dict) else None)
+            if not isinstance(poison_weapon, dict) and weapon_slot == "weapon":
+                poison_weapon = p.get("weapon") or {}
+            if (not _veneno_id_valido(item.get("veneno_id"))
+                    or not isinstance(poison_weapon, dict)
+                    or not (poison_weapon.get("die") or poison_weapon.get("id") in RANGED_AMMO)):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
+            if poison_weapon.get("id") in RANGED_AMMO:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.selecione_municao_para_envenenar")})
+                return
+            if not self._validar_aplicacao_veneno_arma(p, item.get("veneno_id"), weapon_slot):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_arma_limite")}); return
 
         if effect == "illusion_lure":
             self._expire_illusions()
@@ -41041,9 +41443,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             extra = f" — imune a {nome_status} por **{rod}** rodada(s)!" if rod else "."
             await self.gm_say(T("narracao.usa", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), txt=txt, extra=extra))
         elif effect == "coat_poison":
-            _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid)
+            _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid, weapon_slot)
             desc = (f"{VENENO_CARGAS} disparos (acerto ou erro) envenenam o alvo"
-                    if _is_ranged else "1 golpe certeiro envenena o alvo")
+                    if _is_ranged else T("narracao.veneno_golpes_desc", n=cargas))
             await self.gm_say(
                 T("narracao.unta_na_arma_2", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), desc=desc))
         elif effect == "wine":
@@ -45413,9 +45815,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._disparar_armadilha(m, arm)
         await self._kobold_pickup_lance(m)
 
-    async def _execute_one_monster_attack(self, m, atk_def, target_obj):
+    async def _execute_one_monster_attack(self, m, atk_def, target_obj, attack_index=None):
         async with self.evento_elemental({"tipo": "monstro", "id": m.get("id"), "caster_id": None}):
-            return await self._execute_one_monster_attack_impl(m, atk_def, target_obj)
+            hit = await self._execute_one_monster_attack_impl(m, atk_def, target_obj)
+            if attack_index is None:
+                attack_index = self._indice_ataque_monstro(m, atk_def)
+            slots = self._monster_attack_poison_slots(m, attack_index)
+            if hit and slots:
+                venom_id = slots.pop(0)
+                self._set_monster_attack_poison_slots(m, attack_index, slots)
+                target = target_obj.get("obj") or {}
+                if self._alvo_vivo(target_obj):
+                    await self._aplicar_veneno(target, venom_id, fonte="ataque")
+            return hit
 
     async def _execute_one_monster_attack_impl(self, m, atk_def, target_obj):
         """Executa um único ataque de um monstro com formato novo."""
@@ -45981,7 +46393,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     continue
                 if self._monster_attack_expected_damage(target, atk_def) <= 0:
                     continue
-                one_hit = await self._execute_one_monster_attack(m, atk_def, target_obj)
+                one_hit = await self._execute_one_monster_attack(m, atk_def, target_obj,
+                                                               attack_index=self._indice_ataque_monstro(m, atk_def))
                 group_hit = one_hit or group_hit
                 if one_hit and atk_def.pop("_consume_weapon_poison", False):
                     m["veneno_arma_ativo"] = False
@@ -46210,23 +46623,67 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return True
         return any(ab.get("action_type") == "magia" for ab in m.get("special_abilities", []))
 
-    async def _envenenar_arma_do_inventario(self, m):
-        """Consome uma dose de veneno da bolsa e prepara o próximo acerto da arma."""
-        if not self._tem_habilidade(m, "envenenar_arma") or m.get("veneno_arma_ativo"):
+    def _monster_attack_poison_slots(self, m, attack_index):
+        attacks = m.get("attacks") if isinstance(m.get("attacks"), list) else []
+        if type(attack_index) is not int or not 0 <= attack_index < len(attacks):
+            return []
+        attack = attacks[attack_index]
+        slots = attack.get("poison_slots")
+        if not isinstance(slots, list):
+            return []
+        return [vid for vid in slots if _veneno_id_valido(vid)][:3]
+
+    def _set_monster_attack_poison_slots(self, m, attack_index, slots):
+        attacks = m.get("attacks") if isinstance(m.get("attacks"), list) else []
+        if type(attack_index) is not int or not 0 <= attack_index < len(attacks):
+            return False
+        attack = attacks[attack_index]
+        if not isinstance(attack, dict):
+            return False
+        attack["poison_slots"] = [vid for vid in slots if _veneno_id_valido(vid)][:3]
+        return True
+
+    def _adicionar_veneno_ao_ataque_monstro_preview(self, m, attack_index, venom_id):
+        attacks = m.get("attacks") if isinstance(m.get("attacks"), list) else []
+        return bool(_veneno_id_valido(venom_id)
+                    and type(attack_index) is int and 0 <= attack_index < len(attacks)
+                    and isinstance(attacks[attack_index], dict)
+                    and (attacks[attack_index].get("damage") or attacks[attack_index].get("damage_dice"))
+                    and not self._monster_attack_poison_slots(m, attack_index))
+
+    def _adicionar_veneno_ao_ataque_monstro(self, m, attack_index, venom_id):
+        if not self._adicionar_veneno_ao_ataque_monstro_preview(m, attack_index, venom_id):
+            return False
+        attacks = m.get("attacks")
+        attack = attacks[attack_index]
+        attack["poison_slots"] = [venom_id] * 3
+        return True
+
+    async def _envenenar_arma_do_inventario(self, m, attack_index=None, item_id=None):
+        """Consome uma dose e prepara a primeira arma elegível da IA ou o alvo pedido."""
+        if not self._tem_habilidade(m, "envenenar_arma"):
             return False
         bag = m.get("equipment_consumables", [])
         item = next((i for i in bag if i.get("effect") == "coat_poison"
+                     and (item_id is None or i.get("id") == item_id)
                      and _veneno_com_melhorias(i.get("veneno_id"))), None)
-        if not item or not m.get("attacks"):
+        if not item:
             return False
-        m["veneno_arma_ativo"] = True
-        m["veneno_arma_id"] = item["veneno_id"]
-        m["equipment_poison"] = item["veneno_id"]
+        attacks = m.get("attacks") if isinstance(m.get("attacks"), list) else []
+        if attack_index is None:
+            attack_index = next((i for i, attack in enumerate(attacks)
+                                 if isinstance(attack, dict)
+                                 and (attack.get("damage") or attack.get("damage_dice"))
+                                 and not self._monster_attack_poison_slots(m, i)), None)
+        if not self._adicionar_veneno_ao_ataque_monstro(m, attack_index, item["veneno_id"]):
+            return False
         bag.remove(item)
-        await self.gm_say(T("narracao.usa_para_envenenar_a_arma", m_get_name_o_monstro=nome_criatura(m), item=nome_item(item)))
+        attack_name = attacks[attack_index].get("name") or T("ui.mestre.golpe")
+        await self.gm_say(T("narracao.unta_ataque_monstro", m_get_name_o_monstro=nome_criatura(m),
+                            item=nome_item(item), attack_name=attack_name))
         return True
 
-    async def handle_mestre_usar_item(self, pid, monster_id, item_id, target_id, tx, ty):
+    async def handle_mestre_usar_item(self, pid, monster_id, item_id, target_id, tx, ty, attack_index=None):
         """Manual: o mestre usa um item de bolsa do monstro (equipment_consumables).
         Consumíveis de alvo-próprio = ação bônus; arremesso/pergaminho = principal.
         Espelha a economia do jogador."""
@@ -46240,6 +46697,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado_no_inventario")}); return
         effect = item.get("effect")
+        if effect == "coat_poison":
+            if (type(attack_index) is not int
+                    or not self._adicionar_veneno_ao_ataque_monstro_preview(m, attack_index, item.get("veneno_id"))):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
 
         if effect in {"food", "ration", "wine", "ale", "meal_survival"}:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_item_nao_tem_efeito_em_monstros")}); return
@@ -46304,16 +46765,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             m["equipment_attack_bonus"] = m.get("equipment_attack_bonus", 0) + val
             await self.gm_say(T("narracao.usa_de_ataque", m_get_name_o_monstro=nome_criatura(m), item=nome_item(item), val=val))
         elif effect == "coat_poison" and veneno_livre:
-            if not await self._envenenar_arma_do_inventario(m):
+            if not await self._envenenar_arma_do_inventario(m, attack_index, item_id):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
             removed = False  # a habilidade já consumiu a dose da bolsa.
             self._debitar_acao_mestre(m, "livre", "item")  # não gasta ação, mas marca _master_touched
         elif effect == "coat_poison":
             vid = item.get("veneno_id")
-            if vid and m.get("attacks"):
-                m["attacks"][0]["on_hit"] = vid
-                m["equipment_poison"] = vid
-            await self.gm_say(T("narracao.unta_na_arma", m_get_name_o_monstro=nome_criatura(m), item=nome_item(item)))
+            if not self._adicionar_veneno_ao_ataque_monstro(m, attack_index, vid):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
+            attack_name = m["attacks"][attack_index].get("name") or T("ui.mestre.golpe")
+            await self.gm_say(T("narracao.unta_ataque_monstro", m_get_name_o_monstro=nome_criatura(m), item=nome_item(item), attack_name=attack_name))
         elif effect == "antidote":
             for k in ("veneno", "veneno_dano", "veneno_rodadas", "envenenado"):
                 m.pop(k, None)
@@ -54500,7 +54961,7 @@ async def handler(ws):
                         msg.get("tx"), msg.get("ty"), msg.get("dir"))
 
                 elif t == "mestre_usar_item":
-                    if room: await room._run_smoke_capable_command(room.handle_mestre_usar_item(pid, msg.get("monster_id"), msg.get("item_id"), msg.get("target_id"), msg.get("tx"), msg.get("ty")), "item manual com reação")
+                    if room: await room._run_smoke_capable_command(room.handle_mestre_usar_item(pid, msg.get("monster_id"), msg.get("item_id"), msg.get("target_id"), msg.get("tx"), msg.get("ty"), msg.get("attack_index")), "item manual com reação")
 
                 elif t == "mestre_encerrar_monstro":
                     if room: await room.handle_mestre_encerrar_monstro(pid, msg.get("monster_id"))
@@ -54793,10 +55254,13 @@ async def handler(ws):
                 elif t == "veneno_rapido":
                     if room: await room.handle_veneno_rapido(pid, msg)
 
+                elif t == "envenenar_municao":
+                    if room: await room.handle_envenenar_municao(pid, msg)
+
                 elif t == "use_item":
                     if room:
                         await room.handle_use_item(pid, msg.get("item_id"), msg.get("target_id"),
-                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"), msg.get("target_pos"))
+                                                   msg.get("source", "bag"), msg.get("gear_slot"), msg.get("pocket_index"), msg.get("belt_token"), msg.get("target_pos"), msg.get("weapon_slot", "weapon"))
 
                 elif t == "move_illusion":
                     if room:

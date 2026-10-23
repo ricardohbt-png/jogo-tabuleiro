@@ -1005,6 +1005,18 @@ window.LANG_ERROS = {
     "en": "Invalid item.",
     "pt": "Item inválido."
   },
+  "erro.veneno_municao_cargas_legadas": {
+    "en": "This weapon still has old poison charges. Use them before coating ammunition.",
+    "pt": "Esta arma ainda tem cargas antigas de veneno. Use-as antes de envenenar munição."
+  },
+  "erro.municao_ja_envenenada": {
+    "en": "This ammunition stack is already poisoned.",
+    "pt": "Esta pilha de munição já está envenenada."
+  },
+  "erro.selecione_municao_para_envenenar": {
+    "en": "Choose ammunition in the poison panel before using this vial.",
+    "pt": "Escolha a munição no painel de veneno antes de usar este frasco."
+  },
   "erro.calice_eter_sem_slot_gasto": {
     "en": "You have no spent 1st-circle spell slot to restore.",
     "pt": "Você não tem um espaço gasto de magia de 1º círculo para recuperar."
@@ -1168,6 +1180,10 @@ window.LANG_ERROS = {
   "erro.nao_foi_possivel_envenenar_a_arma": {
     "en": "Couldn't poison the weapon.",
     "pt": "Não foi possível envenenar a arma."
+  },
+  "erro.veneno_arma_limite": {
+    "en": "This weapon already has its full set of distinct poisons. Use an active poison again or choose another weapon.",
+    "pt": "Esta arma já atingiu o limite de venenos diferentes. Reaplique um veneno ativo ou escolha outra arma."
   },
   "erro.nao_foi_possivel_salvar_o_ponto_da_cidad": {
     "en": "Couldn't save the town point.",

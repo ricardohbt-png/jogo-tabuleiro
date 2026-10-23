@@ -1466,16 +1466,38 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > em mais nada. Gate em `handle_criar_armadilha` via `_armadilhas_desbloqueadas`.
 > **Desarme:** `ladino_desarme_2/3` dão +2 no teste (não soma mais no III);
 > `_3` também adiciona um 2º teste que, em sucesso, devolve o `custo_ouro` da
-> armadilha. **Veneno Rápido:** o veneno mora na **arma equipada** como uma lista
-> de cargas `poison_slots` (viaja com a arma ao trocar/desequipar; consumida por
-> `pop(0)` no acerto) — helpers `_weapon_poison_slots`/`_set_weapon_poison_slots`/
-> `_aplicar_veneno_na_arma`. Melee tem **1 marcador por padrão**; o teto sobe pelas
-> specs via `_capacidade_poison_melee`: `ladino_veneno_2` → 2 cargas do mesmo veneno
-> (dura 2 golpes); `ladino_veneno_3` → soma um 2º veneno DIFERENTE mantendo o
-> anterior (máx. 2 distintos, FIFO — o antigo é gasto primeiro; reaplicar o mesmo
-> recarrega e o move ao fim); combinadas: 2 venenos × 2 cargas = 4. À distância
-> (arco/besta) usa `VENENO_CARGAS` projéteis (substitui). O efeito genérico de item
-> `coat_poison` fica inalterado. **Esconder nas Sombras:** `ladino_esconder_2/3` dão +2 no
+> armadilha. **Veneno Rápido:** em armas à distância, o veneno acompanha cada projétil
+> na pilha (`poison_ids`), não a arma. Cada frasco envenena até 10 flechas/virotes;
+> `ladino_veneno_2` eleva esse teto a 20, reunindo munição ainda não envenenada
+> de pilhas compatíveis, sem exceder `MAX_AMMO_STACK == 10`. A pilha escolhida
+> define tipo e atributos; munição compatível é consumida primeiro do slot escolhido,
+> depois da mão esquerda e da bolsa por ordem. Quantidades abaixo do teto aplicável
+> pedem confirmação com a dose perdida e consomem o frasco inteiro. `ladino_veneno_3`
+> permite dois venenos distintos nos mesmos projéteis (até 10 ou 20 no total, um
+> frasco por veneno). A pilha
+> preparada é separada e só empilha com munição de mesmo tipo, atributos de disparo e
+> combinação de venenos. O disparo consome uma unidade em acerto ou erro; no acerto,
+> cada veneno faz seu próprio teste. Veneno Rápido continua ação livre e custa 1 sede
+> por frasco; o frasco genérico preserva a ação bônus atual. Corpo a corpo continua
+> usando `poison_slots` e `_aplicar_veneno_na_arma`: cada aplicação dura 3 acertos,
+> ou 6 com `ladino_veneno_2`, e `ladino_veneno_3` mantém dois venenos distintos em
+> fila FIFO (cada um com suas próprias cargas). Erros não gastam cargas corpo a corpo.
+> Aplicações antigas conservam apenas as cargas restantes, sem receber cargas novas
+> retroativamente. Cargas à distância já salvas continuam no fluxo antigo
+> até acabarem; enquanto houver cargas, não se pode preparar munição para aquela arma.
+> `handle_envenenar_municao` centraliza validação e consumo, e `_ammo_stack_key` mantém
+> a assinatura durante equipar, guardar e retirar. Para combate com duas armas,
+> cada item equipado armazena a própria fila `poison_slots`; a aplicação do herói
+> identifica `weapon_slot` (`weapon`/`off_hand`) e cada acerto consome somente a fila
+> da arma que atacou. O Mestre aplica frascos a um ataque de `attacks[]` usando
+> `attack_index`; cada ataque armazena sua fila `poison_slots`, separada de `on_hit`
+> nativo. Ataques manuais consomem a fila selecionada; a IA usa a primeira entrada
+> elegível. Erros preservam cargas; os efeitos `on_hit` nativos continuam ativos.
+> Com Veneno Rápido III, a arma aceita até dois venenos distintos; reaplicar um
+> veneno já ativo renova suas cargas. Uma dose distinta que excederia esse limite
+> é recusada antes de consumir o frasco ou custos, e a interface mantém a escolha
+> aberta para selecionar outra arma ou um veneno já ativo.
+> **Esconder nas Sombras:** `ladino_esconder_2/3` dão +2 no
 > teste; `_3` também faz a ativação **deixar de gastar a ação bônus** e, ao
 > quebrar a invisibilidade (`_quebrar_invisibilidade`), concede +2 de CA por 1
 > rodada via `self.temp_def` (mecanismo já existente que expira sozinho).
@@ -2602,8 +2624,9 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `habilidade_id`, gateando por `hero_paladin_<habilidade_id>` — conceder Regeneração Divina não
 > libera Guerreiro da Luz. **Fix de uma lacuna da Fase I:** os dois upkeeps
 > (`_processar_inicio_turno_luccas`, `_processar_manutencao_richard`) eram travados por classe, de
-> modo que uma habilidade **concedida** nunca pagava manutenção — agora pagam. Sem mudança em
-> `_capacidade_poison_melee` (já retorna o base 1 para não-ladinos). Cliente: o bloco de
+> modo que uma habilidade **concedida** nunca pagava manutenção — agora pagam. A duração
+> corpo a corpo foi atualizada para 3/6 acertos por aplicação em
+> `_capacidade_poison_melee`; cargas já salvas não são preenchidas retroativamente. Cliente: o bloco de
 > habilidades concedidas ganhou os despachos de `_clericSkillBtn`/`_bardSkillBtn` (os quatro
 > helpers de botão são agnósticos de classe). Editor: `GRANTED_HERO_IDS` cresceu para 14, com um
 > **teste de sincronia** ([J6]) que lê o JS e compara com `GRANTED_HERO_SKILLS` — necessário

@@ -19,7 +19,8 @@ altere a arma envenenada sem o jogador ou mestre perceber.
   consome uma carga somente da arma que realizou aquele ataque; erro não gasta
   carga. A aplicação dura 3 acertos, ou 6 com `ladino_veneno_2`, por veneno.
 - Com `ladino_veneno_3`, cada arma pode manter até dois venenos distintos em
-  sequência; reaplicar um veneno segue a regra existente daquela arma.
+  sequência; reaplicar um veneno ativo renova suas cargas. Um terceiro veneno
+  distinto é recusado sem consumir o frasco nem descartar cargas existentes.
 - O ataque da mão secundária usa as cargas da arma secundária. Custos e
   economia de ação de cada ataque permanecem iguais aos atuais.
 - Para um monstro controlado pelo mestre, o painel de uso de item permite

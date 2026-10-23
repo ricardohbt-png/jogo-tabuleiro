@@ -963,16 +963,16 @@ window.LANG_CATALOGO = {
     "pt": "Fórmula: Teto Esmagador"
   },
   "cat.guilda.ladino_veneno_2.desc": {
-    "en": "Weapon poison (melee) now lasts 2 successful hits.",
-    "pt": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros."
+    "en": "Each melee poison application now lasts 6 successful hits instead of 3. One vial also coats up to 20 arrows or bolts instead of 10.",
+    "pt": "Cada aplicação de veneno corpo a corpo passa a durar 6 golpes certeiros, em vez de 3. Um frasco também envenena até 20 flechas ou virotes, em vez de 10."
   },
   "cat.guilda.ladino_veneno_2.nome": {
     "en": "Quick Poison II",
     "pt": "Veneno Rápido II"
   },
   "cat.guilda.ladino_veneno_3.desc": {
-    "en": "Can keep 2 different poisons on the weapon at the same time.",
-    "pt": "Pode manter 2 venenos diferentes na arma ao mesmo tempo."
+    "en": "Can apply 2 different poisons to the same ammunition and keep 2 different poisons queued on a melee weapon.",
+    "pt": "Pode aplicar 2 venenos diferentes à mesma munição e manter 2 venenos distintos em sequência na arma corpo a corpo."
   },
   "cat.guilda.ladino_veneno_3.nome": {
     "en": "Quick Poison III",
@@ -2123,8 +2123,8 @@ window.LANG_CATALOGO = {
     "pt": "Ressurreição"
   },
   "cat.habilidade.veneno_rapido.desc": {
-    "en": "Free action. Coats a poison from the bag on the weapon — the next clean hits poison the target.",
-    "pt": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam o alvo."
+    "en": "Free action. Consumes one vial and 1 thirst per vial to coat up to 10 arrows or bolts (20 with Veneno Rápido II). Veneno Rápido III can combine two different poisons on the same projectiles.",
+    "pt": "Ação livre. Consome um frasco e 1 de sede por frasco para envenenar até 10 flechas ou virotes (20 com Veneno Rápido II). Veneno Rápido III pode combinar dois venenos diferentes nos mesmos projéteis."
   },
   "cat.habilidade.veneno_rapido.nome": {
     "en": "Quick Poison",
@@ -2577,6 +2577,22 @@ window.LANG_CATALOGO = {
   "cat.item.flechas.nome": {
     "en": "Arrows (×10)",
     "pt": "Flechas (×10)"
+  },
+  "cat.item.flecha_envenenada.nome": {
+    "en": "Poisoned Arrow",
+    "pt": "Flecha Envenenada"
+  },
+  "cat.item.virote_envenenado.nome": {
+    "en": "Poisoned Bolt",
+    "pt": "Virote Envenenado"
+  },
+  "cat.item.flechas_prata_envenenadas.nome": {"en": "Poisoned Silver Arrows", "pt": "Flechas de Prata Envenenadas"},
+  "cat.item.flechas_incendiarias_envenenadas.nome": {"en": "Poisoned Incendiary Arrows", "pt": "Flechas Incendiárias Envenenadas"},
+  "cat.item.virotes_prata_envenenados.nome": {"en": "Poisoned Silver Bolts", "pt": "Virotes de Prata Envenenados"},
+  "cat.item.virotes_incendiarios_envenenados.nome": {"en": "Poisoned Incendiary Bolts", "pt": "Virotes Incendiários Envenenados"},
+  "cat.item.municao_envenenada": {
+    "en": "{nome}",
+    "pt": "{nome}"
   },
   "cat.item.flechas_prata.nome": {
     "en": "Silver Arrows (×10)",

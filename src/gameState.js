@@ -2697,7 +2697,7 @@ const GS = (() => {
     if (Array.isArray(dir)) msg.dir = dir;
     send(msg);
   }
-  function mestreUsarItem(monsterId, itemId, targetId, tx, ty) { send({ type: 'mestre_usar_item', monster_id: monsterId, item_id: itemId, target_id: targetId, tx, ty }); }
+  function mestreUsarItem(monsterId, itemId, targetId, tx, ty, attackIndex) { send({ type: 'mestre_usar_item', monster_id: monsterId, item_id: itemId, target_id: targetId, tx, ty, attack_index: attackIndex }); }
   // Janela Manual: o monstro ataca um herói.
   function mestreAtacarMonstro(monsterId, targetId, attackIndex) {
     send({ type: 'mestre_atacar_monstro', monster_id: monsterId, target_id: targetId,
@@ -3616,7 +3616,7 @@ const GS = (() => {
     return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_desarme_3');
   }
   function ladinoVenenoMaxHits() {
-    return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_veneno_2') ? 2 : 1;
+    return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_veneno_2') ? 6 : 3;
   }
   function ladinoVeneno2Slots() {
     return (guildOwnedOf(myPid).especializacoes || []).includes('ladino_veneno_3');

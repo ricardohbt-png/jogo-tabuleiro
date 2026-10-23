@@ -3184,8 +3184,8 @@ window.LANG_INTERFACE = {
     "pt": "1 de {n} habilidades selecionada."
   },
   "ui.habilidade.veneno": {
-    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Effect:</strong> {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong> Fortitude DC {p2} {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Application:</strong>\n        Using it coats the equipped weapon (bonus action). The next hit transfers the\n        poison to the target.\n      </div>",
-    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Efeito:</strong>\n        {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong>\n        Fortitude dificuldade {p2}\n        {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Aplicação:</strong>\n        Usar unta a arma equipada (ação bônus). O próximo golpe certeiro\n        transfere o veneno ao alvo.\n      </div>\n    "
+    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Effect:</strong> {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong> Fortitude DC {p2} {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Application:</strong>\n        On ranged weapons, apply it to up to 10 arrows or bolts (20 with Veneno Rápido II; bonus action); each hit applies the poison on the projectile.\n      </div>",
+    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Efeito:</strong>\n        {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong>\n        Fortitude dificuldade {p2}\n        {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Aplicação:</strong>\n        Com armas à distância, aplique a até 10 flechas ou virotes (20 com Veneno Rápido II; ação bônus); cada acerto aplica os venenos do projétil.\n      </div>\n    "
   },
   "ui.habilidade.versatil": {
     "en": "⚔️ <strong style=\"color:#c8a951\">Versatile:</strong> One hand: 1d10 damage with a shield. Two hands: 3d4 damage without a shield. Switch modes with a bonus action (-1 hunger -1 thirst).",
@@ -5592,8 +5592,8 @@ window.LANG_INTERFACE = {
     "pt": "Vender"
   },
   "ui.item.veneno_agonia_sufocante.desc": {
-    "en": "LEGENDARY. Coated on the weapon: 1d4 damage per round for up to 1d4 rounds. Each round, Fortitude DC 14 neutralises the poison.",
-    "pt": "LENDÁRIO. Untado na arma: 1d4 de dano por rodada por até 1d4 rodadas. A cada rodada, Fortitude CD 14 neutraliza o veneno."
+    "en": "LEGENDARY. On a failed Fortitude DC 14 save, deals 1d4 damage per round for up to 1d4 rounds. Each round, another Fortitude save can neutralise it.",
+    "pt": "LENDÁRIO. Ao falhar em Fortitude CD 14, causa 1d4 de dano por rodada por até 1d4 rodadas. A cada rodada, outro teste de Fortitude pode neutralizá-lo."
   },
   "ui.item.veneno_aranha_sombria.desc": {
     "en": "Reduces Strength by 1d4 for 1d6 rounds. Fortitude DC 10 negates.",
@@ -5810,12 +5810,24 @@ window.LANG_INTERFACE = {
     "pt": "🪤 CRIAR ARMADILHA"
   },
   "ui.ladino.dois_venenos": {
-    "en": "up to 2 simultaneous poisons",
-    "pt": "até 2 venenos simultâneos"
+    "en": "up to 2 different poisons in sequence",
+    "pt": "até 2 venenos diferentes em sequência"
   },
   "ui.ladino.dura_golpes_certeiros": {
     "en": "lasts {n} successful hit(s){extra}",
     "pt": "dura {n} golpe(s) certeiro(s){extra}"
+  },
+  "ui.ladino.dura_disparos": {
+    "en": "lasts {n} shot(s) per poison{extra}",
+    "pt": "dura {n} disparo(s) por veneno{extra}"
+  },
+  "ui.ladino.disparos_restantes_trocar": {
+    "en": "{n} poisoned shot(s) remaining{extra} — click to change",
+    "pt": "{n} disparo(s) envenenado(s) restante(s){extra} — clique p/ trocar"
+  },
+  "ui.ladino.dois_venenos_disparos": {
+    "en": "up to 2 simultaneous poisons, 3 shots each",
+    "pt": "até 2 venenos simultâneos, 3 disparos cada"
   },
   "ui.ladino.esconder_desc": {
     "en": "Stealth check{b} — bonus action",
@@ -5868,6 +5880,40 @@ window.LANG_INTERFACE = {
   "ui.ladino.veneno_rapido_titulo": {
     "en": "☠️ QUICK POISON",
     "pt": "☠️ VENENO RÁPIDO"
+  },
+  "ui.ladino.veneno_municao_titulo": {"en": "☠️ POISON AMMUNITION", "pt": "☠️ ENVENENAR MUNIÇÃO"},
+  "ui.ladino.custo_veneno_rapido_municao": {
+    "en": "Free action · 1 thirst per vial; each vial coats up to {n} projectiles",
+    "pt": "Ação livre · 1 sede por frasco; cada frasco cobre até {n} projéteis"
+  },
+  "ui.ladino.custo_frasco_municao": {
+    "en": "Bonus action · consumes each selected vial and its unused dose",
+    "pt": "Ação bônus · consome cada frasco escolhido e a dose não utilizada"
+  },
+  "ui.ladino.prepara_municao_desc": {
+    "en": "One vial coats up to {n} projectiles; Veneno Rápido III can apply {venenos} poisons to each",
+    "pt": "Um frasco envenena até {n} projéteis; Veneno Rápido III pode aplicar {venenos} venenos em cada um"
+  },
+  "ui.ladino.custo_por_frasco": {"en": "💧1 per vial", "pt": "💧1 por frasco"},
+  "ui.ladino.veneno_legado_terminar": {
+    "en": "Use the old poison charges on this weapon before coating ammunition.",
+    "pt": "Use as cargas antigas de veneno desta arma antes de envenenar munição."
+  },
+  "ui.ladino.escolha_municao": {"en": "Choose ammunition", "pt": "Escolha a munição"},
+  "ui.ladino.quantidade_municao": {"en": "Projectile count (up to {n})", "pt": "Quantidade de projéteis (até {n})"},
+  "ui.ladino.mao_esquerda": {"en": "Off hand", "pt": "Mão esquerda"},
+  "ui.ladino.bolsa": {"en": "Bag", "pt": "Bolsa"},
+  "ui.ladino.veneno": {"en": "Poison vial", "pt": "Frasco de veneno"},
+  "ui.ladino.segundo_veneno_opcional": {"en": "Second poison (Veneno Rápido III)", "pt": "Segundo veneno (Veneno Rápido III)"},
+  "ui.ladino.nenhum": {"en": "None", "pt": "Nenhum"},
+  "ui.ladino.aplicar_veneno": {"en": "Prepare poisoned ammunition", "pt": "Preparar munição envenenada"},
+  "ui.ladino.sem_municao_compativel": {"en": "No compatible ammunition available", "pt": "Não há munição compatível disponível"},
+  "ui.ladino.selecao_municao_invalida": {"en": "Invalid ammunition selection", "pt": "Seleção de munição inválida"},
+  "ui.ladino.venenos_precisam_ser_diferentes": {"en": "Choose two different poisons", "pt": "Escolha dois venenos diferentes"},
+  "ui.ladino.fraco_selecionado_deve_ser_usado": {"en": "The selected vial must be included", "pt": "O frasco selecionado precisa estar incluído"},
+  "ui.ladino.confirmar_municao_envenenada": {
+    "en": "Coat {n} projectile(s) with {frascos} vial(s)? Each is consumed in full; {perdida} projectile(s) of dose per vial will be lost.",
+    "pt": "Envenenar {n} projétil(is) usando {frascos} frasco(s)? Cada um será consumido inteiro; serão perdidos {perdida} projétil(is) de dose por frasco."
   },
   "ui.loja.aba.alimentos": {
     "en": "🍺 Food",
@@ -9542,8 +9588,8 @@ window.LANG_INTERFACE = {
     "pt": "Ação principal. Traz um aliado morto adjacente de volta com 1 HP."
   },
   "ui.selecao.skill.desc.veneno_rapido": {
-    "en": "Free action. Coats a poison from the bag onto the weapon — the next hits poison the target.",
-    "pt": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam."
+    "en": "Free action. Coats up to 10 arrows or bolts per vial (20 with Veneno Rápido II); costs 1 thirst per vial. Veneno Rápido III can combine two different poisons on the same projectiles.",
+    "pt": "Ação livre. Envenena até 10 flechas ou virotes por frasco (20 com Veneno Rápido II); custa 1 de sede por frasco. Veneno Rápido III pode combinar dois venenos diferentes nos mesmos projéteis."
   },
   "ui.selecao.skill.detectar_armadilhas": {
     "en": "Detect Traps",
@@ -11296,6 +11342,15 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.manual": {
     "en": "Save · {local}",
     "pt": "Salvamento · {local}"
-  }
+  },
+  "ui.ladino.escolha_arma_veneno": {"en":"Choose the weapon to poison","pt":"Escolha a arma para envenenar"},
+  "ui.ladino.arma_principal": {"en":"Main hand","pt":"Mão principal"},
+  "ui.ladino.mao_secundaria": {"en":"Off hand","pt":"Mão secundária"},
+  "ui.ladino.envenenar_municao_arma_principal": {"en":"Poison main-hand ammunition","pt":"Envenenar munição da arma principal"},
+  "ui.mestre.escolha_ataque_envenenar": {"en":"Choose the monster attack to poison","pt":"Escolha o ataque do monstro para envenenar"},
+  "ui.mestre.aplicar_veneno_ataque": {"en":"Apply poison to this attack","pt":"Aplicar veneno neste ataque"},
+  "ui.mestre.sem_ataque_elegivel_veneno": {"en":"No eligible attack is available for poison.","pt":"Não há ataque elegível disponível para receber veneno."},
+  "ui.ladino.cargas_veneno": {"en":"{n} poison charges","pt":"{n} cargas de veneno"},
+  "ui.mestre.veneno_ativo": {"en":"Poison already applied","pt":"Veneno já aplicado"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
