@@ -635,7 +635,7 @@ async def secao_cidade_com_masmorra():
     a.broadcast_city_state = lambda: asyncio.sleep(0)
     await a._voltar_para_cidade()
     fonte = open(os.path.join(RAIZ, "server.py"), encoding="utf-8").read()
-    ini = fonte.index("async def handle_world_adventure")
+    ini = fonte.index("async def handle_world_adventure(")   # com "(": existe outra função com esse prefixo
     trecho = fonte[ini:fonte.index("async def ", ini + 10)]
     check("handle_world_adventure apaga a foto ao zerar dungeon_generated",
           "self.dungeon_generated = False" in trecho and "self._apagar_foto()" in trecho)

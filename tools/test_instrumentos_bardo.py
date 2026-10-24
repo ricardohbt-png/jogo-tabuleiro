@@ -37,7 +37,7 @@ def test_tipo_item_e_maos():
     assert server.INSTRUMENTOS_BASE["sino"]["maos"] == 1
 
 def _room_bardo():
-    room = server.GameRoom.__new__(server.GameRoom)
+    room = server.GameRoom("BARDO")
     room.phase = "playing"
     room.round_num = 1
     room.turn_index = 0

@@ -251,7 +251,7 @@ async def main():
     check("com dano desde o turno anterior, enfurece", m.get("furia_cega") is True)
 
     print("\n[12] Goblin Combatente: Arremesso manual como ação bônus")
-    r = sala([{"type": "goblin_combatente", "pos": [6, 6]}])
+    r = sala([{"type": "goblin_dual", "pos": [6, 6]}])   # o Combatente não arremessa mais; o Dual sim
     h = await heroi(r, "warrior", 8, 6); h["hp"] = h["max_hp"] = 500; h["ac"] = 0
     await iniciar(r); m = monstro(r)
     await ir_para(r, "monster", m["id"]); r._errs.clear()
@@ -316,6 +316,9 @@ async def main():
     lad = await heroi(r, "rogue", 4, 6)
     frasco = next((i for i in lad.get("bag", []) if i.get("effect") == "coat_poison"), None)
     check("há um frasco na bolsa", frasco is not None)
+    adaga = copy.deepcopy(S._DUNGEON_ITEM_CATALOG["dagger"])
+    lad["gear"]["weapon"] = adaga
+    r._sincronizar_arma_de_combate(lad, adaga)   # o herói de teste nasce desarmado: o autor escolhe o kit
     await iniciar(r); await ir_para(r, "hero", lad["id"]); r._errs.clear()
     await r.handle_teste_acao_heroi(MASTER, lad["id"], "hero_skill", {"skill_id": "veneno_rapido", "veneno_id": (frasco or {}).get("veneno_id")})
     check("Veneno Rápido untou a arma", not r._errs and bool(r._weapon_poison_slots(lad)))
@@ -371,9 +374,9 @@ async def main():
     check("a CA do goblin pressionado caiu 2 no ataque de monstro", cas and cas[-1] == ca_base - 2)
 
     print("\n[19d] Arremesso do Goblin no Manual aceita criatura a até 3 casas")
-    r = sala([{"type": "goblin_combatente", "pos": [6, 6]}, {"type": "troll", "pos": [8, 6]}])
+    r = sala([{"type": "goblin_dual", "pos": [6, 6]}, {"type": "troll", "pos": [8, 6]}])
     h = await heroi(r, "warrior", 11, 11); h["hp"] = h["max_hp"] = 500
-    await iniciar(r); gob = monstro(r, "goblin_combatente"); tr = monstro(r, "troll")
+    await iniciar(r); gob = monstro(r, "goblin_dual"); tr = monstro(r, "troll")
     tr["hp"] = tr["max_hp"] = 500
     await ir_para(r, "monster", gob["id"]); r._errs.clear()
     import random as _rnd

@@ -171,9 +171,9 @@ async def main():
     # conta ataques via broadcast de "Dano"? Mais simples: conta chamadas de execução
     cnt = {"n": 0}
     orig_exec = r2._execute_one_monster_attack
-    async def spy(m, atk, tobj):
+    async def spy(m, atk, tobj, **kw):
         cnt["n"] += 1
-        return await orig_exec(m, atk, tobj)
+        return await orig_exec(m, atk, tobj, **kw)
     r2._execute_one_monster_attack = spy
     await r2._monster_execute_attacks(urso2, {"kind": "player", "obj": alvo})
     check("multi-ataque executa os 2 golpes", cnt["n"] == 2)
@@ -733,9 +733,9 @@ async def main():
 
     def make_spy(room, store):
         orig = room._execute_one_monster_attack
-        async def spy(m, atk, tobj):
+        async def spy(m, atk, tobj, **kw):
             store.append((atk["name"], atk.get("atk_bonus")))
-            return await orig(m, atk, tobj)
+            return await orig(m, atk, tobj, **kw)
         room._execute_one_monster_attack = spy
 
     # Sensível a Venenos: perda de HP máximo dobrada (CON poison)

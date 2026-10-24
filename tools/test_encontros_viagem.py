@@ -108,8 +108,9 @@ class RegrasViagemTests(unittest.TestCase):
         self.assertEqual(alcancadas, estrada, "estrada deve ser contínua, sem trechos isolados")
         self.assertFalse(any(tuple(d.get("pos", [])) in estrada for d in mapa["decorations"]
                              if d.get("type") == "arvore"), "árvores não bloqueiam a estrada")
-        zonas = mapa["encounter_spawn_zones"]
-        self.assertLess(zonas["heroes"]["x_max"] + 4, zonas["enemies"]["x_min"])
+        # O editor não guarda mais `encounter_spawn_zones`: os heróis entram pela entrada do mapa e os
+        # inimigos nascem nas casas fixas de `_iniciar_encontro_viagem` (x >= 14).
+        self.assertLess(mapa["entrance"]["x"] + 4, 14)
 
 
 class TransacaoViagemTests(unittest.IsolatedAsyncioTestCase):
@@ -237,7 +238,11 @@ class TransacaoViagemTests(unittest.IsolatedAsyncioTestCase):
         }
         r.monsters = {}
         await r._check_objectives()
+        # Vencer abre a escolha do anfitrião; o destino só vale depois dela.
         self.assertEqual(r.phase, "city")
+        self.assertEqual(r.pending_world_travel["phase"], "choice")
+        self.assertEqual(r.world_location, "alva_e_luz")
+        await r.handle_world_adventure_encounter_choice("p1", "continue")
         self.assertEqual(r.world_location, "vila_riacho")
         self.assertIsNone(r.pending_world_travel)
         self.assertFalse(r.mission_complete_pending)

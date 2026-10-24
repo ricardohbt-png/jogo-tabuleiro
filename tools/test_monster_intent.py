@@ -274,9 +274,9 @@ def roda_ia_real(r):
         return res
     r._get_monster_primary_target = wrap
     oe = r._execute_one_monster_attack
-    async def ex(m_, atk_def, target_obj):
+    async def ex(m_, atk_def, target_obj, **kw):
         ataque.setdefault(m_["id"], (target_obj.get("obj") or {}).get("id"))
-        return await oe(m_, atk_def, target_obj)
+        return await oe(m_, atk_def, target_obj, **kw)
     r._execute_one_monster_attack = ex
     od = S.d20_attack
     def d20(*a_, **k_):

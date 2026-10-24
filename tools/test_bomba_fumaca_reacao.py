@@ -57,8 +57,8 @@ class SmokeReactionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(definition['alvo'], 'ataque_alvo')
         self.assertEqual(market['price'], 50)
         self.assertEqual(market['effect'], 'throwable')
-        stocks = [city['mercador'] for city in S.CITY_SHOPS.values()
-                  if 'mercador' in city]
+        stocks = [city['mercador'] for cid, city in S.CITY_SHOPS.items()
+                  if 'mercador' in city and cid != 'vila_dos_charcos']   # loja especial da Zumbra
         self.assertTrue(stocks)
         self.assertTrue(all('bomba_flash' in stock for stock in stocks))
 

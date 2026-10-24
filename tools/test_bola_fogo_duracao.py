@@ -10,6 +10,8 @@ import server
 
 async def verificar():
     room = server.GameRoom("FIREBALL_DURATION_TEST")
+    room.map_w = room.map_h = 8
+    room.tiles = [[server.FLOOR] * 8 for _ in range(8)]   # a reação elemental da Bola de Fogo lê o terreno
     room.gm_say = lambda *args, **kwargs: asyncio.sleep(0)
     room._aplicar_dano_area_fogo = lambda *args, **kwargs: asyncio.sleep(0)
     zona = {

@@ -7,6 +7,14 @@ except Exception:
     pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server
+
+# Os saves do editor gravam os arquivos de dados reais: redireciona para uma pasta temporária para este
+# teste nunca tocar em world_adventures.json (um conflito de acesso já o deixou com dados de teste).
+import atexit, shutil, tempfile
+_TMP_DADOS = tempfile.mkdtemp()
+atexit.register(shutil.rmtree, _TMP_DADOS, True)
+server.WORLD_ADVENTURES_FILE = os.path.join(_TMP_DADOS, "world_adventures.json")
+server.WORLD_MAP_POINTS_FILE = os.path.join(_TMP_DADOS, "world_map_points.json")
 from server import GameRoom, make_player
 
 PASS = 0; FAIL = 0

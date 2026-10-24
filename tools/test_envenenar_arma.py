@@ -30,8 +30,9 @@ async def main():
     antes = len(kobold["equipment_consumables"])
     check("envenena arma com uma dose", await room._envenenar_arma_do_inventario(kobold))
     check("dose foi consumida", len(kobold["equipment_consumables"]) == antes - 1)
-    check("próximo ataque fica envenenado", kobold["veneno_arma_ativo"] is True
-          and kobold["veneno_arma_id"] in S.VENENOS)
+    envenenados = [i for i, _a in enumerate(kobold["attacks"]) if room._monster_attack_poison_slots(kobold, i)]
+    check("próximo ataque fica envenenado (cargas no ataque)", len(envenenados) == 1
+          and room._monster_attack_poison_slots(kobold, envenenados[0])[0] in S.VENENOS)
     check("não gasta segunda dose enquanto arma já está envenenada",
           not await room._envenenar_arma_do_inventario(kobold))
 
