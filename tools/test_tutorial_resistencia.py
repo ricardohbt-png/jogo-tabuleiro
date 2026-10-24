@@ -94,17 +94,10 @@ class TutorialResistenciaTests(unittest.IsolatedAsyncioTestCase):
                     if f['id'] not in p['licoes_feitas']:
                         p['licoes_feitas'].append(f['id'])
         p['licao_atual'] = None
-        p['pos'] = [51, 18]
-        p['moves_left'] = 5
-        p['moved_this_turn'] = False
-        await r.handle_move(p['id'], 0, 1)
-        self.assertEqual(p['pos'], [51, 19])
-        await r.handle_open_door(p['id'], 51, 20)
-        await r.handle_move(p['id'], 0, 1)
-        await r.handle_move(p['id'], 0, 1)
-        await r.handle_move(p['id'], 0, 1)
-        await r.handle_move(p['id'], 0, 1)
-        self.assertEqual(p['pos'], [51, 23])
+        # O corredor de armadilhas, as salas de gás/piche e a gárgula agora ficam entre a aula de dano
+        # e a retirada (todas puláveis); aqui basta chegar à saída.
+        p['pos'] = [36, 36]
+        await r._verificar_falas(p, r._room_containing_point(p['pos']))
         self.assertEqual(p['licao_atual'], 'fala_retirada')
         self.assertTrue({'fala_res', 'fala_vuln', 'fala_atalhos'}.issubset(p['licoes_puladas']))
 
@@ -154,7 +147,7 @@ class TutorialResistenciaTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("fala_vuln", p["licoes_feitas"])
 
         self.assertIsNone(p["licao_atual"])
-        p["pos"] = [51, 24]
+        p["pos"] = [36, 36]   # a saída do Campo (depois do corredor de armadilhas e das salas de reações)
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         self.assertEqual(p["licao_atual"], "fala_retirada")
 
