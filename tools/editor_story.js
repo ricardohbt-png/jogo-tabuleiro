@@ -16,6 +16,7 @@
       fit: s.fit === "contain" ? "contain" : "cover", _url: "",
       // condição do slide (item/fato/...): o painel só edita o item, mas conserva o resto
       requisito: s.requisito && typeof s.requisito === "object" ? s.requisito : null,
+      cinematica: typeof s.cinematica === "string" ? s.cinematica : "",
       negar: s.negar === true }));
     return { slides, audio: val.audio || null, _audioUrl: null };
   }
@@ -27,15 +28,16 @@
   }
   // -> string (1 slide só-texto, sem áudio) | objeto | undefined (vazio)
   function storyToSaved(st) {
-    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image);
+    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image || s.cinematica);
     if (!slides.length) return undefined;
     if (slides.length === 1 && slides[0].text && slides[0].text.trim()
-        && !slides[0].image && !st.audio && !condicaoAtiva(slides[0]))
+        && !slides[0].image && !slides[0].cinematica && !st.audio && !condicaoAtiva(slides[0]))
       return slides[0].text;
     const out = { slides: slides.map(s => {
       const o = {};
       if (s.text && s.text.trim()) o.text = s.text;
       if (s.image) o.image = s.image;
+      if (s.cinematica) o.cinematica = s.cinematica;
       if (s.fit === "contain") o.fit = "contain";
       if (condicaoAtiva(s)) { o.requisito = s.requisito; if (s.negar) o.negar = true; }
       return o;
@@ -164,7 +166,7 @@
         st.slides.splice(i + 1, 0, {
           text: s.text || "", image: s.image || "", fit: s.fit === "contain" ? "contain" : "cover",
           _url: "", _imgFile: s._imgFile || "",
-          requisito: s.requisito ? Object.assign({}, s.requisito) : null, negar: !!s.negar
+          cinematica: s.cinematica || "", requisito: s.requisito ? Object.assign({}, s.requisito) : null, negar: !!s.negar
         });
         render();
       };

@@ -111,6 +111,38 @@ window.LANG_INTERFACE = {
   "ui.diario.tentar_novamente": {"en": "Try again", "pt": "Tentar novamente"},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
+  "dado.bomba_de_flash_de_gilo": {
+    "en": "Gilo's Flash Bomb",
+    "pt": "Bomba de Flash de Gilo"
+  },
+  "cat.item.flecha_envenenada.nome": {
+    "en": "Poisoned Arrow",
+    "pt": "Flecha Envenenada"
+  },
+  "cat.item.flechas_incendiarias_envenenadas.nome": {
+    "en": "Poisoned Incendiary Arrows",
+    "pt": "Flechas Incendiárias Envenenadas"
+  },
+  "cat.item.flechas_prata_envenenadas.nome": {
+    "en": "Poisoned Silver Arrows",
+    "pt": "Flechas de Prata Envenenadas"
+  },
+  "cat.item.municao_envenenada": {
+    "en": "{nome}",
+    "pt": "{nome}"
+  },
+  "cat.item.virote_envenenado.nome": {
+    "en": "Poisoned Bolt",
+    "pt": "Virote Envenenado"
+  },
+  "cat.item.virotes_incendiarios_envenenados.nome": {
+    "en": "Poisoned Incendiary Bolts",
+    "pt": "Virotes Incendiários Envenenados"
+  },
+  "cat.item.virotes_prata_envenenados.nome": {
+    "en": "Poisoned Silver Bolts",
+    "pt": "Virotes de Prata Envenenados"
+  },
   "dado.acerto": {
     "en": "To-hit",
     "pt": "Acerto"
@@ -11298,6 +11330,30 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.manual": {
     "en": "Save · {local}",
     "pt": "Salvamento · {local}"
+  },
+  "ui.cinematica.gilo.1": {
+    "en": "Easy now, little ones... I just wanted to leave.",
+    "pt": "Calma, bichinhos... eu só queria ir embora."
+  },
+  "ui.cinematica.gilo.2": {
+    "en": "Ah, damn it! My coin!",
+    "pt": "Ah, desgraça! A minha moeda!"
+  },
+  "ui.cinematica.gilo.3": {
+    "en": "The caravan... already took the Eye...",
+    "pt": "A caravana... já levou o Olho..."
+  },
+  "ui.cinematica.gilo.4": {
+    "en": "...up the mountain.",
+    "pt": "...serra acima."
+  },
+  "ui.cinematica.tec": {
+    "en": "TWANG!",
+    "pt": "TEC!"
+  },
+  "ui.cinematica.rever": {
+    "en": "Watch again",
+    "pt": "Rever"
   },
   "ui.ladino.escolha_arma_veneno": {"en":"Choose the weapon to poison","pt":"Escolha a arma para envenenar"},
   "ui.ladino.arma_principal": {"en":"Main hand","pt":"Mão principal"},

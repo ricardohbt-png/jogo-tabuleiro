@@ -755,6 +755,7 @@ const DECOR_GLB_TYPES = {
   mesa_cadeiras: 'assets/objetos/mesa.glb',
   trono: 'assets/objetos/trono.glb',
   barril: 'assets/objetos/barril.glb',
+  barril_cerveja: 'assets/objetos/barril_cerveja.glb',
   // Toda decoração do tipo coluna usa o mesmo modelo, mesmo sem PNG próprio.
   coluna: 'assets/objetos/coluna.glb',
   arvore: 'assets/objetos/arvore.glb',
@@ -840,6 +841,7 @@ const DECOR_3D = {
   carroca:        { shape: 'box', h: 0.7,  color: 0x7a5230 },
   coluna:         { shape: 'cyl', h: 1.8,  color: 0xaaaaaa },
   barril:         { shape: 'cyl', h: 0.8,  color: 0x8a5a2a },
+  barril_cerveja: { shape: 'cyl', h: 0.8,  color: 0x55321d },
   arca_tesouros:  { shape: 'box', h: 0.6,  color: 0xc8a23a },
   cama_casal:     { shape: 'box', h: 0.5,  color: 0x8a5a3c },
   estante_livros: { shape: 'box', h: 1.6,  color: 0x5a3a1a },
@@ -2645,12 +2647,46 @@ function _storyPaintMute() {
   if (ov) ov.querySelector('#story-mute').textContent = _storyMuted ? '🔇' : '🔊';
 }
 
+// Slide com `cinematica`: em vez de imagem, uma animação cartum de peças atuando sozinhas (src/cinematica.js).
+// Idempotente por chave: renderStory repinta a cada game_state e não pode reiniciar a cena em andamento.
+let _storyCine = null;
+function _storyCineParar() {
+  if (_storyCine && _storyCine.ctl) _storyCine.ctl.parar();
+  _storyCine = null;
+  const c = document.getElementById('story-cine'); if (c) c.style.display = 'none';
+  const r = document.getElementById('story-cine-rever'); if (r) r.style.display = 'none';
+}
+function _storyCineTextos() {
+  return { falas: [t('ui.cinematica.gilo.1'), t('ui.cinematica.gilo.2'), t('ui.cinematica.gilo.3'), t('ui.cinematica.gilo.4')],
+           tec: t('ui.cinematica.tec') };
+}
+function _storyCinePaint(ov, img, slide, chave) {
+  if (!slide.cinematica || !window.Cinematica) { if (_storyCine) _storyCineParar(); return; }
+  let cv = document.getElementById('story-cine');
+  if (!cv) {
+    cv = document.createElement('canvas'); cv.id = 'story-cine';
+    cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;background:#000';
+    img.appendChild(cv);
+    const rv = document.createElement('button'); rv.id = 'story-cine-rever'; rv.textContent = '↻ ' + t('ui.cinematica.rever');
+    rv.style.cssText = 'position:absolute;top:14px;left:14px;z-index:3;display:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:bold';
+    rv.onclick = () => { if (_storyCine && _storyCine.ctl) { _storyCine.ctl.reiniciar(); rv.style.display = 'none'; } };
+    ov.appendChild(rv);
+  }
+  cv.style.display = 'block';
+  if (_storyCine && _storyCine.chave === chave) return;
+  _storyCineParar(); cv.style.display = 'block';
+  const rv = document.getElementById('story-cine-rever');
+  _storyCine = { chave, ctl: Cinematica.iniciar(cv, slide.cinematica, {
+    textos: _storyCineTextos(), onFim: () => { if (rv) rv.style.display = 'block'; } }) };
+}
+
 function _storyPaint() {
   const beat = GS.pendingStory && GS.pendingStory();
   const ov = document.getElementById('story-overlay');
   if (!beat || !ov) return;
   const slide = beat.slides[_storyIdx] || {};
   const img = ov.querySelector('#story-img');
+  _storyCinePaint(ov, img, slide, beat.key + ':' + _storyIdx);
   if (slide.image) {
     img.style.backgroundImage = 'url("' + slide.image + '")';
     img.style.backgroundSize = (slide.fit === 'contain') ? 'contain' : 'cover';
@@ -2678,6 +2714,7 @@ function _storyComplete(msg){
   if(!ov || ov.dataset.key !== msg?.key) return;
   ov.style.display='none';
   _storyAudioStop();
+  _storyCineParar();
   _cidadeTourTentarMostrar();
 }
 
@@ -2687,6 +2724,7 @@ function renderStory() {
   if (!beat || !beat.slides || !beat.slides.length) {
     if (ov) ov.style.display = 'none';
     _storyAudioStop();
+    _storyCineParar();
     return;
   }
   if (!ov) {
@@ -2714,6 +2752,7 @@ function renderStory() {
       else {
         GS.marcarStoryVista(b.key);
         _storyAudioStop();
+        _storyCineParar();
         _defeatMusicActive = false;
         _defeatAudioStop();
         ov.style.display = 'none';
@@ -7702,8 +7741,8 @@ function _pawnScaleFactor(porte){
 // a ovelha (médio) usa o enquadramento comum.
 const _TINY_3D_PAWNS = new Set(['pombo', 'rato']);
 const _TINY_3D_PAWN_FRAC = 0.34;
-// O rato da Metamorfose deve ter presença visual semelhante à do pombo.
-const _RATO_3D_PAWN_FRAC = _TINY_3D_PAWN_FRAC;
+// O rato fica mais 10% maior que a escala anterior (0,374 × 1,10 = 0,4114).
+const _RATO_3D_PAWN_FRAC = 0.4114;
 const _GATO_3D_PAWN_FRAC = 0.40;
 // A ovelha é uma forma média, mas o modelo é largo; reduzimos um pouco o
 // enquadramento para ela não dominar visualmente o quadrado.
@@ -52050,6 +52089,9 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   // Identificadores de `image` do bestiário.
   goblin_assassino: 'assets/models3d/monstros/assassino_goblin.glb',
   bandido:           'assets/models3d/monstros/bandido.glb',
+  gilo_dedos_sujos:  'assets/models3d/monstros/gilo_dedos_sujos.glb',
+  bardo:              'assets/models3d/monstros/bardo.glb',
+  bardo_da_caravana:  'assets/models3d/monstros/bardo_da_caravana.glb',
   goblinArqueiro:    'assets/models3d/monstros/goblin_arqueiro.glb',
   goblinCombatente:  'assets/models3d/monstros/goblin_combatente.glb',
   // Variantes por instância: a mesma chave de `image` seleciona PNG e GLB.
@@ -52091,6 +52133,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   loboCinzento:      'assets/models3d/monstros/lobo.glb',
   lobo_alfa:         'assets/models3d/monstros/lobo_alfa.glb',
   ursoNegro:         'assets/models3d/monstros/urso.glb',
+  urso_pardo:        'assets/models3d/monstros/urso_pardo.glb',
   // O Zumbi Infectado mantém o mesmo GLB no fallback por tipo.
   zumbi:             'assets/models3d/monstros/zumbi.glb',
   ogroClava:         'assets/models3d/monstros/ogro_clava.glb',
@@ -52196,6 +52239,14 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   vela_de_fogo:       'assets/models3d/monstros/vela_fogo.glb',
 });
 function _monsterGLBPath(imageName, monsterType){
+  // A variante da Caravana compartilha o identificador de imagem do Bardo,
+  // mas usa material verde e ouro próprio.
+  if (monsterType === 'bardo_da_caravana')
+    return _MONSTER_GLB_MODELS.bardo_da_caravana;
+  // O Urso Pardo compartilha a imagem 2D do Urso Negro, mas usa uma cópia
+  // própria do GLB com paleta marrom enegrecida.
+  if (monsterType === 'urso_pardo')
+    return _MONSTER_GLB_MODELS.urso_pardo;
   // O Assassino Goblin compartilha a arte 2D do Goblin Dual, mas usa seu
   // modelo 3D próprio; o tipo precisa prevalecer sobre o identificador de imagem.
   if (monsterType === 'goblin_assassino')
@@ -52522,6 +52573,10 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.userData._monsterOriented = !!oriented;
     wrap.userData._monsterCenteredLength = !!(oriented && fillFootprint && !is2x2);
     // Ajustes individuais de proporção sem afetar as demais miniaturas.
+    // O Bandido fica 5% maior sobre a escala anterior (1,05 × 1,05 = 1,1025);
+    // Gilo recebe mais uma redução de 5% (0,847875 × 0,95 = 0,80548125);
+    // o Assassino da Serra recebe mais 5% (0,85 × 0,95 = 0,8075).
+    // O Bardo fica 15% menor; o Bardo da Caravana, 10% menor.
     // As três variantes de Medusa ficam 15% menores; o Mago das Trevas fica
     // 8% menor; o Necromante usa 1,045 após a redução
     // de 5% sobre o ajuste anterior; o Lacralion
@@ -52541,7 +52596,12 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     // 10% menores, respectivamente;
     // o Garaloux Jovem fica 20% menor e o Alfa fica 15% menor sobre a escala
     // atual (1,30 × 0,85 = 1,105).
-    const monsterVisualScale = monsterType === 'dark_mage' ? 0.92
+    const monsterVisualScale = monsterType === 'bandido' ? 1.1025
+      : monsterType === 'gilo_dedos_sujos' ? 0.80548125
+      : monsterType === 'assassino_da_caravana' ? 0.8075
+      : monsterType === 'bardo_da_caravana' ? 0.90
+      : monsterType === 'bardo' ? 0.85
+      : monsterType === 'dark_mage' ? 0.92
       : monsterType === 'necromante' ? 1.045
       : monsterType === 'lacralion_filhote' ? 0.70
       : monsterType === 'lacralion_anciao' ? 1.30
@@ -52549,6 +52609,7 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
           || monsterType === 'grande_gorgona') ? 0.85
       : (monsterType === 'zumbi' || monsterType === 'zumbi_infectado') ? 0.85
       : (monsterType === 'bugbear_sombras' || imageName === 'bugbear') ? 0.90
+      : monsterType === 'urso_pardo' ? 1.20
       : monsterType === 'ferrao_charcos_adulto' ? 1.20
       : monsterType === 'ferrao_charcos_anciao' ? 1.30
       : monsterType === 'ovelha' ? 0.68
@@ -52572,6 +52633,8 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : (monsterType === 'orc' || monsterType === 'orc_guerreiro'
           || imageName === 'orc' || imageName === 'orcGuerreiro'
           || imageName === 'orc_guerreiro') ? 0.90
+      // Escorpião Gigante: escala anterior 0,84 × 1,10 = 0,924.
+      : monsterType === 'escorpiao_gigante' ? 0.924
       : (monsterType === 'escorpiao_pedra' || monsterType === 'aranha_sombria'
           || imageName === 'escorpiaodepedra' || imageName === 'aranhasombria') ? 0.70
       : (monsterType === 'ogro_clava' || monsterType === 'ogro_lanca'
@@ -52678,6 +52741,10 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'bugbear',
   ]);
   const movementFront = new Set([
+    // O GLB do Bardo também precisa do quarto de volta para a frente seguir o movimento.
+    'bardo',
+    // Estes modelos também precisam alinhar a frente ao sentido do movimento.
+    'bandido', 'gilo_dedos_sujos', 'goblin_assassino', 'jacare',
     'ciclope',
     'harpia',
     // O Goblin Arqueiro também precisa do giro de 90° para acompanhar a

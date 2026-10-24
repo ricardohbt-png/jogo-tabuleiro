@@ -141,6 +141,17 @@ SLIDES_FINAIS = [
 ]
 
 
+def outro_gilo():
+    """Encerramento da Praça viva: a cinemática cartum da morte do Gilo (src/cinematica.js), só para quem chegou a
+    tempo de vê-lo cair (o mesmo fato que a Praça viva grava). A legenda fica sob a animação."""
+    import elara_graciero_mapas as M
+    return {"slides": [{
+        "cinematica": "gilo_morte",
+        "text": ("Os escorpiões se fecham sobre o Gilo. Ele não solta a moeda sem cunho até o fim, e as últimas "
+                 "palavras ficam com vocês."),
+        "requisito": _req(fato=M.F_VIU_MORRER)}]}
+
+
 def outro_rota():
     slides = []
     for texto, cond in SLIDES_FINAIS:
@@ -161,10 +172,10 @@ def destinos():
     def perto(dx, dy):
         return round(min(100, max(0, base["x"] + dx)), 2), round(min(100, max(0, base["y"] + dy)), 2)
 
-    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False):
+    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False, outro_etapa=""):
         x, y = perto(dx, dy)
         return {"id": did, "nome": nome, "x": x, "y": y, "fome": 1, "sede": 1,
-                "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": ""} for arq, enc in etapas],
+                "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": outro_etapa} for arq, enc in etapas],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
                 "outro_rota": outro_rota() if final else "", "requisito": requisito, "renome_recompensa": renome}
@@ -176,7 +187,8 @@ def destinos():
                                        _req(aventura_id="elara_graciero_beco"), 1),
         "elara_graciero_praca_viva": destino("elara_graciero_praca_viva", "A Praça dos Escorpiões", 3.0, 0.5,
                                              [("elara_graciero_praca_viva.json", False)],
-                                             _req(aventura_id="elara_graciero_cais", sem_fato=F_LENTO), 2),
+                                             _req(aventura_id="elara_graciero_cais", sem_fato=F_LENTO), 2,
+                                             outro_etapa=outro_gilo()),
         "elara_graciero_praca_morta": destino("elara_graciero_praca_morta", "A Praça dos Escorpiões", 3.0, 0.5,
                                               [("elara_graciero_praca_morta.json", False)],
                                               _req(aventura_id="elara_graciero_cais", fato=F_LENTO), 2),

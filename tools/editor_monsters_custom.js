@@ -4085,298 +4085,6 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "so_habilidade": "furia_berserker"
   },
   {
-    "type": "gilo_dedos_sujos",
-    "name": "Gilo Dedos Sujos",
-    "emoji": "🗡️",
-    "overwrite_native": false,
-    "tier": 2,
-    "cr": 2.0,
-    "base_hp": 38,
-    "hp": 39,
-    "natural_armor": 0,
-    "ac_bonus": 0,
-    "ac": 13,
-    "movement": 6,
-    "movement_exception": false,
-    "vision_base": 0,
-    "visao_escuro": false,
-    "base_attack_bonus": 1,
-    "caster_level": 1,
-    "str_": 14,
-    "dex": 16,
-    "con_": 12,
-    "int_": 10,
-    "fort_base": 1,
-    "ref_base": 1,
-    "will_base": 1,
-    "fort": 2,
-    "ref_": 4,
-    "will": 1,
-    "attacks": [
-      {
-        "name": "Adaga",
-        "damage": "1d6",
-        "fire_damage": null,
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 2,
-        "attack_attribute": "dex",
-        "damage_attribute": "dex",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": 3,
-        "base_attack_bonus": 0,
-        "atk_bonus": 3,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "disease_severity": null,
-        "disease_dc": 10,
-        "disease_save": "fortitude",
-        "causa_sangramento": false,
-        "aplica_hemorragia": false,
-        "extra_damage": null,
-        "extra_damage_types": []
-      }
-    ],
-    "special_abilities": [
-      {
-        "id": "hero_warrior_mira_certeira",
-        "source": "heroi",
-        "source_id": "mira_certeira",
-        "source_class": "warrior",
-        "name": "Mira Certeira",
-        "icon": "⚔️",
-        "descricao": "+2 no dado de acerto neste turno",
-        "action_type": "acao",
-        "monster_effect": "vantagem_combate",
-        "guild_progressions": [
-          {
-            "id": "guerreiro_mira_3",
-            "level": 3,
-            "requires": "guerreiro_combinar_2",
-            "name": "Mira Certeira III",
-            "icon": "🎯",
-            "description": "Mira Certeira também concede +2 de dano (além do +2 de acerto)."
-          }
-        ],
-        "uses_per_day": 3,
-        "cooldown_turns": 4
-      }
-    ],
-    "monster_abilities": [
-      {
-        "id": "hero_warrior_mira_certeira",
-        "uses_per_day": 3,
-        "cooldown_turns": 4
-      }
-    ],
-    "monster_spells": [],
-    "negative_ability_ids": [],
-    "negative_ability_configs": {},
-    "immunities": [],
-    "resistances": [],
-    "weaknesses": [
-      {
-        "type": "acid",
-        "name": "Ácido",
-        "multiplier": 2
-      }
-    ],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
-    "guaranteed_loot": [],
-    "loot_table": {},
-    "loot_drops": [
-      {
-        "kind": "gold",
-        "amount": 40,
-        "chance": 100
-      }
-    ],
-    "gold": 0,
-    "xp": 60,
-    "ai_type": "agressivo",
-    "ai_profile": "agressivo",
-    "ai_tactics": [],
-    "image": "soldado",
-    "portrait": "soldado",
-    "model3d": null,
-    "armor_description": null,
-    "size": [
-      1,
-      1
-    ],
-    "oriented": false,
-    "porte": "medio",
-    "spawn_min": 0,
-    "spawn_max": 0,
-    "undead": false,
-    "subtipo": "raca_padrao",
-    "boss": false,
-    "voo": false,
-    "altura_inicial": 0,
-    "altura_max": 0,
-    "pode_alterar_altura": false,
-    "custo_mov_altura": 1,
-    "ignora_obstaculos_voo": false
-  },
-  {
-    "type": "escorpiao_gigante",
-    "name": "Escorpião Gigante",
-    "emoji": "🦂",
-    "overwrite_native": false,
-    "tier": 1,
-    "cr": 1.0,
-    "base_hp": 16,
-    "hp": 17,
-    "natural_armor": 3,
-    "ac_bonus": 0,
-    "ac": 14,
-    "movement": 6,
-    "movement_exception": false,
-    "vision_base": 0,
-    "visao_escuro": false,
-    "base_attack_bonus": 2,
-    "caster_level": 1,
-    "str_": 10,
-    "dex": 12,
-    "con_": 12,
-    "int_": 1,
-    "fort_base": 3,
-    "ref_base": 2,
-    "will_base": 5,
-    "fort": 4,
-    "ref_": 3,
-    "will": 0,
-    "attacks": [
-      {
-        "name": "Pinça",
-        "damage": "1d8",
-        "fire_damage": null,
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 2,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": 0,
-        "base_attack_bonus": 2,
-        "atk_bonus": 2,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "disease_severity": null,
-        "disease_dc": 10,
-        "disease_save": "fortitude",
-        "causa_sangramento": false,
-        "aplica_hemorragia": false,
-        "extra_damage": null,
-        "extra_damage_types": []
-      },
-      {
-        "name": "Ferrão",
-        "damage": "1d8",
-        "fire_damage": null,
-        "damage_types": [
-          "physical"
-        ],
-        "num_attacks": 1,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
-        "apply_attribute_damage": true,
-        "attribute_mod_base": 0,
-        "base_attack_bonus": 2,
-        "atk_bonus": 2,
-        "range": null,
-        "on_hit": "veneno_escorpiao_pedra",
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "disease_severity": null,
-        "disease_dc": 10,
-        "disease_save": "fortitude",
-        "causa_sangramento": false,
-        "aplica_hemorragia": false,
-        "extra_damage": null,
-        "extra_damage_types": []
-      }
-    ],
-    "special_abilities": [
-      {
-        "id": "envenenar",
-        "name": "Envenenar",
-        "action_type": "passiva",
-        "attack_index": 1,
-        "veneno_id": "veneno_escorpiao_pedra",
-        "poison_dc": 10,
-        "descricao": "Vincula um veneno escolhido a um dos ataques da criatura.",
-        "source": "monstro",
-        "uses_per_day": 1,
-        "cooldown_turns": 0
-      }
-    ],
-    "monster_abilities": [
-      {
-        "id": "envenenar",
-        "uses_per_day": 1,
-        "cooldown_turns": 0,
-        "attack_index": 1,
-        "veneno_id": "veneno_escorpiao_pedra",
-        "poison_dc": 10
-      }
-    ],
-    "monster_spells": [],
-    "negative_ability_ids": [],
-    "negative_ability_configs": {},
-    "immunities": [],
-    "resistances": [],
-    "weaknesses": [
-      {
-        "type": "physical",
-        "categoria": "contundente",
-        "name": "Contundente",
-        "bonus_flat": 2,
-        "descricao": "Fraqueza a Contundente: recebe +1 dano"
-      }
-    ],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
-    "guaranteed_loot": [],
-    "loot_table": {},
-    "loot_drops": [],
-    "gold": 0,
-    "xp": 0,
-    "ai_type": "agressivo",
-    "ai_profile": "agressivo",
-    "ai_tactics": [],
-    "image": "escorpiaodepedra",
-    "portrait": "escorpiaodepedra",
-    "model3d": null,
-    "armor_description": null,
-    "size": [
-      1,
-      1
-    ],
-    "oriented": false,
-    "porte": "medio",
-    "spawn_min": 0,
-    "spawn_max": 0,
-    "undead": false,
-    "subtipo": "animal",
-    "boss": false,
-    "voo": false,
-    "altura_inicial": 0,
-    "altura_max": 0,
-    "pode_alterar_altura": false,
-    "custo_mov_altura": 1,
-    "ignora_obstaculos_voo": false
-  },
-  {
     "type": "leonel",
     "name": "Leonel",
     "emoji": "🎩",
@@ -4634,7 +4342,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_tactics": [],
     "image": "soldado",
     "portrait": "soldado",
-    "model3d": null,
+    "model3d": "assets/models3d/monstros/assassino_da_serra.glb",
     "armor_description": null,
     "size": [
       1,
@@ -4653,6 +4361,387 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "pode_alterar_altura": false,
     "custo_mov_altura": 1,
     "ignora_obstaculos_voo": false
+  },
+  {
+    "type": "escorpiao_gigante",
+    "name": "Escorpião Gigante",
+    "emoji": "🦂",
+    "overwrite_native": false,
+    "tier": 1,
+    "cr": 1.5,
+    "base_hp": 17,
+    "hp": 18,
+    "natural_armor": 4,
+    "ac_bonus": 0,
+    "ac": 15,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 4,
+    "caster_level": 1,
+    "str_": 10,
+    "dex": 12,
+    "con_": 12,
+    "int_": 1,
+    "fort_base": 3,
+    "ref_base": 2,
+    "will_base": 5,
+    "fort": 4,
+    "ref_": 3,
+    "will": 0,
+    "attacks": [
+      {
+        "name": "Pinça",
+        "damage": "2d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 2,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 0,
+        "base_attack_bonus": 4,
+        "atk_bonus": 4,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "disease_severity": null,
+        "disease_dc": 10,
+        "disease_save": "fortitude",
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      },
+      {
+        "name": "Ferrão",
+        "damage": "1d6",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 0,
+        "base_attack_bonus": 4,
+        "atk_bonus": 4,
+        "range": null,
+        "on_hit": "veneno_escorpiao_pedra",
+        "on_hit_effect": null,
+        "poison_dc": 14,
+        "disease_severity": null,
+        "disease_dc": 10,
+        "disease_save": "fortitude",
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [
+      {
+        "id": "envenenar",
+        "name": "Envenenar",
+        "action_type": "passiva",
+        "attack_index": 1,
+        "veneno_id": "veneno_escorpiao_pedra",
+        "poison_dc": 14,
+        "descricao": "Vincula um veneno escolhido a um dos ataques da criatura.",
+        "source": "monstro",
+        "uses_per_day": 1,
+        "cooldown_turns": 0
+      }
+    ],
+    "monster_abilities": [
+      {
+        "id": "envenenar",
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "attack_index": 1,
+        "veneno_id": "veneno_escorpiao_pedra",
+        "poison_dc": 14
+      }
+    ],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "negative_ability_configs": {},
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "type": "physical",
+        "categoria": "contundente",
+        "name": "Contundente",
+        "bonus_flat": 2,
+        "descricao": "Fraqueza a Contundente: recebe +1 dano"
+      }
+    ],
+    "equipment_enabled": false,
+    "equipped_items": [],
+    "equipment": [],
+    "guaranteed_loot": [],
+    "loot_table": {
+      "1-15": {
+        "tipo": "item",
+        "id": "veneno_escorpiao_aprimorado",
+        "quantidade": 1
+      },
+      "16-25": {
+        "tipo": "item",
+        "id": "veneno_escorpiao_aprimorado",
+        "quantidade": 2
+      },
+      "26-30": {
+        "tipo": "item",
+        "id": "veneno_escorpiao_aprimorado",
+        "quantidade": 3
+      },
+      "31-100": null
+    },
+    "loot_drops": [],
+    "gold": 0,
+    "xp": 0,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "escorpiaodepedra",
+    "portrait": "escorpiaodepedra",
+    "model3d": "assets/models3d/monstros/escorpiao_gigante_preto.glb",
+    "armor_description": null,
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "animal",
+    "boss": false,
+    "voo": false,
+    "altura_inicial": 0,
+    "altura_max": 0,
+    "pode_alterar_altura": false,
+    "custo_mov_altura": 1,
+    "ignora_obstaculos_voo": false
+  },
+  {
+    "type": "gilo_dedos_sujos",
+    "name": "Gilo Dedos Sujos",
+    "emoji": "🗡️",
+    "overwrite_native": false,
+    "tier": 2,
+    "cr": 2.5,
+    "base_hp": 35,
+    "hp": 36,
+    "natural_armor": 0,
+    "ac_bonus": 0,
+    "ac": 12,
+    "movement": 6,
+    "movement_exception": false,
+    "vision_base": 0,
+    "visao_escuro": false,
+    "base_attack_bonus": 3,
+    "caster_level": 1,
+    "str_": 14,
+    "dex": 15,
+    "con_": 12,
+    "int_": 11,
+    "fort_base": 1,
+    "ref_base": 4,
+    "will_base": 1,
+    "fort": 2,
+    "ref_": 6,
+    "will": 1,
+    "attacks": [
+      {
+        "name": "Besta de Mão",
+        "damage": "1d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "dex",
+        "damage_attribute": "dex",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 3,
+        "atk_bonus": 5,
+        "range": 4,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "disease_severity": null,
+        "disease_dc": 10,
+        "disease_save": "fortitude",
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      },
+      {
+        "name": "Besta de Mão (segunda)",
+        "damage": "1d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
+        "attack_attribute": "dex",
+        "damage_attribute": "dex",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 3,
+        "atk_bonus": 5,
+        "range": 4,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "disease_severity": null,
+        "disease_dc": 10,
+        "disease_save": "fortitude",
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      }
+    ],
+    "special_abilities": [],
+    "monster_abilities": [],
+    "monster_spells": [],
+    "negative_ability_ids": [],
+    "negative_ability_configs": {},
+    "immunities": [],
+    "resistances": [],
+    "weaknesses": [
+      {
+        "type": "acid",
+        "name": "Ácido",
+        "multiplier": 2
+      }
+    ],
+    "equipment_enabled": true,
+    "equipped_items": [
+      "leather_plate",
+      "hand_crossbow",
+      "ring_vita",
+      "circlet",
+      "boots",
+      "amulet",
+      "cinto_utilidades"
+    ],
+    "equipment": [
+      "leather_plate",
+      "hand_crossbow",
+      "ring_vita",
+      "circlet",
+      "boots",
+      "amulet",
+      "cinto_utilidades"
+    ],
+    "guaranteed_loot": [],
+    "loot_table": {},
+    "loot_drops": [
+      {
+        "kind": "gold",
+        "amount": 40,
+        "chance": 100
+      }
+    ],
+    "gold": 0,
+    "xp": 60,
+    "ai_type": "agressivo",
+    "ai_profile": "agressivo",
+    "ai_tactics": [],
+    "image": "gilo_dedos_sujos",
+    "portrait": "gilo_dedos_sujos",
+    "model3d": "assets/models3d/monstros/gilo_dedos_sujos.glb",
+    "armor_description": null,
+    "size": [
+      1,
+      1
+    ],
+    "oriented": false,
+    "porte": "medio",
+    "spawn_min": 0,
+    "spawn_max": 0,
+    "undead": false,
+    "subtipo": "raca_padrao",
+    "boss": true,
+    "voo": false,
+    "altura_inicial": 0,
+    "altura_max": 0,
+    "pode_alterar_altura": false,
+    "custo_mov_altura": 1,
+    "ignora_obstaculos_voo": false,
+    "level": 4,
+    "class_id": "rogue",
+    "gilo_loadout": {
+      "weapons": [
+        {
+          "id": "hand_crossbow",
+          "quantity": 2
+        }
+      ],
+      "armor": "leather_plate",
+      "accessories": [
+        "ring_vita",
+        "ring_vita",
+        "amulet",
+        "circlet",
+        "boots",
+        "cinto_utilidades"
+      ],
+      "consumables": {
+        "virote_incendiario": 30,
+        "virote_alquimico": 10,
+        "frasco_piche": 2,
+        "frasco_oleo": 2,
+        "fogo_grego": 2,
+        "health_potion_concentrated": 3,
+        "veneno_agonia_sufocante": 2,
+        "ensaio_sobre_a_cegueira": 1,
+        "veneno_ardonia_negra": 1,
+        "bomba_flash": 4
+      },
+      "veneno_rapido_level": 3,
+      "flash_reaction": "somente_quando_gilo_for_atacado",
+      "abilities": [
+        {
+          "id": "disparo_duplo",
+          "name": "Disparo Duplo",
+          "uses": "ataques duplos com as duas bestas"
+        },
+        {
+          "id": "mira_perfeita",
+          "name": "Mira Perfeita",
+          "cooldown_rounds": 4
+        },
+        {
+          "id": "arremesso_rapido",
+          "name": "Arremesso Rápido",
+          "cooldown_rounds": 4
+        },
+        {
+          "id": "sangue_frio",
+          "name": "Sangue Frio",
+          "cooldown_rounds": 5
+        },
+        {
+          "id": "veneno_rapido_3",
+          "name": "Veneno Rápido III",
+          "effect": "dois venenos diferentes por conjunto de 10 virotes"
+        }
+      ]
+    }
   }
 ];
 // GERADO pelo servidor ao salvar no Editor de criaturas.

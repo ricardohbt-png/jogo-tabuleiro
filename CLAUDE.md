@@ -1,16 +1,5 @@
 # Legends for Hire — Regras de Arquitetura
 
-### Bardo da Caravana: variante nativa do Bardo (2026-10-23)
-
-O Bardo da Caravana (rota do Olho) deixou de ser ficha personalizada derivada do Soldado e virou **variante nativa do
-Bardo**, `_variante_bardo_caravana()` no `server.py`: mesma IA (`ai_type: "bardo"`), Canção Heroica, Provocação e instrumento
-sorteado, só mais forte — 26 PV (contra 9), CA 16 com Couro Reforçado, ataque +6 (contra +3), Provocação CD 13 (`bardo_cd_provocacao`),
-recarga 3 (`bardo_recarga`), instrumento padrão ou refinado, arma besta/besta de mão/chicote, ouro 30–60, ND 2. O motor reconhece
-variantes por `_eh_bardo(m)` (tipo `bardo` **ou** IA `bardo`) em vez de comparar `type == "bardo"`; uma ficha personalizada não
-serve porque o validador só aceita habilidades da biblioteca do editor e descarta `random_equipment`. `ficha_bardo_agente` e a
-ficha gravada em `monstros_personalizados.json` saíram. Junto: o Bardo sorteando o Cajado de Madeira quebrava a IA
-(`reach: "cajado"` virando `int`) em `_ai_agressivo`. Testes: `python -X utf8 tools/test_elara_montanha_fichas.py`.
-
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo
@@ -26,6 +15,47 @@ secundária aceitava veneno. Enquanto houver cargas, o nome da arma ganha "enven
 como a munição) e a lista de status mostra uma linha por arma com veneno, usos e efeito (não um ícone por carga). A decisão de quais alvos existem é `GS.venenoAlvos(me, opts)` (pura, em `gameState.js`);
 o **protocolo não mudou** (`use_item`, `veneno_rapido`, `envenenar_municao`). Chaves
 `ui.veneno.*`. Testes: `node tools/test_veneno_alvos.js` e `python -X utf8 tools/test_veneno_arma_principal.py`.
+
+### Bardo da Caravana: variante nativa do Bardo (2026-10-23)
+
+O Bardo da Caravana (rota do Olho) deixou de ser ficha personalizada derivada do Soldado e virou **variante nativa do
+Bardo**, `_variante_bardo_caravana()` no `server.py`: mesma IA (`ai_type: "bardo"`), Canção Heroica, Provocação e instrumento
+sorteado, só mais forte — 26 PV (contra 9), CA 16 com Couro Reforçado, ataque +6 (contra +3), Provocação CD 13 (`bardo_cd_provocacao`),
+recarga 3 (`bardo_recarga`), instrumento padrão ou refinado, arma besta/besta de mão/chicote, ouro 30–60, ND 2. O motor reconhece
+variantes por `_eh_bardo(m)` (tipo `bardo` **ou** IA `bardo`) em vez de comparar `type == "bardo"`; uma ficha personalizada não
+serve porque o validador só aceita habilidades da biblioteca do editor e descarta `random_equipment`. `ficha_bardo_agente` e a
+ficha gravada em `monstros_personalizados.json` saíram. Junto: o Bardo sorteando o Cajado de Madeira quebrava a IA
+(`reach: "cajado"` virando `int`) em `_ai_agressivo`. A miniatura do Bardo da Caravana usa escala visual 0,90
+(redução de 10%) e GLB próprio `assets/models3d/monstros/bardo_da_caravana.glb`, recolorido em verde musgo e ouro
+por `tools/recolor_bardo_caravana.py`; a prévia é gerada com `tools/render_bardo_caravana_preview.py`. Testes:
+`python -X utf8 tools/test_elara_montanha_fichas.py`.
+
+### Urso Pardo (ND 3)
+
+Ficha nativa `urso_pardo` em `server.py`, derivada do Urso Negro: 48 PV, CA 15, For 22, Des 12, Con 16, visão 7 casas,
+mordida +7 (1d10+5) e duas garras +7 (1d8+5). Mantém Fúria e os modificadores de dano do Corpo Massivo do Urso Negro.
+`_ai_urso_pardo` usa Investida Heroica automaticamente na primeira aproximação do combate: dobra o movimento; após dois
+passos seguidos na mesma direção, o primeiro ataque recebe vantagem e +2 dano. Golpe Devastador II tem recarga de 4 rodadas
+e dobra somente os dados da próxima Mordida (não o modificador fixo), com limpeza da preparação se o alvo cair antes dela.
+A ficha compartilha a arte 2D `ursoNegro`, mas usa `assets/models3d/monstros/urso_pardo.glb`: cópia do `urso.glb`
+com paleta marrom enegrecida, geometria e textura preservadas. A miniatura 3D do Pardo é 20% maior; a escala e o GLB
+do Urso Negro continuam inalterados. Regenerar a cor com `python -X utf8 tools/recolor_urso_pardo_glb.py`.
+O catálogo do editor é gerado por `tools/export_catalog.py`.
+
+### Cinemáticas cartum nos slides de história (2026-10-22)
+
+Um slide de `intro`/`outro`/`outro_rota` aceita `cinematica: <id>` (lista fechada `STORY_CINEMATICAS` no `server.py`; vale
+sozinha, sem texto nem imagem; `_story_norm`, `_clean_story_field` e `_validar_story` a conservam, e o `editor_story.js` não
+a perde ao salvar). O cliente (`_storyCinePaint` em `game.js`) troca a imagem por um `<canvas>` e toca
+`src/cinematica.js`: peças de tabuleiro cartum que "atuam sozinhas", desenhadas em vetor, sem arte externa nem vídeo.
+`Cinematica.desenhar(ctx, w, h, t, textos, id)` é função pura do tempo (pula, revê e testa em qualquer instante);
+`Cinematica.iniciar(canvas, id, {textos, onFim})` toca em tempo real, escala sem distorcer (cobre a tela, corta as laterais),
+para sozinha quando o overlay fecha, e o botão "↻ Rever" aparece no fim. O slide é condicional como qualquer outro. Falas e
+onomatopeia vêm do dicionário (`ui.cinematica.*`). **Primeira cena, `gilo_morte`** (22 s): os escorpiões cercam o Gilo na
+Praça dos Escorpiões, ele atira (TEC!), tropeça, derruba a moeda de prata sem cunho, rasteja até ela e diz a dica da serra;
+é o `outro` da etapa de `elara_graciero_praca_viva`, só com `fato elara_viu_gilo_morrer` (gerador
+`tools/gerar_elara_graciero.py`, `outro_gilo()`). **Não mostra o Olho:** quem o tem em cada ramo já foi decidido em outro
+lugar. Cena nova = função em `CENAS` + id em `STORY_CINEMATICAS`. Teste: `python -X utf8 tools/test_cinematica.py`.
 
 ### O Resgate de Elara — rota do Olho (2026-10-22)
 
@@ -43,7 +73,7 @@ reação possível: "não houve tempo"); sem ele, o grupo segue riscos de faca d
 ser vencido, sem cadáver nem loot); o objetivo grava `elara_rota_olho_vencida` e `elara_olho_recuperado` por `fatos`. Com o Olho
 na bolsa, o slide "O Olho volta ao Templo" do final de Graciero substitui "O Olho não está aqui". Testes:
 `python -X utf8 tools/test_elara_montanha_fichas.py`, `test_elara_montanha_mapas.py`, `test_elara_montanha_dados.py` e
-`test_elara_montanha_fluxo.py`. **Fica para o autor:** arte das cenas e dos novos monstros, texto final e calibragem por jogo.
+`test_elara_montanha_fluxo.py`. O Assassino da Serra usa `assets/models3d/monstros/assassino_da_serra.glb`, variante visual do Soldado com armadura negra e tecidos/couro marrons; regenerar com `python -X utf8 tools/recolor_assassino_serra.py` e prévia com `blender --background --python tools/render_assassino_serra_preview.py`. A ficha oficial e o gerador da rota gravam `model3d` próprio, mantendo a arte 2D do Soldado; a escala da miniatura é 0,8075 (mais 5% menor que a anterior de 0,85). **Fica para o autor:** arte das cenas, texto final e calibragem por jogo.
 
 ### O Resgate de Elara — Graciero (2026-10-22)
 
@@ -73,7 +103,15 @@ Plano `docs/superpowers/plans/2026-10-22-campanha-elara-parte3-gilo.md`. Gerador
 `tools/gerar_elara_gilo.py` (`--simular`, `--forcar`; assinaturas em `tools/.elara_gilo_assinaturas.json`). Só toca nas
 conversas `elara_*` dos slots ativos `barman`, `patrono_fundo`, `npc_ms2e74bw` e `npc_ms2e85ew` da taverna de Corvin
 (todas com requisito `elara_ramo_b`), nos destinos `elara_adhadal` e `elara_corvin`, na ficha `gilo_dedos_sujos`
-(`tools/elara_gilo_ficha.py`, derivada do `soldado`, ND 2, gravada pelo caminho do editor) e nos quatro mapas.
+(`tools/elara_gilo_ficha.py`, gravada pelo caminho do editor) e nos quatro mapas. A ficha oficial atualizada de Gilo é
+Ladino 4, chefe ND estimado 2,5: FOR 14, DES 15 (17 efetiva pelas botas), CON 12, INT 11; 36 PV pela fórmula aprovada
+antes dos itens, +19 PV dos dois Anéis da Vitalidade, Amuleto da Sorte e Tiara Arcana (55 PV totais), CA 16,
+salvamentos Fort +2, Ref +7 e Vont +1. Usa Armadura de Couro e Placas, duas Bestas de Mão (+6, 1d4+3, alcance 4),
+30 virotes incendiários e 10 alquímicos; Veneno Rápido III, Disparo Duplo, Mira Perfeita (recarga 4), Arremesso Rápido
+(recarga 4), Sangue Frio (recarga 5), amuleto, botas, cinto, poções e venenos constam no loadout persistido `gilo_loadout`.
+Leva 4 Bombas de Flash que só pode usar como reação quando ele próprio for atacado; o servidor verifica alcance 5 e
+linha de visão, consome a bomba mesmo se errar e, se acertar, impõe -2 e desvantagem ao ataque que disparou a reação.
+Virotes alquímicos ficam contabilizados, mas ainda não têm efeito de combate definido no catálogo.
 **Adhadal** são cópias ajustadas dos protótipos do autor (`floresta.json` e `floresta_2.json`, que nunca mudam):
 poste, grupo esperado 4×nível 3, armadilhas de caça e falas de rastro; a 2ª etapa é desbastada (ND ≤ 10,8), ganha uma
 `exit` autorada alcançável por BFS e `saida_permitida: false`; as duas etapas são emendadas. **Corvin**: a caçada
@@ -809,7 +847,7 @@ resistência enquanto o herói permanecia na mesma sala.
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
 > ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 88 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> autoritativo `DECOR_TYPES` (server.py, 89 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
@@ -821,6 +859,9 @@ resistência enquanto o herói permanecia na mesma sala.
 > `cerca_curva` bloqueiam; `cerca_quebrada` permite passagem. `porteira_fechada`
 > bloqueia e `porteira_aberta` permite passagem; ambas têm placa PASTO e dobradiças.
 > `celeiro_medieval` ocupa 4×4, é alto e bloqueia passagem; tem miniaturas PNG/GLB próprias.
+> `barril_cerveja` é uma decoração 1×1 baixa e sólida, sem interação; usa a arte
+> `assets/objetos/barril_cerveja.png` e o GLB colorido `assets/objetos/barril_cerveja.glb`,
+> derivado da referência `assets/itens/barril_de_cerveja.png` sem alterar o GLB original.
 > `galinheiro` ocupa 2×2, é alto e bloqueia passagem; inclui três ninhos frontais
 > com ovos e usa miniaturas PNG/GLB próprias.
 > `cabana_rustica` ocupa 3×3, é alta e bloqueia passagem; tem troncos, varanda
@@ -2340,6 +2381,13 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > morrer, deixa 2–10 PO. Retrato e miniatura usam `image="bandido"` e
 > `portrait="bandido"` (`assets/retratos/monstros/bandido.png` e
 > `assets/pawns/monstros/bandido/bandido.png`).
+> Gilo Dedos Sujos (`gilo_dedos_sujos`) usa miniatura GLB própria criada a partir
+> do Bandido, com roupas castanhas escuras, chapéu de couro sobre o capuz com
+> textura irregular (`assets/models3d/monstros/gilo_chapeu_couro.png`) e duas bestas
+> de mão; usa escala visual 0,80548125 (mais 5% menor que a anterior de 0,847875) e
+> acompanha a direção do movimento. O `.blend`
+> é a fonte editável; atualizar o material e exportar o GLB oficial com
+> `blender --background --python tools/texture_gilo_hat.py`.
 
 > **Editor de Itens — Fase 1 (Armas):** nova aba "Editor de itens" no editor de
 > masmorras (`tools/editor.html` + `tools/editor_items_editor.js`); sub-aba

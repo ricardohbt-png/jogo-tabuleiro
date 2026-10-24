@@ -1133,7 +1133,22 @@
         "file": "elara_graciero_praca_viva.json",
         "encadear": false,
         "intro": "",
-        "outro": ""
+        "outro": {
+          "slides": [
+            {
+              "cinematica": "gilo_morte",
+              "text": "Os escorpiões se fecham sobre o Gilo. Ele não solta a moeda sem cunho até o fim, e as últimas palavras ficam com vocês.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_viu_gilo_morrer",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            }
+          ]
+        }
       }
     ],
     "espera_retorno": {

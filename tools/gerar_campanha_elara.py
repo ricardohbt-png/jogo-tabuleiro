@@ -12,8 +12,8 @@ Só toca no que é dele: a cena `templo_alva` e o `scene` do ponto `templo` de A
 `relogio` e `fato` do objetivo principal (aditivo e idempotente; recusa reescrever um arquivo cuja
 formatação não é a do editor). Nunca regrava o desenho dos mapas.
 
-ARTE PROVISÓRIA: fundo e retrato do Exequiel são reaproveitados de assets/ até o autor subir a arte
-dele pelo editor (aba Cenas e NPCs).
+ARTE: fundo panorâmico do pátio do Templo e personagem Exequiel de corpo inteiro, ambos em
+`assets/cenas/`.
 """
 import argparse
 import json
@@ -32,8 +32,8 @@ PONTO_ID = "templo"
 NPC_ID = "npc_exequiel"
 AVENTURA = "elara_parte1"
 RELOGIO_ID = "elara_p1"
-FUNDO_PROVISORIO = "assets/cenas/fundos/alva_e_luz_fundo.png"
-RETRATO_PROVISORIO = "assets/tavern/nobre2.png"
+FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
+IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
 
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
@@ -104,7 +104,7 @@ def conversas_templo():
 def cena_templo():
     return {"nome": "Templo de Alva e Luz", "background": FUNDO_PROVISORIO, "art_ratio": 1.5,
             "mode": "individual", "mask": "",
-            "slots": [{"id": NPC_ID, "name": "Exequiel", "image": RETRATO_PROVISORIO,
+            "slots": [{"id": NPC_ID, "name": "Exequiel", "image": IMAGEM_EXEQUIEL,
                        "x": 35.0, "y": 30.3, "w": 30.0, "h": 69.7, "z": 1.0, "dialog": "",
                        "conversations": conversas_templo()}]}
 

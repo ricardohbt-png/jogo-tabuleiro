@@ -377,7 +377,7 @@
     },
     "templo_alva": {
       "nome": "Templo de Alva e Luz",
-      "background": "assets/cenas/fundos/alva_e_luz_fundo.png",
+      "background": "assets/cenas/fundos/templo_alva_patio.png",
       "art_ratio": 1.5,
       "mode": "individual",
       "mask": "",
@@ -385,7 +385,7 @@
         {
           "id": "npc_exequiel",
           "name": "Exequiel",
-          "image": "assets/tavern/nobre2.png",
+          "image": "assets/cenas/personagens/exequiel_corpo_inteiro.png",
           "x": 35.0,
           "y": 30.3,
           "w": 30.0,

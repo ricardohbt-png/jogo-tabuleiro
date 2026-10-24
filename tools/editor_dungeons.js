@@ -65572,6 +65572,7 @@ window.EDITOR_DUNGEONS = [
       "name": "Floresta de Adhadal — Entrada",
       "ambiente": "ar_livre",
       "saida_permitida": true,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 26,
@@ -66049,6 +66050,8 @@ window.EDITOR_DUNGEONS = [
         "x": 24,
         "y": 2
       },
+      "routes": [],
+      "route_exits": [],
       "monsters": [
         {
           "type": "goblin",
@@ -66058,7 +66061,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_0"
         },
         {
           "type": "esqueleto_humano_customizado",
@@ -66068,7 +66072,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_1"
         },
         {
           "type": "goblin",
@@ -66078,7 +66083,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_2"
         },
         {
           "type": "goblin",
@@ -66088,7 +66094,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_3"
         },
         {
           "type": "grotao",
@@ -66098,7 +66105,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_4"
         },
         {
           "type": "goblin",
@@ -66108,7 +66116,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": null,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_5"
         },
         {
           "type": "devorador_metal",
@@ -66119,6 +66128,7 @@ window.EDITOR_DUNGEONS = [
           "room_id": null,
           "boss": false,
           "target": false,
+          "source_id": "mob_6",
           "vscale": [
             1.3,
             1.3
@@ -66128,6 +66138,7 @@ window.EDITOR_DUNGEONS = [
       "chests": [],
       "traps": [
         {
+          "id": "trap_0",
           "tipo": "armadilha_urso",
           "pos": [
             4,
@@ -66135,6 +66146,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_1",
           "tipo": "rede",
           "pos": [
             10,
@@ -66142,6 +66154,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_2",
           "tipo": "buraco",
           "pos": [
             14,
@@ -67484,44 +67497,6 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.3,
             1.9
-          ]
-        },
-        {
-          "id": "decor_76",
-          "type": "chao",
-          "pos": [
-            6,
-            7
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "chaograma1.png",
-          "size": [
-            2,
-            2
-          ]
-        },
-        {
-          "id": "decor_78",
-          "type": "chao",
-          "pos": [
-            1,
-            8
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "chaograma1.png",
-          "size": [
-            2,
-            2
           ]
         },
         {
@@ -69158,25 +69133,6 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false
-        },
-        {
-          "id": "decor_175",
-          "type": "chao",
-          "pos": [
-            12,
-            6
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "image": "chãoagua.png",
-          "size": [
-            2,
-            3
-          ]
         }
       ],
       "secret_passages": [],
@@ -69622,6 +69578,10 @@ window.EDITOR_DUNGEONS = [
         "16,8": "grama",
         "15,0": "grama"
       },
+      "pontes": [],
+      "elevacoes": {},
+      "alturas_parede": {},
+      "transicao_altura": "rampa",
       "objectives": {
         "primary": {
           "type": "reach_exit",
@@ -69632,8 +69592,7 @@ window.EDITOR_DUNGEONS = [
           }
         },
         "secondary": []
-      },
-      "marcador_entrada": "poste"
+      }
     }
   },
   {
@@ -132974,7 +132933,7 @@ window.EDITOR_DUNGEONS = [
           "type": "vela_de_fogo",
           "pos": [
             6,
-            14
+            15
           ],
           "room_id": null,
           "boss": false,
@@ -133468,7 +133427,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "garaloux_jovem",
           "pos": [
-            0,
+            1,
             11
           ],
           "room_id": null,
@@ -133479,7 +133438,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "garaloux_adulto",
           "pos": [
-            2,
+            4,
             11
           ],
           "room_id": null,
@@ -133490,7 +133449,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "garaloux_alfa",
           "pos": [
-            4,
+            7,
             11
           ],
           "room_id": null,
@@ -133501,8 +133460,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "molochus_jovem",
           "pos": [
-            6,
-            11
+            11,
+            12
           ],
           "room_id": null,
           "boss": false,
@@ -133512,8 +133471,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "molochus_adulto",
           "pos": [
-            8,
-            11
+            14,
+            12
           ],
           "room_id": null,
           "boss": false,
@@ -133523,8 +133482,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "molochus_anciao",
           "pos": [
-            10,
-            11
+            17,
+            12
           ],
           "room_id": null,
           "boss": false,
@@ -133567,7 +133526,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "soldado",
           "pos": [
-            14,
+            9,
             2
           ],
           "room_id": null,
@@ -133600,8 +133559,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "escorpiao_de_pedra_customizado",
           "pos": [
-            6,
-            7
+            5,
+            8
           ],
           "room_id": null,
           "boss": false,
@@ -133645,7 +133604,7 @@ window.EDITOR_DUNGEONS = [
           "type": "grotao",
           "pos": [
             1,
-            13
+            14
           ],
           "room_id": null,
           "boss": false,
@@ -133656,7 +133615,7 @@ window.EDITOR_DUNGEONS = [
           "type": "crocodilo_jovem",
           "pos": [
             13,
-            11
+            14
           ],
           "room_id": null,
           "boss": false,
@@ -133710,8 +133669,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "lagarto_carniceiro",
           "pos": [
-            15,
-            11
+            16,
+            14
           ],
           "room_id": null,
           "boss": false,
@@ -133722,7 +133681,7 @@ window.EDITOR_DUNGEONS = [
           "type": "grotao_customizado",
           "pos": [
             4,
-            14
+            15
           ],
           "room_id": null,
           "boss": false,
@@ -133840,10 +133799,10 @@ window.EDITOR_DUNGEONS = [
           "source_id": "mob_85"
         },
         {
-          "type": "pombo",
+          "type": "urso_pardo",
           "pos": [
-            5,
-            17
+            20,
+            6
           ],
           "room_id": null,
           "boss": false,
@@ -133851,7 +133810,7 @@ window.EDITOR_DUNGEONS = [
           "source_id": "mob_86"
         },
         {
-          "type": "pombo",
+          "type": "bardo_da_caravana",
           "pos": [
             7,
             17
@@ -133871,6 +133830,83 @@ window.EDITOR_DUNGEONS = [
           "boss": false,
           "target": false,
           "source_id": "mob_88"
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            5,
+            2
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_89"
+        },
+        {
+          "type": "bardo",
+          "pos": [
+            7,
+            2
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_90"
+        },
+        {
+          "type": "jacare",
+          "pos": [
+            10,
+            14
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_91"
+        },
+        {
+          "type": "goblin_assassino",
+          "pos": [
+            14,
+            2
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_92"
+        },
+        {
+          "type": "gilo_dedos_sujos",
+          "pos": [
+            9,
+            17
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_93"
+        },
+        {
+          "type": "escorpiao_gigante",
+          "pos": [
+            6,
+            8
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_94"
+        },
+        {
+          "type": "assassino_da_caravana",
+          "pos": [
+            13,
+            17
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_95"
         }
       ],
       "chests": [],

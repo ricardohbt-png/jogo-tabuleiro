@@ -4,6 +4,7 @@
   "name": "Floresta de Adhadal — Entrada",
   "ambiente": "ar_livre",
   "saida_permitida": true,
+  "marcador_entrada": "poste",
   "start_mode": "entrance",
   "grid": {
     "w": 26,
@@ -481,6 +482,8 @@
     "x": 24,
     "y": 2
   },
+  "routes": [],
+  "route_exits": [],
   "monsters": [
     {
       "type": "goblin",
@@ -490,7 +493,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_0"
     },
     {
       "type": "esqueleto_humano_customizado",
@@ -500,7 +504,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_1"
     },
     {
       "type": "goblin",
@@ -510,7 +515,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_2"
     },
     {
       "type": "goblin",
@@ -520,7 +526,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_3"
     },
     {
       "type": "grotao",
@@ -530,7 +537,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_4"
     },
     {
       "type": "goblin",
@@ -540,7 +548,8 @@
       ],
       "room_id": null,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_5"
     },
     {
       "type": "devorador_metal",
@@ -551,6 +560,7 @@
       "room_id": null,
       "boss": false,
       "target": false,
+      "source_id": "mob_6",
       "vscale": [
         1.3,
         1.3
@@ -560,6 +570,7 @@
   "chests": [],
   "traps": [
     {
+      "id": "trap_0",
       "tipo": "armadilha_urso",
       "pos": [
         4,
@@ -567,6 +578,7 @@
       ]
     },
     {
+      "id": "trap_1",
       "tipo": "rede",
       "pos": [
         10,
@@ -574,6 +586,7 @@
       ]
     },
     {
+      "id": "trap_2",
       "tipo": "buraco",
       "pos": [
         14,
@@ -1916,44 +1929,6 @@
       "vscale": [
         1.3,
         1.9
-      ]
-    },
-    {
-      "id": "decor_76",
-      "type": "chao",
-      "pos": [
-        6,
-        7
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "chaograma1.png",
-      "size": [
-        2,
-        2
-      ]
-    },
-    {
-      "id": "decor_78",
-      "type": "chao",
-      "pos": [
-        1,
-        8
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "chaograma1.png",
-      "size": [
-        2,
-        2
       ]
     },
     {
@@ -3590,25 +3565,6 @@
       ],
       "loot": null,
       "key_objective": false
-    },
-    {
-      "id": "decor_175",
-      "type": "chao",
-      "pos": [
-        12,
-        6
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null,
-      "key_objective": false,
-      "image": "chãoagua.png",
-      "size": [
-        2,
-        3
-      ]
     }
   ],
   "secret_passages": [],
@@ -4054,6 +4010,10 @@
     "16,8": "grama",
     "15,0": "grama"
   },
+  "pontes": [],
+  "elevacoes": {},
+  "alturas_parede": {},
+  "transicao_altura": "rampa",
   "objectives": {
     "primary": {
       "type": "reach_exit",
@@ -4064,6 +4024,5 @@
       }
     },
     "secondary": []
-  },
-  "marcador_entrada": "poste"
+  }
 }

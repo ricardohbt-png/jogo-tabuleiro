@@ -3052,6 +3052,14 @@ window.LANG_NARRACAO = {
     "en": "{item_emoji} **{heroi}** coats **{item}** on the weapon — {desc}!",
     "pt": "{item_emoji} **{heroi}** unta **{item}** na arma — {desc}!"
   },
+  "narracao.gilo_flash_acerta": {
+    "en": "Gilo answers the attack with a Flash Bomb. The throw hits; {restam} left.",
+    "pt": "Gilo reage ao ataque contra si com uma Bomba de Flash. O arremesso acerta; restam {restam}."
+  },
+  "narracao.gilo_flash_erra": {
+    "en": "Gilo answers the attack with a Flash Bomb. The throw misses; {restam} left.",
+    "pt": "Gilo reage ao ataque contra si com uma Bomba de Flash. O arremesso erra; restam {restam}."
+  },
   "narracao.usa": {
     "en": "{item_emoji} **{heroi}** uses **{item}**: {txt}{extra}",
     "pt": "{item_emoji} **{heroi}** usa **{item}**: {txt}{extra}"

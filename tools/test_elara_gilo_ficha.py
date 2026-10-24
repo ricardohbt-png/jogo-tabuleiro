@@ -16,9 +16,9 @@ class FichaTests(unittest.TestCase):
         ok, norm = S._validate_custom_monster(f)
         self.assertTrue(ok, norm)
         self.assertEqual(norm["type"], "gilo_dedos_sujos")
-        self.assertEqual(norm["cr"], 2)
-        self.assertEqual(S.monster_cr(norm), 2)
-        self.assertEqual(norm["attacks"][0]["num_attacks"], 2)
+        self.assertEqual(norm["cr"], 2.5)
+        self.assertEqual(S.monster_cr(norm), 2.5)
+        self.assertEqual([x["num_attacks"] for x in norm["attacks"]], [1, 1])   # duas bestas de mão
 
     def test_nada_da_rede_por_nome(self):
         t = json.dumps(G.ficha_gilo(), ensure_ascii=False).lower()

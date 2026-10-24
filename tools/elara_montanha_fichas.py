@@ -11,6 +11,7 @@ def ficha_assassino():
     f = G.ficha_gilo()
     f.update({"type": TIPO_ASSASSINO, "name": "O Assassino da Serra", "emoji": "🗡️", "tier": 3, "cr": 3,
               "base_hp": 45, "hp": 45, "ac": 16, "movement": 7, "xp": 120, "boss": True,
-              "image": "soldado", "portrait": "soldado"})
+              "image": "soldado", "portrait": "soldado",
+              "model3d": "assets/models3d/monstros/assassino_da_serra.glb"})
     f["loot_drops"] = [{"kind": "gold", "amount": 90, "chance": 100}]
     return f

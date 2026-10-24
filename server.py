@@ -5747,6 +5747,44 @@ MONSTER_DEFS = [
         "image": "ursoNegro",
         "undead": False, "boss": False,
     },
+    # Urso Pardo (ND 3): variante mais resistente e agressiva do Urso Negro.
+    {
+        "type": "urso_pardo", "name": "Urso Pardo", "emoji": "🐻",
+        "tier": 2, "cr": 3,
+        "hp": 48, "ac": 15, "natural_armor": 4,
+        "size": [1, 1], "movement": 6, "vision_base": 3,
+        "str_": 22, "dex": 12, "con_": 16, "int_": 2,
+        "fort": 6, "ref_": 3, "will": 1,
+        "attacks": [
+            {"name": "Mordida", "atk_bonus": 7, "damage": "1d10+5",
+             "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
+             "categoria": "perfurante"},
+            {"name": "Garra", "atk_bonus": 7, "damage": "1d8+5",
+             "damage_types": ["physical"], "num_attacks": 2, "on_hit": None,
+             "categoria": "cortante"},
+        ],
+        "special_abilities": [
+            {"id": "furia", "name": "Fúria", "action_type": "passiva",
+             "descricao": "Com HP < 50%: +2 de dano em todos os ataques"},
+            {"id": "golpe_devastador_urso_pardo", "name": "Golpe Devastador II", "icon": "💥",
+             "action_type": "acao_bonus", "cooldown_turns": 4,
+             "descricao": "A cada 4 rodadas, dobra os dados da próxima Mordida; o modificador fixo não é dobrado."},
+            {"id": "investida_heroica_urso_pardo", "name": "Investida Heroica", "icon": "⚡",
+             "action_type": "passiva", "cooldown_turns": 0,
+             "descricao": "No primeiro avanço do combate, dobra o movimento para se aproximar. Se avançar 2 casas seguidas na mesma direção, a próxima mordida tem vantagem e +2 de dano."},
+        ],
+        "immunities": [],
+        "weaknesses": [
+            {"type": "physical", "categoria": "perfurante", "bonus_flat": 1,
+             "descricao": "Corpo massivo: +1 dano de perfuração/alcance (arcos, bestas, lanças)"},
+            {"type": "physical", "categoria": "contundente", "bonus_flat": -1,
+             "descricao": "Corpo massivo: -1 dano de concussão (martelos, maças, bastões)"},
+        ],
+        "loot_table": {"1-100": None},
+        "spawn_min": 1, "spawn_max": 1,
+        "ai_type": "agressivo", "porte": "grande", "image": "ursoNegro",
+        "undead": False, "boss": False,
+    },
     # â”€â”€ Orc Guerreiro (ND 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {
         "type": "orc_guerreiro", "name": "Orc Guerreiro", "emoji": "👹",
@@ -7326,7 +7364,9 @@ MONSTER_DEFS.extend([
 for _monster_def in MONSTER_DEFS:
     if not _monster_def.get("movement_exception"):
         _monster_def["movement"] = 6
-    _monster_def["vision_base"] = 0
+    # A maioria usa o bônus neutro; criaturas com visão autorada, como o Urso
+    # Pardo, preservam o valor definido na ficha.
+    _monster_def.setdefault("vision_base", 0)
 
 SUBTIPOS_MONSTRO = {
     "construto": {"nome": "Construto", "imunidades": ["paralisia", "petrificacao", "encantamento", "controle_mental", "medo", "necrótico", "veneno", "gases", "doenca", "sono"], "descricao": "Imune a paralisia, petrificação, encantamento, controle mental, medo, necrótico, venenos, gases, doença e sono."},
@@ -7379,6 +7419,11 @@ def _tutorial_provision_id(item):
 
 
 CHEST_ITEMS = [
+    # Veneno especial que só pode ser saqueado do Escorpião Gigante.
+    {"id": "veneno_escorpiao_aprimorado", "name": "Veneno Aprimorado do Escorpião Gigante",
+     "emoji": "🦂", "item_slot": "bag", "effect": "coat_poison", "value": 0,
+     "veneno_id": "veneno_escorpiao_aprimorado", "loot_only": True, "price": 0,
+     "descricao": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude CD 14 anula."},
     # Refeição portátil autorada para o Campo de Treinamento; não é item de loja.
     {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗",
      "item_slot": "bag", "effect": "meal_survival", "fome": 40, "sede": 40,
@@ -7864,6 +7909,11 @@ VENENOS = {
         "nome": "Veneno do Escorpião Pedra", "icone": "🦂",
         "operacao": "penalidade", "atributos": [("ataque", -1), ("movimento", -1)],
         "duracao": "1d6", "save": "fortitude", "dificuldade": 11, "anula": True,
+    },
+    "veneno_escorpiao_aprimorado": {
+        "nome": "Veneno Aprimorado do Escorpião Gigante", "icone": "🦂",
+        "operacao": "penalidade", "atributos": [("ataque", -1), ("movimento", -1)],
+        "duracao": "1d6", "save": "fortitude", "dificuldade": 14, "anula": True,
     },
     "veneno_cobra_cuspidora": {
         "nome": "Veneno de Cobra Cuspidora", "icone": "🐍",
@@ -9372,6 +9422,9 @@ def _rolar_espera(espera):
         return max(0, roll_dice(e["dados"]))
     return e["rodadas"]
 
+# Cinemáticas cartum do cliente (src/cinematica.js): um slide pode trazer `cinematica: <id>` no lugar de imagem.
+STORY_CINEMATICAS = frozenset({"gilo_morte"})
+
 def _story_norm(val):
     """Normaliza um campo de história para {'slides': [...], 'audio': str|None}.
     Aceita string (legado = 1 slide de texto), objeto {'slides','audio'} ou vazio.
@@ -9390,6 +9443,8 @@ def _story_norm(val):
                 slide["text"] = s["text"]
             if isinstance(s.get("image"), str) and s["image"]:
                 slide["image"] = s["image"]
+            if s.get("cinematica") in STORY_CINEMATICAS:
+                slide["cinematica"] = s["cinematica"]
             if not slide:
                 continue
             slide["fit"] = "contain" if s.get("fit") == "contain" else "cover"
@@ -9427,6 +9482,8 @@ def _clean_story_field(raw):
             slide["text"] = s["text"][:2000]
         if _story_media_ok(s.get("image")):
             slide["image"] = s["image"]
+        if s.get("cinematica") in STORY_CINEMATICAS:
+            slide["cinematica"] = s["cinematica"]
         if not slide:
             continue
         if s.get("fit") == "contain":
@@ -9506,8 +9563,10 @@ def _validar_story(val, rotulo):
             return False, f"{rotulo}: slide {j+1} 'fit' deve ser 'cover' ou 'contain'."
         if "requisito" in s and not isinstance(s["requisito"], dict):
             return False, f"{rotulo}: slide {j+1} 'requisito' deve ser um objeto."
-        if not (s.get("text") or s.get("image")):
-            return False, f"{rotulo}: slide {j+1} precisa de texto ou imagem."
+        if "cinematica" in s and s["cinematica"] not in STORY_CINEMATICAS:
+            return False, f"{rotulo}: slide {j+1} 'cinematica' desconhecida."
+        if not (s.get("text") or s.get("image") or s.get("cinematica")):
+            return False, f"{rotulo}: slide {j+1} precisa de texto, imagem ou cinemática."
     if "audio" in val and not isinstance(val["audio"], str):
         return False, f"{rotulo}: 'audio' deve ser texto."
     return True, "ok"
@@ -9858,6 +9917,7 @@ DECOR_MODEL3D = {
     "mesa_cadeiras": "assets/objetos/mesa.glb",
     "coluna": "assets/objetos/coluna.glb",
     "barril": "assets/objetos/barril.glb",
+    "barril_cerveja": "assets/objetos/barril_cerveja.glb",
     "arca_tesouros": "assets/objetos/bau.glb",
     "cama_casal": "assets/objetos/cama_de_casal.glb",
     "estante": "assets/objetos/estante_armas_cranios.glb",
@@ -9979,6 +10039,8 @@ DECOR_TYPES = {
     "carroca":        _decor("Carroça", "🛒", [2, 2], gira=True, alto=True, image="carroca.png"),
     "coluna":         _decor("Coluna de pedra", "🏛️", [1, 1], alto=True),
     "barril":         _decor("Barril", "🛢️", [1, 1]),
+    "barril_cerveja": _decor("Barril de cerveja", "🍺", [1, 1],
+                               loot_capaz=False, image="barril_cerveja.png"),
     "arca_tesouros":  _decor("Arca de tesouros", "💰", [1, 1]),
     "cama_casal":     _decor("Cama de casal", "🛌", [2, 2], gira=True),
     "estante_livros": _decor("Estante de livros", "📚", [1, 2], gira=True, alto=True),
@@ -11969,6 +12031,68 @@ def _vincular_envenenar_ataque(monstro):
             ataques[indice]["on_hit"] = veneno_id
             ataques[indice]["poison_dc"] = max(1, min(40, int(habilidade.get("poison_dc", 10))))
 
+
+def _configurar_gilo_spawn(monstro):
+    """Aplica o loadout fixo do Gilo sem alterar os catálogos compartilhados."""
+    loadout = monstro.get("gilo_loadout") or {}
+    # As Botas Velozes do catálogo só dão movimento. A ficha do Gilo declara
+    # explicitamente o bônus próprio de +2 DES das botas que ele usa.
+    bonus_des = 2
+    monstro["dex"] = int(monstro.get("dex", 15)) + bonus_des
+    monstro["gilo_boots_dex_bonus"] = bonus_des
+    monstro["ac"] = int(monstro.get("ac", 10)) + 1  # DES 15 -> 17: mod +2 -> +3
+    monstro["ref_"] = int(monstro.get("ref_", 0)) + 1
+
+    # A ficha de editor armazena IDs sem repetição; instâncias de combate
+    # materializam as duas bestas, o segundo anel e cada consumível contado.
+    weapon = deepcopy(_DUNGEON_ITEM_CATALOG.get("hand_crossbow") or
+                      next((item for item in SHOP_WEAPONS if item.get("id") == "hand_crossbow"), {}))
+    monstro["equipment_items"] = [deepcopy(item) for item in monstro.get("equipment_items", [])]
+    if weapon:
+        monstro["equipment_items"].append(deepcopy(weapon))
+        monstro["gilo_second_hand_crossbow"] = deepcopy(weapon)
+    ring = deepcopy(_DUNGEON_ITEM_CATALOG.get("ring_vita") or {})
+    if ring:
+        monstro["equipment_items"].append(ring)
+        monstro["equipment_hp_bonus"] = int(monstro.get("equipment_hp_bonus", 0)) + int(ring.get("value", 0) or 0)
+        monstro["max_hp"] += int(ring.get("value", 0) or 0)
+        monstro["hp"] += int(ring.get("value", 0) or 0)
+
+    # A fórmula aprovada foi (8 + CON +1) × nível 4 = 36 PV antes dos itens.
+    # Os acessórios nativos somam +14; o segundo Anel da Vitalidade soma +5.
+    monstro["level"] = 4
+    monstro["class_id"] = "rogue"
+    monstro["gilo_virotes_incendiarios"] = 30
+    monstro["gilo_virotes_alquimicos"] = 10
+    monstro["gilo_flash_grenades"] = 4
+
+    consumable_ids = (loadout.get("consumables") or {})
+    monstro["equipment_consumables"] = []
+    for item_id, quantity in consumable_ids.items():
+        if item_id == "bomba_flash":
+            continue  # uso reservado à reação pessoal do Gilo
+        item = (_DUNGEON_ITEM_CATALOG.get(item_id)
+                or next((candidate for candidate in SHOP_AMMO if candidate.get("id") == item_id), None)
+                or next((candidate for candidate in SHOP_MERCHANT if candidate.get("id") == item_id), None))
+        if not item:
+            # Virote Alquímico ainda não tem regra própria no catálogo; fica
+            # contabilizado na reserva de munição, sem inventar um efeito.
+            continue
+        monstro["equipment_consumables"].extend(deepcopy(item) for _ in range(max(0, int(quantity or 0))))
+
+    # As duas bestas disparam uma vez cada por ação. O bônus +6 já inclui
+    # DES efetiva (+3) e ataque base de Ladino 4 (+3).
+    ataques = []
+    for nome in ("Besta de Mão", "Besta de Mão (segunda)"):
+        ataques.append({"name": nome, "damage": "1d4", "damage_types": [DMG_PHYSICAL],
+                        "num_attacks": 1, "attack_attribute": "dex", "damage_attribute": "dex",
+                        "apply_attribute_damage": True, "attribute_mod_base": mod(monstro["dex"]),
+                        "base_attack_bonus": 3, "atk_bonus": 6, "range": 4,
+                        "on_hit": None, "on_hit_effect": None, "poison_dc": 10,
+                        "extra_damage": None, "extra_damage_types": []})
+    monstro["attacks"] = ataques
+    monstro["boss"] = True
+
 def make_monster(mdef, room):
     m = deepcopy(mdef)
     _vincular_envenenar_ataque(m)
@@ -12074,6 +12198,8 @@ def make_monster(mdef, room):
     elif _eh_bardo(m):
         _configurar_bardo_spawn(m)
     _aplicar_equipamentos_monstro(m)
+    if m.get("type") == "gilo_dedos_sujos":
+        _configurar_gilo_spawn(m)
     if m.get("type") == "bandido" and m.get("bandido_veneno_doses", 0) > 0:
         poison_def = _DUNGEON_ITEM_CATALOG.get("veneno_fungo_acre")
         if poison_def:
@@ -15910,6 +16036,55 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.gm_say(T("narracao.bomba_flash_acerta" if hit else "narracao.bomba_flash_erra",
                             heroi=hero["name"], monstro=nome_criatura(attacker)))
         await asyncio.sleep(.18)
+        return {"disadvantage": hit, "attack_penalty": 2 if hit else 0}
+
+    async def _gilo_flash_reaction(self, alvo, atacante):
+        """Gilo gasta uma Flash apenas em reação a um ataque contra si mesmo."""
+        if (not alvo or alvo.get("type") != "gilo_dedos_sujos"
+                or int(alvo.get("gilo_flash_grenades", 0) or 0) <= 0
+                or self.phase != "playing" or not self._vivo(alvo) or not self._vivo(atacante)):
+            return None
+        origem, destino = alvo.get("pos"), atacante.get("pos")
+        if (not isinstance(origem, (list, tuple)) or len(origem) != 2
+                or not isinstance(destino, (list, tuple)) or len(destino) != 2):
+            return None
+        alcance = int(ARREMESSAVEIS["bomba_flash"].get("alcance", 5))
+        if (max(abs(origem[0] - destino[0]), abs(origem[1] - destino[1])) > alcance
+                or not self._tem_linha_de_visao(origem, destino)
+                or not self._alcance_com_altura(alvo, destino, alcance, destino=atacante)):
+            return None
+
+        # O consumível é gasto ao reagir, mesmo se o ataque de Flash errar.
+        alvo["gilo_flash_grenades"] -= 1
+        defn = ARREMESSAVEIS["bomba_flash"]
+        feedback_id = await self._emitir_feedback_ataque(
+            "start", alvo, atacante, defn["name"], "normal",
+            projectile={"kind": "item", "item_id": "bomba_flash", "item_emoji": defn["emoji"]})
+        await asyncio.sleep(.2)
+        roll = random.randint(1, 20)
+        attack_bonus = int(alvo.get("atk_bonus", 6) or 6)
+        target_tile = self._target_tile(atacante, atacante.get("pos"))
+        if atacante in self.players.values():
+            target_ac = self._player_effective_ac(atacante)
+        else:
+            target_ac = int(atacante.get("ac", atacante.get("ca", 10)) or 10)
+        target_ac = self._ponto_vulneravel_ac(
+            atacante, target_tile, target_ac, attacker_id=alvo.get("id"))
+        cover = self._cobertura_baixa_bonus(alvo, atacante, target_tile)
+        target_ac += cover
+        hit = roll != 1 and (roll == 20 or roll + attack_bonus >= target_ac)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                              "label": T("dado.bomba_de_flash_de_gilo"), "hit": hit,
+                              "crit": roll == 20, "modifier": attack_bonus,
+                              "total": roll + attack_bonus})
+        await self._emitir_feedback_ataque(
+            "result", alvo, atacante, defn["name"], "normal", attack_id=feedback_id,
+            roll=roll, total=roll + attack_bonus, hit=hit, crit=roll == 20,
+            natural=roll, natural_critical=roll == 20, natural_fumble=roll == 1)
+        await self.gm_say(T(
+            "narracao.gilo_flash_acerta" if hit else "narracao.gilo_flash_erra",
+            restam=alvo['gilo_flash_grenades']))
+        await asyncio.sleep(.12)
         return {"disadvantage": hit, "attack_penalty": 2 if hit else 0}
 
     async def _prepare_smoke_reaction(self, attacker, target_obj):
@@ -22373,6 +22548,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         vantagem = mods["vantagem"]
         desvantagem = mods["desvantagem"]
         eff_target_ac = mods["eff_target_ac"]
+        gilo_flash_effect = await self._gilo_flash_reaction(target, p)
+        if isinstance(gilo_flash_effect, dict) and gilo_flash_effect.get("disadvantage"):
+            if vantagem:
+                vantagem = desvantagem = False
+            else:
+                desvantagem = True
 
         # O projétil só é debitado depois de confirmar alvo, alcance, visão e ação.
         projectile = ammo[0]
@@ -22393,6 +22574,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         situacionais = mods["eff_atk"] - mods["main_attack_base"] - off_atk_bonus
         offhand_atk = (mod(p.get("dex", 12)) + p.get("level_bonus", 1)
                        + situacionais + off_atk_bonus - off_wear)
+        if isinstance(gilo_flash_effect, dict):
+            offhand_atk -= int(gilo_flash_effect.get("attack_penalty", 0) or 0)
         if _weapon_nat1_wear(off):
             offhand_atk -= self._corrosao_arma_pen(p)
 
@@ -22778,6 +22961,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Acerto, CA efetiva e vantagem/desvantagem vêm do MESMO helper que a
             # prévia de acerto do tooltip (prever_ataque) usa — mudar um modificador
             # aqui muda os dois. As narrações e consumos continuam neste handler.
+            gilo_flash_effect = await self._gilo_flash_reaction(target, p)
             _mods = self._modificadores_ataque_heroi(p, target, target_tile, w_range, attacker_id=pid)
             surv_mod = _mods["surv_mod"]; preso_pen = _mods["preso_pen"]
             cancao_dano = _mods["cancao_dano"]; gl_dano = _mods["gl_dano"]
@@ -22787,6 +22971,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             penalidade_furtivo = _mods["penalidade_furtivo"]
             esc = _mods["esc"]; _mira_ranged = _mods["mira_ranged"]; _investida = _mods["investida"]
             vantagem = _mods["vantagem"]; desvantagem = _mods["desvantagem"]
+            if isinstance(gilo_flash_effect, dict) and gilo_flash_effect.get("disadvantage"):
+                # A Flash acertada impõe -2 e desvantagem somente neste ataque.
+                eff_atk -= int(gilo_flash_effect.get("attack_penalty", 2) or 2)
+                if vantagem:
+                    vantagem = False
+                    desvantagem = False
+                else:
+                    desvantagem = True
             if penalidade_furtivo:
                 await self.gm_say(T("narracao.antecipa_o_ataque_furtivo_2_no_acerto", target=nome_criatura(target)))
             if preso_pen:
@@ -45897,6 +46089,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._monster_attack_height_ok(m, target, atk_def):
             return False
 
+        gilo_flash_effect = (await self._gilo_flash_reaction(target, m)
+                             if target_obj.get("kind") in {"player", "monster"} else None)
         reaction_effect = await self._prepare_smoke_reaction(m, target_obj)
         if self.phase != "playing" or not self._vivo(m) or not self._vivo(target):
             return False
@@ -45904,6 +46098,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                               if isinstance(reaction_effect, dict) else bool(reaction_effect))
         flash_attack_penalty = int(reaction_effect.get("attack_penalty", 0) or 0) \
             if isinstance(reaction_effect, dict) else 0
+        if isinstance(gilo_flash_effect, dict):
+            smoke_disadvantage = smoke_disadvantage or bool(gilo_flash_effect.get("disadvantage"))
+            flash_attack_penalty = max(
+                flash_attack_penalty, int(gilo_flash_effect.get("attack_penalty", 0) or 0))
         if self._consumir_bomba_flash_ataque(m):
             flash_attack_penalty = max(flash_attack_penalty, 2)
             smoke_disadvantage = True
@@ -46011,6 +46209,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # A habilidade é consumida na primeira tentativa, mesmo se o ataque
         # errar; assim o segundo ataque não recebe o mesmo benefício.
         troll_devastador = bool(m.pop("_troll_devastador_ataque", False))
+        urso_pardo_devastador = bool(
+            m.get("_urso_pardo_devastador_mordida") and atk_def.get("name") == "Mordida"
+        )
+        if urso_pardo_devastador:
+            m.pop("_urso_pardo_devastador_mordida", None)
         troll_investida = bool(m.pop("_troll_investida_ataque", False))
 
         if target.get("dormindo"):
@@ -46061,7 +46264,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 self._aplicar_hemorragia(target)
             editor_devastador = bool(m.get("_editor_ability_dobrar_dano"))
             raw_dmg = (self._rolar_dados_dobrados(atk_def["damage"])
-                       if (troll_devastador or editor_devastador)
+                       if (troll_devastador or urso_pardo_devastador or editor_devastador)
                        else roll_dice(atk_def["damage"]))
             if crit:
                 raw_dmg *= 2
@@ -46442,6 +46645,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     continue
                 if self._monster_attack_expected_damage(target, atk_def) <= 0:
                     continue
+                if m.get("type") == "gilo_dedos_sujos":
+                    incendiarios = int(m.get("gilo_virotes_incendiarios", 0) or 0)
+                    alquimicos = int(m.get("gilo_virotes_alquimicos", 0) or 0)
+                    if incendiarios + alquimicos <= 0:
+                        continue
+                    atk_def = deepcopy(atk_def)
+                    if incendiarios:
+                        m["gilo_virotes_incendiarios"] = incendiarios - 1
+                        atk_def["extra_damage"] = "1d4"
+                        atk_def["extra_damage_types"] = [DMG_FIRE]
+                    else:
+                        # Munição alquímica é registrada e consumida, mas não
+                        # recebe efeito de combate até existir uma regra para ela.
+                        m["gilo_virotes_alquimicos"] = alquimicos - 1
                 one_hit = await self._execute_one_monster_attack(m, atk_def, target_obj,
                                                                attack_index=self._indice_ataque_monstro(m, atk_def))
                 group_hit = one_hit or group_hit
@@ -50505,6 +50722,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._ai_minotauro(m, targets)
             return
         await self._processar_onda_envolvente_turno(m)
+        if m.get("type") == "urso_pardo":
+            await self._ai_urso_pardo(m, targets)
+            return
         if await self._monster_try_amaldicoar(m, targets):
             return
         if await self._monster_try_explosao_vapor(m, targets):
@@ -51069,6 +51289,64 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.gm_say(T("narracao.impoe_pressao_constante", monstro=nome_criatura(m)))
 
         await self._monster_execute_attacks(m, target_obj)
+
+    async def _ai_urso_pardo(self, m, targets):
+        """Urso Pardo: abre o combate com Investida Heroica e duplica os dados da Mordida a cada 4 rodadas."""
+        cds = m.setdefault("ability_cooldowns", {})
+        for key in list(cds):
+            cds[key] = max(0, int(cds.get(key, 0) or 0) - 1)
+
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        abriu_com_investida = False
+        passos_retos = 0
+        direcao_anterior = None
+
+        if not self._is_adjacent_to_monster(target.get("pos", []), m):
+            if not m.get("_urso_pardo_investida_usada"):
+                m["_urso_pardo_investida_usada"] = True
+                abriu_com_investida = True
+                movimento = int(m.get("movement", 6) or 6) * 2
+                m["_water_moves_left"] = max(
+                    int(m.get("_water_moves_left", 0) or 0),
+                    self._water_turn_moves(m, movimento),
+                )
+                await self.gm_say(T(
+                    "narracao.usa_investida_heroica_e_dobra_seu_desloc_2",
+                    nome_criatura_m=nome_criatura(m),
+                ))
+
+            while (m.get("_water_moves_left", 0) > 0
+                   and not self._is_adjacent_to_monster(target.get("pos", []), m)):
+                antes = list(m["pos"])
+                await self._monster_move_step(m, target["pos"])
+                if m["pos"] == antes:
+                    break
+                direcao = (m["pos"][0] - antes[0], m["pos"][1] - antes[1])
+                passos_retos = passos_retos + 1 if direcao == direcao_anterior else 1
+                direcao_anterior = direcao
+
+        if not self._is_adjacent_to_monster(target.get("pos", []), m):
+            return
+
+        if abriu_com_investida and passos_retos >= 2:
+            m["editor_ability_advantage"] = max(1, int(m.get("editor_ability_advantage", 0) or 0))
+            m["editor_ability_damage"] = max(2, int(m.get("editor_ability_damage", 0) or 0))
+
+        golpe_id = "golpe_devastador_urso_pardo"
+        if self._habilidade_monstro(m, golpe_id) and cds.get(golpe_id, 0) <= 0:
+            m["_urso_pardo_devastador_mordida"] = True
+            cds[golpe_id] = 4
+            await self.gm_say(T("narracao.desfere_golpe_devastador", monstro=nome_criatura(m)))
+
+        try:
+            await self._monster_execute_attacks(m, target_obj)
+        finally:
+            # Se as garras derrubaram o alvo antes da mordida, o golpe preparado
+            # não pode vazar para a mordida de uma rodada posterior.
+            m.pop("_urso_pardo_devastador_mordida", None)
 
     async def _ai_ogro(self, m, targets):
         """Ogro (Clava/Lança): avança até o alvo mais próximo e bate forte.
@@ -52460,8 +52738,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     # templo, então loot de vinho/ração/poção de templo caía silencioso.
                     item_def = _DUNGEON_ITEM_CATALOG.get(loot["id"])
                     if item_def:
-                        loot_items.extend(hidratar_itens_bau([loot]) if self._is_utility_belt_item(item_def)
-                                          else [deepcopy(item_def)])
+                        if self._is_utility_belt_item(item_def):
+                            loot_items.extend(hidratar_itens_bau([loot]))
+                        else:
+                            try:
+                                quantidade = max(1, min(99, int(loot.get("quantidade", 1))))
+                            except (TypeError, ValueError):
+                                quantidade = 1
+                            loot_items.extend(deepcopy(item_def) for _ in range(quantidade))
                 elif loot.get("tipo") == "instrumento_aleatorio":
                     loot_items.append(gerar_instrumento_aleatorio())   # Fase 4a
                 elif loot.get("tipo") == "scroll":
@@ -56825,6 +57109,13 @@ def _validate_custom_monster(raw):
         "pode_alterar_altura": pode_alterar_altura, "custo_mov_altura": custo_mov_altura,
         "ignora_obstaculos_voo": ignora_obstaculos_voo,
     }
+    result["level"] = _monster_int(raw.get("level", 1), 1, 1, 20)
+    if raw.get("class_id"):
+        result["class_id"] = str(raw.get("class_id"))[:24]
+    if typ == "gilo_dedos_sujos" and isinstance(raw.get("gilo_loadout"), dict):
+        # Metadados autorais da ficha do chefe: quantidades de equipamento,
+        # munição e habilidades não cabem no campo legado de IDs únicos.
+        result["gilo_loadout"] = deepcopy(raw["gilo_loadout"])
     if vscale != [1.0, 1.0]:
         result["vscale"] = vscale
     if fill_footprint_3d:

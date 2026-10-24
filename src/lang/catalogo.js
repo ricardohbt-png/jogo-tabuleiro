@@ -266,6 +266,10 @@ window.LANG_CATALOGO = {
     "en": "Barrel",
     "pt": "Barril"
   },
+  "cat.decor.barril_cerveja.nome": {
+    "en": "Beer Barrel",
+    "pt": "Barril de cerveja"
+  },
   "cat.decor.bola_corrente.nome": {
     "en": "Ball and Chain",
     "pt": "Bola de ferro com corrente"
@@ -964,7 +968,7 @@ window.LANG_CATALOGO = {
   },
   "cat.guilda.ladino_veneno_2.desc": {
     "en": "Each melee poison application now lasts 6 successful hits instead of 3. One vial also coats up to 20 arrows or bolts instead of 10.",
-    "pt": "Cada aplicação de veneno corpo a corpo passa a durar 6 golpes certeiros, em vez de 3. Um frasco também envenena até 20 flechas ou virotes, em vez de 10."
+    "pt": "Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes."
   },
   "cat.guilda.ladino_veneno_2.nome": {
     "en": "Quick Poison II",
@@ -972,7 +976,7 @@ window.LANG_CATALOGO = {
   },
   "cat.guilda.ladino_veneno_3.desc": {
     "en": "Can apply 2 different poisons to the same ammunition and keep 2 different poisons queued on a melee weapon.",
-    "pt": "Pode aplicar 2 venenos diferentes à mesma munição e manter 2 venenos distintos em sequência na arma corpo a corpo."
+    "pt": "Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo."
   },
   "cat.guilda.ladino_veneno_3.nome": {
     "en": "Quick Poison III",
@@ -1001,6 +1005,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_bardo.nome": {
     "en": "Legend: Bard",
     "pt": "Lenda: Bardo"
+  },
+  "cat.guilda.lenda_bardo_da_caravana.desc": {
+    "en": "+1 attack and +1 to saves against Caravan Bard.",
+    "pt": "+1 de ataque e +1 nos saves contra Bardo da Caravana."
+  },
+  "cat.guilda.lenda_bardo_da_caravana.nome": {
+    "en": "Legend: Caravan Bard",
+    "pt": "Lenda: Bardo da Caravana"
   },
   "cat.guilda.lenda_bugbear_sombras.desc": {
     "en": "+1 to attack and +1 to saving throws against Bugbear — Boogeyman of the Shadows.",
@@ -1530,6 +1542,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Black Bear",
     "pt": "Lenda: Urso Negro"
   },
+  "cat.guilda.lenda_urso_pardo.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Urso Pardo."
+  },
+  "cat.guilda.lenda_urso_pardo.nome": {
+    "en": "",
+    "pt": "Lenda: Urso Pardo"
+  },
   "cat.guilda.lenda_vampiro_anciao.desc": {
     "en": "+1 to attack and +1 to saving throws against Ancient Vampire.",
     "pt": "+1 de ataque e +1 nos saves contra Vampiro Ancião."
@@ -1553,14 +1573,6 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_zumbi_infectado.nome": {
     "en": "Lore: Infected Zombie",
     "pt": "Lenda: Zumbi Infectado"
-  },
-  "cat.guilda.lenda_bardo_da_caravana.desc": {
-    "en": "+1 attack and +1 to saves against Caravan Bard.",
-    "pt": "+1 de ataque e +1 nos saves contra Bardo da Caravana."
-  },
-  "cat.guilda.lenda_bardo_da_caravana.nome": {
-    "en": "Legend: Caravan Bard",
-    "pt": "Lenda: Bardo da Caravana"
   },
   "cat.guilda.mago_aprimorar_2.desc": {
     "en": "Enhance Spell now gives +2 to the save DC (was +1).",
@@ -2132,7 +2144,7 @@ window.LANG_CATALOGO = {
   },
   "cat.habilidade.veneno_rapido.desc": {
     "en": "Free action. Consumes one vial and 1 thirst per vial to coat up to 10 arrows or bolts (20 with Veneno Rápido II). Veneno Rápido III can combine two different poisons on the same projectiles.",
-    "pt": "Ação livre. Consome um frasco e 1 de sede por frasco para envenenar até 10 flechas ou virotes (20 com Veneno Rápido II). Veneno Rápido III pode combinar dois venenos diferentes nos mesmos projéteis."
+    "pt": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam o alvo."
   },
   "cat.habilidade.veneno_rapido.nome": {
     "en": "Quick Poison",
@@ -2585,22 +2597,6 @@ window.LANG_CATALOGO = {
   "cat.item.flechas.nome": {
     "en": "Arrows (×10)",
     "pt": "Flechas (×10)"
-  },
-  "cat.item.flecha_envenenada.nome": {
-    "en": "Poisoned Arrow",
-    "pt": "Flecha Envenenada"
-  },
-  "cat.item.virote_envenenado.nome": {
-    "en": "Poisoned Bolt",
-    "pt": "Virote Envenenado"
-  },
-  "cat.item.flechas_prata_envenenadas.nome": {"en": "Poisoned Silver Arrows", "pt": "Flechas de Prata Envenenadas"},
-  "cat.item.flechas_incendiarias_envenenadas.nome": {"en": "Poisoned Incendiary Arrows", "pt": "Flechas Incendiárias Envenenadas"},
-  "cat.item.virotes_prata_envenenados.nome": {"en": "Poisoned Silver Bolts", "pt": "Virotes de Prata Envenenados"},
-  "cat.item.virotes_incendiarios_envenenados.nome": {"en": "Poisoned Incendiary Bolts", "pt": "Virotes Incendiários Envenenados"},
-  "cat.item.municao_envenenada": {
-    "en": "{nome}",
-    "pt": "{nome}"
   },
   "cat.item.flechas_prata.nome": {
     "en": "Silver Arrows (×10)",
@@ -3418,6 +3414,14 @@ window.LANG_CATALOGO = {
     "en": "Scarlet Pain",
     "pt": "Dor Escarlate"
   },
+  "cat.item.veneno_escorpiao_aprimorado.desc": {
+    "en": "",
+    "pt": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude CD 14 anula."
+  },
+  "cat.item.veneno_escorpiao_aprimorado.nome": {
+    "en": "",
+    "pt": "Veneno Aprimorado do Escorpião Gigante"
+  },
   "cat.item.veneno_escorpiao_pedra.nome": {
     "en": "Stone Scorpion Venom",
     "pt": "Veneno do Escorpião Pedra"
@@ -4185,6 +4189,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.urso_negro_customizado.nome": {
     "en": "Black Bear",
     "pt": "Urso Negro"
+  },
+  "cat.monstro.urso_pardo.nome": {
+    "en": "",
+    "pt": "Urso Pardo"
   },
   "cat.monstro.vampiro_anciao.nome": {
     "en": "Ancient Vampire",

@@ -1616,6 +1616,102 @@ window.EDITOR_CATALOG = {
       "percepcao": 12
     },
     {
+      "type": "urso_pardo",
+      "name": "Urso Pardo",
+      "emoji": "🐻",
+      "boss": false,
+      "tier": 2,
+      "cr": 3,
+      "hp": 48,
+      "ac": 15,
+      "natural_armor": 4,
+      "movement": 6,
+      "vision_base": 3,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "ursoNegro",
+      "str_": 22,
+      "dex": 12,
+      "con_": 16,
+      "int_": 2,
+      "fort": 6,
+      "ref_": 3,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 7,
+          "damage": "1d10+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "perfurante"
+        },
+        {
+          "name": "Garra",
+          "atk_bonus": 7,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2,
+          "on_hit": null,
+          "categoria": "cortante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "furia",
+          "name": "Fúria",
+          "action_type": "passiva",
+          "descricao": "Com HP < 50%: +2 de dano em todos os ataques"
+        },
+        {
+          "id": "golpe_devastador_urso_pardo",
+          "name": "Golpe Devastador II",
+          "icon": "💥",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 4,
+          "descricao": "A cada 4 rodadas, dobra os dados da próxima Mordida; o modificador fixo não é dobrado."
+        },
+        {
+          "id": "investida_heroica_urso_pardo",
+          "name": "Investida Heroica",
+          "icon": "⚡",
+          "action_type": "passiva",
+          "cooldown_turns": 0,
+          "descricao": "No primeiro avanço do combate, dobra o movimento para se aproximar. Se avançar 2 casas seguidas na mesma direção, a próxima mordida tem vantagem e +2 de dano."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "physical",
+          "categoria": "perfurante",
+          "bonus_flat": 1,
+          "descricao": "Corpo massivo: +1 dano de perfuração/alcance (arcos, bestas, lanças)"
+        },
+        {
+          "type": "physical",
+          "categoria": "contundente",
+          "bonus_flat": -1,
+          "descricao": "Corpo massivo: -1 dano de concussão (martelos, maças, bastões)"
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 13
+    },
+    {
       "type": "orc_guerreiro",
       "name": "Orc Guerreiro",
       "emoji": "👹",
@@ -7119,6 +7215,24 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "golpe_devastador_urso_pardo",
+      "name": "Golpe Devastador II",
+      "icon": "💥",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 4,
+      "descricao": "A cada 4 rodadas, dobra os dados da próxima Mordida; o modificador fixo não é dobrado.",
+      "source": "monstro"
+    },
+    {
+      "id": "investida_heroica_urso_pardo",
+      "name": "Investida Heroica",
+      "icon": "⚡",
+      "action_type": "passiva",
+      "cooldown_turns": 0,
+      "descricao": "No primeiro avanço do combate, dobra o movimento para se aproximar. Se avançar 2 casas seguidas na mesma direção, a próxima mordida tem vantagem e +2 de dano.",
+      "source": "monstro"
+    },
+    {
       "id": "investida_brutal",
       "name": "Investida Brutal",
       "action_type": "passiva",
@@ -10105,6 +10219,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_urso_pardo",
+      "source": "guilda",
+      "source_id": "lenda_urso_pardo",
+      "name": "Lenda: Urso Pardo",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Urso Pardo.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_orc_guerreiro",
       "source": "guilda",
       "source_id": "lenda_orc_guerreiro",
@@ -11212,6 +11337,17 @@ window.EDITOR_CATALOG = {
     }
   ],
   "items": [
+    {
+      "id": "veneno_escorpiao_aprimorado",
+      "name": "Veneno Aprimorado do Escorpião Gigante",
+      "emoji": "🦂",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_escorpiao_aprimorado",
+      "loot_only": true,
+      "descricao": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude CD 14 anula."
+    },
     {
       "id": "banquete_viagem",
       "name": "Banquete de Viagem",
@@ -13839,6 +13975,10 @@ window.EDITOR_CATALOG = {
       "name": "Veneno do Escorpião Pedra"
     },
     {
+      "id": "veneno_escorpiao_aprimorado",
+      "name": "Veneno Aprimorado do Escorpião Gigante"
+    },
+    {
       "id": "veneno_cobra_cuspidora",
       "name": "Veneno de Cobra Cuspidora"
     },
@@ -14504,6 +14644,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": true,
       "special": null,
       "image": null
+    },
+    {
+      "type": "barril_cerveja",
+      "nome": "Barril de cerveja",
+      "emoji": "🍺",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "barril_cerveja.png"
     },
     {
       "type": "arca_tesouros",
