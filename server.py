@@ -49582,7 +49582,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             bonus_dex = mod(m.get("dex", 10))
             total = d20 + bonus_dex
             sucesso = total >= dificuldade
-            cooldowns["bandido_esconder_se"] = 3
+            m.setdefault("monster_ability_cooldowns", {})["bandido_esconder_se"] = 3
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                   "label": T("dado.furtividade_de", nome=nome_criatura(m)),
                                   "hit": sucesso})
