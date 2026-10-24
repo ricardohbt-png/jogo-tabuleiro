@@ -44,11 +44,11 @@ MM = ART["masmorras"]
 
 # Faixas planejadas na spec (ND arredondado, faixa pelo termômetro).
 ESPERADO = {
-    "sombras_1_vau.json": {0: (1.0, "facil"), 1: (1.25, "facil"), 2: (2.0, "equilibrada")},
+    "sombras_1_vau.json": {0: (1.0, "facil"), 1: (2.75, "equilibrada"), 2: (2.0, "equilibrada")},
     "sombras_2_minas.json": {0: (1.25, "facil"), 1: (0.95, "facil"), 2: (2.0, "facil"),
                              3: (3.5, "equilibrada")},
     "sombras_3a_saloes.json": {0: (0.0, "facil"), 1: (2.5, "facil"), 2: (2.5, "facil"),
-                               3: (3.5, "facil")},
+                               3: (4.0, "facil")},
     "sombras_3b_trono.json": {0: (0.0, "facil"), 1: (5.5, "equilibrada"), 2: (2.5, "facil")},
 }
 

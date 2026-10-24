@@ -3427,7 +3427,7 @@
         <label>${t("ui.editor.masmorra.painel.emoji_falante")}</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
         <label>${t("ui.editor.masmorra.painel.nome_falante")}</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="${t("ui.editor.masmorra.painel.opcional")}">
         <label>${t("ui.editor.masmorra.painel.retrato_falante")}</label><input id="f-retrato" value="${escGuia(fal.retrato)}" placeholder="assets/portraits/nome.png" style="width:100%">
-        <label>${t("ui.editor.masmorra.painel.cena_fala")}</label><input id="f-cena" value="${escGuia(fal.cena)}" placeholder="assets/tela de transição/tutorial/nome.png" style="width:100%">
+        <label>${t("ui.editor.masmorra.painel.cena_fala")}</label><input id="f-cena" value="${escGuia(fal.cena)}" placeholder="assets/tela de transi&ccedil;&atilde;o/tutorial/nome.png" style="width:100%">
         <label>${t("ui.editor.masmorra.painel.texto")}</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
         <label>${t("ui.editor.masmorra.painel.gatilho")}</label><select id="f-tipo">
           <option value="proximidade"${tg.tipo === "proximidade" ? " selected" : ""}>${t("ui.editor.masmorra.painel.gatilho_proximidade")}</option>
@@ -4880,7 +4880,7 @@
     S.exit = obj.exit || null;
     S.routes = (obj.routes || []).map((r, i) => ({
       id: typeof r.id === "string" ? r.id : "rota_" + i,
-      name: String(r.name || ("Rota " + (i + 1))).slice(0, 80),
+      name: String(r.name || (t("ui.editor.masmorra.rotas.rota") + " " + (i + 1))).slice(0, 80),
       monster_policy: r.monster_policy === "reaparecer" ? "reaparecer" : "persistir_derrotas",
     }));
     S.nextRouteId = S.routes.reduce((n, r) => { const m = /^rota_(\d+)$/.exec(r.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, 0);
@@ -4889,7 +4889,7 @@
       let id = typeof e.id === "string" && e.id && !usedRouteExitIds.has(e.id) ? e.id : "route_exit_" + routeExitSeq++;
       while (usedRouteExitIds.has(id)) id = "route_exit_" + routeExitSeq++;
       usedRouteExitIds.add(id);
-      return { id, name: String(e.name || ("Saída " + (i + 1))).slice(0, 80), route_id: String(e.route_id || ""), pos: Array.isArray(e.pos) ? e.pos.slice() : [0, 0] };
+      return { id, name: String(e.name || (t("ui.editor.masmorra.painel.saida") + " " + (i + 1))).slice(0, 80), route_id: String(e.route_id || ""), pos: Array.isArray(e.pos) ? e.pos.slice() : [0, 0] };
     });
     S.nextRouteExitId = S.routeExits.reduce((n, e) => { const m = /^route_exit_(\d+)$/.exec(e.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, routeExitSeq);
     S.routeExitRouteId = S.routes[0]?.id || "";

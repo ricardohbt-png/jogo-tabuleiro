@@ -16,6 +16,7 @@ atexit.register(shutil.rmtree, _TMP_DADOS, True)
 server.WORLD_ADVENTURES_FILE = os.path.join(_TMP_DADOS, "world_adventures.json")
 server.WORLD_MAP_POINTS_FILE = os.path.join(_TMP_DADOS, "world_map_points.json")
 from server import GameRoom, make_player
+server.chance_encontro = lambda fome, sede: 0   # sem emboscada aleatória: o teste precisa de fluxo determinístico
 
 PASS = 0; FAIL = 0
 def check(name, cond):
@@ -232,7 +233,7 @@ async def test_so_na_cidade():
         check("ausente vira False", server.WORLD_ADVENTURES["test_cidade"].get("so_na_cidade") is False)
         base = os.path.dirname(os.path.abspath(__file__))
         js = open(os.path.join(base, "..", "game.js"), encoding="utf-8").read()
-        check("mapa-múndi do cliente pula so_na_cidade", "filter(a => !a.so_na_cidade)" in js)
+        check("mapa-múndi do cliente pula so_na_cidade", "filter(a => !a.so_na_cidade &&" in js)
         check("Campo de Treinamento está só na cidade",
               salvos.get("treinamento", {}).get("so_na_cidade") is True)
     finally:

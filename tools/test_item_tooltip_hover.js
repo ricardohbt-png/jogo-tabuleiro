@@ -67,6 +67,7 @@ for(const [name, html] of [['aplicarTooltipAoItemDados','ITEM'],['aplicarTooltip
   assert.deepEqual([tip.style.left,tip.style.top],position,'A descrição permanece fixa');
 }
 const inventory=fs.readFileSync(require('path').join(__dirname,'..','src/ui/inventoryModal.js'),'utf8');
+ctx._itemDisplayName=item=>item.name;
 ctx._showInventoryTooltip=()=>{ tip.innerHTML='INVENTÁRIO'; };
 vm.runInContext(inventory.match(/function _wireTooltip\([^]*?\n  }/)[0],ctx);
 ctx.esconderTooltip();

@@ -140,7 +140,7 @@ console.log('\n[4] _somGolpe / _somDor');
 }
 
 console.log('\n[5] Fiação de combate');
-check('base da cena leva impacto', /attacker_pos:msg\.attacker_pos, target_pos:msg\.target_pos, projectile: msg\.projectile \|\| null, impacto: msg\.impacto \|\| null/.test(GAME));
+check('base da cena leva impacto', /attacker_pos:msg\.attacker_pos, target_pos:msg\.target_pos, projectile: msg\.projectile \|\| null,\s*impacto: msg\.impacto \|\| null/.test(GAME));
 check('impact chama _somGolpe antes do cue adiado', /const tocouGolpe = !c\.tardio && _somGolpe\(c\);/.test(GAME));
 check('cue adiado só toca sem amostra', /if\(f\.cueAdiado\)\{ if\(!tocouGolpe\) _playCombatCue\(f\.cueAdiado\.kind, f\.cueAdiado\.opts\); f\.cueAdiado = null; \}/.test(GAME));
 check('dor tenta amostra antes da síntese', /if\(fb\.cue && !_somDor\(c, fb\)\) _playCombatCue\('damage', fb\.cue\);/.test(GAME));

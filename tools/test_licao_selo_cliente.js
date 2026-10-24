@@ -12,14 +12,14 @@ function no(cls) {
 }
 const host = {
   children: [], _open: false,
-  classList: { add: () => { host._open = true; }, remove() {}, contains: () => host._open },
+  classList: { add: () => { host._open = true; }, remove() {}, toggle() {}, contains: () => host._open },
   appendChild(el) { host.children.push(el); },
   set innerHTML(v) { host.children = []; host.html = v; },
 };
 const ctx = {
   $: () => host, _licaoUltima: null, _guiaFecharPasso() {}, _guiaIniciar() {}, _esc: s => String(s),
   _tutHTML: s => String(s), t: k => k, _guiaMostrar() {}, GS: {},
-  GuiaTutorial: { parseUi: () => null },
+  GuiaTutorial: { parseUi: () => null, demonstracaoDisponivel: () => false },
 };
 vm.createContext(ctx);
 vm.runInContext(`${fn}; this.f = _mostrarJanelaLicao;`, ctx);

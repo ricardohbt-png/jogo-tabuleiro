@@ -1442,7 +1442,7 @@ const InventoryModal = (() => {
       }
       if(_selected?.kind === 'bag'){_onBeltSlotClick(gearSlot, pocketIndex); return true;}
       _selected = _beltEntry(_currentPlayer(), gearSlot, pocketIndex) ? {kind:'belt', gearSlot, pocketIndex} : null;
-      const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex};
+      const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex, beltToken:_currentPlayer()?.gear?.[gearSlot]?.utility_belt_token};
       _gamepadAction = _selected && _canOfferGamepadAction(null, sourceInfo) ? {sourceInfo, choice:'use'} : null;
       _gamepadRefreshSelected(); return true;
     }

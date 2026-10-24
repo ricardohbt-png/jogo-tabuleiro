@@ -92,7 +92,7 @@ const context = {_assetURL: x => x};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('src/gameState.js', 'utf8'), context);
 const source = fs.readFileSync('game.js', 'utf8');
-const start = source.indexOf('function itemIconHTML(');
+const start = source.indexOf('const ITEM_ICON_OVERRIDES');
 const end = source.indexOf('\nfunction _guardarSelecaoLoja', start);
 vm.runInContext(source.slice(start,end), context);
 const items = [{id:'cinto_utilidades'}, {id:'cinto_com_bolsos'},

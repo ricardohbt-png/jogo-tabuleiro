@@ -17,6 +17,7 @@ const sandbox = {
       for (let x = cx - radius; x <= cx + radius; x++) out.add(`${x},${y}`);
   },
   _aplicarSpellHL() {},
+  _reagePrever() {},
 };
 vm.runInNewContext(`${match[0]}\n_recomputarAreaThrow(7, 4);`, sandbox);
 assert.deepStrictEqual(Array.from(sandbox.window._spellHL.area), ['7,4']);

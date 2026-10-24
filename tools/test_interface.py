@@ -230,6 +230,7 @@ LITERAIS_INTENCIONAIS = {
     # e o `id.includes('ácido')` que casa o id da armadilha — traduzi-los
     # quebraria o ramo em silêncio (o lote de 2026-09-14 chegou a fazê-lo).
     'atk armado',
+    'skill-btn guild-tec',   # classe CSS do botão de técnica da Guilda
     'ácido',
     # Fase interna da animação de ataque; não aparece como texto de interface.
     'GOLPE',
@@ -260,6 +261,9 @@ def _pendente(linha, txt):
     if RE_MARKUP_I18N.search(txt):
         return False
     if txt in LITERAIS_INTENCIONAIS:
+        return False
+    # Atributos de arrastar atalho: ids de LÓGICA (data-guia), não rótulos.
+    if txt.startswith('draggable="true" data-shortcut-kind='):
         return False
     if _e_arg_de_console(linha):
         return False

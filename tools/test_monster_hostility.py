@@ -51,9 +51,10 @@ def secao_config():
     ok, normalized = S._validate_monster_hostility(config)
     check("aceita seleções de subtipo e tipo pelo id", ok and normalized == config)
     room, orc, goblin = make_room()
-    legacy_attacks = room._monster_hostility_attacks(orc)
+    legacy = {k: v for k, v in orc.items() if k != "attacks"}   # o orc atual já sorteia arma e traz `attacks`
+    legacy_attacks = room._monster_hostility_attacks(legacy)
     check("fichas legadas sem lista de ataques mantêm o ataque básico",
-          len(legacy_attacks) == 1 and legacy_attacks[0]["damage"] == orc["damage"])
+          len(legacy_attacks) == 1 and legacy_attacks[0]["damage"] == legacy["damage"])
     S.MONSTER_HOSTILITY = {"orc": config["orc"]}
     check("a criatura escolhida pelo nome é hostil", room._monster_hostility_matches(orc, goblin))
     undead = dict(goblin, type="esqueleto_humano", subtipo="morto_vivo")
