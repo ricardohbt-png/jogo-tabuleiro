@@ -1,5 +1,16 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Bardo da Caravana: variante nativa do Bardo (2026-10-23)
+
+O Bardo da Caravana (rota do Olho) deixou de ser ficha personalizada derivada do Soldado e virou **variante nativa do
+Bardo**, `_variante_bardo_caravana()` no `server.py`: mesma IA (`ai_type: "bardo"`), Canção Heroica, Provocação e instrumento
+sorteado, só mais forte — 26 PV (contra 9), CA 16 com Couro Reforçado, ataque +6 (contra +3), Provocação CD 13 (`bardo_cd_provocacao`),
+recarga 3 (`bardo_recarga`), instrumento padrão ou refinado, arma besta/besta de mão/chicote, ouro 30–60, ND 2. O motor reconhece
+variantes por `_eh_bardo(m)` (tipo `bardo` **ou** IA `bardo`) em vez de comparar `type == "bardo"`; uma ficha personalizada não
+serve porque o validador só aceita habilidades da biblioteca do editor e descarta `random_equipment`. `ficha_bardo_agente` e a
+ficha gravada em `monstros_personalizados.json` saíram. Junto: o Bardo sorteando o Cajado de Madeira quebrava a IA
+(`reach: "cajado"` virando `int`) em `_ai_agressivo`. Testes: `python -X utf8 tools/test_elara_montanha_fichas.py`.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

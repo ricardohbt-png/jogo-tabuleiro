@@ -1554,6 +1554,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Infected Zombie",
     "pt": "Lenda: Zumbi Infectado"
   },
+  "cat.guilda.lenda_bardo_da_caravana.desc": {
+    "en": "+1 attack and +1 to saves against Caravan Bard.",
+    "pt": "+1 de ataque e +1 nos saves contra Bardo da Caravana."
+  },
+  "cat.guilda.lenda_bardo_da_caravana.nome": {
+    "en": "Legend: Caravan Bard",
+    "pt": "Lenda: Bardo da Caravana"
+  },
   "cat.guilda.mago_aprimorar_2.desc": {
     "en": "Enhance Spell now gives +2 to the save DC (was +1).",
     "pt": "Aprimorar Magia dá +2 na CD do save (era +1)."

@@ -6632,6 +6632,40 @@ MONSTER_DEFS = [
     {"type":"vampiro_anciao","name":"Vampiro Ancião","emoji":"🧛","tier":7,"cr":7,"hp":42,"ac":19,"size":[1,1],"movement":6,"str_":18,"dex":20,"con_":10,"int_":16,"fort":6,"ref_":8,"will":8,"attacks":[{"name":"Espada Bastarda","atk_bonus":9,"damage":"1d10+5","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":8,"damage":"1d8+5","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_area_vampirico","name":"Encantar em Área","action_type":"acao","dc":13,"range":4,"cooldown_turns":2},{"id":"comandar_escravos","name":"Comandar Escravos","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"mestre_vampiro","subtipo":"morto_vivo","undead":True,"boss":False},
     {"type":"lorde_vampiro","name":"Lorde Vampiro","emoji":"👑🧛","tier":9,"cr":9,"hp":60,"ac":21,"size":[1,1],"movement":6,"str_":20,"dex":22,"con_":10,"int_":18,"fort":8,"ref_":10,"will":10,"attacks":[{"name":"Espada Longa Mágica","atk_bonus":12,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":11,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_supremo_vampirico","name":"Encantar Supremo em Área","action_type":"acao","dc":14,"range":6,"cooldown_turns":2},{"id":"comandar_vampiros","name":"Comandar Vampiros","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lorde_vampiro","subtipo":"morto_vivo","undead":True,"boss":True},
 ]
+def _variante_bardo_caravana():
+    """O Bardo da Caravana é o Bardo (mesma IA, Canção Heroica, Provocação e instrumento sorteado), só mais forte:
+    mais vida, ataque e defesa, CD de Provocação 13, recarga de 3 rodadas e um equipamento melhor."""
+    v = deepcopy(next(m for m in MONSTER_DEFS if m["type"] == "bardo"))
+    v.update({
+        "type": "bardo_da_caravana", "name": "Bardo da Caravana",
+        "tier": 2, "cr": 2, "hp": 26, "ac": 14, "movement": 6,
+        "dex": 18, "con_": 14, "int_": 14, "fort": 2, "ref_": 4, "will": 4,
+        "base_attack_bonus": 2, "bardo_recarga": 3, "bardo_cd_provocacao": 13,
+        "gold_range": [30, 60],
+        "random_equipment": {
+            "armors": ["leather_plate"],
+            "weapons": ["besta", "hand_crossbow", "chicote"],
+            "instruments": list(_ROLLER_BASES),
+            "instrument_qualities": [{"id": "padrao", "chance": 55}, {"id": "refinado", "chance": 45}],
+            "instrument_origins": [{"id": "humana", "chance": 60}, {"id": "elfica", "chance": 20},
+                                    {"id": "ana", "chance": 20}],
+            "ammunition": {"count": 20, "incendiary_chance": {"hand_crossbow": 25, "besta": 30}},
+        },
+    })
+    v["attacks"][0]["atk_bonus"] = 6
+    for ab in v["special_abilities"]:
+        if ab["id"] == "bardo_provocacao":
+            ab["cooldown_turns"] = 3
+            ab["descricao"] = ("Um herói a até 3 casas testa Vontade CD 13 por até 3 turnos; "
+                               "a falha força aproximação e ataque ao bardo.")
+        elif ab["id"] == "bardo_habilidade_instrumento":
+            ab["cooldown_turns"] = 3
+            ab["descricao"] = "Ativa a habilidade do instrumento equipado. Recarga de 3 rodadas."
+    return v
+
+
+MONSTER_DEFS.append(_variante_bardo_caravana())
+
 
 # Subtipos gerais. As regras de dano sÃ£o aplicadas centralmente em
 # _apply_damage_types; imunidades de estado que dependem de fisiologia (veneno,
@@ -11772,7 +11806,7 @@ def _aplicar_equipamentos_monstro(m):
     weapon = next((item for item in items if item.get("die")), None)
     if weapon:
         configured_attack = (m.get("attacks") or [{}])[0]
-        attr = "dex" if weapon.get("stat") == "dex" or m.get("type") in {"bandido", "bardo"} else "str_"
+        attr = "dex" if weapon.get("stat") == "dex" or (m.get("type") == "bandido" or _eh_bardo(m)) else "str_"
         atk_bonus = int(m.get("base_attack_bonus", 0)) + mod(m.get(attr, 10))
         m["attacks"] = [{
             "name": weapon.get("name", "Arma"), "atk_bonus": atk_bonus,
@@ -11801,7 +11835,7 @@ def _aplicar_equipamentos_monstro(m):
     ac_bonus += sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "def_")
     # O Bardo usa CA base 13 já contando o Manto inicial da ficha de classe;
     # as outras armaduras sorteadas substituem esse manto, sem somar sobre ele.
-    if m.get("type") == "bardo":
+    if _eh_bardo(m):
         ac_bonus = max(0, ac_bonus - 1)
     if ac_bonus:
         m["ac"] += ac_bonus
@@ -11863,6 +11897,11 @@ def _configurar_mago_trevas_spawn(m):
                          nivel=1, int_bonus=2)
         if random.random() < float(scroll_cfg.get("chance", 0)) / 100 else None)
 
+def _eh_bardo(m):
+    """Bardo nativo ou variante dele (ex.: o Bardo da Caravana): qualquer criatura com a IA `bardo`."""
+    return bool(m) and (m.get("type") == "bardo" or m.get("ai_type") == "bardo")
+
+
 def _configurar_bardo_spawn(m):
     """Sorteia equipamento e instrumento do Bardo inimigo na criação da instância."""
     cfg = m.get("random_equipment") or {}
@@ -11873,8 +11912,8 @@ def _configurar_bardo_spawn(m):
     m["bardo_armadura"] = armadura
     m["equipment_enabled"] = True
     m["equipped_items"] = [armadura, arma]
-    m["base_attack_bonus"] = 0
-    m["atk_bonus"] = 3
+    m["base_attack_bonus"] = int(m.get("base_attack_bonus", 0) or 0)
+    m["atk_bonus"] = mod(m.get("dex", 10)) + m["base_attack_bonus"]
 
     bases = tuple(cfg.get("instruments") or _ROLLER_BASES)
     base = random.choice(bases)
@@ -12029,7 +12068,7 @@ def make_monster(mdef, room):
         _configurar_bandido_spawn(m)
     elif m.get("type") == "dark_mage":
         _configurar_mago_trevas_spawn(m)
-    elif m.get("type") == "bardo":
+    elif _eh_bardo(m):
         _configurar_bardo_spawn(m)
     _aplicar_equipamentos_monstro(m)
     if m.get("type") == "bandido" and m.get("bandido_veneno_doses", 0) > 0:
@@ -16784,7 +16823,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         # Ecos Dolorosos do Sino: o Bardo inimigo devolve dano sonoro ao herói
         # que o acertou em corpo a corpo.
-        if (alvo and alvo.get("type") == "bardo" and atacante.get("class_id")
+        if (alvo and _eh_bardo(alvo) and atacante.get("class_id")
                 and _distancia_chebyshev(atacante.get("pos", []), alvo.get("pos", [])) <= 1
                 and alvo.get("bardo_ecos_ate", 0) >= self.round_num
                 and alvo.get("hp", 0) > 0 and atacante.get("alive")):
@@ -19043,7 +19082,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p.pop("bardo_provocado_por", None)
             p.pop("bardo_provocacao_turnos", None)
             return False
-        resistiu, *_ = await self._save_mostrado(p, "vontade", 11)
+        resistiu, *_ = await self._save_mostrado(p, "vontade", int(bardo.get("bardo_cd_provocacao", 11) or 11))
         if resistiu:
             p.pop("bardo_provocado_por", None)
             p.pop("bardo_provocacao_turnos", None)
@@ -46290,17 +46329,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self._aplicar_efeito_movimento_charcos(m, target, paralitico, "o Ferrão Paralítico")
                 if target.get("hp", 0) > 0:
                     await self._registrar_tentaculo_charcos(m, target, atk_def)
-            if (m.get("type") == "bardo" and dano_sofrido > 0
+            if (_eh_bardo(m) and dano_sofrido > 0
                     and m.get("bardo_dueto_fantasma_ate", 0) >= self.round_num
                     and target.get("hp", target.get("vida_atual", 0)) > 0):
                 eco = max(0, dano_sofrido * int(m.get("bardo_dueto_fantasma_fracao", 0) or 0) // 100)
                 if eco:
                     await self._aplicar_dano_alvo(target, eco, DMG_PHYSICAL, m.get("id"), is_attack=True)
                     await self.gm_say(f"O Dueto Fantasma repete o golpe e causa {eco} de dano.")
-            if (m.get("type") != "bardo" and is_player and target.get("hp", 0) > 0
+            if (not _eh_bardo(m) and is_player and target.get("hp", 0) > 0
                     and not m.get("_bardo_dueto_marcial_reacao")):
                 for bardo in self.monsters.values():
-                    if (bardo.get("type") != "bardo" or bardo.get("hp", 0) <= 0
+                    if (not _eh_bardo(bardo) or bardo.get("hp", 0) <= 0
                             or bardo.get("bardo_dueto_marcial_ate", 0) < self.round_num
                             or _distancia_chebyshev(bardo.get("pos", []), m.get("pos", [])) > 1
                             or _distancia_chebyshev(bardo.get("pos", []), target.get("pos", [])) > 1):
@@ -49358,8 +49397,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False
         alvo["bardo_provocado_por"] = m.get("id")
         alvo["bardo_provocacao_turnos"] = 3
-        m.setdefault("monster_ability_cooldowns", {})["bardo_provocacao"] = 4
-        await self.gm_say(f"{nome_criatura(m)} provoca {alvo.get('name', 'o herói')}; faça Vontade CD 11 no início dos próximos turnos.")
+        m.setdefault("monster_ability_cooldowns", {})["bardo_provocacao"] = int(m.get("bardo_recarga", 4) or 4)
+        await self.gm_say(f"{nome_criatura(m)} provoca {alvo.get('name', 'o herói')}; faça Vontade CD {int(m.get('bardo_cd_provocacao', 11) or 11)} no início dos próximos turnos.")
         return True
 
     async def _bardo_iniciar_requiem(self, m, alvo, stats):
@@ -49522,7 +49561,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             else:
                 usados = True
         if usados:
-            m.setdefault("monster_ability_cooldowns", {})["bardo_habilidade_instrumento"] = 4
+            m.setdefault("monster_ability_cooldowns", {})["bardo_habilidade_instrumento"] = int(m.get("bardo_recarga", 4) or 4)
             await self.gm_say(f"{nome_criatura(m)} usa {INSTRUMENTOS_BASE[base]['habilidade_nome']}.")
         return usados
 
@@ -50813,8 +50852,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         attack_range = max((int(a.get("range", 0) or 0) for a in m.get("attacks", [])), default=0)
-        attack_reach = max((int(a.get("reach", 1) or 1) for a in m.get("attacks", [])
-                            if not a.get("range")), default=1)
+        # `reach` de arma pode ser um rótulo ("cajado", "lanca") em vez de um número: nesse caso vale 1 casa.
+        attack_reach = max(((int(a.get("reach", 1)) if str(a.get("reach", 1)).isdigit() else 1) or 1
+                            for a in m.get("attacks", []) if not a.get("range")), default=1)
         def alvo_no_alcance():
             if attack_range > 0:
                 return (self._monster_attack_in_range(m, target["pos"], {"range": attack_range})
@@ -52456,7 +52496,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Loot garantido (ex.: "arma equipada" do Orc) â€” sempre dropa.
             if m.get("type") == "bandido":
                 gold = random.randint(2, 10)
-            elif m.get("type") in {"dark_mage", "bardo"}:
+            elif m.get("type") == "dark_mage" or _eh_bardo(m):
                 gold_range = m.get("gold_range") or (4, 12)
                 gold = random.randint(int(gold_range[0]), int(gold_range[1]))
             equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []

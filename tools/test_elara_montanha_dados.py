@@ -56,7 +56,8 @@ class DiscoTests(unittest.TestCase):
             ok, msg = S.validar_dungeon(S.carregar_dungeon(arq))
             self.assertTrue(ok, f"{arq}: {msg}")
         tipos = {m["type"] for m in self.ler("monstros_personalizados.json")}
-        self.assertTrue({F.TIPO_ASSASSINO, F.TIPO_BARDO} <= tipos)
+        self.assertIn(F.TIPO_ASSASSINO, tipos)
+        self.assertNotIn(F.TIPO_BARDO, tipos, "o Bardo da Caravana é nativo (variante do Bardo), não ficha personalizada")
         with open(os.path.join(RAIZ, "tools", "editor_monsters_custom.js"), encoding="utf-8") as f:
             self.assertIn(F.TIPO_ASSASSINO, f.read())
 

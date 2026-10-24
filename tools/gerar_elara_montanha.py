@@ -101,7 +101,7 @@ def _gravar(caminho, dados):
 def garantir_registros(gravar):
     """Põe as fichas no catálogo vivo (para os mapas validarem) e, se `gravar`, no arquivo do editor. O Olho vem de
     `gerar_elara_graciero.py`: aqui só se confere que ele existe."""
-    for fn in (F.ficha_assassino, F.ficha_bardo_agente):
+    for fn in (F.ficha_assassino,):
         ok, norm = S._validate_custom_monster(fn())
         if not ok:
             raise ValueError(f"ficha {fn.__name__} inválida: {norm}")

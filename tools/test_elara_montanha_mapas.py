@@ -9,7 +9,7 @@ sys.path.insert(0, RAIZ); sys.path.insert(0, os.path.join(RAIZ, "tools"))
 import server as S
 import elara_montanha_fichas as F
 
-for _fn in (F.ficha_assassino, F.ficha_bardo_agente):
+for _fn in (F.ficha_assassino,):
     _ok, _n = S._validate_custom_monster(_fn())
     if not any(m.get("type") == _n["type"] for m in S.MONSTER_DEFS):
         S.MONSTER_DEFS.append(dict(_n, _personalizado=True))
