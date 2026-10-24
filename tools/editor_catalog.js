@@ -4255,6 +4255,139 @@ window.EDITOR_CATALOG = {
       "percepcao": 15
     },
     {
+      "type": "bardo_da_caravana",
+      "name": "Bardo da Caravana",
+      "emoji": "🎻",
+      "boss": false,
+      "tier": 2,
+      "cr": 2,
+      "hp": 26,
+      "ac": 14,
+      "natural_armor": 0,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "bardo",
+      "portrait": "bardo",
+      "base_attack_bonus": 2,
+      "str_": 10,
+      "dex": 18,
+      "con_": 14,
+      "int_": 14,
+      "fort": 2,
+      "ref_": 4,
+      "will": 4,
+      "random_equipment": {
+        "armors": [
+          "leather_plate"
+        ],
+        "weapons": [
+          "besta",
+          "hand_crossbow",
+          "chicote"
+        ],
+        "instruments": [
+          "harpa",
+          "tambor",
+          "sino",
+          "alaude",
+          "trompa",
+          "lira",
+          "flauta",
+          "violino",
+          "gaita"
+        ],
+        "instrument_qualities": [
+          {
+            "id": "padrao",
+            "chance": 55
+          },
+          {
+            "id": "refinado",
+            "chance": 45
+          }
+        ],
+        "instrument_origins": [
+          {
+            "id": "humana",
+            "chance": 60
+          },
+          {
+            "id": "elfica",
+            "chance": 20
+          },
+          {
+            "id": "ana",
+            "chance": 20
+          }
+        ],
+        "ammunition": {
+          "count": 20,
+          "incendiary_chance": {
+            "hand_crossbow": 25,
+            "besta": 30
+          }
+        }
+      },
+      "attacks": [
+        {
+          "name": "Arma equipada",
+          "atk_bonus": 6,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "dex",
+          "damage_attribute": "dex",
+          "apply_attribute_damage": true,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "hero_bard_cancao_heroica",
+          "name": "Canção Heroica",
+          "source": "heroi",
+          "uses_per_combat": 1,
+          "duration_rounds": 4,
+          "action_type": "acao",
+          "descricao": "Uma vez por combate, concede +1 em 1d4+1 atributos aos monstros aliados em até 5 casas por 1d4+2 rodadas."
+        },
+        {
+          "id": "bardo_provocacao",
+          "name": "Provocação",
+          "cooldown_turns": 3,
+          "action_type": "acao_bonus",
+          "descricao": "Um herói a até 3 casas testa Vontade CD 13 por até 3 turnos; a falha força aproximação e ataque ao bardo."
+        },
+        {
+          "id": "bardo_habilidade_instrumento",
+          "name": "Habilidade do Instrumento",
+          "cooldown_turns": 3,
+          "action_type": "acao",
+          "descricao": "Ativa a habilidade do instrumento equipado. Recarga de 3 rodadas."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "gold_range": [
+        30,
+        60
+      ],
+      "ai_type": "bardo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
+    },
+    {
       "type": "ferrao_charcos_jovem",
       "name": "Ferrão dos Charcos Jovem",
       "emoji": "🦂",
@@ -8466,7 +8599,7 @@ window.EDITOR_CATALOG = {
           "requires": null,
           "name": "Veneno Rápido II",
           "icon": "☠️",
-          "description": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros."
+          "description": "Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes."
         },
         {
           "id": "ladino_veneno_3",
@@ -8474,7 +8607,7 @@ window.EDITOR_CATALOG = {
           "requires": "ladino_veneno_2",
           "name": "Veneno Rápido III",
           "icon": "☠️",
-          "description": "Pode manter 2 venenos diferentes na arma ao mesmo tempo."
+          "description": "Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo."
         }
       ]
     },
@@ -9482,7 +9615,7 @@ window.EDITOR_CATALOG = {
       "source_id": "ladino_veneno_2",
       "name": "Veneno Rápido II",
       "icon": "✦",
-      "descricao": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros.",
+      "descricao": "Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -9493,7 +9626,7 @@ window.EDITOR_CATALOG = {
       "source_id": "ladino_veneno_3",
       "name": "Veneno Rápido III",
       "icon": "✦",
-      "descricao": "Pode manter 2 venenos diferentes na arma ao mesmo tempo.",
+      "descricao": "Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -10286,6 +10419,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Lorde Vampiro",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lorde Vampiro.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_bardo_da_caravana",
+      "source": "guilda",
+      "source_id": "lenda_bardo_da_caravana",
+      "name": "Lenda: Bardo da Caravana",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bardo da Caravana.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
