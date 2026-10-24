@@ -1904,10 +1904,20 @@ function _nomeMuncaoEnvenenada(it){
   return t(keys[it?.ammo_type]||(String(it?.ammo_type||'').includes('virote')?'cat.item.virote_envenenado.nome':'cat.item.flecha_envenenada.nome'));
 }
 window._nomeMuncaoEnvenenada = _nomeMuncaoEnvenenada;
+// Nome mostrado de um item: munição e arma com veneno ganham o aviso no nome enquanto o veneno durar.
+// Só armas têm `poison_slots` (a fila de cargas); a munição guarda `poison_ids`.
+function _nomeItemExibido(it){
+  if(Array.isArray(it?.poison_ids)&&it.poison_ids.length) return _nomeMuncaoEnvenenada(it);
+  const nome=it?.name||it?.nome||it?.id||'Item';
+  if(Array.isArray(it?.poison_slots)&&it.poison_slots.length){
+    const primeira=String(nome).trim().split(/\s+/)[0].toLowerCase();
+    return t(/a$/.test(primeira)||primeira==='foice'?'ui.veneno.arma_envenenada_f':'ui.veneno.arma_envenenada_m',{nome});
+  }
+  return nome;
+}
+window._nomeItemExibido=_nomeItemExibido;
 function _itemLabel(it){
-  const poisoned=Array.isArray(it?.poison_ids)&&it.poison_ids.length>0;
-  const name=poisoned ? _nomeMuncaoEnvenenada(it) : (it?.name||it?.id||'Item');
-  return `${it?.emoji||'📦'} ${name}${it?.ammo_count!=null?' ×'+it.ammo_count:''}`;
+  return `${it?.emoji||'📦'} ${_nomeItemExibido(it)}${it?.ammo_count!=null?' ×'+it.ammo_count:''}`;
 }
 function _renderBauSlots(container, items, limit, action){
   if(!container) return;
@@ -20598,7 +20608,7 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
       });
     }
     for(const m of alvos.municoes){
-      const origem=m.source==='off_hand'?t('ui.ladino.mao_esquerda'):`${t('ui.ladino.bolsa')} #${m.index+1}`;
+      const origem=m.source==='off_hand'?t('ui.veneno.municao_equipada'):t('ui.veneno.municao_bolsa',{n:m.index+1});
       const bloqueio=bonusUsado?t('ui.veneno.bonus_usado'):semSedeMunicao?t('ui.ladino.sede_insuficiente')
         :m.legado?t('ui.veneno.legado'):'';
       const parcial=m.parcial?` · ${t('ui.veneno.municao_parcial',{max:m.maxFrasco})}`:'';
@@ -20607,7 +20617,7 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
           <span style="color:#a99a7c;font-size:10px"> (${_esc(origem)})</span>
           <div style="color:#a99a7c;font-size:10px">${_esc(nomesEscolhidos)}</div>`,
         bloqueado:!!bloqueio,
-        motivo:bloqueio||(t('ui.veneno.municao_rende',{n:m.qtd,total:m.total})+parcial),
+        motivo:bloqueio||(t(m.completa?'ui.veneno.municao_completa':'ui.veneno.municao_rende',{n:m.qtd,total:m.total})+parcial),
         ao:()=>send({type:'envenenar_municao',method:metodo,ammo_source:m.source,ammo_index:m.index,
           quantity:m.qtd,poison_ids:[...escolhidos],item_id:metodo==='frasco'?escolhidos[0]:null,
           weapon_slot:m.weaponSlot,
@@ -30095,11 +30105,24 @@ function _modificadoresTemporariosStatus(p){
 
   // Venenos aplicados à arma também são efeitos ativos, embora não sejam uma
   // penalidade do próprio personagem.
-  const armasEnvenenadas = [p.weapon, p.gear?.weapon, p.gear?.off_hand]
-    .filter(Boolean).flatMap(w => Array.isArray(w.poison_slots) ? w.poison_slots : (w.veneno_id ? [w.veneno_id] : []));
-  if(armasEnvenenadas.length){
-    const nomes = armasEnvenenadas.map(id => `☠️ ${id}`).join(' · ');
-    add(t('ui.status.veneno_aplicado'), `${armasEnvenenadas.length} carga(s) — ${nomes}`);
+  // Uma linha por arma (e por pilha de munição equipada) com o veneno, o número de usos e o efeito.
+  const _efeitoVeneno = ids => [...new Set(ids)].map(id => GS.CATALOGO_ITENS?.[id]?.descricao).filter(Boolean).join(' · ');
+  [{rot: t('ui.ladino.arma_principal'), it: Object.assign({}, p.weapon || {}, p.gear?.weapon || {})},
+   {rot: t('ui.ladino.mao_secundaria'), it: p.gear?.off_hand}].forEach(({rot, it}) => {
+    const fila = Array.isArray(it?.poison_slots) && it.poison_slots.length ? it.poison_slots
+      : (it?.veneno_id ? [it.veneno_id] : []);
+    if(!fila.length) return;
+    const grupos = [];
+    fila.forEach(id => { const g = grupos.find(x => x.id === id); if(g) g.n++; else grupos.push({id, n: 1}); });
+    const resumo = grupos.map(g => `${_nomeVenenoPorId(g.id)} ×${g.n}`).join(' → ');
+    const efeito = _efeitoVeneno(fila);
+    add(`☠️ ${rot}: ${it.name || it.id || ''}`, efeito ? `${resumo} — ${efeito}` : resumo);
+  });
+  const municaoEquipada = p.gear?.off_hand;
+  if(municaoEquipada?.effect === 'ammo' && Array.isArray(municaoEquipada.poison_ids) && municaoEquipada.poison_ids.length){
+    const resumo = municaoEquipada.poison_ids.map(_nomeVenenoPorId).join(' + ') + ` ×${municaoEquipada.ammo_count || 0}`;
+    const efeito = _efeitoVeneno(municaoEquipada.poison_ids);
+    add(`☠️ ${_nomeMuncaoEnvenenada(municaoEquipada)}`, efeito ? `${resumo} — ${efeito}` : resumo);
   }
 
   // Doenças e maldições são persistentes até purificação, mas precisam ser

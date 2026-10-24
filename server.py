@@ -21973,6 +21973,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _desarme_bonus(self, p):
         return 2 if (tem_espec(p, "ladino_desarme_2") or tem_espec(p, "ladino_desarme_3")) else 0
 
+    def _arma_do_slot(self, p, slot="weapon"):
+        """Arma equipada no slot, completa o bastante para checar dado e tipo. A arma inicial da mão principal
+        pode estar em `gear.weapon` só com id, nome e veneno (sem `die`); o resto vive na cópia de combate
+        `p["weapon"]`. Sem essa fusão a mão principal nunca podia receber veneno."""
+        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
+        item = gear.get(slot)
+        if slot != "weapon":
+            return item if isinstance(item, dict) else None
+        combat = p.get("weapon") if isinstance(p.get("weapon"), dict) else None
+        if not isinstance(item, dict):
+            return combat
+        if item.get("die") or item.get("id") in RANGED_AMMO or not combat or combat.get("id") != item.get("id"):
+            return item
+        return {**combat, **item}
+
     def _poison_slots_do_item(self, p, slot="weapon"):
         """Retorna a fila FIFO de veneno da arma equipada no slot pedido."""
         if slot not in {"weapon", "off_hand"}:
@@ -22052,10 +22067,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Valida alvo e limite de venenos distintos sem alterar estado."""
         if slot not in {"weapon", "off_hand"} or not _veneno_id_valido(veneno_id):
             return False
-        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
-        item = gear.get(slot)
-        if not isinstance(item, dict) and slot == "weapon":
-            item = p.get("weapon") or {}
+        item = self._arma_do_slot(p, slot)
         if not isinstance(item, dict) or not (item.get("die") or item.get("id") in RANGED_AMMO):
             return False
         weapon_id = item.get("id", "")
@@ -22081,10 +22093,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """
         if not self._validar_aplicacao_veneno_arma(p, veneno_id, slot):
             return False, 0
-        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
-        item = gear.get(slot)
-        if not isinstance(item, dict) and slot == "weapon":
-            item = p.get("weapon") or {}
+        item = self._arma_do_slot(p, slot)
         if not isinstance(item, dict) or not (item.get("die") or item.get("id") in RANGED_AMMO):
             return False, 0
         weapon_id = item.get("id", "")
@@ -40859,8 +40868,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_sabe_usar_veneno_rapido")}); return
 
         weapon_slot = msg.get("weapon_slot", "weapon")
-        gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
-        selected_weapon = gear.get(weapon_slot) if weapon_slot in {"weapon", "off_hand"} else None
+        selected_weapon = self._arma_do_slot(p, weapon_slot) if weapon_slot in {"weapon", "off_hand"} else None
         if not isinstance(selected_weapon, dict) and weapon_slot == "weapon":
             selected_weapon = p.get("weapon") or {}
         weapon_id = selected_weapon.get("id", "") if isinstance(selected_weapon, dict) else ""
@@ -41250,8 +41258,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if effect == "coat_poison":
             if weapon_slot not in {"weapon", "off_hand"}:
                 await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
-            poison_weapon = ((p.get("gear") or {}).get(weapon_slot)
-                             if isinstance(p.get("gear"), dict) else None)
+            poison_weapon = self._arma_do_slot(p, weapon_slot)
             if not isinstance(poison_weapon, dict) and weapon_slot == "weapon":
                 poison_weapon = p.get("weapon") or {}
             if (not _veneno_id_valido(item.get("veneno_id"))

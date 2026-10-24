@@ -34,11 +34,22 @@ let r = alvos({ gear: { weapon: espada, off_hand: adaga }, bag: [] });
 check('corpo a corpo: 2 armas', r.armas.map(a => a.slot), ['weapon', 'off_hand']);
 check('corpo a corpo: sem munição', r.municoes.length, 0);
 
-// 2. Arco na mão principal: só munição (arco não recebe veneno direto), flechas da mão e da bolsa agrupadas.
+// 2. Arco na mão principal: só munição (arco não recebe veneno direto). Cada pilha é uma opção, para
+// escolher entre a munição equipada e a da bolsa; o frasco normal (10) usa só a pilha escolhida.
 r = alvos({ gear: { weapon: arco, off_hand: flechas(6) }, bag: [flechas(8), { id: 'x' }] });
 check('arco: sem arma direta', r.armas.length, 0);
-check('arco: flechas iguais viram UM cartão', r.municoes.length, 1);
-check('arco: total e quantidade', [r.municoes[0].total, r.municoes[0].qtd, r.municoes[0].sobra, r.municoes[0].parcial], [14, 10, 4, false]);
+check('arco: uma opção por pilha', r.municoes.map(m => [m.source, m.total, m.qtd, m.parcial]), [['off_hand', 6, 6, true], ['bag', 8, 8, true]]);
+check('arco: nenhuma completa com outra pilha no frasco normal', r.municoes.some(m => m.completa), false);
+
+// 2b. Com o frasco de 20 (Veneno Rápido II) a pilha completa com as iguais até o limite.
+r = alvos({ gear: { weapon: arco, off_hand: flechas(6) }, bag: [flechas(8)] }, { maxPorFrasco: 20 });
+check('frasco de 20: completa com pilhas iguais', r.municoes.map(m => [m.qtd, m.completa]), [[14, true], [14, true]]);
+
+// 2c. A mão principal inicial vem reduzida em gear.weapon (sem dado); a cópia de combate completa.
+r = alvos({ gear: { weapon: { id: 'dagger', name: 'Adaga', poison_slots: ['v2'] }, off_hand: adaga },
+            weapon: { id: 'dagger', die: '1d4' }, bag: [] });
+check('mão principal reduzida aparece', r.armas.map(a => a.slot), ['weapon', 'off_hand']);
+check('mão principal mantém nome e cargas do item equipado', [r.armas[0].item.name, r.armas[0].ativos], ['Adaga', ['v2']]);
 
 // 3. Com pouca munição o cartão avisa que a dose é parcial.
 r = alvos({ gear: { weapon: arco }, bag: [flechas(4)] });
@@ -90,6 +101,11 @@ check('painel chama desenhar() ao abrir', corpo.endsWith('\n  desenhar();\n}\n')
 const iniLadino = fonte.indexOf('function _rogueSkillBtn(');
 const ladino = fonte.slice(iniLadino, fonte.indexOf('\n}\n', iniLadino));
 check('_rogueSkillBtn não chama desenhar()', /(^|[^\w.])desenhar\(/.test(ladino), false);
+
+// 12. Nome com veneno: a função existe e o inventário e o `_itemLabel` a usam.
+check('_nomeItemExibido declarada no game.js', fonte.includes('function _nomeItemExibido('), true);
+const modal = fs.readFileSync(path.join(root, 'src/ui/inventoryModal.js'), 'utf8');
+check('inventário usa _nomeItemExibido', modal.includes('window._nomeItemExibido'), true);
 
 if(falhas){ console.log(`\n${falhas} falha(s)`); process.exit(1); }
 console.log('\ntudo ok');

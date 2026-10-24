@@ -17,11 +17,15 @@ Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno 
 painel, `abrirPainelEnvenenar({metodo, venenoId, vialSource})` em `game.js`: escolhe o(s) veneno(s)
 (chips; até 2 com `ladino_veneno_3`, o frasco clicado fica fixo) e **um clique** num cartão aplica — arma da
 mão principal/secundária ou pilha de munição. Cada cartão mostra o veneno atual, quanto rende e, quando
-bloqueado, o motivo (outro veneno, cargas antigas, sem sede, ação bônus usada). Munição: pilhas iguais
-da mão e da bolsa viram um cartão (o servidor já as junta) e a dose parcial aparece no texto, sem
-`confirm()`. A decisão de quais alvos existem é `GS.venenoAlvos(me, opts)` (pura, em `gameState.js`);
-o **protocolo e o servidor não mudaram** (`use_item`, `veneno_rapido`, `envenenar_municao`). Chaves
-`ui.veneno.*`. Teste: `node tools/test_veneno_alvos.js`.
+bloqueado, o motivo (outro veneno, cargas antigas, sem sede, ação bônus usada). Munição: **um cartão por
+pilha** (equipada ou "bolsa #n"), para escolher de onde sai; o frasco normal usa só a pilha escolhida e a dose
+parcial aparece no texto, sem `confirm()` (só com o frasco de 20 a pilha completa com as iguais).
+**A mão principal inicial vem reduzida em `gear.weapon` (sem `die`; o resto fica em `p["weapon"]`)**:
+`GameRoom._arma_do_slot` (servidor) e a fusão em `venenoAlvos` (cliente) a completam — sem isso só a mão
+secundária aceitava veneno. Enquanto houver cargas, o nome da arma ganha "envenenada/o" (`_nomeItemExibido`,
+como a munição) e a lista de status mostra uma linha por arma com veneno, usos e efeito (não um ícone por carga). A decisão de quais alvos existem é `GS.venenoAlvos(me, opts)` (pura, em `gameState.js`);
+o **protocolo não mudou** (`use_item`, `veneno_rapido`, `envenenar_municao`). Chaves
+`ui.veneno.*`. Testes: `node tools/test_veneno_alvos.js` e `python -X utf8 tools/test_veneno_arma_principal.py`.
 
 ### O Resgate de Elara — rota do Olho (2026-10-22)
 

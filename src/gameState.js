@@ -3637,8 +3637,12 @@ const GS = (() => {
       hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata'],
     };
     const gear = (me && me.gear) || {};
+    // O item inicial da mão principal pode vir reduzido em gear.weapon (sem dado de dano): completa
+    // com a cópia de combate, mantendo nome e cargas de veneno do item equipado.
+    const principal = (gear.weapon || (me && me.weapon))
+      ? Object.assign({}, (me && me.weapon) || {}, gear.weapon || {}) : null;
     const slots = [
-      { slot: 'weapon', item: gear.weapon || (me && me.weapon) || null },
+      { slot: 'weapon', item: principal },
       { slot: 'off_hand', item: gear.off_hand || null },
     ];
     const semVeneno = (it) => !Array.isArray(it && it.poison_ids) || it.poison_ids.length === 0;
@@ -3673,18 +3677,22 @@ const GS = (() => {
         if (it && it.effect === 'ammo' && validos.includes(it.ammo_type) && semVeneno(it) && (it.ammo_count || 0) > 0)
           pilhas.push({ source: 'bag', index, item: it });
       });
-      const grupos = new Map();
+      // Uma opção por pilha, para o jogador escolher entre a munição equipada e a da bolsa. O servidor
+      // usa a pilha escolhida primeiro; só completa com pilhas iguais se a quantidade passar dela, o que
+      // só acontece quando o frasco rende mais que uma pilha (Veneno Rápido II, 20 projéteis).
+      const totalDoGrupo = new Map();
       for (const pilha of pilhas) {
         const chave = assinatura(pilha.item);
-        if (!grupos.has(chave)) grupos.set(chave, { primeira: pilha, total: 0 });
-        grupos.get(chave).total += Math.max(0, Number(pilha.item.ammo_count) || 0);
+        totalDoGrupo.set(chave, (totalDoGrupo.get(chave) || 0) + Math.max(0, Number(pilha.item.ammo_count) || 0));
       }
-      for (const g of grupos.values()) {
-        const qtd = Math.min(maxFrasco, g.total);
+      for (const pilha of pilhas) {
+        const total = Math.max(0, Number(pilha.item.ammo_count) || 0);
+        const grupo = totalDoGrupo.get(assinatura(pilha.item));
+        const completa = maxFrasco > 10 && maxFrasco > total && grupo > total;
+        const qtd = Math.min(maxFrasco, completa ? grupo : total);
         municoes.push({
-          tipo: 'municao', weaponSlot: slot, arma: item, source: g.primeira.source, index: g.primeira.index,
-          item: g.primeira.item, total: g.total, qtd, sobra: g.total - qtd, parcial: qtd < maxFrasco,
-          maxFrasco, legado,
+          tipo: 'municao', weaponSlot: slot, arma: item, source: pilha.source, index: pilha.index,
+          item: pilha.item, total, qtd, completa, parcial: qtd < maxFrasco, maxFrasco, legado,
         });
       }
     }

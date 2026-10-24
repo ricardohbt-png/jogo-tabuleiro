@@ -10291,10 +10291,6 @@ window.LANG_INTERFACE = {
     "en": "fully petrified",
     "pt": "totalmente petrificado"
   },
-  "ui.status.veneno_aplicado": {
-    "en": "🗡️ Poison applied",
-    "pt": "🗡️ Veneno aplicado"
-  },
   "ui.status.visao_limitada_e_ataques_a_distancia_preju": {
     "en": "limited vision and ranged attacks impaired",
     "pt": "visão limitada e ataques à distância prejudicados"
@@ -11331,6 +11327,11 @@ window.LANG_INTERFACE = {
   "ui.veneno.hud_estado": {"en":"{rotulo}: {nomes} ×{n}","pt":"{rotulo}: {nomes} ×{n}"},
   "ui.veneno.hud_municao": {"en":"Poisoned ammo: {n}","pt":"Munição envenenada: {n}"},
   "ui.veneno.hud_sem_alvo": {"en":"Equip a weapon or carry compatible ammunition.","pt":"Equipe uma arma ou leve munição compatível."},
+  "ui.veneno.arma_envenenada_f": {"en":"Poisoned {nome}","pt":"{nome} envenenada"},
+  "ui.veneno.arma_envenenada_m": {"en":"Poisoned {nome}","pt":"{nome} envenenado"},
+  "ui.veneno.municao_equipada": {"en":"equipped","pt":"equipada"},
+  "ui.veneno.municao_bolsa": {"en":"bag #{n}","pt":"bolsa #{n}"},
+  "ui.veneno.municao_completa": {"en":"→ poisons {n} (tops up with identical stacks)","pt":"→ envenena {n} (completa com pilhas iguais)"},
   "ui.ladino.cargas_veneno": {"en":"{n} poison charges","pt":"{n} cargas de veneno"},
   "ui.mestre.veneno_ativo": {"en":"Poison already applied","pt":"Veneno já aplicado"}
 };

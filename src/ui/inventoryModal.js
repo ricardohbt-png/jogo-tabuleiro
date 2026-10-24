@@ -72,8 +72,8 @@ const InventoryModal = (() => {
   ];
   // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
   const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);
-  const _itemDisplayName = item => Array.isArray(item?.poison_ids) && item.poison_ids.length
-    ? (window._nomeMuncaoEnvenenada?.(item) || item.name || item.id || 'Item')
+  const _itemDisplayName = item => window._nomeItemExibido
+    ? window._nomeItemExibido(item)
     : (item?.name || item?.nome || item?.id || 'Item');
 
   // Instrumentos do Bardo (Fase 1): o instrumento vive na MÃO DO ESCUDO (o slot
