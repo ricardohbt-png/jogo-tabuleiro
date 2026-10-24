@@ -5179,7 +5179,7 @@ MONSTER_DEFS = [
         },
         "gold_range": [4, 12], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "porte": "medio",
-        "image": "dark_mage", "subtipo": "raca_padrao", "undead": False, "boss": False,
+        "image": "necromante", "subtipo": "raca_padrao", "undead": False, "boss": False,
     },
     {
         "type": "bardo", "name": "Bardo", "emoji": "🎻",
@@ -9292,22 +9292,39 @@ def carregar_dungeon(file):
     except Exception:
         return None
 
+_LISTA_DUNGEONS_CACHE = {}   # caminho -> (mtime_ns, tamanho, entrada ou None)
+
 def listar_dungeons():
-    """Varre DUNGEONS_DIR e devolve [{id, name, file}] das masmorras válidas."""
+    """Varre DUNGEONS_DIR e devolve [{id, name, file}] das masmorras válidas.
+    Cada arquivo só é relido e revalidado quando muda (mtime/tamanho): o lobby chama
+    isto a cada broadcast, e validar as ~120 masmorras custava ~0,25 s por chamada."""
     out = []
     try:
         arquivos = sorted(f for f in os.listdir(DUNGEONS_DIR) if f.endswith(".json"))
     except Exception:
         return out
     for file in arquivos:
-        defn = carregar_dungeon(file)
-        if not defn:
+        caminho = os.path.join(DUNGEONS_DIR, file)
+        try:
+            st = os.stat(caminho)
+            assinatura = (st.st_mtime_ns, st.st_size)
+        except OSError:
             continue
-        ok, _ = validar_dungeon(defn)
-        if ok:
-            out.append({"id": defn.get("id", file), "name": defn.get("name", file), "file": file,
-                        "route_exits": [{"id": x.get("id"), "name": x.get("name", x.get("id"))}
-                                        for x in defn.get("route_exits", []) if isinstance(x, dict)]})
+        em_cache = _LISTA_DUNGEONS_CACHE.get(caminho)
+        if em_cache and em_cache[0] == assinatura:
+            entrada = em_cache[1]
+        else:
+            entrada = None
+            defn = carregar_dungeon(file)
+            if defn:
+                ok, _ = validar_dungeon(defn)
+                if ok:
+                    entrada = {"id": defn.get("id", file), "name": defn.get("name", file), "file": file,
+                               "route_exits": [{"id": x.get("id"), "name": x.get("name", x.get("id"))}
+                                               for x in defn.get("route_exits", []) if isinstance(x, dict)]}
+            _LISTA_DUNGEONS_CACHE[caminho] = (assinatura, entrada)
+        if entrada:
+            out.append(deepcopy(entrada))
     return out
 
 CAMPAIGNS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "campaigns")

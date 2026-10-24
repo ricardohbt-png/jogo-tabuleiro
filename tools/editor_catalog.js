@@ -208,7 +208,7 @@ window.EDITOR_CATALOG = {
         1
       ],
       "porte": "medio",
-      "image": "dark_mage",
+      "image": "necromante",
       "base_attack_bonus": 0,
       "caster_level": 1,
       "spell_slots_per_combat": 3,
