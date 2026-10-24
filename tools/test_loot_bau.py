@@ -33,7 +33,7 @@ async def main():
         await r._spawn_chest_from_room({"cx": 5, "cy": 5, "looted": False})
     for chest in r.chests.values():
         for it in chest["items"]:
-            if it["id"] not in LOOT_POOL_PROCEDURAL:
+            if it["id"] not in LOOT_POOL_PROCEDURAL and it["id"] != "grimorio_bau":   # molde materializado no baú
                 fora.append(it["id"])
     check("nenhum item fora do pool em 200 baús", fora == [], f"fora: {set(fora)}")
     check("todo baú tem ao menos 1 item", all(c["items"] for c in r.chests.values()))

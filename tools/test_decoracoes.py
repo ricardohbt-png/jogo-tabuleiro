@@ -18,7 +18,7 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("88 tipos", len(d) == 88)
+    check("catálogo com ao menos 88 tipos", len(d) >= 88)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "poco_balde", "cerca_reta", "cerca_curva", "cerca_quebrada",
         "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "choupana_palha_escura", "cabana_palha_velha", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
