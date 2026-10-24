@@ -3764,6 +3764,9 @@ FOTO_SALA_CATEGORIAS = {
     "_rx_escopo": "efemero", "_rx_em_reacao": "efemero", "_rx_seq": "efemero", "_rx_avisou_crosta": "efemero",
     "_intent_cache": "efemero", "_intent_ultimo": "efemero",
     "_diferidos_enviados": "efemero",
+    "illusions": "efemero",   # iscas de ilusão: nunca vão para saves
+    "cooperative_markers": "efemero", "cooperative_vision_preferences": "efemero",
+    "_cooperative_marker_last_at": "efemero",
     # janelas, timers e tarefas
     "initiative_task": "janela", "turn_timer_task": "janela",
     "turn_timer_started_ms": "janela", "turn_token": "janela",
@@ -16830,7 +16833,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             dano_eco = roll_dice(str(alvo.get("bardo_ecos_dano", "1")))
             dano_eco = self._apply_damage_types(dano_eco, ["sound"], atacante)
             await self._aplicar_dano_alvo(atacante, dano_eco, "sound", alvo.get("id"))
-            await self.gm_say(f"Os Ecos Dolorosos ferem {atacante.get('name', 'o herói')} em {dano_eco}.")
+            await self.gm_say(T("narracao.ecos_dolorosos_ferem", heroi=nome_criatura(atacante), dano=dano_eco))
 
     async def handle_usar_oportunidade_movimento(self, pid):
         """Gasta o crédito de Oportunidade na via 'movimento extra' (soma spd a
@@ -19089,7 +19092,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p.pop("bardo_requiem_por", None)
             p.pop("bardo_requiem_contador", None)
             p.pop("bardo_requiem_faces", None)
-            await self.gm_say(f"{p.get('name', 'O herói')} resiste à Provocação do Bardo.")
+            await self.gm_say(T("narracao.resiste_a_provocacao_do_bardo", heroi=nome_criatura(p)))
             return True
         restantes = max(0, int(p.get("bardo_provocacao_turnos", 0) or 0) - 1)
         p["bardo_provocacao_turnos"] = restantes
@@ -19099,7 +19102,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             dano = roll_dice(f"{contador}d{int(p.get('bardo_requiem_faces', 2) or 2)}")
             dano = self._apply_damage_types(dano, ["sound"], p)
             await self._aplicar_dano_alvo(p, dano, "sound", bardo_id)
-            await self.gm_say(f"O Réquiem do Bardo causa {dano} de dano sonoro a {p.get('name', 'o herói')}.")
+            await self.gm_say(T("narracao.requiem_do_bardo_causa_dano", dano=dano, heroi=nome_criatura(p)))
             if p.get("hp", 0) <= 0:
                 p.pop("bardo_requiem_por", None)
                 p.pop("bardo_requiem_contador", None)
@@ -19114,7 +19117,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     and self._alvo_no_alcance_arma(p, bardo)):
                 await self.handle_attack(p["id"], bardo_id, buffs=[])
             elif p.get("alive"):
-                await self.gm_say(f"{p.get('name', 'O herói')} avança em direção a {nome_criatura(bardo)}.")
+                await self.gm_say(T("narracao.heroi_avanca_ate_o_bardo", heroi=nome_criatura(p), bardo=nome_criatura(bardo)))
         finally:
             p.pop("_bardo_provocacao_resolving", None)
         if restantes <= 0 or bardo.get("hp", 0) <= 0:
@@ -46342,7 +46345,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 eco = max(0, dano_sofrido * int(m.get("bardo_dueto_fantasma_fracao", 0) or 0) // 100)
                 if eco:
                     await self._aplicar_dano_alvo(target, eco, DMG_PHYSICAL, m.get("id"), is_attack=True)
-                    await self.gm_say(f"O Dueto Fantasma repete o golpe e causa {eco} de dano.")
+                    await self.gm_say(T("narracao.dueto_fantasma_repete", eco=eco))
             if (not _eh_bardo(m) and is_player and target.get("hp", 0) > 0
                     and not m.get("_bardo_dueto_marcial_reacao")):
                 for bardo in self.monsters.values():
@@ -49405,7 +49408,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvo["bardo_provocado_por"] = m.get("id")
         alvo["bardo_provocacao_turnos"] = 3
         m.setdefault("monster_ability_cooldowns", {})["bardo_provocacao"] = int(m.get("bardo_recarga", 4) or 4)
-        await self.gm_say(f"{nome_criatura(m)} provoca {alvo.get('name', 'o herói')}; faça Vontade CD {int(m.get('bardo_cd_provocacao', 11) or 11)} no início dos próximos turnos.")
+        await self.gm_say(T("narracao.bardo_provoca", bardo=nome_criatura(m), heroi=nome_criatura(alvo),
+                            cd=int(m.get("bardo_cd_provocacao", 11) or 11)))
         return True
 
     async def _bardo_iniciar_requiem(self, m, alvo, stats):
@@ -49421,7 +49425,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvo["bardo_requiem_contador"] = 0
         dado = str(stats.get("dado", "d2"))
         alvo["bardo_requiem_faces"] = int(dado.lower().lstrip("d") or 2)
-        await self.gm_say(f"{nome_criatura(m)} inicia o Réquiem Final sobre {alvo.get('name', 'o herói')}.")
+        await self.gm_say(T("narracao.bardo_inicia_o_requiem", bardo=nome_criatura(m), heroi=nome_criatura(alvo)))
         return True
 
     async def _bardo_dano_instrumento(self, m, alvo, expressao, salvamento="reflexos"):
@@ -49522,9 +49526,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for efeito in passos:
                 if efeito == 2:
                     self._set_mod_magia(m, {"ataque": -1}, 1)
-                    await self.gm_say(f"{nome_criatura(m)} desafina e sofre -1 no próximo ataque.")
+                    await self.gm_say(T("narracao.bardo_desafina", bardo=nome_criatura(m)))
                 elif efeito == 3:
-                    await self.gm_say(f"{nome_criatura(m)} improvisa sem produzir efeito.")
+                    await self.gm_say(T("narracao.bardo_improvisa_sem_efeito", bardo=nome_criatura(m)))
                 elif efeito == 4:
                     m["bardo_ecos_ate"] = self.round_num + 2
                     m["bardo_ecos_dano"] = "1d3"
@@ -49569,7 +49573,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 usados = True
         if usados:
             m.setdefault("monster_ability_cooldowns", {})["bardo_habilidade_instrumento"] = int(m.get("bardo_recarga", 4) or 4)
-            await self.gm_say(f"{nome_criatura(m)} usa {INSTRUMENTOS_BASE[base]['habilidade_nome']}.")
+            await self.gm_say(T("narracao.bardo_usa_habilidade", bardo=nome_criatura(m),
+                                habilidade=T(f"narracao.habilidade_instrumento.{base}")))
         return usados
 
     async def _ai_bardo(self, m, targets):
@@ -49587,7 +49592,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             duracao = random.randint(1, 4) + 2
             if self._ativar_cancao_monstro(m, atributos, duracao):
                 await self._emitir_animacao_cancao_monstro(m)
-                await self.gm_say(f"{nome_criatura(m)} entoa a Canção Heroica por {duracao} rodadas.")
+                await self.gm_say(T("narracao.bardo_entoa_a_cancao", bardo=nome_criatura(m), duracao=duracao))
                 return
 
         provocacao = next((entry["obj"] for entry in vivos if entry.get("kind") == "player"
@@ -49613,7 +49618,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if int(m.get("virotes", 0) or 0) <= 0:
             if not m.get("bardo_sem_virotes_avisado"):
                 m["bardo_sem_virotes_avisado"] = True
-                await self.gm_say(f"{nome_criatura(m)} fica sem virotes e avança com a besta descarregada.")
+                await self.gm_say(T("narracao.bardo_sem_virotes", bardo=nome_criatura(m)))
             alvo = self._get_monster_primary_target(m, targets)
             if alvo:
                 for _ in range(max(0, int(m.get("movement", 6) or 0))):
@@ -53618,6 +53623,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _monster_illusion_target(self, monster, targets=None):
         """Retorna a isca visível mais próxima para monstros automáticos."""
         if not monster or monster.get("control_mode") == "manual":
+            return None
+        if not self.illusions:
+            # Sem nenhuma isca na sala o resultado é sempre "nenhuma"; evita calcular a visão de
+            # todos os alvos a cada turno de cada monstro só para descobrir isso.
             return None
         candidates = targets if targets is not None else self._alvos_hostis_para_monstros()
         visible = self._alvos_visiveis_para_monstro(monster, candidates)

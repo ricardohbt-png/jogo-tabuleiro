@@ -3304,6 +3304,27 @@ window.LANG_NARRACAO = {
     "en": "⚙️ **{heroi}** activated the mechanism: a trap has been switched off!",
     "pt": "⚙️ **{heroi}** ativou o mecanismo: uma armadilha foi desligada!"
   },
-  "narracao.unta_ataque_monstro": {"en":"☠️ **{m_get_name_o_monstro}** uses **{item}** to poison **{attack_name}**.","pt":"☠️ **{m_get_name_o_monstro}** usa **{item}** para envenenar **{attack_name}**."}
+  "narracao.unta_ataque_monstro": {"en":"☠️ **{m_get_name_o_monstro}** uses **{item}** to poison **{attack_name}**.","pt":"☠️ **{m_get_name_o_monstro}** usa **{item}** para envenenar **{attack_name}**."},
+  "narracao.resiste_a_provocacao_do_bardo": {"en":"{heroi} resists the Bard's Taunt.","pt":"{heroi} resiste à Provocação do Bardo."},
+  "narracao.requiem_do_bardo_causa_dano": {"en":"The Bard's Requiem deals {dano} sonic damage to {heroi}.","pt":"O Réquiem do Bardo causa {dano} de dano sonoro a {heroi}."},
+  "narracao.heroi_avanca_ate_o_bardo": {"en":"{heroi} advances toward {bardo}.","pt":"{heroi} avança em direção a {bardo}."},
+  "narracao.bardo_desafina": {"en":"{bardo} plays off-key and takes -1 on the next attack.","pt":"{bardo} desafina e sofre -1 no próximo ataque."},
+  "narracao.bardo_improvisa_sem_efeito": {"en":"{bardo} improvises to no effect.","pt":"{bardo} improvisa sem produzir efeito."},
+  "narracao.bardo_usa_habilidade": {"en":"{bardo} uses {habilidade}.","pt":"{bardo} usa {habilidade}."},
+  "narracao.bardo_provoca": {"en":"{bardo} taunts {heroi}: make a Will save (DC {cd}) at the start of the next turns.","pt":"{bardo} provoca {heroi}; faça Vontade CD {cd} no início dos próximos turnos."},
+  "narracao.bardo_inicia_o_requiem": {"en":"{bardo} begins the Final Requiem on {heroi}.","pt":"{bardo} inicia o Réquiem Final sobre {heroi}."},
+  "narracao.ecos_dolorosos_ferem": {"en":"The Painful Echoes hurt {heroi} for {dano}.","pt":"Os Ecos Dolorosos ferem {heroi} em {dano}."},
+  "narracao.bardo_entoa_a_cancao": {"en":"{bardo} sings the Heroic Song for {duracao} rounds.","pt":"{bardo} entoa a Canção Heroica por {duracao} rodadas."},
+  "narracao.bardo_sem_virotes": {"en":"{bardo} runs out of bolts and charges with the empty crossbow.","pt":"{bardo} fica sem virotes e avança com a besta descarregada."},
+  "narracao.dueto_fantasma_repete": {"en":"The Phantom Duet repeats the blow and deals {eco} damage.","pt":"O Dueto Fantasma repete o golpe e causa {eco} de dano."},
+  "narracao.habilidade_instrumento.harpa": {"en":"Cutting Note","pt":"Nota Cortante"},
+  "narracao.habilidade_instrumento.tambor": {"en":"Thunderous Chord","pt":"Acorde Trovejante"},
+  "narracao.habilidade_instrumento.sino": {"en":"Painful Echoes","pt":"Ecos Dolorosos"},
+  "narracao.habilidade_instrumento.alaude": {"en":"Heroic Symphony","pt":"Sinfonia Heroica"},
+  "narracao.habilidade_instrumento.trompa": {"en":"General's Call","pt":"Chamado do General"},
+  "narracao.habilidade_instrumento.lira": {"en":"Martial Duet","pt":"Dueto Marcial"},
+  "narracao.habilidade_instrumento.flauta": {"en":"Phantom Duet","pt":"Dueto Fantasma"},
+  "narracao.habilidade_instrumento.violino": {"en":"Final Requiem","pt":"Réquiem Final"},
+  "narracao.habilidade_instrumento.gaita": {"en":"Improvisation","pt":"Improviso"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);
