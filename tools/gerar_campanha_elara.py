@@ -31,6 +31,7 @@ CENA_ID = "templo_alva"
 PONTO_ID = "templo"
 NPC_ID = "npc_exequiel"
 AVENTURA = "elara_parte1"
+AVENTURA_FAZENDA = "elara_fazenda"   # 2º destino: a fazenda, liberada pela carta achada na casa
 RELOGIO_ID = "elara_p1"
 FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
 IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
@@ -38,6 +39,7 @@ IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
 F_CASA = "elara_casa_vencida"
+F_CARTA = "elara_carta_fazenda"            # a carta do baú da casa (gravada pelo objetivo da casa)
 F_FAZENDA = "elara_fazenda_vencida"
 F_LENTO = "elara_lento"                    # o relógio passou do limite (ausente = rápido)
 F_PRESSIONOU = "elara_templo_pressionou"   # o grupo ouviu o Exequiel depois da fazenda
@@ -87,9 +89,9 @@ def conversas_templo():
             "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela "
             "estrada e a relíquia que guardávamos foi roubada esta noite. Não posso dizer o que ela "
             "é, só que não pode ficar em mãos erradas. Já não há tempo para as duas coisas: escolham.",
-            # aventura_id = a rota (casa + fazenda) concluída: o relógio pode passar do limite
+            # aventura_id = a fazenda concluída: o relógio pode passar do limite
             # durante a fazenda, e o Templo só fala depois dela.
-            _req(fato=F_LENTO, aventura_id=AVENTURA), fato=F_PRESSIONOU),
+            _req(fato=F_LENTO, aventura_id=AVENTURA_FAZENDA), fato=F_PRESSIONOU),
         _conversa(
             "elara_escolher_mocas",
             "Vamos atrás das moças: a estrada leva à Vila do Riacho.",
@@ -110,6 +112,8 @@ def cena_templo():
 
 
 PONTO_CASA = "elara_casa"
+PONTO_FAZENDA = "elara_fazenda"
+PONTO_REFUGIO = "ponto_1"   # a Fazenda do Leste (Refúgio dos Heróis): só aparece depois da missão da fazenda
 
 
 def ponto_casa():
@@ -118,24 +122,40 @@ def ponto_casa():
             "aventura": AVENTURA, "oculto_ate_liberar": False, "ocultar_apos_concluir": True}
 
 
+def ponto_fazenda(refugio):
+    """Entrada da fazenda no mapa de Alva e Luz, no lugar do Refúgio (que só surge depois)."""
+    return {"x": refugio["x"], "y": refugio["y"], "type": "dungeon", "name": "Fazenda do Leste",
+            "emoji": "🌾", "aventura": AVENTURA_FAZENDA, "oculto_ate_liberar": False,
+            "ocultar_apos_concluir": True}
+
+
 def destinos():
     base = S.WORLD_LOCATIONS[CIDADE]
     x, y = round(min(100, base["x"] + 5), 2), round(min(100, base["y"] + 3), 2)
     return {AVENTURA: {
         "id": AVENTURA, "nome": "O Resgate de Elara", "x": x, "y": y, "fome": 1, "sede": 1,
         "dungeons": [
-            {"file": "casa_secreta.json", "encadear": True,
+            {"file": "casa_secreta.json", "encadear": False,
              "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira "
                       "a poeira e a algo pior.",
-             "outro": ""},
-            {"file": "fazenda.json", "encadear": False, "intro": "",
-             "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que "
-                      "estivesse ali já cumpriu a sua parte. Voltem ao Templo."},
+             "outro": "A carta traz o endereço de uma fazenda a leste da cidade. Há um lugar novo no mapa."},
         ],
         "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
         "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
         "so_na_cidade": True,
-        "outro_rota": "", "requisito": _req(fato=F_PEDIU), "renome_recompensa": 1}}
+        "outro_rota": "", "requisito": _req(fato=F_PEDIU), "renome_recompensa": 1},
+        AVENTURA_FAZENDA: {
+            "id": AVENTURA_FAZENDA, "nome": "A Fazenda do Leste", "x": min(100, x + 2), "y": y,
+            "fome": 1, "sede": 1,
+            "dungeons": [
+                {"file": "fazenda.json", "encadear": False, "intro": "",
+                 "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que "
+                          "estivesse ali já cumpriu a sua parte. Voltem ao Templo."},
+            ],
+            "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
+            "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
+            "so_na_cidade": True,
+            "outro_rota": "", "requisito": _req(fato=F_CARTA), "renome_recompensa": 1}}
 
 
 def relogio_padrao():
@@ -209,6 +229,11 @@ def aplicar(simular=False, caminhos=None):
         raise ValueError(f"ponto {PONTO_ID!r} de {CIDADE} não existe em city_map_points.json")
     ponto["scene"] = CENA_ID
     pontos[CIDADE].setdefault(PONTO_CASA, ponto_casa())
+    refugio = pontos[CIDADE].get(PONTO_REFUGIO)
+    if refugio is not None:
+        pontos[CIDADE].setdefault(PONTO_FAZENDA, ponto_fazenda(refugio))
+        refugio["requisito"] = _req(fato=F_FAZENDA)     # o Refúgio é a recompensa da missão da fazenda
+        refugio["oculto_ate_liberar"] = True
 
     cenas = _ler(c["cenas"], {})
     da_cidade = cenas.setdefault(CIDADE, {})
@@ -225,10 +250,12 @@ def aplicar(simular=False, caminhos=None):
 
     aventuras = _ler(c["adventures"], {})
     anterior = aventuras.get(AVENTURA) or {}
+    for aid, novo in destinos().items():
+        antigo = aventuras.get(aid) or {}
+        if "x" in antigo and "y" in antigo:        # a posição no mapa-múndi é do autor
+            novo["x"], novo["y"] = antigo["x"], antigo["y"]
+        aventuras[aid] = novo
     novo = destinos()[AVENTURA]
-    if "x" in anterior and "y" in anterior:        # a posição no mapa-múndi é do autor
-        novo["x"], novo["y"] = anterior["x"], anterior["y"]
-    aventuras[AVENTURA] = novo
 
     resultado = {}
     for arquivo, fato in MAPAS.items():
