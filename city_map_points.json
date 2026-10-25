@@ -78,6 +78,16 @@
       "aventura": "treinamento",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": true
+    },
+    "elara_casa": {
+      "x": 78.0,
+      "y": 62.0,
+      "type": "dungeon",
+      "name": "A Casa da Viela",
+      "emoji": "🏚️",
+      "aventura": "elara_parte1",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
     }
   },
   "vila_riacho": {
