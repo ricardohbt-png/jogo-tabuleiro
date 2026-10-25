@@ -12,10 +12,10 @@ import gerar_campanha_elara as G
 
 
 class DadosTests(unittest.TestCase):
-    def test_destino_unico_com_duas_etapas_emendadas_e_oculto_ate_o_pedido(self):
+    def test_destino_da_casa_oculto_ate_o_pedido(self):
         d = G.destinos()[G.AVENTURA]
-        self.assertEqual([e["file"] for e in d["dungeons"]], ["casa_secreta.json", "fazenda.json"])
-        self.assertEqual([e["encadear"] for e in d["dungeons"]], [True, False])
+        self.assertEqual([e["file"] for e in d["dungeons"]], ["casa_secreta.json"])
+        self.assertEqual([e["encadear"] for e in d["dungeons"]], [False])
         self.assertTrue(d["oculto_ate_liberar"])
         self.assertEqual(d["requisito"]["fato"], G.F_PEDIU)
         self.assertTrue(d["ocultar_apos_concluir"])
@@ -75,6 +75,24 @@ class DiscoTests(unittest.TestCase):
         a = self.ler("world_adventures.json")
         self.assertIn(G.AVENTURA, a)
         self.assertEqual(a[G.AVENTURA]["requisito"]["fato"], G.F_PEDIU)
+
+    def test_fazenda_e_destino_proprio_liberado_pela_carta(self):
+        a = self.ler("world_adventures.json")
+        self.assertEqual([e["file"] for e in a[G.AVENTURA]["dungeons"]], ["casa_secreta.json"])
+        f = a[G.AVENTURA_FAZENDA]
+        self.assertEqual([e["file"] for e in f["dungeons"]], ["fazenda.json"])
+        self.assertEqual(f["requisito"]["fato"], G.F_CARTA)
+        self.assertTrue(f["oculto_ate_liberar"])
+        self.assertTrue(f["so_na_cidade"], "sem emboscada de viagem")
+
+    def test_pontos_da_cidade(self):
+        p = self.ler("city_map_points.json")["alva_e_luz"]
+        self.assertEqual(p[G.PONTO_CASA]["aventura"], G.AVENTURA)
+        self.assertEqual(p[G.PONTO_FAZENDA]["aventura"], G.AVENTURA_FAZENDA)
+        r = p[G.PONTO_REFUGIO]
+        self.assertEqual(r["type"], "refugio")
+        self.assertEqual(r["requisito"]["fato"], G.F_FAZENDA)
+        self.assertTrue(r["oculto_ate_liberar"])
 
     def test_mapas_do_autor_tem_relogio_e_fato_de_vitoria(self):
         for arquivo, fato in (("casa_secreta.json", G.F_CASA), ("fazenda.json", G.F_FAZENDA)):

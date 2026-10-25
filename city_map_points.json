@@ -58,7 +58,8 @@
         "renome_min": 0,
         "nivel_grupo_min": 0,
         "item_id": "",
-        "fato": "",
+        "fato": "elara_fazenda_vencida",
+        "sem_fato": "",
         "aventura_id": ""
       },
       "fundo_basico": "assets/city/refugio_basico.svg",
@@ -66,7 +67,7 @@
       "fundo_externo": "assets/city/refugio_fazenda_do_leste.png",
       "fundo_comum": "assets/city/refugio_area_compartilhada.png",
       "fundo_quarto": "assets/city/refugio_quarto_heroi.png",
-      "oculto_ate_liberar": false,
+      "oculto_ate_liberar": true,
       "ocultar_apos_concluir": false
     },
     "treinamento": {
@@ -86,6 +87,16 @@
       "name": "A Casa da Viela",
       "emoji": "🏚️",
       "aventura": "elara_parte1",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_fazenda": {
+      "x": 14.97,
+      "y": 13.07,
+      "type": "dungeon",
+      "name": "Fazenda do Leste",
+      "emoji": "🌾",
+      "aventura": "elara_fazenda",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": true
     }

@@ -875,15 +875,9 @@
     "dungeons": [
       {
         "file": "casa_secreta.json",
-        "encadear": true,
-        "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
-        "outro": ""
-      },
-      {
-        "file": "fazenda.json",
         "encadear": false,
-        "intro": "",
-        "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que estivesse ali já cumpriu a sua parte. Voltem ao Templo."
+        "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
+        "outro": "A carta traz o endereço de uma fazenda a leste da cidade. Há um lugar novo no mapa."
       }
     ],
     "espera_retorno": {
@@ -1559,5 +1553,40 @@
       "tambem_fato": "elara_ramo_a"
     },
     "renome_recompensa": 2
+  },
+  "elara_fazenda": {
+    "id": "elara_fazenda",
+    "nome": "A Fazenda do Leste",
+    "x": 70.5,
+    "y": 54.41,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "fazenda.json",
+        "encadear": false,
+        "intro": "",
+        "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que estivesse ali já cumpriu a sua parte. Voltem ao Templo."
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_carta_fazenda",
+      "sem_fato": "",
+      "aventura_id": ""
+    },
+    "renome_recompensa": 1
   }
 }
