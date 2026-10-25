@@ -10374,6 +10374,38 @@ SHOP_TAVERN = [
     {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗", "price": 100, "item_slot": "bag",
      "effect": "meal_survival", "fome": 40, "sede": 40, "icon": "assets/itens/banquete.png"},
 ]
+
+
+# Comida solta por monstros humanoides: rolagem extra de 10% ao morrer, em cima do saque normal.
+CHANCE_COMIDA_MONSTRO = 0.10
+_COMIDA_MONSTRO_TIPOS = {"orc", "dark_mage", "bardo", "bardo_da_caravana", "troll", "bandido",
+                         "necromante", "soldado", "xama_goblin_customizado"}
+_COMIDA_MONSTRO_PREFIXOS = ("orc_", "goblin", "kobold_", "ogro_")
+
+
+def _monstro_deixa_comida(m):
+    """O monstro é do grupo que pode deixar comida? Orc, mago das trevas, bardo, goblin, troll,
+    bandido, necromante, kobold, ogro e soldado, com todas as variantes (pelo tipo)."""
+    tipo = str((m or {}).get("type") or "")
+    return (tipo in _COMIDA_MONSTRO_TIPOS or tipo.startswith(_COMIDA_MONSTRO_PREFIXOS)
+            or _eh_bardo(m or {}))
+
+
+def _sortear_comida_monstro():
+    """Uma comida transportável da taverna, com peso 1/preço: quanto mais cara, mais rara."""
+    opcoes = [i for i in SHOP_TAVERN
+              if i.get("item_slot") == "bag" and i.get("effect") in ("food", "meal_survival")]
+    base = random.choices(opcoes, weights=[1.0 / max(1, int(i.get("price", 1))) for i in opcoes])[0]
+    item = deepcopy(base)
+    item.pop("price", None)   # item achado não carrega preço de loja
+    return item
+
+
+def _comida_extra_do_monstro(m):
+    """Item de comida a somar ao saque do monstro (ou None): só o grupo, e só com 10% de sorte."""
+    if _monstro_deixa_comida(m) and random.random() < CHANCE_COMIDA_MONSTRO:
+        return _sortear_comida_monstro()
+    return None
 # Poções mágicas à venda também no Mercador: a Raízes do Brejo (Vila dos Charcos) vende
 # poções junto de grimórios e iscas, e cada loja só vende o que a fonte do seu tipo
 # contém. São os MESMOS dicts do Templo (mesmo preço e efeito). Só estende a FONTE: o
@@ -18295,6 +18327,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     item["locked"] = not unlocked
                     limpos[point_id] = item
                 else:
+                    if ponto.get("oculto_ate_liberar") and ponto.get("requisito"):
+                        liberado, _ = self._avaliar_requisito(ponto["requisito"])
+                        if not liberado:
+                            continue
                     limpos[point_id] = ponto
             saida[city_id] = limpos
         return saida
@@ -18328,10 +18364,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return {"items": [], "gold": 0, "slot_limit": 3, "background": "assets/city/refugio_basico.svg",
                 "backgrounds": ["assets/city/refugio_basico.svg"], "trophies": [], "renome_individual": 0}
 
-                    if ponto.get("oculto_ate_liberar") and ponto.get("requisito"):
-                        liberado, _ = self._avaliar_requisito(ponto["requisito"])
-                        if not liberado:
-                            continue
     def _conta_do_jogador(self, p):
         """Chave do quarto privado. Numa sala sem savegame (jogo rápido) não existe
         conta e o apelido faz as vezes dela — o que só funciona se os TRÊS pontos que
@@ -48377,6 +48409,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif 71 <= base_roll <= 90:
             gold_total += 2
 
+        comida = _comida_extra_do_monstro(m)
+        if comida:
+            items_sempre.append(comida)
         delivery = self._spawn_monster_loot(list(m["pos"]), gold_total, items_sempre)
         if delivery == "ground_gold":
             await self.gm_say(T("narracao.deixou_moeda_s_2", monstro=nome_criatura(m), gold_total=gold_total))
@@ -48407,6 +48442,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not m.get("usou_dominar"):
             dom = gerar_pergaminho(3, magia_id="dominar_morto_vivo")
             if dom: itens.append(dom)
+        comida = _comida_extra_do_monstro(m)
+        if comida:
+            itens.append(comida)
         delivery = self._spawn_monster_loot(list(m["pos"]), gold, itens)
         if delivery == "ground_gold":
             await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
@@ -52831,6 +52869,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if m.get("type") in {"goblin_combatente", "dark_mage"}:
                 # A bolsa restante preserva só os consumíveis não utilizados.
                 loot_items.extend(deepcopy(m.get("equipment_consumables", [])))
+            comida = _comida_extra_do_monstro(m)
+            if comida:
+                loot_items.append(comida)
             delivery = self._spawn_monster_loot(list(m["pos"]), gold, loot_items)
             chest_msg = " Um **baú de saque** apareceu!" if delivery == "chest" else ""
             await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=nome_criatura(m), share_xp=share_xp, chest_msg=chest_msg))
@@ -52838,6 +52879,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
         else:
             # Sistema legado: baÃº sÃ³ quando a sala toda Ã© limpa
+            # Comida do grupo humanoide: rolagem própria por monstro, mesmo sem a sala limpa.
+            comida = _comida_extra_do_monstro(m)
+            if comida:
+                self._spawn_monster_loot(list(m["pos"]), 0, [comida])
             gold = m.get("gold", 0)
             if mroom:
                 living = [mm for mm in self.monsters.values()
