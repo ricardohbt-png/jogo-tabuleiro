@@ -114,7 +114,7 @@ PONTO_CASA = "elara_casa"
 
 def ponto_casa():
     """Entrada da casa no mapa de Alva e Luz: a casa fica na cidade, sem estrada nem emboscada."""
-    return {"x": 78.0, "y": 62.0, "type": "dungeon", "name": "A Casa da Viela", "emoji": "🏚️",
+    return {"x": 62.3, "y": 65.72, "type": "dungeon", "name": "A Casa da Viela", "emoji": "🏚️",
             "aventura": AVENTURA, "oculto_ate_liberar": False, "ocultar_apos_concluir": True}
 
 
