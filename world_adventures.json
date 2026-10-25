@@ -894,6 +894,7 @@
     "oculto_ate_liberar": true,
     "revisitavel": false,
     "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,

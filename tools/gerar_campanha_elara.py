@@ -109,6 +109,15 @@ def cena_templo():
                        "conversations": conversas_templo()}]}
 
 
+PONTO_CASA = "elara_casa"
+
+
+def ponto_casa():
+    """Entrada da casa no mapa de Alva e Luz: a casa fica na cidade, sem estrada nem emboscada."""
+    return {"x": 78.0, "y": 62.0, "type": "dungeon", "name": "A Casa da Viela", "emoji": "🏚️",
+            "aventura": AVENTURA, "oculto_ate_liberar": False, "ocultar_apos_concluir": True}
+
+
 def destinos():
     base = S.WORLD_LOCATIONS[CIDADE]
     x, y = round(min(100, base["x"] + 5), 2), round(min(100, base["y"] + 3), 2)
@@ -125,6 +134,7 @@ def destinos():
         ],
         "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
         "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
+        "so_na_cidade": True,
         "outro_rota": "", "requisito": _req(fato=F_PEDIU), "renome_recompensa": 1}}
 
 
@@ -198,6 +208,7 @@ def aplicar(simular=False, caminhos=None):
     if ponto is None:
         raise ValueError(f"ponto {PONTO_ID!r} de {CIDADE} não existe em city_map_points.json")
     ponto["scene"] = CENA_ID
+    pontos[CIDADE].setdefault(PONTO_CASA, ponto_casa())
 
     cenas = _ler(c["cenas"], {})
     da_cidade = cenas.setdefault(CIDADE, {})
