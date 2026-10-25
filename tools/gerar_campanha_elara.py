@@ -46,6 +46,13 @@ F_PRESSIONOU = "elara_templo_pressionou"   # o grupo ouviu o Exequiel depois da 
 F_RAMO_A = "elara_ramo_a"                  # seguir as moças
 F_RAMO_B = "elara_ramo_b"                  # seguir o Gilo
 
+CENA_MESTRE = "mestre_armas_alva"
+NPC_MESTRE = "npc_mestre_armas"
+PONTO_MESTRE = "mestre_armas_alva"
+F_PRESENTE = "elara_refugio_presenteado"   # o Mestre de Armas deu a fazenda de presente
+FUNDO_MESTRE = "assets/cenas/fundos/templo_alva_patio.png"   # arte provisória: pátio de Alva e Luz
+IMAGEM_MESTRE = "assets/portraits/mestre_de_armas.png"
+
 MAPAS = {"casa_secreta.json": F_CASA, "fazenda.json": F_FAZENDA}
 
 
@@ -111,6 +118,27 @@ def cena_templo():
                        "conversations": conversas_templo()}]}
 
 
+def cena_mestre():
+    """O Mestre de Armas do tutorial aparece em Alva e Luz depois da fazenda e dá o lugar de presente."""
+    return {"nome": "Mestre de Armas", "background": FUNDO_MESTRE, "art_ratio": 1.5,
+            "mode": "individual", "mask": "",
+            "slots": [{"id": NPC_MESTRE, "name": "Mestre de Armas", "image": IMAGEM_MESTRE,
+                       "x": 26.3, "y": 35.0, "w": 47.4, "h": 65.0, "z": 1.0, "dialog": "",
+                       "conversations": [_conversa(
+                           "elara_fazenda_presente",
+                           "Então foram vocês que limparam a velha Fazenda do Leste! Boa notícia, "
+                           "aventureiros: a Guilda não deixa um lugar bom daqueles apodrecer. A "
+                           "fazenda é de vocês, de presente. Descansem, guardem as suas coisas e "
+                           "reúnam-se por lá entre uma aventura e outra. Está marcada no mapa da cidade.",
+                           _req(fato=F_FAZENDA), fato=F_PRESENTE, uma_vez=False)]}]}
+
+
+def ponto_mestre():
+    """Marcador do Mestre de Armas no mapa da cidade: só aparece depois da fazenda vencida."""
+    return {"x": 44.0, "y": 27.0, "type": "cena", "name": "Mestre de Armas", "emoji": "🎓",
+            "scene": CENA_MESTRE, "requisito": _req(fato=F_FAZENDA), "oculto_ate_liberar": True}
+
+
 PONTO_CASA = "elara_casa"
 PONTO_FAZENDA = "elara_fazenda"
 PONTO_REFUGIO = "ponto_1"   # a Fazenda do Leste (Refúgio dos Heróis): só aparece depois da missão da fazenda
@@ -138,7 +166,7 @@ def destinos():
             {"file": "casa_secreta.json", "encadear": False,
              "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira "
                       "a poeira e a algo pior.",
-             "outro": "A carta traz o endereço de uma fazenda a leste da cidade. Há um lugar novo no mapa."},
+             "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem luz: a Fazenda do Leste. Há um lugar novo no mapa. [rascunho]"},
         ],
         "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
         "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
@@ -235,8 +263,11 @@ def aplicar(simular=False, caminhos=None):
         refugio["requisito"] = _req(fato=F_FAZENDA)     # o Refúgio é a recompensa da missão da fazenda
         refugio["oculto_ate_liberar"] = True
 
+    pontos[CIDADE].setdefault(PONTO_MESTRE, ponto_mestre())
+
     cenas = _ler(c["cenas"], {})
     da_cidade = cenas.setdefault(CIDADE, {})
+    da_cidade.setdefault(CENA_MESTRE, cena_mestre())
     cena = da_cidade.get(CENA_ID)
     if not cena:
         da_cidade[CENA_ID] = cena_templo()

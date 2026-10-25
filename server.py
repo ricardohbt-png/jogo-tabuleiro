@@ -18328,6 +18328,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return {"items": [], "gold": 0, "slot_limit": 3, "background": "assets/city/refugio_basico.svg",
                 "backgrounds": ["assets/city/refugio_basico.svg"], "trophies": [], "renome_individual": 0}
 
+                    if ponto.get("oculto_ate_liberar") and ponto.get("requisito"):
+                        liberado, _ = self._avaliar_requisito(ponto["requisito"])
+                        if not liberado:
+                            continue
     def _conta_do_jogador(self, p):
         """Chave do quarto privado. Numa sala sem savegame (jogo rápido) não existe
         conta e o apelido faz as vezes dela — o que só funciona se os TRÊS pontos que

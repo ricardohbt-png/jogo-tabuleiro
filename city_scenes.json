@@ -524,6 +524,46 @@
           ]
         }
       ]
+    },
+    "mestre_armas_alva": {
+      "nome": "Mestre de Armas",
+      "background": "assets/cenas/fundos/templo_alva_patio.png",
+      "art_ratio": 1.5,
+      "mode": "individual",
+      "mask": "",
+      "slots": [
+        {
+          "id": "npc_mestre_armas",
+          "name": "Mestre de Armas",
+          "image": "assets/portraits/mestre_de_armas.png",
+          "x": 26.3,
+          "y": 35.0,
+          "w": 47.4,
+          "h": 65.0,
+          "z": 1.0,
+          "dialog": "",
+          "conversations": [
+            {
+              "id": "elara_fazenda_presente",
+              "texto": "Então foram vocês que limparam a velha Fazenda do Leste! Boa notícia, aventureiros: a Guilda não deixa um lugar bom daqueles apodrecer. A fazenda é de vocês, de presente. Descansem, guardem as suas coisas e reúnam-se por lá entre uma aventura e outra. Está marcada no mapa da cidade.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_fazenda_vencida",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_refugio_presenteado",
+                "item_id": ""
+              },
+              "uma_vez": false
+            }
+          ]
+        }
+      ]
     }
   },
   "vila_riacho": {

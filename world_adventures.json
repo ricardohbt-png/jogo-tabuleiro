@@ -877,7 +877,7 @@
         "file": "casa_secreta.json",
         "encadear": false,
         "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
-        "outro": "A carta traz o endereço de uma fazenda a leste da cidade. Há um lugar novo no mapa."
+        "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem luz: a Fazenda do Leste. Há um lugar novo no mapa. [rascunho]"
       }
     ],
     "espera_retorno": {

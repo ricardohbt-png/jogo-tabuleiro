@@ -99,6 +99,23 @@
       "aventura": "elara_fazenda",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": true
+    },
+    "mestre_armas_alva": {
+      "x": 44.0,
+      "y": 27.0,
+      "type": "cena",
+      "name": "Mestre de Armas",
+      "emoji": "🎓",
+      "scene": "mestre_armas_alva",
+      "requisito": {
+        "renome_min": 0,
+        "nivel_grupo_min": 0,
+        "item_id": "",
+        "fato": "elara_fazenda_vencida",
+        "sem_fato": "",
+        "aventura_id": ""
+      },
+      "oculto_ate_liberar": true
     }
   },
   "vila_riacho": {
