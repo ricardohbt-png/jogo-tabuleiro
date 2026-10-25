@@ -90,16 +90,6 @@
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": true
     },
-    "elara_fazenda": {
-      "x": 14.97,
-      "y": 13.07,
-      "type": "dungeon",
-      "name": "Fazenda do Leste",
-      "emoji": "🌾",
-      "aventura": "elara_fazenda",
-      "oculto_ate_liberar": false,
-      "ocultar_apos_concluir": true
-    },
     "mestre_armas_alva": {
       "x": 44.0,
       "y": 27.0,

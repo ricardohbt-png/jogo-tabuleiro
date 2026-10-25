@@ -61,8 +61,7 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
     n = PONTOS.index(ate)
     if n >= 1:
         fatos |= {P1.F_PEDIU, P1.F_CASA, P1.F_CARTA, P1.F_FAZENDA, P1.F_PRESSIONOU}
-        prog["elara_parte1"] = 1
-        prog["elara_fazenda"] = 1
+        prog["elara_parte1"] = 2
         if lento:
             fatos.add(P1.F_LENTO)
     if n >= 2:

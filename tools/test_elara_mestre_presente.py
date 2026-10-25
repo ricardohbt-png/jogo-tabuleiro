@@ -34,6 +34,8 @@ class MestrePresenteTests(unittest.TestCase):
         conv = slot["conversations"][0]
         self.assertEqual(conv["requisito"].get("fato"), "elara_fazenda_vencida")
         self.assertIn("presente", conv["texto"])
+        for palavra in ("itens", "dinheiro", "troféus"):
+            self.assertIn(palavra, conv["texto"])
         self.assertFalse(conv["uma_vez"])
 
     def test_ponto_liga_na_cena(self):

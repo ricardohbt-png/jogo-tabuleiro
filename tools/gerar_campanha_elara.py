@@ -31,10 +31,11 @@ CENA_ID = "templo_alva"
 PONTO_ID = "templo"
 NPC_ID = "npc_exequiel"
 AVENTURA = "elara_parte1"
-AVENTURA_FAZENDA = "elara_fazenda"   # 2º destino: a fazenda, liberada pela carta achada na casa
+PONTO_FAZENDA_ANTIGO = "elara_fazenda"   # ponto/destino de combate da fazenda, removidos: a fazenda é a 2ª etapa da casa
 RELOGIO_ID = "elara_p1"
 FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
 IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
+IMAGEM_EXEQUIEL_HISTORIA = "assets/story/exequiel_templo.png"   # cópia: a mídia de história só vem de assets/story/
 
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
@@ -87,18 +88,17 @@ def conversas_templo():
         _conversa(
             "elara_pos_fazenda_rapido",
             "Vocês voltaram depressa, e isso pode fazer toda a diferença. A fazenda era uma "
-            "distração: as moças seguem pela estrada e, ao mesmo tempo, alguém esteve aqui no "
-            "Templo esta noite e levou uma relíquia. Não posso dizer o que ela é. Com rapidez ainda "
-            "podem tentar as duas coisas.",
+            "distração: as moças seguem pela estrada e, ao mesmo tempo, o Olho foi levado "
+            "enquanto todos olhávamos para o lado errado. Com rapidez ainda podem tentar as "
+            "duas coisas.",
             _req(fato=F_FAZENDA, sem_fato=F_LENTO), fato=F_PRESSIONOU),
         _conversa(
             "elara_pos_fazenda_lento",
             "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela "
-            "estrada e a relíquia que guardávamos foi roubada esta noite. Não posso dizer o que ela "
-            "é, só que não pode ficar em mãos erradas. Já não há tempo para as duas coisas: escolham.",
+            "estrada e o Olho já vai longe. Já não há tempo para as duas coisas: escolham.",
             # aventura_id = a fazenda concluída: o relógio pode passar do limite
             # durante a fazenda, e o Templo só fala depois dela.
-            _req(fato=F_LENTO, aventura_id=AVENTURA_FAZENDA), fato=F_PRESSIONOU),
+            _req(fato=F_LENTO, aventura_id=AVENTURA), fato=F_PRESSIONOU),
         _conversa(
             "elara_escolher_mocas",
             "Vamos atrás das moças: a estrada leva à Vila do Riacho.",
@@ -118,19 +118,23 @@ def cena_templo():
                        "conversations": conversas_templo()}]}
 
 
+def _conversa_mestre():
+    return _conversa(
+        "elara_fazenda_presente",
+        "Então foram vocês que limparam a Fazenda do Leste! O Templo já falou com o regente: a "
+        "fazenda é de vocês, de presente pelos serviços prestados. É o Refúgio dos Heróis, que "
+        "agora aparece no mapa da cidade. Lá o grupo guarda itens e dinheiro e expõe os troféus das "
+        "suas aventuras. O que deixarem por lá fica seguro de uma missão para outra.",
+        _req(fato=F_FAZENDA), fato=F_PRESENTE, uma_vez=False)
+
+
 def cena_mestre():
     """O Mestre de Armas do tutorial aparece em Alva e Luz depois da fazenda e dá o lugar de presente."""
     return {"nome": "Mestre de Armas", "background": FUNDO_MESTRE, "art_ratio": 1.5,
             "mode": "individual", "mask": "",
             "slots": [{"id": NPC_MESTRE, "name": "Mestre de Armas", "image": IMAGEM_MESTRE,
                        "x": 26.3, "y": 35.0, "w": 47.4, "h": 65.0, "z": 1.0, "dialog": "",
-                       "conversations": [_conversa(
-                           "elara_fazenda_presente",
-                           "Então foram vocês que limparam a velha Fazenda do Leste! Boa notícia, "
-                           "aventureiros: a Guilda não deixa um lugar bom daqueles apodrecer. A "
-                           "fazenda é de vocês, de presente. Descansem, guardem as suas coisas e "
-                           "reúnam-se por lá entre uma aventura e outra. Está marcada no mapa da cidade.",
-                           _req(fato=F_FAZENDA), fato=F_PRESENTE, uma_vez=False)]}]}
+                       "conversations": [_conversa_mestre()]}]}
 
 
 def ponto_mestre():
@@ -140,7 +144,6 @@ def ponto_mestre():
 
 
 PONTO_CASA = "elara_casa"
-PONTO_FAZENDA = "elara_fazenda"
 PONTO_REFUGIO = "ponto_1"   # a Fazenda do Leste (Refúgio dos Heróis): só aparece depois da missão da fazenda
 
 
@@ -150,11 +153,20 @@ def ponto_casa():
             "aventura": AVENTURA, "oculto_ate_liberar": False, "ocultar_apos_concluir": True}
 
 
-def ponto_fazenda(refugio):
-    """Entrada da fazenda no mapa de Alva e Luz, no lugar do Refúgio (que só surge depois)."""
-    return {"x": refugio["x"], "y": refugio["y"], "type": "dungeon", "name": "Fazenda do Leste",
-            "emoji": "🌾", "aventura": AVENTURA_FAZENDA, "oculto_ate_liberar": False,
-            "ocultar_apos_concluir": True}
+def slides_fim_da_fazenda():
+    """Cena final da fazenda: o Templo, o Exequiel e o roubo do Olho."""
+    return {"slides": [
+        {"text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
+                 "moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis "
+                 "prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.", "fit": "cover"},
+        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
+         "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. "
+                 "Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais "
+                 "do que isso, só que ele não pode ficar em mãos erradas.”"},
+        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
+         "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em "
+                 "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. Procurem o "
+                 "Mestre de Armas, ele explica como usá-la.”"}]}
 
 
 def destinos():
@@ -163,27 +175,20 @@ def destinos():
     return {AVENTURA: {
         "id": AVENTURA, "nome": "O Resgate de Elara", "x": x, "y": y, "fome": 1, "sede": 1,
         "dungeons": [
-            {"file": "casa_secreta.json", "encadear": False,
+            {"file": "casa_secreta.json", "encadear": True,
              "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira "
                       "a poeira e a algo pior.",
-             "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem luz: a Fazenda do Leste. Há um lugar novo no mapa. [rascunho]"},
+             "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as "
+                      "muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de "
+                      "feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem "
+                      "luz: a Fazenda do Leste."},
+            {"file": "fazenda.json", "encadear": False, "intro": "",
+             "outro": slides_fim_da_fazenda()},
         ],
         "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
         "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
         "so_na_cidade": True,
-        "outro_rota": "", "requisito": _req(fato=F_PEDIU), "renome_recompensa": 1},
-        AVENTURA_FAZENDA: {
-            "id": AVENTURA_FAZENDA, "nome": "A Fazenda do Leste", "x": min(100, x + 2), "y": y,
-            "fome": 1, "sede": 1,
-            "dungeons": [
-                {"file": "fazenda.json", "encadear": False, "intro": "",
-                 "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que "
-                          "estivesse ali já cumpriu a sua parte. Voltem ao Templo."},
-            ],
-            "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
-            "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
-            "so_na_cidade": True,
-            "outro_rota": "", "requisito": _req(fato=F_CARTA), "renome_recompensa": 1}}
+        "outro_rota": "", "requisito": _req(fato=F_PEDIU), "renome_recompensa": 1}}
 
 
 def relogio_padrao():
@@ -259,7 +264,7 @@ def aplicar(simular=False, caminhos=None):
     pontos[CIDADE].setdefault(PONTO_CASA, ponto_casa())
     refugio = pontos[CIDADE].get(PONTO_REFUGIO)
     if refugio is not None:
-        pontos[CIDADE].setdefault(PONTO_FAZENDA, ponto_fazenda(refugio))
+        pontos[CIDADE].pop(PONTO_FAZENDA_ANTIGO, None)      # a fazenda deixou de ser um ponto de combate
         refugio["requisito"] = _req(fato=F_FAZENDA)     # o Refúgio é a recompensa da missão da fazenda
         refugio["oculto_ate_liberar"] = True
 
@@ -267,7 +272,14 @@ def aplicar(simular=False, caminhos=None):
 
     cenas = _ler(c["cenas"], {})
     da_cidade = cenas.setdefault(CIDADE, {})
-    da_cidade.setdefault(CENA_MESTRE, cena_mestre())
+    existente = da_cidade.get(CENA_MESTRE)
+    if existente is None:
+        da_cidade[CENA_MESTRE] = cena_mestre()
+    else:
+        slot_m = next((x for x in existente.get("slots", []) if x.get("id") == NPC_MESTRE), None)
+        if slot_m is not None:
+            slot_m["conversations"] = [_conversa_mestre()] + [
+                cv for cv in slot_m.get("conversations", []) if cv.get("id") != "elara_fazenda_presente"]
     cena = da_cidade.get(CENA_ID)
     if not cena:
         da_cidade[CENA_ID] = cena_templo()
@@ -280,6 +292,7 @@ def aplicar(simular=False, caminhos=None):
             slot["conversations"] = conversas_templo() + manter
 
     aventuras = _ler(c["adventures"], {})
+    aventuras.pop(PONTO_FAZENDA_ANTIGO, None)
     anterior = aventuras.get(AVENTURA) or {}
     for aid, novo in destinos().items():
         antigo = aventuras.get(aid) or {}

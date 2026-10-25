@@ -875,9 +875,32 @@
     "dungeons": [
       {
         "file": "casa_secreta.json",
-        "encadear": false,
+        "encadear": true,
         "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
-        "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem luz: a Fazenda do Leste. Há um lugar novo no mapa. [rascunho]"
+        "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem luz: a Fazenda do Leste."
+      },
+      {
+        "file": "fazenda.json",
+        "encadear": false,
+        "intro": "",
+        "outro": {
+          "slides": [
+            {
+              "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.",
+              "fit": "cover"
+            },
+            {
+              "image": "assets/story/exequiel_templo.png",
+              "fit": "contain",
+              "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais do que isso, só que ele não pode ficar em mãos erradas.”"
+            },
+            {
+              "image": "assets/story/exequiel_templo.png",
+              "fit": "contain",
+              "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. Procurem o Mestre de Armas, ele explica como usá-la.”"
+            }
+          ]
+        }
       }
     ],
     "espera_retorno": {
@@ -1568,40 +1591,5 @@
       "tambem_fato": "elara_ramo_a"
     },
     "renome_recompensa": 2
-  },
-  "elara_fazenda": {
-    "id": "elara_fazenda",
-    "nome": "A Fazenda do Leste",
-    "x": 70.5,
-    "y": 54.41,
-    "fome": 1,
-    "sede": 1,
-    "dungeons": [
-      {
-        "file": "fazenda.json",
-        "encadear": false,
-        "intro": "",
-        "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que estivesse ali já cumpriu a sua parte. Voltem ao Templo."
-      }
-    ],
-    "espera_retorno": {
-      "modo": "fixa",
-      "rodadas": 0,
-      "dados": ""
-    },
-    "oculto_ate_liberar": true,
-    "revisitavel": false,
-    "ocultar_apos_concluir": true,
-    "so_na_cidade": true,
-    "outro_rota": "",
-    "requisito": {
-      "renome_min": 0,
-      "nivel_grupo_min": 0,
-      "item_id": "",
-      "fato": "elara_carta_fazenda",
-      "sem_fato": "",
-      "aventura_id": ""
-    },
-    "renome_recompensa": 1
   }
 }

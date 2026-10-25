@@ -451,7 +451,7 @@
             },
             {
               "id": "elara_pos_fazenda_rapido",
-              "texto": "Vocês voltaram depressa, e isso pode fazer toda a diferença. A fazenda era uma distração: as moças seguem pela estrada e, ao mesmo tempo, alguém esteve aqui no Templo esta noite e levou uma relíquia. Não posso dizer o que ela é. Com rapidez ainda podem tentar as duas coisas.",
+              "texto": "Vocês voltaram depressa, e isso pode fazer toda a diferença. A fazenda era uma distração: as moças seguem pela estrada e, ao mesmo tempo, o Olho foi levado enquanto todos olhávamos para o lado errado. Com rapidez ainda podem tentar as duas coisas.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
@@ -469,14 +469,14 @@
             },
             {
               "id": "elara_pos_fazenda_lento",
-              "texto": "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela estrada e a relíquia que guardávamos foi roubada esta noite. Não posso dizer o que ela é, só que não pode ficar em mãos erradas. Já não há tempo para as duas coisas: escolham.",
+              "texto": "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela estrada e o Olho já vai longe. Já não há tempo para as duas coisas: escolham.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "elara_lento",
                 "sem_fato": "",
-                "aventura_id": "elara_fazenda"
+                "aventura_id": "elara_parte1"
               },
               "efeito": {
                 "renome": 0,
@@ -545,7 +545,7 @@
           "conversations": [
             {
               "id": "elara_fazenda_presente",
-              "texto": "Então foram vocês que limparam a velha Fazenda do Leste! Boa notícia, aventureiros: a Guilda não deixa um lugar bom daqueles apodrecer. A fazenda é de vocês, de presente. Descansem, guardem as suas coisas e reúnam-se por lá entre uma aventura e outra. Está marcada no mapa da cidade.",
+              "texto": "Então foram vocês que limparam a Fazenda do Leste! O Templo já falou com o regente: a fazenda é de vocês, de presente pelos serviços prestados. É o Refúgio dos Heróis, que agora aparece no mapa da cidade. Lá o grupo guarda itens e dinheiro e expõe os troféus das suas aventuras. O que deixarem por lá fica seguro de uma missão para outra.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,

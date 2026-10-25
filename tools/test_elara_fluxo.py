@@ -63,7 +63,7 @@ class FluxoTests(unittest.TestCase):
         r = sala(fatos={G.F_FAZENDA})
         self.assertEqual([c for c in conversas(r) if c.startswith("elara_pos")], ["elara_pos_fazenda_rapido"])
         r2 = sala(fatos={G.F_FAZENDA, G.F_LENTO})
-        r2.world_adventure_progress = {G.AVENTURA_FAZENDA: 1}
+        r2.world_adventure_progress = {G.AVENTURA: 2}
         self.assertEqual([c for c in conversas(r2) if c.startswith("elara_pos")], ["elara_pos_fazenda_lento"])
         r3 = sala(fatos={G.F_LENTO})       # passou do limite ainda na fazenda: o Templo não fala antes do fim
         self.assertEqual([c for c in conversas(r3) if c.startswith("elara_pos")], [])
@@ -71,7 +71,7 @@ class FluxoTests(unittest.TestCase):
     def test_escolha_so_depois_da_pressao_e_nunca_bloqueia(self):
         for fatos in ({G.F_FAZENDA}, {G.F_FAZENDA, G.F_LENTO}):
             r = sala(fatos=fatos)
-            r.world_adventure_progress = {G.AVENTURA_FAZENDA: 1}
+            r.world_adventure_progress = {G.AVENTURA: 2}
             self.assertNotIn("elara_escolher_mocas", conversas(r))
             falar(r, next(c for c in conversas(r) if c.startswith("elara_pos")))
             self.assertIn("elara_escolher_mocas", conversas(r))

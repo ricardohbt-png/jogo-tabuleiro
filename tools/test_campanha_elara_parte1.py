@@ -14,8 +14,8 @@ import gerar_campanha_elara as G
 class DadosTests(unittest.TestCase):
     def test_destino_da_casa_oculto_ate_o_pedido(self):
         d = G.destinos()[G.AVENTURA]
-        self.assertEqual([e["file"] for e in d["dungeons"]], ["casa_secreta.json"])
-        self.assertEqual([e["encadear"] for e in d["dungeons"]], [False])
+        self.assertEqual([e["file"] for e in d["dungeons"]], ["casa_secreta.json", "fazenda.json"])
+        self.assertEqual([e["encadear"] for e in d["dungeons"]], [True, False])
         self.assertTrue(d["oculto_ate_liberar"])
         self.assertEqual(d["requisito"]["fato"], G.F_PEDIU)
         self.assertTrue(d["ocultar_apos_concluir"])
@@ -76,19 +76,22 @@ class DiscoTests(unittest.TestCase):
         self.assertIn(G.AVENTURA, a)
         self.assertEqual(a[G.AVENTURA]["requisito"]["fato"], G.F_PEDIU)
 
-    def test_fazenda_e_destino_proprio_liberado_pela_carta(self):
+    def test_fazenda_e_a_segunda_etapa_encadeada_e_acaba_com_o_exequiel(self):
         a = self.ler("world_adventures.json")
-        self.assertEqual([e["file"] for e in a[G.AVENTURA]["dungeons"]], ["casa_secreta.json"])
-        f = a[G.AVENTURA_FAZENDA]
-        self.assertEqual([e["file"] for e in f["dungeons"]], ["fazenda.json"])
-        self.assertEqual(f["requisito"]["fato"], G.F_CARTA)
-        self.assertTrue(f["oculto_ate_liberar"])
-        self.assertTrue(f["so_na_cidade"], "sem emboscada de viagem")
+        etapas = a[G.AVENTURA]["dungeons"]
+        self.assertEqual([e["file"] for e in etapas], ["casa_secreta.json", "fazenda.json"])
+        self.assertTrue(etapas[0]["encadear"], "a fazenda começa sozinha depois da casa")
+        self.assertNotIn("rascunho", str(etapas[0]["outro"]).lower())
+        textos = " ".join(s.get("text", "") for s in etapas[1]["outro"]["slides"])
+        self.assertIn("Exequiel", textos)
+        self.assertIn("Olho", textos)
+        self.assertNotIn("elara_fazenda", a, "a fazenda não é mais um destino de combate")
+        self.assertTrue(a[G.AVENTURA]["so_na_cidade"], "sem emboscada de viagem")
 
     def test_pontos_da_cidade(self):
         p = self.ler("city_map_points.json")["alva_e_luz"]
         self.assertEqual(p[G.PONTO_CASA]["aventura"], G.AVENTURA)
-        self.assertEqual(p[G.PONTO_FAZENDA]["aventura"], G.AVENTURA_FAZENDA)
+        self.assertNotIn("elara_fazenda", p)
         r = p[G.PONTO_REFUGIO]
         self.assertEqual(r["type"], "refugio")
         self.assertEqual(r["requisito"]["fato"], G.F_FAZENDA)
