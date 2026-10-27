@@ -14,12 +14,18 @@ RAIZ = Path(__file__).resolve().parents[1]
 JSON_CAMPO = RAIZ / "dungeons" / "campo_de_treinamento.json"
 ID = "fala_hostilidade"
 POS = [32, 15]
+CONTINUA_SEM = ["fala_18", "fala_19"]
 
 
 def aplicar(d):
     for f in d["falas"]:
         if f["id"] == ID:
             f["pos"] = list(POS)
+            # Comida e água moram na mesma sala 21: sem isto, ficar com elas pendentes
+            # segurava a hostilidade para sempre (o herói precisa estar na sala 21 para
+            # disparar, e nela as duas nunca saem da zona para serem puladas).
+            f["continua_sem"] = list(CONTINUA_SEM)
+            f["continua_sem_ativas"] = list(CONTINUA_SEM)
     return d
 
 
