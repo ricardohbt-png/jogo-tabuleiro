@@ -3117,7 +3117,8 @@
       37
     ],
     "room_id": 18,
-    "image": "elara.png"
+    "image": "elara.png",
+    "model3d": "elara.glb"
   },
   "materiais": {
     "2,22": "grama",
