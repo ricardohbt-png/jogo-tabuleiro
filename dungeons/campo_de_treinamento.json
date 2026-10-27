@@ -6774,6 +6774,14 @@
           "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto",
           "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo"
         }
+      ],
+      "continua_sem": [
+        "fala_18",
+        "fala_19"
+      ],
+      "continua_sem_ativas": [
+        "fala_18",
+        "fala_19"
       ]
     },
     {
