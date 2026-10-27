@@ -131,7 +131,10 @@ check(p["bonus_action_used"] is True and all(i["id"]!="vela_escuridao" for i in 
 check(g._verificar_ataque_furtivo(p, {"id":"m","name":"x","pos":[6,5]}) is True, "Ladino oculto → furtivo automático")
 try: asyncio.run(g.handle_end_turn("p1"))
 except Exception: pass
-check(not p.get("oculto_vela"), "oculto expira no fim do turno")
+check(p.get("oculto_vela") is True and p.get("oculto_vela_rodadas") == 1, "vela mantém ocultação por uma rodada extra")
+try: asyncio.run(g.handle_end_turn("p1"))
+except Exception: pass
+check(not p.get("oculto_vela"), "oculto expira ao fim da rodada extra")
 
 g3, p3 = jogo_item("rogue"); p3["invisivel_sombras"]=True
 asyncio.run(g3.handle_use_item("p1","vela_escuridao"))

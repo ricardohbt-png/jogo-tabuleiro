@@ -6967,6 +6967,22 @@ window.LANG_INTERFACE = {
     "en": "Arcane Staff temporary slot — back in {n} round(s)",
     "pt": "Slot temporário do Cajado Arcano — volta em {n} rodada(s)"
   },
+  "ui.magia.slot_chapeu_arquimago_pronto": {
+    "en": "Archmage's Hat extra slot — ready",
+    "pt": "Slot extra do Chapéu do Arquimago — pronto"
+  },
+  "ui.magia.slot_chapeu_arquimago_volta_em": {
+    "en": "Archmage's Hat extra slot — back in {n} round(s)",
+    "pt": "Slot extra do Chapéu do Arquimago — volta em {n} rodada(s)"
+  },
+  "ui.magia.slot_chapeu_arquimago_superior_pronto": {
+    "en": "Superior Archmage's Hat 2nd-circle slot — ready",
+    "pt": "Slot de 2º círculo do Chapéu do Arquimago Superior — pronto"
+  },
+  "ui.magia.slot_chapeu_arquimago_superior_volta_em": {
+    "en": "Superior Archmage's Hat 2nd-circle slot — back in {n} round(s)",
+    "pt": "Slot de 2º círculo do Chapéu do Arquimago Superior — volta em {n} rodada(s)"
+  },
   "ui.magia.slot_disponivel": {
     "en": "Slot available",
     "pt": "Slot disponível"

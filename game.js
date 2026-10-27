@@ -6683,12 +6683,16 @@ function updateTurnBrief(msg){
   const slots = me.slots_max || {};
   const spent = me.slots_remaining || {};
   const slotNames = {primeiro:'I', segundo:'II', terceiro:'III', quarto:'IV', quinto:'V'};
-  const slotLines = Object.entries(slotNames).filter(([circle]) => Number(slots[circle] || 0) > 0).map(([circle, roman]) => {
-    let remaining = Array.isArray(spent[circle]) ? spent[circle].length : 0;
-    const staffSpent = circle === 'primeiro' && spent.cajado_arcano?.ativo && !spent.cajado_arcano?.pronto;
-    if(staffSpent) remaining = Math.max(0, remaining - 1);
-    const extraStaff = circle === 'primeiro' && spent.cajado_arcano?.ativo && spent.cajado_arcano?.pronto ? 1 : 0;
-    return `${t('ui.hud.resumo_circulo', {n:roman})}: ${Math.max(0, Number(slots[circle] || 0) - remaining) + extraStaff} ${t('ui.hud.resumo_livres')}`;
+  const extraSlotsPorCirculo = {
+    primeiro:['cajado_arcano','chapeu_arquimago'],
+    segundo:['chapeu_arquimago_superior']
+  };
+  const slotLines = Object.entries(slotNames).filter(([circle]) => Number(slots[circle] || 0) > 0
+    || (extraSlotsPorCirculo[circle] || []).some(id => spent[id]?.ativo)).map(([circle, roman]) => {
+    const remaining = Array.isArray(spent[circle]) ? spent[circle].length : 0;
+    const extrasProntos = (extraSlotsPorCirculo[circle] || [])
+      .filter(id => spent[id]?.ativo && spent[id]?.pronto).length;
+    return `${t('ui.hud.resumo_circulo', {n:roman})}: ${Math.max(0, Number(slots[circle] || 0) - remaining) + extrasProntos} ${t('ui.hud.resumo_livres')}`;
   });
 
   const vision = computeVisionSet(msg, me);
@@ -22080,6 +22084,19 @@ function _slotsMaxParaHeroi(heroi){
 }
 
 // Aba de magias em jogo: cartas por círculo + pips de slot com contagem regressiva.
+function _slotsExtrasMagiaEquipados(heroi, circulo){
+  const restantes = heroi?.slots_remaining || {};
+  const definicoes = [
+    {id:'cajado_arcano', icone:'✦', classe:'staff', prontoKey:'ui.magia.slot_cajado_pronto', recargaKey:'ui.magia.slot_cajado_volta_em'},
+    {id:'chapeu_arquimago', icone:'✧', classe:'archmage', prontoKey:'ui.magia.slot_chapeu_arquimago_pronto', recargaKey:'ui.magia.slot_chapeu_arquimago_volta_em'},
+    {id:'chapeu_arquimago_superior', icone:'✵', classe:'archmage-superior', prontoKey:'ui.magia.slot_chapeu_arquimago_superior_pronto', recargaKey:'ui.magia.slot_chapeu_arquimago_superior_volta_em'}
+  ];
+  return definicoes.map(def => {
+    const slot = restantes[def.id] || {};
+    return {...def, circulo:slot.circulo, ativo:!!slot.ativo, pronto:!!slot.pronto, recarga:Math.max(0, Number(slot.recarga) || 0)};
+  }).filter(slot => slot.ativo && slot.circulo === circulo);
+}
+
 function renderMagiasFichaEmJogo(heroi, cls) {
   cls = cls || (heroi && heroi.class_id) || 'mage';
   const nivel    = Math.min((heroi && (heroi.level || heroi.nivel)) || 1, 5);
@@ -22091,7 +22108,6 @@ function renderMagiasFichaEmJogo(heroi, cls) {
   const limites  = _slotsMaxParaHeroi(heroi);
   const cooldown = (heroi && heroi.slots_cooldown) || {primeiro:[], segundo:[], terceiro:[], quarto:[], quinto:[]};
   const restantesServidor = (heroi && heroi.slots_remaining) || null;
-  const cajadoExtra = restantesServidor?.cajado_arcano || null;
   const round    = (window.GS && GS.gameState && GS.gameState.round) || 0;
   function renderCirculoMagias(circulo, label) {
     const magiasCirculo = known.filter(id => GRIMORIO_CLIENT[id] && GRIMORIO_CLIENT[id].circulo === circulo);
@@ -22100,7 +22116,9 @@ function renderMagiasFichaEmJogo(heroi, cls) {
     const treinoLivre = !!heroi?.slots_livres_treino && magiasCirculo.length > 0;
     const possuiTesteLivre = treinoLivre || (cls === 'cleric' && circulo === 'quinto' && magiasCirculo.includes('tempestade_ciclones'));
     const temMagiaDoLivro = magiasCirculo.some(id => idsDoLivro.has(id));
-    if (limite === 0 && !possuiTesteLivre && !temMagiaDoLivro) return `
+    const slotsExtras = _slotsExtrasMagiaEquipados(heroi, circulo);
+    const semSlotDeClasse = limite === 0 && temMagiaDoLivro && slotsExtras.length === 0;
+    if (limite === 0 && slotsExtras.length === 0 && !possuiTesteLivre && !temMagiaDoLivro) return `
       <div style="opacity:0.3; margin-bottom:12px;">
         <div style="color:#4a4a4a; font-size:9px; letter-spacing:2px;">${label} — ${t('ui.magia.slot_nivel_maior')}</div>
       </div>`;
@@ -22112,11 +22130,10 @@ function renderMagiasFichaEmJogo(heroi, cls) {
           .filter(r => r > round)
           .map(r => r - round)
           .sort((a,b) => a - b);
-    const extraAtivo = circulo === 'primeiro' && !!cajadoExtra?.ativo;
-    const extraLivre = extraAtivo && !!cajadoExtra?.pronto;
+    const extrasLivres = slotsExtras.filter(slot => slot.pronto).length;
     const livresNormais = Math.max(0, limite - espera.length);
-    const livres = livresNormais + (extraLivre ? 1 : 0);
-    const totalSlots = limite + (extraAtivo ? 1 : 0);
+    const livres = livresNormais + extrasLivres;
+    const totalSlots = limite + slotsExtras.length;
 
     const pipsNormais = Array.from({length: limite}).map((_, i) => {
       if (i < livresNormais) {
@@ -22125,23 +22142,26 @@ function renderMagiasFichaEmJogo(heroi, cls) {
       const falta = espera[i - livresNormais];   // rodadas até liberar este slot
       return `<div title="Volta em ${falta} rodada(s)" style="width:16px; height:16px; border-radius:50%; background:#1a1a1a; border:1px solid #3a3a3a; display:flex; align-items:center; justify-content:center; color:#cc8844; font-size:9px;">${falta}</div>`;
     }).join('');
-    const pipsExtra = extraAtivo ? (extraLivre
-      ? `<div title="Slot temporário do Cajado Arcano — pronto" data-i18n-title="ui.magia.slot_temporario_do_cajado_arcano_pronto" style="width:16px; height:16px; border-radius:50%; background:#5b3009; border:1px solid #ff9d2e; display:flex; align-items:center; justify-content:center; color:#ffd08a; font-size:10px; box-shadow:0 0 6px rgba(255,157,46,.38);">✦</div>`
-      : `<div title="${t('ui.magia.slot_cajado_volta_em', {n: cajadoExtra.recarga})}" style="width:16px; height:16px; border-radius:50%; background:#24190d; border:1px solid #d4771c; display:flex; align-items:center; justify-content:center; color:#ffb347; font-size:9px; box-shadow:inset 0 0 5px rgba(0,0,0,.7);">${cajadoExtra.recarga}</div>`)
-      : '';
+    const pipsExtra = slotsExtras.map(slot => {
+      const titulo = slot.pronto ? t(slot.prontoKey) : t(slot.recargaKey, {n:slot.recarga});
+      const cor = slot.classe === 'staff'
+        ? (slot.pronto ? ['#5b3009','#ff9d2e','#ffd08a'] : ['#24190d','#d4771c','#ffb347'])
+        : (slot.pronto ? ['#39235a','#bf8cff','#e4c7ff'] : ['#21192d','#7952a6','#c09ae8']);
+      return `<div title="${titulo}" style="width:16px; height:16px; border-radius:50%; background:${cor[0]}; border:1px solid ${cor[1]}; display:flex; align-items:center; justify-content:center; color:${cor[2]}; font-size:${slot.pronto ? 10 : 9}px; box-shadow:0 0 6px ${slot.pronto ? 'rgba(191,140,255,.38)' : 'rgba(0,0,0,.7)'};">${slot.pronto ? slot.icone : slot.recarga}</div>`;
+    }).join('');
     const pips = pipsNormais + pipsExtra;
 
     return `
       <div style="margin-bottom:14px;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
           <span style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${label}</span>
-          <span style="color:${limite === 0 && temMagiaDoLivro ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${limite === 0 && temMagiaDoLivro ? t('ui.magia.sem_slot_circulo') : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
+          <span style="color:${semSlotDeClasse ? '#cc8844' : livres === 0 && !treinoLivre ? '#ff4136' : '#44cc88'}; font-size:10px;">${semSlotDeClasse ? t('ui.magia.sem_slot_circulo') : treinoLivre ? t('ui.magia.slots_treino_livre') : `${livres}/${totalSlots} slots`}</span>
         </div>
         <div style="display:flex; gap:4px; margin-bottom:8px;">${pips}</div>
         <div style="display:flex; flex-wrap:wrap; gap:4px;">
           ${magiasCirculo.map((id, idx) => {
             const livreParaTeste = possuiTesteLivre || (cls === 'mage' && (id === 'metamorfose' || id === 'teleporte'));
-            const temSlotMaximo = limite > 0 || treinoLivre || (cls === 'cleric' && circulo === 'quinto' && id === 'tempestade_ciclones');
+            const temSlotMaximo = limite > 0 || slotsExtras.length > 0 || treinoLivre || (cls === 'cleric' && circulo === 'quinto' && id === 'tempestade_ciclones');
             return criarCartaMagia(id, false, temSlotMaximo && (livreParaTeste || livres > 0), false, 'jogo', idsDoLivro.has(id));
           }).join('')}
           ${magiasCirculo.length === 0 ? `<div style="color:#4a4a4a; font-size:9px; font-style:italic; padding:8px;">${t('ui.magia.nenhuma_magia_memorizada')}</div>` : ''}
@@ -22275,7 +22295,7 @@ function castarMagia(magiaId) {
   let alvoTipo;
   const ehArea = ['area', 'area_fixa', 'area_persistente'].includes(tipo);
   if (tipo === 'area_centrada')                                    alvoTipo = 'self_area'; // área fixa no caster, confirma c/ clique
-  else if (ehArea && _alcanceMagiaCli(m, GS.me && GS.me.level) <= 0) alvoTipo = 'self_area'; // ex.: Abençoar (centrada no caster)
+  else if (ehArea && _alcanceMagiaCli(m, GS.me && GS.me.level, GS.me) <= 0) alvoTipo = 'self_area'; // ex.: Abençoar (centrada no caster)
   else if (tipo === 'linha_reflexiva')                            alvoTipo = 'linha';
   else if (tipo === 'cone')                                       alvoTipo = 'cone';   // mira por direção
   else if (tipo === 'alvo')                                       alvoTipo = 'foe';
@@ -22476,7 +22496,7 @@ function castarPergaminho(item) {
   let alvoTipo;
   const ehArea = ['area', 'area_fixa', 'area_persistente'].includes(tipo);
   if (tipo === 'area_centrada')                                    alvoTipo = 'self_area';
-  else if (ehArea && _alcanceMagiaCli(m, me && me.level) <= 0)     alvoTipo = 'self_area';
+  else if (ehArea && _alcanceMagiaCli(m, me && me.level, me, true) <= 0) alvoTipo = 'self_area';
   else if (tipo === 'linha_reflexiva')                            alvoTipo = 'linha';
   else if (tipo === 'cone')                                       alvoTipo = 'cone';
   else if (tipo === 'alvo')                                       alvoTipo = 'foe';
@@ -22571,12 +22591,10 @@ function _clickTileTeleporteDestino(tx, ty){
 }
 
 // Magias de terreno cujo lado no servidor é calculado por nível e/ou por
-// escolha do jogador (terreno do Senhor das Águas, tamanho da Prisão) e que
-// recebem o Cajado Arcano como +1 ADITIVO (`_cajado_arcano_area_bonus`).
-// Para elas `_cajadoArcanoAreaLado` NÃO serve — devolve `area_lado + 1` cego
-// ao nível, e com o cajado equipado a área verde ficava presa em 4x4 enquanto
-// a lava real da Ira crescia com o nível.
-const MAGIAS_AREA_CAJADO_ADITIVO = new Set([
+// escolha do jogador (terreno do Senhor das Águas, tamanho da Prisão). Para
+// elas, o bônus de equipamento deve ser somado ao lado calculado, sem apagar
+// o crescimento por nível ou a escolha do jogador.
+const MAGIAS_AREA_EQUIPAMENTO_ADITIVO = new Set([
   'ira_rocha_ardente', 'tempestade_ciclones', 'definhar', 'senhor_das_aguas', 'prisao_chamas',
 ]);
 
@@ -22586,15 +22604,15 @@ function _prisaoChamasLadoEscolhido() {
   return Math.max(2, Math.min(4, Number(_prisaoChamasLado) || 2));
 }
 
-// Espelha `_cajado_arcano_area_bonus` do servidor: +1 com o Cajado Arcano na
-// mão e magia de área — só pelo `tipo`, porque a Prisão de Chamas não tem
-// `area_lado` no catálogo (o jogador escolhe o tamanho). Pergaminho não ganha.
-function _cajadoArcanoAreaBonus(heroi, m, scroll = false) {
+// Espelha o servidor: Cajado Arcano soma +1 lado; Tiara da Expansão Arcana
+// soma +2 lados (um quadrado adicional de raio). Pergaminhos não ganham bônus.
+function _equipamentoAreaMagiaBonus(heroi, m, scroll = false) {
   if (scroll || !heroi || !m) return 0;
   const arma = heroi.gear?.weapon || heroi.weapon || {};
-  if (arma.id !== 'staff') return 0;
   if (!['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo)) return 0;
-  return 1;
+  const bonusCajado = arma.id === 'staff' ? 1 : 0;
+  const bonusTiara = heroi.gear?.head?.id === 'tiara_expansao_arcana' ? 2 : 0;
+  return bonusCajado + bonusTiara;
 }
 
 // Lado do quadrado verde da mira de uma magia de área — espelha o lado que o
@@ -22612,12 +22630,12 @@ function _areaLadoMiraMagia(magiaId, _def, _me, scroll) {
   const definharLado = magiaId === 'definhar'
     ? 3 + Math.floor((Number(_me?.level) || 1) / 3) : 0;
   const prisaoChamasLado = magiaId === 'prisao_chamas' ? _prisaoChamasLadoEscolhido() : 0;
-  if (MAGIAS_AREA_CAJADO_ADITIVO.has(magiaId)) {
+  if (MAGIAS_AREA_EQUIPAMENTO_ADITIVO.has(magiaId)) {
     return (prisaoChamasLado || senhorAguasLado || iraRochaLado || tempestadeLado || definharLado)
-      + _cajadoArcanoAreaBonus(_me, _def, !!scroll);
+      + _equipamentoAreaMagiaBonus(_me, _def, !!scroll);
   }
-  const cajadoLado = _cajadoArcanoAreaLado(_me, _def, !!scroll);
-  return cajadoLado || invernoLado || (_def && _def.area_lado) || 0;
+  const equipamentoLado = _equipamentoAreaMagiaLado(_me, _def, !!scroll);
+  return equipamentoLado || invernoLado || (_def && _def.area_lado) || 0;
 }
 
 function _iniciarModoMagia(magiaId, alvoTipo, scrollItemId, options = {}) {
@@ -22773,7 +22791,7 @@ function _clickTileMagia(tx, ty) {
         ? (GS.gameState?.players || []).find(pp => pp.alive && pp.id !== me?.id
             && pp.pos[0] === tx && pp.pos[1] === ty)
       : (GS.gameState?.players || []).find(pp => pp.alive && pp.pos[0] === tx && pp.pos[1] === ty);
-    const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me && me.level), alvoVisual);
+    const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me && me.level, me, !!mode.scrollItemId), alvoVisual);
     if (me && alc > 0) {
       const d = Math.max(Math.abs(me.pos[0] - tx), Math.abs(me.pos[1] - ty));
       if (d > alc) {
@@ -23874,15 +23892,21 @@ function _aimStartDisarmTrap() {
   });
 }
 
-function _alcanceMagiaCli(m, level) {
+function _alcanceMagiaCli(m, level, heroi=null, pergaminho=false) {
+  let alcance;
   if (m.alcance_base != null) {
     const lv = level || 1;
     // Silêncio escala 1 a cada 2 níveis; as demais, 1 por nível (a partir do nível 1).
-    if (m.id === 'silencio') return m.alcance_base + Math.floor(lv / 2) * (m.alcance_escala || 0);
-    if (m.alcance_por_niveis) return m.alcance_base + Math.floor(lv / m.alcance_por_niveis) * (m.alcance_escala || 0);
-    return m.alcance_base + (m.alcance_escala || 0) * (lv - 1);
+    if (m.id === 'silencio') alcance = m.alcance_base + Math.floor(lv / 2) * (m.alcance_escala || 0);
+    else if (m.alcance_por_niveis) alcance = m.alcance_base + Math.floor(lv / m.alcance_por_niveis) * (m.alcance_escala || 0);
+    else alcance = m.alcance_base + (m.alcance_escala || 0) * (lv - 1);
+  } else {
+    alcance = (m.alcance != null) ? m.alcance : 0;
   }
-  return (m.alcance != null) ? m.alcance : 0;
+  const acessorios = [heroi?.gear?.item1, heroi?.gear?.item2];
+  const bonus = !pergaminho && Number(alcance) > 0
+    && acessorios.some(item => item?.id === 'amulet_alcance_arcano') ? 1 : 0;
+  return Number(alcance || 0) + bonus;
 }
 function _alturaEntidadeCli(entidade){
   const n = Number(entidade?.altura);
@@ -24001,15 +24025,14 @@ function _areaLadoMagiaMonstroCli(magia, nivel) {
 function _addQuadradoMagiaMonstro(cx, cy, lado, out) {
   _addQuadradoChamadoInverno(cx, cy, lado, out);
 }
-function _cajadoArcanoAreaLado(heroi, m, scroll = false) {
+function _equipamentoAreaMagiaLado(heroi, m, scroll = false) {
   if (scroll || !heroi || !m) return 0;
-  const arma = heroi.gear?.weapon || heroi.weapon || {};
-  if (arma.id !== 'staff') return 0;
-  if (!['area', 'area_persistente', 'area_fixa', 'area_centrada'].includes(m.tipo)) return 0;
-  if (m.id === 'chamado_inverno') return 4 + Math.floor((Number(heroi.level) || 1) / 2) + 1;
-  if (m.area_lado != null) return Math.max(1, Number(m.area_lado) + 1);
-  if (m.area_raio != null) return Math.max(1, Number(m.area_raio) * 2 + 2);
-  if (m.area_base != null) return Math.max(1, Number(m.area_base) + 1);
+  const bonus = _equipamentoAreaMagiaBonus(heroi, m, false);
+  if (!bonus) return 0;
+  if (m.id === 'chamado_inverno') return 4 + Math.floor((Number(heroi.level) || 1) / 2) + bonus;
+  if (m.area_lado != null) return Math.max(1, Number(m.area_lado) + bonus);
+  if (m.area_raio != null) return Math.max(1, Number(m.area_raio) * 2 + 1 + bonus);
+  if (m.area_base != null) return Math.max(1, Number(m.area_base) + bonus);
   return 0;
 }
 // Quadrado de lado `lado` (ex.: 4x4 do Silêncio) — espelha _em_zona_quadrada do servidor.
@@ -24040,7 +24063,7 @@ function _recomputarAlcanceMagia() {
   // alvoLivre (Clarividência): sem anel de alcance — pode mirar o mapa inteiro.
   if (m && me && !mode.alvoLivre && !m.alcance_los
       && mode.alvoTipo !== 'linha' && mode.alvoTipo !== 'cone') {
-    const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level));
+    const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level, me, !!mode.scrollItemId));
     if (alc > 0) _addCheb(me.pos[0], me.pos[1], alc, range);
   }
   window._spellHL.range = range;
@@ -24120,7 +24143,7 @@ function _recomputarAreaMagia(hx, hy) {
       const [dx, dy] = _dir8(hx - me.pos[0], hy - me.pos[1]);
       mode.dir = [dx, dy];
       if (dx !== 0 || dy !== 0) {
-        const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level));
+        const alc = _alcanceComAlturaCli(me, _alcanceMagiaCli(m, me.level, me, !!mode.scrollItemId));
         for (const [k, c] of _caminhoRelampagoCli(me.pos[0], me.pos[1], dx, dy, alc)) {
           if (c >= 2) dbl.add(k); else area.add(k);
         }
@@ -24319,7 +24342,8 @@ function _atualizarDirecaoSpell3D(){
   const dx = Number(mode.dir[0]) || 0, dz = Number(mode.dir[1]) || 0;
   if(!dx && !dz) return;
   const m = GRIMORIO_CLIENT[mode.magiaId] || {};
-  const length = mode.alvoTipo === 'cone' ? Number(m.comprimento || m.range || 4) : _alcanceMagiaCli(m, me.level);
+  const length = mode.alvoTipo === 'cone' ? Number(m.comprimento || m.range || 4)
+    : _alcanceMagiaCli(m, me.level, me, !!mode.scrollItemId);
   const T = g3.T;
   if(!g3.spellDirectionGroup){
     const group = new T.Group(); group.name = 'spell-direction-preview'; group.renderOrder = 24;
@@ -27618,6 +27642,7 @@ function renderMyPanel(state){
     else if(sk.granted_origem === 'bard')    sl.appendChild(_bardSkillBtn(me, sk));
     else if(sk.granted_origem === 'weapon')  sl.appendChild(_weaponThrowSkillBtn(me, sk));
     else if(sk.granted_origem === 'crystal_ball') sl.appendChild(_crystalBallSkillBtn(me, sk));
+    else if(sk.granted_origem === 'shadow_cloak') sl.appendChild(_shadowCloakSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
@@ -28204,7 +28229,8 @@ function _desenharSpellDirection2D(ctx, state){
   const dx = Number(mode.dir[0]) || 0, dy = Number(mode.dir[1]) || 0;
   if(!dx && !dy) return;
   const m = GRIMORIO_CLIENT[mode.magiaId] || {};
-  const length = mode.alvoTipo === 'cone' ? Number(m.comprimento || m.range || 4) : _alcanceMagiaCli(m, me.level);
+  const length = mode.alvoTipo === 'cone' ? Number(m.comprimento || m.range || 4)
+    : _alcanceMagiaCli(m, me.level, me, !!mode.scrollItemId);
   const sx = me.pos[0]*CELL + CELL/2, sy = me.pos[1]*CELL + CELL/2;
   const ex = sx + dx * length * CELL, ey = sy + dy * length * CELL;
   const ux = dx, uy = dy, px = -uy, py = ux;
@@ -29812,6 +29838,21 @@ function useItem(itemId, targetId, sourceInfo){
       _iniciarPreviewSolucaoMecanismo(itemId, sourceInfo);
       return;
     }
+    if(it?.effect === 'revive_ally'){
+      if(!me) return;
+      const alvos = (GS.gameState?.players || []).filter(q =>
+        q.id !== me.id && q.class_id && !q.is_master && !q.test_hero && !q.alive
+        && Array.isArray(q.pos)
+        && Math.max(Math.abs(q.pos[0] - me.pos[0]), Math.abs(q.pos[1] - me.pos[1])) <= 1);
+      if(!alvos.length){
+        toast(t('erro.aliado_invalido'), 'var(--orange)');
+        return;
+      }
+      openTargetModal(t('ui.item.escolha_o_alvo_consumivel',
+        {icone: it.emoji || '💫', nome: it.name}), alvos, 'ally',
+        id => useItem(itemId, id, sourceInfo));
+      return;
+    }
     if(it && CURA_STATUS_EFFECTS.includes(it.effect)){
       const alvos = (GS.gameState.players || []).filter(q =>
         q.alive && (q.id === me.id ||
@@ -30337,13 +30378,6 @@ function _slotsMenuMagias(heroi){
   const naMasmorra = !!GS.gameState;
   const round = naMasmorra ? Number(GS.gameState.round || 0) : 0;
   const status = {};
-  const extraRaw = heroi?.slots_remaining?.cajado_arcano || null;
-  const extra = {
-    ativo: !!extraRaw?.ativo,
-    livre: !!extraRaw?.ativo && !!extraRaw?.pronto,
-    espera: extraRaw?.ativo && Number(extraRaw?.recarga || 0) > 0
-      ? [Math.max(0, Number(extraRaw.recarga) || 0)] : []
-  };
   ['primeiro','segundo','terceiro','quarto'].forEach(circulo => {
     const total = Number(limites[circulo] || 0);
     const espera = naMasmorra && Array.isArray(restantesServidor?.[circulo])
@@ -30353,12 +30387,12 @@ function _slotsMenuMagias(heroi){
             .map(r => Math.max(0, Number(r) - round)).sort((a,b) => a - b)
         : [];
     const livresNormais = Math.max(0, total - espera.length);
-    const isPrimeiro = circulo === 'primeiro';
-    const livres = livresNormais + (isPrimeiro && extra.livre ? 1 : 0);
+    const extras = _slotsExtrasMagiaEquipados(heroi, circulo);
+    const livres = livresNormais + extras.filter(slot => slot.pronto).length;
     status[circulo] = {
-      total: total + (isPrimeiro && extra.ativo ? 1 : 0), livres, espera,
+      total: total + extras.length, livres, espera,
       regularTotal: total, regularLivres: livresNormais,
-      extra: isPrimeiro && extra.ativo ? extra : null
+      extras
     };
     // Sala de treino do Mago: sem recargas e sem limite (o servidor não cobra slots).
     if(heroi?.slots_livres_treino){
@@ -30380,11 +30414,10 @@ function renderSlotsMenuMagias(heroi){
       const falta = s.espera[i - s.regularLivres] || 0;
       return `<span class="mm-slot-pip cooldown" title="${t('ui.magia.slot_volta_em', {n:falta})}">${falta}</span>`;
     }).join('');
-    const pipsCajado = s.extra ? (s.extra.livre
-      ? `<span class="mm-slot-pip ready staff" title="${t('ui.magia.slot_cajado_pronto')}">✦</span>`
-      : `<span class="mm-slot-pip cooldown staff" title="${t('ui.magia.slot_cajado_volta_em', {n: s.extra.espera[0] || 0})}">${s.extra.espera[0] || 0}</span>`)
-      : '';
-    const pips = pipsNormais + pipsCajado;
+    const pipsExtras = s.extras.map(slot => slot.pronto
+      ? `<span class="mm-slot-pip ready ${slot.classe}" title="${t(slot.prontoKey)}">${slot.icone}</span>`
+      : `<span class="mm-slot-pip cooldown ${slot.classe}" title="${t(slot.recargaKey, {n:slot.recarga})}">${slot.recarga}</span>`).join('');
+    const pips = pipsNormais + pipsExtras;
     return `<div class="mm-slot-circle"><h4>${_labelCirculo(circulo)}</h4><span class="mm-slot-count${s.livres === 0 ? ' empty' : ''}">${s.treinoLivre ? t('ui.magia.slots_treino_livre') : t('ui.magia.slots_disponiveis', {livres:s.livres, total:s.total})}</span><div class="mm-slot-pips">${pips}</div></div>`;
   }).join('');
   return `<aside class="menu-magias-slots" aria-label="${t('ui.magia.slots_aria')}"><div class="mm-slots-header">${t('ui.magia.slots_titulo')}<small>${t('ui.magia.slots_recarga')}</small></div>${grupos}</aside>`;
@@ -30935,6 +30968,21 @@ function ativarHabilidadeDoMenu(skillId){
     fecharMenuHabilidades();
     fecharMenuMagias();
     _iniciarModoMagia('clarividencia', 'tile', null, {crystalBall:true});
+    return;
+  }
+  if(skillId === 'usar_manto_sombras'){
+    const item = me.gear?.armor;
+    const prontaEm = Number(item?.manto_escuridao_pronto_em || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    if(item?.id !== 'manto_das_sombras' || me.class_id !== 'rogue'){
+      toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return;
+    }
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.item.manto_das_sombras.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    send({type:'use_shadow_cloak'});
     return;
   }
   const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
@@ -31510,6 +31558,29 @@ function _crystalBallSkillBtn(me, skill){
     </div>
     <div class="skill-cost">${restante > 0 ? `${restante}r` : '🎯'}</div>`;
   btn.onclick = () => ativarHabilidadeDoMenu('usar_bola_cristal');
+  return btn;
+}
+
+function _shadowCloakSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.armor;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.manto_escuridao_pronto_em || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.id === 'manto_das_sombras' && me?.class_id === 'rogue'
+    && GS.isMyTurn && me.alive && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '🌑')} ${t('cat.item.manto_das_sombras.nome')}${recarga}</div>
+      <div class="skill-desc">${t('cat.item.manto_das_sombras.desc')}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🌑'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu('usar_manto_sombras');
   return btn;
 }
 
@@ -49133,6 +49204,8 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   bronze_armor: {path: 'assets/itens/bronze_armor.glb', footprint: 0.82},
   // O escudo redondo já está deitado no plano XZ, com a face voltada para cima.
   escudo_p: {path: 'assets/itens/escudo_redondo.glb', footprint: 0.78},
+  // O escudo grande é exportado em pé; o renderer o deita sobre o piso.
+  escudo_g: {path: 'assets/itens/escudo_grande.glb', layFlat: true, footprint: 0.82},
   flechas: {path: 'assets/itens/flechas.glb', footprint: 0.78},
   chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
@@ -52248,6 +52321,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   devorador_metal:    'assets/models3d/monstros/devorador_de_metal.glb',
   kobold_lanceiro:    'assets/models3d/monstros/kobold.glb',
   kobold_besteiro:    'assets/models3d/monstros/kobold_besteiro.glb',
+  kobold_mago:        'assets/models3d/monstros/kobold_mago.glb',
   lagarto_carniceiro: 'assets/models3d/monstros/lagarto_carniceiro.glb',
   lobo_cinzento:      'assets/models3d/monstros/lobo.glb',
   lobo_cinzento_customizado: 'assets/models3d/monstros/lobo_alfa.glb',
@@ -52760,6 +52834,7 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
   const leftQuarterTurn = new Set([
     'koboldlanceiro', 'kobold_lanceiro',
     'koboldbesteiro', 'kobold_besteiro',
+    'kobold_mago',
     // O GLB do Orc foi exportado de lado; corrigir um quarto de volta
     // mantém o rosto alinhado ao sentido do movimento.
     'orc', 'orcGuerreiro', 'orc_guerreiro',

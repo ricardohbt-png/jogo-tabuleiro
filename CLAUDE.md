@@ -12,9 +12,36 @@
 
 O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "def_"`, `value: 1`, preço 80 moedas e imagem `assets/itens/ring.png`. As cinco cidades com mercador o incluem em `city_shops.json`; nome e descrição ficam em `src/lang/catalogo.js`. O bônus usa o fluxo normal de equipar/desequipar e recalcular CA. Regressão: `python -X utf8 tools/test_anel_protecao.py`.
 
+### Reajuste de acessórios de vida (2026-10-25)
+
+`ring_vita` (Anel da Vitalidade) e `amulet` (Amuleto da Sorte) concedem `maxhp: +5` e custam 100 moedas cada em `SHOP_MERCHANT`.
+`circlet` (Tiara Arcana) custa 60 moedas, concede +1 CA e +2 PV máximos, e só pode ser comprada/equipada por mago, clérigo, ladino, patrulheiro e bardo (`allowed_classes`: `mage`, `cleric`, `rogue`, `ranger`, `bard`).
+
+`amulet_alcance_arcano` custa 400 moedas, usa `assets/itens/amulet.png`, ocupa um dos slots `item1`/`item2` e está nos cinco mercadores. Enquanto equipado, dá +1 casa ao alcance de lançamento de magias com alcance positivo; não aumenta o tamanho da área, cones, nem alcance de pergaminhos ou magias de monstros. `_apply_single_effect` armazena o bônus reversível em `gear_spell_range_bonus`; `handle_magia` aplica-o a uma cópia da definição da magia antes das validações, e `game.js` espelha a faixa na mira do jogador. Chamado do Inverno e Senhor das Águas recebem o bônus em seus cálculos especiais de alcance.
+
+`tiara_expansao_arcana` (Tiara da Expansão Arcana) custa 800 moedas, ocupa `head`, usa `assets/itens/circlet.png` e é vendida nos mercadores das cinco cidades. Enquanto equipada, aumenta em 1 casa o raio das magias de área; o bônus adiciona duas casas à dimensão do quadrado da área, soma ao Cajado Arcano e não afeta pergaminhos, linhas ou cones. `spell_area` é reversível em `_apply_single_effect`; `_equipamento_area_magia_lado` e `_equipamento_area_magia_bonus` aplicam a área no servidor, e `game.js` espelha a mira.
+
 ### Anel do Vigia (2026-10-25)
 
 `anel_vigia` é vendido por 80 moedas nos cinco mercadores, usa `assets/itens/ring.png` e concede `vision: +2` enquanto equipado. O bônus usa `vision_bonus` e aumenta o raio de visão dos heróis; não altera percepção nem visão de monstros.
+
+### Boinas do Batedor e do Alerta (2026-10-26)
+
+`boina_batedor` custa 60 moedas e concede `vision: +1`; `boina_alerta` custa 150 moedas e concede `vision: +1` mais `save_bonus: +1` em todos os testes de resistência enquanto equipada. Ambas ocupam `head`, usam `assets/itens/chapeu1.png` e estão nos cinco mercadores. `save_bonus` é aplicado e removido no fluxo de equipamento e somado em `_testar_save`.
+
+### Manto das Sombras (2026-10-26)
+
+`manto_das_sombras` custa 1.500 moedas e é exclusivo do Ladino. Ocupa `armor`, concede +2 CA total e +2 a Esconder nas Sombras, cumulativo com a especialização do Ladino. Usa `assets/itens/manto_das_sombras.png` e está à venda nos cinco ferreiros. Como ação principal, concede a magia Manto da Escuridão sem gastar slot, com recarga de 20 rodadas guardada na instância do item; o uso paga 1 fome e 1 sede.
+
+### Veste da Égide Arcana (2026-10-26)
+
+`veste_egide_arcana` custa 1.000 moedas, ocupa `armor`, concede +2 CA e +1 nos testes de resistência feitos contra magias. É exclusiva de Mago e Clérigo, usa `assets/itens/veste_egide_arcana.png` e está à venda nos cinco ferreiros. `magic_save_bonus` é aplicado e removido no fluxo de equipamento; o modificador só entra enquanto um grimório ou conjurador de monstro está resolvendo uma magia.
+
+### Chapéus do Bruxo e do Conjurador (2026-10-26)
+
+`chapeu_bruxo` custa 200 moedas e concede `spell_dc: +1`; é exclusivo do Mago. `chapeu_conjurador` custa 800 moedas e concede `spell_dc: +2`; pode ser usado por Mago e Clérigo. Ambos ocupam `head`. `_apply_single_effect` mantém o bônus reversível em `gear_spell_dc_bonus`, somado em `_dif_magia` para CDs de resistência das magias. Usam `assets/itens/chapeu_bruxo1.png` e `assets/itens/chapeu_bruxo2.png`, respectivamente, e estão à venda nos cinco mercadores.
+
+`chapeu_arquimago` custa 600 moedas e concede um slot extra de 1º círculo a cada 20 rodadas; `chapeu_arquimago_superior` custa 1.200 e concede um slot extra de 2º círculo a cada 40 rodadas. Ambos podem ser usados por Mago e Clérigo, ocupam `head` e são vendidos nos cinco mercadores. Cada variante guarda cooldown independente, que continua contando desequipada; o slot só fica disponível enquanto o item está equipado. Como compartilham `head`, não podem ser equipados juntos; o slot de cada um acumula com o do Cajado Arcano. A ficha, o menu de magias e o resumo de turno mostram cada carga no círculo correspondente.
 
 ### Anéis de Precisão, Impacto e Supremacia (2026-10-25)
 
@@ -43,6 +70,10 @@ Cerveja Anã custa 8 moedas, usa assets/itens/barril_de_cerveja.png e é vendida
 ### Botas do Passo Felino (2026-10-25)
 
 `botas_passo_felino` custa 500 moedas, usa o slot dedicado `boots`, concede +2 Destreza por `_apply_attribute_delta` enquanto equipada e aponta para `assets/itens/bota.png`. Está disponível nos cinco mercadores (`city_shops.json`) e no catálogo PT/EN e do editor. O Gilo já tinha um ajuste específico de +2 DES em `_configurar_gilo_spawn`; `Botas Velozes` continuam sendo o item separado que concede +1 movimento.
+
+### Elmo de Ferro — preço e classes (2026-10-25)
+
+`helm_iron` concede +1 CA, custa 40 moedas e só pode ser comprado/equipado por guerreiro, clérigo, patrulheiro e paladino. `allowed_classes` usa os IDs `warrior`, `cleric`, `ranger` e `paladin`; `handle_shop_buy` e o fluxo de equipamento aplicam a restrição no servidor.
 
 ### Painel único "Envenenar" (2026-10-23)
 
@@ -549,6 +580,21 @@ especial de arremesso/recolhimento só é ativada para a lança. A arma e o escu
 escolhidos entram no loot; se a lança já estiver no chão, não é duplicada. A
 chave visual continua `koboldlanceiro`: não há variantes nem alterações em PNG
 ou modelo 3D.
+
+### Kobold Mago (2026-10-26)
+
+`kobold_mago` é ND 0,75, movimento 6, nível de conjurador 1 e tem três slots
+de 1º círculo. Cada instância sorteia duas magias distintas entre Bola de Fogo,
+Relâmpago, Sono, Raio Congelante e Barreira Arcana; os slots são um limite total
+compartilhado. Seu item de cabeça é uma rolagem exclusiva: Chapéu do Bruxo 10%,
+Tiara da Expansão Arcana 5%, Chapéu do Arquimago 1%, ou nenhum 84%. Os efeitos
+do equipamento afetam suas magias; o slot do Chapéu do Arquimago recarrega em
+20 rodadas. Ao morrer, deixa 5–20 moedas e participa da chance padrão de 10% de
+comida dos kobolds. A miniatura 3D está em `assets/models3d/monstros/kobold_mago.glb`
+(cópia colorida da miniatura de Desktop) e a PNG 2D transparente está em
+`assets/pawns/monstros/kobold_mago/kobold_mago.png`; ambas usam `image: kobold_mago`.
+`game.js` vincula o GLB pelo tipo `kobold_mago`. O catálogo do editor vem de
+`tools/export_catalog.py`.
 
 ### Campo de Treinamento — salas por herói (2026-10-01)
 
@@ -1438,8 +1484,10 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > e a ordem entre flechas comuns, incendiárias e de prata; o painel inicia recolhido
 > e pode ser expandido/recolhido sem fechar o inventário. Ao consumir a última
 > flecha equipada em arco, o servidor move da bolsa a primeira pilha disponível
-> conforme a ordem, respeitando os tipos aceitos pela arma. Besta/virotes não usam
-> essa preferência. Mensagem autoritativa de troca: `narracao.auto_equipou_municao`.
+> conforme a ordem, respeitando os tipos aceitos pela arma. Com aljava na mão
+> secundária, o arco consome diretamente da bolsa e usa a mesma ordem de preferência;
+> bestas/virotes não usam essa preferência. Mensagem autoritativa de troca:
+> `narracao.auto_equipou_municao`.
 
 > **Largar/pegar itens no chão (`game_state.ground_items`):** na masmorra, o herói
 > larga um item numa das 8 casas adjacentes e pega de volta — inclusive item largado
@@ -1458,7 +1506,10 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `groundItemPickable`; largar = arrastar o item pra FORA do modal (backdrop) na
 > masmorra; render 2D (emoji + brilho) e 3D (`buildGroundItem3D`, sprite + brilho,
 > `g3.groundItemMeshes`) espelham os baús; pegar = clicar na casa (hook unificado
-> `handleTileClick`, cobre 2D e 3D). Teste do servidor: `tools/test_ground_items.py`.
+> `handleTileClick`, cobre 2D e 3D). No 3D, `escudo_g` usa
+> `assets/itens/escudo_grande.glb` recolorido conforme `assets/itens/escudo_g.png`,
+> orientado deitado no piso; `escudo_p` mantém o modelo redondo. Teste do servidor:
+> `tools/test_ground_items.py`.
 
 > **Guilda dos Heróis (Fase 0):** novo prédio na cidade (hotspot `guilda` →
 > `openGuild`) onde cada personagem compra aprimoramentos **permanentes**:
@@ -1581,7 +1632,8 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > armadilha. **Veneno Rápido:** em armas à distância, o veneno acompanha cada projétil
 > na pilha (`poison_ids`), não a arma. Cada frasco envenena até 10 flechas/virotes;
 > `ladino_veneno_2` eleva esse teto a 20, reunindo munição ainda não envenenada
-> de pilhas compatíveis, sem exceder `MAX_AMMO_STACK == 10`. A pilha escolhida
+> de pilhas compatíveis, sem exceder a capacidade efetiva da pilha (10 por padrão,
+> ampliada pela aljava equipada). A pilha escolhida
 > define tipo e atributos; munição compatível é consumida primeiro do slot escolhido,
 > depois da mão esquerda e da bolsa por ordem. Quantidades abaixo do teto aplicável
 > pedem confirmação com a dose perdida e consomem o frasco inteiro. `ladino_veneno_3`
@@ -4792,6 +4844,15 @@ o descanso encerra a duração da poção. O painel de status mostra as rodadas
 restantes. Ícone transparente: `assets/itens/pocao_voo.png`. Regressão:
 `python -X utf8 tools/test_potions.py`.
 
+### Lágrima da Última Luz (2026-10-26)
+
+`lagrima_ultima_luz` é consumível de `SHOP_TEMPLE` por 120 moedas, com ícone
+`assets/itens/lagrima_ultima_luz.png`. `use_item` exige o alvo morto ser um herói
+aliado adjacente e a ação principal ainda disponível; o item é consumido, o alvo
+volta com 1 PV, limpa petrificação/veneno/fogo, e não age nesse turno. O cliente
+abre a mira apenas para aliados mortos adjacentes. A ressurreição em serviço do
+templo continua sendo uma opção separada na cidade.
+
 ### Poções de Resistência Elemental (2026-10-17)
 
 São seis frascos vendidos por 80 moedas nos quatro templos: fogo, gelo,
@@ -4862,3 +4923,8 @@ armadilhas permanentes) e não recupera ouro nem dispara armadilhas. PNG:
 `assets/itens/solucao_mecanismo.png`. Regressões:
 `python tools/test_solucao_mecanismo.py` e
 `node tools/test_solucao_mecanismo_cliente.js`.
+
+
+### Último Suspiro (2026-10-26)
+
+`ultimo_suspiro` custa 500 moedas, usa `assets/itens/ultimo_suspiro.png` e ocupa um dos slots `item1`/`item2`. Cada cópia equipada previne uma morte ao deixar o herói com 1 PV e consumir a cópia; duas equipadas acumulam duas proteções, consumidas uma por evento letal. Cópias na bolsa não ativam. A checagem ocorre depois da regeneração e antes de Instinto de Sobrevivência e Último Esforço; mortes forçadas ignoram a proteção. `tecnica_ultimo_esforco` passa a custar 700 moedas; a mecânica e recarga permanecem iguais.

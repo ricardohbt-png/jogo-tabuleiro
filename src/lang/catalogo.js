@@ -1334,6 +1334,14 @@ window.LANG_CATALOGO = {
     "en": "Lore: Kobold Spearman",
     "pt": "Lenda: Kobold Lanceiro"
   },
+  "cat.guilda.lenda_kobold_mago.desc": {
+    "en": "+1 to attack and +1 to saves against Kobold Mages.",
+    "pt": "+1 de ataque e +1 nos saves contra Kobold Mago."
+  },
+  "cat.guilda.lenda_kobold_mago.nome": {
+    "en": "Legend: Kobold Mage",
+    "pt": "Lenda: Kobold Mago"
+  },
   "cat.guilda.lenda_lacralion_adulto.desc": {
     "en": "+1 to attack and +1 to saving throws against Adult Lacralion.",
     "pt": "+1 de ataque e +1 nos saves contra Lacralion Adulto."
@@ -1543,11 +1551,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Urso Negro"
   },
   "cat.guilda.lenda_urso_pardo.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saves against Brown Bears.",
     "pt": "+1 de ataque e +1 nos saves contra Urso Pardo."
   },
   "cat.guilda.lenda_urso_pardo.nome": {
-    "en": "",
+    "en": "Legend: Brown Bear",
     "pt": "Lenda: Urso Pardo"
   },
   "cat.guilda.lenda_vampiro_anciao.desc": {
@@ -2270,6 +2278,14 @@ window.LANG_CATALOGO = {
     "en": "Amulet of Luck",
     "pt": "Amuleto da Sorte"
   },
+  "cat.item.amulet_alcance_arcano.desc": {
+    "en": "+1 square to spell casting range while equipped.",
+    "pt": "+1 quadrado ao alcance de lançamento das magias enquanto equipado."
+  },
+  "cat.item.amulet_alcance_arcano.nome": {
+    "en": "Amulet of Arcane Reach",
+    "pt": "Amuleto do Alcance Arcano"
+  },
   "cat.item.anel_impacto.desc": {
     "en": "+1 damage per successful melee or ranged weapon hit.",
     "pt": "+1 de dano por acerto com armas corpo a corpo ou à distância."
@@ -2373,6 +2389,22 @@ window.LANG_CATALOGO = {
   "cat.item.bless.nome": {
     "en": "Divine Blessing",
     "pt": "Bênção Divina"
+  },
+  "cat.item.boina_alerta.desc": {
+    "en": "+1 vision and +1 to all saving throws while equipped.",
+    "pt": "+1 de visão e +1 em todos os testes de resistência enquanto equipada."
+  },
+  "cat.item.boina_alerta.nome": {
+    "en": "Alert Beret",
+    "pt": "Boina do Alerta"
+  },
+  "cat.item.boina_batedor.desc": {
+    "en": "+1 vision while equipped.",
+    "pt": "+1 de visão enquanto equipada."
+  },
+  "cat.item.boina_batedor.nome": {
+    "en": "Scout's Beret",
+    "pt": "Boina do Batedor"
   },
   "cat.item.bola_cristal_clarividencia.desc": {
     "en": "Main action. Casts Clairvoyance without spending a spell slot. Cooldown: 10 rounds. Mage and Cleric use the normal level scaling; other classes reveal a fixed 4×4 area.",
@@ -2490,6 +2522,38 @@ window.LANG_CATALOGO = {
     "en": "Chainmail",
     "pt": "Cota de Malha"
   },
+  "cat.item.chapeu_arquimago.desc": {
+    "en": "Grants one extra 1st-circle spell slot with its own 20-round recharge. Stacks with the Arcane Staff.",
+    "pt": "Concede um slot extra de magia de 1º círculo com recarga de 20 rodadas. O slot tem recarga independente e acumula com o Cajado Arcano."
+  },
+  "cat.item.chapeu_arquimago.nome": {
+    "en": "Archmage's Hat",
+    "pt": "Chapéu do Arquimago"
+  },
+  "cat.item.chapeu_arquimago_superior.desc": {
+    "en": "Grants one extra 2nd-circle spell slot with its own 40-round recharge. Usable by Mage and Cleric.",
+    "pt": "Concede um slot extra de magia de 2º círculo com recarga própria de 40 rodadas. Pode ser usado por Mago e Clérigo."
+  },
+  "cat.item.chapeu_arquimago_superior.nome": {
+    "en": "Superior Archmage's Hat",
+    "pt": "Chapéu do Arquimago Superior"
+  },
+  "cat.item.chapeu_bruxo.desc": {
+    "en": "+1 to the saving throw DC of your spells while equipped. Mage only.",
+    "pt": "+1 na CD dos testes de resistência das magias enquanto equipado. Exclusivo do Mago."
+  },
+  "cat.item.chapeu_bruxo.nome": {
+    "en": "Warlock's Hat",
+    "pt": "Chapéu do Bruxo"
+  },
+  "cat.item.chapeu_conjurador.desc": {
+    "en": "+2 to the saving throw DC of your spells while equipped. Usable by Mage and Cleric.",
+    "pt": "+2 na CD dos testes de resistência das magias enquanto equipado. Usável por Mago e Clérigo."
+  },
+  "cat.item.chapeu_conjurador.nome": {
+    "en": "Spellcaster's Hat",
+    "pt": "Chapéu do Conjurador"
+  },
   "cat.item.chicote.desc": {
     "en": "Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield.",
     "pt": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
@@ -2521,6 +2585,10 @@ window.LANG_CATALOGO = {
   "cat.item.cinto_utilidades.nome": {
     "en": "Utility Belt",
     "pt": "Cinto de Utilidades"
+  },
+  "cat.item.circlet.desc": {
+    "en": "+1 Armor Class and +2 maximum Hit Points while equipped.",
+    "pt": "+1 de Classe de Armadura e +2 de vida máxima enquanto equipada."
   },
   "cat.item.circlet.nome": {
     "en": "Arcane Circlet",
@@ -3002,6 +3070,14 @@ window.LANG_CATALOGO = {
     "en": "Repair Kit",
     "pt": "Kit de Reparo"
   },
+  "cat.item.lagrima_ultima_luz.desc": {
+    "en": "Consumable. Use as a main action on an adjacent dead ally to bring them back with 1 HP. They do not act this turn.",
+    "pt": "Consumível. Use como ação principal em um aliado morto adjacente para trazê-lo de volta com 1 PV. Ele não age neste turno."
+  },
+  "cat.item.lagrima_ultima_luz.nome": {
+    "en": "Tear of the Last Light",
+    "pt": "Lágrima da Última Luz"
+  },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
     "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
@@ -3205,6 +3281,14 @@ window.LANG_CATALOGO = {
   "cat.item.mangual_prata.nome": {
     "en": "Silver Flail",
     "pt": "Mangual de Prata"
+  },
+  "cat.item.manto_das_sombras.desc": {
+    "en": "Rogue only. Grants +2 total AC and +2 to Hide in Shadows. As a main action, casts Cloak of Darkness without spending a spell slot. Recharge: 20 rounds.",
+    "pt": "Exclusivo do Ladino. Concede +2 de CA total e +2 em Esconder nas Sombras. Como ação principal, conjura Manto da Escuridão sem gastar espaço de magia. Recarga: 20 rodadas."
+  },
+  "cat.item.manto_das_sombras.nome": {
+    "en": "Cloak of Shadows",
+    "pt": "Manto das Sombras"
   },
   "cat.item.marreta.desc": {
     "en": "Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit.",
@@ -3514,6 +3598,22 @@ window.LANG_CATALOGO = {
     "en": "Intelligence Awakening Talisman",
     "pt": "Talismã do Despertar: Inteligência"
   },
+  "cat.item.tiara_expansao_arcana.desc": {
+    "en": "+1 square of radius to area spells while equipped. Stacks with the Arcane Staff.",
+    "pt": "+1 quadrado de raio nas magias de área enquanto equipada. Acumula com o Cajado Arcano."
+  },
+  "cat.item.tiara_expansao_arcana.nome": {
+    "en": "Circlet of Arcane Expansion",
+    "pt": "Tiara da Expansão Arcana"
+  },
+  "cat.item.ultimo_suspiro.desc": {
+    "en": "While equipped, prevents one death: upon reaching 0 HP, the hero is left with 1 HP and this amulet is consumed. Two equipped copies grant two protections, one at a time.",
+    "pt": "Enquanto equipado, evita uma morte: ao chegar a 0 PV, o herói fica com 1 PV e este amuleto é consumido. Duas cópias equipadas concedem duas proteções, uma por vez."
+  },
+  "cat.item.ultimo_suspiro.nome": {
+    "en": "Last Breath",
+    "pt": "Último Suspiro"
+  },
   "cat.item.unarmed.desc": {
     "en": "Unarmed: — physical damage, using Strength.",
     "pt": "Desarmado: — de dano físico, usando Força."
@@ -3571,11 +3671,11 @@ window.LANG_CATALOGO = {
     "pt": "Dor Escarlate"
   },
   "cat.item.veneno_escorpiao_aprimorado.desc": {
-    "en": "",
+    "en": "-1 to attacks and -1 square of movement for 1d6 rounds. A successful DC 14 Fortitude save negates it.",
     "pt": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude CD 14 anula."
   },
   "cat.item.veneno_escorpiao_aprimorado.nome": {
-    "en": "",
+    "en": "Improved Giant Scorpion Venom",
     "pt": "Veneno Aprimorado do Escorpião Gigante"
   },
   "cat.item.veneno_escorpiao_pedra.nome": {
@@ -3601,6 +3701,14 @@ window.LANG_CATALOGO = {
   "cat.item.veneno_polvo_abissal.nome": {
     "en": "Abyssal Octopus Ink",
     "pt": "Tinta do Polvo Abissal"
+  },
+  "cat.item.veste_egide_arcana.desc": {
+    "en": "Exclusive to Mage and Cleric. Grants +2 total AC and +1 to saving throws against spells.",
+    "pt": "Exclusiva de Mago e Clérigo. Concede +2 de CA total e +1 nos testes de resistência contra magias."
+  },
+  "cat.item.veste_egide_arcana.nome": {
+    "en": "Arcane Aegis Cloak",
+    "pt": "Veste da Égide Arcana"
   },
   "cat.item.vidro_acido_grande.nome": {
     "en": "Large Acid Vial",
@@ -4210,6 +4318,10 @@ window.LANG_CATALOGO = {
     "en": "Kobold Spearman",
     "pt": "Kobold Lanceiro"
   },
+  "cat.monstro.kobold_mago.nome": {
+    "en": "Kobold Mage",
+    "pt": "Kobold Mago"
+  },
   "cat.monstro.lacralion_adulto.nome": {
     "en": "Adult Lacralion",
     "pt": "Lacralion Adulto"
@@ -4347,7 +4459,7 @@ window.LANG_CATALOGO = {
     "pt": "Urso Negro"
   },
   "cat.monstro.urso_pardo.nome": {
-    "en": "",
+    "en": "Brown Bear",
     "pt": "Urso Pardo"
   },
   "cat.monstro.vampiro_anciao.nome": {

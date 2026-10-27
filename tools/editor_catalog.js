@@ -2466,6 +2466,84 @@ window.EDITOR_CATALOG = {
       "percepcao": 13
     },
     {
+      "type": "kobold_mago",
+      "name": "Kobold Mago",
+      "emoji": "🐊",
+      "boss": false,
+      "tier": 2,
+      "cr": 0.75,
+      "hp": 9,
+      "ac": 13,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "pequeno",
+      "image": "kobold_mago",
+      "caster_level": 1,
+      "spell_slots_per_combat": 3,
+      "str_": 8,
+      "dex": 15,
+      "con_": 10,
+      "int_": 14,
+      "fort": 2,
+      "ref_": 4,
+      "will": 4,
+      "random_equipment": {
+        "headwear": [
+          {
+            "id": "chapeu_bruxo",
+            "chance": 10
+          },
+          {
+            "id": "tiara_expansao_arcana",
+            "chance": 5
+          },
+          {
+            "id": "chapeu_arquimago",
+            "chance": 1
+          }
+        ]
+      },
+      "monster_spell_pool": [
+        "bola_fogo",
+        "relampago",
+        "sono",
+        "raio_congelante",
+        "barreira_arcana"
+      ],
+      "attacks": [
+        {
+          "name": "Adaga",
+          "atk_bonus": 3,
+          "damage": "1d4+1",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [],
+      "monster_spells": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "equipped_items": [],
+      "gold_range": [
+        5,
+        20
+      ],
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
+    },
+    {
       "type": "necromante",
       "name": "Necromante",
       "emoji": "🧙",
@@ -10329,6 +10407,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_kobold_mago",
+      "source": "guilda",
+      "source_id": "lenda_kobold_mago",
+      "name": "Lenda: Kobold Mago",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Kobold Mago.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_necromante",
       "source": "guilda",
       "source_id": "lenda_necromante",
@@ -12153,6 +12242,43 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 1
     },
     {
+      "id": "manto_das_sombras",
+      "name": "Manto das Sombras",
+      "emoji": "🌑",
+      "icon": "assets/itens/manto_das_sombras.png",
+      "allowed_classes": [
+        "rogue"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "armor",
+      "ac_bonus": 2,
+      "descricao": "Exclusivo do Ladino. Concede +2 de CA total e +2 em Esconder nas Sombras. Como ação principal, conjura Manto da Escuridão sem gastar espaço de magia. Recarga: 20 rodadas."
+    },
+    {
+      "id": "veste_egide_arcana",
+      "name": "Veste da Égide Arcana",
+      "emoji": "🧥",
+      "icon": "assets/itens/veste_egide_arcana.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "armor",
+      "ac_bonus": 2,
+      "bonuses": [
+        {
+          "effect": "magic_save_bonus",
+          "value": 1
+        }
+      ],
+      "descricao": "Exclusiva de Mago e Clérigo. Concede +2 de CA total e +1 nos testes de resistência contra magias."
+    },
+    {
       "id": "leather",
       "name": "Armadura de Couro",
       "emoji": "🥋",
@@ -12503,26 +12629,6 @@ window.EDITOR_CATALOG = {
       "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."
     },
     {
-      "id": "anel_protecao",
-      "name": "Anel de Proteção",
-      "emoji": "💍",
-      "icon": "assets/itens/ring.png",
-      "item_slot": "ring",
-      "effect": "def_",
-      "value": 1,
-      "descricao": "+1 de Classe de Armadura enquanto estiver equipado."
-    },
-    {
-      "id": "anel_vigia",
-      "name": "Anel do Vigia",
-      "emoji": "💍",
-      "icon": "assets/itens/ring.png",
-      "item_slot": "ring",
-      "effect": "vision",
-      "value": 2,
-      "descricao": "+2 de visão enquanto estiver equipado."
-    },
-    {
       "id": "ring_str",
       "name": "Anel da Precisão",
       "emoji": "💍",
@@ -12557,6 +12663,218 @@ window.EDITOR_CATALOG = {
         }
       ],
       "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."
+    },
+    {
+      "id": "ring_vita",
+      "name": "Anel da Vitalidade",
+      "emoji": "💍",
+      "item_slot": "ring",
+      "effect": "maxhp",
+      "value": 5
+    },
+    {
+      "id": "anel_protecao",
+      "name": "Anel de Proteção",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "def_",
+      "value": 1,
+      "descricao": "+1 de Classe de Armadura enquanto estiver equipado."
+    },
+    {
+      "id": "anel_vigia",
+      "name": "Anel do Vigia",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "vision",
+      "value": 2,
+      "descricao": "+2 de visão enquanto estiver equipado."
+    },
+    {
+      "id": "helm_iron",
+      "name": "Elmo de Ferro",
+      "emoji": "⛑️",
+      "allowed_classes": [
+        "warrior",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
+      "item_slot": "head",
+      "effect": "def_",
+      "value": 1
+    },
+    {
+      "id": "circlet",
+      "name": "Tiara Arcana",
+      "emoji": "👑",
+      "allowed_classes": [
+        "mage",
+        "cleric",
+        "rogue",
+        "ranger",
+        "bard"
+      ],
+      "item_slot": "head",
+      "effect": "def_",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "maxhp",
+          "value": 2
+        }
+      ],
+      "descricao": "+1 de Classe de Armadura e +2 de vida máxima enquanto equipada."
+    },
+    {
+      "id": "amulet_alcance_arcano",
+      "name": "Amuleto do Alcance Arcano",
+      "emoji": "📿",
+      "icon": "assets/itens/amulet.png",
+      "item_slot": "item",
+      "effect": "spell_range",
+      "value": 1,
+      "descricao": "+1 quadrado ao alcance de lançamento das magias enquanto equipado."
+    },
+    {
+      "id": "ultimo_suspiro",
+      "name": "Último Suspiro",
+      "emoji": "📿",
+      "icon": "assets/itens/ultimo_suspiro.png",
+      "item_slot": "item",
+      "effect": "death_ward",
+      "value": 1,
+      "descricao": "Enquanto equipado, evita uma morte: ao chegar a 0 PV, o herói fica com 1 PV e este amuleto é consumido. Duas cópias equipadas concedem duas proteções, uma por vez."
+    },
+    {
+      "id": "tiara_expansao_arcana",
+      "name": "Tiara da Expansão Arcana",
+      "emoji": "👑",
+      "icon": "assets/itens/circlet.png",
+      "item_slot": "head",
+      "effect": "spell_area",
+      "value": 1,
+      "descricao": "+1 quadrado de raio nas magias de área enquanto equipada. Acumula com o Cajado Arcano."
+    },
+    {
+      "id": "boina_batedor",
+      "name": "Boina do Batedor",
+      "emoji": "🧢",
+      "icon": "assets/itens/chapeu1.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 1,
+      "descricao": "+1 de visão enquanto equipada."
+    },
+    {
+      "id": "boina_alerta",
+      "name": "Boina do Alerta",
+      "emoji": "🧢",
+      "icon": "assets/itens/chapeu1.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "save_bonus",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de visão e +1 em todos os testes de resistência enquanto equipada."
+    },
+    {
+      "id": "chapeu_bruxo",
+      "name": "Chapéu do Bruxo",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo1.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "head",
+      "effect": "spell_dc",
+      "value": 1,
+      "descricao": "+1 na CD dos testes de resistência das magias enquanto equipado. Exclusivo do Mago."
+    },
+    {
+      "id": "chapeu_conjurador",
+      "name": "Chapéu do Conjurador",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo2.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "head",
+      "effect": "spell_dc",
+      "value": 2,
+      "descricao": "+2 na CD dos testes de resistência das magias enquanto equipado. Usável por Mago e Clérigo."
+    },
+    {
+      "id": "chapeu_arquimago",
+      "name": "Chapéu do Arquimago",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo2.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "head",
+      "descricao": "Concede um slot extra de magia de 1º círculo com recarga de 20 rodadas. O slot tem recarga independente e acumula com o Cajado Arcano.",
+      "extra_spell_circle": "primeiro",
+      "extra_spell_cooldown": 20
+    },
+    {
+      "id": "chapeu_arquimago_superior",
+      "name": "Chapéu do Arquimago Superior",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo2.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "head",
+      "descricao": "Concede um slot extra de magia de 2º círculo com recarga própria de 40 rodadas. Pode ser usado por Mago e Clérigo.",
+      "extra_spell_circle": "segundo",
+      "extra_spell_cooldown": 40
+    },
+    {
+      "id": "bota_alada",
+      "name": "Bota Alada",
+      "emoji": "🪽",
+      "kind": "boots",
+      "item_slot": "boots",
+      "effect": "voo",
+      "value": 0,
+      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
+    },
+    {
+      "id": "boots",
+      "name": "Botas Velozes",
+      "emoji": "👢",
+      "kind": "boots",
+      "item_slot": "boots",
+      "effect": "spd",
+      "value": 1
+    },
+    {
+      "id": "botas_passo_felino",
+      "name": "Botas do Passo Felino",
+      "emoji": "👢",
+      "icon": "assets/itens/bota.png",
+      "item_slot": "boots",
+      "effect": "dex",
+      "value": 2,
+      "descricao": "+2 de Destreza enquanto equipada."
+    },
+    {
+      "id": "amulet",
+      "name": "Amuleto da Sorte",
+      "emoji": "📿",
+      "item_slot": "item",
+      "effect": "maxhp",
+      "value": 5
     },
     {
       "id": "talisma_despertar_forca",
@@ -12637,67 +12955,6 @@ window.EDITOR_CATALOG = {
       "effect": "con_",
       "value": 2,
       "descricao": "+2 de Constituição enquanto equipado."
-    },
-    {
-      "id": "ring_vita",
-      "name": "Anel da Vitalidade",
-      "emoji": "💍",
-      "item_slot": "ring",
-      "effect": "maxhp",
-      "value": 5
-    },
-    {
-      "id": "helm_iron",
-      "name": "Elmo de Ferro",
-      "emoji": "⛑️",
-      "item_slot": "head",
-      "effect": "def_",
-      "value": 1
-    },
-    {
-      "id": "circlet",
-      "name": "Tiara Arcana",
-      "emoji": "👑",
-      "item_slot": "head",
-      "effect": "maxhp",
-      "value": 4
-    },
-    {
-      "id": "bota_alada",
-      "name": "Bota Alada",
-      "emoji": "🪽",
-      "kind": "boots",
-      "item_slot": "boots",
-      "effect": "voo",
-      "value": 0,
-      "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."
-    },
-    {
-      "id": "boots",
-      "name": "Botas Velozes",
-      "emoji": "👢",
-      "kind": "boots",
-      "item_slot": "boots",
-      "effect": "spd",
-      "value": 1
-    },
-    {
-      "id": "botas_passo_felino",
-      "name": "Botas do Passo Felino",
-      "emoji": "👢",
-      "icon": "assets/itens/bota.png",
-      "item_slot": "boots",
-      "effect": "dex",
-      "value": 2,
-      "descricao": "+2 de Destreza enquanto equipada."
-    },
-    {
-      "id": "amulet",
-      "name": "Amuleto da Sorte",
-      "emoji": "📿",
-      "item_slot": "item",
-      "effect": "maxhp",
-      "value": 5
     },
     {
       "id": "backpack",
@@ -13428,6 +13685,15 @@ window.EDITOR_CATALOG = {
       "effect": "throwable"
     },
     {
+      "id": "lagrima_ultima_luz",
+      "name": "Lágrima da Última Luz",
+      "emoji": "💫",
+      "icon": "assets/itens/lagrima_ultima_luz.png",
+      "item_slot": "bag",
+      "effect": "revive_ally",
+      "descricao": "Consumível. Use como ação principal em um aliado morto adjacente para trazê-lo de volta com 1 PV. Ele não age neste turno."
+    },
+    {
       "id": "health_potion",
       "name": "Poção de Cura",
       "emoji": "🧪",
@@ -13719,6 +13985,16 @@ window.EDITOR_CATALOG = {
       "granted_ability": "hero_rogue_esconder_sombras",
       "kind": "ring",
       "item_slot": "ring",
+      "bonuses": [
+        {
+          "effect": "atk_bonus",
+          "value": 1
+        },
+        {
+          "effect": "vision",
+          "value": 1
+        }
+      ],
       "descricao": "+1 de acerto e +1 de visão. Concede a habilidade Esconder nas Sombras enquanto estiver equipado: ação bônus (🍖-2 💧-1); teste de d20 + Destreza contra a percepção dos monstros que o enxergam. Em sucesso você fica invisível e não pode ser escolhido como alvo, e ainda pode atacar na mesma rodada; manter a invisibilidade custa 🍖-1 💧-1 por turno. Para o Ladino, o primeiro golpe saindo das sombras é um Ataque Furtivo."
     },
     {
@@ -13761,6 +14037,7 @@ window.EDITOR_CATALOG = {
       "granted_ability": null,
       "kind": "ring",
       "item_slot": "ring",
+      "bonuses": [],
       "descricao": "Uma relíquia pesada do Templo de Alva e Luz. Está quente ao toque."
     }
   ],

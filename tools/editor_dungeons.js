@@ -22782,9 +22782,85 @@ window.EDITOR_DUNGEONS = [
         "x": 4,
         "y": 2
       },
+      "routes": [],
+      "route_exits": [],
       "monsters": [],
-      "chests": [],
-      "traps": [],
+      "chests": [
+        {
+          "pos": [
+            4,
+            1
+          ],
+          "gold": 0,
+          "items": [
+            {
+              "id": "carta",
+              "texto": "Parecem instruções.\n\"Reagrupem-se na fazenda do Leste para abandonarmos essa cidade\""
+            },
+            {
+              "id": "cantil_agua"
+            },
+            {
+              "id": "elixir_cavalo_ferro"
+            }
+          ],
+          "key_objective": true
+        }
+      ],
+      "traps": [
+        {
+          "id": "trap_0",
+          "tipo": "mina_terrestre",
+          "pos": [
+            4,
+            8
+          ],
+          "dificuldade": 13
+        },
+        {
+          "id": "trap_1",
+          "tipo": "jato_acido",
+          "pos": [
+            2,
+            7
+          ],
+          "dificuldade": 15,
+          "dano": "1d6"
+        },
+        {
+          "id": "trap_2",
+          "tipo": "lamina_pendulo",
+          "pos": [
+            3,
+            13
+          ]
+        },
+        {
+          "id": "trap_3",
+          "tipo": "lamina_pendulo",
+          "pos": [
+            3,
+            14
+          ]
+        },
+        {
+          "id": "trap_4",
+          "tipo": "camara_gas",
+          "pos": [
+            6,
+            8
+          ],
+          "dificuldade": 15
+        },
+        {
+          "id": "trap_5",
+          "tipo": "lamina_escondida",
+          "pos": [
+            4,
+            10
+          ]
+        }
+      ],
       "decorations": [
         {
           "id": "decor_0",
@@ -22832,9 +22908,16 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "disable_trap_ids": [
+            "trap_4"
+          ],
           "size": [
             1,
             1
+          ],
+          "vscale": [
+            1.3,
+            1.4
           ],
           "voffset": [
             -0.3,
@@ -22906,7 +22989,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "bomba_flash"
+              }
+            ]
+          },
           "key_objective": false
         },
         {
@@ -22920,7 +23010,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "veneno_polvo_abissal"
+              }
+            ]
+          },
           "key_objective": false
         },
         {
@@ -22934,7 +23031,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "garrafa_vinho"
+              },
+              {
+                "id": "racao_viagem"
+              }
+            ]
+          },
           "key_objective": true
         },
         {
@@ -22969,6 +23076,10 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "image": "chaotapete1.png",
+          "size": [
+            3,
+            3
+          ],
           "vscale": [
             4,
             3.2
@@ -22990,6 +23101,25 @@ window.EDITOR_DUNGEONS = [
           "image": "cortina_vermelha.png",
           "vscale": [
             1.6,
+            1.3
+          ]
+        },
+        {
+          "id": "decor_12",
+          "type": "cortina_vermelha",
+          "pos": [
+            7,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cortina_vermelha.png",
+          "vscale": [
+            1.9,
             1.3
           ]
         }
@@ -23047,6 +23177,25 @@ window.EDITOR_DUNGEONS = [
       ],
       "falas": [],
       "master_reinforcements": [],
+      "relogio": {
+        "id": "elara_p1",
+        "limite": 60,
+        "fato_ao_passar": "elara_lento",
+        "avisos": [
+          {
+            "em": 25,
+            "texto": "O sino do Templo ecoa ao longe. A patrulha da estrada já saiu."
+          },
+          {
+            "em": 45,
+            "texto": "A noite avança. As moças devem estar cada vez mais longe."
+          },
+          {
+            "em": 60,
+            "texto": "O tempo está quase esgotado."
+          }
+        ]
+      },
       "expected_party": {
         "heroes": 4,
         "level": 1
@@ -23139,8 +23288,8 @@ window.EDITOR_DUNGEONS = [
         "7,9": "madeira",
         "6,9": "madeira",
         "5,9": "madeira",
-        "5,6": "enegrecida",
-        "5,7": "enegrecida",
+        "5,6": "madeira",
+        "5,7": "madeira",
         "6,6": "madeira_escura",
         "6,7": "madeira_escura",
         "7,7": "madeira_escura",
@@ -23156,38 +23305,82 @@ window.EDITOR_DUNGEONS = [
         "1,13": "madeira_escura",
         "2,13": "madeira_escura",
         "2,14": "madeira_escura",
-        "1,14": "madeira_escura"
+        "1,14": "madeira_escura",
+        "3,14": "madeira_escura",
+        "4,14": "madeira_escura",
+        "5,14": "madeira_escura",
+        "6,14": "madeira_escura",
+        "7,14": "madeira_escura",
+        "8,14": "madeira_escura",
+        "9,14": "madeira_escura",
+        "9,13": "madeira_escura",
+        "8,13": "madeira_escura",
+        "7,13": "madeira_escura",
+        "6,13": "madeira_escura",
+        "5,13": "madeira_escura",
+        "4,13": "madeira_escura",
+        "3,13": "madeira_escura",
+        "3,12": "madeira_escura",
+        "2,12": "madeira_escura",
+        "1,12": "madeira_escura",
+        "4,12": "madeira_escura",
+        "5,12": "madeira_escura",
+        "6,12": "madeira_escura",
+        "7,12": "madeira_escura",
+        "8,12": "madeira_escura",
+        "9,12": "madeira_escura",
+        "9,11": "madeira_escura",
+        "8,11": "madeira_escura",
+        "7,11": "madeira_escura",
+        "6,11": "madeira_escura",
+        "5,11": "madeira_escura",
+        "4,11": "madeira_escura",
+        "3,11": "madeira_escura",
+        "2,11": "madeira_escura",
+        "1,11": "madeira_escura",
+        "1,10": "madeira_escura",
+        "2,10": "madeira_escura",
+        "3,10": "madeira_escura",
+        "4,10": "madeira_escura",
+        "5,10": "madeira_escura",
+        "6,10": "madeira_escura",
+        "7,10": "madeira_escura",
+        "8,10": "madeira_escura",
+        "4,9": "madeira_escura",
+        "3,9": "madeira_escura",
+        "2,9": "madeira_escura",
+        "1,9": "madeira_escura",
+        "1,8": "madeira_escura",
+        "1,7": "madeira_escura",
+        "2,7": "madeira_escura",
+        "3,7": "madeira_escura",
+        "4,7": "madeira_escura",
+        "4,8": "madeira_escura",
+        "3,8": "madeira_escura",
+        "2,8": "madeira_escura",
+        "1,6": "madeira_escura",
+        "2,6": "madeira_escura",
+        "3,6": "madeira_escura",
+        "4,6": "madeira_escura"
       },
+      "pontes": [],
+      "elevacoes": {},
+      "alturas_parede": {},
+      "transicao_altura": "rampa",
       "objectives": {
         "primary": {
-          "type": "reach_exit",
+          "type": "open_key_chest",
           "xp": 0,
           "reward": {
             "gold": 0,
             "items": []
           },
-          "fato": "elara_casa_vencida"
+          "fato": "elara_casa_vencida",
+          "fatos": [
+            "elara_carta_fazenda"
+          ]
         },
         "secondary": []
-      },
-      "relogio": {
-        "id": "elara_p1",
-        "limite": 60,
-        "fato_ao_passar": "elara_lento",
-        "avisos": [
-          {
-            "em": 25,
-            "texto": "O sino do Templo ecoa ao longe. A patrulha da estrada já saiu."
-          },
-          {
-            "em": 45,
-            "texto": "A noite avança. As moças devem estar cada vez mais longe."
-          },
-          {
-            "em": 60,
-            "texto": "O tempo está quase esgotado."
-          }
-        ]
       }
     }
   },
@@ -107945,9 +108138,125 @@ window.EDITOR_DUNGEONS = [
       },
       "hero_spawns": [],
       "exit": null,
-      "monsters": [],
+      "monsters": [
+        {
+          "type": "bandido",
+          "pos": [
+            12,
+            7
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            5,
+            10
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            15,
+            6
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "lobo_cinzento",
+          "pos": [
+            15,
+            12
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "lobo_cinzento",
+          "pos": [
+            10,
+            13
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        }
+      ],
       "chests": [],
-      "traps": [],
+      "traps": [
+        {
+          "id": "trap_0",
+          "tipo": "armadilha_urso",
+          "pos": [
+            7,
+            5
+          ],
+          "dificuldade": 13
+        },
+        {
+          "id": "trap_1",
+          "tipo": "rede",
+          "pos": [
+            11,
+            6
+          ],
+          "dificuldade": 13
+        },
+        {
+          "id": "trap_2",
+          "tipo": "armadilha_dardos_envenenados",
+          "pos": [
+            7,
+            8
+          ],
+          "dificuldade": 14,
+          "veneno_id": "veneno_escorpiao_pedra"
+        },
+        {
+          "id": "trap_3",
+          "tipo": "fosso_estacas",
+          "pos": [
+            7,
+            11
+          ],
+          "dificuldade": 14
+        },
+        {
+          "id": "trap_4",
+          "tipo": "mina_terrestre",
+          "pos": [
+            12,
+            12
+          ],
+          "dificuldade": 13
+        },
+        {
+          "id": "trap_5",
+          "tipo": "armadilha_urso",
+          "pos": [
+            14,
+            11
+          ],
+          "dificuldade": 13
+        },
+        {
+          "id": "trap_6",
+          "tipo": "lamina_escondida",
+          "pos": [
+            8,
+            14
+          ],
+          "dificuldade": 13
+        }
+      ],
       "decorations": [
         {
           "id": "decor_0",
@@ -130888,7 +131197,8 @@ window.EDITOR_DUNGEONS = [
           37
         ],
         "room_id": 18,
-        "image": "elara.png"
+        "image": "elara.png",
+        "model3d": "elara.glb"
       },
       "materiais": {
         "2,22": "grama",
@@ -140046,7 +140356,8 @@ window.EDITOR_DUNGEONS = [
           37
         ],
         "room_id": 18,
-        "image": "elara.png"
+        "image": "elara.png",
+        "model3d": "elara.glb"
       },
       "materiais": {
         "2,22": "grama",

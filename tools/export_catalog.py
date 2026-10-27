@@ -89,7 +89,7 @@ def build_catalog():
             "base_attack_bonus", "base_hp", "caster_level", "spell_slots_per_combat", "str_", "dex", "con_", "int_",
             "fort", "ref_", "will", "fort_base", "ref_base", "will_base", "save_bonuses", "save_penalties",
             "crit_vulnerability_min_nat_roll",
-            "weapon_options", "shield_option", "random_equipment",
+            "weapon_options", "shield_option", "random_equipment", "monster_spell_pool",
             "attacks", "special_abilities", "monster_spells", "immunities", "weaknesses",
             "resistances",
             "loot_table", "loot_drops", "guaranteed_loot", "equipment", "equipment_enabled", "equipped_items", "gold", "gold_range", "xp",
@@ -107,9 +107,10 @@ def build_catalog():
         "corrosion_max", "corrosion_materials",
         "crit_nat20_multiplier", "crit_min_nat_roll", "extra_attack_on_crit_min_nat",
         "range", "reach", "throw_range", "categoria", "granted_ability", "kind", "ac_bonus",
-        "damage_reduction", "item_slot", "effect", "value", "veneno_id",
-        "ammo_type", "ammo_count", "extra_damage", "extra_damage_types", "loot_only", "descricao", "texto",
-        "magic_ids", "fixed_magic_ids",
+        "damage_reduction", "item_slot", "effect", "value", "bonuses", "veneno_id",
+        "ammo_type", "ammo_count", "quiver_arrow_capacity", "quiver_bolt_capacity",
+        "extra_damage", "extra_damage_types", "loot_only", "descricao", "texto",
+        "magic_ids", "fixed_magic_ids", "extra_spell_circle", "extra_spell_cooldown",
         "curse_mode", "curse_id", "curse_category"
     )
     items = []

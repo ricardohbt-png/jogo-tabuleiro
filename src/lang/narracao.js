@@ -209,8 +209,8 @@ window.LANG_NARRACAO = {
     "pt": "⚡ **{caster}** acelera — ações dobradas e movimento dobrado por {dur} rodada(s)!"
   },
   "narracao.acende_a_e_a_luz_em_volta_e_sugada_fica": {
-    "en": "{item_emoji} **{heroi}** lights the **{item}**, and the light around it is swallowed: **hidden** until the end of the turn{extra}",
-    "pt": "{item_emoji} **{heroi}** acende a **{item}**, e a luz em volta é sugada: fica **oculto** até o fim do turno{extra}"
+    "en": "{item_emoji} **{heroi}** lights the **{item}**, and the light around it is swallowed: **hidden** until the end of the next turn (+1 round){extra}",
+    "pt": "{item_emoji} **{heroi}** acende a **{item}**, e a luz em volta é sugada: fica **oculto** até o fim do próximo turno (+1 rodada){extra}"
   },
   "narracao.acende_a_vela_reveladora": {
     "en": "🕯️ **{heroi}** lights the **{item}**. Active traps within 3 squares are revealed to the party for **{rodadas}** rounds.",
@@ -2448,6 +2448,10 @@ window.LANG_NARRACAO = {
     "en": "🔥 **{heroi}** refuses to die — **LAST STAND**! Two turns of fury before falling.",
     "pt": "🔥 **{heroi}** recusa a morte — **ÚLTIMO ESFORÇO**! Dois turnos de fúria antes de cair."
   },
+  "narracao.ultimo_suspiro_salva_heroi": {
+    "en": "📿 The Last Breath Amulet shatters and keeps **{heroi}** alive with **1 HP**!",
+    "pt": "📿 O amuleto Último Suspiro se parte e mantém **{heroi}** vivo com **1 PV**!"
+  },
   "narracao.recusa_se_a_tombar_fortitude_vs_cd_fica": {
     "en": "🧟 **{monstro}** refuses to fall! (Fortitude {tot} vs DC {cd}) — left at **1 HP**.",
     "pt": "🧟 **{monstro}** recusa-se a tombar! (Fortitude {tot} vs CD {cd}) — fica com **1 HP**."
@@ -2619,6 +2623,10 @@ window.LANG_NARRACAO = {
   "narracao.templo_ressuscita_aliado_com_1_pv": {
     "en": "⛪ **{heroi}** pays {preco} coins at the temple and brings **{alvo}** back to life with **1 HP**.",
     "pt": "⛪ **{heroi}** paga {preco} moedas no templo e traz **{alvo}** de volta à vida com **1 PV**."
+  },
+  "narracao.usa_lagrima_ultima_luz": {
+    "en": "💫 **{heroi}** uses the Tear of the Last Light to bring **{alvo}** back with **1 HP**!",
+    "pt": "💫 **{heroi}** usa a Lágrima da Última Luz e traz **{alvo}** de volta com **1 PV**!"
   },
   "narracao.retorna_a_forma_normal": {
     "en": "🌙 **{heroi}** returns to their normal form.",

@@ -9,6 +9,7 @@ Run: python server.py
 
 import asyncio
 import base64
+import contextvars
 from contextlib import contextmanager
 import datetime
 import gzip
@@ -34,6 +35,8 @@ from terrain_reactions import TerrainReactions
 from monster_intent import MonsterIntent, INTENT_CAMPOS_ALVO, INTENT_CAMPOS_MONSTRO
 import aiohttp
 from aiohttp import web
+
+_FONTE_MAGIA_ATUAL = contextvars.ContextVar("fonte_magia_atual", default=None)
 
 # â”€â”€â”€ MAP CONSTANTS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -4265,7 +4268,7 @@ GUILD_CATALOG = {
     "tecnica_ultimo_esforco": {
         "id": "tecnica_ultimo_esforco", "categoria": "tecnica", "classe": None,
         "linha": None, "nivel": None, "requer": None, "exclusiva": False,
-        "preco": 350, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
+        "preco": 700, "custo_fome": 6, "custo_sede": 6, "recarga_rodadas": 10,
         "nome": "Último Esforço", "icon": "🔥", "automatica": True,
         "desc": "Automática. Se um dano zeraria seu HP, você fica com 1 e ganha 2 "
                 "turnos seguidos: todo ataque tem vantagem e todo acerto é crítico "
@@ -6136,6 +6139,35 @@ MONSTER_DEFS = [
         "vscale": [0.5, 0.5],
         "undead": False, "boss": False,
     },
+    {
+        "type": "kobold_mago", "name": "Kobold Mago", "emoji": "🐊",
+        "tier": 2, "cr": 0.75, "level": 1, "caster_level": 1,
+        "hp": 9, "ac": 13, "size": [1, 1], "movement": 6,
+        "str_": 8, "dex": 15, "con_": 10, "int_": 14,
+        "fort": 2, "ref_": 4, "will": 4,
+        "attacks": [
+            {"name": "Adaga", "atk_bonus": 3, "damage": "1d4+1",
+             "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
+             "categoria": "perfurante"},
+        ],
+        "special_abilities": [],
+        "monster_spells": [],
+        "monster_spell_pool": ["bola_fogo", "relampago", "sono", "raio_congelante",
+                               "barreira_arcana"],
+        "spell_slots_per_combat": 3,
+        "equipment_enabled": True, "equipped_items": [],
+        "random_equipment": {"headwear": [
+            {"id": "chapeu_bruxo", "chance": 10},
+            {"id": "tiara_expansao_arcana", "chance": 5},
+            {"id": "chapeu_arquimago", "chance": 1},
+        ]},
+        "gold_range": [5, 20],
+        "loot_table": {"1-100": None},
+        "spawn_min": 0, "spawn_max": 0,
+        "ai_type": "agressivo", "porte": "pequeno",
+        "image": "kobold_mago", "vscale": [0.5, 0.5],
+        "undead": False, "boss": False,
+    },
     # â”€â”€ Necromante (ND 2): mago nÃ­vel 2, conjurador + mestre dos mortos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {
         "type": "necromante", "name": "Necromante", "emoji": "🧙",
@@ -7630,6 +7662,18 @@ SHOP_ARMORS = [
     # hÃ­bridos sofrem tanto corrosÃ£o orgÃ¢nica quanto corrosÃ£o de metal.
     {"id": "cloak",        "name": "Manto",              "emoji": "🧣",  "ac_bonus": 1, "price": 15, "kind": "armor",
      "armor_category": "leve", "corrosion_materials": ["organic"]},
+    {"id": "manto_das_sombras", "name": "Manto das Sombras", "emoji": "🌑",
+     "icon": "assets/itens/manto_das_sombras.png", "ac_bonus": 2, "price": 1500, "kind": "armor",
+     "armor_category": "leve", "corrosion_materials": ["organic"],
+     "hide_bonus": 2, "spell_id": "manto_escuridao", "spell_cooldown": 20,
+     "allowed_classes": ["rogue"],
+     "descricao": "Exclusivo do Ladino. Concede +2 de CA total e +2 em Esconder nas Sombras. Como ação principal, conjura Manto da Escuridão sem gastar espaço de magia. Recarga: 20 rodadas."},
+    {"id": "veste_egide_arcana", "name": "Veste da Égide Arcana", "emoji": "🧥",
+     "icon": "assets/itens/veste_egide_arcana.png", "ac_bonus": 2, "price": 1000, "kind": "armor",
+     "armor_category": "leve", "corrosion_materials": ["organic"],
+     "allowed_classes": ["mage", "cleric"],
+     "bonuses": [{"effect": "magic_save_bonus", "value": 1}],
+     "descricao": "Exclusiva de Mago e Clérigo. Concede +2 de CA total e +1 nos testes de resistência contra magias."},
     {"id": "leather",      "name": "Armadura de Couro",  "emoji": "🥋",  "ac_bonus": 2, "price": 30, "kind": "armor",
      "armor_category": "leve", "corrosion_materials": ["organic"],
      "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
@@ -7657,6 +7701,11 @@ SHOP_ARMORS = [
 ]
 
 ARMOR_CATALOG = {item["id"]: item for item in SHOP_ARMORS if item.get("kind") == "armor"}
+
+CHAPEU_ARQUIMAGO_SLOT_DEFS = {
+    "chapeu_arquimago": {"extra_spell_circle": "primeiro", "extra_spell_cooldown": 20},
+    "chapeu_arquimago_superior": {"extra_spell_circle": "segundo", "extra_spell_cooldown": 40},
+}
 
 SHOP_MERCHANT = [
     # Venenos de dano contÃ­nuo: uma dose por compra; armas Ã  distÃ¢ncia gastam
@@ -7691,10 +7740,6 @@ SHOP_MERCHANT = [
      "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."},
     {"id": "moeda_da_sorte", "name": "Moeda da Sorte", "emoji": "🪙", "price": 120, "item_slot": "bag", "effect": "luck_coin", "value": 1,
      "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."},
-    {"id": "anel_protecao", "name": "Anel de Proteção", "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "def_", "value": 1,
-     "descricao": "+1 de Classe de Armadura enquanto estiver equipado."},
-    {"id": "anel_vigia",    "name": "Anel do Vigia",    "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "vision", "value": 2,
-     "descricao": "+2 de visão enquanto estiver equipado."},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
     {"id": "ring_str",      "name": "Anel da Precisão", "emoji": "💍", "icon": "assets/itens/ring_str.png", "price": 50, "item_slot": "ring", "effect": "atk", "value": 1,
      "descricao": "+1 de acerto em ataques enquanto estiver equipado."},
@@ -7703,6 +7748,53 @@ SHOP_MERCHANT = [
     {"id": "anel_supremacia", "name": "Anel da Supremacia", "emoji": "💍", "icon": "assets/itens/ring_vita.png", "price": 200, "item_slot": "ring", "effect": "atk", "value": 1,
      "bonuses": [{"effect": "damage_bonus", "value": 1}],
      "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."},
+    {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 100, "item_slot": "ring",  "effect": "maxhp",     "value": 5},
+    {"id": "anel_protecao", "name": "Anel de Proteção", "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "def_", "value": 1,
+     "descricao": "+1 de Classe de Armadura enquanto estiver equipado."},
+    {"id": "anel_vigia",    "name": "Anel do Vigia",    "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "vision", "value": 2,
+     "descricao": "+2 de visão enquanto estiver equipado."},
+    # â”€â”€ CabeÃ§a (slot head) â”€â”€
+    {"id": "helm_iron",     "name": "Elmo de Ferro",     "emoji": "⛑️", "price": 40, "item_slot": "head",  "effect": "def_",      "value": 1,
+     "allowed_classes": ["warrior", "cleric", "ranger", "paladin"]},
+    {"id": "circlet",       "name": "Tiara Arcana",      "emoji": "👑",  "price": 60, "item_slot": "head",  "effect": "def_",      "value": 1,
+     "bonuses": [{"effect": "maxhp", "value": 2}],
+     "allowed_classes": ["mage", "cleric", "rogue", "ranger", "bard"],
+     "descricao": "+1 de Classe de Armadura e +2 de vida máxima enquanto equipada."},
+    {"id": "amulet_alcance_arcano", "name": "Amuleto do Alcance Arcano", "emoji": "📿", "icon": "assets/itens/amulet.png", "price": 400, "item_slot": "item", "effect": "spell_range", "value": 1,
+     "descricao": "+1 quadrado ao alcance de lançamento das magias enquanto equipado."},
+    {"id": "ultimo_suspiro", "name": "Último Suspiro", "emoji": "📿", "icon": "assets/itens/ultimo_suspiro.png", "price": 500, "item_slot": "item", "effect": "death_ward", "value": 1,
+     "descricao": "Enquanto equipado, evita uma morte: ao chegar a 0 PV, o herói fica com 1 PV e este amuleto é consumido. Duas cópias equipadas concedem duas proteções, uma por vez."},
+    {"id": "tiara_expansao_arcana", "name": "Tiara da Expansão Arcana", "emoji": "👑", "icon": "assets/itens/circlet.png", "price": 800, "item_slot": "head", "effect": "spell_area", "value": 1,
+     "descricao": "+1 quadrado de raio nas magias de área enquanto equipada. Acumula com o Cajado Arcano."},
+    {"id": "boina_batedor", "name": "Boina do Batedor", "emoji": "🧢", "icon": "assets/itens/chapeu1.png", "price": 60, "item_slot": "head", "effect": "vision", "value": 1,
+     "descricao": "+1 de visão enquanto equipada."},
+    {"id": "boina_alerta", "name": "Boina do Alerta", "emoji": "🧢", "icon": "assets/itens/chapeu1.png", "price": 150, "item_slot": "head", "effect": "vision", "value": 1,
+     "bonuses": [{"effect": "save_bonus", "value": 1}],
+     "descricao": "+1 de visão e +1 em todos os testes de resistência enquanto equipada."},
+    {"id": "chapeu_bruxo", "name": "Chapéu do Bruxo", "emoji": "🧙", "icon": "assets/itens/chapeu_bruxo1.png", "price": 200, "item_slot": "head", "effect": "spell_dc", "value": 1,
+     "allowed_classes": ["mage"],
+     "descricao": "+1 na CD dos testes de resistência das magias enquanto equipado. Exclusivo do Mago."},
+    {"id": "chapeu_conjurador", "name": "Chapéu do Conjurador", "emoji": "🧙", "icon": "assets/itens/chapeu_bruxo2.png", "price": 800, "item_slot": "head", "effect": "spell_dc", "value": 2,
+     "allowed_classes": ["mage", "cleric"],
+     "descricao": "+2 na CD dos testes de resistência das magias enquanto equipado. Usável por Mago e Clérigo."},
+    {"id": "chapeu_arquimago", "name": "Chapéu do Arquimago", "emoji": "🧙", "icon": "assets/itens/chapeu_bruxo2.png", "price": 600, "item_slot": "head",
+     "allowed_classes": ["mage", "cleric"],
+     **CHAPEU_ARQUIMAGO_SLOT_DEFS["chapeu_arquimago"],
+     "descricao": "Concede um slot extra de magia de 1º círculo com recarga de 20 rodadas. O slot tem recarga independente e acumula com o Cajado Arcano."},
+    {"id": "chapeu_arquimago_superior", "name": "Chapéu do Arquimago Superior", "emoji": "🧙", "icon": "assets/itens/chapeu_bruxo2.png", "price": 1200, "item_slot": "head",
+     "allowed_classes": ["mage", "cleric"],
+     **CHAPEU_ARQUIMAGO_SLOT_DEFS["chapeu_arquimago_superior"],
+     "descricao": "Concede um slot extra de magia de 2º círculo com recarga própria de 40 rodadas. Pode ser usado por Mago e Clérigo."},
+    {"id": "bota_alada",     "name": "Bota Alada",         "emoji": "🪽",  "price": 0,
+     "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "voo", "value": 0,
+     "magico": True,
+     "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."},
+    # â”€â”€ Itens ativos (slots item1 / item2) â”€â”€
+    {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 80,
+     "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
+    {"id": "botas_passo_felino", "name": "Botas do Passo Felino", "emoji": "👢", "icon": "assets/itens/bota.png", "price": 500, "item_slot": "boots", "effect": "dex", "value": 2,
+     "descricao": "+2 de Destreza enquanto equipada."},
+    {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 100, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "talisma_despertar_forca", "name": "Talismã do Despertar: Força", "emoji": "📿", "icon": "assets/itens/medalhao3.png", "price": 250, "item_slot": "item", "effect": "str_", "value": 1,
      "descricao": "+1 de Força enquanto equipado."},
     {"id": "talisma_despertar_destreza", "name": "Talismã do Despertar: Destreza", "emoji": "📿", "icon": "assets/itens/medalhao3.png", "price": 250, "item_slot": "item", "effect": "dex", "value": 1,
@@ -7719,27 +7811,13 @@ SHOP_MERCHANT = [
      "descricao": "+2 de Inteligência enquanto equipado."},
     {"id": "talisma_ascensao_constituicao", "name": "Talismã da Ascensão: Constituição", "emoji": "📿", "icon": "assets/itens/medalhao4.png", "price": 500, "item_slot": "item", "effect": "con_", "value": 2,
      "descricao": "+2 de Constituição enquanto equipado."},
-    {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 15, "item_slot": "ring",  "effect": "maxhp",     "value": 5},
-    # â”€â”€ CabeÃ§a (slot head) â”€â”€
-    {"id": "helm_iron",     "name": "Elmo de Ferro",     "emoji": "⛑️", "price": 14, "item_slot": "head",  "effect": "def_",      "value": 1},
-    {"id": "circlet",       "name": "Tiara Arcana",      "emoji": "👑",  "price": 16, "item_slot": "head",  "effect": "maxhp",     "value": 4},
-    {"id": "bota_alada",     "name": "Bota Alada",         "emoji": "🪽",  "price": 0,
-     "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "voo", "value": 0,
-     "magico": True,
-     "descricao": "Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 3."},
-    # â”€â”€ Itens ativos (slots item1 / item2) â”€â”€
-    {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 10,
-     "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
-    {"id": "botas_passo_felino", "name": "Botas do Passo Felino", "emoji": "👢", "icon": "assets/itens/bota.png", "price": 500, "item_slot": "boots", "effect": "dex", "value": 2,
-     "descricao": "+2 de Destreza enquanto equipada."},
-    {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
-    {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 18, "item_slot": "item",  "effect": "bagslots",  "value": 3},
+    {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 100, "item_slot": "item",  "effect": "bagslots",  "value": 3},
     {"id": "mochila_carga", "name": "Mochila de Carga", "emoji": "🎒", "icon": "assets/itens/backpack.png", "price": 250, "item_slot": "item", "effect": "bagslots", "value": 6,
      "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila."},
-    {"id": "cinto_utilidades", "name": "Cinto de Utilidades", "emoji": "🎒", "price": 80,
+    {"id": "cinto_utilidades", "name": "Cinto de Utilidades", "emoji": "🎒", "price": 250,
      "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
-    {"id": "cinto_com_bolsos", "name": "Cinto com Bolsos", "emoji": "🎒", "price": 30,
+    {"id": "cinto_com_bolsos", "name": "Cinto com Bolsos", "emoji": "🎒", "price": 120,
      "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
      "descricao": "Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
     # â”€â”€ Venenos (consumÃ­veis de bolsa â€” untam a arma; ver VENENOS) â”€â”€
@@ -10318,6 +10396,10 @@ MATERIAIS_PAREDE_DEFAULT = "pedra_normal"
 
 SHOP_TEMPLE = [
     {"id":"agua_benta","name":"Água Benta","emoji":"💧✝️","price":30,"item_slot":"bag","effect":"throwable"},
+    {"id": "lagrima_ultima_luz", "name": "Lágrima da Última Luz", "emoji": "💫",
+     "icon": "assets/itens/lagrima_ultima_luz.png", "price": 120,
+     "item_slot": "bag", "effect": "revive_ally",
+     "descricao": "Consumível. Use como ação principal em um aliado morto adjacente para trazê-lo de volta com 1 PV. Ele não age neste turno."},
     {"id":"magia_voo", "name":"Voo", "emoji":"🪽", "price":0,
      "effect":"learn_spell", "magia_id":"voo", "allowed_classes":["mage", "cleric"],
      "descricao":"Aprende a magia Voo, que permite controlar a altura do alvo até 10."},
@@ -11842,6 +11924,9 @@ def make_player(pid, name, cls_id, slot):
         # que a recarga continue correndo mesmo enquanto o item estiver fora
         # do equipamento; o slot só fica visível/utilizável quando equipado.
         "cajado_arcano_slot_pronto_em": 0,
+        # Recarga própria do Chapéu do Arquimago; pode acumular com a do cajado.
+        "chapeu_arquimago_slot_pronto_em": 0,
+        "chapeu_arquimago_superior_slot_pronto_em": 0,
         "pending_spell_pick":  [],     # fila de cÃ­rculos a escolher ao subir de nÃ­vel
         "shortcut_slots":      [None] * SHORTCUT_SLOT_COUNT,  # atalhos da campanha
     }
@@ -12024,6 +12109,14 @@ def _aplicar_equipamentos_monstro(m):
     if move_bonus:
         m["movement"] += move_bonus
         m["equipment_movement_bonus"] = move_bonus
+    spell_dc_bonus = sum(int(item.get("value", 0) or 0) for item in items
+                         if item.get("effect") == "spell_dc")
+    if spell_dc_bonus:
+        m["gear_spell_dc_bonus"] = spell_dc_bonus
+    spell_area_bonus = sum(int(item.get("value", 0) or 0) for item in items
+                           if item.get("effect") == "spell_area")
+    if spell_area_bonus:
+        m["gear_spell_area_bonus"] = spell_area_bonus
     poison = (None if m.get("type") == "bandido" else next((
         item.get("veneno_id") for item in items
         if item.get("effect") == "coat_poison" and item.get("veneno_id")), None))
@@ -12298,6 +12391,20 @@ def make_monster(mdef, room):
         m["kobold_shield_id"] = "escudo_p" if m["kobold_weapon_id"] == "shortsword" else None
         if m["kobold_shield_id"]:
             m["equipped_items"].append(m["kobold_shield_id"])
+    if m.get("type") == "kobold_mago":
+        # Item de cabeça exclusivo por instância: 10% Chapéu do Bruxo,
+        # 5% Tiara da Expansão, 1% Chapéu do Arquimago, 84% nenhum.
+        rolagem = random.randint(1, 100)
+        acumulado = 0
+        item_cabeca = None
+        for opcao in (m.get("random_equipment") or {}).get("headwear", []):
+            acumulado += max(0, int(opcao.get("chance", 0)))
+            if rolagem <= acumulado:
+                item_cabeca = opcao.get("id")
+                break
+        m["equipment_enabled"] = True
+        m["equipped_items"] = [item_cabeca] if item_cabeca else []
+        m["kobold_mago_slot_arquimago_pronto_em"] = 0
     if m.get("type") == "bandido":
         _configurar_bandido_spawn(m)
     elif m.get("type") == "dark_mage":
@@ -12332,6 +12439,13 @@ def make_monster(mdef, room):
             if ab.get("source") in {"heroi", "guilda"}
         }
         m["monster_ability_cooldowns"] = {}
+    if m.get("type") == "kobold_mago":
+        pool_magias = m.pop("monster_spell_pool", (
+            "bola_fogo", "relampago", "sono", "raio_congelante", "barreira_arcana"))
+        m["monster_spells"] = [
+            {"id": sid, "limit_mode": "encounter", "uses_per_combat": 3}
+            for sid in random.sample(pool_magias, 2)
+        ]
     # Magias sÃ£o configuradas separadamente das habilidades. Fichas antigas
     # continuam vÃ¡lidas: suas entradas action_type=magia sÃ£o convertidas aqui.
     spell_defs = m.get("monster_spells")
@@ -22426,7 +22540,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return is_ranged, cargas
 
     def _esconder_bonus(self, p):
-        return 2 if (tem_espec(p, "ladino_esconder_2") or tem_espec(p, "ladino_esconder_3")) else 0
+        bonus_especializacao = 2 if (tem_espec(p, "ladino_esconder_2") or tem_espec(p, "ladino_esconder_3")) else 0
+        armadura = (p.get("gear") or {}).get("armor") or {}
+        bonus_item = int(armadura.get("hide_bonus", 0) or 0) if armadura.get("id") == "manto_das_sombras" else 0
+        return bonus_especializacao + bonus_item
 
     def _armadilhas_desbloqueadas(self, p):
         """Tipos de armadilha que o Ladino pode fabricar: buraco sempre grátis;
@@ -28510,6 +28627,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 crystal_ball_skill = self._crystal_ball_skill(p)
                 if crystal_ball_skill:
                     granted.append(crystal_ball_skill)
+                shadow_cloak_skill = self._shadow_cloak_skill(p)
+                if shadow_cloak_skill:
+                    granted.append(shadow_cloak_skill)
                 granted_ids = {s.get("id") for s in granted if isinstance(s, dict)}
                 # A habilidade do instrumento é dinâmica: o ID depende da
                 # base atualmente equipada na off_hand (ex.: instrumento_harpa).
@@ -28828,7 +28948,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not skill:
                     skill = next((s for s in (self._granted_hero_skills(p) + self._weapon_throw_skills(p)
                                               + ([self._crystal_ball_skill(p)]
-                                                 if self._crystal_ball_skill(p) else []))
+                                                 if self._crystal_ball_skill(p) else [])
+                                              + ([self._shadow_cloak_skill(p)]
+                                                 if self._shadow_cloak_skill(p) else []))
                                   if isinstance(s, dict) and s.get("id") == clean["id"]), None)
             if not skill:
                 inst = (p.get("gear") or {}).get("off_hand")
@@ -28867,6 +28989,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif e == "vision":
             # Quadrados extras de visão (raio de revelação da névoa).
             p["vision_bonus"] = p.get("vision_bonus", 0) + v
+        elif e == "save_bonus":
+            # Bônus passivo em todos os testes de resistência enquanto equipado.
+            p["gear_save_bonus"] = p.get("gear_save_bonus", 0) + v
+        elif e == "magic_save_bonus":
+            # Bônus passivo apenas nos testes de resistência contra magias.
+            p["gear_magic_save_bonus"] = p.get("gear_magic_save_bonus", 0) + v
+        elif e == "spell_dc":
+            # Bônus passivo na CD de resistência das magias enquanto equipado.
+            p["gear_spell_dc_bonus"] = p.get("gear_spell_dc_bonus", 0) + v
+        elif e == "spell_area":
+            # Ampliação passiva do raio das magias de área enquanto equipada.
+            p["gear_spell_area_bonus"] = p.get("gear_spell_area_bonus", 0) + v
+        elif e == "spell_range":
+            # Alcance de lançamento adicional para magias enquanto equipado.
+            p["gear_spell_range_bonus"] = p.get("gear_spell_range_bonus", 0) + v
         elif e == "bagslots":
             # Mochila/alforje: expande o inventÃ¡rio enquanto equipada
             p["bag_size"] = max(1, p.get("bag_size", 6) + v)
@@ -31051,52 +31188,100 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "recarga": restante if ativo else 0,
         }
 
-    def _cajado_arcano_area_lado(self, caster, magia):
-        """Expande a dimensão de magias de área em exatamente uma casa.
-
-        A regra é dimensional: 3x3 vira 4x4, não 5x5. O quadrado usa a
-        mesma âncora assimétrica já usada pelo cliente para áreas pares.
-        """
-        if not self._cajado_arcano_equipado(caster):
+    def _chapeu_arquimago_equipado(self, p):
+        """Retorna o chapéu de Arquimago equipado, se houver."""
+        if not p:
             return None
+        item = (p.get("gear") or {}).get("head") or {}
+        return item if item.get("id") in CHAPEU_ARQUIMAGO_SLOT_DEFS else None
+
+    def _chapeu_arquimago_slot_circulo(self, p, item_id=None):
+        item = self._chapeu_arquimago_equipado(p)
+        if item and (item_id is None or item.get("id") == item_id):
+            return str(item.get("extra_spell_circle")
+                       or CHAPEU_ARQUIMAGO_SLOT_DEFS[item["id"]]["extra_spell_circle"])
+        return str(CHAPEU_ARQUIMAGO_SLOT_DEFS.get(item_id, {}).get("extra_spell_circle", ""))
+
+    def _chapeu_arquimago_slot_recarga(self, p, item_id=None):
+        item = self._chapeu_arquimago_equipado(p)
+        if not item or (item_id is not None and item.get("id") != item_id):
+            item = CHAPEU_ARQUIMAGO_SLOT_DEFS.get(item_id, {})
+        try:
+            return max(1, int((item or {}).get("extra_spell_cooldown") or 20))
+        except (TypeError, ValueError):
+            return 20
+
+    def _chapeu_arquimago_slot_restante(self, p, item_id=None):
+        """Rodadas restantes da carga própria de cada versão do chapéu."""
+        item = self._chapeu_arquimago_equipado(p)
+        item_id = item_id or (item or {}).get("id") or "chapeu_arquimago"
+        try:
+            pronto_em = int(p.get(f"{item_id}_slot_pronto_em", 0) or 0)
+        except (TypeError, ValueError):
+            pronto_em = 0
+        return max(0, pronto_em - self.round_num)
+
+    def _chapeu_arquimago_slot_pronto(self, p, item_id=None):
+        item = self._chapeu_arquimago_equipado(p)
+        return (bool(item and (item_id is None or item.get("id") == item_id))
+                and self._chapeu_arquimago_slot_restante(p, item_id) <= 0)
+
+    def _chapeu_arquimago_slot_payload(self, p, item_id):
+        item = self._chapeu_arquimago_equipado(p)
+        ativo = bool(item and item.get("id") == item_id)
+        restante = self._chapeu_arquimago_slot_restante(p, item_id)
+        return {
+            "ativo": ativo,
+            "circulo": self._chapeu_arquimago_slot_circulo(p, item_id),
+            "pronto": bool(ativo and restante <= 0),
+            "recarga": restante if ativo else 0,
+        }
+
+    def _equipamento_area_magia_bonus_lado(self, caster, magia):
+        """Bônus de lado: Cajado Arcano +1 e Tiara da Expansão +2.
+
+        A tiara aumenta o raio em uma casa (mais duas casas na dimensão);
+        pode acumular com o cajado. O cálculo é compartilhado pelas magias
+        de área e não alcança linhas, cones ou pergaminhos.
+        """
+        if caster.get("_pergaminho_em_uso"):
+            return 0
         tipo = magia.get("tipo")
         if tipo not in ("area", "area_persistente", "area_fixa", "area_centrada"):
+            return 0
+        bonus = int(caster.get("gear_spell_area_bonus", 0) or 0) * 2
+        if self._cajado_arcano_equipado(caster):
+            bonus += 1
+        return max(0, bonus)
+
+    def _equipamento_area_magia_lado(self, caster, magia):
+        """Lado efetivo da área com os bônus de equipamento aplicáveis."""
+        bonus = self._equipamento_area_magia_bonus_lado(caster, magia)
+        if not bonus:
             return None
         if magia.get("id") == "chamado_inverno":
             nivel = self._nivel_conjurador(caster)
-            return max(1, 4 + (nivel // 2) + 1)
+            return max(1, 4 + (nivel // 2) + bonus)
         if magia.get("area_lado") is not None:
             try:
-                return max(1, int(magia["area_lado"]) + 1)
+                return max(1, int(magia["area_lado"]) + bonus)
             except (TypeError, ValueError):
                 return None
         if magia.get("area_raio") is not None:
             try:
-                return max(1, int(magia["area_raio"]) * 2 + 2)
+                return max(1, int(magia["area_raio"]) * 2 + 1 + bonus)
             except (TypeError, ValueError):
                 return None
         if magia.get("area_base") is not None:
             try:
-                return max(1, int(magia["area_base"]) + 1)
+                return max(1, int(magia["area_base"]) + bonus)
             except (TypeError, ValueError):
                 return None
         return None
 
-    def _cajado_arcano_area_bonus(self, caster, magia):
-        """+1 de lado do Cajado Arcano, ADITIVO ao lado por nível.
-
-        Irmão de `_cajado_arcano_area_lado` (que devolve o lado inteiro e é
-        cego ao nível). As magias de terreno — Ira, Tempestade, Definhar,
-        Senhor das Águas, Prisão de Chamas — calculam o lado por nível e/ou
-        por escolha do jogador (terreno, tamanho), então o cajado precisa
-        SOMAR ao lado delas, não substituí-lo. Devolve 0 sem o cajado ou
-        para magia que não é de área.
-        """
-        if not self._cajado_arcano_equipado(caster):
-            return 0
-        if magia.get("tipo") not in ("area", "area_persistente", "area_fixa", "area_centrada"):
-            return 0
-        return 1
+    def _equipamento_area_magia_bonus(self, caster, magia):
+        """Soma bônus de lado a magias de área dimensionadas por nível/escolha."""
+        return self._equipamento_area_magia_bonus_lado(caster, magia)
 
     def _slots_disponiveis(self, p, circulo):
         """Slots livres no círculo = máximo do nível − gastos ainda em cooldown."""
@@ -31130,6 +31315,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             extra = self._cajado_arcano_slot_restante(p)
             if extra > 0:
                 esperas.append(extra)
+        chapeu_extra = self._chapeu_arquimago_equipado(p)
+        if (chapeu_extra
+                and circulo == self._chapeu_arquimago_slot_circulo(p, chapeu_extra.get("id"))):
+            extra = self._chapeu_arquimago_slot_restante(p, chapeu_extra.get("id"))
+            if extra > 0:
+                esperas.append(extra)
         return min(esperas) if esperas else None
 
     def _slots_restantes_payload(self, p):
@@ -31150,12 +31341,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 for ready_at in p.get("slots_cooldown", {}).get(circulo, [])
             )
         out["cajado_arcano"] = self._cajado_arcano_slot_payload(p)
+        for item_id in CHAPEU_ARQUIMAGO_SLOT_DEFS:
+            out[item_id] = self._chapeu_arquimago_slot_payload(p, item_id)
         return out
 
     def _recarregar_slots(self, p):
         """Recarga total (descanso na cidade): zera todos os cooldowns."""
         p["slots_cooldown"] = {circ: [] for circ in _slot_circulos_para(p)}
         p["cajado_arcano_slot_pronto_em"] = 0
+        for item_id in CHAPEU_ARQUIMAGO_SLOT_DEFS:
+            p[f"{item_id}_slot_pronto_em"] = 0
 
     # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
@@ -31245,6 +31440,63 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._licao_evento(p, "usar_habilidade", alvo="usar_bola_cristal")
         await self.push_state()
 
+    async def handle_use_shadow_cloak(self, pid, data=None):
+        """Conjura Manto da Escuridão pelo manto equipado, sem gastar slot."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        if p.get("class_id") != "rogue":
+            await self.send_to(pid, {"type": "error", "msg": T(
+                "erro.sua_classe_nao_pode_usar_item", item=nome_de("item", "manto_das_sombras"))})
+            return
+        for status, chave in (("metamorfose_ativa", "erro.a_forma_transformada_nao_pode_lancar_mag"),
+                              ("petrificado", "erro.voce_esta_petrificado_e_nao_pode_lancar"),
+                              ("paralisado", "erro.voce_esta_paralisado_e_nao_pode_lancar_m"),
+                              ("dormindo", "erro.voce_esta_dormindo_e_nao_pode_lancar_mag")):
+            if p.get(status):
+                await self.send_to(pid, {"type": "error", "msg": T(chave)})
+                return
+        if self._tem_maldicao(p, "silencio_deuses"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.silencio_dos_deuses_impede_lancar_magias")})
+            return
+        if self._em_silencio(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_numa_area_de_silencio_e_nao_po")})
+            return
+
+        item = (p.get("gear") or {}).get("armor")
+        if not isinstance(item, dict) or item.get("id") != "manto_das_sombras":
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+            return
+        if self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+        pronta_em = int(item.get("manto_escuridao_pronto_em", 0) or 0)
+        restante = pronta_em - int(self.round_num or 0)
+        if restante > 0:
+            await self.send_to(pid, {"type": "error", "msg": T(
+                "erro.tecnica_em_recarga", tecnica=nome_item(item), rodadas=restante)})
+            return
+
+        p["action_done"] = True
+        item["manto_escuridao_pronto_em"] = int(self.round_num or 0) + 20
+        self._pagar_fome_sede(p, 1, 1, contexto="Manto das Sombras")
+        self._verificar_estado_sobrevivencia(p)
+        await self._executar_magia_grimorio(p, deepcopy(GRIMORIO["manto_escuridao"]), {})
+        if p.get("invisivel_magico"):
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "invisibilidade",
+                "phase": "break", "caster_id": p["id"],
+                "origin": list(p.get("pos", [0, 0])), "reason": "nova_magia",
+            })
+            p["invisivel_magico"] = False
+            p.pop("invisivel_magico_rodadas", None)
+            await self.gm_say(T("narracao.revela_se_ao_lancar_magia", heroi=p["name"]))
+        await self._licao_evento(p, "usar_habilidade", alvo="usar_manto_sombras")
+        await self.push_state()
+
     async def handle_magia(self, pid, data):
         """Lança uma magia do GRIMÓRIO (Pedro/mage, Lewis/cleric). Valida classe,
         elegibilidade, slots do círculo e custo de sobrevivência; despacha o efeito."""
@@ -31295,6 +31547,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.magia_ainda_em_desenvolvimento", icone=magia["icone"], magia=nome_de("magia", magia_id))}); return
 
+        # Não altere o catálogo global: o amuleto aumenta apenas a cópia usada
+        # nesta conjuração, antes das pré-validações e dos executores.
+        alcance_item_bonus = max(0, int(p.get("gear_spell_range_bonus", 0) or 0))
+        if alcance_item_bonus:
+            magia = deepcopy(magia)
+            for campo in ("alcance", "alcance_base"):
+                try:
+                    alcance_base = int(magia.get(campo, 0) or 0)
+                except (TypeError, ValueError):
+                    continue
+                if alcance_base > 0:
+                    magia[campo] = alcance_base + alcance_item_bonus
+
         # Teleporte valida o alvo antes de consumir slot, recursos ou ação. O
         # destino é escolhido depois do save/consentimento e é validado de novo
         # no servidor quando o jogador clicar na casa final.
@@ -31342,13 +31607,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         circulo = magia.get("circulo", "primeiro")
         slots_normais_livres = self._slots_disponiveis(p, circulo)
         usa_slot_extra_cajado = False
+        usa_slot_extra_chapeu = False
+        chapeu_slot_item = self._chapeu_arquimago_equipado(p)
+        chapeu_slot_id = (chapeu_slot_item or {}).get("id")
         if not magia_teste_livre:
+            sem_slots_normais = slots_normais_livres <= 0
             usa_slot_extra_cajado = bool(
-                circulo == CAJADO_ARCANO_SLOT_CIRCULO
-                and slots_normais_livres <= 0
+                sem_slots_normais
+                and circulo == CAJADO_ARCANO_SLOT_CIRCULO
                 and self._cajado_arcano_slot_pronto(p)
             )
-        if not magia_teste_livre and slots_normais_livres <= 0 and not usa_slot_extra_cajado:
+            usa_slot_extra_chapeu = bool(
+                sem_slots_normais
+                and chapeu_slot_item
+                and circulo == self._chapeu_arquimago_slot_circulo(p, chapeu_slot_id)
+                and not usa_slot_extra_cajado
+                and self._chapeu_arquimago_slot_pronto(p, chapeu_slot_id)
+            )
+        if (not magia_teste_livre and slots_normais_livres <= 0
+                and not usa_slot_extra_cajado and not usa_slot_extra_chapeu):
             falta = self._proximo_slot_rodadas(p, circulo)
             if falta is None:
                 extra = ""
@@ -31387,6 +31664,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # ambas estiverem armadas no mesmo lanÃ§amento.
         tec_dc = self._tec_ex_dc_bonus(p, magia)
         tec_dur, alcance_bonus = self._tec_ex_dur_alcance_bonus(p, magia)
+        # Duas áreas de terreno calculam alcance diretamente pelo nível,
+        # sem consultar os campos alcance_base/alcance da definição.
+        if magia_id in ("chamado_inverno", "senhor_das_aguas"):
+            alcance_bonus += alcance_item_bonus
         tec_mult = self._tec_ex_dmg_mult(p, magia)
         dc_bonus  += tec_dc
         dur_bonus += tec_dur
@@ -31457,12 +31738,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         usou_acelerada = bool(p.get("tec_ex_acelerada_armado"))
         p["_tec_save_desvantagem"] = bool(p.get("tec_ex_canalizacao_perfeita_armado"))
 
-        # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência. O slot do cajado
-        # é deliberadamente o último: só entra quando todos os normais estão
-        # em recarga e volta em 20 rodadas.
+        # Cobra 1 SLOT do círculo + 🍖/💧 de sobrevivência. Os slots extras
+        # do cajado e do chapéu ficam atrás dos slots normais, mas são
+        # independentes entre si e podem ser usados na mesma aventura.
         if not magia_teste_livre:
             if usa_slot_extra_cajado:
                 p["cajado_arcano_slot_pronto_em"] = self.round_num + CAJADO_ARCANO_SLOT_REGEN
+            elif usa_slot_extra_chapeu:
+                p[f"{chapeu_slot_id}_slot_pronto_em"] = self.round_num + self._chapeu_arquimago_slot_recarga(p, chapeu_slot_id)
             else:
                 self._gastar_slot(p, circulo)
             self._pagar_fome_sede(p, 1, 1, contexto="magia")
@@ -32074,9 +32357,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _executar_magia_grimorio(self, caster, magia, data, *args, **kwargs):
         """Escopo elemental por conjuração: as reações de terreno resolvem uma
         vez ao fim da magia (ver terrain_reactions.py)."""
-        async with self.evento_elemental({"tipo": "magia", "id": magia.get("id"),
-                                          "caster_id": caster.get("id")}):
-            return await self._executar_magia_grimorio_impl(caster, magia, data, *args, **kwargs)
+        token = _FONTE_MAGIA_ATUAL.set(caster)
+        try:
+            async with self.evento_elemental({"tipo": "magia", "id": magia.get("id"),
+                                              "caster_id": caster.get("id")}):
+                return await self._executar_magia_grimorio_impl(caster, magia, data, *args, **kwargs)
+        finally:
+            _FONTE_MAGIA_ATUAL.reset(token)
 
     async def _executar_magia_grimorio_impl(self, caster, magia, data, dmg_mult=1, dur_bonus=0, alcance_bonus=0):
         """Despacha a execução de uma magia já paga. FUNDAÇÃO: implementa o sistema
@@ -32571,7 +32858,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         lado = int(magia.get("area_lado", 3) or 3) + (
             nivel // int(magia.get("area_lado_niveis", 3) or 3)
-        ) + self._cajado_arcano_area_bonus(caster, magia)
+        ) + self._equipamento_area_magia_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             await self.send_to(caster["id"], {"type": "error",
@@ -32679,7 +32966,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if dados.get("_bola_cristal_area_fixa"):
             area_lado = magia.get("area_lado", 4)
         else:
-            area_lado = self._cajado_arcano_area_lado(caster, magia) or magia.get("area_lado")
+            area_lado = self._equipamento_area_magia_lado(caster, magia) or magia.get("area_lado")
         tx = int((data or {}).get("tx", caster["pos"][0]))
         ty = int((data or {}).get("ty", caster["pos"][1]))
         dur    = magia.get("duracao", 2)
@@ -32835,7 +33122,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Área centrada no caster: +1 ataque/dano/CA/resistência aos aliados no raio."""
         dur  = self._rolar_dado(magia.get("duracao", "1d4+1")) + dur_bonus
         raio = magia.get("area_raio", 3)
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        area_lado = self._equipamento_area_magia_lado(caster, magia)
         buff = magia.get("buff", {"ataque": 1, "dano": 1, "ca": 1, "resistencia": 1})
         cx, cy = caster["pos"]
         alvos = []
@@ -32867,7 +33154,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Área centrada na casa escolhida: -1 ataque/dano/CA/resistência aos inimigos no raio."""
         dur    = self._rolar_dado(magia.get("duracao", "1d4+1")) + dur_bonus
         raio   = magia.get("area_raio", 1)
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        area_lado = self._equipamento_area_magia_lado(caster, magia)
         debuff = magia.get("debuff", {"ataque": -1, "dano": -1, "ca": -1, "resistencia": -1})
         tx = int((data or {}).get("tx", caster["pos"][0]))
         ty = int((data or {}).get("ty", caster["pos"][1]))
@@ -33269,7 +33556,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return out
 
     def _alvos_na_area_magia(self, caster, magia, tx, ty, raio):
-        lado = self._cajado_arcano_area_lado(caster, magia)
+        lado = self._equipamento_area_magia_lado(caster, magia)
         return self._alvos_na_area_quadrada(tx, ty, lado) if lado else self._alvos_na_area(tx, ty, raio)
 
     def _vivo(self, alvo):
@@ -33599,7 +33886,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             alvos.append(alvo)
         raio = max(1, int(magia.get("area_raio", 2)))
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        area_lado = self._equipamento_area_magia_lado(caster, magia)
         distancia_visual = max(abs(caster["pos"][0] - tx), abs(caster["pos"][1] - ty))
         travel_ms = max(600, min(1250, 480 + distancia_visual * 145))
         animation_id = f"sono_{caster['id']}_{self.round_num}_{tx}_{ty}"
@@ -33648,7 +33935,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             alvos.append(alvo)
         raio = max(1, int(magia.get("area_raio", 2)))
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        area_lado = self._equipamento_area_magia_lado(caster, magia)
         distancia_visual = max(abs(caster["pos"][0] - tx), abs(caster["pos"][1] - ty))
         travel_ms = max(600, min(1250, 480 + distancia_visual * 145))
         animation_id = f"medo_{caster['id']}_{self.round_num}_{tx}_{ty}"
@@ -34020,7 +34307,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not await self._checar_alcance_centro(caster, magia, tx, ty): return
         dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
         raio = max(1, int(magia.get("area_raio", 1)))
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        area_lado = self._equipamento_area_magia_lado(caster, magia)
         alvos = self._alvos_na_area_magia(caster, magia, tx, ty, raio)
         animation_id = f"lentidao_{caster['id']}_{self.round_num}_{tx}_{ty}"
         distancia_visual = max(abs(caster["pos"][0] - tx), abs(caster["pos"][1] - ty))
@@ -34118,7 +34405,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Aplica o Manto e compartilha seu estado entre magia e poção."""
         dur = self._rolar_dado(magia.get("duracao", "1d4")) + dur_bonus
         raio = magia.get("area_raio", 3)
-        area_lado = (self._cajado_arcano_area_lado(caster, magia)
+        area_lado = (self._equipamento_area_magia_lado(caster, magia)
                      if aplicar_bonus_cajado else None)
         animation_id = f"manto_escuridao_{caster['id']}_{self.round_num}_{caster['pos'][0]}_{caster['pos'][1]}"
         await self.broadcast({
@@ -34213,7 +34500,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         (5 + 1 por 2 níveis). Duração 1d4 rodadas."""
         nivel   = self._nivel_conjurador(caster)
         alcance = magia.get("alcance_base", 5) + (nivel // 2) * magia.get("alcance_escala", 1)
-        lado    = self._cajado_arcano_area_lado(caster, magia) or magia.get("area_lado", 4)
+        lado    = self._equipamento_area_magia_lado(caster, magia) or magia.get("area_lado", 4)
         tx = int((data or {}).get("tx", caster["pos"][0]))
         ty = int((data or {}).get("ty", caster["pos"][1]))
         dist = max(abs(caster["pos"][0]-tx), abs(caster["pos"][1]-ty))
@@ -34499,7 +34786,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._tem_linha_de_visao(caster["pos"], [cx, cy]):
             return False, ("erro.uma_parede_bloqueia_a_trajetoria_do_cham", {})
         lado_base = int(magia.get("area_lado", 4) or 4) + (nivel // int(magia.get("area_lado_niveis", 2) or 2))
-        lado = self._cajado_arcano_area_lado(caster, magia) or lado_base
+        lado = self._equipamento_area_magia_lado(caster, magia) or lado_base
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
@@ -34686,9 +34973,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             lado_base = int(magia.get("area_lado", 4) or 4)
         # Senhor das Águas usa dois lados-base diferentes (4 para água e 3
         # para água profunda); por isso o cajado entra como bônus ADITIVO
-        # (`_cajado_arcano_area_bonus`) e não pelo `_cajado_arcano_area_lado`,
+        # (`_equipamento_area_magia_bonus`) e não pelo `_equipamento_area_magia_lado`,
         # que substituiria a escolha do jogador e o nível.
-        lado = lado_base + (nivel // nivel_area) + self._cajado_arcano_area_bonus(caster, magia)
+        lado = lado_base + (nivel // nivel_area) + self._equipamento_area_magia_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
@@ -34798,7 +35085,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False, ("erro.uma_parede_bloqueia_a_trajetoria_da_ira_da_rocha", {})
         lado = int(magia.get("area_lado", 3) or 3) + (
             nivel // int(magia.get("area_lado_niveis", 3) or 3)
-        ) + self._cajado_arcano_area_bonus(caster, magia)
+        ) + self._equipamento_area_magia_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         if not tiles:
             return False, ("erro.a_area_escolhida_nao_contem_piso_valido", {})
@@ -35014,7 +35301,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False, ("erro.uma_parede_bloqueia_a_tempestade", {})
         lado = int(magia.get("area_lado", 3)) + (
             nivel // int(magia.get("area_lado_niveis", 3) or 3)
-        ) + self._cajado_arcano_area_bonus(caster, magia)
+        ) + self._equipamento_area_magia_bonus(caster, magia)
         tiles = self._inverno_area_tiles(cx, cy, lado)
         area = {(int(x), int(y)) for x, y in tiles}
         if not area:
@@ -35652,7 +35939,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False, ("erro.a_prisao_de_chamas_deve_ter_2x2_3x3_ou_4", {})
         # O jogador escolhe 2/3/4 (validado acima); o Cajado Arcano soma +1
         # por cima da escolha — o cliente segue mandando o tamanho escolhido.
-        lado += self._cajado_arcano_area_bonus(caster, magia)
+        lado += self._equipamento_area_magia_bonus(caster, magia)
         if not (0 <= cx < self.map_w and 0 <= cy < self.map_h):
             return False, ("erro.o_centro_da_magia_esta_fora_do_mapa", {})
         dist = max(abs(caster["pos"][0] - cx), abs(caster["pos"][1] - cy))
@@ -36551,9 +36838,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _dif_magia(self, caster, magia):
         """Dificuldade para resistir: 8 + bônus de INT + círculo (1/2/3). Soma o
         bônus temporário `_mm_dc_bonus`, setado em handle_magia a partir da
-        Metamagia do Mago (1f) e/ou da técnica Aprimorar Magia da Guilda (Fase 3)."""
+        Metamagia do Mago (1f), da técnica Aprimorar Magia da Guilda (Fase 3) e
+        do equipamento com bônus passivo `gear_spell_dc_bonus`."""
         circ = {"primeiro": 1, "segundo": 2, "terceiro": 3, "quarto": 4, "quinto": 5}.get(magia.get("circulo", "primeiro"), 1)
-        return 8 + mod(caster.get("int_", 10)) + circ + caster.get("_mm_dc_bonus", 0)
+        return (8 + mod(caster.get("int_", 10)) + circ
+                + caster.get("_mm_dc_bonus", 0)
+                + caster.get("gear_spell_dc_bonus", 0))
 
     # â”€â”€ Bola de Fogo (Ã¡rea persistente que decai R1â†’R2â†’R3) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _executar_bola_fogo(self, caster, magia, data, dmg_mult, dur_bonus, alcance_bonus=0):
@@ -36563,7 +36853,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alcance   = magia["alcance_base"]
         save_dif  = self._dif_magia(caster, magia)
         raio      = magia.get("area_raio", 1)
-        area_lado = self._cajado_arcano_area_lado(caster, magia)
+        area_lado = self._equipamento_area_magia_lado(caster, magia)
         cx = int((data or {}).get("tx", caster["pos"][0]))
         cy = int((data or {}).get("ty", caster["pos"][1]))
 
@@ -38674,6 +38964,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             evento["rerolled"] = True
         self._resistance_events.append(evento)
 
+    def _bonus_resistencia_magia(self, alvo, fonte=None):
+        """Bônus da Égide Arcana quando a origem do teste é uma magia."""
+        origem = _FONTE_MAGIA_ATUAL.get()
+        if origem is None and isinstance(fonte, dict):
+            # Teleporte e Metamorfose mantêm uma confirmação de resistência
+            # assíncrona fora do executor do grimório.
+            if (self._eh_jogador(fonte)
+                    and fonte.get("class_id") in ("mage", "cleric")):
+                origem = fonte
+        if not isinstance(origem, dict):
+            return 0
+        if self._eh_jogador(origem):
+            conjurador = origem.get("class_id") in ("mage", "cleric")
+        else:
+            conjurador = self._monster_e_conjurador(origem)
+        return int(alvo.get("gear_magic_save_bonus", 0) or 0) if conjurador else 0
+
     def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None,
                      desvantagem=False, poison_effect=False):
         """Retorna (passou, d20, bonus, total). extra_mod: bônus/penalidade adicional.
@@ -38684,6 +38991,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                  + self._cancao_monstro_bonus(alvo, "resistencia")
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
                  + self._resistencia_saves_bonus(alvo)
+                 + int(alvo.get("gear_save_bonus", 0) or 0)
+                 + self._bonus_resistencia_magia(alvo, fonte)
                  + self._alaude_runico_resist(alvo, tipo_save)
                  + self._vulnerabilidade_save_pen(alvo, tipo_save))
         if poison_effect and tipo_save == "fortitude" and (
@@ -41674,6 +41983,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         effect, val = item["effect"], item.get("value", 0)
 
+        revive_target = None
+        if effect == "revive_ally":
+            if p.get("action_done"):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+                return
+            revive_target = self.players.get(target_id) if target_id else None
+            if (not revive_target or revive_target is p or revive_target.get("alive")
+                    or not revive_target.get("class_id") or revive_target.get("is_master")
+                    or revive_target.get("test_hero")):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")})
+                return
+            if not self._no_raio(p, revive_target, 1):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.o_aliado_precisa_estar_adjacente")})
+                return
+
         if effect == "luck_coin" and p.get("moeda_sorte_ativa"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.moeda_da_sorte_ja_ativa")})
             return
@@ -41912,6 +42238,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 doses_msg = ""
             await self.gm_say(
                 T("narracao.usa_e_recupera_hp_3", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), val=val, doses_msg=doses_msg))
+        elif effect == "revive_ally":
+            alvo = revive_target
+            alvo["alive"] = True
+            alvo["hp"] = 1
+            self.hero_corpses.pop(alvo["id"], None)
+            alvo["petrificado"] = False
+            alvo["petrificado_rodadas"] = 0
+            alvo["efeitos_veneno"] = []
+            alvo["em_chamas_rodadas"] = 0
+            alvo["chamas_agua_apaga"] = True
+            alvo["action_done"] = True
+            alvo["bonus_action_used"] = True
+            p["action_done"] = True
+            await self.gm_say(T("narracao.usa_lagrima_ultima_luz",
+                                heroi=p["name"], alvo=alvo["name"]))
         elif effect == "regeneration":
             # A reserva fica no herÃ³i, nÃ£o no frasco. Assim ela nÃ£o se perde caso
             # esteja com HP cheio: sÃ³ Ã© gasta nos prÃ³ximos turnos que realmente
@@ -42225,13 +42566,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         dur_bonus = 1 if t.get("duracao") else 0
         dc_bonus  = 1 if t.get("cd") else 0
         lv0, int0, dc0 = p.get("level", 1), p.get("int_", 10), p.get("_mm_dc_bonus", 0)
+        scroll0 = p.get("_pergaminho_em_uso")
         p["level"]        = nivel
         p["int_"]         = 10 + 2 * int_bonus   # mod(int_) == int_bonus
         p["_mm_dc_bonus"] = dc_bonus             # talento Aprimorar gravado (+1 CD)
+        p["_pergaminho_em_uso"] = True
         try:
             await self._executar_magia_grimorio(p, magia, data or {}, dmg_mult, dur_bonus)
         finally:
             p["level"], p["int_"], p["_mm_dc_bonus"] = lv0, int0, dc0
+            if scroll0 is None:
+                p.pop("_pergaminho_em_uso", None)
+            else:
+                p["_pergaminho_em_uso"] = scroll0
 
     async def _pergaminho_invocar_hostil(self, p):
         """Invocação que dá errado: surge uma criatura hostil aos jogadores."""
@@ -48654,12 +49001,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     for _ in range(roll_dice("1d6")):
                         items_sempre.append(deepcopy(virote_item))
 
-        # Tabela base (01-40 nada, 41-70 1 moeda, 71-90 2 moedas, 91-100 nada)
-        base_roll = random.randint(1, 100)
-        if 41 <= base_roll <= 70:
-            gold_total += 1
-        elif 71 <= base_roll <= 90:
-            gold_total += 2
+        if m.get("type") == "kobold_mago":
+            for item in m.get("equipment_items", []):
+                if item.get("item_slot") == "head":
+                    items_sempre.append(deepcopy(item))
+            gold_range = m.get("gold_range") or [5, 20]
+            gold_total = random.randint(int(gold_range[0]), int(gold_range[1]))
+        else:
+            # Tabela base (01-40 nada, 41-70 1 moeda, 71-90 2 moedas, 91-100 nada)
+            base_roll = random.randint(1, 100)
+            if 41 <= base_roll <= 70:
+                gold_total += 1
+            elif 71 <= base_roll <= 90:
+                gold_total += 2
 
         comida = _comida_extra_do_monstro(m)
         if comida:
@@ -50731,14 +51085,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         except (TypeError, ValueError):
             return 1
 
+    def _monster_spell_slot_available(self, m):
+        """True when the monster has a normal slot or a ready Archmage slot."""
+        if m.get("spell_slots_per_combat") is None:
+            return True
+        if m.get("spell_slots_remaining", 0) > 0:
+            return True
+        if "chapeu_arquimago" in m.get("equipped_items", []):
+            return self.round_num >= int(m.get("kobold_mago_slot_arquimago_pronto_em", 0))
+        return False
+
     def _magia_monstro_disponivel(self, m, sid):
         """True se o monstro pode lançar sid agora (implementada, com usos e
         fora de recarga). Mesmos limites que _monster_try_spell aplica."""
         cfg = self._spell_cfg(m, sid)
         if not cfg or sid not in GRIMORIO or sid not in GRIMORIO_IMPLEMENTADAS:
             return False
-        if (m.get("type") == "dark_mage" and cfg.get("source") != "scroll"
-                and m.get("spell_slots_remaining", 0) <= 0):
+        if (cfg.get("source") != "scroll" and not self._monster_spell_slot_available(m)):
             return False
         if cfg.get("limit_mode", "encounter") == "cooldown":
             return self.round_num >= m.get("spell_cooldowns", {}).get(sid, 0)
@@ -50780,8 +51143,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         else:
             uses = m.setdefault("spell_uses", {}).get(sid, max(1, int(cfg.get("uses_per_combat", 1))))
             m["spell_uses"][sid] = max(0, uses - 1)
-            if m.get("type") == "dark_mage":
-                m["spell_slots_remaining"] = max(0, m.get("spell_slots_remaining", 0) - 1)
+            if m.get("spell_slots_per_combat") is not None:
+                if m.get("spell_slots_remaining", 0) > 0:
+                    m["spell_slots_remaining"] = max(0, m.get("spell_slots_remaining", 0) - 1)
+                elif "chapeu_arquimago" in m.get("equipped_items", []):
+                    m["kobold_mago_slot_arquimago_pronto_em"] = self.round_num + 20
 
     async def _lancar_magia_monstro(self, m, sid, data, cfg=None):
         """Debita uso/recarga e executa a magia. Ponto único usado pela IA
@@ -50893,8 +51259,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             sid = cfg.get("id")
             if sid in skip_ids:
                 continue
-            if (m.get("type") == "dark_mage" and cfg.get("source") != "scroll"
-                    and m.get("spell_slots_remaining", 0) <= 0):
+            if (cfg.get("source") != "scroll" and not self._monster_spell_slot_available(m)):
                 continue
             magia = GRIMORIO.get(sid)
             if not magia or sid not in GRIMORIO_IMPLEMENTADAS:
@@ -53182,6 +53547,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p.pop("regen_pool", None); p.pop("regen_ressurge", None); p.pop("regen_visual_id", None); p.pop("regen_por_rodada", None)
             await self.gm_say(T("narracao.seria_derrotado_mas_a_regeneracao_o_reer", heroi=p['name']))
             return
+        # Último Suspiro: cada cópia equipada é uma proteção de uso único.
+        # Verifica item1 antes de item2 para consumir só uma carga por morte;
+        # itens que ainda estão na bolsa não protegem.
+        if not force:
+            gear = p.get("gear") or {}
+            for slot in ("item1", "item2"):
+                item = gear.get(slot)
+                if item and item.get("id") == "ultimo_suspiro":
+                    gear[slot] = None
+                    p["hp"] = 1
+                    await self.gm_say(T("narracao.ultimo_suspiro_salva_heroi", heroi=p["name"]))
+                    return
         # Instinto de SobrevivÃªncia: tÃ©cnica genÃ©rica de recarga longa â€” sobrevive com 1 HP.
         if (not force and tem_tecnica_equipada(p, "tecnica_instinto_sobrevivencia")
                 and self.tecnica_restante(p, "tecnica_instinto_sobrevivencia") == 0):
@@ -54222,6 +54599,29 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "granted_origem": "crystal_ball",
         }
 
+    def _shadow_cloak_skill(self, p):
+        """Ação de Manto da Escuridão concedida ao Ladino pela armadura."""
+        if not isinstance(p, dict):
+            return None
+        item = (p.get("gear") or {}).get("armor")
+        if (p.get("class_id") != "rogue" or not isinstance(item, dict)
+                or item.get("id") != "manto_das_sombras"):
+            return None
+        pronta_em = int(item.get("manto_escuridao_pronto_em", 0) or 0)
+        restante = max(0, pronta_em - int(self.round_num or 0))
+        return {
+            "id": "usar_manto_sombras",
+            "name": "Manto das Sombras",
+            "icon": "🌑",
+            "image": item.get("icon", "assets/itens/manto_das_sombras.png"),
+            "tipo": "acao_principal",
+            "target": "self_area",
+            "description": item.get("descricao", "Conjura Manto da Escuridão. Recarga: 20 rodadas."),
+            "recarga_rodadas": 20,
+            "cooldown_remaining": restante,
+            "granted_origem": "shadow_cloak",
+        }
+
     def _monster_illusion_target(self, monster, targets=None):
         """Retorna a isca visível mais próxima para monstros automáticos."""
         if not monster or monster.get("control_mode") == "manual":
@@ -54403,6 +54803,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             crystal_ball_skill = self._crystal_ball_skill(p)
             if crystal_ball_skill:
                 granted_skills.append(crystal_ball_skill)
+            shadow_cloak_skill = self._shadow_cloak_skill(p)
+            if shadow_cloak_skill:
+                granted_skills.append(shadow_cloak_skill)
             # Metadado autoritativo para o HUD: a bomba de fumaça e o Manto
             # criam zonas no mapa, então o cliente não deve precisar inferir
             # sozinho se este personagem está dentro da área penalizada.
@@ -55927,6 +56330,9 @@ async def handler(ws):
 
                 elif t == "use_crystal_ball":
                     if room: await room.handle_use_crystal_ball(pid, msg)
+
+                elif t == "use_shadow_cloak":
+                    if room: await room.handle_use_shadow_cloak(pid, msg)
 
                 elif t == "read_item":
                     if room:
