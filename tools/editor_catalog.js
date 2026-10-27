@@ -12698,6 +12698,16 @@ window.EDITOR_CATALOG = {
       "value": 3
     },
     {
+      "id": "mochila_carga",
+      "name": "Mochila de Carga",
+      "emoji": "🎒",
+      "icon": "assets/itens/backpack.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 6,
+      "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila."
+    },
+    {
       "id": "cinto_utilidades",
       "name": "Cinto de Utilidades",
       "emoji": "🎒",

@@ -28,6 +28,10 @@ Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` conc
 
 `aljava_pequena` (30 moedas) e `aljava_grande` (60) são vendidas em `ferreiro_ammo` nos cinco ferreiros, usam `assets/itens/aljava.png` e equipam em `gear.off_hand`. Sem aljava, cada pilha mantém o limite de 10. Equipada, aumenta o limite de pilha da bolsa para 20/40 flechas ou 25/50 virotes (`_max_ammo_stack_for`). Arcos equipados com aljava consomem flechas diretamente da bolsa, na ordem de preferência de flechas; bestas continuam consumindo virotes da bolsa e a aljava usa o espaço secundário. Flechas e virotes são munições separadas; prata/incendiária respeitam o limite correspondente ao tipo. Não altera dano nem concede munição.
 
+### Mochila de Carga (2026-10-25)
+
+mochila_carga custa 250 moedas, usa assets/itens/backpack.png e concede +6 espaços enquanto equipada. É vendida nos mesmos quatro mercadores que a Mochila de Couro. Como ambos ocupam item1/item2 e o efeito bagslots é aditivo, podem ser equipadas juntas; a capacidade cresce em +9.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

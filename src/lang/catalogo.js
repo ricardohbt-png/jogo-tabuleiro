@@ -3222,6 +3222,14 @@ window.LANG_CATALOGO = {
     "en": "Hawk's Aim Elixir",
     "pt": "Elixir da Mira do Falcão"
   },
+  "cat.item.mochila_carga.desc": {
+    "en": "While equipped, increases backpack capacity by 6 slots.",
+    "pt": "Equipado, aumenta em 6 espaços a capacidade da mochila."
+  },
+  "cat.item.mochila_carga.nome": {
+    "en": "Cargo Backpack",
+    "pt": "Mochila de Carga"
+  },
   "cat.item.moeda_da_sorte.desc": {
     "en": "Bonus action. Consumes the coin when activated. The hero rerolls their first failed attack or saving throw; the second result stands. Stays active until triggered.",
     "pt": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."

@@ -7732,6 +7732,8 @@ SHOP_MERCHANT = [
      "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 18, "item_slot": "item",  "effect": "bagslots",  "value": 3},
+    {"id": "mochila_carga", "name": "Mochila de Carga", "emoji": "🎒", "icon": "assets/itens/backpack.png", "price": 250, "item_slot": "item", "effect": "bagslots", "value": 6,
+     "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila."},
     {"id": "cinto_utilidades", "name": "Cinto de Utilidades", "emoji": "🎒", "price": 80,
      "item_slot": "item", "effect": "utility_belt", "value": 0, "icon": "assets/itens/cinto_e_bolsos.png",
      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."},
