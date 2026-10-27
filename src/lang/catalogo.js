@@ -3507,8 +3507,8 @@ window.LANG_CATALOGO = {
     "pt": "Desarmado"
   },
   "cat.item.vela_escuridao.desc": {
-    "en": "Bonus action. You stay hidden until the end of the turn; your next attack has advantage. For the Rogue, the next attack automatically triggers Sneak Attack.",
-    "pt": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
+    "en": "Bonus action. You stay hidden until the end of your next turn (+1 round); your next attack has advantage. For the Rogue, the next attack automatically triggers Sneak Attack.",
+    "pt": "Ação bônus. Fica oculto até o fim do próximo turno (+1 rodada); o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
   },
   "cat.item.vela_escuridao.nome": {
     "en": "Candle of Darkness",

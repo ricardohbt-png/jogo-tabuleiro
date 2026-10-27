@@ -32,6 +32,10 @@ Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` conc
 
 mochila_carga custa 250 moedas, usa assets/itens/backpack.png e concede +6 espaços enquanto equipada. É vendida nos mesmos quatro mercadores que a Mochila de Couro. Como ambos ocupam item1/item2 e o efeito bagslots é aditivo, podem ser equipadas juntas; a capacidade cresce em +9.
 
+### Vela da Escuridão — duração (2026-10-25)
+
+A Vela da Escuridão concede ocultação pelo turno de uso e por mais 1 rodada: oculto_vela_rodadas começa em 2 e diminui ao encerrar o turno do herói. O próximo ataque mantém vantagem; para Ladino, o primeiro ataque enquanto oculto ativa Ataque Furtivo automaticamente. A vela continua sem acumular com outra furtividade.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

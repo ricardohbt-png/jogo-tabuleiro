@@ -12440,8 +12440,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🕯️",
       "item_slot": "bag",
       "effect": "veil_shadow",
-      "value": 0,
-      "descricao": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
+      "value": 2,
+      "descricao": "Ação bônus. Fica oculto até o fim do próximo turno (+1 rodada); o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
     },
     {
       "id": "vela_reveladora",

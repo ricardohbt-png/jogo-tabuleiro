@@ -7677,8 +7677,8 @@ SHOP_MERCHANT = [
      "descricao": "Dissolve a pedra: cura petrificação e protege por 1d4 rodadas."},
     {"id": "elixir_depurativo", "name": "Elixir Depurativo", "emoji": "🧴", "price": 20, "item_slot": "bag", "effect": "cure_disease", "value": 0, "imunidade_dado": "1d4",
      "descricao": "Purga doenças do corpo e protege por 1d4 rodadas."},
-    {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 0,
-     "descricao": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."},
+    {"id": "vela_escuridao","name": "Vela da Escuridão", "emoji": "🕯️", "price": 50, "item_slot": "bag",   "effect": "veil_shadow","value": 2,
+     "descricao": "Ação bônus. Fica oculto até o fim do próximo turno (+1 rodada); o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."},
     {"id": "vela_reveladora", "name": "Vela Reveladora", "emoji": "🕯️", "icon": "assets/itens/vela_reveladora.png", "price": 80, "item_slot": "bag", "effect": "reveal_traps_potion", "value": 10,
      "descricao": "Ação bônus. Por 10 rodadas, revela para todo o grupo as armadilhas ativas em um raio de 3 casas ao redor do herói. O raio acompanha o herói; a vela não aciona nem desarma armadilhas."},
     {"id": "lampada_vigilia_arcana", "name": "Lâmpada da Vigília Arcana", "emoji": "🏮", "icon": "assets/itens/lampada_vigilia_arcana.png", "price": 60, "item_slot": "bag", "effect": "arcane_vigilance_potion", "value": 10, "radius": 3,
@@ -41990,6 +41990,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Acende a vela: oculto atÃ© o fim do turno. Ladino â†’ Ataque Furtivo
             # automÃ¡tico; demais â†’ prÃ³ximo ataque com vantagem (ver handle_attack).
             p["oculto_vela"] = True
+            p["oculto_vela_rodadas"] = max(1, int(val or 2))
             if p.get("class_id") == "rogue":
                 extra = " — seu próximo ataque é um **Ataque Furtivo** automático!"
             else:
@@ -42561,7 +42562,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         fosso_encerrando = bool(p.get("fosso_turno_perdido"))
         # Limpa imobilizaÃ§Ã£o (teia/rede) â€” o jogador encerrou o turno bloqueado
         p.pop("perde_turno", None)
-        p.pop("oculto_vela", None)   # Vela da EscuridÃ£o: oculto dura sÃ³ atÃ© o fim do turno
+        if p.get("oculto_vela"):
+            vela_rodadas = max(1, int(p.get("oculto_vela_rodadas", 1) or 1)) - 1
+            if vela_rodadas > 0:
+                p["oculto_vela_rodadas"] = vela_rodadas
+            else:
+                p.pop("oculto_vela", None)
+                p.pop("oculto_vela_rodadas", None)
+        else:
+            p.pop("oculto_vela_rodadas", None)
 
         # â”€â”€ Turno dos servos: logo apÃ³s o mago jogar, ele controla os animados â”€â”€
         # O primeiro "encerrar turno" abre a janela dos servos (sem avanÃ§ar); o
