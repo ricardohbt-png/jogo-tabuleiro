@@ -27643,6 +27643,7 @@ function renderMyPanel(state){
     else if(sk.granted_origem === 'weapon')  sl.appendChild(_weaponThrowSkillBtn(me, sk));
     else if(sk.granted_origem === 'crystal_ball') sl.appendChild(_crystalBallSkillBtn(me, sk));
     else if(sk.granted_origem === 'shadow_cloak') sl.appendChild(_shadowCloakSkillBtn(me, sk));
+    else if(sk.granted_origem === 'runic_armor') sl.appendChild(_runicArmorSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
@@ -30985,6 +30986,23 @@ function ativarHabilidadeDoMenu(skillId){
     send({type:'use_shadow_cloak'});
     return;
   }
+  if(skillId === 'usar_armadura_runica_barreira_arcana'
+      || skillId === 'usar_armadura_runica_protecao_energia'){
+    const item = me.gear?.armor;
+    const prontaEm = Number(item?.armadura_runica_pronta_em || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    const spellId = skillId.endsWith('_barreira_arcana') ? 'barreira_arcana' : 'protecao_energia';
+    if(item?.id !== 'armadura_runica' || !['warrior','paladin'].includes(me.class_id)){
+      toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return;
+    }
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.item.armadura_runica.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    send({type:'use_runic_armor', spell_id:spellId});
+    return;
+  }
   const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
   if(weaponThrowSlot){
     fecharMenuHabilidades();
@@ -31581,6 +31599,34 @@ function _shadowCloakSkillBtn(me, skill){
     </div>
     <div class="skill-cost">${restante > 0 ? `${restante}r` : '🌑'}</div>`;
   btn.onclick = () => ativarHabilidadeDoMenu('usar_manto_sombras');
+  return btn;
+}
+
+function _runicArmorSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.armor;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.armadura_runica_pronta_em || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const spellId = skill?.spell_id;
+  const valido = spellId === 'barreira_arcana' || spellId === 'protecao_energia';
+  const podeUsar = !!(valido && item?.id === 'armadura_runica'
+    && ['warrior','paladin'].includes(me?.class_id)
+    && GS.isMyTurn && me.alive && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  const nomeMagia = valido ? t(`cat.magia.${spellId}.nome`) : t('cat.item.armadura_runica.nome');
+  const descricao = valido ? t(`cat.item.armadura_runica.${spellId}.desc`) : t('cat.item.armadura_runica.desc');
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '🛡️')} ${nomeMagia}${recarga}</div>
+      <div class="skill-desc">${descricao}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🛡️'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu(skill.id);
   return btn;
 }
 

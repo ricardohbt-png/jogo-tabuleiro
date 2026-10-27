@@ -7692,6 +7692,11 @@ SHOP_ARMORS = [
     {"id": "plate",        "name": "Armadura de Placas", "emoji": "🛡️", "ac_bonus": 6, "price": 400, "kind": "armor",
      "armor_category": "pesada", "corrosion_materials": ["metal"],
      "allowed_classes": ["paladin", "warrior"]},
+    {"id": "armadura_runica", "name": "Armadura Rúnica", "emoji": "🛡️",
+     "icon": "assets/itens/armadura_runica.png", "ac_bonus": 7, "price": 2500, "kind": "armor",
+     "armor_category": "pesada", "corrosion_materials": ["metal"],
+     "allowed_classes": ["paladin", "warrior"],
+     "descricao": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."},
     {"id": "monster_leather_plate", "name": "Armadura de Couro de Monstro e Placas", "emoji": "🛡️", "ac_bonus": 7, "price": 600, "kind": "armor",
      "armor_category": "pesada", "corrosion_materials": ["organic", "metal"],
      "allowed_classes": ["paladin", "warrior"]},
@@ -7792,7 +7797,7 @@ SHOP_MERCHANT = [
     # â”€â”€ Itens ativos (slots item1 / item2) â”€â”€
     {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 80,
      "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
-    {"id": "botas_passo_felino", "name": "Botas do Passo Felino", "emoji": "👢", "icon": "assets/itens/bota.png", "price": 500, "item_slot": "boots", "effect": "dex", "value": 2,
+    {"id": "botas_passo_felino", "name": "Botas do Passo Felino", "emoji": "👢", "icon": "assets/itens/boots.png", "price": 500, "item_slot": "boots", "effect": "dex", "value": 2,
      "descricao": "+2 de Destreza enquanto equipada."},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 100, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "talisma_despertar_forca", "name": "Talismã do Despertar: Força", "emoji": "📿", "icon": "assets/itens/medalhao3.png", "price": 250, "item_slot": "item", "effect": "str_", "value": 1,
@@ -17464,7 +17469,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 gear_item["armor_category"] = item.get("armor_category")
                 gear_item["corrosion_materials"] = list(item.get("corrosion_materials", []))
             for _k in ("corrosion_materials", "corrosao_resistente", "corrosao_niveis_penalidade",
-                       "bonuses", "granted_ability", "maldicao_id", "maldicao_prende", "kind",
+                       "bonuses", "granted_ability", "maldicao_id", "maldicao_prende", "kind", "icon",
+                       "allowed_classes",
                        "damage_reduction", "descricao"):
                 if _k in item and _k not in gear_item:
                     gear_item[_k] = deepcopy(item[_k])
@@ -28630,6 +28636,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 shadow_cloak_skill = self._shadow_cloak_skill(p)
                 if shadow_cloak_skill:
                     granted.append(shadow_cloak_skill)
+                granted.extend(self._runic_armor_skills(p))
                 granted_ids = {s.get("id") for s in granted if isinstance(s, dict)}
                 # A habilidade do instrumento é dinâmica: o ID depende da
                 # base atualmente equipada na off_hand (ex.: instrumento_harpa).
@@ -28950,7 +28957,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                               + ([self._crystal_ball_skill(p)]
                                                  if self._crystal_ball_skill(p) else [])
                                               + ([self._shadow_cloak_skill(p)]
-                                                 if self._shadow_cloak_skill(p) else []))
+                                                 if self._shadow_cloak_skill(p) else [])
+                                              + self._runic_armor_skills(p))
                                   if isinstance(s, dict) and s.get("id") == clean["id"]), None)
             if not skill:
                 inst = (p.get("gear") or {}).get("off_hand")
@@ -31495,6 +31503,71 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p.pop("invisivel_magico_rodadas", None)
             await self.gm_say(T("narracao.revela_se_ao_lancar_magia", heroi=p["name"]))
         await self._licao_evento(p, "usar_habilidade", alvo="usar_manto_sombras")
+        await self.push_state()
+
+    async def handle_use_runic_armor(self, pid, data=None):
+        """Conjura uma proteção da Armadura Rúnica, com recarga compartilhada."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive"):
+            return
+        if p.get("class_id") not in ("warrior", "paladin"):
+            await self.send_to(pid, {"type": "error", "msg": T(
+                "erro.sua_classe_nao_pode_usar_item", item=nome_de("item", "armadura_runica"))})
+            return
+        spell_id = (data or {}).get("spell_id") if isinstance(data, dict) else None
+        if spell_id not in ("barreira_arcana", "protecao_energia"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+            return
+        for status, chave in (("metamorfose_ativa", "erro.a_forma_transformada_nao_pode_lancar_mag"),
+                              ("petrificado", "erro.voce_esta_petrificado_e_nao_pode_lancar"),
+                              ("paralisado", "erro.voce_esta_paralisado_e_nao_pode_lancar_m"),
+                              ("dormindo", "erro.voce_esta_dormindo_e_nao_pode_lancar_mag")):
+            if p.get(status):
+                await self.send_to(pid, {"type": "error", "msg": T(chave)})
+                return
+        if self._tem_maldicao(p, "silencio_deuses"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.silencio_dos_deuses_impede_lancar_magias")})
+            return
+        if self._em_silencio(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_numa_area_de_silencio_e_nao_po")})
+            return
+
+        item = (p.get("gear") or {}).get("armor")
+        if not isinstance(item, dict) or item.get("id") != "armadura_runica":
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+            return
+        if self._acao_bloqueada(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+        restante = int(item.get("armadura_runica_pronta_em", 0) or 0) - int(self.round_num or 0)
+        if restante > 0:
+            await self.send_to(pid, {"type": "error", "msg": T(
+                "erro.tecnica_em_recarga", tecnica=nome_item(item), rodadas=restante)})
+            return
+
+        magia = deepcopy(GRIMORIO[spell_id])
+        if spell_id == "barreira_arcana":
+            magia.update({"duracao": "1d1+3", "duracao_por_nivel": 0})
+        else:
+            magia["duracao"] = "1d1+4"
+
+        p["action_done"] = True
+        item["armadura_runica_pronta_em"] = int(self.round_num or 0) + 30
+        self._pagar_fome_sede(p, 1, 1, contexto="Armadura Rúnica")
+        self._verificar_estado_sobrevivencia(p)
+        await self._executar_magia_grimorio(p, magia, {})
+        if p.get("invisivel_magico"):
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "invisibilidade", "phase": "break",
+                "caster_id": p["id"], "origin": list(p.get("pos", [0, 0])), "reason": "nova_magia",
+            })
+            p["invisivel_magico"] = False
+            p.pop("invisivel_magico_rodadas", None)
+            await self.gm_say(T("narracao.revela_se_ao_lancar_magia", heroi=p["name"]))
+        await self._licao_evento(p, "usar_habilidade", alvo=f"usar_armadura_runica_{spell_id}")
         await self.push_state()
 
     async def handle_magia(self, pid, data):
@@ -54622,6 +54695,29 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "granted_origem": "shadow_cloak",
         }
 
+    def _runic_armor_skills(self, p):
+        """Duas proteções da armadura, com recarga compartilhada na instância."""
+        if not isinstance(p, dict) or p.get("class_id") not in ("warrior", "paladin"):
+            return []
+        item = (p.get("gear") or {}).get("armor")
+        if not isinstance(item, dict) or item.get("id") != "armadura_runica":
+            return []
+        remaining = max(0, int(item.get("armadura_runica_pronta_em", 0) or 0)
+                        - int(self.round_num or 0))
+        return [{
+            "id": f"usar_armadura_runica_{spell_id}",
+            "spell_id": spell_id,
+            "name": GRIMORIO[spell_id]["nome"],
+            "icon": GRIMORIO[spell_id].get("icone", "🛡️"),
+            "image": item.get("icon", "assets/itens/armadura_runica.png"),
+            "tipo": "acao_principal",
+            "target": "self",
+            "description": item.get("descricao", "Proteção rúnica. Recarga compartilhada: 30 rodadas."),
+            "recarga_rodadas": 30,
+            "cooldown_remaining": remaining,
+            "granted_origem": "runic_armor",
+        } for spell_id in ("barreira_arcana", "protecao_energia")]
+
     def _monster_illusion_target(self, monster, targets=None):
         """Retorna a isca visível mais próxima para monstros automáticos."""
         if not monster or monster.get("control_mode") == "manual":
@@ -54806,6 +54902,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             shadow_cloak_skill = self._shadow_cloak_skill(p)
             if shadow_cloak_skill:
                 granted_skills.append(shadow_cloak_skill)
+            granted_skills.extend(self._runic_armor_skills(p))
             # Metadado autoritativo para o HUD: a bomba de fumaça e o Manto
             # criam zonas no mapa, então o cliente não deve precisar inferir
             # sozinho se este personagem está dentro da área penalizada.
@@ -56333,6 +56430,9 @@ async def handler(ws):
 
                 elif t == "use_shadow_cloak":
                     if room: await room.handle_use_shadow_cloak(pid, msg)
+
+                elif t == "use_runic_armor":
+                    if room: await room.handle_use_runic_armor(pid, msg)
 
                 elif t == "read_item":
                     if room:
@@ -58127,7 +58227,9 @@ def _weapon_nat1_wear(weapon):
 
 def _weapon_allowed_classes(item):
     """A restrição nativa também vale para itens de saves/loot sem metadados."""
-    return item.get("allowed_classes") or WEAPONS.get(item.get("id"), {}).get("allowed_classes")
+    ident = item.get("id")
+    return (item.get("allowed_classes") or WEAPONS.get(ident, {}).get("allowed_classes")
+            or ARMOR_CATALOG.get(ident, {}).get("allowed_classes"))
 
 WEAPON_GRANTED_ABILITIES = {"arremesso_bruto", "causar_sangramento"}
 

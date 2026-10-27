@@ -36,6 +36,8 @@ class BotasPassoFelinoTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(item["price"], 500)
         self.assertEqual((item["item_slot"], item["effect"], item["value"]),
                          ("boots", "dex", 2))
+        self.assertEqual(item["icon"], "assets/itens/boots.png")
+        self.assertTrue((RAIZ / item["icon"]).is_file())
         lojas = json.loads((RAIZ / "city_shops.json").read_text(encoding="utf-8"))
         mercadores = [c for c, l in lojas.items() if "mercador" in l]
         self.assertEqual(len(mercadores), 5)

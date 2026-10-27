@@ -11529,11 +11529,17 @@ window.EDITOR_CATALOG = {
       "id": "armadura_runica",
       "name": "Armadura Rúnica",
       "emoji": "🛡️",
-      "item_slot": "bag",
-      "effect": "treasure",
-      "value": 0,
-      "loot_only": true,
-      "descricao": "Armadura rúnica obtida do Gigante Rúnico; item especial para uso futuro."
+      "icon": "assets/itens/armadura_runica.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "armor",
+      "ac_bonus": 7,
+      "descricao": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
     },
     {
       "id": "runa_ancestral",
@@ -12862,7 +12868,7 @@ window.EDITOR_CATALOG = {
       "id": "botas_passo_felino",
       "name": "Botas do Passo Felino",
       "emoji": "👢",
-      "icon": "assets/itens/bota.png",
+      "icon": "assets/itens/boots.png",
       "item_slot": "boots",
       "effect": "dex",
       "value": 2,

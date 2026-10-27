@@ -37,6 +37,10 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `veste_egide_arcana` custa 1.000 moedas, ocupa `armor`, concede +2 CA e +1 nos testes de resistência feitos contra magias. É exclusiva de Mago e Clérigo, usa `assets/itens/veste_egide_arcana.png` e está à venda nos cinco ferreiros. `magic_save_bonus` é aplicado e removido no fluxo de equipamento; o modificador só entra enquanto um grimório ou conjurador de monstro está resolvendo uma magia.
 
+### Armadura Rúnica (2026-10-26)
+
+`armadura_runica` custa 2.500 moedas, ocupa `armor`, concede +7 CA total e só pode ser comprada/equipada por Guerreiro e Paladino. Usa `assets/itens/armadura_runica.png` e está nos cinco ferreiros. Enquanto equipada, concede duas ações principais sem gasto de espaço de magia: Barreira Arcana (reduz 5 de todo dano) ou Proteção contra Energia (absorve 10 por rodada dos tipos listados), ambas por exatamente 5 rodadas. As opções compartilham recarga de 30 rodadas guardada na instância equipada. O ID também continua resolvendo o saque do Gigante Rúnico para a definição completa da armadura.
+
 ### Chapéus do Bruxo e do Conjurador (2026-10-26)
 
 `chapeu_bruxo` custa 200 moedas e concede `spell_dc: +1`; é exclusivo do Mago. `chapeu_conjurador` custa 800 moedas e concede `spell_dc: +2`; pode ser usado por Mago e Clérigo. Ambos ocupam `head`. `_apply_single_effect` mantém o bônus reversível em `gear_spell_dc_bonus`, somado em `_dif_magia` para CDs de resistência das magias. Usam `assets/itens/chapeu_bruxo1.png` e `assets/itens/chapeu_bruxo2.png`, respectivamente, e estão à venda nos cinco mercadores.
@@ -69,7 +73,7 @@ Cerveja Anã custa 8 moedas, usa assets/itens/barril_de_cerveja.png e é vendida
 
 ### Botas do Passo Felino (2026-10-25)
 
-`botas_passo_felino` custa 500 moedas, usa o slot dedicado `boots`, concede +2 Destreza por `_apply_attribute_delta` enquanto equipada e aponta para `assets/itens/bota.png`. Está disponível nos cinco mercadores (`city_shops.json`) e no catálogo PT/EN e do editor. O Gilo já tinha um ajuste específico de +2 DES em `_configurar_gilo_spawn`; `Botas Velozes` continuam sendo o item separado que concede +1 movimento.
+`botas_passo_felino` custa 500 moedas, usa o slot dedicado `boots`, concede +2 Destreza por `_apply_attribute_delta` enquanto equipada e aponta para `assets/itens/boots.png`. Está disponível nos cinco mercadores (`city_shops.json`) e no catálogo PT/EN e do editor. O Gilo já tinha um ajuste específico de +2 DES em `_configurar_gilo_spawn`; `Botas Velozes` continuam sendo o item separado que concede +1 movimento.
 
 ### Elmo de Ferro — preço e classes (2026-10-25)
 
