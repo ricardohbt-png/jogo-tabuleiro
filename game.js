@@ -30323,17 +30323,39 @@ function _menuStatusMarkup(p, opts = {}){
     arma: _fmtBonus(bonusDanoArma),
     temp: _fmtBonus(bonusDano - bonusDanoArma)
   });
+  const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
+  // Mão secundária: espelha o golpe extra do servidor (atributo da 2ª arma, bônus de nível
+  // e modificadores situacionais; dano = dado + atributo + sobrevivência).
+  const off = p.gear?.off_hand;
+  const offEhArma = !!(off && off.die && off.id !== 'hand_crossbow' && off.effect !== 'shield'
+    && off.tipo_item !== 'instrumento' && off.effect !== 'quiver');
+  let linhasOff = '';
+  if(offEhArma){
+    const modFor = _modAtributo(p.str_), modDes = _modAtributo(p.dex);
+    let offMod = off.off_hand_forca ? modFor : (off.finesse ? Math.max(modFor, modDes) : modDes);
+    if(off.off_hand_stat) offMod = _modAtributo(p[off.off_hand_stat]);
+    const nomeAtrOff = off.off_hand_stat
+      ? _rotulo(off.off_hand_stat, 'ui.atributo.sigla', off.off_hand_stat)
+      : (off.off_hand_forca ? _rotulo('str_', 'ui.atributo.sigla', 'FOR') : _rotulo('dex', 'ui.atributo.sigla', 'DES'));
+    const levelBonus = Number(p.level_bonus ?? 1) || 0;
+    const acertoOff = offMod + levelBonus + bonusAtaque;
+    const danoOff = `${off.die} ${_fmtBonus(offMod)} → ${off.die} ${_fmtBonus(offMod + sobrevivencia)}`;
+    linhasOff = linha(t('ui.ladino.mao_secundaria'), off.name || '')
+      + linha(t('ui.status.acerto_mao_sec'), _fmtBonus(acertoOff),
+          t('ui.status.detalhe_acerto_mao_sec', {attr:nomeAtrOff, mod:_fmtBonus(offMod), nivel:_fmtBonus(levelBonus), temp:_fmtBonus(bonusAtaque)}))
+      + linha(t('ui.status.dano_mao_sec'), danoOff,
+          t('ui.status.detalhe_dano_mao_sec', {attr:nomeAtrOff, mod:_fmtBonus(offMod), temp:_fmtBonus(sobrevivencia)}));
+  }
   const temporarios = _modificadoresTemporariosStatus(p);
   // Rodada atual: converte o `ate` absoluto dos efeitos em rodadas restantes.
   const _stStatus = GS.gameState || GS.cityState || {};
   const r = Number(_stStatus.round || _stStatus.round_num || 0);
-  const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
   const _bAtual = t('ui.status.base_atual');
   const close = opts.embedded ? '' : `<button onclick="fecharMenuStatus()" aria-label="${t('ui.geral.fechar')}">✕</button>`;
   const hint = opts.embedded ? `<small>${p.name || t('ui.tabuleiro.heroi')}</small>` : `<small>${p.name || t('ui.tabuleiro.heroi')} · ${t('ui.status.tecla_s')}</small>`;
   return `<section class="menu-status${opts.embedded ? ' menu-status-embedded' : ''}" role="dialog" aria-modal="true" aria-label="${t('ui.status.aria')}">
     <header class="st-header"><div><b>${t('ui.status.titulo')}</b>${hint}</div>${close}</header>
-    <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, detalheDano)}</section>
+    <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, detalheDano)}${linhasOff}</section>
     <section><h3>${t('ui.status.resistencias')}</h3>${linha(t('ui.resistencia.fortitude'), `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.reflexos'), `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.vontade'), `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, _bAtual)}</section>
     <section><h3>${t('ui.status.modificadores_temp')}</h3>${temporarios.length ? temporarios.map(m => { const n = m.rodadas != null ? Number(m.rodadas) : (m.ate != null && r ? Math.max(0, Number(m.ate) - r) : null); return `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${n != null && n > 0 ? `<em>${t('ui.status.rodadas_restantes', {n:n})}</em>` : ''}</div>`; }).join('') : `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`}</section></div></section>`;
 }

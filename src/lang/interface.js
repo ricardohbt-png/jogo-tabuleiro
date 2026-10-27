@@ -9827,6 +9827,10 @@ window.LANG_INTERFACE = {
     "en": "Character status",
     "pt": "Status do personagem"
   },
+  "ui.status.acerto_mao_sec": {"en":"Attack (off hand)","pt":"Acerto (mão sec.)"},
+  "ui.status.dano_mao_sec": {"en":"Damage (off hand)","pt":"Dano (mão sec.)"},
+  "ui.status.detalhe_acerto_mao_sec": {"en":"{attr} {mod} · level {nivel} · temporary {temp}","pt":"{attr} {mod} · nível {nivel} · temporários {temp}"},
+  "ui.status.detalhe_dano_mao_sec": {"en":"{attr} {mod} · other bonuses {temp}","pt":"{attr} {mod} · outros bônus {temp}"},
   "ui.status.arma_equipada": {
     "en": "Equipped weapon",
     "pt": "Arma equipada"
