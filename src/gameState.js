@@ -2584,6 +2584,12 @@ const GS = (() => {
     if (source === 'bag') send({ type: 'drop_item', source: 'bag',  index: ref });
     else                  send({ type: 'drop_item', source: 'gear', slot_key: ref });
   }
+  // Passa um item (bolsa ou equipado) de um herói meu para a bolsa de outro herói meu.
+  function transferItem(source, ref, toHero, fromHero) {
+    const m = { type: 'transfer_item', source, to_hero: toHero, heroi: fromHero };
+    if (source === 'bag') m.index = ref; else m.slot_key = ref;
+    send(m);
+  }
   function pickupItem(id) { send({ type: 'pickup_item', ground_id: id }); }
   // Resolver puro: item do chão é pegável por `player`? (adjacência Chebyshev ≤1)
   function groundItemPickable(gi, player) {
@@ -4168,6 +4174,7 @@ const GS = (() => {
     reorderBag,
     equipOffhand,
     dropItem,
+    transferItem,
     interagirDecor,
     takeFromDecor,
     takeAllFromDecor,

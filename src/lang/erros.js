@@ -1033,6 +1033,9 @@ window.LANG_ERROS = {
     "en": "Your health is already full.",
     "pt": "A vida já está cheia."
   },
+  "erro.transferencia_destino_invalido": {"en":"That hero cannot receive the item.","pt":"Esse herói não pode receber o item."},
+  "erro.transferencia_precisa_adjacente": {"en":"Both heroes must be adjacent to pass an item.","pt":"Os dois heróis precisam estar adjacentes para passar um item."},
+  "erro.transferencia_bolsa_cheia": {"en":"The other hero's bag is full.","pt":"A bolsa do outro herói está cheia."},
   "erro.item_nao_encontrado": {
     "en": "Item not found.",
     "pt": "Item não encontrado."

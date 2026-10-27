@@ -2624,6 +2624,7 @@ window.LANG_NARRACAO = {
     "en": "⛪ **{heroi}** pays {preco} coins at the temple and brings **{alvo}** back to life with **1 HP**.",
     "pt": "⛪ **{heroi}** paga {preco} moedas no templo e traz **{alvo}** de volta à vida com **1 PV**."
   },
+  "narracao.entrega_item_a_heroi": {"en":"{heroi} hands {item} to {alvo}.","pt":"{heroi} entrega {item} a {alvo}."},
   "narracao.usa_lagrima_ultima_luz": {
     "en": "💫 **{heroi}** uses the Tear of the Last Light to bring **{alvo}** back with **1 HP**!",
     "pt": "💫 **{heroi}** usa a Lágrima da Última Luz e traz **{alvo}** de volta com **1 PV**!"

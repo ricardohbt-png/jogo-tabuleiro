@@ -9827,6 +9827,7 @@ window.LANG_INTERFACE = {
     "en": "Character status",
     "pt": "Status do personagem"
   },
+  "ui.inv.passar_item_para": {"en":"Pass the selected item to {nome}","pt":"Passar o item selecionado para {nome}"},
   "ui.status.acerto_mao_sec": {"en":"Attack (off hand)","pt":"Acerto (mão sec.)"},
   "ui.status.dano_mao_sec": {"en":"Damage (off hand)","pt":"Dano (mão sec.)"},
   "ui.status.detalhe_acerto_mao_sec": {"en":"{attr} {mod} · level {nivel} · temporary {temp}","pt":"{attr} {mod} · nível {nivel} · temporários {temp}"},

@@ -191,6 +191,12 @@ const InventoryModal = (() => {
 .inv-arrow-order-row .inv-arrow-name{flex:1;}
 .inv-arrow-order-row button{width:23px;height:22px;padding:0;border:1px solid #70572e;border-radius:4px;background:#2b1e11;color:#ffe5a4;cursor:pointer;}
 .inv-arrow-order-row button:disabled{opacity:.35;cursor:default;}
+.inv-hero-strip{display:none;gap:8px;justify-content:center;align-items:flex-start;margin:4px 0 6px;}
+.inv-hero-strip.on{display:flex;}
+.inv-hero-chip{width:56px;text-align:center;font-size:10px;color:#f4ecd8;cursor:pointer;border-radius:6px;padding:2px;border:2px solid transparent;}
+.inv-hero-chip img{width:48px;height:64px;object-fit:cover;border-radius:4px;display:block;margin:0 auto 2px;border:1px solid #6a5a3a;}
+.inv-hero-chip.drop-hover{border-color:#8fe08a;background:rgba(143,224,138,.18);}
+.inv-hero-chip.far{opacity:.45;}
 .inv-gold{display:flex;align-items:center;justify-content:center;gap:6px;color:#ffcf7a;font-weight:bold;
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -936,6 +942,7 @@ const InventoryModal = (() => {
                 <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button><div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div></div>
               </div>
               ${typeof window._renderAcoesExplicacaoHTML === 'function' ? window._renderAcoesExplicacaoHTML() : ''}
+              <div class="inv-hero-strip"></div>
               <div class="inv-grid"></div>
               <div class="inv-arrow-auto-host"></div>
               <div class="inv-gold">🪙 <span></span></div>
@@ -949,6 +956,7 @@ const InventoryModal = (() => {
       </div>`;
     overlay.querySelector('.inv-close').onclick = close;
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
+    _renderHeroStrip(overlay, player);
     _renderGear(overlay, player);
     _renderArrowAutoEquip(overlay, player);
     _renderBelts(overlay, player);
@@ -958,6 +966,58 @@ const InventoryModal = (() => {
     _wirePanelToggles(overlay);
     _applyPanelPrefs(overlay);
     _restoreGamepadFocus(focusBeforeRender);
+  }
+
+  // Faixa com os retratos dos OUTROS heróis do jogador: soltar um item aqui o
+  // passa para a bolsa dele (o servidor valida adjacência e espaço livre).
+  function _renderHeroStrip(overlay, player){
+    const strip = overlay.querySelector('.inv-hero-strip');
+    if(!strip || typeof GS === 'undefined') return;
+    strip.innerHTML = '';
+    strip.classList.remove('on');
+    if(_readOnly || !GS.temGrupo || !GS.ehMeuHeroi(player.id)) return;
+    const gs = GS.gameState, estado = gs || GS.cityState;
+    const outros = (estado?.players || []).filter(q => q.id !== player.id && GS.ehMeuHeroi(q.id)
+      && q.class_id && q.alive);
+    if(!outros.length) return;
+    const portraits = (typeof HERO_PORTRAIT_PATHS !== 'undefined') ? HERO_PORTRAIT_PATHS : {};
+    outros.forEach(q => {
+      const longe = !!(gs && gs.phase === 'playing' && !q.fora_masmorra && !player.fora_masmorra
+        && Array.isArray(q.pos) && Array.isArray(player.pos)
+        && Math.max(Math.abs(q.pos[0] - player.pos[0]), Math.abs(q.pos[1] - player.pos[1])) > 1);
+      const chip = document.createElement('div');
+      chip.className = 'inv-hero-chip' + (longe ? ' far' : '');
+      chip.dataset.heroId = q.id;
+      chip.title = t('ui.inv.passar_item_para', {nome: q.name || ''});
+      chip.innerHTML = `<img src="${portraits[q.class_id] || ''}" alt=""><span></span>`;
+      chip.querySelector('span').textContent = q.name || '';
+      chip.addEventListener('dragover', (e) => {
+        if(!_selected || (_selected.kind !== 'bag' && _selected.kind !== 'gear')) return;
+        e.preventDefault(); chip.classList.add('drop-hover');
+      });
+      chip.addEventListener('dragleave', () => chip.classList.remove('drop-hover'));
+      chip.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation(); chip.classList.remove('drop-hover');
+        _transferSelectedTo(q.id);
+      });
+      chip.addEventListener('click', () => { if(_selected) _transferSelectedTo(q.id); });
+      strip.appendChild(chip);
+    });
+    strip.classList.add('on');
+  }
+
+  function _transferSelectedTo(toPid){
+    const sel = _selected, player = _currentPlayer();
+    if(!sel || !player || (sel.kind !== 'bag' && sel.kind !== 'gear')){ _selected = null; refresh(); return; }
+    const enviar = () => {
+      _selected = null; _gamepadAction = null;
+      GS.transferItem(sel.kind, sel.kind === 'bag' ? sel.index : sel.slotKey, toPid, player.id);
+    };
+    if(sel.kind === 'gear' && _botaAladaEmVoo(player, sel.slotKey)){
+      _confirmarDesequiparBota(player, sel.slotKey, enviar, () => { _gamepadAction = null; refresh(); });
+      return;
+    }
+    enviar();
   }
 
   function _onGearSlotClick(slotKey, blocked){

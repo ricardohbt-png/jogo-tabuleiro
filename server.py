@@ -30309,6 +30309,57 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if chest_id in self.chests:
             await self.push_state()
 
+    async def handle_transfer_item(self, pid, source, index=None, slot_key=None, to_hero=None):
+        """Solo com grupo: passa um item da bolsa (ou equipado) de um herói do
+        jogador para a bolsa de outro herói dele. Sem custo de ação. Na masmorra
+        os dois precisam estar adjacentes; na cidade, não. Se a bolsa do
+        destinatário estiver cheia, nada muda."""
+        async def recusa(chave):
+            await self.send_to(pid, {"type": "error", "msg": T(chave)})
+        p = self.players.get(pid)
+        alvo = self.players.get(to_hero) if isinstance(to_hero, str) else None
+        if (not p or not alvo or alvo is p or not p.get("alive") or not alvo.get("alive")
+                or not alvo.get("class_id") or alvo.get("is_master") or alvo.get("test_hero")
+                or self._conexao_de(pid) != self._conexao_de(to_hero)):
+            await recusa("erro.transferencia_destino_invalido"); return
+        fora_p, fora_a = self._fora_da_masmorra(pid), self._fora_da_masmorra(to_hero)
+        if self.phase == "playing" and not (fora_p and fora_a):
+            if fora_p != fora_a or not self._no_raio(p, alvo, 1):
+                await recusa("erro.transferencia_precisa_adjacente"); return
+        elif self.phase not in ("city", "playing"):
+            await recusa("erro.transferencia_destino_invalido"); return
+        if source == "bag":
+            if not isinstance(index, int) or isinstance(index, bool) or not 0 <= index < len(p["bag"]):
+                await recusa("erro.slot_de_inventario_invalido"); return
+            item = p["bag"][index]
+        elif source == "gear":
+            if slot_key not in GEAR_SLOTS or not p["gear"].get(slot_key):
+                await recusa("erro.nada_equipado_nesse_slot"); return
+            item = p["gear"][slot_key]
+            if self._item_maldicao_vinculante(p, item) or self._slot_travado_por_maldicao(p, slot_key):
+                await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
+        else:
+            return
+        if len(alvo["bag"]) >= alvo.get("bag_size", 6):
+            await recusa("erro.transferencia_bolsa_cheia"); return
+        if source == "bag":
+            p["bag"].pop(index)
+        else:
+            # Desequipar abre uma vaga na bolsa de quem entrega só por um instante:
+            # o item segue direto para o destinatário.
+            p["bag_size"] = p.get("bag_size", 6) + 1
+            try:
+                await self.handle_unequip(pid, slot_key)
+            finally:
+                p["bag_size"] -= 1
+            if p["gear"].get(slot_key) is item or not any(b is item for b in p["bag"]):
+                return   # o desequipar foi recusado (já avisou o jogador)
+            p["bag"] = [b for b in p["bag"] if b is not item]
+        alvo["bag"].append(item)
+        await self.gm_say(T("narracao.entrega_item_a_heroi", heroi=p["name"],
+                            item=nome_item(item), alvo=alvo["name"]))
+        await self.push_state_or_city()
+
     async def handle_drop_item(self, pid, source, index=None, slot_key=None):
         """Larga um item no chão (1ª casa adjacente livre). Ação LIVRE, a qualquer
         momento (sem _is_turn). Origem: bolsa (index) ou slot equipado (slot_key —
@@ -56495,6 +56546,9 @@ async def handler(ws):
 
                 elif t == "sell_item":
                     if room: await room.handle_shop_sell(pid, msg.get("item_slot"))
+
+                elif t == "transfer_item":
+                    if room: await room.handle_transfer_item(pid, msg.get("source"), msg.get("index"), msg.get("slot_key"), msg.get("to_hero"))
 
                 elif t == "drop_item":
                     if room: await room.handle_drop_item(pid, msg.get("source"), msg.get("index"), msg.get("slot_key"))
