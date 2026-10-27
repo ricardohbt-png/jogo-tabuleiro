@@ -11526,22 +11526,6 @@ window.EDITOR_CATALOG = {
       "descricao": "Martelo colossal gravado com runas: dano 2d8+5 e alcance de 2 quadrados."
     },
     {
-      "id": "armadura_runica",
-      "name": "Armadura Rúnica",
-      "emoji": "🛡️",
-      "icon": "assets/itens/armadura_runica.png",
-      "allowed_classes": [
-        "paladin",
-        "warrior"
-      ],
-      "corrosion_materials": [
-        "metal"
-      ],
-      "kind": "armor",
-      "ac_bonus": 7,
-      "descricao": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
-    },
-    {
       "id": "runa_ancestral",
       "name": "Runa Ancestral",
       "emoji": "✨",
@@ -12319,6 +12303,32 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 3
     },
     {
+      "id": "placas_da_besta",
+      "name": "Placas da Besta",
+      "emoji": "🛡️",
+      "icon": "assets/itens/placas_da_besta.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "kind": "armor",
+      "ac_bonus": 3,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura de couro e placas reforçada com ônix. Concede +3 CA, reduz em 1 cada instância de dano físico recebido enquanto equipada e suporta 4 níveis de corrosão sem penalidade. Depois sofre as penalidades normais por 2 níveis; no nível seguinte é destruída."
+    },
+    {
       "id": "chainmail",
       "name": "Cota de Malha",
       "emoji": "🪖",
@@ -12378,6 +12388,22 @@ window.EDITOR_CATALOG = {
       ],
       "kind": "armor",
       "ac_bonus": 6
+    },
+    {
+      "id": "armadura_runica",
+      "name": "Armadura Rúnica",
+      "emoji": "🛡️",
+      "icon": "assets/itens/armadura_runica.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "armor",
+      "ac_bonus": 7,
+      "descricao": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
     },
     {
       "id": "monster_leather_plate",

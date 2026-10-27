@@ -3354,6 +3354,14 @@ window.LANG_CATALOGO = {
     "en": "Bread",
     "pt": "Pão"
   },
+  "cat.item.placas_da_besta.desc": {
+    "en": "Reinforced leather and plate armor with glossy onyx plates. Grants +3 AC, reduces each instance of physical damage received by 1 while equipped, and ignores the first 4 corrosion levels. The next 2 levels penalize it normally; the following level destroys it.",
+    "pt": "Armadura de couro e placas reforçada com ônix. Concede +3 CA, reduz em 1 cada instância de dano físico recebido enquanto equipada e suporta 4 níveis de corrosão sem penalidade. Depois sofre as penalidades normais por 2 níveis; no nível seguinte é destruída."
+  },
+  "cat.item.placas_da_besta.nome": {
+    "en": "Beast's Plate Armor",
+    "pt": "Placas da Besta"
+  },
   "cat.item.plate.nome": {
     "en": "Plate Armor",
     "pt": "Armadura de Placas"

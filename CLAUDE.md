@@ -41,6 +41,10 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `armadura_runica` custa 2.500 moedas, ocupa `armor`, concede +7 CA total e só pode ser comprada/equipada por Guerreiro e Paladino. Usa `assets/itens/armadura_runica.png` e está nos cinco ferreiros. Enquanto equipada, concede duas ações principais sem gasto de espaço de magia: Barreira Arcana (reduz 5 de todo dano) ou Proteção contra Energia (absorve 10 por rodada dos tipos listados), ambas por exatamente 5 rodadas. As opções compartilham recarga de 30 rodadas guardada na instância equipada. O ID também continua resolvendo o saque do Gigante Rúnico para a definição completa da armadura.
 
+### Placas da Besta (2026-10-26)
+
+`placas_da_besta` custa 250 moedas, ocupa `armor`, concede +3 CA e reduz em 1 cada instância de dano `physical` recebido enquanto equipada. Herda das `leather_plate` as classes permitidas (Guerreiro, Ladino, Bardo e Paladino) e os materiais de corrosão. `corrosao_resistente: 4` concede 4 níveis sem penalidade; depois há os 2 níveis normais com penalidade e o nível seguinte destrói a peça. Usa `assets/itens/placas_da_besta.png` (variante negra brilhante de `assets/itens/leather_plate.png`) e está nos cinco ferreiros. O bônus `resist` já é aplicado/removido em `_apply_gear_effect` e processado por `_apply_damage_types`.
+
 ### Chapéus do Bruxo e do Conjurador (2026-10-26)
 
 `chapeu_bruxo` custa 200 moedas e concede `spell_dc: +1`; é exclusivo do Mago. `chapeu_conjurador` custa 800 moedas e concede `spell_dc: +2`; pode ser usado por Mago e Clérigo. Ambos ocupam `head`. `_apply_single_effect` mantém o bônus reversível em `gear_spell_dc_bonus`, somado em `_dif_magia` para CDs de resistência das magias. Usam `assets/itens/chapeu_bruxo1.png` e `assets/itens/chapeu_bruxo2.png`, respectivamente, e estão à venda nos cinco mercadores.
