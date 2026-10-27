@@ -10419,6 +10419,8 @@ SHOP_TAVERN = [
     {"id": "garrafa_agua",   "name": "Garrafa de Água",  "emoji": "💧", "price": 2,  "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 10},
     {"id": "suco_fruta",     "name": "Suco de Fruta",    "emoji": "🧃", "price": 5,  "item_slot": "bag", "effect": "food", "fome": 5,  "sede": 10},
     {"id": "caneca_cerveja", "name": "Caneca de Cerveja","emoji": "🍺", "price": 5,  "item_slot": "bag", "effect": "ale",  "value": 10},
+    {"id": "cerveja_ana", "name": "Cerveja Anã", "emoji": "🍺", "icon": "assets/itens/barril_de_cerveja.png", "price": 8, "item_slot": "bag", "effect": "ale_ac", "value": 18,
+     "descricao": "Restaura 18 de fome e sede, mas reduz a CA em 1 por 10 rodadas."},
     {"id": "garrafa_vinho",  "name": "Garrafa de Vinho", "emoji": "🍷", "price": 10, "item_slot": "bag", "effect": "wine", "value": 15},
     {"id": "racao_viagem",   "name": "Ração de Viagem",  "emoji": "🥩", "price": 20, "item_slot": "bag", "effect": "food", "fome": 20, "sede": 0},
     {"id": "racao_completa", "name": "Ração Completa",   "emoji": "🥩", "icon": "assets/itens/racao.png", "price": 60, "item_slot": "bag", "effect": "food", "fome": 25, "sede": 25},
@@ -19468,6 +19470,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._processar_dreno_maldicoes(p)
         await self._processar_vinho_turno(p)
         await self._processar_cerveja_turno(p)
+        await self._processar_cerveja_ana_turno(p)
         await self._processar_buffs_magicos_turno(p)
         await self._processar_olhar_petrificante_inicio(p)
         if p.get("petrificado"):
@@ -41986,6 +41989,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._verificar_estado_sobrevivencia(p)
             await self.gm_say(
                 T("narracao.vira_a_fome_sede_mas_fica_alegre_1_ataqu", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), val=val))
+        elif effect == "ale_ac":
+            # Cerveja Anã: sacia, mas reduz a CA por 10 rodadas; beber de novo renova o efeito.
+            _restaurar_sobrevivencia(p, val, val)
+            p["cerveja_ana_ca_ativo"] = True
+            p["cerveja_ana_ca_rodadas"] = 10
+            self._verificar_estado_sobrevivencia(p)
+            await self.gm_say(T("narracao.bebe_cerveja_ana",
+                               item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), val=val))
         elif effect == "veil_shadow":
             # Acende a vela: oculto atÃ© o fim do turno. Ladino â†’ Ataque Furtivo
             # automÃ¡tico; demais â†’ prÃ³ximo ataque com vantagem (ver handle_attack).
@@ -43446,7 +43457,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 - self._corrosao_ca_pen(p)
                 + self._pen(p, "ca")              # penalidade de veneno (era inerte)
                 + self._maldicao_mod(p, "ca")     # Marca do Caçador
-                - pressao_minotauro)
+                - pressao_minotauro
+                - (1 if p.get("cerveja_ana_ca_ativo") else 0))
 
     def _metal_armor_ac(self, p):
         """Parcela de CA concedida pela armadura metálica equipada."""
@@ -43825,12 +43837,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p["atk_bonus"]    += 1
             await self.gm_say(T("narracao.recupera_a_pontaria_penalidade_da_cervej", heroi=p['name']))
 
+    async def _processar_cerveja_ana_turno(self, p):
+        """Tica a penalidade de CA da Cerveja Anã e encerra após 10 rodadas."""
+        if p.get("cerveja_ana_ca_rodadas", 0) <= 0:
+            return
+        p["cerveja_ana_ca_rodadas"] -= 1
+        if p["cerveja_ana_ca_rodadas"] <= 0 and p.get("cerveja_ana_ca_ativo"):
+            p["cerveja_ana_ca_ativo"] = False
+            await self.gm_say(T("narracao.recupera_da_embriaguez_cerveja_ana", heroi=p['name']))
+
     def _resetar_cerveja(self, p):
-        """Reset por dungeon: cancela a embriaguez da cerveja restaurando o ataque."""
+        """Reset por dungeon: cancela os efeitos temporários das cervejas."""
         if p.get("cerveja_ativo"):
             p["atk_bonus"] += 1
         p["cerveja_ativo"]   = False
         p["cerveja_rodadas"] = 0
+        p["cerveja_ana_ca_ativo"] = False
+        p["cerveja_ana_ca_rodadas"] = 0
 
     def _resetar_corrosao(self, p):
         """Reset por dungeon: REPARA os danos de nível 1-2 (limpa o estado, então as
@@ -47248,7 +47271,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     or not self._adicionar_veneno_ao_ataque_monstro_preview(m, attack_index, item.get("veneno_id"))):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")}); return
 
-        if effect in {"food", "ration", "wine", "ale", "meal_survival"}:
+        if effect in {"food", "ration", "wine", "ale", "ale_ac", "meal_survival"}:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_item_nao_tem_efeito_em_monstros")}); return
 
         if effect == "throwable":

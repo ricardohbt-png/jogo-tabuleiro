@@ -2470,6 +2470,14 @@ window.LANG_CATALOGO = {
     "en": "Letter",
     "pt": "Carta"
   },
+  "cat.item.cerveja_ana.desc": {
+    "en": "Restores 18 hunger and thirst, but reduces AC by 1 for 10 rounds.",
+    "pt": "Restaura 18 de fome e sede, mas reduz a CA em 1 por 10 rodadas."
+  },
+  "cat.item.cerveja_ana.nome": {
+    "en": "Dwarven Ale",
+    "pt": "Cerveja Anã"
+  },
   "cat.item.chainmail.nome": {
     "en": "Chainmail",
     "pt": "Cota de Malha"

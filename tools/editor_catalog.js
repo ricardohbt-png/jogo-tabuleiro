@@ -13371,6 +13371,16 @@ window.EDITOR_CATALOG = {
       "value": 10
     },
     {
+      "id": "cerveja_ana",
+      "name": "Cerveja Anã",
+      "emoji": "🍺",
+      "icon": "assets/itens/barril_de_cerveja.png",
+      "item_slot": "bag",
+      "effect": "ale_ac",
+      "value": 18,
+      "descricao": "Restaura 18 de fome e sede, mas reduz a CA em 1 por 10 rodadas."
+    },
+    {
       "id": "garrafa_vinho",
       "name": "Garrafa de Vinho",
       "emoji": "🍷",

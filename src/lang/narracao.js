@@ -744,6 +744,10 @@ window.LANG_NARRACAO = {
     "en": "🌊 **{nome_criatura_criatura}** escapes the whirlpool and can move normally.",
     "pt": "🌊 **{nome_criatura_criatura}** consegue escapar do rodamoinho e pode se mover normalmente."
   },
+  "narracao.bebe_cerveja_ana": {
+    "en": "{item_emoji} **{heroi}** drinks **{item}** (+{val} hunger/thirst), but loses 1 AC for 10 rounds!",
+    "pt": "{item_emoji} **{heroi}** bebe **{item}** (+{val} fome/sede), mas perde 1 de CA por 10 rodadas!"
+  },
   "narracao.consome": {
     "en": "{item_emoji} **{heroi}** consumes **{item}**: {e_join_partes}.",
     "pt": "{item_emoji} **{heroi}** consome **{item}**: {e_join_partes}."
@@ -2415,6 +2419,10 @@ window.LANG_NARRACAO = {
   "narracao.recupera_a_coragem": {
     "en": "😱 **{monstro}** regains its courage.",
     "pt": "😱 **{monstro}** recupera a coragem."
+  },
+  "narracao.recupera_da_embriaguez_cerveja_ana": {
+    "en": "🍺 **{heroi}** sobers up; their AC returns to normal.",
+    "pt": "🍺 **{heroi}** se recupera da embriaguez; sua CA volta ao normal."
   },
   "narracao.recupera_a_pontaria_penalidade_da_cervej": {
     "en": "🍺 **{heroi}** regains their aim (the beer penalty wore off).",
