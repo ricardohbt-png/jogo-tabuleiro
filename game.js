@@ -6677,6 +6677,7 @@ function updateTurnBrief(msg){
   const now = [`❤️ ${Math.max(0, Number(me.hp) || 0)} / ${Number(me.max_hp) || Number(me.hp) || 0} PV`];
   const activeConditions = _turnBriefConditions.filter(([key]) => _turnBriefConditionValue(me, key))
     .map(([,labelKey,icon]) => `${icon} ${t(labelKey)}`);
+  if(me.moeda_sorte_ativa) activeConditions.push(`🪙 ${t('ui.hud.moeda_da_sorte_ativa')}`);
   if(activeConditions.length) now.push(`${t('ui.hud.resumo_condicoes')}: ${activeConditions.join(', ')}`);
 
   const slots = me.slots_max || {};
@@ -15508,7 +15509,9 @@ function _consumeResistanceEvents(state){
       roll: Number(e.roll) || 0,
       modifier: Number(e.modifier) || 0,
       total: Number(e.total) || 0,
-      outcome: _resistanceOutcomeText(e),
+      outcome: e.rerolled
+        ? `${t('ui.hud.moeda_da_sorte_rolou_novamente')} · ${_resistanceOutcomeText(e)}`
+        : _resistanceOutcomeText(e),
       // Cor por FLAG, não pelo texto: o rótulo é traduzido e comparar strings
       // quebraria em silêncio ao trocar o idioma.
       failed: !e.passed && !e.immune,
@@ -29330,7 +29333,7 @@ $('btn-end-turn')?.addEventListener('click', endTurn);
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
 const BONUS_ACTION_EFFECTS = new Set([
   'heal', 'regeneration', 'atk_bonus', 'antidote', 'coat_poison',
-  'veil_shadow', 'disarm_traps_area', 'invisibility', 'speed', 'darkness_mantle', 'elemental_resistance_potion', 'arcane_barrier_potion', 'strength_potion', 'dexterity_potion',
+  'veil_shadow', 'disarm_traps_area', 'luck_coin', 'invisibility', 'speed', 'darkness_mantle', 'elemental_resistance_potion', 'arcane_barrier_potion', 'strength_potion', 'dexterity_potion',
   'constitution_potion', 'intelligence_potion', 'ranged_range_potion',
   'cure_poison', 'cure_petrification', 'cure_disease'
   // food e meal_survival (Banquete de Viagem) ficam de fora: comida é de uso livre

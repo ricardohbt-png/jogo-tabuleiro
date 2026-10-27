@@ -12472,6 +12472,15 @@ window.EDITOR_CATALOG = {
       "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."
     },
     {
+      "id": "moeda_da_sorte",
+      "name": "Moeda da Sorte",
+      "emoji": "🪙",
+      "item_slot": "bag",
+      "effect": "luck_coin",
+      "value": 1,
+      "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."
+    },
+    {
       "id": "ring_str",
       "name": "Anel de Força",
       "emoji": "💍",

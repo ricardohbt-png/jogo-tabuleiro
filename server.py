@@ -7689,6 +7689,8 @@ SHOP_MERCHANT = [
      "descricao": "Ação bônus. Cria uma imagem realista do herói em uma casa livre e visível a até 6 casas. Monstros automáticos que a percebam a perseguem. Dura 4 rodadas; antes das ações do herói, pode mover até 6 casas uma vez por turno. O primeiro ataque a dissipa sem ferir o herói. Só é possível manter uma ilusão ativa por vez."},
     {"id": "solucao_mecanismo", "name": "Solução do Mecanismo", "emoji": "📦", "icon": "assets/itens/solucao_mecanismo.png", "price": 250, "item_slot": "bag", "effect": "disarm_traps_area", "value": 3,
      "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."},
+    {"id": "moeda_da_sorte", "name": "Moeda da Sorte", "emoji": "🪙", "price": 120, "item_slot": "bag", "effect": "luck_coin", "value": 1,
+     "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
     {"id": "ring_str",      "name": "Anel de Força",     "emoji": "💍",  "price": 12, "item_slot": "ring",  "effect": "atk",       "value": 1},
     {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 15, "item_slot": "ring",  "effect": "maxhp",     "value": 5},
@@ -15036,6 +15038,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     crit = True
                 resultados.append({"alvo": alvo, "tile": tile, "eff_atk": eff_atk,
                                    "eff_ac": eff_ac, "hit": hit, "crit": crit})
+
+            if resultados and not any(r["hit"] for r in resultados) and self._consumir_moeda_sorte(p):
+                _hit0, roll, total, _crit0, descartado = self._rolar_ataque(
+                    base_atk, primeira_ca, vantagem, desvantagem)
+                for r in resultados:
+                    r["hit"] = bool(roll == 20 or roll + r["eff_atk"] >= r["eff_ac"])
+                    r["crit"] = bool(r["hit"] and roll == 20)
+                    crit_min_nat = weapon.get("crit_min_nat_roll")
+                    if r["hit"] and crit_min_nat is not None and roll >= int(crit_min_nat):
+                        r["crit"] = True
+                    if r["hit"] and r["alvo"].get("type") == "ciclope" and roll >= 19:
+                        r["crit"] = True
+                await self.gm_say(T("narracao.moeda_sorte_rolou_ataque", heroi=p["name"]))
 
             # Sangue Frio trata a varredura como um único ataque: no máximo um
             # reroll para todos os alvos, nunca um reroll por direção.
@@ -22411,7 +22426,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "start", atacante, alvo, feedback_attack)
         w = atacante.get("weapon") or {}
         atk = atacante.get("atk_bonus", 0)
-        hit, roll, total, crit, _d = self._rolar_ataque(atk, alvo.get("ac", 10), False, False)
+        hit, roll, total, crit, _d = self._rolar_ataque(
+            atk, alvo.get("ac", 10), False, False, atacante=atacante)
+        if atacante.pop("_moeda_sorte_rolada", False):
+            await self.gm_say(T("narracao.moeda_sorte_rolou_ataque", heroi=atacante["name"]))
         if feedback_animation_id:
             await self.broadcast({"type": "spell_animation", "spell_id": "dueto_marcial",
                                   "phase": "resolve", "animation_id": feedback_animation_id,
@@ -22641,7 +22659,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             projectile=_projetil_de(off), impact_weapon_id=off.get("id"),
             impacto=_impacto_de(off))
         hit, roll, total, crit, _desc = self._rolar_ataque(
-            offhand_atk, eff_target_ac, vantagem, desvantagem)
+            offhand_atk, eff_target_ac, vantagem, desvantagem, atacante=p)
+        if p.pop("_moeda_sorte_rolada", False):
+            await self.gm_say(T("narracao.moeda_sorte_rolou_ataque", heroi=p["name"]))
         if not hit and target.get("type") == "ciclope" and roll >= 19:
             crit = True
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
@@ -23063,7 +23083,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 holy_level=int(p.get("golpe_sagrado_nivel") or 1)
                     if p.get("golpe_sagrado_ativo") and w_range is None else 0,
                 holy_type=p.get("golpe_sagrado_tipo_extra") or "holy")
-            hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
+            hit, roll, total, crit, _desc = self._rolar_ataque(
+                eff_atk, eff_target_ac, vantagem, desvantagem, atacante=p)
+            if p.pop("_moeda_sorte_rolada", False):
+                await self.gm_say(T("narracao.moeda_sorte_rolou_ataque", heroi=p["name"]))
             if not hit and self._sangue_frio_consumir(p):
                 await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
@@ -23398,9 +23421,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if _weapon_nat1_wear(off) or _weapon_nat1_wear(p.get("weapon")):
                     # O desgaste pertence à peça, não à outra mão.
                     offhand_atk += self._corrosao_arma_pen(p) - off_wear
-                ohit, oroll, ototal, ocrit = d20_attack(
+                ohit, oroll, ototal, ocrit, _off_discarded = self._rolar_ataque(
                     offhand_atk, tgt["ac"] + self._mod_magia(tgt, "ca")
-                    + self._cancao_monstro_bonus(tgt, "ca"))
+                    + self._cancao_monstro_bonus(tgt, "ca"), atacante=p)
+                if p.pop("_moeda_sorte_rolada", False):
+                    await self.gm_say(T("narracao.moeda_sorte_rolou_ataque", heroi=p["name"]))
                 if ohit and tgt.get("type") == "ciclope" and oroll >= 19:
                     ocrit = True
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": oroll,
@@ -30129,7 +30154,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     # â”€â”€ AÃ§Ã£o BÃ´nus â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # Efeitos de item que contam como aÃ§Ã£o bÃ´nus (mÃ¡x. 1 por turno).
     BONUS_ACTION_EFFECTS = {"heal", "regeneration", "atk_bonus", "antidote", "coat_poison",
-                            "veil_shadow", "reveal_traps_potion", "arcane_vigilance_potion", "illusion_lure", "disarm_traps_area", "invisibility", "speed", "darkness_mantle", "elemental_resistance_potion", "arcane_barrier_potion", "strength_potion", "dexterity_potion", "cure_poison", "cure_petrification", "cure_disease",
+                            "veil_shadow", "reveal_traps_potion", "arcane_vigilance_potion", "illusion_lure", "disarm_traps_area", "luck_coin", "invisibility", "speed", "darkness_mantle", "elemental_resistance_potion", "arcane_barrier_potion", "strength_potion", "dexterity_potion", "cure_poison", "cure_petrification", "cure_disease",
                             "constitution_potion", "intelligence_potion", "flight_potion", "archery_potion", "ranged_range_potion", "restore_spell_slot", "meal_survival"}
 
     def _consumir_recursos(self, player, tipo_acao):
@@ -37443,18 +37468,32 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         it.pop("price", None)   # item achado nÃ£o carrega preÃ§o de loja
         return it
 
-    def _rolar_ataque(self, atk_bonus, target_ac, vantagem=False, desvantagem=False):
+    def _consumir_moeda_sorte(self, p):
+        if not isinstance(p, dict) or not p.get("moeda_sorte_ativa"):
+            return False
+        p["moeda_sorte_ativa"] = False
+        return True
+
+    def _rolar_ataque(self, atk_bonus, target_ac, vantagem=False, desvantagem=False,
+                      atacante=None):
         """d20_attack com vantagem/desvantagem (2d20). Vantagem+desvantagem = normal.
         Retorna (hit, roll, total, crit, descartado) — descartado=None se rolagem única."""
+        if isinstance(atacante, dict):
+            atacante.pop("_moeda_sorte_rolada", None)
         if vantagem and desvantagem:
             vantagem = desvantagem = False
         if not vantagem and not desvantagem:
-            h, r, t, c = d20_attack(atk_bonus, target_ac)
-            return h, r, t, c, None
-        a = d20_attack(atk_bonus, target_ac)
-        b = d20_attack(atk_bonus, target_ac)
-        usado, outro = (a, b) if (a[1] >= b[1]) == vantagem else (b, a)
-        return usado[0], usado[1], usado[2], usado[3], outro[1]
+            resultado = (*d20_attack(atk_bonus, target_ac), None)
+        else:
+            a = d20_attack(atk_bonus, target_ac)
+            b = d20_attack(atk_bonus, target_ac)
+            usado, outro = (a, b) if (a[1] >= b[1]) == vantagem else (b, a)
+            resultado = (usado[0], usado[1], usado[2], usado[3], outro[1])
+        if (not resultado[0] and isinstance(atacante, dict)
+                and self._eh_jogador(atacante) and self._consumir_moeda_sorte(atacante)):
+            atacante["_moeda_sorte_rolada"] = True
+            return self._rolar_ataque(atk_bonus, target_ac, vantagem, desvantagem)
+        return resultado
 
     async def _aplicar_escuridao(self, caster, raio, duracao, pos=None, visual_id=None,
                                  seguir_caster=False, concede_visao=False, area_lado=None):
@@ -38521,7 +38560,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _registrar_resultado_resistencia(self, alvo, tipo_save, dificuldade,
                                          d20, bonus, total, passou,
                                          poison_effect=False, immune=False,
-                                         fonte=None):
+                                         fonte=None, rerolled=False):
         """Enfileira o resultado visual de um save sem alterar sua resolução."""
         if not alvo:
             return
@@ -38531,7 +38570,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             kind, key = "animado", f"a:{alvo.get('id')}"
         else:
             kind, key = "monster", f"m:{alvo.get('id')}"
-        self._resistance_events.append({
+        evento = {
             "entity_key": key,
             "entity_kind": kind,
             "target_id": alvo.get("id"),
@@ -38546,7 +38585,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "poison": bool(poison_effect),
             "immune": bool(immune),
             "source": fonte or "",
-        })
+        }
+        if rerolled:
+            evento["rerolled"] = True
+        self._resistance_events.append(evento)
 
     def _testar_save(self, alvo, tipo_save, dificuldade, extra_mod=0, fonte=None,
                      desvantagem=False, poison_effect=False):
@@ -38569,6 +38611,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         d20   = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
         total = d20 + bonus
         passou = total >= dificuldade
+        rerolled = False
+        if not passou and self._eh_jogador(alvo) and alvo.get("moeda_sorte_ativa"):
+            alvo["moeda_sorte_ativa"] = False
+            d20 = min(random.randint(1, 20), random.randint(1, 20)) if desvantagem else random.randint(1, 20)
+            total = d20 + bonus
+            passou = total >= dificuldade
+            rerolled = True
         if poison_effect and not passou and self._tem_habilidade(alvo, "metabolismo_instavel"):
             alvo["lento"] = True
             alvo["lento_rodadas"] = max(1, int(alvo.get("lento_rodadas", 0) or 0))
@@ -38577,7 +38626,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvo["_corpo_pesado_reflexos_falhou"] = True
         self._registrar_resultado_resistencia(
             alvo, tipo_save, dificuldade, d20, bonus, total, passou,
-            poison_effect=poison_effect, fonte=fonte)
+            poison_effect=poison_effect, fonte=fonte, rerolled=rerolled)
         return passou, d20, bonus, total
 
     async def _aplicar_veneno(self, alvo, veneno_id, fonte="ataque", dificuldade=None):
@@ -41540,6 +41589,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         effect, val = item["effect"], item.get("value", 0)
 
+        if effect == "luck_coin" and p.get("moeda_sorte_ativa"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.moeda_da_sorte_ja_ativa")})
+            return
+
         repair_option = None
         if effect == "repair_corrosion":
             if item.get("id") != "kit_reparo_campo":
@@ -41896,6 +41949,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             quantidade = await self._solucao_mecanismo_desarmar_raio(p, raio=3)
             await self.gm_say(T("narracao.usa_solucao_mecanismo",
                                heroi=p["name"], quantidade=quantidade))
+        elif effect == "luck_coin":
+            if source_location is None:
+                if not any(candidate is item for candidate in (p.get("bag") or [])):
+                    await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+                    return
+                if not self._consume_action_item(p, item, source_location):
+                    return
+                remove_item = False
+            p["moeda_sorte_ativa"] = True
+            await self.gm_say(T("narracao.ativa_moeda_da_sorte", heroi=p["name"]))
         elif effect == "repair_corrosion":
             target_item = self._reparar_um_nivel_opcao(p, repair_option)
             if not self._consume_action_item(p, item, source_location):

@@ -77,6 +77,7 @@
       "vela_escuridao",
       "ring_str",
       "ring_vita",
+      "moeda_da_sorte",
       "helm_iron",
       "circlet",
       "boots",
@@ -285,6 +286,7 @@
       "vela_escuridao",
       "ring_str",
       "ring_vita",
+      "moeda_da_sorte",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -491,6 +493,7 @@
       "vela_escuridao",
       "ring_str",
       "ring_vita",
+      "moeda_da_sorte",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -697,6 +700,7 @@
       "vela_escuridao",
       "ring_str",
       "ring_vita",
+      "moeda_da_sorte",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -930,7 +934,8 @@
       "pocao_resistencia_sagrado",
       "pocao_barreira_arcana",
       "elixir_cavalo_ferro",
-      "regeneration_potion"
+      "regeneration_potion",
+      "moeda_da_sorte"
     ]
   }
 }

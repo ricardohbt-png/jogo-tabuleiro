@@ -4,6 +4,10 @@
 
 `kit_reparo_campo` custa 60 moedas e é vendido em `ferreiro_ammo` nas cinco cidades. É consumível de ação principal: o inventário abre a seleção entre armas, armaduras e escudos com corrosão; o servidor valida o alvo, remove exatamente 1 nível e consome um kit. Peças destruídas continuam irrecuperáveis. O reparo de cidade segue distinto e remove todos os níveis por seu preço calculado.
 
+### Moeda da Sorte (2026-10-25)
+
+`moeda_da_sorte` custa 120 moedas e está nos cinco mercadores. Ativá-la consome o item e usa uma ação bônus; `moeda_sorte_ativa` permanece no estado do herói até a primeira falha em um ataque ou teste de resistência. O servidor rerrola o mesmo d20, preservando vantagem/desvantagem; o segundo resultado é final. Não permite outra moeda enquanto estiver ativa.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

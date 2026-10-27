@@ -4347,6 +4347,14 @@ window.LANG_INTERFACE = {
     "en": "PASSED",
     "pt": "PASSOU"
   },
+  "ui.hud.moeda_da_sorte_rolou_novamente": {
+    "en": "LUCKY COIN REROLL",
+    "pt": "MOEDA DA SORTE: NOVA ROLAGEM"
+  },
+  "ui.hud.moeda_da_sorte_ativa": {
+    "en": "Lucky Coin ready",
+    "pt": "Moeda da Sorte ativa"
+  },
   "ui.hud.passou_metade_do_dano": {
     "en": "PASSED — HALF DAMAGE",
     "pt": "PASSOU — METADE DO DANO"

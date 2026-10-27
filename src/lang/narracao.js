@@ -232,6 +232,14 @@ window.LANG_NARRACAO = {
     "en": "📦 **{heroi}** turns the key in the **Solution of the Mechanism**. The runes disable **{quantidade}** active trap(s) in the 3-square area.",
     "pt": "📦 **{heroi}** gira a chave na **Solução do Mecanismo**. As runas desativam **{quantidade}** armadilha(s) ativa(s) na área de 3 casas."
   },
+  "narracao.ativa_moeda_da_sorte": {
+    "en": "🪙 **{heroi}** activates the Lucky Coin. It will reroll their first failed attack or saving throw; the second result stands.",
+    "pt": "🪙 **{heroi}** ativa a Moeda da Sorte. Ela repetirá o primeiro ataque ou teste de resistência que falhar; o segundo resultado vale."
+  },
+  "narracao.moeda_sorte_rolou_ataque": {
+    "en": "🪙 The Lucky Coin rerolls **{heroi}**'s failed attack; the new result stands.",
+    "pt": "🪙 A Moeda da Sorte repete o ataque que **{heroi}** falhou; o novo resultado vale."
+  },
   "narracao.usa_kit_reparo": {
     "en": "🧰 **{heroi}** uses a Repair Kit on **{item}**, removing 1 corrosion level. The item now has {nivel} corrosion level(s).",
     "pt": "🧰 **{heroi}** usa um Kit de Reparo em **{item}** e remove 1 nível de corrosão. A peça fica com {nivel} nível(is) de corrosão."

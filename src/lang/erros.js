@@ -1061,6 +1061,10 @@ window.LANG_ERROS = {
     "en": "Choose a damaged weapon, armor or shield to repair.",
     "pt": "Escolha uma arma, armadura ou escudo danificado para reparar."
   },
+  "erro.moeda_da_sorte_ja_ativa": {
+    "en": "A Lucky Coin is already active for you.",
+    "pt": "Você já tem uma Moeda da Sorte ativa."
+  },
   "erro.ja_criou_redemoinhos": {
     "en": "You have already created the {n} whirlpool(s) of this spell.",
     "pt": "Você já criou os {n} redemoinho(s) desta magia."

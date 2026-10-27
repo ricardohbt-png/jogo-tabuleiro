@@ -3174,6 +3174,14 @@ window.LANG_CATALOGO = {
     "en": "Hawk's Aim Elixir",
     "pt": "Elixir da Mira do Falcão"
   },
+  "cat.item.moeda_da_sorte.desc": {
+    "en": "Bonus action. Consumes the coin when activated. The hero rerolls their first failed attack or saving throw; the second result stands. Stays active until triggered.",
+    "pt": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."
+  },
+  "cat.item.moeda_da_sorte.nome": {
+    "en": "Lucky Coin",
+    "pt": "Moeda da Sorte"
+  },
   "cat.item.monster_leather_plate.nome": {
     "en": "Monster Leather and Plate Armor",
     "pt": "Armadura de Couro de Monstro e Placas"
