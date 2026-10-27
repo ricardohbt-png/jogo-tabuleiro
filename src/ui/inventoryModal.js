@@ -197,6 +197,11 @@ const InventoryModal = (() => {
 .inv-hero-chip img{width:48px;height:64px;object-fit:cover;border-radius:4px;display:block;margin:0 auto 2px;border:1px solid #6a5a3a;}
 .inv-hero-chip.drop-hover{border-color:#8fe08a;background:rgba(143,224,138,.18);}
 .inv-hero-chip.far{opacity:.45;}
+.inv-hero-chip.current{border-color:#d9b44a;cursor:default;}
+/* Com o inventário aberto, a barra de heróis da cidade fica acima do modal e vira alvo de soltura. */
+body.inv-open #city-hero-bar{z-index:1200;pointer-events:none;background:none;}
+body.inv-open #city-hero-bar .city-hcard{pointer-events:auto;}
+body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;background:rgba(143,224,138,.25);}
 .inv-gold{display:flex;align-items:center;justify-content:center;gap:6px;color:#ffcf7a;font-weight:bold;
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -329,6 +334,7 @@ const InventoryModal = (() => {
     if(typeof window.fecharMenuMagias === 'function') window.fecharMenuMagias();
     if(typeof window.fecharMenuStatus === 'function') window.fecharMenuStatus();
     _openPid  = pid;
+    document.body.classList.add('inv-open');
     _readOnly = !!opts.readOnly;
     _selected = null;
     _gamepadAction = null;
@@ -344,6 +350,7 @@ const InventoryModal = (() => {
   }
 
   function close(){
+    document.body.classList.remove('inv-open');
     _openPid  = null;
     _storageCtx = null;
     _selected = null;
@@ -977,34 +984,60 @@ const InventoryModal = (() => {
     strip.classList.remove('on');
     if(_readOnly || !GS.temGrupo || !GS.ehMeuHeroi(player.id)) return;
     const gs = GS.gameState, estado = gs || GS.cityState;
-    const outros = (estado?.players || []).filter(q => q.id !== player.id && GS.ehMeuHeroi(q.id)
-      && q.class_id && q.alive);
-    if(!outros.length) return;
+    const meus = (estado?.players || []).filter(q => GS.ehMeuHeroi(q.id) && q.class_id);
+    if(meus.length < 2) return;
     const portraits = (typeof HERO_PORTRAIT_PATHS !== 'undefined') ? HERO_PORTRAIT_PATHS : {};
-    outros.forEach(q => {
-      const longe = !!(gs && gs.phase === 'playing' && !q.fora_masmorra && !player.fora_masmorra
+    meus.forEach(q => {
+      const atual = q.id === player.id;
+      const longe = !atual && !!(gs && gs.phase === 'playing' && !q.fora_masmorra && !player.fora_masmorra
         && Array.isArray(q.pos) && Array.isArray(player.pos)
         && Math.max(Math.abs(q.pos[0] - player.pos[0]), Math.abs(q.pos[1] - player.pos[1])) > 1);
       const chip = document.createElement('div');
-      chip.className = 'inv-hero-chip' + (longe ? ' far' : '');
+      chip.className = 'inv-hero-chip' + (longe ? ' far' : '') + (atual ? ' current' : '');
       chip.dataset.heroId = q.id;
-      chip.title = t('ui.inv.passar_item_para', {nome: q.name || ''});
+      chip.title = atual ? (q.name || '') : t('ui.inv.passar_item_para', {nome: q.name || ''});
       chip.innerHTML = `<img src="${portraits[q.class_id] || ''}" alt=""><span></span>`;
       chip.querySelector('span').textContent = q.name || '';
       chip.addEventListener('dragover', (e) => {
+        if(atual || !q.alive) return;
         if(!_selected || (_selected.kind !== 'bag' && _selected.kind !== 'gear')) return;
         e.preventDefault(); chip.classList.add('drop-hover');
       });
       chip.addEventListener('dragleave', () => chip.classList.remove('drop-hover'));
       chip.addEventListener('drop', (e) => {
         e.preventDefault(); e.stopPropagation(); chip.classList.remove('drop-hover');
-        _transferSelectedTo(q.id);
+        if(!atual && q.alive) _transferSelectedTo(q.id);
       });
-      chip.addEventListener('click', () => { if(_selected) _transferSelectedTo(q.id); });
+      // Sem item selecionado, o retrato leva ao inventário daquele herói.
+      chip.addEventListener('click', () => {
+        if(atual) return;
+        if(_selected){ if(q.alive) _transferSelectedTo(q.id); } else _irParaHeroi(q.id);
+      });
       strip.appendChild(chip);
     });
     strip.classList.add('on');
   }
+
+  // Troca o inventário aberto para outro herói meu (o foco do jogo vai junto,
+  // pois as ações do inventário valem para o herói em foco).
+  function _irParaHeroi(pid){
+    if(_readOnly || typeof GS === 'undefined' || !GS.ehMeuHeroi(pid)) return false;
+    // focarHeroi fecha o inventário (o que estava aberto era do herói anterior): reabre no novo.
+    if(GS.temGrupo && GS.myPid !== pid) GS.focarHeroi(pid);
+    open(pid);
+    return true;
+  }
+
+  // Alvo de soltura externo (retratos da barra da cidade): passa o item
+  // selecionado para o herói `pid`. Devolve true se havia um item arrastado.
+  function soltarNoHeroi(pid){
+    if(!_openPid || _readOnly || !_selected || (_selected.kind !== 'bag' && _selected.kind !== 'gear')) return false;
+    if(pid === _openPid || !GS.ehMeuHeroi(pid)) return false;
+    _transferSelectedTo(pid);
+    return true;
+  }
+  function temItemSelecionado(){ return !!(_openPid && !_readOnly && _selected
+    && (_selected.kind === 'bag' || _selected.kind === 'gear')); }
 
   function _transferSelectedTo(toPid){
     const sel = _selected, player = _currentPlayer();
@@ -1622,6 +1655,6 @@ const InventoryModal = (() => {
     return true;
   }
 
-  return { open, close, toggle, isOpen, refresh, openStorage, updateStorage, storageScope,
+  return { open, close, toggle, isOpen, refresh, soltarNoHeroi, temItemSelecionado, irParaHeroi: _irParaHeroi, openStorage, updateStorage, storageScope,
     gamepadUseFocused, gamepadConfirmFocused, gamepadCycleAction, gamepadActionOpen, gamepadCancelSelection, gamepadDropSelected };
 })();

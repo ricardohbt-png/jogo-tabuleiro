@@ -1717,8 +1717,25 @@ function _updateCityHeroBar(msg){
     </div>`;
   }).join('')+`<div class="city-gold-badge">${t('ui.cidade.badge_ouro', {n: gold})}</div>`;
   bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
+    const pid0 = card.getAttribute('data-pid');
+    // Item arrastado no inventário pode ser solto sobre o retrato de outro herói meu.
+    card.ondragover = e => {
+      if(typeof InventoryModal !== 'undefined' && InventoryModal.temItemSelecionado?.() && GS.ehMeuHeroi(pid0)){
+        e.preventDefault(); card.classList.add('drop-hover');
+      }
+    };
+    card.ondragleave = () => card.classList.remove('drop-hover');
+    card.ondrop = e => {
+      card.classList.remove('drop-hover');
+      if(typeof InventoryModal !== 'undefined' && InventoryModal.soltarNoHeroi?.(pid0)) e.preventDefault();
+    };
     card.onclick = () => {
       const pid = card.getAttribute('data-pid');
+      // Inventário aberto: o retrato leva ao inventário daquele herói (ou passa o item selecionado).
+      if(typeof InventoryModal !== 'undefined' && InventoryModal.isOpen?.() && GS.ehMeuHeroi(pid)){
+        if(!InventoryModal.soltarNoHeroi?.(pid)) InventoryModal.irParaHeroi?.(pid);
+        return;
+      }
       // Solo com grupo: a ficha de um herói meu abre editável (o foco é ele).
       if(GS.temGrupo && GS.ehMeuHeroi(pid)) GS.focarHeroi(pid);
       abrirFichaCidade(pid);
