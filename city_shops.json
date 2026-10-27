@@ -176,7 +176,8 @@
       "talisma_ascensao_forca",
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
-      "talisma_ascensao_constituicao"
+      "talisma_ascensao_constituicao",
+      "botas_passo_felino"
     ],
     "templo": [
       "agua_benta",
@@ -399,7 +400,8 @@
       "talisma_ascensao_forca",
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
-      "talisma_ascensao_constituicao"
+      "talisma_ascensao_constituicao",
+      "botas_passo_felino"
     ],
     "templo": [
       "agua_benta",
@@ -622,7 +624,8 @@
       "talisma_ascensao_forca",
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
-      "talisma_ascensao_constituicao"
+      "talisma_ascensao_constituicao",
+      "botas_passo_felino"
     ],
     "templo": [
       "agua_benta",
@@ -845,7 +848,8 @@
       "talisma_ascensao_forca",
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
-      "talisma_ascensao_constituicao"
+      "talisma_ascensao_constituicao",
+      "botas_passo_felino"
     ],
     "templo": [
       "agua_benta",
@@ -1015,7 +1019,8 @@
       "talisma_ascensao_forca",
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
-      "talisma_ascensao_constituicao"
+      "talisma_ascensao_constituicao",
+      "botas_passo_felino"
     ]
   }
 }

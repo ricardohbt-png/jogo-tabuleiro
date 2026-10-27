@@ -2426,6 +2426,14 @@ window.LANG_CATALOGO = {
     "en": "Boots of the Long Stride",
     "pt": "Bota dos passos largos"
   },
+  "cat.item.botas_passo_felino.desc": {
+    "en": "+2 Dexterity while equipped.",
+    "pt": "+2 de Destreza enquanto equipada."
+  },
+  "cat.item.botas_passo_felino.nome": {
+    "en": "Feline Step Boots",
+    "pt": "Botas do Passo Felino"
+  },
   "cat.item.bote_da_serpente.desc": {
     "en": "Bonus action. Increase Dexterity by 1d4+1 for 1d6+4 rounds, applying its normal modifiers to attacks, damage, AC, Reflex saves, initiative, vision radius, Dexterity checks, and Bard instrument ability DCs. Drinking another renews the duration without stacking the bonus.",
     "pt": "Ação bônus. Aumenta a Destreza em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a ataques, dano, CA, Reflexos, iniciativa, raio de visão, testes de Destreza e CD de habilidades de instrumento do Bardo. Beber outro renova a duração sem acumular o bônus."

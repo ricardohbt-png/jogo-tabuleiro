@@ -12682,6 +12682,16 @@ window.EDITOR_CATALOG = {
       "value": 1
     },
     {
+      "id": "botas_passo_felino",
+      "name": "Botas do Passo Felino",
+      "emoji": "👢",
+      "icon": "assets/itens/bota.png",
+      "item_slot": "boots",
+      "effect": "dex",
+      "value": 2,
+      "descricao": "+2 de Destreza enquanto equipada."
+    },
+    {
       "id": "amulet",
       "name": "Amuleto da Sorte",
       "emoji": "📿",

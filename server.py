@@ -7730,6 +7730,8 @@ SHOP_MERCHANT = [
     # â”€â”€ Itens ativos (slots item1 / item2) â”€â”€
     {"id": "boots",         "name": "Botas Velozes",     "emoji": "👢",  "price": 10,
      "item_type": "boots", "kind": "boots", "item_slot": "boots", "effect": "spd", "value": 1},
+    {"id": "botas_passo_felino", "name": "Botas do Passo Felino", "emoji": "👢", "icon": "assets/itens/bota.png", "price": 500, "item_slot": "boots", "effect": "dex", "value": 2,
+     "descricao": "+2 de Destreza enquanto equipada."},
     {"id": "amulet",        "name": "Amuleto da Sorte",  "emoji": "📿",  "price": 15, "item_slot": "item",  "effect": "maxhp",     "value": 5},
     {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 18, "item_slot": "item",  "effect": "bagslots",  "value": 3},
     {"id": "mochila_carga", "name": "Mochila de Carga", "emoji": "🎒", "icon": "assets/itens/backpack.png", "price": 250, "item_slot": "item", "effect": "bagslots", "value": 6,
