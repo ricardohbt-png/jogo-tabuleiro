@@ -163,7 +163,9 @@
       "solucao_mecanismo",
       "calice_eter",
       "ignus_fatus",
-      "fata_morgana"
+      "fata_morgana",
+      "anel_impacto",
+      "anel_supremacia"
     ],
     "templo": [
       "agua_benta",
@@ -372,7 +374,9 @@
       "solucao_mecanismo",
       "calice_eter",
       "ignus_fatus",
-      "fata_morgana"
+      "fata_morgana",
+      "anel_impacto",
+      "anel_supremacia"
     ],
     "templo": [
       "agua_benta",
@@ -581,7 +585,9 @@
       "solucao_mecanismo",
       "calice_eter",
       "ignus_fatus",
-      "fata_morgana"
+      "fata_morgana",
+      "anel_impacto",
+      "anel_supremacia"
     ],
     "templo": [
       "agua_benta",
@@ -790,7 +796,9 @@
       "solucao_mecanismo",
       "calice_eter",
       "ignus_fatus",
-      "fata_morgana"
+      "fata_morgana",
+      "anel_impacto",
+      "anel_supremacia"
     ],
     "templo": [
       "agua_benta",
@@ -945,7 +953,10 @@
       "regeneration_potion",
       "moeda_da_sorte",
       "anel_protecao",
-      "anel_vigia"
+      "anel_vigia",
+      "ring_str",
+      "anel_impacto",
+      "anel_supremacia"
     ]
   }
 }

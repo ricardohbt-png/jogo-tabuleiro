@@ -7696,7 +7696,13 @@ SHOP_MERCHANT = [
     {"id": "anel_vigia",    "name": "Anel do Vigia",    "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "vision", "value": 2,
      "descricao": "+2 de visão enquanto estiver equipado."},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
-    {"id": "ring_str",      "name": "Anel de Força",     "emoji": "💍",  "price": 12, "item_slot": "ring",  "effect": "atk",       "value": 1},
+    {"id": "ring_str",      "name": "Anel da Precisão", "emoji": "💍", "icon": "assets/itens/ring_str.png", "price": 50, "item_slot": "ring", "effect": "atk", "value": 1,
+     "descricao": "+1 de acerto em ataques enquanto estiver equipado."},
+    {"id": "anel_impacto",  "name": "Anel do Impacto",  "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "damage_bonus", "value": 1,
+     "descricao": "+1 de dano por acerto com armas corpo a corpo ou à distância."},
+    {"id": "anel_supremacia", "name": "Anel da Supremacia", "emoji": "💍", "icon": "assets/itens/ring_vita.png", "price": 200, "item_slot": "ring", "effect": "atk", "value": 1,
+     "bonuses": [{"effect": "damage_bonus", "value": 1}],
+     "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."},
     {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 15, "item_slot": "ring",  "effect": "maxhp",     "value": 5},
     # â”€â”€ CabeÃ§a (slot head) â”€â”€
     {"id": "helm_iron",     "name": "Elmo de Ferro",     "emoji": "⛑️", "price": 14, "item_slot": "head",  "effect": "def_",      "value": 1},
@@ -15645,6 +15651,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return (surv_mod + cancao_dano + gl_dano
                 + self._mod_magia(p, "dano") + self._tecnica_bonus_dano(p)
                 + bonus_extra + weapon.get("dmg_bonus", 0)
+                + int(p.get("gear_damage_bonus", 0) or 0)
                 + p.get("skill_bonus_dano", 0) - self._corrosao_arma_pen(p)
                 + self._pen(p, "dano")                      # veneno (era inerte)
                 + self._maldicao_mod(p, "dano_fisico"))     # Lâmina Enferrujada
@@ -23609,7 +23616,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if hit:
             die_str = throw_die
             raw = roll_dice(die_str)
-            dmg = max(1, (raw + throw_stat_mod - throw_wear) * (2 if crit else 1))
+            dmg = max(1, (raw + throw_stat_mod - throw_wear) * (2 if crit else 1)
+                      + int(p.get("gear_damage_bonus", 0) or 0))
             if _weapon_nat1_wear(dagger):
                 dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, dagger, attacker_pos=p["pos"])
             die_type = "d" + die_str.split("d")[1]
@@ -28776,6 +28784,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         e, v = effect, value * mult
         if e in ("atk", "atk_bonus"):
             p["atk_bonus"] += v; p["base_atk_bonus"] += v
+        elif e == "damage_bonus":
+            p["gear_damage_bonus"] = p.get("gear_damage_bonus", 0) + v
         elif e in ("def_", "ac_bonus"):
             p["ac"] += v
             p["ac_base"] = p.get("ac_base", 10) + v

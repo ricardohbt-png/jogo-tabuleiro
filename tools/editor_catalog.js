@@ -12502,11 +12502,39 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "ring_str",
-      "name": "Anel de Força",
+      "name": "Anel da Precisão",
       "emoji": "💍",
+      "icon": "assets/itens/ring_str.png",
       "item_slot": "ring",
       "effect": "atk",
-      "value": 1
+      "value": 1,
+      "descricao": "+1 de acerto em ataques enquanto estiver equipado."
+    },
+    {
+      "id": "anel_impacto",
+      "name": "Anel do Impacto",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "damage_bonus",
+      "value": 1,
+      "descricao": "+1 de dano por acerto com armas corpo a corpo ou à distância."
+    },
+    {
+      "id": "anel_supremacia",
+      "name": "Anel da Supremacia",
+      "emoji": "💍",
+      "icon": "assets/itens/ring_vita.png",
+      "item_slot": "ring",
+      "effect": "atk",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "damage_bonus",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."
     },
     {
       "id": "ring_vita",

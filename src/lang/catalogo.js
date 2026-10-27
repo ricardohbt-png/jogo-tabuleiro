@@ -2254,6 +2254,14 @@ window.LANG_CATALOGO = {
     "en": "Amulet of Luck",
     "pt": "Amuleto da Sorte"
   },
+  "cat.item.anel_impacto.desc": {
+    "en": "+1 damage per successful melee or ranged weapon hit.",
+    "pt": "+1 de dano por acerto com armas corpo a corpo ou à distância."
+  },
+  "cat.item.anel_impacto.nome": {
+    "en": "Ring of Impact",
+    "pt": "Anel do Impacto"
+  },
   "cat.item.anel_protecao.desc": {
     "en": "+1 Armor Class while equipped.",
     "pt": "+1 de Classe de Armadura enquanto estiver equipado."
@@ -2261,6 +2269,14 @@ window.LANG_CATALOGO = {
   "cat.item.anel_protecao.nome": {
     "en": "Ring of Protection",
     "pt": "Anel de Proteção"
+  },
+  "cat.item.anel_supremacia.desc": {
+    "en": "+1 to attack rolls and +1 damage per successful melee or ranged weapon hit.",
+    "pt": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."
+  },
+  "cat.item.anel_supremacia.nome": {
+    "en": "Ring of Supremacy",
+    "pt": "Anel da Supremacia"
   },
   "cat.item.anel_vigia.desc": {
     "en": "+2 vision while equipped.",
@@ -3326,9 +3342,13 @@ window.LANG_CATALOGO = {
     "en": "Regeneration Potion",
     "pt": "Poção de Regeneração"
   },
+  "cat.item.ring_str.desc": {
+    "en": "+1 to attack rolls while equipped.",
+    "pt": "+1 de acerto em ataques enquanto estiver equipado."
+  },
   "cat.item.ring_str.nome": {
-    "en": "Ring of Strength",
-    "pt": "Anel de Força"
+    "en": "Ring of Precision",
+    "pt": "Anel da Precisão"
   },
   "cat.item.ring_vita.nome": {
     "en": "Ring of Vitality",
