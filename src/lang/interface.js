@@ -5051,6 +5051,14 @@ window.LANG_INTERFACE = {
     "en": "Leather Armour",
     "pt": "Armadura de Couro"
   },
+  "ui.item.armadura_runica.barreira_arcana.desc": {
+    "en": "Reduces all damage taken by 5 for 5 rounds.",
+    "pt": "Reduz em 5 todo dano recebido por 5 rodadas."
+  },
+  "ui.item.armadura_runica.protecao_energia.desc": {
+    "en": "Absorbs up to 10 damage per round from fire, cold, electricity, acid, water, or holy damage for 5 rounds.",
+    "pt": "Absorve até 10 de dano por rodada de fogo, gelo, eletricidade, ácido, água ou dano sagrado por 5 rodadas."
+  },
   "ui.item.banquete_frasco.nome": {
     "en": "Feast in a Flask",
     "pt": "Banquete em Frasco"

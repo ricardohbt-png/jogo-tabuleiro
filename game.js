@@ -31619,7 +31619,7 @@ function _runicArmorSkillBtn(me, skill){
   const recarga = restante > 0
     ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
   const nomeMagia = valido ? t(`cat.magia.${spellId}.nome`) : t('cat.item.armadura_runica.nome');
-  const descricao = valido ? t(`cat.item.armadura_runica.${spellId}.desc`) : t('cat.item.armadura_runica.desc');
+  const descricao = valido ? t(`ui.item.armadura_runica.${spellId}.desc`) : t('cat.item.armadura_runica.desc');
   btn.innerHTML = `
     <div class="skill-info">
       <div class="skill-name">${abilityIconHtml(skill, '🛡️')} ${nomeMagia}${recarga}</div>

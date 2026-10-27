@@ -2344,15 +2344,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.armadura_runica.desc": {
     "en": "Heavy plate armor with +7 AC. Warriors and Paladins can cast Arcane Barrier or Protection from Energy for exactly 5 rounds without spending a spell slot. Shared cooldown: 30 rounds.",
-    "pt": "Armadura pesada de placas com +7 CA. Guerreiros e Paladinos podem conjurar Barreira Arcana ou Proteção contra Energia por exatamente 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
-  },
-  "cat.item.armadura_runica.barreira_arcana.desc": {
-    "en": "Reduces all damage taken by 5 for 5 rounds.",
-    "pt": "Reduz em 5 todo dano recebido por 5 rodadas."
-  },
-  "cat.item.armadura_runica.protecao_energia.desc": {
-    "en": "Absorbs up to 10 damage per round from fire, cold, electricity, acid, water, or holy damage for 5 rounds.",
-    "pt": "Absorve até 10 de dano por rodada de fogo, gelo, eletricidade, ácido, água ou dano sagrado por 5 rodadas."
+    "pt": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
   },
   "cat.item.armadura_runica.nome": {
     "en": "Runic Armor",
