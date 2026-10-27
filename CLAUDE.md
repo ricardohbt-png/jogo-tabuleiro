@@ -24,6 +24,10 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` concede +1 por 250 moedas e usa `assets/itens/medalhao3.png`; `talisma_ascensao_<atributo>` concede +2 por 500 moedas e usa `assets/itens/medalhao4.png`. Cada tier tem uma versão de Força (`str_`), Destreza (`dex`), Inteligência (`int_`) e Constituição (`con_`). São equipamentos no slot `item`, aplicados e removidos por `_apply_gear_effect`/`_apply_attribute_delta`, então derivados como ataque, CA, resistências, PV e CD acompanham o atributo. Os oito SKUs ficam nos cinco mercadores em `city_shops.json` e no catálogo PT/EN e do editor.
 
+### Aljavas (2026-10-25)
+
+`aljava_pequena` (30 moedas) e `aljava_grande` (60) são vendidas em `ferreiro_ammo` nos cinco ferreiros, usam `assets/itens/aljava.png` e equipam em `gear.off_hand`. Sem aljava, cada pilha mantém o limite de 10. Equipada, aumenta o limite de pilha da bolsa para 20/40 flechas ou 25/50 virotes (`_max_ammo_stack_for`). Arcos equipados com aljava consomem flechas diretamente da bolsa, na ordem de preferência de flechas; bestas continuam consumindo virotes da bolsa e a aljava usa o espaço secundário. Flechas e virotes são munições separadas; prata/incendiária respeitam o limite correspondente ao tipo. Não altera dano nem concede munição.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

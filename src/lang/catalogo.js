@@ -2250,6 +2250,22 @@ window.LANG_CATALOGO = {
     "en": "Silver Halberd",
     "pt": "Alabarda de Prata"
   },
+  "cat.item.aljava_grande.desc": {
+    "en": "Equipped in the off hand, raises each stack capacity to 40 arrows or 50 bolts.",
+    "pt": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."
+  },
+  "cat.item.aljava_grande.nome": {
+    "en": "Large Quiver",
+    "pt": "Aljava Grande"
+  },
+  "cat.item.aljava_pequena.desc": {
+    "en": "Equipped in the off hand, raises each stack capacity to 20 arrows or 25 bolts.",
+    "pt": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 20 flechas ou 25 virotes."
+  },
+  "cat.item.aljava_pequena.nome": {
+    "en": "Small Quiver",
+    "pt": "Aljava Pequena"
+  },
   "cat.item.amulet.nome": {
     "en": "Amulet of Luck",
     "pt": "Amuleto da Sorte"

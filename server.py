@@ -7808,6 +7808,12 @@ SHOP_MERCHANT = [
 # MuniÃ§Ã£o â€” vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projÃ©teis
 # por pacote nas bÃ¡sicas, vendidas individualmente nas incendiÃ¡rias).
 SHOP_AMMO = [
+    {"id": "aljava_pequena", "name": "Aljava Pequena", "emoji": "🏹", "icon": "assets/itens/aljava.png", "price": 30,
+     "item_slot": "off_hand", "effect": "quiver", "quiver_arrow_capacity": 20, "quiver_bolt_capacity": 25,
+     "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 20 flechas ou 25 virotes."},
+    {"id": "aljava_grande", "name": "Aljava Grande", "emoji": "🏹", "icon": "assets/itens/aljava.png", "price": 60,
+     "item_slot": "off_hand", "effect": "quiver", "quiver_arrow_capacity": 40, "quiver_bolt_capacity": 50,
+     "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."},
     {"id": "kit_reparo_campo", "name": "Kit de Reparo", "emoji": "🧰", "price": 60, "item_slot": "bag", "effect": "repair_corrosion", "value": 1,
      "descricao": "Ação principal. Remove 1 nível de corrosão de uma arma, armadura ou escudo danificado. Não recupera peças destruídas."},
     {"id": "flechas",  "name": "Flechas (×10)",  "emoji": "🏹", "price": 3,
@@ -7922,7 +7928,23 @@ _ACIDO_AC_MIN = 5    # piso da CA corroÃ­da por Ã¡cido (nÃ£o vira acerto a
 #   â€¢ reduÃ§Ã£o de FOR â†’ menos dano corpo a corpo; reduÃ§Ã£o de CON â†’ recalcula max_hp
 #   â€¢ status petrificado/cego usam flags + contador prÃ³prio de rodadas
 VENENO_CARGAS  = 3    # nÂº de golpes certeiros que uma untada de veneno envenena
-MAX_AMMO_STACK = 10   # mÃ¡ximo de projÃ©teis por slot de muniÃ§Ã£o (bolsa ou off_hand)
+MAX_AMMO_STACK = 10   # limite padrão por pilha; aljavas equipadas ampliam flechas/virotes na bolsa
+QUIVER_ARROW_TYPES = {"flechas", "flechas_prata", "flechas_incendiarias"}
+QUIVER_BOLT_TYPES = {"virotes", "virotes_prata", "virotes_incendiarios"}
+
+
+def _max_ammo_stack_for(p, item):
+    """Capacidade da pilha conforme a aljava equipada na mão secundária."""
+    ammo_type = item.get("ammo_type") if isinstance(item, dict) else None
+    gear = p.get("gear") if isinstance(p, dict) else None
+    off_hand = gear.get("off_hand") if isinstance(gear, dict) else None
+    if not isinstance(off_hand, dict) or off_hand.get("effect") != "quiver":
+        return MAX_AMMO_STACK
+    if ammo_type in QUIVER_ARROW_TYPES:
+        return max(MAX_AMMO_STACK, int(off_hand.get("quiver_arrow_capacity", MAX_AMMO_STACK) or MAX_AMMO_STACK))
+    if ammo_type in QUIVER_BOLT_TYPES:
+        return max(MAX_AMMO_STACK, int(off_hand.get("quiver_bolt_capacity", MAX_AMMO_STACK) or MAX_AMMO_STACK))
+    return MAX_AMMO_STACK
 
 # atributo do veneno (PT, igual ao cliente) â†’ chave de score do jogador no servidor
 _VENENO_ATTR_MAP = {
@@ -17345,9 +17367,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 ammo_count = item.get("ammo_count", 10)
                 off = p["gear"].get("off_hand")
                 if off and _ammo_stack_key(off) == _ammo_stack_key(item) \
-                        and off.get("ammo_count", 0) + ammo_count <= MAX_AMMO_STACK:
+                        and off.get("ammo_count", 0) + ammo_count <= _max_ammo_stack_for(p, off):
                     # Mesmo tipo jÃ¡ equipado e com espaÃ§o: adiciona ao contador
-                    space = MAX_AMMO_STACK - off.get("ammo_count", 0)
+                    space = _max_ammo_stack_for(p, off) - off.get("ammo_count", 0)
                     add   = min(ammo_count, space)
                     off["ammo_count"] = off.get("ammo_count", 0) + add
                     log = f"{loja_emoji} **{p['name']}** recarregou **{item['name']}** (+{add} → {off['ammo_count']} total)."
@@ -17360,9 +17382,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     existing_bag = next(
                         (b for b in p["bag"]
                          if _ammo_stack_key(b) == _ammo_stack_key(item)
-                         and b.get("ammo_count", 0) + ammo_count <= MAX_AMMO_STACK), None)
+                         and b.get("ammo_count", 0) + ammo_count <= _max_ammo_stack_for(p, b)), None)
                     if existing_bag:
-                        add = min(ammo_count, MAX_AMMO_STACK - existing_bag.get("ammo_count", 0))
+                        add = min(ammo_count, _max_ammo_stack_for(p, existing_bag) - existing_bag.get("ammo_count", 0))
                         existing_bag["ammo_count"] = existing_bag.get("ammo_count", 0) + add
                         log = f"{loja_emoji} **{p['name']}** guardou **{item['name']}** na bolsa ({existing_bag['ammo_count']} total)."
                     elif len(p["bag"]) >= p.get("bag_size", 6):
@@ -18489,7 +18511,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alteracoes = []
             for destino in destinos:
                 quantidade = max(0, int(destino.get("ammo_count", 0) or 0))
-                cabe = max(0, MAX_AMMO_STACK - quantidade)
+                cabe = max(0, _max_ammo_stack_for(p, destino) - quantidade)
                 usa = min(cabe, restante)
                 if usa:
                     alteracoes.append((destino, quantidade + usa))
@@ -18499,7 +18521,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             novos = []
             while restante > 0 and len(bag) + len(novos) < p.get("bag_size", 6):
                 novo = deepcopy(item)
-                novo["ammo_count"] = min(MAX_AMMO_STACK, restante)
+                novo["ammo_count"] = min(_max_ammo_stack_for(p, novo), restante)
                 novos.append(novo)
                 restante -= novo["ammo_count"]
             if restante > 0:
@@ -22861,6 +22883,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 _off = p.get("gear", {}).get("off_hand")
                 _off_type = (_off or {}).get("ammo_type")
                 _is_crossbow = (weapon_here or {}).get("id") in ("besta", "hand_crossbow")
+                _quiver_equipped = (_off or {}).get("id") in {"aljava_pequena", "aljava_grande"}
                 if _is_crossbow:
                     # Bestas recarregam diretamente dos virotes da bolsa e deixam
                     # a mão esquerda livre para escudo. Munição EQUIPADA na mão
@@ -22880,11 +22903,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             key=lambda it: _valid_ammo.index(it["ammo_type"]))
                         if _bag_candidatas:
                             _ammo_source = ("bag", _bag_candidatas[0])
+                elif _quiver_equipped:
+                    # A aljava ocupa a mão secundária e permite que o arco puxe
+                    # a munição diretamente das pilhas maiores na bolsa.
+                    ordem_salva = p.get("auto_equip_arrows_order")
+                    if not isinstance(ordem_salva, (list, tuple)):
+                        ordem_salva = AUTO_EQUIP_ARROW_TYPES
+                    ordem = [t for t in ordem_salva
+                             if t in _valid_ammo]
+                    ordem.extend(t for t in _valid_ammo if t not in ordem)
+                    _bag_candidatas = sorted(
+                        (item for item in p.get("bag", [])
+                         if item.get("effect") == "ammo"
+                         and item.get("ammo_type") in _valid_ammo
+                         and item.get("ammo_count", 0) > 0),
+                        key=lambda it: ordem.index(it["ammo_type"]))
+                    if _bag_candidatas:
+                        _ammo_source = ("bag", _bag_candidatas[0])
                 elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
                     _ammo_source = ("off_hand", _off)
                 if not _ammo_source:
                     nome_proj = T("erro._municao_flechas") if _valid_ammo[0] == "flechas" else T("erro._municao_virotes")
-                    onde = T("erro._local_bolsa_ou_mao_esquerda") if _is_crossbow else T("erro._local_mao_esquerda")
+                    onde = T("erro._local_bolsa_ou_mao_esquerda") if (_is_crossbow or _quiver_equipped) else T("erro._local_mao_esquerda")
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.sem_municao_no_local", municao=nome_proj, local=onde)})
                     return
@@ -29450,9 +29490,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for item in bag:
                 if (item.get("effect") == "ammo" and item.get("ammo_type") == ammo_type
                         and int(item.get("ammo_count", 1) or 0) > 0):
-                    bag.remove(item)
-                    gear["off_hand"] = item
-                    return item
+                    limite = _max_ammo_stack_for(p, item)
+                    if int(item.get("ammo_count", 0) or 0) > limite:
+                        equipado = deepcopy(item)
+                        equipado["ammo_count"] = limite
+                        item["ammo_count"] = int(item.get("ammo_count", 0) or 0) - limite
+                    else:
+                        bag.remove(item)
+                        equipado = item
+                    gear["off_hand"] = equipado
+                    return equipado
         return None
 
     async def handle_set_auto_equip_arrows(self, pid, enabled, order):
@@ -29677,8 +29724,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if item.get("effect") == "ammo":
                 off = p["gear"].get("off_hand")
                 if off and _ammo_stack_key(off) == _ammo_stack_key(item) \
-                        and off.get("ammo_count", 0) < MAX_AMMO_STACK:
-                    qty = min(item.get("ammo_count", 1), MAX_AMMO_STACK - off.get("ammo_count", 0))
+                        and off.get("ammo_count", 0) < _max_ammo_stack_for(p, off):
+                    qty = min(item.get("ammo_count", 1), _max_ammo_stack_for(p, off) - off.get("ammo_count", 0))
                     off["ammo_count"] = off.get("ammo_count", 0) + qty
                     restante = int(item.get("ammo_count", 1) or 1) - qty
                     if restante > 0:
@@ -29992,8 +30039,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 qty       = item.get("ammo_count", 1)
                 off = p["gear"].get("off_hand")
                 if off and _ammo_stack_key(off) == _ammo_stack_key(item) \
-                        and off.get("ammo_count", 0) < MAX_AMMO_STACK:
-                    add = min(qty, MAX_AMMO_STACK - off.get("ammo_count", 0))
+                        and off.get("ammo_count", 0) < _max_ammo_stack_for(p, off):
+                    add = min(qty, _max_ammo_stack_for(p, off) - off.get("ammo_count", 0))
                     off["ammo_count"] = off.get("ammo_count", 0) + add
                     if add >= qty:
                         chest["items"].pop(idx)
@@ -30005,9 +30052,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     existing = next(
                         (b for b in p["bag"]
                          if _ammo_stack_key(b) == _ammo_stack_key(item)
-                         and b.get("ammo_count", 0) < MAX_AMMO_STACK), None)
+                         and b.get("ammo_count", 0) < _max_ammo_stack_for(p, b)), None)
                     if existing:
-                        add = min(qty, MAX_AMMO_STACK - existing.get("ammo_count", 0))
+                        add = min(qty, _max_ammo_stack_for(p, existing) - existing.get("ammo_count", 0))
                         existing["ammo_count"] = existing.get("ammo_count", 0) + add
                         if add >= qty:
                             chest["items"].pop(idx)
@@ -41143,7 +41190,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return None
         selected_key = _ammo_stack_key(selected)
         if (selected_key is None or _ammo_stack_poison_ids(selected) != ()
-                or int(selected.get("ammo_count", 0) or 0) > MAX_AMMO_STACK
+                or int(selected.get("ammo_count", 0) or 0) > _max_ammo_stack_for(p, selected)
                 or selected.get("ammo_type") not in RANGED_AMMO.get((p.get("weapon") or {}).get("id", ""), ())):
             return None
         if type(quantity) is not int or quantity < 1:
@@ -41155,14 +41202,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         candidates = [(ammo_source, ammo_index if ammo_source == "bag" else None, selected)]
         if ammo_source != "off_hand" and isinstance(off_hand, dict) and _ammo_stack_key(off_hand) == selected_key \
                 and _ammo_stack_poison_ids(off_hand) == () \
-                and 0 < int(off_hand.get("ammo_count", 0) or 0) <= MAX_AMMO_STACK:
+                and 0 < int(off_hand.get("ammo_count", 0) or 0) <= _max_ammo_stack_for(p, off_hand):
             candidates.append(("off_hand", None, off_hand))
         for idx, item in enumerate(bag):
             if ammo_source == "bag" and idx == ammo_index:
                 continue
             if isinstance(item, dict) and _ammo_stack_key(item) == selected_key \
                     and _ammo_stack_poison_ids(item) == () \
-                    and 0 < int(item.get("ammo_count", 0) or 0) <= MAX_AMMO_STACK:
+                    and 0 < int(item.get("ammo_count", 0) or 0) <= _max_ammo_stack_for(p, item):
                 candidates.append(("bag", idx, item))
 
         available = sum(max(0, int(item.get("ammo_count", 0) or 0)) for _, _, item in candidates)
@@ -41180,9 +41227,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         prepared = []
         pending = quantity
+        limite_pilha = _max_ammo_stack_for(p, selected)
         while pending:
             stack = deepcopy(selected)
-            stack["ammo_count"] = min(MAX_AMMO_STACK, pending)
+            stack["ammo_count"] = min(limite_pilha, pending)
             stack["poison_ids"] = list(ids)
             prepared.append(stack)
             pending -= stack["ammo_count"]

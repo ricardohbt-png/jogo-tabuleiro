@@ -12277,6 +12277,28 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 8
     },
     {
+      "id": "aljava_pequena",
+      "name": "Aljava Pequena",
+      "emoji": "🏹",
+      "icon": "assets/itens/aljava.png",
+      "item_slot": "off_hand",
+      "effect": "quiver",
+      "quiver_arrow_capacity": 20,
+      "quiver_bolt_capacity": 25,
+      "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 20 flechas ou 25 virotes."
+    },
+    {
+      "id": "aljava_grande",
+      "name": "Aljava Grande",
+      "emoji": "🏹",
+      "icon": "assets/itens/aljava.png",
+      "item_slot": "off_hand",
+      "effect": "quiver",
+      "quiver_arrow_capacity": 40,
+      "quiver_bolt_capacity": 50,
+      "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."
+    },
+    {
       "id": "kit_reparo_campo",
       "name": "Kit de Reparo",
       "emoji": "🧰",
