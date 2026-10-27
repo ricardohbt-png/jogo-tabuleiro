@@ -3410,6 +3410,70 @@ window.LANG_CATALOGO = {
     "en": "Serrated Iron Shortsword",
     "pt": "Espada Curta de Ferro Serrilhado"
   },
+  "cat.item.talisma_ascensao_constituicao.desc": {
+    "en": "+2 Constitution while equipped.",
+    "pt": "+2 de Constituição enquanto equipado."
+  },
+  "cat.item.talisma_ascensao_constituicao.nome": {
+    "en": "Constitution Ascension Talisman",
+    "pt": "Talismã da Ascensão: Constituição"
+  },
+  "cat.item.talisma_ascensao_destreza.desc": {
+    "en": "+2 Dexterity while equipped.",
+    "pt": "+2 de Destreza enquanto equipado."
+  },
+  "cat.item.talisma_ascensao_destreza.nome": {
+    "en": "Dexterity Ascension Talisman",
+    "pt": "Talismã da Ascensão: Destreza"
+  },
+  "cat.item.talisma_ascensao_forca.desc": {
+    "en": "+2 Strength while equipped.",
+    "pt": "+2 de Força enquanto equipado."
+  },
+  "cat.item.talisma_ascensao_forca.nome": {
+    "en": "Strength Ascension Talisman",
+    "pt": "Talismã da Ascensão: Força"
+  },
+  "cat.item.talisma_ascensao_inteligencia.desc": {
+    "en": "+2 Intelligence while equipped.",
+    "pt": "+2 de Inteligência enquanto equipado."
+  },
+  "cat.item.talisma_ascensao_inteligencia.nome": {
+    "en": "Intelligence Ascension Talisman",
+    "pt": "Talismã da Ascensão: Inteligência"
+  },
+  "cat.item.talisma_despertar_constituicao.desc": {
+    "en": "+1 Constitution while equipped.",
+    "pt": "+1 de Constituição enquanto equipado."
+  },
+  "cat.item.talisma_despertar_constituicao.nome": {
+    "en": "Constitution Awakening Talisman",
+    "pt": "Talismã do Despertar: Constituição"
+  },
+  "cat.item.talisma_despertar_destreza.desc": {
+    "en": "+1 Dexterity while equipped.",
+    "pt": "+1 de Destreza enquanto equipado."
+  },
+  "cat.item.talisma_despertar_destreza.nome": {
+    "en": "Dexterity Awakening Talisman",
+    "pt": "Talismã do Despertar: Destreza"
+  },
+  "cat.item.talisma_despertar_forca.desc": {
+    "en": "+1 Strength while equipped.",
+    "pt": "+1 de Força enquanto equipado."
+  },
+  "cat.item.talisma_despertar_forca.nome": {
+    "en": "Strength Awakening Talisman",
+    "pt": "Talismã do Despertar: Força"
+  },
+  "cat.item.talisma_despertar_inteligencia.desc": {
+    "en": "+1 Intelligence while equipped.",
+    "pt": "+1 de Inteligência enquanto equipado."
+  },
+  "cat.item.talisma_despertar_inteligencia.nome": {
+    "en": "Intelligence Awakening Talisman",
+    "pt": "Talismã do Despertar: Inteligência"
+  },
   "cat.item.unarmed.desc": {
     "en": "Unarmed: — physical damage, using Strength.",
     "pt": "Desarmado: — de dano físico, usando Força."

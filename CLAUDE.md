@@ -20,6 +20,10 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `ring_str` permanece com o ID salvo existente, mas se chama Anel da Precisão: custa 50 moedas, usa `assets/itens/ring_str.png` e concede +1 de acerto. `anel_impacto` custa 80, usa `assets/itens/ring.png` e soma +1 ao dano de cada acerto com arma; `anel_supremacia` custa 200, usa `assets/itens/ring_vita.png` e concede os dois bônus. Os itens aparecem nos cinco mercadores de `city_shops.json` e no catálogo do editor. O efeito `damage_bonus` de equipamento é armazenado simetricamente em `gear_damage_bonus` e entra no cálculo compartilhado de dano armado, incluindo corpo a corpo, ataques à distância, mão secundária, arremesso de armas e prévia de ataque; não afeta magia, ataques desarmados nem consumíveis arremessados.
 
+### Talismãs de atributo (2026-10-25)
+
+Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` concede +1 por 250 moedas e usa `assets/itens/medalhao3.png`; `talisma_ascensao_<atributo>` concede +2 por 500 moedas e usa `assets/itens/medalhao4.png`. Cada tier tem uma versão de Força (`str_`), Destreza (`dex`), Inteligência (`int_`) e Constituição (`con_`). São equipamentos no slot `item`, aplicados e removidos por `_apply_gear_effect`/`_apply_attribute_delta`, então derivados como ataque, CA, resistências, PV e CD acompanham o atributo. Os oito SKUs ficam nos cinco mercadores em `city_shops.json` e no catálogo PT/EN e do editor.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

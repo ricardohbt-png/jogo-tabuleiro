@@ -12537,6 +12537,86 @@ window.EDITOR_CATALOG = {
       "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."
     },
     {
+      "id": "talisma_despertar_forca",
+      "name": "Talismã do Despertar: Força",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "str_",
+      "value": 1,
+      "descricao": "+1 de Força enquanto equipado."
+    },
+    {
+      "id": "talisma_despertar_destreza",
+      "name": "Talismã do Despertar: Destreza",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "dex",
+      "value": 1,
+      "descricao": "+1 de Destreza enquanto equipado."
+    },
+    {
+      "id": "talisma_despertar_inteligencia",
+      "name": "Talismã do Despertar: Inteligência",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "int_",
+      "value": 1,
+      "descricao": "+1 de Inteligência enquanto equipado."
+    },
+    {
+      "id": "talisma_despertar_constituicao",
+      "name": "Talismã do Despertar: Constituição",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 1,
+      "descricao": "+1 de Constituição enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_forca",
+      "name": "Talismã da Ascensão: Força",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "str_",
+      "value": 2,
+      "descricao": "+2 de Força enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_destreza",
+      "name": "Talismã da Ascensão: Destreza",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "dex",
+      "value": 2,
+      "descricao": "+2 de Destreza enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_inteligencia",
+      "name": "Talismã da Ascensão: Inteligência",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "int_",
+      "value": 2,
+      "descricao": "+2 de Inteligência enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_constituicao",
+      "name": "Talismã da Ascensão: Constituição",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 2,
+      "descricao": "+2 de Constituição enquanto equipado."
+    },
+    {
       "id": "ring_vita",
       "name": "Anel da Vitalidade",
       "emoji": "💍",

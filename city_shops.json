@@ -165,7 +165,15 @@
       "ignus_fatus",
       "fata_morgana",
       "anel_impacto",
-      "anel_supremacia"
+      "anel_supremacia",
+      "talisma_despertar_forca",
+      "talisma_despertar_destreza",
+      "talisma_despertar_inteligencia",
+      "talisma_despertar_constituicao",
+      "talisma_ascensao_forca",
+      "talisma_ascensao_destreza",
+      "talisma_ascensao_inteligencia",
+      "talisma_ascensao_constituicao"
     ],
     "templo": [
       "agua_benta",
@@ -376,7 +384,15 @@
       "ignus_fatus",
       "fata_morgana",
       "anel_impacto",
-      "anel_supremacia"
+      "anel_supremacia",
+      "talisma_despertar_forca",
+      "talisma_despertar_destreza",
+      "talisma_despertar_inteligencia",
+      "talisma_despertar_constituicao",
+      "talisma_ascensao_forca",
+      "talisma_ascensao_destreza",
+      "talisma_ascensao_inteligencia",
+      "talisma_ascensao_constituicao"
     ],
     "templo": [
       "agua_benta",
@@ -587,7 +603,15 @@
       "ignus_fatus",
       "fata_morgana",
       "anel_impacto",
-      "anel_supremacia"
+      "anel_supremacia",
+      "talisma_despertar_forca",
+      "talisma_despertar_destreza",
+      "talisma_despertar_inteligencia",
+      "talisma_despertar_constituicao",
+      "talisma_ascensao_forca",
+      "talisma_ascensao_destreza",
+      "talisma_ascensao_inteligencia",
+      "talisma_ascensao_constituicao"
     ],
     "templo": [
       "agua_benta",
@@ -798,7 +822,15 @@
       "ignus_fatus",
       "fata_morgana",
       "anel_impacto",
-      "anel_supremacia"
+      "anel_supremacia",
+      "talisma_despertar_forca",
+      "talisma_despertar_destreza",
+      "talisma_despertar_inteligencia",
+      "talisma_despertar_constituicao",
+      "talisma_ascensao_forca",
+      "talisma_ascensao_destreza",
+      "talisma_ascensao_inteligencia",
+      "talisma_ascensao_constituicao"
     ],
     "templo": [
       "agua_benta",
@@ -956,7 +988,15 @@
       "anel_vigia",
       "ring_str",
       "anel_impacto",
-      "anel_supremacia"
+      "anel_supremacia",
+      "talisma_despertar_forca",
+      "talisma_despertar_destreza",
+      "talisma_despertar_inteligencia",
+      "talisma_despertar_constituicao",
+      "talisma_ascensao_forca",
+      "talisma_ascensao_destreza",
+      "talisma_ascensao_inteligencia",
+      "talisma_ascensao_constituicao"
     ]
   }
 }
