@@ -8,6 +8,10 @@
 
 `moeda_da_sorte` custa 120 moedas e está nos cinco mercadores. Ativá-la consome o item e usa uma ação bônus; `moeda_sorte_ativa` permanece no estado do herói até a primeira falha em um ataque ou teste de resistência. O servidor rerrola o mesmo d20, preservando vantagem/desvantagem; o segundo resultado é final. Não permite outra moeda enquanto estiver ativa.
 
+### Anel de Proteção (2026-10-25)
+
+O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "def_"`, `value: 1`, preço 80 moedas e imagem `assets/itens/ring.png`. As cinco cidades com mercador o incluem em `city_shops.json`; nome e descrição ficam em `src/lang/catalogo.js`. O bônus usa o fluxo normal de equipar/desequipar e recalcular CA. Regressão: `python -X utf8 tools/test_anel_protecao.py`.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

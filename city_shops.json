@@ -78,6 +78,7 @@
       "ring_str",
       "ring_vita",
       "moeda_da_sorte",
+      "anel_protecao",
       "helm_iron",
       "circlet",
       "boots",
@@ -287,6 +288,7 @@
       "ring_str",
       "ring_vita",
       "moeda_da_sorte",
+      "anel_protecao",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -494,6 +496,7 @@
       "ring_str",
       "ring_vita",
       "moeda_da_sorte",
+      "anel_protecao",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -701,6 +704,7 @@
       "ring_str",
       "ring_vita",
       "moeda_da_sorte",
+      "anel_protecao",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -935,7 +939,8 @@
       "pocao_barreira_arcana",
       "elixir_cavalo_ferro",
       "regeneration_potion",
-      "moeda_da_sorte"
+      "moeda_da_sorte",
+      "anel_protecao"
     ]
   }
 }

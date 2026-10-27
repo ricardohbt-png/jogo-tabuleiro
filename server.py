@@ -7691,6 +7691,8 @@ SHOP_MERCHANT = [
      "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."},
     {"id": "moeda_da_sorte", "name": "Moeda da Sorte", "emoji": "🪙", "price": 120, "item_slot": "bag", "effect": "luck_coin", "value": 1,
      "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."},
+    {"id": "anel_protecao", "name": "Anel de Proteção", "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "def_", "value": 1,
+     "descricao": "+1 de Classe de Armadura enquanto estiver equipado."},
     # â”€â”€ AnÃ©is (slots ring1 / ring2) â”€â”€
     {"id": "ring_str",      "name": "Anel de Força",     "emoji": "💍",  "price": 12, "item_slot": "ring",  "effect": "atk",       "value": 1},
     {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 15, "item_slot": "ring",  "effect": "maxhp",     "value": 5},

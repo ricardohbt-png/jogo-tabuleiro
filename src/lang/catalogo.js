@@ -2254,6 +2254,14 @@ window.LANG_CATALOGO = {
     "en": "Amulet of Luck",
     "pt": "Amuleto da Sorte"
   },
+  "cat.item.anel_protecao.desc": {
+    "en": "+1 Armor Class while equipped.",
+    "pt": "+1 de Classe de Armadura enquanto estiver equipado."
+  },
+  "cat.item.anel_protecao.nome": {
+    "en": "Ring of Protection",
+    "pt": "Anel de Proteção"
+  },
   "cat.item.antidote.desc": {
     "en": "Neutralizes poisons and protects against new ones for 1d4 rounds.",
     "pt": "Neutraliza venenos e protege contra novos por 1d4 rodadas."

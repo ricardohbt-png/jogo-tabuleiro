@@ -12481,6 +12481,16 @@ window.EDITOR_CATALOG = {
       "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."
     },
     {
+      "id": "anel_protecao",
+      "name": "Anel de Proteção",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "def_",
+      "value": 1,
+      "descricao": "+1 de Classe de Armadura enquanto estiver equipado."
+    },
+    {
       "id": "ring_str",
       "name": "Anel de Força",
       "emoji": "💍",
