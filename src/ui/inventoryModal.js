@@ -440,14 +440,17 @@ const InventoryModal = (() => {
     const isBonusAction = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
       && BONUS_ACTION_EFFECTS.has(item.effect);
     const bonusBloqueado = isBonusAction && !!player.bonus_action_used;
+    // Na cidade não há turno: só a poção de cura (efeito `heal`) pode ser usada.
+    const podeCurarNaCidade = !_readOnly && !gsNow && !!GS.cityState && player?.id === GS.myPid
+      && !!player.alive && item?.effect === 'heal';
     const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
       ? GS.CATALOGO_ITENS[item && item.id] : null;
     const isArremessavel = !!(catDef?.arremessavel || item?.arremessavel);
     return {
       isCarta, isScroll, isConsumable, isArremessavel,
       podeLer: isCarta,
-      podeUsar: isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
-        && !bonusBloqueado,
+      podeUsar: (isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
+        && !bonusBloqueado) || podeCurarNaCidade,
       podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster && !player.action_done,
       podeArremessar: isMyOwnDungeonTurn && isArremessavel
         && (typeof GS.canThrowItem !== 'function' || GS.canThrowItem(player)),

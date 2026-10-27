@@ -42032,7 +42032,46 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             slots[pocket_index] = None
         return True
 
+    async def _usar_pocao_cidade(self, pid, item_id, source, gear_slot, pocket_index, belt_token):
+        """Poção de cura na cidade: sem turno, ação bônus nem fome/sede. Devolve
+        True quando o pedido foi tratado aqui (com ou sem recusa)."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or p.get("is_master"):
+            return False
+        item, source_location = self._resolve_consumable_source(
+            p, item_id, source, gear_slot, pocket_index, belt_token)
+        if not item or item.get("effect") != "heal":
+            return False
+        if p.get("hp", 0) >= p.get("max_hp", 0):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.a_vida_ja_esta_cheia")})
+            return True
+        max_uses = int(item.get("max_uses", 1) or 1)
+        uses_left = int(item.get("uses_left", max_uses) or 0)
+        if max_uses > 1 and uses_left <= 0:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.esta_pocao_ja_nao_possui_doses")})
+            return True
+        remove_item = True
+        if max_uses > 1:
+            uses_left -= 1
+            item["uses_left"] = uses_left
+            remove_item = uses_left <= 0
+        usado = deepcopy(item)
+        if remove_item and not self._consume_action_item(p, item, source_location):
+            return True
+        cura = self._curar_hp(p, item.get("value", 0), "Poção de cura")
+        doses_msg = ""
+        if max_uses > 1:
+            doses_msg = (" A garrafa se esvazia." if remove_item
+                         else f" **{uses_left}/{max_uses}** doses restantes.")
+        await self.gm_say(T("narracao.usa_e_recupera_hp_3", item_emoji=usado.get("emoji", ""),
+                            heroi=p["name"], item=nome_item(usado), val=cura, doses_msg=doses_msg))
+        await self.push_state_or_city()
+        return True
+
     async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None, target_pos=None, weapon_slot="weapon"):
+        if self._em_cidade(pid) and await self._usar_pocao_cidade(
+                pid, item_id, source, gear_slot, pocket_index, belt_token):
+            return
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return

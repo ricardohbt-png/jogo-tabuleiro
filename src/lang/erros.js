@@ -1029,6 +1029,10 @@ window.LANG_ERROS = {
     "en": "Item can't be thrown.",
     "pt": "Item não arremessável."
   },
+  "erro.a_vida_ja_esta_cheia": {
+    "en": "Your health is already full.",
+    "pt": "A vida já está cheia."
+  },
   "erro.item_nao_encontrado": {
     "en": "Item not found.",
     "pt": "Item não encontrado."
