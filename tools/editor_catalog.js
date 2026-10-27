@@ -12491,6 +12491,16 @@ window.EDITOR_CATALOG = {
       "descricao": "+1 de Classe de Armadura enquanto estiver equipado."
     },
     {
+      "id": "anel_vigia",
+      "name": "Anel do Vigia",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "vision",
+      "value": 2,
+      "descricao": "+2 de visão enquanto estiver equipado."
+    },
+    {
       "id": "ring_str",
       "name": "Anel de Força",
       "emoji": "💍",

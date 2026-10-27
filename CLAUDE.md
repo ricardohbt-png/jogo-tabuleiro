@@ -12,6 +12,10 @@
 
 O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "def_"`, `value: 1`, preço 80 moedas e imagem `assets/itens/ring.png`. As cinco cidades com mercador o incluem em `city_shops.json`; nome e descrição ficam em `src/lang/catalogo.js`. O bônus usa o fluxo normal de equipar/desequipar e recalcular CA. Regressão: `python -X utf8 tools/test_anel_protecao.py`.
 
+### Anel do Vigia (2026-10-25)
+
+`anel_vigia` é vendido por 80 moedas nos cinco mercadores, usa `assets/itens/ring.png` e concede `vision: +2` enquanto equipado. O bônus usa `vision_bonus` e aumenta o raio de visão dos heróis; não altera percepção nem visão de monstros.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

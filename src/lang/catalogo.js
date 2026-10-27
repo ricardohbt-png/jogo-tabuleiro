@@ -2262,6 +2262,14 @@ window.LANG_CATALOGO = {
     "en": "Ring of Protection",
     "pt": "Anel de Proteção"
   },
+  "cat.item.anel_vigia.desc": {
+    "en": "+2 vision while equipped.",
+    "pt": "+2 de visão enquanto estiver equipado."
+  },
+  "cat.item.anel_vigia.nome": {
+    "en": "Watcher Ring",
+    "pt": "Anel do Vigia"
+  },
   "cat.item.antidote.desc": {
     "en": "Neutralizes poisons and protects against new ones for 1d4 rounds.",
     "pt": "Neutraliza venenos e protege contra novos por 1d4 rodadas."

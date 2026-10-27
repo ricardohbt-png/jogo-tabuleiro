@@ -79,6 +79,7 @@
       "ring_vita",
       "moeda_da_sorte",
       "anel_protecao",
+      "anel_vigia",
       "helm_iron",
       "circlet",
       "boots",
@@ -289,6 +290,7 @@
       "ring_vita",
       "moeda_da_sorte",
       "anel_protecao",
+      "anel_vigia",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -497,6 +499,7 @@
       "ring_vita",
       "moeda_da_sorte",
       "anel_protecao",
+      "anel_vigia",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -705,6 +708,7 @@
       "ring_vita",
       "moeda_da_sorte",
       "anel_protecao",
+      "anel_vigia",
       "helm_iron",
       "circlet",
       "bota_alada",
@@ -940,7 +944,8 @@
       "elixir_cavalo_ferro",
       "regeneration_potion",
       "moeda_da_sorte",
-      "anel_protecao"
+      "anel_protecao",
+      "anel_vigia"
     ]
   }
 }
