@@ -65,7 +65,8 @@
       "flechas_prata",
       "virotes_prata",
       "virote_incendiario",
-      "flecha_incendiaria"
+      "flecha_incendiaria",
+      "kit_reparo_campo"
     ],
     "mercador": [
       "veneno_fungo_acre",
@@ -270,7 +271,8 @@
       "flechas_prata",
       "virotes_prata",
       "virote_incendiario",
-      "flecha_incendiaria"
+      "flecha_incendiaria",
+      "kit_reparo_campo"
     ],
     "mercador": [
       "veneno_fungo_acre",
@@ -475,7 +477,8 @@
       "flechas_prata",
       "virotes_prata",
       "virote_incendiario",
-      "flecha_incendiaria"
+      "flecha_incendiaria",
+      "kit_reparo_campo"
     ],
     "mercador": [
       "veneno_fungo_acre",
@@ -680,7 +683,8 @@
       "flechas_prata",
       "virotes_prata",
       "virote_incendiario",
-      "flecha_incendiaria"
+      "flecha_incendiaria",
+      "kit_reparo_campo"
     ],
     "mercador": [
       "veneno_fungo_acre",
@@ -898,7 +902,8 @@
       "flechas_prata",
       "virotes_prata",
       "virote_incendiario",
-      "flecha_incendiaria"
+      "flecha_incendiaria",
+      "kit_reparo_campo"
     ],
     "mercador": [
       "grimorio_bola_fogo",

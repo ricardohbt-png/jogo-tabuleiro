@@ -7780,6 +7780,8 @@ SHOP_MERCHANT = [
 # MuniÃ§Ã£o â€” vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projÃ©teis
 # por pacote nas bÃ¡sicas, vendidas individualmente nas incendiÃ¡rias).
 SHOP_AMMO = [
+    {"id": "kit_reparo_campo", "name": "Kit de Reparo", "emoji": "🧰", "price": 60, "item_slot": "bag", "effect": "repair_corrosion", "value": 1,
+     "descricao": "Ação principal. Remove 1 nível de corrosão de uma arma, armadura ou escudo danificado. Não recupera peças destruídas."},
     {"id": "flechas",  "name": "Flechas (×10)",  "emoji": "🏹", "price": 3,
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas", "ammo_count": 10},
     {"id": "virotes",  "name": "Virotes (×10)",  "emoji": "🏹", "price": 3,
@@ -28613,6 +28615,43 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._limpar_corrosao_item(p.get("weapon"))
         return item
 
+    def _reparar_um_nivel_opcao(self, p, opcao):
+        """Remove um nível de corrosão sem recuperar uma peça destruída."""
+        slot = opcao["slot"]
+        if opcao.get("location") == "bag":
+            item = (p.get("bag") or [])[opcao["bag_index"]]
+        else:
+            item = (p.get("gear") or {}).get(slot)
+            if not item and slot == "weapon":
+                item = p.get("weapon")
+        nivel = max(0, int(opcao.get("levels", 0) or 0) - 1)
+        if nivel:
+            item["corrosion_level"] = nivel
+        else:
+            self._limpar_corrosao_item(item)
+        arma_secundaria = (slot == "off_hand" and opcao.get("location") != "bag"
+                           and self._eh_arma_offhand(item, p))
+        if opcao.get("location") != "bag" and not arma_secundaria:
+            pref = {"weapon": "arma", "armor": "armadura", "off_hand": "escudo"}[slot]
+            c = self._corr(p)
+            c[f"{pref}_lvl"] = nivel
+            c[f"{pref}_id"] = item.get("id") if item else None
+            c[f"{pref}_destruida"] = False
+            c[f"{pref}_resist"] = int((item or {}).get("corrosao_resistente", 0) or 0)
+            c[f"{pref}_penmax"] = int((item or {}).get("corrosao_niveis_penalidade", 2) or 2)
+            if pref == "armadura":
+                c["armadura_com_ca"] = bool(item and item.get("id") != "cloak")
+            elif pref == "escudo":
+                c["escudo_com_ca"] = bool(item)
+            if slot == "weapon" and p.get("weapon") is not item:
+                outra_arma = p.get("weapon")
+                if isinstance(outra_arma, dict) and outra_arma.get("id") == item.get("id"):
+                    if nivel:
+                        outra_arma["corrosion_level"] = nivel
+                    else:
+                        self._limpar_corrosao_item(outra_arma)
+        return item
+
     async def handle_repair_item(self, pid, slot, bag_index=None):
         """Repara todos os níveis de corrosão do item em uma única compra."""
         if not self._em_cidade(pid):
@@ -41501,6 +41540,34 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         effect, val = item["effect"], item.get("value", 0)
 
+        repair_option = None
+        if effect == "repair_corrosion":
+            if item.get("id") != "kit_reparo_campo":
+                await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+                return
+            if isinstance(target_id, str) and target_id.startswith("repair:gear:"):
+                repair_slot = target_id.split(":", 2)[2]
+                repair_bag_index = None
+            elif isinstance(target_id, str) and target_id.startswith("repair:bag:"):
+                repair_slot = None
+                repair_bag_index = target_id.split(":", 2)[2]
+            else:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.kit_reparo_sem_alvo")})
+                return
+            try:
+                repair_index = int(repair_bag_index) if repair_bag_index is not None else None
+            except (TypeError, ValueError):
+                repair_index = None
+            repair_option = next((option for option in self._opcoes_reparo_ferreiro(p)
+                                 if (repair_slot is None or option.get("slot") == repair_slot)
+                                 and option.get("bag_index") == repair_index), None)
+            if not repair_option:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.kit_reparo_sem_alvo")})
+                return
+            if p.get("action_done"):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+                return
+
         # Valida alvo e frasco antes da ação bônus, sede ou retirada do item.
         poison_weapon = None
         if effect == "coat_poison":
@@ -41829,6 +41896,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             quantidade = await self._solucao_mecanismo_desarmar_raio(p, raio=3)
             await self.gm_say(T("narracao.usa_solucao_mecanismo",
                                heroi=p["name"], quantidade=quantidade))
+        elif effect == "repair_corrosion":
+            target_item = self._reparar_um_nivel_opcao(p, repair_option)
+            if not self._consume_action_item(p, item, source_location):
+                return
+            remove_item = False
+            p["action_done"] = True
+            await self.gm_say(T("narracao.usa_kit_reparo", heroi=p["name"],
+                               item=nome_item(target_item), nivel=repair_option["levels"] - 1))
         elif effect == "invisibility":
             # A poção compartilha o mesmo estado, animação, duração e regras de
             # quebra da magia. Seu valor é duração fixa, sem rolagem de dado.

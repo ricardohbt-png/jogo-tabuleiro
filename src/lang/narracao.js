@@ -232,6 +232,10 @@ window.LANG_NARRACAO = {
     "en": "📦 **{heroi}** turns the key in the **Solution of the Mechanism**. The runes disable **{quantidade}** active trap(s) in the 3-square area.",
     "pt": "📦 **{heroi}** gira a chave na **Solução do Mecanismo**. As runas desativam **{quantidade}** armadilha(s) ativa(s) na área de 3 casas."
   },
+  "narracao.usa_kit_reparo": {
+    "en": "🧰 **{heroi}** uses a Repair Kit on **{item}**, removing 1 corrosion level. The item now has {nivel} corrosion level(s).",
+    "pt": "🧰 **{heroi}** usa um Kit de Reparo em **{item}** e remove 1 nível de corrosão. A peça fica com {nivel} nível(is) de corrosão."
+  },
   "narracao.acerta_em_d20_vs_ca": {
     "en": "{defn_emoji} **{heroi}** hits **{target}** with **{defn}** (d20={roll}+{p_atk_bonus}={total} vs AC {target_ac})!",
     "pt": "{defn_emoji} **{heroi}** acerta **{defn}** em **{target}** (d20={roll}+{p_atk_bonus}={total} vs CA {target_ac})!"

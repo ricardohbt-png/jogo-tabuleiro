@@ -12277,6 +12277,15 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 8
     },
     {
+      "id": "kit_reparo_campo",
+      "name": "Kit de Reparo",
+      "emoji": "🧰",
+      "item_slot": "bag",
+      "effect": "repair_corrosion",
+      "value": 1,
+      "descricao": "Ação principal. Remove 1 nível de corrosão de uma arma, armadura ou escudo danificado. Não recupera peças destruídas."
+    },
+    {
       "id": "flechas",
       "name": "Flechas (×10)",
       "emoji": "🏹",

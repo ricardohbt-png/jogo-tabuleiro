@@ -1057,6 +1057,10 @@ window.LANG_ERROS = {
     "en": "This item has no repairable corrosion.",
     "pt": "Este item não possui corrosão reparável."
   },
+  "erro.kit_reparo_sem_alvo": {
+    "en": "Choose a damaged weapon, armor or shield to repair.",
+    "pt": "Escolha uma arma, armadura ou escudo danificado para reparar."
+  },
   "erro.ja_criou_redemoinhos": {
     "en": "You have already created the {n} whirlpool(s) of this spell.",
     "pt": "Você já criou os {n} redemoinho(s) desta magia."

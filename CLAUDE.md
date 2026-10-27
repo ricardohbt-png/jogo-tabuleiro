@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Kit de Reparo de Campo (2026-10-25)
+
+`kit_reparo_campo` custa 60 moedas e é vendido em `ferreiro_ammo` nas cinco cidades. É consumível de ação principal: o inventário abre a seleção entre armas, armaduras e escudos com corrosão; o servidor valida o alvo, remove exatamente 1 nível e consome um kit. Peças destruídas continuam irrecuperáveis. O reparo de cidade segue distinto e remove todos os níveis por seu preço calculado.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo

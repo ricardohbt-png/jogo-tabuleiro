@@ -29767,6 +29767,32 @@ function useItem(itemId, targetId, sourceInfo){
     const it = sourceInfo?.source === 'utility_belt'
       ? me?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
       : me && (me.bag || []).find(b => b.id === itemId);
+    if(it?.effect === 'repair_corrosion'){
+      const repairTargets = [];
+      const damaged = item => Number(item?.corrosion_level || item?.corrosao_inicial || 0) > 0
+        && !item?.corrosion_destroyed;
+      for(const slot of ['weapon', 'armor', 'off_hand']){
+        const item = me?.gear?.[slot] || (slot === 'weapon' ? me?.weapon : null);
+        const repairable = slot !== 'off_hand' || item?.kind === 'shield' || item?.item_slot === 'shield'
+          || GS.isOffhandWeapon?.(item) || GS.slotCategoryForItem?.(item) === 'weapon';
+        if(item && repairable && damaged(item))
+          repairTargets.push({id:`repair:gear:${slot}`, name:item.name || item.id, emoji:item.emoji || '🛠️'});
+      }
+      (me?.bag || []).forEach((item, index) => {
+        const kind = GS.slotCategoryForItem?.(item);
+        const repairable = kind === 'weapon' || kind === 'armor'
+          || (kind === 'off_hand' && (item?.kind === 'shield' || item?.item_slot === 'shield'));
+        if(repairable && damaged(item))
+          repairTargets.push({id:`repair:bag:${index}`, name:item.name || item.id, emoji:item.emoji || '🛠️'});
+      });
+      if(!repairTargets.length){
+        toast(t('erro.kit_reparo_sem_alvo'), 'var(--orange)');
+        return;
+      }
+      openTargetModal(t('ui.item.escolha_peca_reparar'), repairTargets, 'item',
+        target => useItem(itemId, target, sourceInfo));
+      return;
+    }
     if(it?.effect==='coat_poison'){
       _abrirPainelAplicarVenenoArma(it.veneno_id||it.id,
         sourceInfo?.source==='utility_belt'?{...sourceInfo,itemId}:sourceInfo);

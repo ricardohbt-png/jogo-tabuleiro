@@ -2930,6 +2930,14 @@ window.LANG_CATALOGO = {
     "en": "Jewel",
     "pt": "Joia"
   },
+  "cat.item.kit_reparo_campo.desc": {
+    "en": "Main action. Removes 1 corrosion level from a damaged weapon, armor or shield. Cannot restore destroyed items.",
+    "pt": "Ação principal. Remove 1 nível de corrosão de uma arma, armadura ou escudo danificado. Não recupera peças destruídas."
+  },
+  "cat.item.kit_reparo_campo.nome": {
+    "en": "Repair Kit",
+    "pt": "Kit de Reparo"
+  },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
     "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."

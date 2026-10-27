@@ -5407,6 +5407,10 @@ window.LANG_INTERFACE = {
     "en": "{icone} {nome} — Choose the target",
     "pt": "{icone} {nome} — Escolha o alvo"
   },
+  "ui.item.escolha_peca_reparar": {
+    "en": "🧰 Repair kit — Choose a damaged weapon, armor or shield",
+    "pt": "🧰 Kit de Reparo — Escolha uma arma, armadura ou escudo danificado"
+  },
   "ui.item.escudo_leve.nome": {
     "en": "Light Shield",
     "pt": "Escudo Leve"
