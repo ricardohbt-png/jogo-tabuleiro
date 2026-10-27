@@ -29332,7 +29332,9 @@ const BONUS_ACTION_EFFECTS = new Set([
   'heal', 'regeneration', 'atk_bonus', 'antidote', 'coat_poison',
   'veil_shadow', 'disarm_traps_area', 'invisibility', 'speed', 'darkness_mantle', 'elemental_resistance_potion', 'arcane_barrier_potion', 'strength_potion', 'dexterity_potion',
   'constitution_potion', 'intelligence_potion', 'ranged_range_potion',
-  'cure_poison', 'cure_petrification', 'cure_disease', 'meal_survival'
+  'cure_poison', 'cure_petrification', 'cure_disease'
+  // food e meal_survival (Banquete de Viagem) ficam de fora: comida é de uso livre
+  // (handle_use_item os exclui do limite), então não pode bloquear a bolsa.
 ]);
 
 // Consumíveis que curam status podem ser usados no próprio herói ou num aliado
