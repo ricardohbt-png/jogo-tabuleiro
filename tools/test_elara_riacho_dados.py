@@ -29,6 +29,8 @@ class DadosTests(unittest.TestCase):
 
     def test_so_aparece_com_o_ramo_a(self):
         for cid, (_slot, c) in todas().items():
+            if cid.startswith("elara_riacho_cor_"):
+                continue    # cor local: aparece só para quem NÃO está no Ramo A (testada à parte)
             req = c["requisito"]
             ramo = req.get("fato") in (R.F_RAMO_A, R.F_SONDOU, R.F_EXPOSTO, R.F_DECIDIDO, R.F_POUPADO, R.F_MOCAS,
                                        R.F_PISTA_BOLSA)
@@ -135,9 +137,17 @@ class DiscoTests(unittest.TestCase):
             gravadas = {c["id"] for c in slots[slot]["conversations"]}
             self.assertTrue({c["id"] for c in convs} <= gravadas, slot)
 
-    def test_conversas_do_autor_preservadas(self):
-        slots = {s["id"]: s for s in self.ler("city_scenes.json")["vila_riacho"]["taverna"]["slots"]}
-        self.assertIn("fala_ms520tuz", {c["id"] for c in slots["barman"]["conversations"]})
+    def test_conversas_de_outra_cidade_foram_trocadas_por_falas_do_riacho(self):
+        cena = self.ler("city_scenes.json")["vila_riacho"]["taverna"]
+        ids = {c["id"] for sl in cena["slots"] for c in sl["conversations"]}
+        self.assertFalse(ids & R.ANTIGAS_RIACHO, "as cópias da taverna de Alva e Luz saíram")
+        self.assertNotIn("Alva e Luz", json.dumps(cena, ensure_ascii=False), "nada de outra cidade na taverna do Riacho")
+        self.assertTrue({"elara_riacho_cor_barman", "elara_riacho_cor_mesa", "elara_riacho_cor_bardo"} <= ids)
+
+    def test_fala_local_so_para_quem_nao_esta_no_ramo_a(self):
+        for cid in ("elara_riacho_cor_barman", "elara_riacho_cor_mesa", "elara_riacho_cor_bardo"):
+            self.assertEqual(todas()[cid][1]["requisito"]["sem_fato"], R.F_RAMO_A, cid)
+            self.assertFalse(todas()[cid][1]["efeito"]["fato"] or todas()[cid][1]["efeito"].get("fatos"), cid)
 
     def test_nenhum_slot_removido_recebe_conversa(self):
         for s in self.ler("city_scenes.json")["vila_riacho"]["taverna"]["slots"]:

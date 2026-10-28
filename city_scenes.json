@@ -582,11 +582,11 @@
           "y": 20.1,
           "w": 14.4,
           "h": 34.0,
-          "dialog": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+          "dialog": "Bem-vindos à Vila do Riacho. Uma refeição quente sempre ajuda antes da estrada.",
           "conversations": [
             {
               "id": "inicial",
-              "texto": "Bem-vindos a Alva e Luz. Uma refeição quente sempre ajuda antes da estrada.",
+              "texto": "Bem-vindos à Vila do Riacho. Uma refeição quente sempre ajuda antes da estrada.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
@@ -602,18 +602,19 @@
               "uma_vez": false
             },
             {
-              "id": "fala_ms520tuz",
-              "texto": "Existe uma casa abandonada muito suspeita nessa cidade. Pessoas referiram muitos barulho estranhos a noite. Mas dizem que nunca viram nada lá dentro.",
+              "id": "elara_riacho_cor_barman",
+              "texto": "O riacho encheu mais que o normal este ano e levou duas ovelhas do Heitor. Quem chega pela estrada oeste faz bem em cruzar a ponte antes de escurecer: ela range, mas aguenta.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "elara_ramo_a",
                 "aventura_id": ""
               },
               "efeito": {
-                "renome": 5,
-                "fato": "chave1",
+                "renome": 0,
+                "fato": "",
                 "item_id": ""
               },
               "uma_vez": false
@@ -764,18 +765,19 @@
               "uma_vez": false
             },
             {
-              "id": "fala_ms527p9a",
-              "texto": "Meu cunhado entrou naquela casa há 2 semanas e desapareceu.",
+              "id": "elara_riacho_cor_mesa",
+              "texto": "Na terceira caneca a vila inteira vira assunto: o preço do sal, a ponte que range, o forasteiro que passou ontem sem olhar para ninguém. Aqui todo mundo sabe de tudo e finge que não.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "chave 1",
+                "fato": "",
+                "sem_fato": "elara_ramo_a",
                 "aventura_id": ""
               },
               "efeito": {
                 "renome": 0,
-                "fato": "cunhado desaparecido",
+                "fato": "",
                 "item_id": ""
               },
               "uma_vez": false
@@ -829,13 +831,14 @@
               "uma_vez": false
             },
             {
-              "id": "fala_ms52ekay",
-              "texto": "Ouvi o boato de um homem desaparecido há 2 semanas. Aquela casa é amaldiçoada. Desistam de procurar algo lá.",
+              "id": "elara_riacho_cor_bardo",
+              "texto": "O bardo dedilha uma melodia curta, de rio e de ponte velha. Olha para vocês por um instante e a canção muda de tom, como se tivesse escolhido outra para recebê-los.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "cunhado desaparecido",
+                "fato": "",
+                "sem_fato": "elara_ramo_a",
                 "aventura_id": ""
               },
               "efeito": {
@@ -843,7 +846,7 @@
                 "fato": "",
                 "item_id": ""
               },
-              "uma_vez": true
+              "uma_vez": false
             },
             {
               "id": "elara_t1_gentil",

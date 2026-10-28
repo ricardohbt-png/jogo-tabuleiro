@@ -61,6 +61,10 @@ def _req(**campos):
     return S._clean_requirement(campos)
 
 
+# Conversas antigas da taverna do Riacho (cópias da taverna de Alva e Luz: casa abandonada, cunhado
+# desaparecido, "Bem-vindos a Alva e Luz") que não pertencem à vila. O gerador as retira e põe falas do Riacho.
+ANTIGAS_RIACHO = {"fala_ms520tuz", "fala_ms527p9a", "fala_ms52ekay"}
+SAUDACAO_RIACHO = ("Bem-vindos à Vila do Riacho. Uma refeição quente sempre ajuda antes da estrada.")
 FALA_PADRAO = {"npc_ms254rwd": "A garçonete passa apressada entre as mesas, de olho na porta."}
 PONTO_CASA = "elara_casa"
 PONTO_CELEIRO = "elara_celeiro"
@@ -75,8 +79,14 @@ def _conversa(cid, texto, requisito, fato="", fatos=(), uma_vez=False):
 
 def conversas():
     """{slot_id: [conversa]} da taverna da Vila do Riacho. Texto autoral; nada dos nomes por trás da rede."""
+    # Cor local: falas da vila para quem NÃO está no Ramo A (para quem está, a cadeia da campanha fala sozinha).
+    fora_do_ramo = _req(sem_fato=F_RAMO_A)
     return {
         "barman": [
+            _conversa("elara_riacho_cor_barman",
+                      "O riacho encheu mais que o normal este ano e levou duas ovelhas do Heitor. Quem chega pela "
+                      "estrada oeste faz bem em cruzar a ponte antes de escurecer: ela range, mas aguenta.",
+                      fora_do_ramo),
             # 1. Chegada: o barman recusa falar, mas aponta quem fala. Libera as pistas e o bardo.
             _conversa("elara_riacho_barman",
                       "Ninguém aqui viu nada, e é assim que a gente continua inteiro. Mas se querem saber o que "
@@ -111,6 +121,10 @@ def conversas():
                       _req(fato=F_MOCAS), fato=F_RUMO_GRACIERO, uma_vez=True),
         ],
         "patrono_fundo": [
+            _conversa("elara_riacho_cor_mesa",
+                      "Na terceira caneca a vila inteira vira assunto: o preço do sal, a ponte que range, o "
+                      "forasteiro que passou ontem sem olhar para ninguém. Aqui todo mundo sabe de tudo e finge "
+                      "que não.", fora_do_ramo),
             _conversa("elara_riacho_mesa",
                       "O Tomé anda com a bolsa cheia desde a lua passada, e não faz serviço nenhum. Paga "
                       "rodada para todo mundo e não conta de onde veio o dinheiro. Eu não disse nada. Se "
@@ -130,6 +144,10 @@ def conversas():
                       uma_vez=True),
         ],
         "cartas": [
+            _conversa("elara_riacho_cor_bardo",
+                      "O bardo dedilha uma melodia curta, de rio e de ponte velha. Olha para vocês por um "
+                      "instante e a canção muda de tom, como se tivesse escolhido outra para recebê-los.",
+                      fora_do_ramo),
             _conversa("elara_t1_gentil",
                       "Você paga uma caneca ao bardo e puxa conversa. Ele se esquiva das perguntas, mas "
                       "agradece o gesto com um sorriso que dura um segundo a mais.",
@@ -216,11 +234,11 @@ def _gravar(caminho, dados):
     os.replace(tmp, caminho)
 
 
-def aplicar(simular=False, forcar=False, caminhos=None):
+def aplicar(simular=False, forcar=False, caminhos=None, sem_mapas=False):
     c = dict({"cenas": S.CITY_SCENES_FILE, "pontos": S.CITY_MAP_POINTS_FILE,
               "adventures": S.WORLD_ADVENTURES_FILE,
               "dungeons_dir": S.DUNGEONS_DIR, "assinaturas": ASSINATURAS}, **(caminhos or {}))
-    mapas = {arq: f() for arq, f in ARQUIVOS.items()}
+    mapas = {} if sem_mapas else {arq: f() for arq, f in ARQUIVOS.items()}   # sem_mapas: não toca nos .json das masmorras
     for arq, defn in mapas.items():
         ok, msg = S.validar_dungeon(defn)
         if not ok:
@@ -245,6 +263,13 @@ def aplicar(simular=False, forcar=False, caminhos=None):
         if slot["id"] not in conversas():
             slot["conversations"] = [cv for cv in (slot.get("conversations") or [])
                                      if not str(cv.get("id", "")).startswith("elara_")]
+    for slot in slots.values():                       # tira as falas antigas que vieram de outra cidade
+        slot["conversations"] = [cv for cv in (slot.get("conversations") or []) if cv.get("id") not in ANTIGAS_RIACHO]
+        for cv in slot["conversations"]:
+            if cv.get("id") == "inicial" and "Alva e Luz" in str(cv.get("texto") or ""):
+                cv["texto"] = SAUDACAO_RIACHO
+        if "Alva e Luz" in str(slot.get("dialog") or ""):
+            slot["dialog"] = SAUDACAO_RIACHO
     for sid, convs in conversas().items():
         slot = slots[sid]
         if not str(slot.get("dialog") or "").strip():     # sem conversa disponível, o NPC ainda precisa dizer algo
@@ -287,9 +312,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--simular", action="store_true")
     ap.add_argument("--forcar", action="store_true")
+    ap.add_argument("--sem-mapas", action="store_true",
+                    help="grava só conversas, destinos e pontos (útil quando um mapa foi editado à mão)")
     args = ap.parse_args(argv)
     try:
-        aplicar(simular=args.simular, forcar=args.forcar)
+        aplicar(simular=args.simular, forcar=args.forcar, sem_mapas=args.sem_mapas)
     except (Conflito, ValueError) as e:
         print(f"RECUSADO: {e}  (nada foi gravado)")
         return 2

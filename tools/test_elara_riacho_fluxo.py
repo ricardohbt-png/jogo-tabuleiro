@@ -47,6 +47,11 @@ FINAIS = {"elara_bardo_escoltar", "elara_bardo_entregar"}
 
 
 class FluxoTests(unittest.TestCase):
+    def test_falas_locais_so_para_quem_nao_esta_no_ramo_a(self):
+        cor = {"elara_riacho_cor_barman", "elara_riacho_cor_mesa", "elara_riacho_cor_bardo"}
+        self.assertTrue(cor <= conversas(sala()), "quem não escolheu o Ramo A ouve a vila")
+        self.assertFalse(cor & conversas(sala({R.F_RAMO_A})), "no Ramo A só fala a cadeia da campanha")
+
     def test_sem_o_ramo_a_nada_do_riacho_aparece(self):
         vistos = conversas(sala())
         self.assertFalse(vistos & (T1 | CONFRONTO | FINAIS | {"elara_riacho_barman", "elara_riacho_mesa", "elara_riacho_serva"}))
