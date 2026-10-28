@@ -144,6 +144,26 @@
       "type": "caravana",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": false
+    },
+    "elara_casa": {
+      "x": 80.5,
+      "y": 48.0,
+      "type": "dungeon",
+      "name": "A Casa do Tomé",
+      "emoji": "🏚️",
+      "aventura": "elara_riacho_casa",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_celeiro": {
+      "x": 14.0,
+      "y": 60.0,
+      "type": "dungeon",
+      "name": "O Celeiro do Heitor",
+      "emoji": "🌾",
+      "aventura": "elara_riacho_celeiro",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
     }
   },
   "vila_corvin": {

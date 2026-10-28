@@ -226,6 +226,23 @@ ameaça `elara_bardo_maltratado`); confronto (`elara_bardo_morto` + `elara_leone
 `elara_bardo_decidido`); ações finais do poupado (`elara_bardo_gentil` ou `elara_bardo_maltratado`, com
 `elara_bardo_final`). Leitura em Graciero: ajuda = poupado + gentil sem maltratado; trai = maltratado;
 nenhum dos dois = hesita. As "ações no mundo" do bardo são escolhas de conversa (não uma cena física).
+**Descoberta das entradas (2026-10-27):** o Ramo A não abre mais a casa só por `elara_ramo_a`. Na taverna do Riacho o grupo
+junta **duas pistas** em qualquer ordem — a mesa de amigos (`elara_riacho_mesa`, fato `elara_pista_tome_bolsa`: o Tomé anda
+com a bolsa cheia) e a garçonete (`elara_riacho_rua`, fato `elara_pista_tome_rua`: luz de madrugada na casa do fim da rua) —
+e o barman (`elara_riacho_endereco`, `fato` + `tambem_fato`, uso único) dá o endereço e grava `elara_casa_tome_descoberta`,
+que é o requisito de `elara_riacho_casa`. O celeiro exige `elara_bardo_decidido` **e** `elara_celeiro_descoberto` (a rumor
+da servente `elara_riacho_serva`, depois de expor o bardo). Os dois destinos têm `so_na_cidade` (sem marcador no mapa-múndi)
+e a entrada é um **ponto de masmorra na ilustração da Vila do Riacho** (`elara_casa` em x 80,5/y 48 e `elara_celeiro` em
+x 14/y 60, tipo `dungeon` com `aventura`): o servidor só os envia quando o destino está visível, então somem até a
+descoberta e depois de concluídos. A posição dos pontos e dos destinos é do autor (o gerador a preserva).
+**Ordem causal da taverna (2026-10-27):** 1) o barman recebe o grupo (`elara_riacho_barman`, uso único, grava
+`elara_riacho_sondou`) e aponta a mesa dos fundos, a garçonete e o bardo; 2) só depois disso aparecem as duas pistas (uso único
+cada) e o tratamento do bardo (`elara_t1_*`); 3) o endereço do barman (`elara_riacho_endereco`) abre a casa; 4) depois da casa
+(`elara_bardo_exposto`) o barman liga a carta ao bardo (`elara_riacho_dica_bardo`, uso único) e o confronto fica disponível;
+5) decidido o confronto (`elara_bardo_decidido`) a garçonete dá a pista do celeiro (`elara_riacho_serva`); 6) moças salvas →
+`elara_riacho_rumo_graciero`. Regra: toda conversa que grava fato de história é de uso único ou se esconde por `sem_fato`
+(`test_toda_conversa_de_progresso_some_depois_de_usada`). A garçonete ganha uma fala padrão (`FALA_PADRAO`) quando o slot
+estava sem `dialog`.
 Testes: `python -X utf8 tools/test_conversa_fatos.py`, `test_elara_riacho_mapas.py`,
 `test_elara_riacho_dados.py`, `test_elara_riacho_fluxo.py` e `node tools/test_conversa_fatos_editor.js`.
 

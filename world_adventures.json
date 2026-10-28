@@ -946,12 +946,13 @@
     "oculto_ate_liberar": true,
     "revisitavel": false,
     "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
       "nivel_grupo_min": 0,
       "item_id": "",
-      "fato": "elara_ramo_a",
+      "fato": "elara_casa_tome_descoberta",
       "sem_fato": "",
       "aventura_id": ""
     },
@@ -980,6 +981,7 @@
     "oculto_ate_liberar": true,
     "revisitavel": false,
     "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -987,7 +989,8 @@
       "item_id": "",
       "fato": "elara_bardo_decidido",
       "sem_fato": "",
-      "aventura_id": ""
+      "aventura_id": "",
+      "tambem_fato": "elara_celeiro_descoberto"
     },
     "renome_recompensa": 1
   },

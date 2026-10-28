@@ -620,21 +620,58 @@
             },
             {
               "id": "elara_riacho_barman",
-              "texto": "Ninguém aqui viu nada, e é assim que a gente continua inteiro. Se querem saber de forasteiros, falem com quem toca à noite: ele ouve tudo antes de qualquer um.",
+              "texto": "Ninguém aqui viu nada, e é assim que a gente continua inteiro. Mas se querem saber o que anda acontecendo, perguntem a quem bebe e a quem serve: o homem da mesa dos fundos fala demais depois da terceira caneca, e a garçonete vê a rua inteira da janela. E quem toca à noite ouve mais que os dois.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "elara_ramo_a",
-                "sem_fato": "",
+                "sem_fato": "elara_riacho_sondou",
                 "aventura_id": ""
               },
               "efeito": {
                 "renome": 0,
-                "fato": "",
+                "fato": "elara_riacho_sondou",
                 "item_id": ""
               },
-              "uma_vez": false
+              "uma_vez": true
+            },
+            {
+              "id": "elara_riacho_endereco",
+              "texto": "Então já sabem do Tomé. A casa é a última antes do muro leste, depois do poço: a de janela fechada. Ele só abre a porta de madrugada, e quem entra sem ser chamado sai mal. Não digam que fui eu quem mandou. (A casa do Tomé agora está marcada no mapa da vila.)",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_pista_tome_bolsa",
+                "sem_fato": "elara_casa_tome_descoberta",
+                "aventura_id": "",
+                "tambem_fato": "elara_pista_tome_rua"
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_casa_tome_descoberta",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
+            {
+              "id": "elara_riacho_dica_bardo",
+              "texto": "Essa carta é do que eu penso? Então o bardo nunca tocou de graça: cada canção dele era um aviso a quem chegava. Ele está no canto de sempre. Se forem falar com ele, que seja com a taverna inteira de testemunha.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_exposto",
+                "sem_fato": "elara_bardo_decidido",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_riacho_dica_bardo",
+                "item_id": ""
+              },
+              "uma_vez": true
             },
             {
               "id": "elara_bardo_escoltar",
@@ -745,21 +782,21 @@
             },
             {
               "id": "elara_riacho_mesa",
-              "texto": "O Tomé anda com a bolsa cheia desde a lua passada, e não faz serviço nenhum. Mora na casa de janela fechada, no fim da rua. Eu não disse nada.",
+              "texto": "O Tomé anda com a bolsa cheia desde a lua passada, e não faz serviço nenhum. Paga rodada para todo mundo e não conta de onde veio o dinheiro. Eu não disse nada. Se querem saber onde ele se enfia à noite, perguntem à garçonete: ela mora de frente.",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "elara_ramo_a",
-                "sem_fato": "",
+                "fato": "elara_riacho_sondou",
+                "sem_fato": "elara_pista_tome_bolsa",
                 "aventura_id": ""
               },
               "efeito": {
                 "renome": 0,
-                "fato": "",
+                "fato": "elara_pista_tome_bolsa",
                 "item_id": ""
               },
-              "uma_vez": false
+              "uma_vez": true
             }
           ],
           "z": 2.0
@@ -815,7 +852,7 @@
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "elara_ramo_a",
+                "fato": "elara_riacho_sondou",
                 "sem_fato": "elara_t1_feito",
                 "aventura_id": ""
               },
@@ -837,7 +874,7 @@
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "elara_ramo_a",
+                "fato": "elara_riacho_sondou",
                 "sem_fato": "elara_t1_feito",
                 "aventura_id": ""
               },
@@ -859,7 +896,7 @@
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "elara_ramo_a",
+                "fato": "elara_riacho_sondou",
                 "sem_fato": "elara_t1_feito",
                 "aventura_id": ""
               },
@@ -1105,8 +1142,26 @@
           "w": 31.9,
           "h": 52.1,
           "z": 0.0,
-          "dialog": "",
+          "dialog": "A garçonete passa apressada entre as mesas, de olho na porta.",
           "conversations": [
+            {
+              "id": "elara_riacho_rua",
+              "texto": "Aquela casa de janela fechada, no fim da rua, ganhou luz de madrugada. Gente entrando e saindo pela porta dos fundos, e ninguém que a gente conheça. Falem com o dono da taverna: ele sabe de quem é.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_riacho_sondou",
+                "sem_fato": "elara_pista_tome_rua",
+                "aventura_id": ""
+              },
+              "efeito": {
+                "renome": 0,
+                "fato": "elara_pista_tome_rua",
+                "item_id": ""
+              },
+              "uma_vez": true
+            },
             {
               "id": "elara_riacho_serva",
               "texto": "Tem uns tropeiros no celeiro do Heitor desde ontem. Mas tropeiro não traz carroça tão cheia, de noite, e com tanta gente calada dentro.",
@@ -1114,16 +1169,16 @@
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "elara_bardo_exposto",
-                "sem_fato": "",
+                "fato": "elara_bardo_decidido",
+                "sem_fato": "elara_celeiro_descoberto",
                 "aventura_id": ""
               },
               "efeito": {
                 "renome": 0,
-                "fato": "",
+                "fato": "elara_celeiro_descoberto",
                 "item_id": ""
               },
-              "uma_vez": false
+              "uma_vez": true
             }
           ]
         }

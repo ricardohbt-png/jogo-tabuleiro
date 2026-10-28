@@ -30,10 +30,29 @@ class DadosTests(unittest.TestCase):
     def test_so_aparece_com_o_ramo_a(self):
         for cid, (_slot, c) in todas().items():
             req = c["requisito"]
-            ramo = req.get("fato") == R.F_RAMO_A or req.get("fato") in (R.F_EXPOSTO, R.F_POUPADO, R.F_MOCAS)
+            ramo = req.get("fato") in (R.F_RAMO_A, R.F_SONDOU, R.F_EXPOSTO, R.F_DECIDIDO, R.F_POUPADO, R.F_MOCAS,
+                                       R.F_PISTA_BOLSA)
             self.assertTrue(ramo, f"{cid} precisa depender (direta ou indiretamente) do ramo A")
-        for cid in ("elara_riacho_barman", "elara_riacho_mesa", "elara_t1_gentil", "elara_t1_ameaca", "elara_t1_ignorou"):
-            self.assertEqual(todas()[cid][1]["requisito"]["fato"], R.F_RAMO_A)
+        self.assertEqual(todas()["elara_riacho_barman"][1]["requisito"]["fato"], R.F_RAMO_A)
+        # tudo o mais da sondagem só existe depois de o barman receber o grupo (ordem causal)
+        for cid in ("elara_riacho_mesa", "elara_riacho_rua", "elara_t1_gentil", "elara_t1_ameaca", "elara_t1_ignorou"):
+            self.assertEqual(todas()[cid][1]["requisito"]["fato"], R.F_SONDOU, cid)
+
+    def test_toda_conversa_de_progresso_some_depois_de_usada(self):
+        """Ordem e causa-efeito: cada conversa que grava um fato de história é de uso único ou se esconde por ele."""
+        for cid, (_slot, c) in todas().items():
+            grava = c["efeito"]["fato"] or c["efeito"].get("fatos")
+            if not grava:
+                continue
+            self.assertTrue(c["uma_vez"] or c["requisito"]["sem_fato"], f"{cid} reapareceria depois de usada")
+
+    def test_cadeia_causal_ate_a_casa_e_alem(self):
+        t = todas()
+        self.assertEqual(t["elara_riacho_barman"][1]["efeito"]["fato"], R.F_SONDOU)
+        self.assertEqual(t["elara_riacho_dica_bardo"][1]["requisito"]["fato"], R.F_EXPOSTO)
+        self.assertEqual(t["elara_riacho_dica_bardo"][1]["requisito"]["sem_fato"], R.F_DECIDIDO)
+        serva = t["elara_riacho_serva"][1]
+        self.assertEqual(serva["requisito"]["fato"], R.F_DECIDIDO, "a pista do celeiro vem depois de decidir sobre o bardo")
 
     def test_tratamento_1_e_exclusivo(self):
         for cid in ("elara_t1_gentil", "elara_t1_ameaca", "elara_t1_ignorou"):
@@ -69,11 +88,35 @@ class DadosTests(unittest.TestCase):
         casa, celeiro = d["elara_riacho_casa"], d["elara_riacho_celeiro"]
         self.assertEqual([e["file"] for e in casa["dungeons"]], ["elara_riacho_casa.json"])
         self.assertEqual([e["file"] for e in celeiro["dungeons"]], ["elara_riacho_celeiro.json"])
-        self.assertEqual(casa["requisito"]["fato"], R.F_RAMO_A)
+        self.assertEqual(casa["requisito"]["fato"], R.F_CASA_DESCOBERTA)
         self.assertEqual(celeiro["requisito"]["fato"], R.F_DECIDIDO)
+        self.assertEqual(celeiro["requisito"]["tambem_fato"], R.F_CELEIRO_DESCOBERTO)
         for x in (casa, celeiro):
             self.assertTrue(x["oculto_ate_liberar"])
             self.assertTrue(x["ocultar_apos_concluir"])
+            self.assertTrue(x["so_na_cidade"], "a entrada é um ponto dentro da vila, não um marcador do mapa-múndi")
+
+    def test_pistas_da_casa_do_tome(self):
+        t = todas()
+        self.assertEqual(t["elara_riacho_mesa"][1]["efeito"]["fato"], R.F_PISTA_BOLSA)
+        self.assertEqual(t["elara_riacho_rua"][1]["efeito"]["fato"], R.F_PISTA_RUA)
+        self.assertEqual(t["elara_riacho_rua"][0], "npc_ms254rwd")
+        fim = t["elara_riacho_endereco"][1]
+        self.assertEqual(t["elara_riacho_endereco"][0], "barman")
+        self.assertEqual((fim["requisito"]["fato"], fim["requisito"]["tambem_fato"], fim["requisito"]["sem_fato"]),
+                         (R.F_PISTA_BOLSA, R.F_PISTA_RUA, R.F_CASA_DESCOBERTA))
+        self.assertEqual(fim["efeito"]["fato"], R.F_CASA_DESCOBERTA)
+        self.assertTrue(fim["uma_vez"])
+        self.assertEqual(t["elara_riacho_serva"][1]["efeito"]["fato"], R.F_CELEIRO_DESCOBERTO)
+
+    def test_pontos_da_vila(self):
+        p = R.pontos()
+        self.assertEqual(set(p), {R.PONTO_CASA, R.PONTO_CELEIRO})
+        self.assertEqual(p[R.PONTO_CASA]["aventura"], "elara_riacho_casa")
+        self.assertEqual(p[R.PONTO_CELEIRO]["aventura"], "elara_riacho_celeiro")
+        for x in p.values():
+            self.assertEqual(x["type"], "dungeon")
+            self.assertTrue(0 <= x["x"] <= 100 and 0 <= x["y"] <= 100)
 
     def test_nada_da_rede_por_nome(self):
         texto = json.dumps([R.conversas(), R.destinos()], ensure_ascii=False).lower()
@@ -100,6 +143,12 @@ class DiscoTests(unittest.TestCase):
         for s in self.ler("city_scenes.json")["vila_riacho"]["taverna"]["slots"]:
             if s.get("removed"):
                 self.assertFalse([c for c in s["conversations"] if c["id"].startswith("elara_")], s["id"])
+
+    def test_pontos_gravados_na_vila(self):
+        pontos = self.ler("city_map_points.json")["vila_riacho"]
+        for pid, esperado in R.pontos().items():
+            self.assertEqual(pontos[pid]["aventura"], esperado["aventura"], pid)
+            self.assertEqual(pontos[pid]["type"], "dungeon", pid)
 
     def test_destinos_e_mapas_gravados(self):
         a = self.ler("world_adventures.json")
