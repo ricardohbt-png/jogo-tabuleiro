@@ -30328,8 +30328,11 @@ function _menuStatusMarkup(p, opts = {}){
   const detalheAcerto = t('ui.status.detalhe_acerto', {bba:_fmtBonus(bonusBaseAtaque), attr:nomeAtributoAtaque, mod:_fmtBonus(danoBase), arma:_fmtBonus(bonusArma), temp:_fmtBonus(bonusAtaque)});
   const bonusDanoArma = Number(weapon?.dmg_bonus ?? weapon?.damage_bonus ?? 0) || 0;
   const bonusDanoHabilidade = Number(p.skill_bonus_dano || 0) || 0;
+  // Anéis de Impacto/Supremacia: `damage_bonus` de equipamento fica em `gear_damage_bonus`
+  // e soma em todo golpe armado (o servidor o lê em `_bonus_fixo_dano_arma`).
+  const bonusDanoEquip = Number(p.gear_damage_bonus || 0) || 0;
   const bonusDano = sobrevivencia + (cancao.bonus_dano || 0) + (gl.dano || 0)
-    + (p.tecnica_buff_dano_arma || 0) + bonusDanoArma + bonusDanoHabilidade;
+    + (p.tecnica_buff_dano_arma || 0) + bonusDanoArma + bonusDanoHabilidade + bonusDanoEquip;
   const tempCa = Number(p.temp_ca_bonus || 0);
   const bonusCa = (cancao.bonus_ca || 0) + (gl.ca || 0) + tempCa;
   const bonusRes = sobrevivencia + (cancao.bonus_res || 0);
@@ -30337,8 +30340,8 @@ function _menuStatusMarkup(p, opts = {}){
   const detalheDano = t('ui.status.detalhe_dano', {
     attr: nomeAtributoAtaque,
     mod: _fmtBonus(danoBase),
-    arma: _fmtBonus(bonusDanoArma),
-    temp: _fmtBonus(bonusDano - bonusDanoArma)
+    arma: _fmtBonus(bonusDanoArma + bonusDanoEquip),
+    temp: _fmtBonus(bonusDano - bonusDanoArma - bonusDanoEquip)
   });
   const linha = (rotulo, valor, detalhe='') => `<div class="st-row"><span>${rotulo}</span><b>${valor}</b>${detalhe ? `<small>${detalhe}</small>` : ''}</div>`;
   // Mão secundária: espelha o golpe extra do servidor (atributo da 2ª arma, bônus de nível
