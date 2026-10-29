@@ -26391,6 +26391,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._aplicar_lava_se_pisar(a)
         await self._aplicar_prisao_chamas_se_pisar(a)
         await self._aplicar_fogueira_se_pisar(a)
+        if a.get("vida_atual", 0) > 0:
+            await self._verificar_entrada_zona_fogo(a, nx, ny)   # fogo residual da Bola de Fogo
         await self._aplicar_piso_congelado_se_pisar(a)
         if a.get("vida_atual", 0) > 0:
             await self._tempestade_verificar_entrada(a, old_pos, a["pos"])
@@ -37121,17 +37123,27 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             zona["ativa"] = False
             await self.gm_say(T("narracao.a_zona_de_bola_de_fogo_se_extingue"))
 
+    @staticmethod
+    def _casa_na_zona_fogo(zona, x, y):
+        """True se a casa (x, y) está dentro da área da zona de Bola de Fogo."""
+        if zona.get("area_lado"):
+            h = int(zona["area_lado"]) // 2
+            return (zona["cx"] - h + 1 <= x <= zona["cx"] + h
+                    and zona["cy"] - h + 1 <= y <= zona["cy"] + h)
+        return max(abs(x - zona["cx"]), abs(y - zona["cy"])) <= zona.get("raio", 2)
+
     async def _verificar_entrada_zona_fogo(self, ator, nx, ny):
-        """Pisar numa zona de Bola de Fogo ativa causa o dano da rodada atual (entrar sofre dano)."""
+        """Pisar numa zona de Bola de Fogo ativa causa o dano da rodada atual (entrar sofre dano).
+
+        Vale para quem anda pela área (herói, monstro, servo e prisioneiro); um monstro
+        grande é ferido se QUALQUER casa do corpo estiver na área, não só a âncora."""
+        if self.monsters.get(ator.get("id")) is ator:
+            casas = [(int(x), int(y)) for x, y in self._monster_tiles(ator)]
+        else:
+            casas = [(nx, ny)]
         for zona in self.zonas_especiais:
             if zona.get("tipo") != "bola_fogo" or not zona.get("ativa"): continue
-            if zona.get("area_lado"):
-                lado = int(zona["area_lado"])
-                h = lado // 2
-                if not (zona["cx"] - h + 1 <= nx <= zona["cx"] + h
-                        and zona["cy"] - h + 1 <= ny <= zona["cy"] + h):
-                    continue
-            elif max(abs(nx - zona["cx"]), abs(ny - zona["cy"])) > zona.get("raio", 2):
+            if not any(self._casa_na_zona_fogo(zona, x, y) for x, y in casas):
                 continue
             dano = zona.get(f"dano_r{zona.get('rodada_atual', 2)}", 0)
             if dano <= 0: continue
@@ -45091,6 +45103,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._aplicar_lava_se_pisar(m)
         await self._aplicar_prisao_chamas_se_pisar(m)
         await self._aplicar_fogueira_se_pisar(m)
+        if m.get("hp", 0) > 0:
+            await self._verificar_entrada_zona_fogo(m, nx, ny)   # fogo residual da Bola de Fogo
         await self._aplicar_piso_congelado_se_pisar(m)
         if m.get("hp", 0) > 0:
             await self._tempestade_verificar_entrada(
@@ -54483,6 +54497,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._aplicar_lava_se_pisar(pr)
         await self._aplicar_prisao_chamas_se_pisar(pr)
         await self._aplicar_fogueira_se_pisar(pr)
+        if pr.get("alive"):
+            await self._verificar_entrada_zona_fogo(pr, nx, ny)   # fogo residual da Bola de Fogo
         # Gelo (Reflexos CD 10; falha zera o movimento) — era o único caminho de
         # movimento sem ele. O hook já roda os dois de redemoinho por dentro.
         await self._aplicar_piso_congelado_se_pisar(pr)
