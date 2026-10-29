@@ -2534,6 +2534,36 @@ const GS = (() => {
     return state.players.filter(p => p && p.id !== myPid && p.alive && !p.fora_masmorra
       && Array.isArray(p.pos) && p.pos[0] >= 0 && p.pos[1] >= 0);
   }
+  // Cura Completa do Templo para o grupo (ESPELHO de GameRoom._plano_cura_grupo_templo; o servidor
+  // recalcula ao comprar). Puro: recebe o city_state. Custo = PV que faltam aos heróis vivos e
+  // presentes / 3 (mínimo 1 moeda); sem ouro suficiente a cura é parcial (3 PV por moeda),
+  // começando por quem tem mais PV faltando. `itens`: só quem muda, com hp antes/depois.
+  const PV_POR_MOEDA_TEMPLO = 3;
+  function planoCuraGrupoTemplo(state, myPid) {
+    const jogadores = (state && Array.isArray(state.players)) ? state.players : [];
+    const herois = jogadores.filter(p => p && p.class_id && !p.is_master && !p.test_hero
+      && p.alive && p.connected !== false);
+    const falta = h => Math.max(0, Number(h.max_hp || 0) - Number(h.hp || 0));
+    const faltando = herois.reduce((n, h) => n + falta(h), 0);
+    const custo = faltando ? Math.max(1, Math.floor(faltando / PV_POR_MOEDA_TEMPLO)) : 0;
+    const ouro = h => Math.max(0, Number(h && h.gold) || 0);
+    const eu = jogadores.find(p => p && p.id === myPid);
+    const saldo = (state && state.solo_grupo && state.ouro_compartilhado)
+      ? jogadores.filter(p => p && p.class_id && !p.is_master && !p.test_hero).reduce((n, h) => n + ouro(h), 0)
+      : ouro(eu);
+    const moedas = Math.min(custo, saldo);
+    const parcial = moedas < custo;
+    let verba = moedas * PV_POR_MOEDA_TEMPLO;
+    const ordem = herois.filter(h => falta(h)).sort((a, b) =>
+      falta(b) - falta(a) || (Number(a.slot) || 0) - (Number(b.slot) || 0) || String(a.id).localeCompare(String(b.id)));
+    const itens = [];
+    for (const h of ordem) {
+      let cura = falta(h);
+      if (parcial) { cura = Math.min(cura, verba); verba -= cura; }
+      if (cura > 0) itens.push({ id: h.id, nome: h.name, max_hp: Number(h.max_hp), antes: Number(h.hp), depois: Number(h.hp) + cura });
+    }
+    return { faltando, custo, saldo, moedas, parcial, itens };
+  }
   function setShortcut(slot, entry) { send({ type:'shortcut_set', slot, entry:entry || null }); }
   function shortcutActivated(entry, slot = null) {
     if (!entry || entry.kind !== 'skill' || !entry.id) return;
@@ -4151,6 +4181,7 @@ const GS = (() => {
     createCooperativeMarker,
     setCooperativeVisionPreference,
     heroisVisaoCompartilhada,
+    planoCuraGrupoTemplo,
     setShortcut,
     shortcutActivated,
     useItem,

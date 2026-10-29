@@ -1472,6 +1472,10 @@ window.LANG_ERROS = {
     "en": "Not enough gold.",
     "pt": "Ouro insuficiente."
   },
+  "erro.ninguem_precisa_de_cura": {
+    "en": "Nobody in the party needs healing.",
+    "pt": "Ninguém do grupo precisa de cura."
+  },
   "erro.ouro_insuficiente_2": {
     "en": "Not enough gold!",
     "pt": "Ouro insuficiente!"

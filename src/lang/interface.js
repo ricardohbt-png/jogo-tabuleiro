@@ -5259,9 +5259,37 @@ window.LANG_INTERFACE = {
     "en": "Heals +{n} HP per use",
     "pt": "Cura +{n} HP por uso"
   },
+  "ui.templo.cura_grupo_status": {
+    "en": "{pv} HP missing in the party: {custo} coin(s).",
+    "pt": "Faltam {pv} PV no grupo: {custo} moeda(s)."
+  },
+  "ui.templo.cura_grupo_ninguem": {
+    "en": "Nobody in the party is hurt.",
+    "pt": "Ninguém do grupo está ferido."
+  },
+  "ui.templo.cura_grupo_titulo": {
+    "en": "Partial party heal",
+    "pt": "Cura parcial do grupo"
+  },
+  "ui.templo.cura_grupo_aviso": {
+    "en": "Your gold does not cover everything ({custo} coins). With {moedas} coin(s) the Temple heals {pv} HP, starting with whoever needs it most:",
+    "pt": "O ouro não cobre tudo ({custo} moedas). Com {moedas} moeda(s) o Templo cura {pv} PV, começando por quem mais precisa:"
+  },
+  "ui.templo.cura_grupo_linha": {
+    "en": "{nome}: {antes} → {depois} / {max} HP",
+    "pt": "{nome}: {antes} → {depois} / {max} PV"
+  },
+  "ui.templo.cura_grupo_sem_cura": {
+    "en": "{nome}: {antes} / {max} HP (not healed)",
+    "pt": "{nome}: {antes} / {max} PV (sem cura)"
+  },
+  "ui.templo.cura_grupo_confirmar": {
+    "en": "Pay {moedas} coin(s) and heal",
+    "pt": "Pagar {moedas} moeda(s) e curar"
+  },
   "ui.item.desc.cura_total": {
-    "en": "Restores all HP",
-    "pt": "Restaura todos os HP"
+    "en": "Heals the whole party: 1 coin for every 3 HP missing (rounded down, at least 1). Without enough gold it heals partially, starting with whoever is hurt most.",
+    "pt": "Cura todo o grupo: 1 moeda a cada 3 PV que faltam (arredonda para baixo, mínimo 1). Sem ouro suficiente cura parcialmente, começando por quem mais precisa."
   },
   "ui.item.desc.dano": {
     "en": "Damage: {dano}",

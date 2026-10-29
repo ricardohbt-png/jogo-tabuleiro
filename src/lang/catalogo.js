@@ -2751,8 +2751,8 @@ window.LANG_CATALOGO = {
     "pt": "Frasco de Piche"
   },
   "cat.item.full_heal.nome": {
-    "en": "Full Heal",
-    "pt": "Cura Completa"
+    "en": "Party Full Heal",
+    "pt": "Cura Completa do Grupo"
   },
   "cat.item.fullplate.nome": {
     "en": "Full Plate Armor",

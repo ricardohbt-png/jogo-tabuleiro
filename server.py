@@ -10498,7 +10498,10 @@ SHOP_TEMPLE = [
      "item_slot": "bag", "effect": "intelligence_potion", "value": "1d6+4",
      "intelligence_bonus": "1d4+1",
      "descricao": "Ação bônus. Aumenta a Inteligência em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a Vontade, CD das magias, iniciativa na próxima recalculação, visão, curas que usam INT e slots de controle do Reviver quando aplicável. Não concede slots normais nem magias conhecidas. Beber outra renova a duração sem acumular o bônus."},
-    {"id": "full_heal", "name": "Cura Completa",  "emoji": "💖",  "price": 15, "effect": "full_heal"},
+    # Serviço de GRUPO: `price` é o valor de cada bloco de `pv_por_moeda` PV; o total é calculado
+    # em GameRoom._plano_cura_grupo_templo (soma o que falta a cada herói vivo e presente).
+    {"id": "full_heal", "name": "Cura Completa do Grupo",  "emoji": "💖",  "price": 1, "effect": "full_heal",
+     "cura_grupo": True, "preco_fixo": True, "pv_por_moeda": 3},
     {"id": "bless",     "name": "Bênção Divina",  "emoji": "✨",  "price": 12, "effect": "bless",    "value": 2},
     {"id": "cleanse",   "name": "Purificação",    "emoji": "🕊️", "price": 8,  "effect": "cleanse"},
 ]
@@ -13703,6 +13706,37 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if conexao in self.players:
             pids.append(conexao)
         return pids
+
+    def _plano_cura_grupo_templo(self, pid):
+        """Plano da Cura Completa do Templo para o grupo (só leitura; nada é alterado).
+
+        Soma os PV que faltam aos heróis vivos e presentes; o custo é `faltando // 3`
+        (mínimo de 1 moeda quando alguém está ferido). Sem ouro suficiente a cura é
+        parcial: 3 PV por moeda, começando por quem tem MAIS PV faltando.
+        `itens` lista (herói, antes, depois) só de quem muda."""
+        por_moeda = 3
+        herois = [h for h in self.players.values()
+                  if h.get("class_id") and not h.get("is_master") and not h.get("test_hero")
+                  and h.get("alive") and h.get("connected", True)]
+        falta = {h["id"]: max(0, int(h.get("max_hp", 0)) - int(h.get("hp", 0))) for h in herois}
+        faltando = sum(falta.values())
+        custo = max(1, faltando // por_moeda) if faltando else 0
+        saldo = max(0, int((self.players.get(pid) or {}).get("gold", 0) or 0))
+        moedas = min(custo, saldo)
+        parcial = moedas < custo
+        verba = moedas * por_moeda
+        itens = []
+        ordem = sorted((h for h in herois if falta[h["id"]]),
+                       key=lambda h: (-falta[h["id"]], int(h.get("slot", 0) or 0), str(h["id"])))
+        for h in ordem:
+            cura = falta[h["id"]]
+            if parcial:
+                cura = min(cura, verba)
+                verba -= cura
+            if cura > 0:
+                itens.append((h, int(h["hp"]), int(h["hp"]) + cura))
+        return {"faltando": faltando, "custo": custo, "saldo": saldo, "moedas": moedas,
+                "parcial": parcial, "itens": itens}
 
     def _eh_anfitriao(self, pid):
         # Não reescreva como comparação direta com host_pid: as checagens de
@@ -17345,7 +17379,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _ajustar_preco(self, item):
         """Cópia do item da loja com o preço da cidade já ajustado pelos marcadores do grupo."""
         mult = _city_price_mult(self.world_location, self.fatos)
-        if mult == 1.0 or not item.get("price"):
+        if mult == 1.0 or not item.get("price") or item.get("preco_fixo"):
             return item
         novo = dict(item)
         novo["preco_base"] = item.get("preco_base", item["price"])
@@ -17416,7 +17450,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # prÃ©-compra aqui â€” comprar uma arma de 2 mÃ£os com escudo equipado Ã© permitido
         # (ela apenas fica na bolsa atÃ© vocÃª trocar).
 
-        price = item["price"]
+        if shop == "templo" and item.get("cura_grupo"):
+            plano_cura = self._plano_cura_grupo_templo(pid)
+            if not plano_cura["faltando"]:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.ninguem_precisa_de_cura")})
+                return
+            price = plano_cura["moedas"]      # parcial: gasta o ouro que houver (3 PV por moeda)
+        else:
+            price = item["price"]
+        if price <= 0 and item.get("cura_grupo"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente_2")})
+            return
         if p["gold"] < price:
             await self.send_to(pid, {"type": "error", "msg": T("erro.ouro_insuficiente_2")})
             return
@@ -17562,8 +17606,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 p.setdefault("magias_conhecidas", []).append(magia_id)
                 log = f"⛪ **{p['name']}** aprendeu gratuitamente a magia **{item['name']}**!"
             elif effect == "full_heal":
-                p["hp"] = p["max_hp"]
-                log = f"⛪ **{p['name']}** foi curado completamente no Templo!"
+                for heroi, _antes, depois in plano_cura["itens"]:
+                    heroi["hp"] = depois
+                nomes = ", ".join(f"**{h['name']}**" for h, _a, _d in plano_cura["itens"])
+                log = (f"⛪ **{p['name']}** pagou {price} moeda(s) e o Templo curou {nomes}"
+                       + (" (parcialmente, o ouro não bastou)!" if plano_cura["parcial"] else " por completo!"))
             elif effect == "bless":
                 bonus = item.get("value", 2)
                 p["atk_bonus"] += bonus

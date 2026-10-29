@@ -3250,7 +3250,10 @@ function _renderShopItems(){
 
   const myClass = myP?myP.class_id:null;
   const list=$('shop-items-list'); if(!list) return;
+  // Cura Completa do Templo é serviço de GRUPO: o preço vem dos PV que faltam (plano puro do GS).
+  const planoCura=GS.planoCuraGrupoTemplo(GS.cityState, GS.myPid);
   list.innerHTML=items.map(item=>{
+    const precoCompra=item.cura_grupo ? planoCura.custo : Number(item.price||0);
     // Restrição de classe: allowed_classes ausente = todas as classes.
     const classRestrita = item.allowed_classes && myClass && !item.allowed_classes.includes(myClass);
     // Refeição de balcão (1×/visita): bloqueia se o herói já a pediu nesta visita.
@@ -3258,8 +3261,14 @@ function _renderShopItems(){
       && myP && (myP.taverna_refeicoes||[]).includes(item.id);
     const jaConhecida = item.effect==='learn_spell'
       && myP && (myP.magias_conhecidas||[]).includes(item.magia_id);
-    const canBuy=gold>=item.price && !classRestrita && !jaUsada && !jaConhecida;
-    const desc=_itemDesc(item);
+    const canBuy=item.cura_grupo
+      ? planoCura.faltando>0 && planoCura.moedas>0 && !!myP?.alive
+      : gold>=precoCompra && !classRestrita && !jaUsada && !jaConhecida;
+    const desc=_itemDesc(item) + (item.cura_grupo
+      ? `<br><b>${planoCura.faltando
+          ? t('ui.templo.cura_grupo_status',{pv:planoCura.faltando,custo:planoCura.custo})
+          : t('ui.templo.cura_grupo_ninguem')}</b>`
+      : '');
     const poisonControls=item.effect==='coat_poison'?`<div class="poison-upgrade-controls" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:7px;">
       <label style="font-size:.68rem;color:var(--text2);">${t('ui.veneno.melhoria_cd')}<select data-poison-upgrade="cd" aria-label="${t('ui.veneno.aria_cd')}" onchange="atualizarMelhoriaVeneno('${item.id}')"><option value="nenhum">${t('ui.veneno.sem_melhoria')}</option><option value="aprimorado">${t('ui.veneno.aprimorado')}</option><option value="avancado">${t('ui.veneno.avancado')}</option><option value="mortal">${t('ui.veneno.mortal')}</option></select></label>
       <label style="font-size:.68rem;color:var(--text2);">${t('ui.veneno.melhoria_potencia')}<select data-poison-upgrade="potencia" aria-label="${t('ui.veneno.aria_potencia')}" onchange="atualizarMelhoriaVeneno('${item.id}')"><option value="nenhum">${t('ui.veneno.sem_melhoria')}</option><option value="fortalecido">${t('ui.veneno.fortalecido')}</option><option value="concentrado">${t('ui.veneno.concentrado')}</option></select></label>
@@ -3276,10 +3285,10 @@ function _renderShopItems(){
         <div class="shop-item-desc">${desc}</div>
         ${poisonControls}
       </div>
-      <span class="shop-item-price poison-preview-price">💰 ${item.price}</span>
+      <span class="shop-item-price poison-preview-price">💰 ${precoCompra}</span>
       <button class="btn-buy" ${canBuy?'':'disabled'}
         title="${classRestrita?t('ui.loja.title_classe_restrita'):jaUsada?t('ui.loja.title_ja_usada'):jaConhecida?t('ui.loja.title_ja_conhecida'):''}"
-        onclick="${item.effect==='coat_poison'?`buyPoisonItem('${item.id}')`:`buyItem('${shopKey}','${item.id}')`}">${classRestrita?'🚫 '+t('ui.loja.restrito'):jaUsada?'✔ '+t('ui.loja.usada'):jaConhecida?'✔ '+t('ui.loja.conhecida'):t('ui.loja.comprar')}</button>
+        onclick="${item.effect==='coat_poison'?`buyPoisonItem('${item.id}')`:item.cura_grupo?`curarGrupoNoTemplo()`:`buyItem('${shopKey}','${item.id}')`}">${classRestrita?'🚫 '+t('ui.loja.restrito'):jaUsada?'✔ '+t('ui.loja.usada'):jaConhecida?'✔ '+t('ui.loja.conhecida'):t('ui.loja.comprar')}</button>
     </div>`;
   }).join('');
   // Tooltip de pergaminho (hover) — a loja usa innerHTML, então anexa por índice.
@@ -3529,6 +3538,40 @@ function removerMaldicaoTemplo(maldicaoId){
 }
 function ressuscitarNoTemplo(targetId){
   send({type:'temple_resurrect', target_id:targetId});
+}
+// Cura Completa do grupo. Com ouro para tudo compra direto; faltando ouro, a cura é PARCIAL e o
+// jogador vê antes como cada herói ficará (o servidor recalcula o mesmo plano ao comprar).
+function curarGrupoNoTemplo(){
+  const plano=GS.planoCuraGrupoTemplo(GS.cityState, GS.myPid);
+  if(!plano.faltando||!plano.moedas) return;
+  if(!plano.parcial){ buyItem('templo','full_heal'); return; }
+  _confirmarCuraParcialTemplo(plano);
+}
+function _confirmarCuraParcialTemplo(plano){
+  if(document.getElementById('cura-parcial-overlay')) return;
+  const esc=txt=>String(txt).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const curados=new Set(plano.itens.map(i=>i.id));
+  const semCura=(GS.cityState.players||[]).filter(h=>h.class_id&&!h.is_master&&!h.test_hero
+    &&h.alive&&h.connected!==false&&!curados.has(h.id)&&Number(h.hp)<Number(h.max_hp));
+  const linhas=plano.itens.map(i=>`<div>💖 ${t('ui.templo.cura_grupo_linha',{nome:esc(i.nome),antes:i.antes,depois:i.depois,max:i.max_hp})}</div>`)
+    .concat(semCura.map(h=>`<div style="opacity:.7">▫️ ${t('ui.templo.cura_grupo_sem_cura',{nome:esc(h.name),antes:h.hp,max:h.max_hp})}</div>`)).join('');
+  const pv=plano.itens.reduce((n,i)=>n+i.depois-i.antes,0);
+  const ov=document.createElement('div');
+  ov.id='cura-parcial-overlay';
+  ov.style.cssText='position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:500;';
+  ov.innerHTML='<div style="background:rgba(28,20,6,.98);border:1px solid var(--gold,#ffcc44);border-radius:12px;padding:22px 24px;max-width:380px;box-shadow:0 8px 30px #000b;">'
+    +'<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;text-align:center;">⛪ '+t('ui.templo.cura_grupo_titulo')+'</div>'
+    +'<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:10px;">'+t('ui.templo.cura_grupo_aviso',{custo:plano.custo,moedas:plano.moedas,pv})+'</div>'
+    +'<div style="color:#e8dcc0;font-size:.82rem;line-height:1.6;margin-bottom:16px;">'+linhas+'</div>'
+    +'<div style="display:flex;gap:10px;">'
+    +'<button data-cura-cancelar style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;background:rgba(40,32,16,.9);color:#cbbe9c;font-weight:700;cursor:pointer;">'+t('ui.geral.cancelar')+'</button>'
+    +'<button data-cura-confirmar style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--gold,#ffcc44);background:rgba(60,45,12,.96);color:var(--gold,#ffcc44);font-weight:700;cursor:pointer;">'+t('ui.templo.cura_grupo_confirmar',{moedas:plano.moedas})+'</button>'
+    +'</div></div>';
+  const fechar=()=>{ if(ov.parentNode) ov.parentNode.removeChild(ov); };
+  ov.addEventListener('click',event=>{ if(event.target===ov) fechar(); });
+  ov.querySelector('[data-cura-cancelar]').onclick=fechar;
+  ov.querySelector('[data-cura-confirmar]').onclick=()=>{ fechar(); buyItem('templo','full_heal'); };
+  document.body.appendChild(ov);
 }
 
 function sellItem(slot){
