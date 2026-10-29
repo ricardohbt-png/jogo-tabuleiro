@@ -31745,11 +31745,13 @@ function openTargetModal(title, targets, kind, callback){
 // clique no chão não deve escolher silenciosamente só uma das duas ações.
 // Mantemos o ataque resolvido pelo GS e usamos este painel apenas para decidir
 // qual ação o jogador pretende executar.
-function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
+// `bau` (opcional): o loot é um baú da casa, aberto em vez de pegar um item do chão.
+// O ataque vem PRIMEIRO: é a ação que destrava o jogador quando a bolsa está cheia.
+function _abrirEscolhaLootOuAtaque(groundItem, attackAction, bau = null){
   const state = GS.gameState;
   const monster = (state?.monsters || []).find(m =>
     String(m.id) === String(attackAction?.targetId) && m.hp > 0);
-  if(!groundItem || !monster || attackAction?.type !== 'attack') return false;
+  if(!(groundItem || bau) || !monster || attackAction?.type !== 'attack') return false;
 
   const modal = $('target-modal');
   const list = $('target-list');
@@ -31781,9 +31783,6 @@ function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
     list.appendChild(button);
   };
 
-  const item = groundItem.item || {};
-  const itemNome = item.name || item.nome || t('ui.bau.item_deixado_no_chao');
-  adicionar('🎒', t('ui.joystick.pegar_item', {nome: itemNome}), t('ui.bau.recolher_loot'), () => GS.pickupItem(groundItem.id));
   adicionar('⚔️', t('ui.joystick.atacar_alvo', {nome: monster.name || monster.nome || t('ui.joystick.monstro')}),
     `HP ${monster.hp}/${monster.max_hp || monster.hp}`, () => {
       // Revalida no estado mais recente antes de consumir a ação.
@@ -31795,9 +31794,25 @@ function _abrirEscolhaLootOuAtaque(groundItem, attackAction){
       GS.notifyAttack();
       sendAttack(atual.targetId, atual.targetPos);
     });
+  if(bau){
+    adicionar('🎁', t('ui.bau.abrir_o_bau'), t('ui.bau.recolher_loot'), () => openChestWindow(bau));
+  } else {
+    const item = groundItem.item || {};
+    const itemNome = item.name || item.nome || t('ui.bau.item_deixado_no_chao');
+    adicionar('🎒', t('ui.joystick.pegar_item', {nome: itemNome}), t('ui.bau.recolher_loot'), () => GS.pickupItem(groundItem.id));
+  }
   modal.classList.add('open');
   _gamepadFocusMapPoint('#target-list .loot-attack-choice', '#target-modal .btn-cancel');
   return true;
+}
+
+// Abre o baú, mas se um monstro vivo está na MESMA casa e dá para atacá-lo, oferece
+// a escolha (atacar / abrir) em vez de abrir sempre: com a bolsa cheia, abrir o baú
+// travava o jogador, que nunca conseguia atacar o monstro por cima do loot.
+function _abrirBauOuAtaque(chest){
+  const ataque = chest?.pos ? GS.resolveTileClick(chest.pos[0], chest.pos[1]) : null;
+  if(ataque?.type === 'attack' && _abrirEscolhaLootOuAtaque(null, ataque, chest)) return;
+  openChestWindow(chest);
 }
 
 function closeTargetModal(){
@@ -33153,7 +33168,7 @@ function _gamepadActivateNearbyInteraction(state, player){
     GS.notifyAttack();
     sendAttack(attack.targetId, attack.targetPos);
   } else if(interaction.kind === 'chest') {
-    openChestWindow(interaction.chest);
+    _abrirBauOuAtaque(interaction.chest);
   } else if(interaction.kind === 'decor') {
     if(interaction.decor.type === 'sino_ritualistico') tocarSinoRitualistico(interaction.decor);
     else GS.interagirDecor(interaction.decor.id);
@@ -33208,7 +33223,7 @@ function _gamepadInteractAtCursor(state){
   const chestAtCursor = (state.chests || []).find(chest =>
     chest.pos?.[0] === tx && chest.pos?.[1] === ty && near(chest.pos));
   if(chestAtCursor){
-    openChestWindow(chestAtCursor);
+    _abrirBauOuAtaque(chestAtCursor);
     _gamepadRumble('confirm');
     return true;
   }
@@ -33226,7 +33241,7 @@ function _gamepadInteractAtCursor(state){
         Math.max(Math.abs(me.pos[0] - a.pos[0]), Math.abs(me.pos[1] - a.pos[1]))
         - Math.max(Math.abs(me.pos[0] - b.pos[0]), Math.abs(me.pos[1] - b.pos[1])))[0];
     if(nearbyChest){
-      openChestWindow(nearbyChest);
+      _abrirBauOuAtaque(nearbyChest);
       _gamepadRumble('confirm');
       return true;
     }
@@ -56470,7 +56485,7 @@ function on3DClick(e){
   const monsterUnderPointer = get3DMonsterAtPointer(e);
   const attackUnderPointer = _alvoAtaqueDoMonstroSobPonteiro(monsterUnderPointer);
   if(attackUnderPointer?.action?.type === 'attack'){
-    handleTileClick(attackUnderPointer.pos[0], attackUnderPointer.pos[1]);
+    handleTileClick(attackUnderPointer.pos[0], attackUnderPointer.pos[1], {preferirAtaque:true});
     return;
   }
   // Mesmo fora do alcance, clicar no monstro não pode cair no piso e coletar
@@ -56506,8 +56521,10 @@ function on3DClick(e){
     if(chest){
       const myP = GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
       const dist = myP ? Math.max(Math.abs(myP.pos[0]-tx), Math.abs(myP.pos[1]-ty)) : 99;
-      if(dist <= 2){ openChestWindow(chest); return; }
-      else { toast(t('ui.tabuleiro.perto_do_bau'), 'var(--gold)'); return; }
+      if(dist <= 2){ _abrirBauOuAtaque(chest); return; }
+      if(GS.resolveTileClick(tx, ty)?.type !== 'attack'){
+        toast(t('ui.tabuleiro.perto_do_bau'), 'var(--gold)'); return;
+      }
     }
     // ── Decoration click (3D path — check footprint of each decoration) ─────────
     // Interativa (loot/fonte) → interage. Sólida (não-pisável) → bloqueia o clique.
@@ -56725,7 +56742,7 @@ document.addEventListener('keydown', (e) => {
 // Called by both 2D canvas click and 3D on3DClick.
 // Pure decision is delegated to GS.resolveTileClick(); this function handles
 // the DOM-side effects (toast, renderMyPanel, send).
-function handleTileClick(tx, ty){
+function handleTileClick(tx, ty, opts){
   if(window._modoMestreMira){ _clickMiraMestre(tx,ty); return; }
   if(_cooperativeMarkerMode){ _handleCooperativeMarkerTarget(tx, ty); return; }
   getAudioContext();
@@ -56858,6 +56875,16 @@ function handleTileClick(tx, ty){
     }
   }
 
+  // Clique direto no MONSTRO (3D): o ataque tem prioridade sobre o loot que divide a casa.
+  if(opts && opts.preferirAtaque){
+    const direto = GS.resolveTileClick(tx, ty);
+    if(direto?.type === 'attack'){
+      GS.pendingMove = null; _clearMovePreviewVisual();
+      GS.notifyAttack();
+      sendAttack(direto.targetId, direto.targetPos);
+      return;
+    }
+  }
   // ── Item no chão (2D e 3D): clicar num item adjacente pega; senão avisa ──────
   // Não-guardado por modo: o 3D funil por handleTileClick(tx,ty) via on3DClick.
   if(_st && Array.isArray(_st.ground_items)){
@@ -56889,8 +56916,11 @@ function handleTileClick(tx, ty){
     if(chest){
       const myP = _st.players.find(p=>p.id===GS.myPid&&p.alive);
       const dist = myP ? Math.max(Math.abs(myP.pos[0]-tx), Math.abs(myP.pos[1]-ty)) : 99;
-      if(dist <= 2){ openChestWindow(chest); return; }
-      else { toast(t('ui.tabuleiro.perto_do_bau'), 'var(--gold)'); return; }
+      if(dist <= 2){ _abrirBauOuAtaque(chest); return; }
+      // Baú longe, mas com um monstro atacável na mesma casa: o ataque segue adiante.
+      if(GS.resolveTileClick(tx, ty)?.type !== 'attack'){
+        toast(t('ui.tabuleiro.perto_do_bau'), 'var(--gold)'); return;
+      }
     }
   }
 

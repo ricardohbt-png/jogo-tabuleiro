@@ -1799,6 +1799,10 @@ window.LANG_INTERFACE = {
     "en": "Activate mechanism",
     "pt": "Ativar mecanismo"
   },
+  "ui.bau.abrir_o_bau": {
+    "en": "Open the chest",
+    "pt": "Abrir o baú"
+  },
   "ui.bau.escolha_uma_acao": {
     "en": "Choose an action",
     "pt": "Escolha uma ação"
