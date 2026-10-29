@@ -1,7 +1,7 @@
 """Mapas do Ramo A de "O Resgate de Elara" (Vila do Riacho), usados por `gerar_elara_riacho.py`.
 
 Tudo é determinístico (semente fixa por mapa). Calibração: grupo esperado de 4 heróis nível 2.
-O monstro `bandido` está sendo criado em outra frente: troque `TIPO_BANDIDO` aqui quando ele existir.
+O monstro `bandido` já existe: `TIPO_BANDIDO` o usa na casa; o celeiro é do autor (editado à mão).
 """
 import os
 import sys
@@ -12,11 +12,13 @@ for _p in (RAIZ, os.path.join(RAIZ, "tools")):
         sys.path.insert(0, _p)
 import server as S  # noqa: E402
 from charcos_mapas import Cena, montar_fila, obj  # noqa: E402
+from gerar_campanha_sombras import Mapa  # noqa: E402
 
-TIPO_BANDIDO = "goblin_combatente"     # bandido comum
+TIPO_BANDIDO = "bandido"               # bandido comum (monstro nativo ND 1)
 TIPO_CAPANGA = "soldado"               # capanga mais forte
 TIPO_ARQUEIRO = "goblin_arqueiro"
 TIPO_VALENTAO = "goblin_dual"           # o mais perigoso dos subordinados (ND 1)
+TIPO_OGRO = "ogro_clava"               # a força contratada (ND 2)
 
 F_BARDO_EXPOSTO = "elara_bardo_exposto"
 F_MOCAS = "elara_mocas_salvas"
@@ -27,36 +29,65 @@ CARTA = {"id": "carta", "texto": (
 
 
 def masmorra_casa():
-    """A casa do morador comprado: sala da frente, quarto e porão com o baú-chave."""
-    c, xs, hs = montar_fila([10, 10, 10], 13, "casa", 2201, piso="madeira_escura", parede="madeira")
-    m = c.m
-    ent, sai = m.em(0, 1, hs // 2), m.em(2, 8, hs // 2)
+    """A casa do Tomé: sala da frente, quarto e o porão escondido atrás de uma estante-mecanismo.
+
+    Tomé (o morador comprado) espera no porão com o baú-chave e os capangas; o ogro é a força que a
+    rede paga. Calibração para 4 heróis nível 2 (poder 8): ND 3,0 / 4,0 / 6,0 por sala."""
+    m = Mapa(36, 14)
+    m.sala(0, 1, 2, 10, 10, role="entrance", locked=False)     # sala da frente
+    m.sala(1, 12, 2, 10, 10)                                   # quarto
+    m.sala(2, 23, 2, 12, 10, locked=False)                     # porão (secreto: só se liga pela estante)
+    m.porta(11, 6, 0, 1)
+    c = Cena("casa", m, 2201, piso="madeira_escura", parede="madeira")
+    hs = 10
+    ent, sai = m.em(0, 1, hs // 2), m.em(2, 10, 5)
     c.proteger(ent, sai)
-    # 0 · Sala da frente
-    c.mon(TIPO_BANDIDO, 0, 7, 2); c.mon(TIPO_BANDIDO, 0, 7, 6)
-    c.mon_livre(TIPO_CAPANGA, 0, 2)
-    c.deco("mesa_cadeiras", 0, 4, 3); c.espalha("barril", 0, 2); c.espalha("estante", 0, 1)
-    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 5, 1)})
-    # 1 · Quarto
-    c.mon(TIPO_CAPANGA, 1, 7, 3); c.mon(TIPO_ARQUEIRO, 1, 7, 6)
-    c.mon_livre(TIPO_VALENTAO, 1, 2)
-    c.deco("cama_casal", 1, 2, 2); c.espalha("estante", 1, 1); c.espalha("barril", 1, 1)
-    c.armadilhas.append({"tipo": "armadilha_dardos_envenenados", "pos": m.em(1, 4, 5), "veneno_id": "veneno_escorpiao_pedra"})
-    # 2 · Porão
-    c.mon(TIPO_BANDIDO, 2, 6, 3, alvo=False); c.mon(TIPO_ARQUEIRO, 2, 6, 6)
-    c.mon_livre(TIPO_CAPANGA, 2, 2); c.mon_livre(TIPO_VALENTAO, 2, 1)
-    c.espalha("barril", 2, 3); c.espalha("estante_armas", 2, 1)
-    c.armadilhas.append({"tipo": "rede", "pos": m.em(2, 4, 4)})
-    c.bau(m.em(2, 8, 3), 25, [CARTA])
-    d = c.baus[-1]
-    d["key_objective"] = True
+    c.proteger((11, 6), (10, 6), (12, 6))
+    c.pintar(2, "terra")
+    # 0 · Sala da frente: lareira, mesa, cobertura baixa; os primeiros capangas já estão de olho
+    c.mon(TIPO_BANDIDO, 0, 7, 2); c.mon(TIPO_BANDIDO, 0, 7, 7)
+    c.mon(TIPO_CAPANGA, 0, 5, 4)
+    c.deco("lareira", 0, 4, 0); c.deco("mesa_cadeiras", 0, 3, 5)
+    c.deco("barril", 0, 9, 0); c.deco("barril", 0, 9, 9); c.deco("barril", 0, 0, 9)
+    c.deco("estante", 0, 7, 0)
+    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 5, 2)})
+    c.armadilhas.append({"tipo": "lamina_escondida", "pos": m.em(0, 8, 5)})
+    # 1 · Quarto: cama, estantes e a estante-mecanismo que esconde a descida
+    c.mon(TIPO_BANDIDO, 1, 6, 2); c.mon(TIPO_BANDIDO, 1, 6, 7); c.mon(TIPO_BANDIDO, 1, 3, 5)
+    c.mon(TIPO_CAPANGA, 1, 7, 5)
+    c.deco("cama_casal", 1, 1, 0); c.deco("cama", 1, 4, 8)
+    c.deco("estante", 1, 3, 0); c.deco("barril", 1, 0, 9); c.deco("barril", 1, 1, 9)
+    # SEM key_objective: acionar a estante só abre a passagem; o objetivo é abrir o baú do porão
+    c.deco("estante_livros", 1, 9, 2, did="casa_estante")
+    c.armadilhas.append({"tipo": "armadilha_dardos_envenenados", "pos": m.em(1, 4, 4), "veneno_id": "veneno_escorpiao_pedra"})
+    c.armadilhas.append({"tipo": "rede", "pos": m.em(1, 5, 6)})
+    # 2 · Porão: Tomé, o capanga grande e o baú-chave
+    tome = c.mon(TIPO_BANDIDO, 2, 9, 4, alvo=True)
+    c.mon(TIPO_OGRO, 2, 6, 5)
+    c.mon(TIPO_BANDIDO, 2, 6, 2); c.mon(TIPO_BANDIDO, 2, 6, 8)
+    c.mon(TIPO_CAPANGA, 2, 4, 5)
+    c.deco("barril", 2, 11, 0); c.deco("barril", 2, 11, 1); c.deco("barril_cerveja", 2, 11, 9)
+    c.deco("barril_cerveja", 2, 10, 9); c.deco("estante_armas", 2, 4, 0); c.deco("estante", 2, 8, 0)
+    c.deco("mesa_quimica", 2, 2, 8)
+    c.armadilhas.append({"tipo": "rede", "pos": m.em(2, 2, 3)})
+    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(2, 8, 6)})
+    c.bau(m.em(2, 10, 3), 25, [CARTA])
+    c.baus[-1]["key_objective"] = True
     c.fala("casa_aviso", m.em(0, 1, 2), "Narrador", "🏚️",
            "A casa do Tomé tem a janela fechada à luz do dia. Alguém dentro abafa passos.", 4)
-    c.fala("casa_porao", m.em(1, 8, hs // 2), "Narrador", "🕯️",
-           "Uma tampa no chão deixa subir um cheiro de mofo. Lá embaixo, uma gaveta trancada.", 3)
-    return c.finalizar("elara_riacho_casa", "A Casa do Tomé", "masmorra", 2, {
-        "primary": obj("open_key_chest", 120, 40, fato=F_BARDO_EXPOSTO), "secondary": []}, ent, sai,
+    c.fala("casa_estante", m.em(1, 8, 4), "Narrador", "🕯️",
+           "Marcas de arrasto no assoalho vão até a estante do canto. Atrás dela sopra um ar frio, de porão.", 3)
+    c.fala("casa_tome", m.em(2, 3, 5), "Tomé", "🧔",
+           "Eu só abria a porta! Foi o bardo da taverna que mandou! Eles me pagam, eu não pergunto...", 4)
+    # A estante abre duas casas da parede entre o quarto e o porão
+    d = c.finalizar("elara_riacho_casa", "A Casa do Tomé", "masmorra", 2, {
+        "primary": obj("open_key_chest", 120, 40, fato=F_BARDO_EXPOSTO),
+        "secondary": [obj("kill_target", 90, 20)]}, ent, sai,
         expected_party={"heroes": 4, "level": 2})
+    d["secret_passages"] = [{"id": f"casa_passagem_{i}", "type": "mechanism", "pos": [22, y],
+                             "key_decor_ids": ["casa_estante"], "keys_mode": "any"}
+                            for i, y in enumerate((6, 7))]
+    return d
 
 
 def masmorra_celeiro():

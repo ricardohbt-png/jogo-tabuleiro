@@ -243,6 +243,11 @@ cada) e o tratamento do bardo (`elara_t1_*`); 3) o endereço do barman (`elara_r
 `elara_riacho_rumo_graciero`. Regra: toda conversa que grava fato de história é de uso único ou se esconde por `sem_fato`
 (`test_toda_conversa_de_progresso_some_depois_de_usada`). A garçonete ganha uma fala padrão (`FALA_PADRAO`) quando o slot
 estava sem `dialog`.
+**A casa do Tomé (2026-10-29):** `masmorra_casa()` (`tools/elara_riacho_mapas.py`) foi refeita: sala da frente, quarto e **porão escondido**
+atrás da `estante_livros` `casa_estante` (duas passagens `mechanism` em `(22,6)`/`(22,7)`; a estante **não** leva `key_objective`, senão
+acioná-la já cumpriria o `open_key_chest`). O porão tem Tomé (`bandido` com `boss`/`target`, objetivo secundário `kill_target`), um `ogro_clava`,
+bandidos e o baú-chave com a carta; 12 monstros, ND 3,0/4,0/6,0 (0,38/0,50/0,75 do poder 8), 6 armadilhas e cenário de casa. Uma fala no quarto
+aponta a estante. O gerador ganhou `--ignorar-editados`: grava os mapas não editados e mantém os que o autor mexeu à mão (hoje o celeiro).
 Testes: `python -X utf8 tools/test_conversa_fatos.py`, `test_elara_riacho_mapas.py`,
 `test_elara_riacho_dados.py`, `test_elara_riacho_fluxo.py` e `node tools/test_conversa_fatos_editor.js`.
 

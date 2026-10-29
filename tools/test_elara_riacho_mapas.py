@@ -24,7 +24,34 @@ class MapasTests(unittest.TestCase):
 
     def test_todas_as_salas_alcancaveis(self):
         for d in (self.casa, self.celeiro):
-            self.assertEqual(set(salas_alcancaveis(d)), {r["id"] for r in d["rooms"]}, d["id"])
+            self.assertEqual(set(salas_alcancaveis(d, passagens_abertas=True)), {r["id"] for r in d["rooms"]}, d["id"])
+
+    def test_porao_so_pela_estante(self):
+        d = self.casa
+        self.assertEqual(set(salas_alcancaveis(d)), {0, 1}, "o porão só existe depois de acionar a estante")
+        chave = {x["id"]: x for x in d["decorations"]}["casa_estante"]
+        self.assertFalse(chave.get("key_objective"), "acionar a estante não pode cumprir o objetivo do baú")
+        for sp in d["secret_passages"]:
+            self.assertEqual(sp["type"], "mechanism")
+            self.assertEqual(sp["key_decor_ids"], ["casa_estante"])
+        self.assertTrue(any("estante" in f["texto"] for f in d["falas"]), "uma fala precisa apontar a estante")
+
+    def test_tome_e_o_alvo_e_o_bau_fica_no_porao(self):
+        d = self.casa
+        alvos = [m for m in d["monsters"] if m.get("target")]
+        self.assertEqual(len(alvos), 1)
+        self.assertEqual(alvos[0]["room_id"], 2)
+        self.assertEqual(d["objectives"]["secondary"][0]["type"], "kill_target")
+        porao = next(r for r in d["rooms"] if r["id"] == 2)
+        bx, by = d["chests"][0]["pos"]
+        self.assertTrue(porao["x"] <= bx < porao["x"] + porao["w"])
+
+    def test_casa_com_bandidos_e_mais_armadilhas(self):
+        d = self.casa
+        self.assertGreaterEqual(len(d["traps"]), 5)
+        self.assertGreaterEqual(sum(1 for m in d["monsters"] if m["type"] == M.TIPO_BANDIDO), 6)
+        self.assertFalse([m for m in d["monsters"] if m["type"].startswith("goblin")], "casa só com gente da rede")
+        self.assertGreaterEqual(len(d["decorations"]), 18)
 
     def test_casa_objetivo_armadilhas_e_bau_chave(self):
         d = self.casa

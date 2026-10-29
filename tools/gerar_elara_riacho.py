@@ -234,7 +234,7 @@ def _gravar(caminho, dados):
     os.replace(tmp, caminho)
 
 
-def aplicar(simular=False, forcar=False, caminhos=None, sem_mapas=False):
+def aplicar(simular=False, forcar=False, caminhos=None, sem_mapas=False, ignorar_editados=False):
     c = dict({"cenas": S.CITY_SCENES_FILE, "pontos": S.CITY_MAP_POINTS_FILE,
               "adventures": S.WORLD_ADVENTURES_FILE,
               "dungeons_dir": S.DUNGEONS_DIR, "assinaturas": ASSINATURAS}, **(caminhos or {}))
@@ -251,8 +251,13 @@ def aplicar(simular=False, forcar=False, caminhos=None, sem_mapas=False):
             atual = _ler(caminho, None)
             if atual is None or assin.get(arq) != assinatura(atual):
                 conflitos.append(arq)
+    if conflitos and ignorar_editados:      # o autor é dono desses mapas: segue sem tocar neles
+        print("mapas editados à mão, mantidos como estão: " + ", ".join(conflitos))
+        for arq in conflitos:
+            mapas.pop(arq)
+        conflitos = []
     if conflitos:
-        raise Conflito("editados depois de gerados (use --forcar): " + ", ".join(conflitos))
+        raise Conflito("editados depois de gerados (use --forcar ou --ignorar-editados): " + ", ".join(conflitos))
 
     cenas = _ler(c["cenas"], {})
     slots = {s.get("id"): s for s in ((cenas.get(CIDADE) or {}).get(CENA) or {}).get("slots", []) if isinstance(s, dict)}
@@ -312,11 +317,13 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--simular", action="store_true")
     ap.add_argument("--forcar", action="store_true")
+    ap.add_argument("--ignorar-editados", action="store_true",
+                    help="grava os mapas não editados e mantém os que o autor alterou à mão")
     ap.add_argument("--sem-mapas", action="store_true",
                     help="grava só conversas, destinos e pontos (útil quando um mapa foi editado à mão)")
     args = ap.parse_args(argv)
     try:
-        aplicar(simular=args.simular, forcar=args.forcar, sem_mapas=args.sem_mapas)
+        aplicar(simular=args.simular, forcar=args.forcar, sem_mapas=args.sem_mapas, ignorar_editados=args.ignorar_editados)
     except (Conflito, ValueError) as e:
         print(f"RECUSADO: {e}  (nada foi gravado)")
         return 2
