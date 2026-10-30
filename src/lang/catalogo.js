@@ -234,6 +234,10 @@ window.LANG_CATALOGO = {
     "en": "Ritual Altar",
     "pt": "Altar ritualístico"
   },
+  "cat.decor.ancinho.nome": {
+    "en": "Rake",
+    "pt": "Ancinho"
+  },
   "cat.decor.arbusto_seco.nome": {
     "en": "Dry Shrub",
     "pt": "Arbusto seco"
@@ -261,6 +265,10 @@ window.LANG_CATALOGO = {
   "cat.decor.arvore_seca.nome": {
     "en": "Dead Tree",
     "pt": "Árvore seca"
+  },
+  "cat.decor.balde_agua_chao.nome": {
+    "en": "Water Bucket",
+    "pt": "Balde com água"
   },
   "cat.decor.barril.nome": {
     "en": "Barrel",
@@ -298,6 +306,10 @@ window.LANG_CATALOGO = {
     "en": "Desert Cactus",
     "pt": "Cacto do deserto"
   },
+  "cat.decor.caixa_ferramentas.nome": {
+    "en": "Toolbox",
+    "pt": "Caixa de ferramentas"
+  },
   "cat.decor.caldeirao.nome": {
     "en": "Cauldron",
     "pt": "Caldeirão"
@@ -321,6 +333,10 @@ window.LANG_CATALOGO = {
   "cat.decor.carroca.nome": {
     "en": "Cart",
     "pt": "Carroça"
+  },
+  "cat.decor.carroca_feno.nome": {
+    "en": "Hay Wagon",
+    "pt": "Carroça com feno"
   },
   "cat.decor.casa.nome": {
     "en": "House",
@@ -357,6 +373,10 @@ window.LANG_CATALOGO = {
   "cat.decor.choupana_palha_escura.nome": {
     "en": "Dark Thatch River Hut",
     "pt": "Choupana de palha escura"
+  },
+  "cat.decor.cocho.nome": {
+    "en": "Wooden Feeding Trough",
+    "pt": "Cocho de madeira"
   },
   "cat.decor.coluna.nome": {
     "en": "Stone Column",
@@ -398,6 +418,10 @@ window.LANG_CATALOGO = {
     "en": "Deity Statue",
     "pt": "Estátua de divindade"
   },
+  "cat.decor.espantalho.nome": {
+    "en": "Scarecrow",
+    "pt": "Espantalho"
+  },
   "cat.decor.estatua_soterrada.nome": {
     "en": "Buried Statue",
     "pt": "Estátua soterrada"
@@ -417,6 +441,10 @@ window.LANG_CATALOGO = {
   "cat.decor.fonte_de_parede.nome": {
     "en": "Wall Fountain",
     "pt": "Fonte de parede"
+  },
+  "cat.decor.forcado.nome": {
+    "en": "Pitchfork",
+    "pt": "Forcado"
   },
   "cat.decor.fumarola.nome": {
     "en": "Fumarole",
@@ -545,6 +573,10 @@ window.LANG_CATALOGO = {
   "cat.decor.ruinas_pedra.nome": {
     "en": "Stone Ruins",
     "pt": "Ruínas de pedra"
+  },
+  "cat.decor.saco_grao.nome": {
+    "en": "Grain Sack",
+    "pt": "Saco de grãos"
   },
   "cat.decor.sino_ritualistico.nome": {
     "en": "Ritual Bell",
@@ -1021,6 +1053,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_bugbear_sombras.nome": {
     "en": "Lore: Bugbear — Shadow Boogeyman",
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
+  },
+  "cat.guilda.lenda_cavalo_sela.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Cavalo de Sela."
+  },
+  "cat.guilda.lenda_cavalo_sela.nome": {
+    "en": "",
+    "pt": "Lenda: Cavalo de Sela"
   },
   "cat.guilda.lenda_ciclope.desc": {
     "en": "+1 to attack and +1 to saving throws against Cyclops.",
@@ -1557,6 +1597,14 @@ window.LANG_CATALOGO = {
   "cat.guilda.lenda_urso_pardo.nome": {
     "en": "Legend: Brown Bear",
     "pt": "Lenda: Urso Pardo"
+  },
+  "cat.guilda.lenda_vaca.desc": {
+    "en": "",
+    "pt": "+1 de ataque e +1 nos saves contra Vaca Arisca."
+  },
+  "cat.guilda.lenda_vaca.nome": {
+    "en": "",
+    "pt": "Lenda: Vaca Arisca"
   },
   "cat.guilda.lenda_vampiro_anciao.desc": {
     "en": "+1 to attack and +1 to saving throws against Ancient Vampire.",
@@ -2358,6 +2406,14 @@ window.LANG_CATALOGO = {
     "en": "Feast",
     "pt": "Banquete"
   },
+  "cat.item.banquete_comemoracao.desc": {
+    "en": "+40 hunger and +40 thirst for each hero • 5 coins per hero • once per city visit for the group",
+    "pt": "+40 de fome e +40 de sede para cada herói • 5 moedas por herói • uma vez por visita para o grupo"
+  },
+  "cat.item.banquete_comemoracao.nome": {
+    "en": "Celebration Banquet",
+    "pt": "Banquete de Comemoração"
+  },
   "cat.item.banquete_viagem.nome": {
     "en": "Travel Banquet",
     "pt": "Banquete de Viagem"
@@ -2502,6 +2558,14 @@ window.LANG_CATALOGO = {
     "en": "Water Canteen",
     "pt": "Cantil de Água"
   },
+  "cat.item.carne_bovina.desc": {
+    "en": "+25 hunger.",
+    "pt": "+25 de fome."
+  },
+  "cat.item.carne_bovina.nome": {
+    "en": "Beef",
+    "pt": "Carne Bovina"
+  },
   "cat.item.carta.desc": {
     "en": "Reading it opens the written message without consuming the letter.",
     "pt": "Ao ler, abre a mensagem escrita sem consumir a carta."
@@ -2537,6 +2601,14 @@ window.LANG_CATALOGO = {
   "cat.item.chapeu_arquimago_superior.nome": {
     "en": "Superior Archmage's Hat",
     "pt": "Chapéu do Arquimago Superior"
+  },
+  "cat.item.chapeu_aventureiro.desc": {
+    "en": "+1 vision and +1 initiative while equipped.",
+    "pt": "+1 de visão e +1 de iniciativa enquanto equipado."
+  },
+  "cat.item.chapeu_aventureiro.nome": {
+    "en": "Adventurer's Hat",
+    "pt": "Chapéu do Aventureiro"
   },
   "cat.item.chapeu_bruxo.desc": {
     "en": "+1 to the saving throw DC of your spells while equipped. Mage only.",
@@ -2730,6 +2802,14 @@ window.LANG_CATALOGO = {
     "en": "Arrows (×10)",
     "pt": "Flechas (×10)"
   },
+  "cat.item.flechas_explosivas.desc": {
+    "en": "Pack of 5 arrows. On a hit, deals +1d6 physical damage to the target and 1d6 to other creatures within radius 1 (Reflex DC 12 halves the damage). The blast can hit allies.",
+    "pt": "Pacote com 5 flechas. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
+  },
+  "cat.item.flechas_explosivas.nome": {
+    "en": "Explosive Arrows",
+    "pt": "Flechas Explosivas"
+  },
   "cat.item.flechas_prata.nome": {
     "en": "Silver Arrows (×10)",
     "pt": "Flechas de Prata (×10)"
@@ -2781,6 +2861,14 @@ window.LANG_CATALOGO = {
   "cat.item.granada_superior.nome": {
     "en": "Greater Grenade",
     "pt": "Granada Superior"
+  },
+  "cat.item.grande_celebracao.desc": {
+    "en": "+75 hunger and +75 thirst for each hero • 12 coins per hero • once per city visit for the group",
+    "pt": "+75 de fome e +75 de sede para cada herói • 12 moedas por herói • uma vez por visita para o grupo"
+  },
+  "cat.item.grande_celebracao.nome": {
+    "en": "Grand Celebration",
+    "pt": "Grande Celebração"
   },
   "cat.item.grimorio_barreira_arcana.desc": {
     "en": "Contains Arcane Barrier. Fixed spells: they cannot be swapped. Only a Mage can use it, equipped in the shield hand. Each casting uses a normal slot of the spell's circle; the grimoire grants neither slots nor castings.",
@@ -3145,6 +3233,14 @@ window.LANG_CATALOGO = {
   "cat.item.leather_plate.nome": {
     "en": "Leather and Plate Armor",
     "pt": "Armadura de Couro e Placas"
+  },
+  "cat.item.leite.desc": {
+    "en": "+5 hunger and +5 thirst.",
+    "pt": "+5 de fome e +5 de sede."
+  },
+  "cat.item.leite.nome": {
+    "en": "Milk",
+    "pt": "Leite"
   },
   "cat.item.longbow.desc": {
     "en": "Long Bow: 1d8 piercing damage, using Dexterity. Range: 10 squares in a straight line or 5 diagonally.",
@@ -3730,6 +3826,14 @@ window.LANG_CATALOGO = {
     "en": "Bolts (×10)",
     "pt": "Virotes (×10)"
   },
+  "cat.item.virotes_explosivos.desc": {
+    "en": "Pack of 5 bolts. On a hit, deals +1d6 physical damage to the target and 1d6 to other creatures within radius 1 (Reflex DC 12 halves the damage). The blast can hit allies.",
+    "pt": "Pacote com 5 virotes. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
+  },
+  "cat.item.virotes_explosivos.nome": {
+    "en": "Explosive Bolts",
+    "pt": "Virotes Explosivos"
+  },
   "cat.item.virotes_prata.nome": {
     "en": "Silver Bolts (×10)",
     "pt": "Virotes de Prata (×10)"
@@ -4134,6 +4238,10 @@ window.LANG_CATALOGO = {
     "en": "Bugbear — Shadow Boogeyman",
     "pt": "Bugbear — Bicho-Papão das Sombras"
   },
+  "cat.monstro.cavalo_sela.nome": {
+    "en": "",
+    "pt": "Cavalo de Sela"
+  },
   "cat.monstro.ciclope.nome": {
     "en": "Cyclops",
     "pt": "Ciclope"
@@ -4469,6 +4577,10 @@ window.LANG_CATALOGO = {
   "cat.monstro.urso_pardo.nome": {
     "en": "Brown Bear",
     "pt": "Urso Pardo"
+  },
+  "cat.monstro.vaca.nome": {
+    "en": "Skittish Cow",
+    "pt": "Vaca Arisca"
   },
   "cat.monstro.vampiro_anciao.nome": {
     "en": "Ancient Vampire",

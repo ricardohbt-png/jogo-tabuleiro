@@ -3153,6 +3153,10 @@ window.LANG_NARRACAO = {
     "en": "{nome_criatura_m} uses Heroic Charge and doubles its movement.",
     "pt": "{nome_criatura_m} usa Investida Heroica e dobra seu deslocamento."
   },
+  "narracao.cavalo_disparada": {
+    "en": "🐎 **{monstro}** uses **Gallop** and doubles its movement while fleeing!",
+    "pt": "🐎 **{monstro}** usa **Disparada** e dobra seu deslocamento ao fugir!"
+  },
   "narracao.usa_o_pergaminho_de_dominar_morto_vivo_e": {
     "en": "🧙 **{monstro}** uses the **Scroll of Dominate Undead** on **{alvo_nome}**!",
     "pt": "🧙 **{monstro}** usa o **Pergaminho de Dominar Morto-Vivo** em **{alvo_nome}**!"

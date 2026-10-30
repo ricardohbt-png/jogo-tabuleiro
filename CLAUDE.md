@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Munição Explosiva (2026-10-30)
+
+`flechas_explosivas` e `virotes_explosivos` são munições separadas, aceitas respectivamente por arcos e bestas. Cada item compra 5 projéteis por 60 moedas e aparece em `ferreiro_ammo` nas cinco cidades; ambos usam `assets/itens magicos/municao_explosiva.png`. O disparo consome 1 munição mesmo se errar. Ao acertar, o alvo principal sofre o dano normal da arma +1d6 físico; as outras criaturas vivas no raio 1 sofrem 1d6 físico, com Reflexos CD 12 para metade. A explosão atinge aliados e não repete o dano de área no alvo principal. `special_effect: explosive_ammo` persiste na pilha; o servidor aplica área com linha de visão e resistências físicas. `attack_feedback.start` carrega posição e marcador da explosão; clientes 2D/3D só tocam o som e a animação no impacto de acerto. Não entram no sorteio de munição dos monstros.
+
 ### Veneno de redução de atributo em monstros (2026-10-30)
 
 O efeito `reduzir` dos venenos (`_aplicar_veneno`) agora atinge o monstro pela mesma regra do herói: a queda real do modificador, e não mais o antigo "FOR = −1 de dano fixo / CON = PV direto" (que ainda transformava DES e INT em −1 de dano por engano). O herói continua com o score bruto reduzido e restaurado. O monstro **não** tem o score bruto alterado (`m["str_"]` etc. são lidos por Fúria, agarrar e outros): o efeito grava `attr_mon` (`str_`/`dex`/`con_`/`int_`) e tudo é derivado **ao vivo** dos efeitos ativos, sem guardar delta que dessincronize quando dois venenos expiram fora de ordem. FOR vira dano em `_pen(m, "dano")`; CON reduz Fortitude e o PV máximo (queda do modificador × ND, `max(1, round(cr))`, nunca abaixo de 1); DES reduz Reflexos, CA (`_ca_veneno_atributo`) e visão; INT reduz Vontade e visão (`_get_raio_visao_monstro` usa o atributo efetivo). A Medusa usa a mesma regra. O único estado guardado é `_veneno_hp_perdido`, recalculado por `_sincronizar_hp_veneno` a cada aplicação, expiração e cura; `_reverter_efeito_veneno` marca o efeito `revertido`. Efeitos gravados no formato antigo (`hp_perdido`, `pen_dano`) continuam revertendo. Percepção do monstro segue fixa na ficha. **Herói (mesmo recálculo):** a CON reduzida do herói (veneno, Medusa e Nuvem de Gás) marca o efeito com `calc_vivo` e `_sincronizar_con_heroi` recalcula PV máximo e Fortitude a partir dos efeitos ativos (`_veneno_hp_perdido`/`_veneno_fort_perdido`), sem o `hp_delta`/`fort_delta` por efeito que dessincronizava quando o primeiro veneno aplicado expirava antes; efeitos no formato antigo continuam revertendo. Teste: `python -X utf8 tools/test_veneno_reducao_monstro.py`.
@@ -7,6 +11,20 @@ O efeito `reduzir` dos venenos (`_aplicar_veneno`) agora atinge o monstro pela m
 ### Cura Completa do grupo no Templo (2026-10-29)
 
 `full_heal` em `SHOP_TEMPLE` deixou de ser o serviço individual de 15 moedas: é "Cura Completa do Grupo" (`cura_grupo`, `preco_fixo`, `pv_por_moeda: 3`). `GameRoom._plano_cura_grupo_templo` soma os PV que faltam aos heróis vivos e presentes (`class_id`, sem Mestre ou heróis de teste) e cobra `faltando // 3`, mínimo de 1 moeda quando alguém está ferido; `preco_fixo` ignora o ágio da cidade. Sem ouro suficiente a cura é parcial (3 PV por moeda), começando por quem tem mais PV faltando (desempate por `slot` e id); ninguém ferido recusa sem cobrar (`erro.ninguem_precisa_de_cura`). O servidor recalcula o plano ao comprar, então o cliente é só prévia. `GS.planoCuraGrupoTemplo(cityState, myPid)` (puro, em `gameState.js`) espelha o plano e soma o ouro do grupo quando `solo_grupo && ouro_compartilhado`; **mudou a regra no servidor, mude o espelho**. Em `game.js`, `curarGrupoNoTemplo` compra direto se o ouro cobre tudo; se a cura é parcial, abre `_confirmarCuraParcialTemplo` com a vida antes→depois de cada herói e quem ficará sem cura. Textos em `ui.templo.cura_grupo_*`. Nota de integração: o commit usa o ouro de quem compra; com `ouro_compartilhado` o débito e `_saldo_ouro_disponivel` entram junto do WIP de ouro compartilhado. Testes: `python -X utf8 tools/test_templo_cura_grupo.py` e `node tools/test_templo_cura_grupo_cliente.js`.
+
+### Vaca Arisca e alimentos bovinos (2026-10-27)
+
+`vaca` é um monstro nativo de ND 1/4, com 16 PV, CA 11 e Cabeçada +3 (`1d6+1`). Ela não inicia ataques; uma ação ofensiva válida de herói contra ela a provoca mesmo se errar. Em cada turno, tem 50% de chance de tentar fugir uma casa; se não fugir, só ataca quando provocada, priorizando seu último agressor vivo. Não entra em encontros aleatórios e pode ser colocada manualmente no editor. Ao morrer, deixa 1–3 `carne_bovina` e 1–4 `leite`, ambos garantidos com quantidades uniformes inclusivas.
+
+`carne_bovina` custa 3 moedas e restaura 25 de fome; `leite` custa 1 moeda e restaura 5 de fome e 5 de sede. Os dois são consumíveis de bolsa vendidos nas tavernas e usam `effect: food`. Arte 2D: `assets/pawns/monstros/vaca/vaca.png`; miniatura 3D: `assets/models3d/monstros/vaca.glb`; fonte Blender: `assets/models3d/monstros/vaca.blend`; ícones: `assets/itens/carne_bovina.png` e `assets/itens/leite.png`. O catálogo do editor é gerado por `tools/export_catalog.py`.
+
+### Cavalo de Sela (ND 1/4, 2026-10-29)
+
+`cavalo_sela` é um monstro nativo de ND 1/4: 16 PV, CA 11, deslocamento 8, FOR 16, DES 12, CON 14, INT 2, salvamentos Fort +4/Ref +3/Vont +1 e Coice +4 (`1d6+2`). Animal médio, não entra em encontros aleatórios e só reage depois de provocado. Em cada turno tem 50% de chance de fugir uma casa; quando `Disparada` está pronta, recarga 4 rodadas, essa fuga percorre até duas casas e aplica efeitos de terreno em cada passo. A miniatura PNG fica em `assets/pawns/monstros/cavalo_sela/cavalo_sela.png`; o modelo 3D e sua fonte Blender são `assets/models3d/monstros/cavalo_sela.glb` e `.blend`, gerados por `tools/build_cavalo_sela_glb.py` e vinculados em `_MONSTER_GLB_MODELS`. Um herói adjacente pode montá-lo com ação bônus; o servidor guarda o vínculo por `cavalo_montado_id`/`cavaleiro_id`, o cavalo compartilha a posição, usa velocidade-base 8 e fica sem turno de IA. Disparada manual exige a ação bônus antes do movimento, dobra de 8 para 16 o orçamento-base e guarda recarga absoluta de quatro rodadas no cavalo. Alvo único preserva o ID escolhido; dano de área encontra herói e cavalo na casa compartilhada. Desmontar custa ação bônus e escolhe casa ortogonal livre; morte ou saída de sala desfaz o vínculo. Controles do cavaleiro ficam na lista de habilidades da ficha e a imagem 2D do cavalo desenha antes do herói. O catálogo do editor é gerado por `tools/export_catalog.py`.
+
+### Ouro compartilhado no Solo (2026-10-27)
+
+Em jogo salvo Solo com mais de um herói, a cidade permite ligar/desligar `ouro_compartilhado` por visita; a preferência é persistida no save e começa desligada, inclusive em saves antigos. Ligado, compras e serviços da cidade usam a soma dos saldos individuais (lojas, refeições de grupo, reparos, Guilda e serviços do Templo); tarifa de caravana e custos durante a masmorra ficam fora. O servidor valida o total antes de debitar: primeiro a ficha de quem iniciou a compra, depois as demais em ordem estável de `slot` e pid. Reembolsos restauram as mesmas fichas; recompensas, loot e vendas continuam creditados individualmente. Desligar não transfere moedas. A barra da cidade exibe ouro individual em cada ficha, total do grupo e a chave; multiplayer e Solo de um herói não exibem a chave nem compartilham saldo.
 
 ### Kit de Reparo de Campo (2026-10-25)
 
@@ -36,6 +54,8 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 ### Boinas do Batedor e do Alerta (2026-10-26)
 
 `boina_batedor` custa 60 moedas e concede `vision: +1`; `boina_alerta` custa 150 moedas e concede `vision: +1` mais `save_bonus: +1` em todos os testes de resistência enquanto equipada. Ambas ocupam `head`, usam `assets/itens/chapeu1.png` e estão nos cinco mercadores. `save_bonus` é aplicado e removido no fluxo de equipamento e somado em `_testar_save`.
+
+`chapeu_aventureiro` custa 120 moedas, ocupa `head`, usa `assets/itens/chapeu_aventureiro.png` e está nos cinco mercadores. Concede `vision: +1` e `initiative: +1` enquanto equipado; ambos usam o fluxo reversível de bônus de equipamento e qualquer classe pode usá-lo.
 
 ### Manto das Sombras (2026-10-26)
 
@@ -1011,6 +1031,12 @@ resistência enquanto o herói permanecia na mesma sala.
 > emoji + 3D geometria procedural (`DECOR_3D`/`decorMeshes`, preparado p/ GLB).
 > Decorações `special:wall` ficam na face da parede e não ocupam o chão; `tocha_parede`
 > combina `assets/objetos/tocha_parede.png` com o loop GLB de `chama_viva.glb` no 3D.
+> `cocho` é uma decoração baixa 2×1, sólida, girável e sem interação; o PNG transparente
+> e o GLB ficam em `assets/objetos/cocho.png` e `assets/objetos/cocho.glb`.
+> `saco_grao` e `caixa_ferramentas` são props 1×1 sólidos e sem interação, com PNG/GLB
+> próprios em `assets/objetos/`. `ancinho` e `forcado` são peças altas 1×1; `balde_agua_chao`
+> é um balde decorativo 1×1 com água visível, sem cargas ou interação. Seus assets ficam em
+> `assets/objetos/` como PNG transparente e GLB.
 > `gruta_parede` é um relevo mural 1×1 com imagem de gruta entre rochas; não é portal
 > nem entrada jogável e usa PNG/GLB próprios com transparência.
 > `braseiro_parede` também usa o loop GLB de `chama_viva.glb`, com tigela suspensa de ferro.
@@ -1548,6 +1574,11 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > `assets/itens/escudo_grande.glb` recolorido conforme `assets/itens/escudo_g.png`,
 > orientado deitado no piso; `escudo_p` mantém o modelo redondo. Teste do servidor:
 > `tools/test_ground_items.py`.
+
+> A miniatura da Cota de Malha usa `assets/itens/cota_malha.glb` para os IDs
+> `chainmail` e `cota_malha` em `game.js`; a textura foi projetada de
+> `assets/itens/chainmail.png` sem alterar a topologia. A fonte GLB original fica
+> em Downloads e o pipeline de recoloração está em `tools/recolor_cota_malha_glb.py`.
 
 > **Guilda dos Heróis (Fase 0):** novo prédio na cidade (hotspot `guilda` →
 > `openGuild`) onde cada personagem compra aprimoramentos **permanentes**:
@@ -2506,12 +2537,16 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 
 > **Bandido (ND 1):** ficha nativa `bandido` com IA própria, PV 9, CA 15
 > (CA base 14 + Manto), movimento 7, atributos e salvamentos do Ladino e ataque
-> +4. Cada exemplar sorteia adaga ou bordão; com adaga, tem 50% de chance de
-> uma segunda adaga. A IA usa Esconder-se e Ataque Furtivo 1 (+2d4 no primeiro
-> golpe ao sair das sombras), ambos conforme suas regras; prepara a fórmula
-> sorteada entre `lamina_escondida`, `armadilha_incendiaria` e `rede`, com 3
-> rodadas de recarga, evitando a própria armadilha. Há 20% de chance de carregar
-> 1–2 frascos de Fungo Acre, consumidos no acerto após envenenar a arma. Ao
+> +4. Cada exemplar tem 70% de chance de adaga ou bordão (50/50; adaga tem 50%
+> de chance de uma segunda) e 30% de chance de besta com 10 virotes. Para a besta,
+> há chances independentes de 10% para o lote ser incendiário e 10% para ser de
+> prata; ambos podem ocorrer juntos. Virote incendiário causa +1d4 de fogo; o de
+> prata causa +1 dano e conta como prata. Sem virotes, usa a coronhada 1d4+DES.
+> A IA usa Esconder-se (recarga 4 rodadas) e Ataque Furtivo 1 (+2d4 no primeiro
+> golpe ao sair das sombras); prepara a fórmula sorteada entre `lamina_escondida`,
+> `armadilha_incendiaria` e `rede`, com 3 rodadas de recarga, evitando a própria
+> armadilha. Há 20% de chance de carregar 1–2 frascos de Fungo Acre, consumidos
+> no acerto após envenenar a arma. Ao
 > morrer, deixa 2–10 PO. Retrato e miniatura usam `image="bandido"` e
 > `portrait="bandido"` (`assets/retratos/monstros/bandido.png` e
 > `assets/pawns/monstros/bandido/bandido.png`).
@@ -4484,6 +4519,7 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > desenho 2D só passou em checagem de sintaxe. Testes: `tools/test_fogo_gelo.py` (32).
 
 > **Fogo + feno (2026-10-17):** sétima reação do motor (`incendiar_feno` em `REACOES`, estado `feno` = casa de um `monte_feno` intacto, `_rx_feno_em`). Fogo de qualquer fonte numa casa de feno o acende, junto com os montes encostados (4 vizinhos, teto `RX_FENO_TETO`=24), como o piche: cria uma zona `chamas_piche` com `feno: true`, `dado: "1d4"` (dano de fogueira, sem pôr ninguém em chamas) e `expira_em = rodada + RX_DURACAO_FENO` (3), então valem as mesmas chamas vivas, o `spell_animation` `ignicao_piche`, o clarão `incendio` e os ganchos de entrada/início de turno do piche (`_rx_fogo_piche` lê `zona["dado"]`). O monte **mantém a imagem** (nada de trocar por fogueira); `queimando` só o deixa de barrar o passo. Quem está na casa queima na ignição. Ao fim (`_rx_feno_acabou`, chamado no ramo `chamas_piche` de `_processar_zonas_turno`) os montes queimados somem e o servidor manda `reacao_elemental` `fuligem`, que o cliente trata como a marca da explosão de gás (`_reacoesFuligens`, ~30 s, só no cliente). Só o feno reage; para outro tipo inflamável, generalize `_rx_feno_em` por um campo `inflamavel`. `queimando` e a zona vão na foto. Testes: `tools/test_feno_fogo.py`.
+> **Carroça com feno e espantalho (2026-10-30):** decorações próprias em `DECOR_TYPES`; a carroça usa o modelo da carroça-base com fardos de feno. `incendiar_carroca_feno` é uma linha separada de `REACOES`, sem espalhar fogo aos vizinhos. A zona `chamas_piche` marcada `carroca_feno` conserva o dano de contato de feno (`1d4`), mantém o bloqueio do objeto e troca `image`/`model3d` ao passar da etapa de feno (rodadas 1–2) para fogo total (rodadas 3–4); no começo da rodada 5 remove a carroça e anuncia `fuligem`. Assets/fonte Blender: `assets/objetos/{espantalho,carroca_feno}.*` e `tools/create_espantalho_carroca_feno.py`.
 
 > **Água profunda e redemoinho nas reações (2026-10-14):** o estado `agua` (`_rx_estado`, qualquer
 > `_water_tile_kind` fora de ponte: `agua`, `agua_profunda`, `rodamoinho`, `rodamoinho_profundo`) substituiu
@@ -4966,3 +5002,7 @@ armadilhas permanentes) e não recupera ouro nem dispara armadilhas. PNG:
 ### Último Suspiro (2026-10-26)
 
 `ultimo_suspiro` custa 500 moedas, usa `assets/itens/ultimo_suspiro.png` e ocupa um dos slots `item1`/`item2`. Cada cópia equipada previne uma morte ao deixar o herói com 1 PV e consumir a cópia; duas equipadas acumulam duas proteções, consumidas uma por evento letal. Cópias na bolsa não ativam. A checagem ocorre depois da regeneração e antes de Instinto de Sobrevivência e Último Esforço; mortes forçadas ignoram a proteção. `tecnica_ultimo_esforco` passa a custar 700 moedas; a mecânica e recarga permanecem iguais.
+
+### Refeições de grupo na taverna (2026-10-27)
+
+`banquete_comemoracao` restaura 40 de fome e sede para cada herói por 5 moedas por herói; `grande_celebracao` restaura 75 por recurso por 12 moedas por herói. São refeições imediatas de grupo, cada uma utilizável uma vez por visita à cidade. O servidor calcula o total pelo número de fichas de herói (`class_id`, sem Mestre ou heróis de teste), cobra o comprador e restaura cada ficha até seu máximo normal; procurações do Solo contam separadamente. Os preços unitários são fixos e ignoram modificadores de preço da cidade. Ambas estão nas cinco tavernas.

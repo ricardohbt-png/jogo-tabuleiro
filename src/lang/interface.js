@@ -127,6 +127,10 @@ window.LANG_INTERFACE = {
     "en": "Poisoned Silver Arrows",
     "pt": "Flechas de Prata Envenenadas"
   },
+  "cat.item.flechas_explosivas_envenenadas.nome": {
+    "en": "Poisoned Explosive Arrows",
+    "pt": "Flechas Explosivas Envenenadas"
+  },
   "cat.item.municao_envenenada": {
     "en": "{nome}",
     "pt": "{nome}"
@@ -142,6 +146,10 @@ window.LANG_INTERFACE = {
   "cat.item.virotes_prata_envenenados.nome": {
     "en": "Poisoned Silver Bolts",
     "pt": "Virotes de Prata Envenenados"
+  },
+  "cat.item.virotes_explosivos_envenenados.nome": {
+    "en": "Poisoned Explosive Bolts",
+    "pt": "Virotes Explosivos Envenenados"
   },
   "dado.acerto": {
     "en": "To-hit",
@@ -2094,6 +2102,26 @@ window.LANG_INTERFACE = {
   "ui.cidade.badge_ouro": {
     "en": "💰 {n} Gold",
     "pt": "💰 {n} Ouro"
+  },
+  "ui.cidade.ouro_total_grupo": {
+    "en": "💰 Group total: {n}",
+    "pt": "💰 Total do grupo: {n}"
+  },
+  "ui.cidade.ouro_individual": {
+    "en": "Gold",
+    "pt": "Ouro"
+  },
+  "ui.cidade.ouro_compartilhado_ligado": {
+    "en": "Shared gold: ON",
+    "pt": "Ouro compartilhado: ligado"
+  },
+  "ui.cidade.ouro_compartilhado_desligado": {
+    "en": "Shared gold: OFF",
+    "pt": "Ouro compartilhado: desligado"
+  },
+  "ui.cidade.ouro_compartilhado_ajuda": {
+    "en": "Click to toggle group gold for purchases and services in town.",
+    "pt": "Clique para alternar o uso do ouro do grupo nas compras e serviços da cidade."
   },
   "ui.cidade.cancelar_ajuste": {
     "en": "✕ Cancel adjustment",
@@ -4986,6 +5014,10 @@ window.LANG_INTERFACE = {
   "ui.inv.auto_arrow.silver": {
     "en": "Silver arrows",
     "pt": "Flechas de prata"
+  },
+  "ui.inv.auto_arrow.explosive": {
+    "en": "Explosive arrows",
+    "pt": "Flechas explosivas"
   },
   "ui.inv.auto_arrow.up": {
     "en": "Move up",

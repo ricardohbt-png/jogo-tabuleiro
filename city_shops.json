@@ -70,6 +70,8 @@
       "virotes_prata",
       "virote_incendiario",
       "flecha_incendiaria",
+      "flechas_explosivas",
+      "virotes_explosivos",
       "aljava_pequena",
       "aljava_grande",
       "kit_reparo_campo"
@@ -88,6 +90,7 @@
       "anel_vigia",
       "boina_batedor",
       "boina_alerta",
+      "chapeu_aventureiro",
       "chapeu_bruxo",
       "chapeu_conjurador",
       "chapeu_arquimago",
@@ -224,6 +227,8 @@
     ],
     "taverna": [
       "refeicao_simples",
+      "banquete_comemoracao",
+      "grande_celebracao",
       "banquete",
       "pao",
       "garrafa_agua",
@@ -234,7 +239,9 @@
       "racao_viagem",
       "racao_completa",
       "cantil_agua",
-      "banquete_viagem"
+      "banquete_viagem",
+      "carne_bovina",
+      "leite"
     ]
   },
   "vila_riacho": {
@@ -308,6 +315,8 @@
       "virotes_prata",
       "virote_incendiario",
       "flecha_incendiaria",
+      "flechas_explosivas",
+      "virotes_explosivos",
       "aljava_pequena",
       "aljava_grande",
       "kit_reparo_campo"
@@ -328,6 +337,7 @@
       "anel_vigia",
       "boina_batedor",
       "boina_alerta",
+      "chapeu_aventureiro",
       "chapeu_bruxo",
       "chapeu_conjurador",
       "chapeu_arquimago",
@@ -462,6 +472,8 @@
     ],
     "taverna": [
       "refeicao_simples",
+      "banquete_comemoracao",
+      "grande_celebracao",
       "banquete",
       "pao",
       "garrafa_agua",
@@ -472,7 +484,9 @@
       "racao_viagem",
       "racao_completa",
       "cantil_agua",
-      "banquete_viagem"
+      "banquete_viagem",
+      "carne_bovina",
+      "leite"
     ]
   },
   "vila_corvin": {
@@ -546,6 +560,8 @@
       "virotes_prata",
       "virote_incendiario",
       "flecha_incendiaria",
+      "flechas_explosivas",
+      "virotes_explosivos",
       "aljava_pequena",
       "aljava_grande",
       "kit_reparo_campo"
@@ -566,6 +582,7 @@
       "anel_vigia",
       "boina_batedor",
       "boina_alerta",
+      "chapeu_aventureiro",
       "chapeu_bruxo",
       "chapeu_conjurador",
       "chapeu_arquimago",
@@ -700,6 +717,8 @@
     ],
     "taverna": [
       "refeicao_simples",
+      "banquete_comemoracao",
+      "grande_celebracao",
       "banquete",
       "pao",
       "garrafa_agua",
@@ -710,7 +729,9 @@
       "racao_viagem",
       "racao_completa",
       "cantil_agua",
-      "banquete_viagem"
+      "banquete_viagem",
+      "carne_bovina",
+      "leite"
     ]
   },
   "graciero": {
@@ -784,6 +805,8 @@
       "virotes_prata",
       "virote_incendiario",
       "flecha_incendiaria",
+      "flechas_explosivas",
+      "virotes_explosivos",
       "aljava_pequena",
       "aljava_grande",
       "kit_reparo_campo"
@@ -804,6 +827,7 @@
       "anel_vigia",
       "boina_batedor",
       "boina_alerta",
+      "chapeu_aventureiro",
       "chapeu_bruxo",
       "chapeu_conjurador",
       "chapeu_arquimago",
@@ -938,6 +962,8 @@
     ],
     "taverna": [
       "refeicao_simples",
+      "banquete_comemoracao",
+      "grande_celebracao",
       "banquete",
       "pao",
       "garrafa_agua",
@@ -948,12 +974,16 @@
       "racao_viagem",
       "racao_completa",
       "cantil_agua",
-      "banquete_viagem"
+      "banquete_viagem",
+      "carne_bovina",
+      "leite"
     ]
   },
   "vila_dos_charcos": {
     "taverna": [
       "refeicao_simples",
+      "banquete_comemoracao",
+      "grande_celebracao",
       "caneca_cerveja",
       "cerveja_ana",
       "pao",
@@ -964,7 +994,9 @@
       "racao_viagem",
       "racao_completa",
       "cantil_agua",
-      "banquete_viagem"
+      "banquete_viagem",
+      "carne_bovina",
+      "leite"
     ],
     "ferreiro_weapon": [
       "lamina_do_vento",
@@ -1036,6 +1068,8 @@
       "virotes_prata",
       "virote_incendiario",
       "flecha_incendiaria",
+      "flechas_explosivas",
+      "virotes_explosivos",
       "aljava_pequena",
       "aljava_grande",
       "kit_reparo_campo"
@@ -1071,6 +1105,7 @@
       "anel_vigia",
       "boina_batedor",
       "boina_alerta",
+      "chapeu_aventureiro",
       "chapeu_bruxo",
       "chapeu_conjurador",
       "chapeu_arquimago",

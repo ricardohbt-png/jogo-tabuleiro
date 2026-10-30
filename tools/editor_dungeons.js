@@ -100290,8 +100290,8 @@ window.EDITOR_DUNGEONS = [
       "saida_permitida": true,
       "start_mode": "entrance",
       "grid": {
-        "w": 34,
-        "h": 13
+        "w": 36,
+        "h": 14
       },
       "tiles": [
         [
@@ -100328,78 +100328,46 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
-          0
-        ],
-        [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
           0,
           0,
           0
         ],
         [
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
           0
         ],
         [
@@ -100426,6 +100394,8 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           0,
+          1,
+          1,
           1,
           1,
           1,
@@ -100472,6 +100442,8 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          1,
+          1,
           0
         ],
         [
@@ -100498,6 +100470,46 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
           1,
           1,
           1,
@@ -100533,7 +100545,9 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          2,
+          0,
+          1,
+          1,
           1,
           1,
           1,
@@ -100580,40 +100594,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0
-        ],
-        [
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
           1,
           1,
           0
@@ -100652,6 +100632,46 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -100688,6 +100708,46 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           0
         ],
         [
@@ -100724,9 +100784,13 @@ window.EDITOR_DUNGEONS = [
           0,
           0,
           0,
+          0,
+          0,
           0
         ],
         [
+          0,
+          0,
           0,
           0,
           0,
@@ -100769,7 +100833,7 @@ window.EDITOR_DUNGEONS = [
           "x": 1,
           "y": 2,
           "w": 10,
-          "h": 9,
+          "h": 10,
           "role": "entrance",
           "locked": false,
           "doors": [
@@ -100784,16 +100848,12 @@ window.EDITOR_DUNGEONS = [
           "x": 12,
           "y": 2,
           "w": 10,
-          "h": 9,
+          "h": 10,
           "role": "monster",
           "locked": true,
           "doors": [
             [
               11,
-              6
-            ],
-            [
-              22,
               6
             ]
           ]
@@ -100802,30 +100862,25 @@ window.EDITOR_DUNGEONS = [
           "id": 2,
           "x": 23,
           "y": 2,
-          "w": 10,
-          "h": 9,
+          "w": 12,
+          "h": 10,
           "role": "monster",
-          "locked": true,
-          "doors": [
-            [
-              22,
-              6
-            ]
-          ]
+          "locked": false,
+          "doors": []
         }
       ],
       "door_conditions": {},
       "entrance": {
         "x": 2,
-        "y": 6
+        "y": 7
       },
       "exit": {
-        "x": 31,
-        "y": 6
+        "x": 33,
+        "y": 7
       },
       "monsters": [
         {
-          "type": "goblin_combatente",
+          "type": "bandido",
           "pos": [
             8,
             4
@@ -100835,20 +100890,10 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "goblin_combatente",
+          "type": "bandido",
           "pos": [
             8,
-            8
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            4,
-            4
+            9
           ],
           "room_id": 0,
           "boss": false,
@@ -100858,36 +100903,36 @@ window.EDITOR_DUNGEONS = [
           "type": "soldado",
           "pos": [
             6,
-            7
+            6
           ],
           "room_id": 0,
           "boss": false,
           "target": false
         },
         {
-          "type": "soldado",
+          "type": "bandido",
           "pos": [
-            19,
-            5
+            18,
+            4
           ],
           "room_id": 1,
           "boss": false,
           "target": false
         },
         {
-          "type": "goblin_arqueiro",
+          "type": "bandido",
           "pos": [
-            19,
-            8
+            18,
+            9
           ],
           "room_id": 1,
           "boss": false,
           "target": false
         },
         {
-          "type": "goblin_dual",
+          "type": "bandido",
           "pos": [
-            14,
+            15,
             7
           ],
           "room_id": 1,
@@ -100895,30 +100940,50 @@ window.EDITOR_DUNGEONS = [
           "target": false
         },
         {
-          "type": "goblin_dual",
+          "type": "soldado",
           "pos": [
-            15,
-            3
+            19,
+            7
           ],
           "room_id": 1,
           "boss": false,
           "target": false
         },
         {
-          "type": "goblin_combatente",
+          "type": "bandido",
+          "pos": [
+            32,
+            6
+          ],
+          "room_id": 2,
+          "boss": true,
+          "target": true
+        },
+        {
+          "type": "ogro_clava",
           "pos": [
             29,
-            5
+            7
           ],
           "room_id": 2,
           "boss": false,
           "target": false
         },
         {
-          "type": "goblin_arqueiro",
+          "type": "bandido",
           "pos": [
             29,
-            8
+            4
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            29,
+            10
           ],
           "room_id": 2,
           "boss": false,
@@ -100927,27 +100992,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "soldado",
           "pos": [
-            25,
-            8
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            25,
-            5
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_dual",
-          "pos": [
-            28,
+            27,
             7
           ],
           "room_id": 2,
@@ -100958,7 +101003,7 @@ window.EDITOR_DUNGEONS = [
       "chests": [
         {
           "pos": [
-            31,
+            33,
             5
           ],
           "gold": 25,
@@ -100976,32 +101021,53 @@ window.EDITOR_DUNGEONS = [
           "tipo": "armadilha_urso",
           "pos": [
             6,
-            3
+            4
+          ]
+        },
+        {
+          "tipo": "lamina_escondida",
+          "pos": [
+            9,
+            7
           ]
         },
         {
           "tipo": "armadilha_dardos_envenenados",
           "pos": [
             16,
-            7
+            6
           ],
           "veneno_id": "veneno_escorpiao_pedra"
         },
         {
           "tipo": "rede",
           "pos": [
-            27,
-            6
+            17,
+            8
+          ]
+        },
+        {
+          "tipo": "rede",
+          "pos": [
+            25,
+            5
+          ]
+        },
+        {
+          "tipo": "armadilha_urso",
+          "pos": [
+            31,
+            8
           ]
         }
       ],
       "decorations": [
         {
-          "id": "casa_mesa_cadeiras_1",
-          "type": "mesa_cadeiras",
+          "id": "casa_lareira_1",
+          "type": "lareira",
           "pos": [
             5,
-            5
+            2
           ],
           "facing": [
             0,
@@ -101010,11 +101076,11 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_barril_2",
-          "type": "barril",
+          "id": "casa_mesa_cadeiras_2",
+          "type": "mesa_cadeiras",
           "pos": [
-            5,
-            10
+            4,
+            7
           ],
           "facing": [
             0,
@@ -101026,7 +101092,7 @@ window.EDITOR_DUNGEONS = [
           "id": "casa_barril_3",
           "type": "barril",
           "pos": [
-            5,
+            10,
             2
           ],
           "facing": [
@@ -101036,11 +101102,11 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_estante_4",
-          "type": "estante",
+          "id": "casa_barril_4",
+          "type": "barril",
           "pos": [
-            7,
-            2
+            10,
+            11
           ],
           "facing": [
             0,
@@ -101049,11 +101115,11 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_cama_casal_5",
-          "type": "cama_casal",
+          "id": "casa_barril_5",
+          "type": "barril",
           "pos": [
-            14,
-            4
+            1,
+            11
           ],
           "facing": [
             0,
@@ -101065,7 +101131,7 @@ window.EDITOR_DUNGEONS = [
           "id": "casa_estante_6",
           "type": "estante",
           "pos": [
-            16,
+            8,
             2
           ],
           "facing": [
@@ -101075,11 +101141,11 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_barril_7",
-          "type": "barril",
+          "id": "casa_cama_casal_7",
+          "type": "cama_casal",
           "pos": [
-            21,
-            9
+            13,
+            2
           ],
           "facing": [
             0,
@@ -101088,10 +101154,10 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_barril_8",
-          "type": "barril",
+          "id": "casa_cama_8",
+          "type": "cama",
           "pos": [
-            27,
+            16,
             10
           ],
           "facing": [
@@ -101101,11 +101167,11 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_barril_9",
-          "type": "barril",
+          "id": "casa_estante_9",
+          "type": "estante",
           "pos": [
-            24,
-            10
+            15,
+            2
           ],
           "facing": [
             0,
@@ -101117,8 +101183,8 @@ window.EDITOR_DUNGEONS = [
           "id": "casa_barril_10",
           "type": "barril",
           "pos": [
-            32,
-            8
+            12,
+            11
           ],
           "facing": [
             0,
@@ -101127,11 +101193,115 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         },
         {
-          "id": "casa_estante_armas_11",
+          "id": "casa_barril_11",
+          "type": "barril",
+          "pos": [
+            13,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_estante",
+          "type": "estante_livros",
+          "pos": [
+            21,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_barril_13",
+          "type": "barril",
+          "pos": [
+            34,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_barril_14",
+          "type": "barril",
+          "pos": [
+            34,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_barril_cerveja_15",
+          "type": "barril_cerveja",
+          "pos": [
+            34,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_barril_cerveja_16",
+          "type": "barril_cerveja",
+          "pos": [
+            33,
+            11
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_estante_armas_17",
           "type": "estante_armas",
           "pos": [
-            23,
-            9
+            27,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_estante_18",
+          "type": "estante",
+          "pos": [
+            31,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null
+        },
+        {
+          "id": "casa_mesa_quimica_19",
+          "type": "mesa_quimica",
+          "pos": [
+            25,
+            10
           ],
           "facing": [
             0,
@@ -101140,7 +101310,32 @@ window.EDITOR_DUNGEONS = [
           "loot": null
         }
       ],
-      "secret_passages": [],
+      "secret_passages": [
+        {
+          "id": "casa_passagem_0",
+          "type": "mechanism",
+          "pos": [
+            22,
+            6
+          ],
+          "key_decor_ids": [
+            "casa_estante"
+          ],
+          "keys_mode": "any"
+        },
+        {
+          "id": "casa_passagem_1",
+          "type": "mechanism",
+          "pos": [
+            22,
+            7
+          ],
+          "key_decor_ids": [
+            "casa_estante"
+          ],
+          "keys_mode": "any"
+        }
+      ],
       "master_reinforcements": [],
       "falas": [
         {
@@ -101160,7 +101355,7 @@ window.EDITOR_DUNGEONS = [
           }
         },
         {
-          "id": "casa_porao",
+          "id": "casa_estante",
           "pos": [
             20,
             6
@@ -101169,10 +101364,26 @@ window.EDITOR_DUNGEONS = [
             "nome": "Narrador",
             "emoji": "🕯️"
           },
-          "texto": "Uma tampa no chão deixa subir um cheiro de mofo. Lá embaixo, uma gaveta trancada.",
+          "texto": "Marcas de arrasto no assoalho vão até a estante do canto. Atrás dela sopra um ar frio, de porão.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 3
+          }
+        },
+        {
+          "id": "casa_tome",
+          "pos": [
+            26,
+            7
+          ],
+          "falante": {
+            "nome": "Tomé",
+            "emoji": "🧔"
+          },
+          "texto": "Eu só abria a porta! Foi o bardo da taverna que mandou! Eles me pagam, eu não pergunto...",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 4
           }
         }
       ],
@@ -101190,7 +101401,16 @@ window.EDITOR_DUNGEONS = [
           },
           "fato": "elara_bardo_exposto"
         },
-        "secondary": []
+        "secondary": [
+          {
+            "type": "kill_target",
+            "xp": 90,
+            "reward": {
+              "gold": 20,
+              "items": []
+            }
+          }
+        ]
       },
       "materiais": {
         "0,0": "madeira",
@@ -101227,6 +101447,8 @@ window.EDITOR_DUNGEONS = [
         "31,0": "madeira",
         "32,0": "madeira",
         "33,0": "madeira",
+        "34,0": "madeira",
+        "35,0": "madeira",
         "0,1": "madeira",
         "1,1": "madeira",
         "2,1": "madeira",
@@ -101261,6 +101483,8 @@ window.EDITOR_DUNGEONS = [
         "31,1": "madeira",
         "32,1": "madeira",
         "33,1": "madeira",
+        "34,1": "madeira",
+        "35,1": "madeira",
         "0,2": "madeira",
         "1,2": "madeira_escura",
         "2,2": "madeira_escura",
@@ -101284,17 +101508,19 @@ window.EDITOR_DUNGEONS = [
         "20,2": "madeira_escura",
         "21,2": "madeira_escura",
         "22,2": "madeira",
-        "23,2": "madeira_escura",
-        "24,2": "madeira_escura",
-        "25,2": "madeira_escura",
-        "26,2": "madeira_escura",
-        "27,2": "madeira_escura",
-        "28,2": "madeira_escura",
-        "29,2": "madeira_escura",
-        "30,2": "madeira_escura",
-        "31,2": "madeira_escura",
-        "32,2": "madeira_escura",
-        "33,2": "madeira",
+        "23,2": "terra",
+        "24,2": "terra",
+        "25,2": "terra",
+        "26,2": "terra",
+        "27,2": "terra",
+        "28,2": "terra",
+        "29,2": "terra",
+        "30,2": "terra",
+        "31,2": "terra",
+        "32,2": "terra",
+        "33,2": "terra",
+        "34,2": "terra",
+        "35,2": "madeira",
         "0,3": "madeira",
         "1,3": "madeira_escura",
         "2,3": "madeira_escura",
@@ -101318,17 +101544,19 @@ window.EDITOR_DUNGEONS = [
         "20,3": "madeira_escura",
         "21,3": "madeira_escura",
         "22,3": "madeira",
-        "23,3": "madeira_escura",
-        "24,3": "madeira_escura",
-        "25,3": "madeira_escura",
-        "26,3": "madeira_escura",
-        "27,3": "madeira_escura",
-        "28,3": "madeira_escura",
-        "29,3": "madeira_escura",
-        "30,3": "madeira_escura",
-        "31,3": "madeira_escura",
-        "32,3": "madeira_escura",
-        "33,3": "madeira",
+        "23,3": "terra",
+        "24,3": "terra",
+        "25,3": "terra",
+        "26,3": "terra",
+        "27,3": "terra",
+        "28,3": "terra",
+        "29,3": "terra",
+        "30,3": "terra",
+        "31,3": "terra",
+        "32,3": "terra",
+        "33,3": "terra",
+        "34,3": "terra",
+        "35,3": "madeira",
         "0,4": "madeira",
         "1,4": "madeira_escura",
         "2,4": "madeira_escura",
@@ -101352,17 +101580,19 @@ window.EDITOR_DUNGEONS = [
         "20,4": "madeira_escura",
         "21,4": "madeira_escura",
         "22,4": "madeira",
-        "23,4": "madeira_escura",
-        "24,4": "madeira_escura",
-        "25,4": "madeira_escura",
-        "26,4": "madeira_escura",
-        "27,4": "madeira_escura",
-        "28,4": "madeira_escura",
-        "29,4": "madeira_escura",
-        "30,4": "madeira_escura",
-        "31,4": "madeira_escura",
-        "32,4": "madeira_escura",
-        "33,4": "madeira",
+        "23,4": "terra",
+        "24,4": "terra",
+        "25,4": "terra",
+        "26,4": "terra",
+        "27,4": "terra",
+        "28,4": "terra",
+        "29,4": "terra",
+        "30,4": "terra",
+        "31,4": "terra",
+        "32,4": "terra",
+        "33,4": "terra",
+        "34,4": "terra",
+        "35,4": "madeira",
         "0,5": "madeira",
         "1,5": "madeira_escura",
         "2,5": "madeira_escura",
@@ -101386,17 +101616,19 @@ window.EDITOR_DUNGEONS = [
         "20,5": "madeira_escura",
         "21,5": "madeira_escura",
         "22,5": "madeira",
-        "23,5": "madeira_escura",
-        "24,5": "madeira_escura",
-        "25,5": "madeira_escura",
-        "26,5": "madeira_escura",
-        "27,5": "madeira_escura",
-        "28,5": "madeira_escura",
-        "29,5": "madeira_escura",
-        "30,5": "madeira_escura",
-        "31,5": "madeira_escura",
-        "32,5": "madeira_escura",
-        "33,5": "madeira",
+        "23,5": "terra",
+        "24,5": "terra",
+        "25,5": "terra",
+        "26,5": "terra",
+        "27,5": "terra",
+        "28,5": "terra",
+        "29,5": "terra",
+        "30,5": "terra",
+        "31,5": "terra",
+        "32,5": "terra",
+        "33,5": "terra",
+        "34,5": "terra",
+        "35,5": "madeira",
         "0,6": "madeira",
         "1,6": "madeira_escura",
         "2,6": "madeira_escura",
@@ -101419,18 +101651,20 @@ window.EDITOR_DUNGEONS = [
         "19,6": "madeira_escura",
         "20,6": "madeira_escura",
         "21,6": "madeira_escura",
-        "22,6": "madeira_escura",
-        "23,6": "madeira_escura",
-        "24,6": "madeira_escura",
-        "25,6": "madeira_escura",
-        "26,6": "madeira_escura",
-        "27,6": "madeira_escura",
-        "28,6": "madeira_escura",
-        "29,6": "madeira_escura",
-        "30,6": "madeira_escura",
-        "31,6": "madeira_escura",
-        "32,6": "madeira_escura",
-        "33,6": "madeira",
+        "22,6": "madeira",
+        "23,6": "terra",
+        "24,6": "terra",
+        "25,6": "terra",
+        "26,6": "terra",
+        "27,6": "terra",
+        "28,6": "terra",
+        "29,6": "terra",
+        "30,6": "terra",
+        "31,6": "terra",
+        "32,6": "terra",
+        "33,6": "terra",
+        "34,6": "terra",
+        "35,6": "madeira",
         "0,7": "madeira",
         "1,7": "madeira_escura",
         "2,7": "madeira_escura",
@@ -101454,17 +101688,19 @@ window.EDITOR_DUNGEONS = [
         "20,7": "madeira_escura",
         "21,7": "madeira_escura",
         "22,7": "madeira",
-        "23,7": "madeira_escura",
-        "24,7": "madeira_escura",
-        "25,7": "madeira_escura",
-        "26,7": "madeira_escura",
-        "27,7": "madeira_escura",
-        "28,7": "madeira_escura",
-        "29,7": "madeira_escura",
-        "30,7": "madeira_escura",
-        "31,7": "madeira_escura",
-        "32,7": "madeira_escura",
-        "33,7": "madeira",
+        "23,7": "terra",
+        "24,7": "terra",
+        "25,7": "terra",
+        "26,7": "terra",
+        "27,7": "terra",
+        "28,7": "terra",
+        "29,7": "terra",
+        "30,7": "terra",
+        "31,7": "terra",
+        "32,7": "terra",
+        "33,7": "terra",
+        "34,7": "terra",
+        "35,7": "madeira",
         "0,8": "madeira",
         "1,8": "madeira_escura",
         "2,8": "madeira_escura",
@@ -101488,17 +101724,19 @@ window.EDITOR_DUNGEONS = [
         "20,8": "madeira_escura",
         "21,8": "madeira_escura",
         "22,8": "madeira",
-        "23,8": "madeira_escura",
-        "24,8": "madeira_escura",
-        "25,8": "madeira_escura",
-        "26,8": "madeira_escura",
-        "27,8": "madeira_escura",
-        "28,8": "madeira_escura",
-        "29,8": "madeira_escura",
-        "30,8": "madeira_escura",
-        "31,8": "madeira_escura",
-        "32,8": "madeira_escura",
-        "33,8": "madeira",
+        "23,8": "terra",
+        "24,8": "terra",
+        "25,8": "terra",
+        "26,8": "terra",
+        "27,8": "terra",
+        "28,8": "terra",
+        "29,8": "terra",
+        "30,8": "terra",
+        "31,8": "terra",
+        "32,8": "terra",
+        "33,8": "terra",
+        "34,8": "terra",
+        "35,8": "madeira",
         "0,9": "madeira",
         "1,9": "madeira_escura",
         "2,9": "madeira_escura",
@@ -101522,17 +101760,19 @@ window.EDITOR_DUNGEONS = [
         "20,9": "madeira_escura",
         "21,9": "madeira_escura",
         "22,9": "madeira",
-        "23,9": "madeira_escura",
-        "24,9": "madeira_escura",
-        "25,9": "madeira_escura",
-        "26,9": "madeira_escura",
-        "27,9": "madeira_escura",
-        "28,9": "madeira_escura",
-        "29,9": "madeira_escura",
-        "30,9": "madeira_escura",
-        "31,9": "madeira_escura",
-        "32,9": "madeira_escura",
-        "33,9": "madeira",
+        "23,9": "terra",
+        "24,9": "terra",
+        "25,9": "terra",
+        "26,9": "terra",
+        "27,9": "terra",
+        "28,9": "terra",
+        "29,9": "terra",
+        "30,9": "terra",
+        "31,9": "terra",
+        "32,9": "terra",
+        "33,9": "terra",
+        "34,9": "terra",
+        "35,9": "madeira",
         "0,10": "madeira",
         "1,10": "madeira_escura",
         "2,10": "madeira_escura",
@@ -101556,51 +101796,55 @@ window.EDITOR_DUNGEONS = [
         "20,10": "madeira_escura",
         "21,10": "madeira_escura",
         "22,10": "madeira",
-        "23,10": "madeira_escura",
-        "24,10": "madeira_escura",
-        "25,10": "madeira_escura",
-        "26,10": "madeira_escura",
-        "27,10": "madeira_escura",
-        "28,10": "madeira_escura",
-        "29,10": "madeira_escura",
-        "30,10": "madeira_escura",
-        "31,10": "madeira_escura",
-        "32,10": "madeira_escura",
-        "33,10": "madeira",
+        "23,10": "terra",
+        "24,10": "terra",
+        "25,10": "terra",
+        "26,10": "terra",
+        "27,10": "terra",
+        "28,10": "terra",
+        "29,10": "terra",
+        "30,10": "terra",
+        "31,10": "terra",
+        "32,10": "terra",
+        "33,10": "terra",
+        "34,10": "terra",
+        "35,10": "madeira",
         "0,11": "madeira",
-        "1,11": "madeira",
-        "2,11": "madeira",
-        "3,11": "madeira",
-        "4,11": "madeira",
-        "5,11": "madeira",
-        "6,11": "madeira",
-        "7,11": "madeira",
-        "8,11": "madeira",
-        "9,11": "madeira",
-        "10,11": "madeira",
+        "1,11": "madeira_escura",
+        "2,11": "madeira_escura",
+        "3,11": "madeira_escura",
+        "4,11": "madeira_escura",
+        "5,11": "madeira_escura",
+        "6,11": "madeira_escura",
+        "7,11": "madeira_escura",
+        "8,11": "madeira_escura",
+        "9,11": "madeira_escura",
+        "10,11": "madeira_escura",
         "11,11": "madeira",
-        "12,11": "madeira",
-        "13,11": "madeira",
-        "14,11": "madeira",
-        "15,11": "madeira",
-        "16,11": "madeira",
-        "17,11": "madeira",
-        "18,11": "madeira",
-        "19,11": "madeira",
-        "20,11": "madeira",
-        "21,11": "madeira",
+        "12,11": "madeira_escura",
+        "13,11": "madeira_escura",
+        "14,11": "madeira_escura",
+        "15,11": "madeira_escura",
+        "16,11": "madeira_escura",
+        "17,11": "madeira_escura",
+        "18,11": "madeira_escura",
+        "19,11": "madeira_escura",
+        "20,11": "madeira_escura",
+        "21,11": "madeira_escura",
         "22,11": "madeira",
-        "23,11": "madeira",
-        "24,11": "madeira",
-        "25,11": "madeira",
-        "26,11": "madeira",
-        "27,11": "madeira",
-        "28,11": "madeira",
-        "29,11": "madeira",
-        "30,11": "madeira",
-        "31,11": "madeira",
-        "32,11": "madeira",
-        "33,11": "madeira",
+        "23,11": "terra",
+        "24,11": "terra",
+        "25,11": "terra",
+        "26,11": "terra",
+        "27,11": "terra",
+        "28,11": "terra",
+        "29,11": "terra",
+        "30,11": "terra",
+        "31,11": "terra",
+        "32,11": "terra",
+        "33,11": "terra",
+        "34,11": "terra",
+        "35,11": "madeira",
         "0,12": "madeira",
         "1,12": "madeira",
         "2,12": "madeira",
@@ -101634,7 +101878,45 @@ window.EDITOR_DUNGEONS = [
         "30,12": "madeira",
         "31,12": "madeira",
         "32,12": "madeira",
-        "33,12": "madeira"
+        "33,12": "madeira",
+        "34,12": "madeira",
+        "35,12": "madeira",
+        "0,13": "madeira",
+        "1,13": "madeira",
+        "2,13": "madeira",
+        "3,13": "madeira",
+        "4,13": "madeira",
+        "5,13": "madeira",
+        "6,13": "madeira",
+        "7,13": "madeira",
+        "8,13": "madeira",
+        "9,13": "madeira",
+        "10,13": "madeira",
+        "11,13": "madeira",
+        "12,13": "madeira",
+        "13,13": "madeira",
+        "14,13": "madeira",
+        "15,13": "madeira",
+        "16,13": "madeira",
+        "17,13": "madeira",
+        "18,13": "madeira",
+        "19,13": "madeira",
+        "20,13": "madeira",
+        "21,13": "madeira",
+        "22,13": "madeira",
+        "23,13": "madeira",
+        "24,13": "madeira",
+        "25,13": "madeira",
+        "26,13": "madeira",
+        "27,13": "madeira",
+        "28,13": "madeira",
+        "29,13": "madeira",
+        "30,13": "madeira",
+        "31,13": "madeira",
+        "32,13": "madeira",
+        "33,13": "madeira",
+        "34,13": "madeira",
+        "35,13": "madeira"
       }
     }
   },
@@ -101648,10 +101930,11 @@ window.EDITOR_DUNGEONS = [
       "name": "O Celeiro",
       "ambiente": "ar_livre",
       "saida_permitida": true,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 50,
-        "h": 16
+        "h": 26
       },
       "tiles": [
         [
@@ -102370,6 +102653,526 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          2,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
           1,
           1,
           1,
@@ -102519,6 +103322,14 @@ window.EDITOR_DUNGEONS = [
             [
               25,
               8
+            ],
+            [
+              19,
+              14
+            ],
+            [
+              20,
+              14
             ]
           ]
         },
@@ -102538,6 +103349,14 @@ window.EDITOR_DUNGEONS = [
             [
               38,
               8
+            ],
+            [
+              31,
+              14
+            ],
+            [
+              32,
+              14
             ]
           ]
         },
@@ -102562,10 +103381,13 @@ window.EDITOR_DUNGEONS = [
         "x": 2,
         "y": 8
       },
+      "hero_spawns": [],
       "exit": {
         "x": 47,
         "y": 8
       },
+      "routes": [],
+      "route_exits": [],
       "monsters": [
         {
           "type": "goblin_combatente",
@@ -102575,7 +103397,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_0"
         },
         {
           "type": "goblin_combatente",
@@ -102585,27 +103408,30 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_1"
         },
         {
           "type": "soldado",
           "pos": [
-            4,
-            3
+            9,
+            5
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_2"
         },
         {
           "type": "soldado",
           "pos": [
-            3,
-            4
+            9,
+            8
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_3"
         },
         {
           "type": "goblin_arqueiro",
@@ -102615,7 +103441,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_4"
         },
         {
           "type": "soldado",
@@ -102625,7 +103452,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_5"
         },
         {
           "type": "goblin_arqueiro",
@@ -102635,27 +103463,30 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_6"
         },
         {
-          "type": "goblin_dual",
+          "type": "bandido",
           "pos": [
             23,
             6
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_7"
         },
         {
-          "type": "goblin_dual",
+          "type": "bandido",
           "pos": [
             23,
             11
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_8"
         },
         {
           "type": "soldado",
@@ -102665,17 +103496,19 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_9"
         },
         {
-          "type": "soldado",
+          "type": "orc_guerreiro",
           "pos": [
             30,
             6
           ],
           "room_id": 2,
           "boss": true,
-          "target": true
+          "target": true,
+          "source_id": "mob_10"
         },
         {
           "type": "goblin_combatente",
@@ -102685,7 +103518,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 2,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_11"
         },
         {
           "type": "goblin_combatente",
@@ -102695,37 +103529,41 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 2,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_12"
         },
         {
-          "type": "goblin_dual",
+          "type": "bandido",
           "pos": [
             34,
             9
           ],
           "room_id": 2,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_13"
         },
         {
-          "type": "goblin_dual",
+          "type": "bandido",
           "pos": [
             35,
             7
           ],
           "room_id": 2,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_14"
         },
         {
-          "type": "soldado",
+          "type": "bandido",
           "pos": [
             31,
             10
           ],
           "room_id": 2,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_15"
         },
         {
           "type": "soldado",
@@ -102735,7 +103573,162 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 2,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_16"
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            28,
+            11
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_17"
+        },
+        {
+          "type": "goblin_arqueiro",
+          "pos": [
+            34,
+            3
+          ],
+          "room_id": 2,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_18"
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            45,
+            10
+          ],
+          "room_id": 3,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_19"
+        },
+        {
+          "type": "bandido",
+          "pos": [
+            46,
+            9
+          ],
+          "room_id": 3,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_20"
+        },
+        {
+          "type": "vaca",
+          "pos": [
+            38,
+            19
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_21"
+        },
+        {
+          "type": "vaca",
+          "pos": [
+            41,
+            20
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_22"
+        },
+        {
+          "type": "vaca",
+          "pos": [
+            43,
+            19
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_23"
+        },
+        {
+          "type": "vaca",
+          "pos": [
+            16,
+            12
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_24"
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            40,
+            4
+          ],
+          "room_id": 3,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_25"
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            43,
+            12
+          ],
+          "room_id": 3,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_26"
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            47,
+            5
+          ],
+          "room_id": 3,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_27"
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            23,
+            22
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_28"
+        },
+        {
+          "type": "rato_gigante",
+          "pos": [
+            30,
+            22
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_29"
+        },
+        {
+          "type": "cavalo_sela",
+          "pos": [
+            42,
+            22
+          ],
+          "room_id": null,
+          "boss": false,
+          "target": false,
+          "source_id": "mob_30"
         }
       ],
       "chests": [
@@ -102756,6 +103749,7 @@ window.EDITOR_DUNGEONS = [
       ],
       "traps": [
         {
+          "id": "trap_0",
           "tipo": "armadilha_urso",
           "pos": [
             7,
@@ -102763,6 +103757,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_1",
           "tipo": "rede",
           "pos": [
             19,
@@ -102770,10 +103765,52 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_2",
           "tipo": "armadilha_dardos_envenenados",
           "pos": [
             29,
             5
+          ],
+          "veneno_id": "veneno_escorpiao_pedra"
+        },
+        {
+          "id": "trap_3",
+          "tipo": "lamina_escondida",
+          "pos": [
+            19,
+            15
+          ]
+        },
+        {
+          "id": "trap_4",
+          "tipo": "armadilha_urso",
+          "pos": [
+            31,
+            15
+          ]
+        },
+        {
+          "id": "trap_5",
+          "tipo": "rede",
+          "pos": [
+            41,
+            9
+          ]
+        },
+        {
+          "id": "trap_6",
+          "tipo": "fosso_estacas",
+          "pos": [
+            44,
+            4
+          ]
+        },
+        {
+          "id": "trap_7",
+          "tipo": "armadilha_dardos_envenenados",
+          "pos": [
+            40,
+            19
           ],
           "veneno_id": "veneno_escorpiao_pedra"
         }
@@ -102790,7 +103827,9 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
           "id": "celeiro_cerca_reta_2",
@@ -102803,7 +103842,9 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
           "id": "celeiro_cerca_reta_3",
@@ -102816,7 +103857,9 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
           "id": "celeiro_barril_4",
@@ -102829,7 +103872,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_barril_5",
@@ -102842,7 +103886,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_carroca_6",
@@ -102855,7 +103900,13 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "carroca.png",
+          "size": [
+            3,
+            3
+          ]
         },
         {
           "id": "celeiro_monte_feno_7",
@@ -102868,7 +103919,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_8",
@@ -102881,7 +103933,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_9",
@@ -102894,7 +103947,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_cerca_reta_10",
@@ -102907,7 +103961,9 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
           "id": "celeiro_cerca_reta_11",
@@ -102920,7 +103976,9 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
           "id": "celeiro_cerca_reta_12",
@@ -102933,7 +103991,9 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
           "id": "celeiro_monte_feno_13",
@@ -102946,7 +104006,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_14",
@@ -102959,7 +104020,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_15",
@@ -102972,7 +104034,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_16",
@@ -102985,7 +104048,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_barril_17",
@@ -102998,7 +104062,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_barril_18",
@@ -103011,7 +104076,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_19",
@@ -103024,7 +104090,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_20",
@@ -103037,7 +104104,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_monte_feno_21",
@@ -103050,7 +104118,8 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
         },
         {
           "id": "celeiro_barril_22",
@@ -103063,11 +104132,1242 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_1",
+          "type": "monte_feno",
+          "pos": [
+            46,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            3,
+            3
+          ]
+        },
+        {
+          "id": "decor_2",
+          "type": "monte_feno",
+          "pos": [
+            39,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "decor_3",
+          "type": "monte_feno",
+          "pos": [
+            32,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "decor_4",
+          "type": "monte_feno",
+          "pos": [
+            25,
+            21
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "size": [
+            3,
+            3
+          ]
+        },
+        {
+          "id": "decor_5",
+          "type": "capim_amarelado",
+          "pos": [
+            15,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_6",
+          "type": "capim_amarelado",
+          "pos": [
+            15,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_7",
+          "type": "capim_amarelado",
+          "pos": [
+            16,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_8",
+          "type": "capim_amarelado",
+          "pos": [
+            26,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_9",
+          "type": "capim_amarelado",
+          "pos": [
+            26,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_10",
+          "type": "capim_amarelado",
+          "pos": [
+            27,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_11",
+          "type": "capim_amarelado",
+          "pos": [
+            24,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_12",
+          "type": "capim_amarelado",
+          "pos": [
+            48,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_13",
+          "type": "capim_amarelado",
+          "pos": [
+            47,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_14",
+          "type": "capim_amarelado",
+          "pos": [
+            48,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_15",
+          "type": "capim_amarelado",
+          "pos": [
+            24,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "capim_amarelado.png"
+        },
+        {
+          "id": "decor_16",
+          "type": "barril_cerveja",
+          "pos": [
+            47,
+            22
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "barril_cerveja.png",
+          "size": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "decor_17",
+          "type": "barril_cerveja",
+          "pos": [
+            48,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "barril_cerveja.png"
+        },
+        {
+          "id": "decor_18",
+          "type": "barril_cerveja",
+          "pos": [
+            37,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "barril_cerveja.png"
+        },
+        {
+          "id": "decor_19",
+          "type": "barril_cerveja",
+          "pos": [
+            26,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "barril_cerveja.png"
+        },
+        {
+          "id": "decor_20",
+          "type": "barril_cerveja",
+          "pos": [
+            38,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "barril_cerveja.png"
+        },
+        {
+          "id": "decor_21",
+          "type": "barril_cerveja",
+          "pos": [
+            37,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "barril_cerveja.png"
+        },
+        {
+          "id": "decor_23",
+          "type": "barril",
+          "pos": [
+            14,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_24",
+          "type": "barril",
+          "pos": [
+            14,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_25",
+          "type": "barril",
+          "pos": [
+            15,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_26",
+          "type": "barril",
+          "pos": [
+            23,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_27",
+          "type": "barril",
+          "pos": [
+            24,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_28",
+          "type": "barril",
+          "pos": [
+            25,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_29",
+          "type": "barril",
+          "pos": [
+            26,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_30",
+          "type": "barril",
+          "pos": [
+            24,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_31",
+          "type": "barril",
+          "pos": [
+            25,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_32",
+          "type": "barril",
+          "pos": [
+            1,
+            22
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_33",
+          "type": "barril",
+          "pos": [
+            3,
+            22
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_34",
+          "type": "barril",
+          "pos": [
+            2,
+            22
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_35",
+          "type": "barril",
+          "pos": [
+            1,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_36",
+          "type": "barril",
+          "pos": [
+            2,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_37",
+          "type": "barril",
+          "pos": [
+            3,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_38",
+          "type": "barril",
+          "pos": [
+            4,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_39",
+          "type": "barril",
+          "pos": [
+            12,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_40",
+          "type": "barril",
+          "pos": [
+            12,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_41",
+          "type": "barril",
+          "pos": [
+            12,
+            19
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_42",
+          "type": "barril",
+          "pos": [
+            13,
+            19
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_43",
+          "type": "barril",
+          "pos": [
+            14,
+            19
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_44",
+          "type": "barril",
+          "pos": [
+            13,
+            20
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_45",
+          "type": "barril",
+          "pos": [
+            14,
+            20
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_46",
+          "type": "barril",
+          "pos": [
+            15,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_47",
+          "type": "barril",
+          "pos": [
+            15,
+            19
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_48",
+          "type": "barril",
+          "pos": [
+            39,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_49",
+          "type": "barril",
+          "pos": [
+            40,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_50",
+          "type": "barril",
+          "pos": [
+            39,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_51",
+          "type": "barril",
+          "pos": [
+            40,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_52",
+          "type": "barril",
+          "pos": [
+            41,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_53",
+          "type": "barril",
+          "pos": [
+            39,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_54",
+          "type": "barril",
+          "pos": [
+            40,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_55",
+          "type": "barril",
+          "pos": [
+            43,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_56",
+          "type": "barril",
+          "pos": [
+            42,
+            7
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_57",
+          "type": "barril",
+          "pos": [
+            42,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_58",
+          "type": "barril",
+          "pos": [
+            43,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_59",
+          "type": "barril",
+          "pos": [
+            21,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_60",
+          "type": "barril",
+          "pos": [
+            22,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_61",
+          "type": "barril",
+          "pos": [
+            19,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_62",
+          "type": "barril",
+          "pos": [
+            20,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_64",
+          "type": "estante",
+          "pos": [
+            17,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estante_armas_cranios.png"
+        },
+        {
+          "id": "decor_65",
+          "type": "estante",
+          "pos": [
+            27,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "estante_armas_cranios.png",
+          "size": [
+            3,
+            2
+          ]
+        },
+        {
+          "id": "decor_66",
+          "type": "monte_feno",
+          "pos": [
+            28,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_67",
+          "type": "monte_feno",
+          "pos": [
+            29,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_68",
+          "type": "monte_feno",
+          "pos": [
+            36,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_69",
+          "type": "monte_feno",
+          "pos": [
+            37,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_70",
+          "type": "monte_feno",
+          "pos": [
+            38,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_71",
+          "type": "monte_feno",
+          "pos": [
+            37,
+            22
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_72",
+          "type": "monte_feno",
+          "pos": [
+            36,
+            22
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_73",
+          "type": "monte_feno",
+          "pos": [
+            35,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_74",
+          "type": "monte_feno",
+          "pos": [
+            34,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false
+        },
+        {
+          "id": "decor_75",
+          "type": "balde_agua_chao",
+          "pos": [
+            12,
+            20
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "balde_agua_chao.png"
+        },
+        {
+          "id": "decor_76",
+          "type": "balde_agua_chao",
+          "pos": [
+            26,
+            12
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "balde_agua_chao.png"
+        },
+        {
+          "id": "decor_77",
+          "type": "balde_agua_chao",
+          "pos": [
+            46,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "balde_agua_chao.png"
+        },
+        {
+          "id": "decor_78",
+          "type": "saco_grao",
+          "pos": [
+            37,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_79",
+          "type": "saco_grao",
+          "pos": [
+            36,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_80",
+          "type": "saco_grao",
+          "pos": [
+            23,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_81",
+          "type": "saco_grao",
+          "pos": [
+            16,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_82",
+          "type": "saco_grao",
+          "pos": [
+            13,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_83",
+          "type": "saco_grao",
+          "pos": [
+            12,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_84",
+          "type": "saco_grao",
+          "pos": [
+            14,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "saco_grao.png"
+        },
+        {
+          "id": "decor_85",
+          "type": "ancinho",
+          "pos": [
+            9,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "ancinho.png"
+        },
+        {
+          "id": "decor_86",
+          "type": "forcado",
+          "pos": [
+            6,
+            23
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "forcado.png"
         }
       ],
       "secret_passages": [],
-      "master_reinforcements": [],
       "falas": [
         {
           "id": "celeiro_chegada",
@@ -103102,134 +105402,120 @@ window.EDITOR_DUNGEONS = [
           }
         }
       ],
+      "master_reinforcements": [],
       "expected_party": {
         "heroes": 4,
         "level": 2
       },
-      "objectives": {
-        "primary": {
-          "type": "rescue_prisoner",
-          "xp": 180,
-          "reward": {
-            "gold": 80,
-            "items": []
-          },
-          "fato": "elara_mocas_salvas"
-        },
-        "secondary": [
-          {
-            "type": "kill_target",
-            "xp": 120,
-            "reward": {
-              "gold": 40,
-              "items": []
-            }
-          }
-        ]
+      "prisoner": {
+        "pos": [
+          36,
+          6
+        ],
+        "room_id": 2
       },
-      "marcador_entrada": "poste",
       "materiais": {
-        "0,0": "parede_terra",
-        "1,0": "parede_terra",
-        "2,0": "parede_terra",
-        "3,0": "parede_terra",
-        "4,0": "parede_terra",
-        "5,0": "parede_terra",
-        "6,0": "parede_terra",
-        "7,0": "parede_terra",
-        "8,0": "parede_terra",
-        "9,0": "parede_terra",
-        "10,0": "parede_terra",
-        "11,0": "parede_terra",
-        "12,0": "parede_terra",
-        "13,0": "parede_terra",
-        "14,0": "parede_terra",
-        "15,0": "parede_terra",
-        "16,0": "parede_terra",
-        "17,0": "parede_terra",
-        "18,0": "parede_terra",
-        "19,0": "parede_terra",
-        "20,0": "parede_terra",
-        "21,0": "parede_terra",
-        "22,0": "parede_terra",
-        "23,0": "parede_terra",
-        "24,0": "parede_terra",
-        "25,0": "parede_terra",
-        "26,0": "parede_terra",
-        "27,0": "parede_terra",
-        "28,0": "parede_terra",
-        "29,0": "parede_terra",
-        "30,0": "parede_terra",
-        "31,0": "parede_terra",
-        "32,0": "parede_terra",
-        "33,0": "parede_terra",
-        "34,0": "parede_terra",
-        "35,0": "parede_terra",
-        "36,0": "parede_terra",
-        "37,0": "parede_terra",
-        "38,0": "parede_terra",
-        "39,0": "parede_terra",
-        "40,0": "parede_terra",
-        "41,0": "parede_terra",
-        "42,0": "parede_terra",
-        "43,0": "parede_terra",
-        "44,0": "parede_terra",
-        "45,0": "parede_terra",
-        "46,0": "parede_terra",
-        "47,0": "parede_terra",
-        "48,0": "parede_terra",
-        "49,0": "parede_terra",
-        "0,1": "parede_terra",
-        "1,1": "parede_terra",
-        "2,1": "parede_terra",
-        "3,1": "parede_terra",
-        "4,1": "parede_terra",
-        "5,1": "parede_terra",
-        "6,1": "parede_terra",
-        "7,1": "parede_terra",
-        "8,1": "parede_terra",
-        "9,1": "parede_terra",
-        "10,1": "parede_terra",
-        "11,1": "parede_terra",
-        "12,1": "parede_terra",
-        "13,1": "parede_terra",
-        "14,1": "parede_terra",
-        "15,1": "parede_terra",
-        "16,1": "parede_terra",
-        "17,1": "parede_terra",
-        "18,1": "parede_terra",
-        "19,1": "parede_terra",
-        "20,1": "parede_terra",
-        "21,1": "parede_terra",
-        "22,1": "parede_terra",
-        "23,1": "parede_terra",
-        "24,1": "parede_terra",
-        "25,1": "parede_terra",
-        "26,1": "parede_terra",
-        "27,1": "parede_terra",
-        "28,1": "parede_terra",
-        "29,1": "parede_terra",
-        "30,1": "parede_terra",
-        "31,1": "parede_terra",
-        "32,1": "parede_terra",
-        "33,1": "parede_terra",
-        "34,1": "parede_terra",
-        "35,1": "parede_terra",
-        "36,1": "parede_terra",
-        "37,1": "parede_terra",
-        "38,1": "parede_terra",
-        "39,1": "parede_terra",
-        "40,1": "parede_terra",
-        "41,1": "parede_terra",
-        "42,1": "parede_terra",
-        "43,1": "parede_terra",
-        "44,1": "parede_terra",
-        "45,1": "parede_terra",
-        "46,1": "parede_terra",
-        "47,1": "parede_terra",
-        "48,1": "parede_terra",
-        "49,1": "parede_terra",
-        "0,2": "parede_terra",
+        "0,0": "madeira",
+        "1,0": "madeira",
+        "2,0": "madeira",
+        "3,0": "madeira",
+        "4,0": "madeira",
+        "5,0": "madeira",
+        "6,0": "madeira",
+        "7,0": "madeira",
+        "8,0": "madeira",
+        "9,0": "madeira",
+        "10,0": "madeira",
+        "11,0": "madeira",
+        "12,0": "madeira",
+        "13,0": "madeira",
+        "14,0": "madeira",
+        "15,0": "madeira",
+        "16,0": "madeira",
+        "17,0": "madeira",
+        "18,0": "madeira",
+        "19,0": "madeira",
+        "20,0": "madeira",
+        "21,0": "madeira",
+        "22,0": "madeira",
+        "23,0": "madeira",
+        "24,0": "madeira",
+        "25,0": "madeira",
+        "26,0": "madeira",
+        "27,0": "madeira",
+        "28,0": "madeira",
+        "29,0": "madeira",
+        "30,0": "madeira",
+        "31,0": "madeira",
+        "32,0": "madeira",
+        "33,0": "madeira",
+        "34,0": "madeira",
+        "35,0": "madeira",
+        "36,0": "madeira",
+        "37,0": "madeira",
+        "38,0": "madeira",
+        "39,0": "madeira",
+        "40,0": "madeira",
+        "41,0": "madeira",
+        "42,0": "madeira",
+        "43,0": "madeira",
+        "44,0": "madeira",
+        "45,0": "madeira",
+        "46,0": "madeira",
+        "47,0": "madeira",
+        "48,0": "madeira",
+        "49,0": "madeira",
+        "0,1": "madeira",
+        "1,1": "madeira",
+        "2,1": "madeira",
+        "3,1": "madeira",
+        "4,1": "madeira",
+        "5,1": "madeira",
+        "6,1": "madeira",
+        "7,1": "madeira",
+        "8,1": "madeira",
+        "9,1": "madeira",
+        "10,1": "madeira",
+        "11,1": "madeira",
+        "12,1": "madeira",
+        "13,1": "madeira",
+        "14,1": "madeira",
+        "15,1": "madeira",
+        "16,1": "madeira",
+        "17,1": "madeira",
+        "18,1": "madeira",
+        "19,1": "madeira",
+        "20,1": "madeira",
+        "21,1": "madeira",
+        "22,1": "madeira",
+        "23,1": "madeira",
+        "24,1": "madeira",
+        "25,1": "madeira",
+        "26,1": "madeira",
+        "27,1": "madeira",
+        "28,1": "madeira",
+        "29,1": "madeira",
+        "30,1": "madeira",
+        "31,1": "madeira",
+        "32,1": "madeira",
+        "33,1": "madeira",
+        "34,1": "madeira",
+        "35,1": "madeira",
+        "36,1": "madeira",
+        "37,1": "madeira",
+        "38,1": "madeira",
+        "39,1": "madeira",
+        "40,1": "madeira",
+        "41,1": "madeira",
+        "42,1": "madeira",
+        "43,1": "madeira",
+        "44,1": "madeira",
+        "45,1": "madeira",
+        "46,1": "madeira",
+        "47,1": "madeira",
+        "48,1": "madeira",
+        "49,1": "madeira",
+        "0,2": "madeira",
         "1,2": "terra",
         "2,2": "terra",
         "3,2": "terra",
@@ -103242,7 +105528,7 @@ window.EDITOR_DUNGEONS = [
         "10,2": "terra",
         "11,2": "terra",
         "12,2": "terra",
-        "13,2": "parede_terra",
+        "13,2": "madeira",
         "14,2": "terra",
         "15,2": "terra",
         "16,2": "terra",
@@ -103254,7 +105540,7 @@ window.EDITOR_DUNGEONS = [
         "22,2": "terra",
         "23,2": "terra",
         "24,2": "terra",
-        "25,2": "parede_terra",
+        "25,2": "madeira",
         "26,2": "terra",
         "27,2": "terra",
         "28,2": "terra",
@@ -103267,7 +105553,7 @@ window.EDITOR_DUNGEONS = [
         "35,2": "terra",
         "36,2": "terra",
         "37,2": "terra",
-        "38,2": "parede_terra",
+        "38,2": "madeira",
         "39,2": "terra",
         "40,2": "terra",
         "41,2": "terra",
@@ -103278,8 +105564,8 @@ window.EDITOR_DUNGEONS = [
         "46,2": "terra",
         "47,2": "terra",
         "48,2": "terra",
-        "49,2": "parede_terra",
-        "0,3": "parede_terra",
+        "49,2": "madeira",
+        "0,3": "madeira",
         "1,3": "terra",
         "2,3": "terra",
         "3,3": "terra",
@@ -103292,7 +105578,7 @@ window.EDITOR_DUNGEONS = [
         "10,3": "terra",
         "11,3": "terra",
         "12,3": "terra",
-        "13,3": "parede_terra",
+        "13,3": "madeira",
         "14,3": "terra",
         "15,3": "terra",
         "16,3": "terra",
@@ -103304,7 +105590,7 @@ window.EDITOR_DUNGEONS = [
         "22,3": "terra",
         "23,3": "terra",
         "24,3": "terra",
-        "25,3": "parede_terra",
+        "25,3": "madeira",
         "26,3": "terra",
         "27,3": "terra",
         "28,3": "terra",
@@ -103317,7 +105603,7 @@ window.EDITOR_DUNGEONS = [
         "35,3": "terra",
         "36,3": "terra",
         "37,3": "terra",
-        "38,3": "parede_terra",
+        "38,3": "madeira",
         "39,3": "terra",
         "40,3": "terra",
         "41,3": "terra",
@@ -103328,8 +105614,8 @@ window.EDITOR_DUNGEONS = [
         "46,3": "terra",
         "47,3": "terra",
         "48,3": "terra",
-        "49,3": "parede_terra",
-        "0,4": "parede_terra",
+        "49,3": "madeira",
+        "0,4": "madeira",
         "1,4": "terra",
         "2,4": "terra",
         "3,4": "terra",
@@ -103342,7 +105628,7 @@ window.EDITOR_DUNGEONS = [
         "10,4": "terra",
         "11,4": "terra",
         "12,4": "terra",
-        "13,4": "parede_terra",
+        "13,4": "madeira",
         "14,4": "terra",
         "15,4": "terra",
         "16,4": "terra",
@@ -103354,7 +105640,7 @@ window.EDITOR_DUNGEONS = [
         "22,4": "terra",
         "23,4": "terra",
         "24,4": "terra",
-        "25,4": "parede_terra",
+        "25,4": "madeira",
         "26,4": "terra",
         "27,4": "terra",
         "28,4": "terra",
@@ -103367,7 +105653,7 @@ window.EDITOR_DUNGEONS = [
         "35,4": "terra",
         "36,4": "terra",
         "37,4": "terra",
-        "38,4": "parede_terra",
+        "38,4": "madeira",
         "39,4": "terra",
         "40,4": "terra",
         "41,4": "terra",
@@ -103378,8 +105664,8 @@ window.EDITOR_DUNGEONS = [
         "46,4": "terra",
         "47,4": "terra",
         "48,4": "terra",
-        "49,4": "parede_terra",
-        "0,5": "parede_terra",
+        "49,4": "madeira",
+        "0,5": "madeira",
         "1,5": "terra",
         "2,5": "terra",
         "3,5": "terra",
@@ -103392,7 +105678,7 @@ window.EDITOR_DUNGEONS = [
         "10,5": "terra",
         "11,5": "terra",
         "12,5": "terra",
-        "13,5": "parede_terra",
+        "13,5": "madeira",
         "14,5": "terra",
         "15,5": "terra",
         "16,5": "terra",
@@ -103404,7 +105690,7 @@ window.EDITOR_DUNGEONS = [
         "22,5": "terra",
         "23,5": "terra",
         "24,5": "terra",
-        "25,5": "parede_terra",
+        "25,5": "madeira",
         "26,5": "terra",
         "27,5": "terra",
         "28,5": "terra",
@@ -103417,7 +105703,7 @@ window.EDITOR_DUNGEONS = [
         "35,5": "terra",
         "36,5": "terra",
         "37,5": "terra",
-        "38,5": "parede_terra",
+        "38,5": "madeira",
         "39,5": "terra",
         "40,5": "terra",
         "41,5": "terra",
@@ -103428,8 +105714,8 @@ window.EDITOR_DUNGEONS = [
         "46,5": "terra",
         "47,5": "terra",
         "48,5": "terra",
-        "49,5": "parede_terra",
-        "0,6": "parede_terra",
+        "49,5": "madeira",
+        "0,6": "madeira",
         "1,6": "terra",
         "2,6": "terra",
         "3,6": "terra",
@@ -103442,7 +105728,7 @@ window.EDITOR_DUNGEONS = [
         "10,6": "terra",
         "11,6": "terra",
         "12,6": "terra",
-        "13,6": "parede_terra",
+        "13,6": "madeira",
         "14,6": "terra",
         "15,6": "terra",
         "16,6": "terra",
@@ -103454,7 +105740,7 @@ window.EDITOR_DUNGEONS = [
         "22,6": "terra",
         "23,6": "terra",
         "24,6": "terra",
-        "25,6": "parede_terra",
+        "25,6": "madeira",
         "26,6": "terra",
         "27,6": "terra",
         "28,6": "terra",
@@ -103467,7 +105753,7 @@ window.EDITOR_DUNGEONS = [
         "35,6": "terra",
         "36,6": "terra",
         "37,6": "terra",
-        "38,6": "parede_terra",
+        "38,6": "madeira",
         "39,6": "terra",
         "40,6": "terra",
         "41,6": "terra",
@@ -103478,8 +105764,8 @@ window.EDITOR_DUNGEONS = [
         "46,6": "terra",
         "47,6": "terra",
         "48,6": "terra",
-        "49,6": "parede_terra",
-        "0,7": "parede_terra",
+        "49,6": "madeira",
+        "0,7": "madeira",
         "1,7": "terra",
         "2,7": "terra",
         "3,7": "terra",
@@ -103492,7 +105778,7 @@ window.EDITOR_DUNGEONS = [
         "10,7": "terra",
         "11,7": "terra",
         "12,7": "terra",
-        "13,7": "parede_terra",
+        "13,7": "madeira",
         "14,7": "terra",
         "15,7": "terra",
         "16,7": "terra",
@@ -103504,7 +105790,7 @@ window.EDITOR_DUNGEONS = [
         "22,7": "terra",
         "23,7": "terra",
         "24,7": "terra",
-        "25,7": "parede_terra",
+        "25,7": "madeira",
         "26,7": "terra",
         "27,7": "terra",
         "28,7": "terra",
@@ -103517,7 +105803,7 @@ window.EDITOR_DUNGEONS = [
         "35,7": "terra",
         "36,7": "terra",
         "37,7": "terra",
-        "38,7": "parede_terra",
+        "38,7": "madeira",
         "39,7": "terra",
         "40,7": "terra",
         "41,7": "terra",
@@ -103528,8 +105814,8 @@ window.EDITOR_DUNGEONS = [
         "46,7": "terra",
         "47,7": "terra",
         "48,7": "terra",
-        "49,7": "parede_terra",
-        "0,8": "parede_terra",
+        "49,7": "madeira",
+        "0,8": "madeira",
         "1,8": "terra",
         "2,8": "terra",
         "3,8": "terra",
@@ -103578,8 +105864,8 @@ window.EDITOR_DUNGEONS = [
         "46,8": "terra",
         "47,8": "terra",
         "48,8": "terra",
-        "49,8": "parede_terra",
-        "0,9": "parede_terra",
+        "49,8": "madeira",
+        "0,9": "madeira",
         "1,9": "terra",
         "2,9": "terra",
         "3,9": "terra",
@@ -103592,7 +105878,7 @@ window.EDITOR_DUNGEONS = [
         "10,9": "terra",
         "11,9": "terra",
         "12,9": "terra",
-        "13,9": "parede_terra",
+        "13,9": "madeira",
         "14,9": "terra",
         "15,9": "terra",
         "16,9": "terra",
@@ -103604,7 +105890,7 @@ window.EDITOR_DUNGEONS = [
         "22,9": "terra",
         "23,9": "terra",
         "24,9": "terra",
-        "25,9": "parede_terra",
+        "25,9": "madeira",
         "26,9": "terra",
         "27,9": "terra",
         "28,9": "terra",
@@ -103617,7 +105903,7 @@ window.EDITOR_DUNGEONS = [
         "35,9": "terra",
         "36,9": "terra",
         "37,9": "terra",
-        "38,9": "parede_terra",
+        "38,9": "madeira",
         "39,9": "terra",
         "40,9": "terra",
         "41,9": "terra",
@@ -103628,8 +105914,8 @@ window.EDITOR_DUNGEONS = [
         "46,9": "terra",
         "47,9": "terra",
         "48,9": "terra",
-        "49,9": "parede_terra",
-        "0,10": "parede_terra",
+        "49,9": "madeira",
+        "0,10": "madeira",
         "1,10": "terra",
         "2,10": "terra",
         "3,10": "terra",
@@ -103642,7 +105928,7 @@ window.EDITOR_DUNGEONS = [
         "10,10": "terra",
         "11,10": "terra",
         "12,10": "terra",
-        "13,10": "parede_terra",
+        "13,10": "madeira",
         "14,10": "terra",
         "15,10": "terra",
         "16,10": "terra",
@@ -103654,7 +105940,7 @@ window.EDITOR_DUNGEONS = [
         "22,10": "terra",
         "23,10": "terra",
         "24,10": "terra",
-        "25,10": "parede_terra",
+        "25,10": "madeira",
         "26,10": "terra",
         "27,10": "terra",
         "28,10": "terra",
@@ -103667,7 +105953,7 @@ window.EDITOR_DUNGEONS = [
         "35,10": "terra",
         "36,10": "terra",
         "37,10": "terra",
-        "38,10": "parede_terra",
+        "38,10": "madeira",
         "39,10": "terra",
         "40,10": "terra",
         "41,10": "terra",
@@ -103678,8 +105964,8 @@ window.EDITOR_DUNGEONS = [
         "46,10": "terra",
         "47,10": "terra",
         "48,10": "terra",
-        "49,10": "parede_terra",
-        "0,11": "parede_terra",
+        "49,10": "madeira",
+        "0,11": "madeira",
         "1,11": "terra",
         "2,11": "terra",
         "3,11": "terra",
@@ -103692,7 +105978,7 @@ window.EDITOR_DUNGEONS = [
         "10,11": "terra",
         "11,11": "terra",
         "12,11": "terra",
-        "13,11": "parede_terra",
+        "13,11": "madeira",
         "14,11": "terra",
         "15,11": "terra",
         "16,11": "terra",
@@ -103704,7 +105990,7 @@ window.EDITOR_DUNGEONS = [
         "22,11": "terra",
         "23,11": "terra",
         "24,11": "terra",
-        "25,11": "parede_terra",
+        "25,11": "madeira",
         "26,11": "terra",
         "27,11": "terra",
         "28,11": "terra",
@@ -103717,7 +106003,7 @@ window.EDITOR_DUNGEONS = [
         "35,11": "terra",
         "36,11": "terra",
         "37,11": "terra",
-        "38,11": "parede_terra",
+        "38,11": "madeira",
         "39,11": "terra",
         "40,11": "terra",
         "41,11": "terra",
@@ -103728,8 +106014,8 @@ window.EDITOR_DUNGEONS = [
         "46,11": "terra",
         "47,11": "terra",
         "48,11": "terra",
-        "49,11": "parede_terra",
-        "0,12": "parede_terra",
+        "49,11": "madeira",
+        "0,12": "madeira",
         "1,12": "terra",
         "2,12": "terra",
         "3,12": "terra",
@@ -103742,7 +106028,7 @@ window.EDITOR_DUNGEONS = [
         "10,12": "terra",
         "11,12": "terra",
         "12,12": "terra",
-        "13,12": "parede_terra",
+        "13,12": "madeira",
         "14,12": "terra",
         "15,12": "terra",
         "16,12": "terra",
@@ -103754,7 +106040,7 @@ window.EDITOR_DUNGEONS = [
         "22,12": "terra",
         "23,12": "terra",
         "24,12": "terra",
-        "25,12": "parede_terra",
+        "25,12": "madeira",
         "26,12": "terra",
         "27,12": "terra",
         "28,12": "terra",
@@ -103767,7 +106053,7 @@ window.EDITOR_DUNGEONS = [
         "35,12": "terra",
         "36,12": "terra",
         "37,12": "terra",
-        "38,12": "parede_terra",
+        "38,12": "madeira",
         "39,12": "terra",
         "40,12": "terra",
         "41,12": "terra",
@@ -103778,8 +106064,8 @@ window.EDITOR_DUNGEONS = [
         "46,12": "terra",
         "47,12": "terra",
         "48,12": "terra",
-        "49,12": "parede_terra",
-        "0,13": "parede_terra",
+        "49,12": "madeira",
+        "0,13": "madeira",
         "1,13": "terra",
         "2,13": "terra",
         "3,13": "terra",
@@ -103792,7 +106078,7 @@ window.EDITOR_DUNGEONS = [
         "10,13": "terra",
         "11,13": "terra",
         "12,13": "terra",
-        "13,13": "parede_terra",
+        "13,13": "madeira",
         "14,13": "terra",
         "15,13": "terra",
         "16,13": "terra",
@@ -103804,7 +106090,7 @@ window.EDITOR_DUNGEONS = [
         "22,13": "terra",
         "23,13": "terra",
         "24,13": "terra",
-        "25,13": "parede_terra",
+        "25,13": "madeira",
         "26,13": "terra",
         "27,13": "terra",
         "28,13": "terra",
@@ -103817,7 +106103,7 @@ window.EDITOR_DUNGEONS = [
         "35,13": "terra",
         "36,13": "terra",
         "37,13": "terra",
-        "38,13": "parede_terra",
+        "38,13": "madeira",
         "39,13": "terra",
         "40,13": "terra",
         "41,13": "terra",
@@ -103828,114 +106114,873 @@ window.EDITOR_DUNGEONS = [
         "46,13": "terra",
         "47,13": "terra",
         "48,13": "terra",
-        "49,13": "parede_terra",
-        "0,14": "parede_terra",
-        "1,14": "parede_terra",
-        "2,14": "parede_terra",
-        "3,14": "parede_terra",
-        "4,14": "parede_terra",
-        "5,14": "parede_terra",
-        "6,14": "parede_terra",
-        "7,14": "parede_terra",
-        "8,14": "parede_terra",
-        "9,14": "parede_terra",
-        "10,14": "parede_terra",
-        "11,14": "parede_terra",
-        "12,14": "parede_terra",
-        "13,14": "parede_terra",
-        "14,14": "parede_terra",
-        "15,14": "parede_terra",
-        "16,14": "parede_terra",
-        "17,14": "parede_terra",
-        "18,14": "parede_terra",
-        "19,14": "parede_terra",
-        "20,14": "parede_terra",
-        "21,14": "parede_terra",
-        "22,14": "parede_terra",
-        "23,14": "parede_terra",
-        "24,14": "parede_terra",
-        "25,14": "parede_terra",
-        "26,14": "parede_terra",
-        "27,14": "parede_terra",
-        "28,14": "parede_terra",
-        "29,14": "parede_terra",
-        "30,14": "parede_terra",
-        "31,14": "parede_terra",
-        "32,14": "parede_terra",
-        "33,14": "parede_terra",
-        "34,14": "parede_terra",
-        "35,14": "parede_terra",
-        "36,14": "parede_terra",
-        "37,14": "parede_terra",
-        "38,14": "parede_terra",
-        "39,14": "parede_terra",
-        "40,14": "parede_terra",
-        "41,14": "parede_terra",
-        "42,14": "parede_terra",
-        "43,14": "parede_terra",
-        "44,14": "parede_terra",
-        "45,14": "parede_terra",
-        "46,14": "parede_terra",
-        "47,14": "parede_terra",
-        "48,14": "parede_terra",
-        "49,14": "parede_terra",
-        "0,15": "parede_terra",
-        "1,15": "parede_terra",
-        "2,15": "parede_terra",
-        "3,15": "parede_terra",
-        "4,15": "parede_terra",
-        "5,15": "parede_terra",
-        "6,15": "parede_terra",
-        "7,15": "parede_terra",
-        "8,15": "parede_terra",
-        "9,15": "parede_terra",
-        "10,15": "parede_terra",
-        "11,15": "parede_terra",
-        "12,15": "parede_terra",
-        "13,15": "parede_terra",
-        "14,15": "parede_terra",
-        "15,15": "parede_terra",
-        "16,15": "parede_terra",
-        "17,15": "parede_terra",
-        "18,15": "parede_terra",
-        "19,15": "parede_terra",
-        "20,15": "parede_terra",
-        "21,15": "parede_terra",
-        "22,15": "parede_terra",
-        "23,15": "parede_terra",
-        "24,15": "parede_terra",
-        "25,15": "parede_terra",
-        "26,15": "parede_terra",
-        "27,15": "parede_terra",
-        "28,15": "parede_terra",
-        "29,15": "parede_terra",
-        "30,15": "parede_terra",
-        "31,15": "parede_terra",
-        "32,15": "parede_terra",
-        "33,15": "parede_terra",
-        "34,15": "parede_terra",
-        "35,15": "parede_terra",
-        "36,15": "parede_terra",
-        "37,15": "parede_terra",
-        "38,15": "parede_terra",
-        "39,15": "parede_terra",
-        "40,15": "parede_terra",
-        "41,15": "parede_terra",
-        "42,15": "parede_terra",
-        "43,15": "parede_terra",
-        "44,15": "parede_terra",
-        "45,15": "parede_terra",
-        "46,15": "parede_terra",
-        "47,15": "parede_terra",
-        "48,15": "parede_terra",
-        "49,15": "parede_terra"
+        "49,13": "madeira",
+        "0,14": "madeira",
+        "1,14": "terra",
+        "2,14": "terra",
+        "3,14": "terra",
+        "4,14": "terra",
+        "5,14": "terra",
+        "6,14": "terra",
+        "7,14": "terra",
+        "8,14": "terra",
+        "9,14": "terra",
+        "10,14": "terra",
+        "11,14": "terra",
+        "12,14": "terra",
+        "13,14": "madeira",
+        "14,14": "madeira",
+        "15,14": "madeira",
+        "16,14": "madeira",
+        "17,14": "madeira",
+        "18,14": "madeira",
+        "21,14": "madeira",
+        "22,14": "madeira",
+        "23,14": "madeira",
+        "24,14": "madeira",
+        "25,14": "madeira",
+        "26,14": "madeira",
+        "27,14": "madeira",
+        "28,14": "madeira",
+        "29,14": "madeira",
+        "30,14": "madeira",
+        "33,14": "madeira",
+        "34,14": "madeira",
+        "35,14": "madeira",
+        "36,14": "madeira",
+        "37,14": "madeira",
+        "38,14": "madeira",
+        "39,14": "madeira",
+        "40,14": "madeira",
+        "41,14": "madeira",
+        "42,14": "madeira",
+        "43,14": "madeira",
+        "44,14": "madeira",
+        "45,14": "madeira",
+        "46,14": "madeira",
+        "47,14": "madeira",
+        "48,14": "madeira",
+        "49,14": "madeira",
+        "0,15": "madeira",
+        "1,15": "terra",
+        "2,15": "terra",
+        "3,15": "terra",
+        "4,15": "terra",
+        "5,15": "terra",
+        "6,15": "terra",
+        "7,15": "terra",
+        "8,15": "terra",
+        "9,15": "terra",
+        "10,15": "terra",
+        "11,15": "terra",
+        "12,15": "terra",
+        "13,15": "madeira",
+        "14,15": "madeira",
+        "15,15": "madeira",
+        "16,15": "madeira",
+        "17,15": "madeira",
+        "18,15": "madeira",
+        "19,15": "terra",
+        "20,15": "terra",
+        "21,15": "madeira",
+        "22,15": "madeira",
+        "23,15": "madeira",
+        "24,15": "madeira",
+        "25,15": "madeira",
+        "26,15": "madeira",
+        "27,15": "madeira",
+        "28,15": "madeira",
+        "29,15": "madeira",
+        "30,15": "madeira",
+        "31,15": "terra",
+        "32,15": "terra",
+        "33,15": "madeira",
+        "34,15": "madeira",
+        "35,15": "madeira",
+        "36,15": "madeira",
+        "37,15": "madeira",
+        "38,15": "madeira",
+        "39,15": "madeira",
+        "40,15": "madeira",
+        "41,15": "madeira",
+        "42,15": "madeira",
+        "43,15": "madeira",
+        "44,15": "madeira",
+        "45,15": "madeira",
+        "46,15": "madeira",
+        "47,15": "madeira",
+        "48,15": "madeira",
+        "49,15": "madeira",
+        "0,16": "madeira",
+        "0,17": "madeira",
+        "0,18": "madeira",
+        "0,19": "madeira",
+        "0,20": "madeira",
+        "0,21": "madeira",
+        "1,21": "terra",
+        "2,21": "terra",
+        "3,21": "terra",
+        "4,21": "terra",
+        "5,21": "terra",
+        "6,21": "terra",
+        "7,21": "terra",
+        "8,21": "terra",
+        "9,21": "terra",
+        "10,21": "terra",
+        "11,21": "terra",
+        "12,21": "terra",
+        "13,21": "terra",
+        "14,21": "terra",
+        "15,21": "terra",
+        "16,21": "terra",
+        "17,21": "terra",
+        "18,21": "terra",
+        "19,21": "terra",
+        "21,21": "terra",
+        "20,21": "terra",
+        "22,21": "terra",
+        "23,21": "terra",
+        "24,20": "terra",
+        "25,20": "terra",
+        "25,21": "terra",
+        "24,21": "terra",
+        "26,21": "terra",
+        "27,21": "terra",
+        "28,21": "terra",
+        "29,21": "terra",
+        "30,21": "terra",
+        "31,20": "terra",
+        "32,20": "terra",
+        "33,20": "terra",
+        "33,21": "terra",
+        "34,21": "terra",
+        "35,21": "terra",
+        "36,21": "terra",
+        "37,21": "terra",
+        "38,21": "terra",
+        "39,21": "terra",
+        "40,21": "terra",
+        "41,21": "terra",
+        "42,21": "terra",
+        "43,21": "terra",
+        "44,21": "terra",
+        "45,21": "terra",
+        "46,21": "terra",
+        "47,21": "terra",
+        "48,21": "terra",
+        "49,21": "madeira",
+        "49,20": "madeira",
+        "48,20": "terra",
+        "47,20": "terra",
+        "46,20": "terra",
+        "45,20": "terra",
+        "44,20": "terra",
+        "43,20": "terra",
+        "42,20": "terra",
+        "41,20": "terra",
+        "40,20": "terra",
+        "39,20": "terra",
+        "38,20": "terra",
+        "37,20": "terra",
+        "36,20": "terra",
+        "35,20": "terra",
+        "34,20": "terra",
+        "30,20": "terra",
+        "29,20": "terra",
+        "28,20": "terra",
+        "27,20": "terra",
+        "26,20": "terra",
+        "31,21": "terra",
+        "32,21": "terra",
+        "23,20": "terra",
+        "22,20": "terra",
+        "1,20": "terra",
+        "2,20": "terra",
+        "3,20": "terra",
+        "4,20": "terra",
+        "5,20": "terra",
+        "6,20": "terra",
+        "7,20": "terra",
+        "8,20": "terra",
+        "9,20": "terra",
+        "10,20": "terra",
+        "11,20": "terra",
+        "12,20": "terra",
+        "13,20": "terra",
+        "14,20": "terra",
+        "15,20": "terra",
+        "16,20": "terra",
+        "17,20": "terra",
+        "18,20": "terra",
+        "19,20": "terra",
+        "20,20": "terra",
+        "21,20": "terra",
+        "49,16": "madeira",
+        "49,17": "madeira",
+        "49,18": "madeira",
+        "49,19": "madeira",
+        "1,16": "terra",
+        "1,17": "terra",
+        "2,17": "terra",
+        "2,18": "terra",
+        "2,19": "terra",
+        "1,18": "terra",
+        "1,19": "terra",
+        "12,16": "terra",
+        "12,17": "terra",
+        "12,18": "terra",
+        "12,19": "terra",
+        "11,19": "terra",
+        "10,19": "terra",
+        "9,19": "terra",
+        "8,19": "terra",
+        "7,19": "terra",
+        "6,19": "terra",
+        "5,19": "terra",
+        "4,19": "terra",
+        "3,19": "terra",
+        "3,18": "terra",
+        "3,17": "terra",
+        "2,16": "terra",
+        "10,16": "terra",
+        "9,16": "terra",
+        "8,16": "terra",
+        "11,16": "terra",
+        "7,16": "terra",
+        "6,16": "terra",
+        "5,16": "terra",
+        "4,16": "terra",
+        "3,16": "terra",
+        "4,17": "terra",
+        "5,17": "terra",
+        "6,17": "terra",
+        "7,17": "terra",
+        "8,17": "terra",
+        "9,17": "terra",
+        "10,17": "terra",
+        "11,17": "terra",
+        "11,18": "terra",
+        "10,18": "terra",
+        "9,18": "terra",
+        "8,18": "terra",
+        "7,18": "terra",
+        "6,18": "terra",
+        "5,18": "terra",
+        "4,18": "terra",
+        "14,16": "madeira",
+        "14,17": "madeira",
+        "14,18": "madeira",
+        "14,19": "terra",
+        "15,19": "terra",
+        "16,19": "terra",
+        "17,19": "terra",
+        "18,19": "terra",
+        "19,19": "terra",
+        "20,19": "terra",
+        "21,19": "terra",
+        "22,19": "terra",
+        "22,18": "terra",
+        "22,17": "terra",
+        "22,16": "terra",
+        "15,16": "terra",
+        "15,17": "terra",
+        "15,18": "terra",
+        "16,18": "terra",
+        "17,18": "terra",
+        "18,18": "terra",
+        "19,18": "terra",
+        "20,18": "terra",
+        "21,18": "terra",
+        "23,18": "terra",
+        "21,17": "terra",
+        "21,16": "terra",
+        "16,16": "terra",
+        "16,17": "terra",
+        "17,17": "terra",
+        "17,16": "terra",
+        "18,16": "terra",
+        "18,17": "terra",
+        "19,17": "terra",
+        "19,16": "terra",
+        "20,16": "terra",
+        "20,17": "terra",
+        "26,19": "terra",
+        "27,19": "terra",
+        "28,19": "terra",
+        "29,19": "terra",
+        "30,19": "terra",
+        "31,19": "terra",
+        "32,19": "terra",
+        "33,19": "terra",
+        "34,19": "terra",
+        "35,19": "terra",
+        "36,19": "terra",
+        "36,18": "terra",
+        "37,18": "terra",
+        "38,18": "terra",
+        "39,18": "terra",
+        "40,18": "terra",
+        "41,18": "terra",
+        "42,18": "terra",
+        "42,17": "terra",
+        "43,17": "terra",
+        "44,17": "terra",
+        "44,16": "terra",
+        "45,16": "terra",
+        "46,16": "terra",
+        "47,16": "terra",
+        "48,16": "terra",
+        "48,17": "terra",
+        "48,18": "terra",
+        "48,19": "terra",
+        "47,19": "terra",
+        "46,19": "terra",
+        "45,19": "terra",
+        "44,19": "terra",
+        "44,18": "terra",
+        "43,18": "terra",
+        "45,17": "terra",
+        "46,17": "terra",
+        "47,17": "terra",
+        "46,18": "terra",
+        "45,18": "terra",
+        "47,18": "terra",
+        "43,19": "terra",
+        "42,19": "terra",
+        "41,19": "terra",
+        "40,19": "terra",
+        "39,19": "terra",
+        "38,19": "terra",
+        "37,19": "terra",
+        "38,17": "terra",
+        "39,17": "terra",
+        "39,16": "terra",
+        "40,16": "terra",
+        "41,16": "terra",
+        "42,16": "terra",
+        "43,16": "terra",
+        "41,17": "terra",
+        "40,17": "terra",
+        "37,17": "terra",
+        "36,17": "terra",
+        "35,17": "terra",
+        "34,17": "terra",
+        "33,17": "terra",
+        "32,17": "terra",
+        "31,17": "terra",
+        "30,17": "terra",
+        "29,17": "terra",
+        "28,17": "terra",
+        "27,17": "terra",
+        "26,17": "terra",
+        "25,17": "terra",
+        "24,17": "terra",
+        "23,17": "terra",
+        "23,16": "terra",
+        "24,16": "terra",
+        "25,16": "terra",
+        "26,16": "terra",
+        "27,16": "terra",
+        "28,16": "terra",
+        "29,16": "terra",
+        "30,16": "terra",
+        "31,16": "terra",
+        "32,16": "terra",
+        "33,16": "terra",
+        "34,16": "terra",
+        "35,16": "terra",
+        "36,16": "terra",
+        "37,16": "terra",
+        "38,16": "terra",
+        "35,18": "terra",
+        "34,18": "terra",
+        "33,18": "terra",
+        "32,18": "terra",
+        "31,18": "terra",
+        "30,18": "terra",
+        "29,18": "terra",
+        "28,18": "terra",
+        "27,18": "terra",
+        "26,18": "terra",
+        "25,18": "terra",
+        "24,18": "terra",
+        "23,19": "terra",
+        "24,19": "terra",
+        "25,19": "terra",
+        "13,18": "madeira",
+        "13,17": "madeira",
+        "13,16": "madeira",
+        "13,19": "terra",
+        "1,22": "terra",
+        "1,23": "terra",
+        "2,23": "terra",
+        "3,23": "terra",
+        "4,23": "terra",
+        "5,23": "terra",
+        "6,23": "terra",
+        "7,23": "terra",
+        "8,23": "terra",
+        "9,23": "terra",
+        "10,23": "terra",
+        "11,23": "terra",
+        "12,23": "terra",
+        "13,23": "terra",
+        "14,23": "terra",
+        "15,23": "terra",
+        "16,23": "terra",
+        "17,23": "terra",
+        "18,23": "terra",
+        "19,23": "terra",
+        "20,23": "terra",
+        "21,23": "terra",
+        "22,23": "terra",
+        "23,23": "terra",
+        "24,23": "terra",
+        "25,23": "terra",
+        "26,23": "terra",
+        "27,23": "terra",
+        "28,23": "terra",
+        "29,23": "terra",
+        "30,23": "terra",
+        "31,23": "terra",
+        "32,23": "terra",
+        "33,23": "terra",
+        "34,23": "terra",
+        "34,22": "terra",
+        "35,22": "terra",
+        "36,22": "terra",
+        "37,22": "terra",
+        "38,22": "terra",
+        "39,22": "terra",
+        "40,22": "terra",
+        "41,22": "terra",
+        "42,22": "terra",
+        "43,22": "terra",
+        "44,22": "terra",
+        "45,22": "terra",
+        "46,22": "terra",
+        "47,22": "terra",
+        "48,22": "terra",
+        "29,22": "terra",
+        "28,22": "terra",
+        "32,22": "terra",
+        "33,22": "terra",
+        "31,22": "terra",
+        "30,22": "terra",
+        "27,22": "terra",
+        "26,22": "terra",
+        "25,22": "terra",
+        "24,22": "terra",
+        "23,22": "terra",
+        "22,22": "terra",
+        "21,22": "terra",
+        "20,22": "terra",
+        "19,22": "terra",
+        "18,22": "terra",
+        "17,22": "terra",
+        "16,22": "terra",
+        "15,22": "terra",
+        "14,22": "terra",
+        "13,22": "terra",
+        "12,22": "terra",
+        "11,22": "terra",
+        "10,22": "terra",
+        "9,22": "terra",
+        "8,22": "terra",
+        "7,22": "terra",
+        "6,22": "terra",
+        "5,22": "terra",
+        "4,22": "terra",
+        "3,22": "terra",
+        "2,22": "terra",
+        "47,23": "terra",
+        "48,23": "terra",
+        "46,23": "terra",
+        "45,23": "terra",
+        "44,23": "terra",
+        "43,23": "terra",
+        "42,23": "terra",
+        "41,23": "terra",
+        "40,23": "terra",
+        "39,23": "terra",
+        "38,23": "terra",
+        "37,23": "terra",
+        "36,23": "terra",
+        "35,23": "terra",
+        "0,22": "madeira",
+        "0,23": "madeira",
+        "0,24": "madeira",
+        "0,25": "madeira",
+        "1,25": "madeira",
+        "2,25": "madeira",
+        "3,25": "madeira",
+        "4,25": "madeira",
+        "5,25": "madeira",
+        "6,25": "madeira",
+        "7,25": "madeira",
+        "8,25": "madeira",
+        "9,25": "madeira",
+        "10,25": "madeira",
+        "11,25": "madeira",
+        "12,25": "madeira",
+        "13,25": "madeira",
+        "14,25": "madeira",
+        "15,25": "madeira",
+        "16,25": "madeira",
+        "17,25": "madeira",
+        "18,25": "madeira",
+        "19,25": "madeira",
+        "20,25": "madeira",
+        "21,25": "madeira",
+        "22,25": "madeira",
+        "22,24": "madeira",
+        "23,24": "madeira",
+        "24,24": "madeira",
+        "25,24": "madeira",
+        "26,24": "madeira",
+        "27,24": "madeira",
+        "28,24": "madeira",
+        "29,24": "madeira",
+        "30,24": "madeira",
+        "31,24": "madeira",
+        "32,24": "madeira",
+        "33,24": "madeira",
+        "34,24": "madeira",
+        "35,24": "madeira",
+        "36,24": "madeira",
+        "37,24": "madeira",
+        "38,24": "madeira",
+        "39,24": "madeira",
+        "40,24": "madeira",
+        "41,24": "madeira",
+        "42,24": "madeira",
+        "43,24": "madeira",
+        "44,24": "madeira",
+        "45,24": "madeira",
+        "46,24": "madeira",
+        "47,24": "madeira",
+        "48,24": "madeira",
+        "49,24": "madeira",
+        "49,22": "madeira",
+        "49,23": "madeira",
+        "49,25": "madeira",
+        "48,25": "madeira",
+        "47,25": "madeira",
+        "46,25": "madeira",
+        "45,25": "madeira",
+        "44,25": "madeira",
+        "43,25": "madeira",
+        "42,25": "madeira",
+        "38,25": "madeira",
+        "39,25": "madeira",
+        "40,25": "madeira",
+        "41,25": "madeira",
+        "36,25": "madeira",
+        "37,25": "madeira",
+        "35,25": "madeira",
+        "34,25": "madeira",
+        "33,25": "madeira",
+        "32,25": "madeira",
+        "31,25": "madeira",
+        "30,25": "madeira",
+        "29,25": "madeira",
+        "28,25": "madeira",
+        "27,25": "madeira",
+        "26,25": "madeira",
+        "25,25": "madeira",
+        "24,25": "madeira",
+        "23,25": "madeira",
+        "21,24": "madeira",
+        "20,24": "madeira",
+        "18,24": "madeira",
+        "19,24": "madeira",
+        "17,24": "madeira",
+        "16,24": "madeira",
+        "15,24": "madeira",
+        "14,24": "madeira",
+        "13,24": "madeira",
+        "12,24": "madeira",
+        "11,24": "madeira",
+        "10,24": "madeira",
+        "9,24": "madeira",
+        "8,24": "madeira",
+        "7,24": "madeira",
+        "6,24": "madeira",
+        "5,24": "madeira",
+        "4,24": "madeira",
+        "3,24": "madeira",
+        "2,24": "madeira",
+        "1,24": "madeira"
       },
-      "prisoner": {
-        "pos": [
-          36,
-          6
-        ],
-        "room_id": 2
+      "pontes": [],
+      "elevacoes": {},
+      "alturas_parede": {
+        "0,0": 2,
+        "1,0": 2,
+        "2,0": 2,
+        "3,0": 2,
+        "4,0": 2,
+        "5,0": 2,
+        "6,0": 2,
+        "7,0": 2,
+        "8,0": 2,
+        "9,0": 2,
+        "10,0": 2,
+        "11,0": 2,
+        "12,0": 2,
+        "13,0": 2,
+        "14,0": 2,
+        "15,0": 2,
+        "16,0": 2,
+        "17,0": 2,
+        "18,0": 2,
+        "19,0": 2,
+        "20,0": 2,
+        "21,0": 2,
+        "22,0": 2,
+        "23,0": 2,
+        "24,0": 2,
+        "25,0": 2,
+        "26,0": 2,
+        "27,0": 2,
+        "28,0": 2,
+        "29,0": 2,
+        "30,0": 2,
+        "31,0": 2,
+        "32,0": 2,
+        "33,0": 2,
+        "34,0": 2,
+        "35,0": 2,
+        "43,0": 2,
+        "44,0": 2,
+        "45,0": 2,
+        "46,0": 2,
+        "47,0": 2,
+        "48,0": 2,
+        "49,0": 2,
+        "42,0": 2,
+        "41,0": 2,
+        "40,0": 2,
+        "39,0": 2,
+        "38,0": 2,
+        "37,0": 2,
+        "36,0": 2,
+        "33,1": 2,
+        "34,1": 2,
+        "37,1": 2,
+        "36,1": 2,
+        "35,1": 2,
+        "38,1": 2,
+        "39,1": 2,
+        "40,1": 2,
+        "41,1": 2,
+        "42,1": 2,
+        "43,1": 2,
+        "44,1": 2,
+        "45,1": 2,
+        "49,1": 2,
+        "48,1": 2,
+        "47,1": 2,
+        "46,1": 2,
+        "32,1": 2,
+        "31,1": 2,
+        "30,1": 2,
+        "29,1": 2,
+        "28,1": 2,
+        "27,1": 2,
+        "26,1": 2,
+        "25,1": 2,
+        "24,1": 2,
+        "23,1": 2,
+        "22,1": 2,
+        "21,1": 2,
+        "20,1": 2,
+        "19,1": 2,
+        "18,1": 2,
+        "17,1": 2,
+        "16,1": 2,
+        "15,1": 2,
+        "14,1": 2,
+        "13,1": 2,
+        "12,1": 2,
+        "11,1": 2,
+        "10,1": 2,
+        "9,1": 2,
+        "8,1": 2,
+        "7,1": 2,
+        "6,1": 2,
+        "5,1": 2,
+        "4,1": 2,
+        "3,1": 2,
+        "2,1": 2,
+        "1,1": 2,
+        "0,1": 2,
+        "0,2": 2,
+        "0,3": 2,
+        "0,4": 2,
+        "0,5": 2,
+        "0,6": 2,
+        "0,7": 2,
+        "0,8": 2,
+        "0,9": 2,
+        "0,10": 2,
+        "0,11": 2,
+        "0,12": 2,
+        "0,13": 2,
+        "0,14": 2,
+        "0,15": 2,
+        "0,16": 2,
+        "0,17": 2,
+        "0,18": 2,
+        "0,19": 2,
+        "0,20": 2,
+        "0,21": 2,
+        "0,22": 2,
+        "0,23": 2,
+        "0,24": 2,
+        "0,25": 2,
+        "1,25": 2,
+        "2,25": 2,
+        "3,25": 2,
+        "4,25": 2,
+        "5,25": 2,
+        "6,25": 2,
+        "7,25": 2,
+        "8,25": 2,
+        "9,25": 2,
+        "10,25": 2,
+        "11,25": 2,
+        "12,25": 2,
+        "13,25": 2,
+        "14,25": 2,
+        "15,25": 2,
+        "16,25": 2,
+        "17,25": 2,
+        "18,25": 2,
+        "19,25": 2,
+        "20,25": 2,
+        "21,25": 2,
+        "22,25": 2,
+        "23,25": 2,
+        "24,25": 2,
+        "25,25": 2,
+        "26,25": 2,
+        "27,25": 2,
+        "28,25": 2,
+        "29,25": 2,
+        "30,25": 2,
+        "31,25": 2,
+        "32,25": 2,
+        "33,25": 2,
+        "34,25": 2,
+        "35,25": 2,
+        "36,25": 2,
+        "37,25": 2,
+        "38,25": 2,
+        "39,25": 2,
+        "40,25": 2,
+        "41,25": 2,
+        "42,25": 2,
+        "43,25": 2,
+        "44,25": 2,
+        "45,25": 2,
+        "46,25": 2,
+        "47,25": 2,
+        "48,25": 2,
+        "49,25": 2,
+        "49,24": 2,
+        "48,24": 2,
+        "47,24": 2,
+        "46,24": 2,
+        "45,24": 2,
+        "44,24": 2,
+        "43,24": 2,
+        "42,24": 2,
+        "41,24": 2,
+        "40,24": 2,
+        "39,24": 2,
+        "38,24": 2,
+        "37,24": 2,
+        "36,24": 2,
+        "35,24": 2,
+        "34,24": 2,
+        "33,24": 2,
+        "32,24": 2,
+        "31,24": 2,
+        "30,24": 2,
+        "29,24": 2,
+        "28,24": 2,
+        "27,24": 2,
+        "26,24": 2,
+        "25,24": 2,
+        "24,24": 2,
+        "23,24": 2,
+        "22,24": 2,
+        "21,24": 2,
+        "20,24": 2,
+        "19,24": 2,
+        "18,24": 2,
+        "17,24": 2,
+        "16,24": 2,
+        "15,24": 2,
+        "14,24": 2,
+        "13,24": 2,
+        "12,24": 2,
+        "11,24": 2,
+        "7,24": 2,
+        "6,24": 2,
+        "5,24": 2,
+        "4,24": 2,
+        "3,24": 2,
+        "2,24": 2,
+        "1,24": 2,
+        "8,24": 2,
+        "9,24": 2,
+        "10,24": 2,
+        "49,2": 2,
+        "49,3": 2,
+        "49,4": 2,
+        "49,5": 2,
+        "49,6": 2,
+        "49,7": 2,
+        "49,8": 2,
+        "49,9": 2,
+        "49,10": 2,
+        "49,11": 2,
+        "49,12": 2,
+        "49,13": 2,
+        "49,14": 2,
+        "49,15": 2,
+        "49,16": 2,
+        "49,17": 2,
+        "49,18": 2,
+        "49,19": 2,
+        "49,20": 2,
+        "49,21": 2,
+        "49,22": 2,
+        "49,23": 2
+      },
+      "transicao_altura": "rampa",
+      "objectives": {
+        "primary": {
+          "type": "rescue_prisoner",
+          "xp": 180,
+          "reward": {
+            "gold": 80,
+            "items": []
+          },
+          "fato": "elara_mocas_salvas"
+        },
+        "secondary": [
+          {
+            "type": "kill_target",
+            "xp": 120,
+            "reward": {
+              "gold": 40,
+              "items": []
+            }
+          }
+        ]
       }
     }
   },

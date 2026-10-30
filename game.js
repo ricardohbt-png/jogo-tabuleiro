@@ -740,6 +740,8 @@ const DECOR_GLB_TYPES = {
   tumba: 'assets/objetos/sarcofago.glb',
   tumba_lapide: 'assets/objetos/tumba_lapide.glb',
   carroca: 'assets/objetos/carroca.glb',
+  carroca_feno: 'assets/objetos/carroca_feno.glb',
+  espantalho: 'assets/objetos/espantalho.glb',
   lapide: 'assets/objetos/lapide.glb',
   cripta: 'assets/objetos/cripta.glb',
   fonte_de_parede: 'assets/objetos/fonte_de_parede.glb',
@@ -783,6 +785,12 @@ const DECOR_GLB_TYPES = {
   placa: 'assets/objetos/placa_fincada.glb',
   monte_ossos: 'assets/objetos/monte_ossos.glb',
   monte_feno: 'assets/objetos/monte_feno.glb',
+  cocho: 'assets/objetos/cocho.glb',
+  saco_grao: 'assets/objetos/saco_grao.glb',
+  caixa_ferramentas: 'assets/objetos/caixa_ferramentas.glb',
+  ancinho: 'assets/objetos/ancinho.glb',
+  forcado: 'assets/objetos/forcado.glb',
+  balde_agua_chao: 'assets/objetos/balde_agua_chao.glb',
   tronco_musgo: 'assets/objetos/tronco_musgo.glb',
   moita_espinhosa: 'assets/objetos/moita_espinhosa.glb',
   capim_alto: 'assets/objetos/capim_alto.glb',
@@ -1713,9 +1721,16 @@ function _updateCityHeroBar(msg){
                  title="Clique para ver a ficha" style="cursor:pointer">
       ${face}
       <div><div class="city-hcard-name">${p.name}</div>
-           <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div></div>
+           <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div>
+           ${p.class_id&&!p.is_master&&!p.test_hero?`<div class="city-hcard-gold">💰 ${Number(p.gold||0)} ${t('ui.cidade.ouro_individual')}</div>`:''}</div>
     </div>`;
-  }).join('')+`<div class="city-gold-badge">${t('ui.cidade.badge_ouro', {n: gold})}</div>`;
+  }).join('')+(msg.solo_grupo
+    ? `<div class="city-gold-badge">${t('ui.cidade.ouro_total_grupo', {n: gold})}</div>
+       <button class="city-gold-toggle${msg.ouro_compartilhado?' active':''}" type="button"
+         aria-pressed="${!!msg.ouro_compartilhado}"
+         title="${t('ui.cidade.ouro_compartilhado_ajuda')}"
+         onclick="send({type:'set_group_gold_sharing',enabled:${!msg.ouro_compartilhado}})">${t(msg.ouro_compartilhado?'ui.cidade.ouro_compartilhado_ligado':'ui.cidade.ouro_compartilhado_desligado')}</button>`
+    : `<div class="city-gold-badge">${t('ui.cidade.badge_ouro', {n: gold})}</div>`);
   bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
     const pid0 = card.getAttribute('data-pid');
     // Item arrastado no inventário pode ser solto sobre o retrato de outro herói meu.
@@ -1741,6 +1756,14 @@ function _updateCityHeroBar(msg){
       abrirFichaCidade(pid);
     };
   });
+}
+
+function _ouroDisponivelCidade(me){
+  const state=GS.cityState||{};
+  if(state.solo_grupo&&state.ouro_compartilhado)
+    return (state.players||[]).filter(p=>p.class_id&&!p.is_master&&!p.test_hero)
+      .reduce((sum,p)=>sum+Math.max(0,Number(p.gold)||0),0);
+  return Math.max(0,Number(me?.gold)||0);
 }
 
 function _updateCityTimeBadge(){
@@ -1919,7 +1942,7 @@ function _ammoStackKeyClient(it){
   return JSON.stringify([it.id,it.ammo_type||it.id,stats,[...poisons].sort()]);
 }
 function _nomeMuncaoEnvenenada(it){
-  const keys={flechas_prata:'cat.item.flechas_prata_envenenadas.nome',flechas_incendiarias:'cat.item.flechas_incendiarias_envenenadas.nome',virotes_prata:'cat.item.virotes_prata_envenenados.nome',virotes_incendiarios:'cat.item.virotes_incendiarios_envenenados.nome'};
+  const keys={flechas_prata:'cat.item.flechas_prata_envenenadas.nome',flechas_incendiarias:'cat.item.flechas_incendiarias_envenenadas.nome',flechas_explosivas:'cat.item.flechas_explosivas_envenenadas.nome',virotes_prata:'cat.item.virotes_prata_envenenados.nome',virotes_incendiarios:'cat.item.virotes_incendiarios_envenenados.nome',virotes_explosivos:'cat.item.virotes_explosivos_envenenados.nome'};
   return t(keys[it?.ammo_type]||(String(it?.ammo_type||'').includes('virote')?'cat.item.virote_envenenado.nome':'cat.item.flecha_envenenada.nome'));
 }
 window._nomeMuncaoEnvenenada = _nomeMuncaoEnvenenada;
@@ -3214,7 +3237,7 @@ function _renderShopItems(){
   if(GS.activeShop==='mercador'&&aba===5){ _renderSellItems('all'); return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
-  const gold=myP?myP.gold:0;
+  const gold=_ouroDisponivelCidade(myP);
   const goldEl=$('shop-gold-val'); if(goldEl) goldEl.textContent=gold;
 
   const shops=GS.cityState.shops;
@@ -3249,16 +3272,24 @@ function _renderShopItems(){
   }
 
   const myClass = myP?myP.class_id:null;
+  const heroisGrupo=(GS.cityState.players||[]).filter(p=>p.class_id&&!p.is_master&&!p.test_hero);
   const list=$('shop-items-list'); if(!list) return;
   // Cura Completa do Templo é serviço de GRUPO: o preço vem dos PV que faltam (plano puro do GS).
   const planoCura=GS.planoCuraGrupoTemplo(GS.cityState, GS.myPid);
   list.innerHTML=items.map(item=>{
-    const precoCompra=item.cura_grupo ? planoCura.custo : Number(item.price||0);
+    const precoCompra=item.refeicao_grupo
+      ? Number(item.price||0)*heroisGrupo.length
+      : item.cura_grupo
+        ? planoCura.custo
+        : Number(item.price||0);
+    const nomeItem=item.refeicao_grupo ? t(`cat.item.${item.id}.nome`) : item.name;
     // Restrição de classe: allowed_classes ausente = todas as classes.
     const classRestrita = item.allowed_classes && myClass && !item.allowed_classes.includes(myClass);
     // Refeição de balcão (1×/visita): bloqueia se o herói já a pediu nesta visita.
-    const jaUsada = item.effect==='meal_survival' && item.item_slot!=='bag'
-      && myP && (myP.taverna_refeicoes||[]).includes(item.id);
+    const jaUsada = item.refeicao_grupo
+      ? heroisGrupo.some(p=>(p.taverna_refeicoes||[]).includes(item.id))
+      : item.effect==='meal_survival' && item.item_slot!=='bag'
+        && myP && (myP.taverna_refeicoes||[]).includes(item.id);
     const jaConhecida = item.effect==='learn_spell'
       && myP && (myP.magias_conhecidas||[]).includes(item.magia_id);
     const canBuy=item.cura_grupo
@@ -3281,7 +3312,7 @@ function _renderShopItems(){
     return `<div class="shop-item" data-shop-item-id="${item.id}" data-poison-base-price="${item.price}"${(classRestrita||jaUsada||jaConhecida)?' style="opacity:.5;"':''}>
       <span class="shop-item-emoji">${itemIconHTML(item)}</span>
       <div class="shop-item-info">
-        <div class="shop-item-name"><span class="poison-preview-name" data-base-name="${item.name}">${item.name}</span>${kindTag}${restritaTag}${usadaTag}${conhecidaTag}</div>
+        <div class="shop-item-name"><span class="poison-preview-name" data-base-name="${nomeItem}">${nomeItem}</span>${kindTag}${restritaTag}${usadaTag}${conhecidaTag}</div>
         <div class="shop-item-desc">${desc}</div>
         ${poisonControls}
       </div>
@@ -3302,8 +3333,10 @@ function _renderShopItems(){
     // Os nomes das maldições saíram do mapa {id: 'texto'} e viraram chaves
     // ui.maldicao.<id> — maldição não é família de catálogo (ver CLAUDE.md,
     // etapa 4c), então não há cat.* e o caminho é o _rotulo.
-    const precos={leve:150,media:400,grave:800};
-    list.insertAdjacentHTML('beforeend',(myP.maldicoes||[]).map(m=>`<div class="shop-item"><span class="shop-item-emoji">☠️</span><div class="shop-item-info"><div class="shop-item-name">${t('ui.loja.remover_maldicao',{nome:_rotulo(m.id,'ui.maldicao',m.id)})}</div><div class="shop-item-desc">${t('ui.loja.desc_remover_maldicao')}</div></div><button class="btn-buy" onclick="removerMaldicaoTemplo('${m.id}')">${t('ui.loja.curar')}</button></div>`).join(''));
+    list.insertAdjacentHTML('beforeend',(myP.maldicoes||[]).map(m=>{
+      const preco=Number(m.preco_remocao||0), semOuro=_ouroDisponivelCidade(myP)<preco;
+      return `<div class="shop-item"><span class="shop-item-emoji">☠️</span><div class="shop-item-info"><div class="shop-item-name">${t('ui.loja.remover_maldicao',{nome:_rotulo(m.id,'ui.maldicao',m.id)})}</div><div class="shop-item-desc">${t('ui.loja.desc_remover_maldicao')}</div></div><span class="shop-item-price">💰 ${preco}</span><button class="btn-buy" ${semOuro?'disabled':''} onclick="removerMaldicaoTemplo('${m.id}')">${t('ui.loja.curar')}</button></div>`;
+    }).join(''));
   }
   if(shopKey === 'templo' && aba===1 && GS.cityState.phase==='city' && myP?.alive){
     const herois=GS.cityState.players.filter(p=>p.class_id&&!p.is_master&&!p.test_hero);
@@ -3311,7 +3344,7 @@ function _renderShopItems(){
     const podeUsar=herois.length>1;
     if(podeUsar&&mortos.length){
       list.insertAdjacentHTML('beforeend',mortos.map(alvo=>{
-        const semOuro=Number(myP.gold||0)<30;
+        const semOuro=_ouroDisponivelCidade(myP)<30;
         return `<div class="shop-item" data-shop-item-id="temple_resurrection_${alvo.id}">
           <span class="shop-item-emoji">💫</span>
           <div class="shop-item-info">
@@ -3328,7 +3361,7 @@ function _renderShopItems(){
 
 function _renderSellItems(mode){
   const myP=GS.cityState&&GS.cityState.players.find(p=>p.id===GS.myPid);
-  const gold=myP?myP.gold:0;
+  const gold=_ouroDisponivelCidade(myP);
   const goldEl=$('shop-gold-val'); if(goldEl) goldEl.textContent=gold;
   const list=$('shop-items-list'); if(!list) return;
   if(!myP){ list.innerHTML=''; return; }
@@ -3383,7 +3416,7 @@ function _renderSellItems(mode){
 
 function _renderRepairItems(){
   const myP=GS.cityState&&GS.cityState.players.find(p=>p.id===GS.myPid);
-  const gold=myP?Number(myP.gold||0):0;
+  const gold=_ouroDisponivelCidade(myP);
   const goldEl=$('shop-gold-val'); if(goldEl) goldEl.textContent=gold;
   const list=$('shop-items-list'); if(!list) return;
   const options=(myP&&Array.isArray(myP.repair_options))?myP.repair_options:[];
@@ -3421,6 +3454,8 @@ function _renderRepairItems(){
 }
 
 function _itemDesc(item){
+  if(item.refeicao_grupo)
+    return t(`cat.item.${item.id}.desc`);
   if(item.effect === 'grimoire'){
     const nomes = (item.magic_ids || []).map(id => GRIMORIO_CLIENT[id]?.nome || id);
     return item.descricao || (nomes.length ? t('ui.grimorio.magias_fixas', {nomes: nomes.join(', ')}) : item.name || '');
@@ -3646,7 +3681,7 @@ function _guildItemRow(i, owned, me){
   const lista = i.categoria === 'tecnica' ? (owned.tecnicas || []) : (owned.especializacoes || []);
   const has   = lista.includes(i.id);
   const reqOk = !i.requer || lista.includes(i.requer);
-  const gold  = (me && me.gold) || 0;
+  const gold  = _ouroDisponivelCidade(me);
   const custo = i.categoria === 'tecnica'
     ? ` · 🍖${i.custo_fome} 💧${i.custo_sede} · ⏱️${i.recarga_rodadas}r` : '';
   const exclusivaBadge = i.exclusiva
@@ -3716,7 +3751,7 @@ function _renderGuild(){
   // faixa de recarga zero; a categoria dela (compra, sem equipar) não muda.
   const specs = catalog.filter(i => i.categoria === 'especializacao' && i.secao !== 'tecnica');
   const tecs  = catalog.filter(i => i.categoria === 'tecnica' || i.secao === 'tecnica');
-  const goldEl = $('guild-gold'); if(goldEl) goldEl.textContent = me.gold || 0;
+  const goldEl = $('guild-gold'); if(goldEl) goldEl.textContent = _ouroDisponivelCidade(me);
   const sec = (arr) => arr.length
     ? arr.map(i => _guildItemRow(i, owned, me)).join('')
     : `<div class="guild-empty">— em breve —</div>`;
@@ -16596,6 +16631,8 @@ function _executarComandoCena(c){
   const now = performance.now();
   const tocouGolpe = !c.tardio && _somGolpe(c);
   if(!c.tardio) try{ _somExplosaoItem(c.item_id, c.targetPos, c.area || c.hit); _somAtaqueElemental(c); }catch(e){}
+  if(!c.tardio && c.hit && c.explosive_ammo)
+    _detonarMunicaoExplosiva(c.explosion_pos || c.targetPos);
   if(!c.tardio && c.item_id === 'bomba_flash' && c.hit && Array.isArray(c.targetPos))
     _spawnPositiveBurst({pos:c.targetPos}, 'flash', 0, 'bomba_flash');
   if(!c.tardio){
@@ -16659,6 +16696,9 @@ function _receiveAttackFeedback(msg){
       area:!!(msg.projectile && msg.projectile.area), impacto: msg.impacto || null,
       weaponId: msg.impact_weapon_id || null,
       itemId: (msg.projectile && msg.projectile.item_id) || null,
+      explosiveAmmo: !!(msg.projectile && msg.projectile.explosive_ammo),
+      explosionPos: msg.projectile && Array.isArray(msg.projectile.explosion_pos)
+        ? msg.projectile.explosion_pos.slice() : null,
       result:false, startedAt:now, resultAt:now,
       prepDuration:_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS),
       resultDuration:_animationProgressDuration(ATTACK_FEEDBACK_RESULT_MS), group:null};
@@ -16686,6 +16726,7 @@ function _receiveAttackFeedback(msg){
         targetPos: msg.target_pos, targetKey: _entityKeyById(msg.target_id) });
       try{ _somAtaqueElemental({ attackerKey: _entityKeyById(msg.attacker_id), targetPos: msg.target_pos }); }catch(e){}
       try{ _somExplosaoItem(f.itemId, msg.target_pos, f.area || !!msg.hit); }catch(e){}   // 2D: granada/incendiário
+      if(msg.hit && f.explosiveAmmo) _detonarMunicaoExplosiva(f.explosionPos || msg.target_pos);
       if(f.itemId === 'bomba_flash' && msg.hit && Array.isArray(msg.target_pos))
         _spawnPositiveBurst({pos:msg.target_pos}, 'flash', 0, 'bomba_flash');
       if(!tocou && cue) _playCombatCue(cue.kind, cue.opts);
@@ -27154,6 +27195,24 @@ function _renderRecursosRodada(me, state){
   </section>`;
 }
 
+function _escolherCasaDesmontar(me){
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:12000;background:#000b;display:flex;align-items:center;justify-content:center';
+  const card = document.createElement('section');
+  card.style.cssText = 'background:#17120d;border:1px solid #9a6a2a;padding:16px;width:min(340px,92vw);color:#eee;font-family:Cinzel,serif';
+  card.innerHTML = `<b>Escolha onde desmontar</b><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px"></div><button style="width:100%;margin-top:10px;padding:8px">Cancelar</button>`;
+  const grid = card.querySelector('div');
+  const [x,y] = me.pos || [0,0];
+  for(const [dx,dy,nome] of [[0,-1,'Norte'],[1,0,'Leste'],[0,1,'Sul'],[-1,0,'Oeste']]){
+    const tx=x+dx, ty=y+dy;
+    if(tx<0||ty<0||tx>=(GS.gameState?.tiles?.[0]?.length||0)||ty>=(GS.gameState?.tiles?.length||0)) continue;
+    const b=document.createElement('button'); b.textContent=`${nome} (${tx}, ${ty})`; b.style.padding='8px';
+    b.onclick=()=>{send({type:'desmontar_cavalo',tx,ty});overlay.remove();}; grid.appendChild(b);
+  }
+  card.querySelector('button:last-child').onclick=()=>overlay.remove();
+  overlay.onclick=e=>{if(e.target===overlay)overlay.remove();}; overlay.appendChild(card); document.body.appendChild(overlay);
+}
+
 function renderMyPanel(state){
   _atualizarBotaoEncerrarTurno(state);
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
@@ -27584,6 +27643,36 @@ function renderMyPanel(state){
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
+  const _montaria = (state.monsters || []).find(m => String(m.id) === String(me.cavalo_montado_id)
+    && m.type === 'cavalo_sela' && m.hp > 0);
+  if(_montaria){
+    const cooldown = Math.max(0, Number(_montaria.disparada_pronta_em || 0) - Number(state.round || 1));
+    const dash = document.createElement('button');
+    dash.className = 'skill-btn guild-tec';
+    dash.disabled = !(GS.isMyTurn && me.alive && state.phase === 'playing' && !me.bonus_action_used
+      && !me.moved_this_turn && !cooldown && !(Number(me.velocidade_rodadas || 0) > 0));
+    dash.innerHTML = `<div class="skill-info"><div class="skill-name">💨 Disparada</div><div class="skill-desc">${cooldown ? `Recarga: ${cooldown} rodada(s)` : 'Dobra o movimento do cavalo neste turno.'}</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
+    dash.onclick = () => send({type:'disparada_cavalo'});
+    sl.appendChild(dash);
+    const desmontar = document.createElement('button');
+    desmontar.className = 'skill-btn';
+    desmontar.disabled = !(GS.isMyTurn && me.alive && state.phase === 'playing' && !me.bonus_action_used);
+    desmontar.innerHTML = `<div class="skill-info"><div class="skill-name">🐎 Desmontar</div><div class="skill-desc">Escolha uma casa ortogonal adjacente.</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
+    desmontar.onclick = () => _escolherCasaDesmontar(me);
+    sl.appendChild(desmontar);
+  } else {
+    const montaveis = (state.monsters || []).filter(m => m?.type === 'cavalo_sela' && m.hp > 0
+      && !m.cavalo_provocado && !m.cavaleiro_id && m.pos && me.pos
+      && Math.abs(m.pos[0]-me.pos[0]) + Math.abs(m.pos[1]-me.pos[1]) === 1);
+    for(const cavalo of montaveis){
+      const montar = document.createElement('button');
+      montar.className = 'skill-btn';
+      montar.disabled = !(GS.isMyTurn && me.alive && state.phase === 'playing' && !me.bonus_action_used);
+      montar.innerHTML = `<div class="skill-info"><div class="skill-name">🐎 Montar ${_esc(cavalo.name || 'Cavalo de Sela')}</div><div class="skill-desc">Usa movimento 8 · ação bônus.</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
+      montar.onclick = () => send({type:'montar_cavalo',monster_id:cavalo.id});
+      sl.appendChild(montar);
+    }
+  }
   // Acessos defensivos ao GS (resiliência a gameState.js desatualizado/cacheado:
   // um GS sem essas funções NÃO pode mais derrubar o painel + botão de turno).
   const _wSel   = (id) => !!(GS.isWarriorSkillSelected && GS.isWarriorSkillSelected(id));
@@ -49353,6 +49442,7 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   // O escudo grande é exportado em pé; o renderer o deita sobre o piso.
   escudo_g: {path: 'assets/itens/escudo_grande.glb', layFlat: true, footprint: 0.82},
   flechas: {path: 'assets/itens/flechas.glb', footprint: 0.78},
+  // O ID de servidor `chainmail` e o alias usam a malha texturizada da cota.
   chainmail: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   cota_malha: {path: 'assets/itens/cota_malha.glb', footprint: 0.82},
   dagger: {path: 'assets/itens/adaga.glb', layFlat: true, footprint: 0.39},
@@ -51860,12 +51950,13 @@ function renderMap3D(state){
     const mSel = (g3.selectedPos && g3.selectedPos[0]===mx && g3.selectedPos[1]===my)
       || (GS.isMaster() && _masterSelectedMonsterIds(state).has(String(m.id)));
     const gamepadAttackTargeted = gamepadAttackTarget3D?.targetId === m.id;
+    const mountedHorse = m.type === 'cavalo_sela' && !!m.cavaleiro_id;
     const imageName = _monsterImageName(m);
     const _monFig3D = obterFig(`mon:${m.id}`,
       // _arteGen: muda quando uma arte que falhou por rede é liberada para nova
       // tentativa — sem ele o peão continuaria com a miniatura genérica, porque
       // a assinatura seria idêntica e obterFig reusaria a figura já construída.
-      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, _eixoDirecaoSig(m.oriented, imageName, m.type, m.model3d, m.facing), _queimando(m), !!m.petrificado, _estaParalisado(m),
+      JSON.stringify([m.type, imageName, m.model3d, !!mSel, gamepadAttackTargeted, mountedHorse, m.porte, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, _eixoDirecaoSig(m.oriented, imageName, m.type, m.model3d, m.facing), _queimando(m), !!m.petrificado, _estaParalisado(m),
         m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, m.vision_radius, m.altura, GS.sorrateiroAtivo(), _arteGen]),
       () => {
         const f = build3DFig('#c82020', true, false, false, mx, my, null, m.type, mSel || gamepadAttackTargeted, imageName, m.porte, m.oriented, m.facing, _queimando(m),
@@ -51875,11 +51966,11 @@ function renderMap3D(state){
         const sy = Math.max(.2, Math.min(4, Number(vs[1]) || 1));
         // Escala só a aparência: posição, footprint e regras continuam iguais.
         const focusScale = gamepadAttackTargeted ? 1.05 : 1;
-        f.scale.set(sx * focusScale, sy * focusScale, sx * focusScale);
+        f.scale.set(sx * focusScale * (mountedHorse ? .78 : 1), sy * focusScale * (mountedHorse ? .72 : 1), sx * focusScale * (mountedHorse ? .78 : 1));
         // O grupo começa no nível do piso; ao reduzir sy, a base também seria
         // multiplicada e afundaria. O lift é aplicado pelo posicionamento
         // comum das entidades, preservando hover, água e saltos de movimento.
-        f.userData._floorAnchorLiftY = TH * (1 - sy) + (gamepadAttackTargeted ? .045 : 0);
+        f.userData._floorAnchorLiftY = TH * (1 - sy * (mountedHorse ? .72 : 1)) + (gamepadAttackTargeted ? .045 : 0);
         f.userData.monId = m.id;   // taggeado para getMonsterMesh() / deslize fiel
         return f;
       },
@@ -52337,6 +52428,8 @@ const _heroGLBQueue  = {};   // classId -> [callbacks]
 // O PNG existente permanece como fallback na visão 3D e como miniatura da visão 2D.
 const _MONSTER_GLB_MODELS = Object.freeze({
   // Identificadores de `image` do bestiário.
+  cavalo_sela:       'assets/models3d/monstros/cavalo_sela.glb',
+  vaca:              'assets/models3d/monstros/vaca.glb',
   goblin_assassino: 'assets/models3d/monstros/assassino_goblin.glb',
   bandido:           'assets/models3d/monstros/bandido.glb',
   gilo_dedos_sujos:  'assets/models3d/monstros/gilo_dedos_sujos.glb',
@@ -53008,6 +53101,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     // A Ovelha também precisa do giro de 90° para acompanhar a direção
     // indicada pelo movimento da forma animal.
     'ovelha',
+    // A Vaca foi exportada com a frente no eixo +X; usa a orientação-base
+    // calibrada para animais cujo focinho acompanha a direção do movimento.
+    'vaca',
     // O Necromante também foi exportado 90° fora do eixo do movimento;
     // usar a orientação-base deixa a frente acompanhar o deslocamento.
     'necromante',
@@ -59597,6 +59693,23 @@ GS.on('gameOver',    msg  => handleGameOver(msg));
 // Explosões de morte e do Elemental de Fogo: destaca tiles e toca o SFX no centro.
 let _explosionTiles = null;
 let _explosionTimer = null;
+function _detonarMunicaoExplosiva(pos){
+  if(!Array.isArray(pos) || pos.length < 2) return;
+  const [cx,cy]=pos.map(Number);
+  if(!Number.isFinite(cx)||!Number.isFinite(cy)) return;
+  if(_explosionTimer) clearTimeout(_explosionTimer);
+  const tiles=[];
+  for(let y=cy-1;y<=cy+1;y++) for(let x=cx-1;x<=cx+1;x++) tiles.push([x,y]);
+  _explosionTiles = new Set(tiles.map(([x,y])=>`${x},${y}`));
+  sfx('explosao', {pos:[cx,cy]});
+  _receberDisparoMina({tipo_id:'mina_terrestre',pos:[cx,cy],area:1});
+  if(GS.gameState) renderMap(GS.gameState);
+  _explosionTimer = setTimeout(() => {
+    _explosionTiles = null;
+    _explosionTimer = null;
+    if(GS.gameState) renderMap(GS.gameState);
+  }, 1200);
+}
 GS.on('explosionArea', msg => {
   if(_explosionTimer) clearTimeout(_explosionTimer);
   _explosionTiles = new Set((msg.tiles||[]).map(([x,y])=>`${x},${y}`));

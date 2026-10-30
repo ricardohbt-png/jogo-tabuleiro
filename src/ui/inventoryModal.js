@@ -69,6 +69,7 @@ const InventoryModal = (() => {
     { id: 'flechas', key: 'ui.inv.auto_arrow.normal' },
     { id: 'flechas_incendiarias', key: 'ui.inv.auto_arrow.fire' },
     { id: 'flechas_prata', key: 'ui.inv.auto_arrow.silver' },
+    { id: 'flechas_explosivas', key: 'ui.inv.auto_arrow.explosive' },
   ];
   // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
   const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);

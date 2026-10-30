@@ -157,6 +157,120 @@ window.EDITOR_CATALOG = {
       "percepcao": 12
     },
     {
+      "type": "vaca",
+      "name": "Vaca Arisca",
+      "emoji": "🐄",
+      "boss": false,
+      "tier": 0,
+      "cr": 0.25,
+      "hp": 16,
+      "ac": 11,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "vaca",
+      "str_": 14,
+      "dex": 10,
+      "con_": 14,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 2,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Cabeçada",
+          "atk_bonus": 3,
+          "damage": "1d6+1",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [],
+      "loot_drops": [
+        {
+          "kind": "item",
+          "item_id": "carne_bovina",
+          "chance": 100,
+          "quantity_range": [
+            1,
+            3
+          ]
+        },
+        {
+          "kind": "item",
+          "item_id": "leite",
+          "chance": 100,
+          "quantity_range": [
+            1,
+            4
+          ]
+        }
+      ],
+      "gold": 0,
+      "ai_type": "vaca_passiva",
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 12
+    },
+    {
+      "type": "cavalo_sela",
+      "name": "Cavalo de Sela",
+      "emoji": "🐎",
+      "boss": false,
+      "tier": 0,
+      "cr": 0.25,
+      "hp": 16,
+      "ac": 11,
+      "movement": 8,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "cavalo_sela",
+      "str_": 16,
+      "dex": 12,
+      "con_": 14,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 3,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Coice",
+          "atk_bonus": 4,
+          "damage": "1d6+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "disparada_cavalo_sela",
+          "name": "Disparada",
+          "icon": "💨",
+          "action_type": "passiva",
+          "cooldown_turns": 4,
+          "descricao": "Dobra o deslocamento neste turno. Recarga: 4 rodadas."
+        }
+      ],
+      "gold": 0,
+      "ai_type": "cavalo_passivo",
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 13
+    },
+    {
       "type": "skeleton",
       "name": "Esqueleto",
       "emoji": "💀",
@@ -2246,8 +2360,13 @@ window.EDITOR_CATALOG = {
       "random_equipment": {
         "weapons": [
           "dagger",
-          "bordao"
+          "bordao",
+          "besta"
         ],
+        "crossbow_chance": 30,
+        "crossbow_bolts": 10,
+        "incendiary_bolts_chance": 10,
+        "silver_bolts_chance": 10,
         "secondary_dagger_chance": 50
       },
       "attacks": [
@@ -2278,7 +2397,7 @@ window.EDITOR_CATALOG = {
           "id": "bandido_esconder_se",
           "name": "Esconder-se 1",
           "action_type": "acao_bonus",
-          "cooldown_turns": 3,
+          "cooldown_turns": 4,
           "descricao": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar."
         },
         {
@@ -2302,7 +2421,8 @@ window.EDITOR_CATALOG = {
       "equipment": [
         "cloak",
         "dagger",
-        "bordao"
+        "bordao",
+        "besta"
       ],
       "equipment_enabled": true,
       "equipped_items": [
@@ -7009,6 +7129,15 @@ window.EDITOR_CATALOG = {
       "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
     },
     {
+      "id": "disparada_cavalo_sela",
+      "name": "Disparada",
+      "icon": "💨",
+      "action_type": "passiva",
+      "cooldown_turns": 4,
+      "descricao": "Dobra o deslocamento neste turno. Recarga: 4 rodadas.",
+      "source": "monstro"
+    },
+    {
       "id": "hero_bard_cancao_heroica",
       "source": "heroi",
       "source_id": "cancao_heroica",
@@ -7401,7 +7530,7 @@ window.EDITOR_CATALOG = {
       "id": "bandido_esconder_se",
       "name": "Esconder-se 1",
       "action_type": "acao_bonus",
-      "cooldown_turns": 3,
+      "cooldown_turns": 4,
       "descricao": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar.",
       "source": "monstro"
     },
@@ -10066,6 +10195,28 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_vaca",
+      "source": "guilda",
+      "source_id": "lenda_vaca",
+      "name": "Lenda: Vaca Arisca",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Vaca Arisca.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_cavalo_sela",
+      "source": "guilda",
+      "source_id": "lenda_cavalo_sela",
+      "name": "Lenda: Cavalo de Sela",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Cavalo de Sela.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_goblin",
       "source": "guilda",
       "source_id": "lenda_goblin",
@@ -12528,6 +12679,28 @@ window.EDITOR_CATALOG = {
       ]
     },
     {
+      "id": "flechas_explosivas",
+      "name": "Flechas Explosivas",
+      "emoji": "💥",
+      "icon": "assets/itens magicos/municao_explosiva.png",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_explosivas",
+      "ammo_count": 5,
+      "descricao": "Pacote com 5 flechas. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
+    },
+    {
+      "id": "virotes_explosivos",
+      "name": "Virotes Explosivos",
+      "emoji": "💥",
+      "icon": "assets/itens magicos/municao_explosiva.png",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_explosivos",
+      "ammo_count": 5,
+      "descricao": "Pacote com 5 virotes. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
+    },
+    {
       "id": "veneno_fungo_acre",
       "name": "Fungo Acre",
       "emoji": "🍄",
@@ -12815,6 +12988,22 @@ window.EDITOR_CATALOG = {
         }
       ],
       "descricao": "+1 de visão e +1 em todos os testes de resistência enquanto equipada."
+    },
+    {
+      "id": "chapeu_aventureiro",
+      "name": "Chapéu do Aventureiro",
+      "emoji": "🤠",
+      "icon": "assets/itens/chapeu_aventureiro.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "initiative",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de visão e +1 de iniciativa enquanto equipado."
     },
     {
       "id": "chapeu_bruxo",
@@ -13706,6 +13895,22 @@ window.EDITOR_CATALOG = {
       "id": "cantil_agua",
       "name": "Cantil de Água",
       "emoji": "🧴",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "carne_bovina",
+      "name": "Carne Bovina",
+      "emoji": "🍖",
+      "icon": "assets/itens/carne_bovina.png",
+      "item_slot": "bag",
+      "effect": "food"
+    },
+    {
+      "id": "leite",
+      "name": "Leite",
+      "emoji": "🥛",
+      "icon": "assets/itens/leite.png",
       "item_slot": "bag",
       "effect": "food"
     },
@@ -14927,6 +15132,96 @@ window.EDITOR_CATALOG = {
       "image": "lago_patos.png"
     },
     {
+      "type": "cocho",
+      "nome": "Cocho de madeira",
+      "emoji": "🪵",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cocho.png"
+    },
+    {
+      "type": "saco_grao",
+      "nome": "Saco de grãos",
+      "emoji": "🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "saco_grao.png"
+    },
+    {
+      "type": "caixa_ferramentas",
+      "nome": "Caixa de ferramentas",
+      "emoji": "🧰",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "caixa_ferramentas.png"
+    },
+    {
+      "type": "ancinho",
+      "nome": "Ancinho",
+      "emoji": "🛠️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "ancinho.png"
+    },
+    {
+      "type": "forcado",
+      "nome": "Forcado",
+      "emoji": "🛠️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "forcado.png"
+    },
+    {
+      "type": "balde_agua_chao",
+      "nome": "Balde com água",
+      "emoji": "🪣",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "balde_agua_chao.png"
+    },
+    {
       "type": "placa",
       "nome": "Placa",
       "emoji": "🪧",
@@ -15631,6 +15926,36 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": null
+    },
+    {
+      "type": "espantalho",
+      "nome": "Espantalho",
+      "emoji": "🧑‍🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "espantalho.png"
+    },
+    {
+      "type": "carroca_feno",
+      "nome": "Carroça com feno",
+      "emoji": "🔥",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "carroca_feno.png"
     },
     {
       "type": "bola_corrente",

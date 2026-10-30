@@ -403,6 +403,7 @@
     transicaoAltura: "rampa",      // transição visual entre níveis diferentes
     elevacaoValor: 1,              // nível aplicado pela ferramenta de altura
     doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
+    doorStyles: {},                 // {"x,y": "portao_levadico"}
     matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
@@ -423,6 +424,7 @@
     S.grid = { w, h };
     S.tiles = [];
     S.doorRotations = {};
+    S.doorStyles = {};
     S.elevacoes = {};
     S.alturasParede = {};
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
@@ -1792,6 +1794,7 @@
     for (const r of S.rooms) r.doors = r.doors.filter(d => !(d[0] === x && d[1] === y));
     delete S.doorRotations[doorKey(x, y)];
     delete S.doorConditions[doorKey(x, y)];
+    delete S.doorStyles[doorKey(x, y)];
   }
 
   function paintTile(x, y) {
@@ -3059,6 +3062,11 @@
         <div style="font-size:11px;color:#8a7a5a;margin-top:4px">${t("ui.editor.masmorra.painel.giros_aplicados", { n: rot })}</div>
         <button id="door-rotate" style="margin-top:8px">↻ ${t("ui.editor.masmorra.painel.girar_90_r")}</button>
         <small style="display:block;color:#8a7a5a;margin-top:6px">${t("ui.editor.masmorra.painel.seta_dourada_hint")}</small>
+        <label style="margin-top:10px;display:block">${t("ui.editor.masmorra.painel.estilo_porta")}</label>
+        <select id="door-style">
+          <option value=""${!S.doorStyles[conditionKey] ? " selected" : ""}>${t("ui.editor.masmorra.painel.porta_comum")}</option>
+          <option value="portao_levadico"${S.doorStyles[conditionKey] === "portao_levadico" ? " selected" : ""}>${t("ui.editor.masmorra.painel.portao_levadico")}</option>
+        </select>
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>🔐 ${t("ui.editor.masmorra.painel.condicao_abertura")}</b>
           <select id="door-condition-type">
@@ -3089,6 +3097,11 @@
             ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${nomeCat("decor", d.type, decorMeta(d.type)?.nome || d.type)} ${_xy(d.pos)}</label>`).join("") : `<small style="color:#d8a0a0">${t("ui.editor.masmorra.painel.marque_decor_chave")}</small>`}` : ""}
         </div>`;
       document.getElementById("door-rotate").onclick = rotateDoorSelected;
+      document.getElementById("door-style").onchange = e => {
+        if (e.target.value === "portao_levadico") S.doorStyles[conditionKey] = e.target.value;
+        else delete S.doorStyles[conditionKey];
+        renderPanel(); render();
+      };
       document.getElementById("door-condition-type").onchange = e => {
         if (e.target.value === "none") delete S.doorConditions[conditionKey];
         else if (e.target.value === "item") S.doorConditions[conditionKey] = { type: "item", item_id: keyItems[0]?.v || "" };
@@ -4008,7 +4021,7 @@
     const b = _regionBounds(rect); if (!b) return null;
     const data = { tiles: [], rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
       secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null,
-      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {} };
+      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {}, doorStyles: {} };
     const refs = { rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
       secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null };
     for (let y = b.y; y <= b.y2; y++) data.tiles.push(S.tiles[y].slice(b.x, b.x2 + 1));
@@ -4059,6 +4072,7 @@
       const key = doorKey(x, y), local = doorKey(x - b.x, y - b.y);
       if (S.doorRotations[key] != null) data.doorRotations[local] = S.doorRotations[key];
       if (S.doorConditions[key]) data.doorConditions[local] = _cloneRegionValue(S.doorConditions[key]);
+      if (S.doorStyles[key]) data.doorStyles[local] = S.doorStyles[key];
       if (S.materiais[key] != null) data.materials[local] = S.materiais[key];
       if (S.elevacoes[key] != null) data.elevations[local] = S.elevacoes[key];
       if (S.alturasParede[key] != null) data.wallHeights[local] = S.alturasParede[key];
@@ -4134,6 +4148,7 @@
       const [x, y] = key.split(",").map(Number); return [doorKey(x + target[0], y + target[1]), value];
     }));
     d.doorRotations = remapKeys(d.doorRotations); d.doorConditions = remapKeys(d.doorConditions);
+    d.doorStyles = remapKeys(d.doorStyles || {});
     d.materials = remapKeys(d.materials); d.elevations = remapKeys(d.elevations);
     d.wallHeights = remapKeys(d.wallHeights || {});
     d.doorConditions = Object.fromEntries(Object.entries(d.doorConditions).map(([key, c]) => [key,
@@ -4151,6 +4166,7 @@
     S.rooms.push(...d.rooms); S.heroSpawns.push(...d.heroSpawns); S.monsters.push(...d.monsters);
     S.chests.push(...d.chests); S.traps.push(...d.traps); S.decorations.push(...d.decorations);
     S.secretPassages.push(...d.secretPassages); S.falas.push(...d.falas); S.pontes.push(...d.pontes);
+    Object.assign(S.doorStyles, d.doorStyles);
     if (d.entrance) S.entrance = d.entrance;
     if (d.exit) S.exit = d.exit;
     if (d.prisoner) S.prisoner = d.prisoner;
@@ -4353,6 +4369,10 @@
         : c.type === "requirement" ? { type: "requirement", requirement: Object.assign({}, c.requirement || {}) }
         : c.type === "gas" ? { type: "gas", zona_id: c.zona_id || "" }
         : { type: "decor", key_decor_ids: (c.key_decor_ids || []).slice(), keys_mode: c.keys_mode === "all" ? "all" : "any" }])),
+      ...(Object.keys(S.doorStyles).length ? { door_styles: Object.fromEntries(Object.entries(S.doorStyles).filter(([key, style]) => {
+        const [x, y] = key.split(",").map(Number);
+        return style === "portao_levadico" && S.tiles[y]?.[x] === DOOR;
+      })) } : {}),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
@@ -4869,6 +4889,12 @@
     };
     loadDoorRotations(obj.door_orientations);
     for (const r of (obj.rooms || [])) loadDoorRotations(r.door_orientations);
+    S.doorStyles = {};
+    for (const [key, style] of Object.entries(obj.door_styles || {})) {
+      if (!/^\d+,\d+$/.test(key) || style !== "portao_levadico") continue;
+      const [x, y] = key.split(",").map(Number);
+      if (S.tiles[y]?.[x] === DOOR) S.doorStyles[key] = style;
+    }
     S.nextRoomId = S.rooms.reduce((m, r) => Math.max(m, r.id + 1), 0);
     S.startMode = obj.start_mode === "hero_spawns" || (!obj.entrance && Array.isArray(obj.hero_spawns) && obj.hero_spawns.length)
       ? "hero_spawns" : "entrance";

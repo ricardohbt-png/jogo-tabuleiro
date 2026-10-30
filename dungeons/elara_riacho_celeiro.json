@@ -1488,8 +1488,8 @@
     {
       "type": "soldado",
       "pos": [
-        4,
-        3
+        9,
+        5
       ],
       "room_id": 0,
       "boss": false,
@@ -1499,8 +1499,8 @@
     {
       "type": "soldado",
       "pos": [
-        3,
-        4
+        9,
+        8
       ],
       "room_id": 0,
       "boss": false,
@@ -1700,6 +1700,7 @@
         38,
         19
       ],
+      "room_id": null,
       "boss": false,
       "target": false,
       "source_id": "mob_21"
@@ -1710,6 +1711,7 @@
         41,
         20
       ],
+      "room_id": null,
       "boss": false,
       "target": false,
       "source_id": "mob_22"
@@ -1720,6 +1722,7 @@
         43,
         19
       ],
+      "room_id": null,
       "boss": false,
       "target": false,
       "source_id": "mob_23"
@@ -1774,6 +1777,7 @@
         23,
         22
       ],
+      "room_id": null,
       "boss": false,
       "target": false,
       "source_id": "mob_28"
@@ -1784,9 +1788,21 @@
         30,
         22
       ],
+      "room_id": null,
       "boss": false,
       "target": false,
       "source_id": "mob_29"
+    },
+    {
+      "type": "cavalo_sela",
+      "pos": [
+        42,
+        22
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_30"
     }
   ],
   "chests": [
@@ -3243,6 +3259,186 @@
       ],
       "loot": null,
       "key_objective": false
+    },
+    {
+      "id": "decor_75",
+      "type": "balde_agua_chao",
+      "pos": [
+        12,
+        20
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "balde_agua_chao.png"
+    },
+    {
+      "id": "decor_76",
+      "type": "balde_agua_chao",
+      "pos": [
+        26,
+        12
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "balde_agua_chao.png"
+    },
+    {
+      "id": "decor_77",
+      "type": "balde_agua_chao",
+      "pos": [
+        46,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "balde_agua_chao.png"
+    },
+    {
+      "id": "decor_78",
+      "type": "saco_grao",
+      "pos": [
+        37,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_79",
+      "type": "saco_grao",
+      "pos": [
+        36,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_80",
+      "type": "saco_grao",
+      "pos": [
+        23,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_81",
+      "type": "saco_grao",
+      "pos": [
+        16,
+        13
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_82",
+      "type": "saco_grao",
+      "pos": [
+        13,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_83",
+      "type": "saco_grao",
+      "pos": [
+        12,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_84",
+      "type": "saco_grao",
+      "pos": [
+        14,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "saco_grao.png"
+    },
+    {
+      "id": "decor_85",
+      "type": "ancinho",
+      "pos": [
+        9,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "ancinho.png"
+    },
+    {
+      "id": "decor_86",
+      "type": "forcado",
+      "pos": [
+        6,
+        23
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "forcado.png"
     }
   ],
   "secret_passages": [],

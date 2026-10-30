@@ -8445,6 +8445,18 @@ def validar_dungeon(defn):
             if not isinstance(value, int) or isinstance(value, bool) or value not in (0, 1, 2, 3):
                 return False, f"orientação de porta inválida em {key}: {value!r}."
 
+    door_styles = defn.get("door_styles") or {}
+    if not isinstance(door_styles, dict):
+        return False, "door_styles deve ser um objeto."
+    for key, style in door_styles.items():
+        if not isinstance(key, str) or not re.fullmatch(r"\d+,\d+", key):
+            return False, f"chave de estilo de porta inválida: {key!r}."
+        dx, dy = (int(v) for v in key.split(","))
+        if not in_grid([dx, dy]) or tile_at([dx, dy]) != DOOR:
+            return False, f"estilo de porta referencia uma casa que não é DOOR: {key}."
+        if style != "portao_levadico":
+            return False, f"estilo de porta desconhecido em {key}: {style!r}."
+
     # Rotas são opcionais para manter toda masmorra autorada anterior válida.
     # IDs estáveis são a chave do progresso entre incursões; não aceitar
     # referências ambíguas aqui evita derrotas/saídas atribuídas ao caminho errado.
@@ -17924,6 +17936,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.dungeon_routes = {str(r.get("id")): deepcopy(r) for r in defn.get("routes", []) if isinstance(r, dict) and r.get("id")}
         self.route_exits = [deepcopy(x) for x in defn.get("route_exits", []) if isinstance(x, dict)]
         self.opened_doors = set()
+        self.door_styles = {}
+        for key, style in (defn.get("door_styles") or {}).items():
+            try:
+                x, y = (int(v) for v in key.split(","))
+            except (AttributeError, TypeError, ValueError):
+                continue
+            if style == "portao_levadico" and 0 <= x < defn["grid"]["w"] and 0 <= y < defn["grid"]["h"] and defn["tiles"][y][x] == DOOR:
+                self.door_styles[(x, y)] = style
         self.map_w = defn["grid"]["w"]
         self.map_h = defn["grid"]["h"]
         self.tiles = deepcopy(defn["tiles"])

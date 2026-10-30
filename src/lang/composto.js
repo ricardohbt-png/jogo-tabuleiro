@@ -22,6 +22,8 @@ window.LANG_COMPOSTO = {
   "cat.item.virotes.nome_curto":            {"pt": "Virotes", "en": "Bolts"},
   "cat.item.flechas_prata.nome_curto":      {"pt": "Flechas de Prata", "en": "Silver Arrows"},
   "cat.item.virotes_prata.nome_curto":      {"pt": "Virotes de Prata", "en": "Silver Bolts"},
+  "cat.item.flechas_explosivas.nome_curto":  {"pt": "Flechas Explosivas", "en": "Explosive Arrows"},
+  "cat.item.virotes_explosivos.nome_curto":  {"pt": "Virotes Explosivos", "en": "Explosive Bolts"},
   "cat.item.virote_incendiario.nome_curto": {"pt": "Virote Incendiário",
                                              "en": "Incendiary Bolt"},
   "cat.item.flecha_incendiaria.nome_curto": {"pt": "Flecha Incendiária",

@@ -574,6 +574,8 @@ const GS = (() => {
     virotes_prata:         { id:'virotes_prata',         nome:'Virotes de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
     flechas_incendiarias:  { id:'flechas_incendiarias',  nome:'Flechas Incendiárias (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
+    flechas_explosivas:    { id:'flechas_explosivas',    nome:'Flechas Explosivas (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_explosivos:    { id:'virotes_explosivos',    nome:'Virotes Explosivos (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
 
     // ── TAVERNA — Itens de sobrevivência ──
     carta:             { id:'carta',             nome:'Carta',               tipo:'carta',      loja:'masmorra', preco:0, item_slot:'bag', effect:'letter', value:0, texto:'Esta carta não contém nenhuma mensagem.', descricao:'Ao ler, abre a mensagem escrita sem consumir a carta.', permitidoPara:['todos'] },
@@ -1037,6 +1039,8 @@ const GS = (() => {
     const ocupaAliado = (x, y) => (atravessar ? occ.aliados : occ).add(`${x},${y}`);
     for (const m of (gameState.monsters || [])) {
       if (!m || m.hp <= 0) continue;
+      if (actor?.cavalo_montado_id && String(m.id) === String(actor.cavalo_montado_id)
+          && String(m.cavaleiro_id) === String(actor.id)) continue;
       if (_podeCompartilharCasaVoando(actor, m)) continue;
       for (const [tx, ty] of monsterTiles(m)) occ.add(`${tx},${ty}`);
     }
@@ -3667,10 +3671,10 @@ const GS = (() => {
     const maxFrasco = Number(opts.maxPorFrasco) || 10;
     const limiteDistintos = opts.doisVenenos ? 2 : 1;
     const MUNICAO = {
-      arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata'],
-      longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata'],
-      besta: ['virotes', 'virotes_incendiarios', 'virotes_prata'],
-      hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata'],
+      arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas'],
+      longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas'],
+      besta: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos'],
+      hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos'],
     };
     const gear = (me && me.gear) || {};
     // O item inicial da mão principal pode vir reduzido em gear.weapon (sem dado de dano): completa
