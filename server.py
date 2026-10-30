@@ -12051,7 +12051,8 @@ def _preco_inicial(item_id):
 
     if cls_id == "bard":
         # Instrumento vive na MÃƒO DO ESCUDO (off_hand) â€” substitui a 2Âª adaga inicial.
-        player["gear"]["off_hand"] = criar_instrumento("alaude", "velho")
+        player["gear"]["off_hand"] = {**criar_instrumento("alaude", "velho"),
+                                      "price": 60, "buy_price": 60}
 
     return player
 
