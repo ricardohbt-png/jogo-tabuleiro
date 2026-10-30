@@ -73,6 +73,8 @@ async def main():
     veneno("t_con4", "constituicao", 4, 5)
     veneno("t_dex4", "destreza", 4, 5)
     veneno("t_int4", "inteligencia", 4, 5)
+    veneno("t_con1", "constituicao", 1, 1)
+    veneno("t_con3", "constituicao", 3, 5)
 
     print("\n[1] FOR: o dano cai pela queda real do modificador")
     r = sala()
@@ -181,6 +183,74 @@ async def main():
         # FOR 16 -2 -> 14 (+2): -1 ; CON 14 -2 -> 12 (+1): -1 x ND 2
         check("Medusa: FOR deriva do modificador", r._pen(m, "dano") == -1, r._pen(m, "dano"))
         check("Medusa: CON deriva do ND", m["max_hp"] <= 58, m["max_hp"])
+
+    print("\n[10] Herói: dois venenos de CON expirando fora de ordem")
+    def heroi_con(r):
+        h = S.make_player("h2", "Heroi2", "warrior", 1)
+        h.update(alive=True, pos=[1, 1], connected=True, con_=14, level=3,
+                 max_hp=60, hp=60, fort=3)
+        r.players["h2"] = h
+        return h
+    r = sala()
+    h = heroi_con(r)
+    await r._aplicar_veneno(h, "t_con1")        # dura 1: 14 -> 13 (+2 -> +1)
+    await r._aplicar_veneno(h, "t_con3")        # dura 5: 13 -> 10 (+1 -> 0)
+    check("acumulado: PV máximo 60 -> 54 (2 x nível 3)", h["max_hp"] == 54, h["max_hp"])
+    check("acumulado: Fortitude 3 -> 1", h["fort"] == 1, h["fort"])
+    await r._processar_venenos_turno(h)          # o primeiro (CON -1) expira
+    check("sobra só CON -3: score 11", h["con_"] == 11, h["con_"])
+    check("PV máximo exato com o que sobrou (era o desvio)", h["max_hp"] == 54, h["max_hp"])
+    check("Fortitude exata com o que sobrou", h["fort"] == 1, h["fort"])
+    for _ in range(6):
+        await r._processar_venenos_turno(h)
+    check("tudo expirado: CON 14", h["con_"] == 14, h["con_"])
+    check("tudo expirado: PV máximo 60", h["max_hp"] == 60, h["max_hp"])
+    check("tudo expirado: Fortitude 3", h["fort"] == 3, h["fort"])
+    check("sem resto de bookkeeping", not h.get("_veneno_hp_perdido") and not h.get("_veneno_fort_perdido"))
+
+    print("\n[11] Herói: cura devolve tudo; PV atual limitado ao novo máximo")
+    r = sala()
+    h = heroi_con(r)
+    await r._aplicar_veneno(h, "t_con4")        # 14 -> 10: -6 PV máx, -2 Fort
+    check("PV atual limitado", h["hp"] == 54 and h["max_hp"] == 54, (h["hp"], h["max_hp"]))
+    r._curar_veneno_status(h)
+    check("cura: CON 14", h["con_"] == 14)
+    check("cura: PV máximo 60", h["max_hp"] == 60, h["max_hp"])
+    check("cura: Fortitude 3", h["fort"] == 3, h["fort"])
+
+    print("\n[12] Herói: efeito no formato antigo (hp_delta/fort_delta) ainda reverte")
+    r = sala()
+    h = heroi_con(r)
+    h.update(con_=10, max_hp=54, hp=54, fort=1)
+    h["efeitos_veneno"] = [{"operacao": "reduzir", "atributo": "constituicao", "valor": 4,
+                            "duracao": 1, "attr_key": "con_", "hp_delta": 6, "fort_delta": 2}]
+    await r._processar_venenos_turno(h)
+    check("formato antigo: CON/PV/Fort restaurados",
+          (h["con_"], h["max_hp"], h["fort"]) == (14, 60, 3), (h["con_"], h["max_hp"], h["fort"]))
+
+    print("\n[13] Herói: Medusa e Nuvem de Gás usam o mesmo recálculo")
+    r = sala()
+    h = heroi_con(r)
+    await r._aplicar_veneno(h, "veneno_medusa")  # CON 14 -2 -> 12 (+2 -> +1)
+    check("Medusa: PV máximo 60 -> 57", h["max_hp"] == 57, h["max_hp"])
+    r._curar_veneno_status(h)
+    check("Medusa + cura: tudo de volta", (h["con_"], h["max_hp"], h["fort"]) == (14, 60, 3),
+          (h["con_"], h["max_hp"], h["fort"]))
+    r = sala()
+    h = heroi_con(r)
+    await r._reduzir_con_temporario(h, 4, 2)     # 14 -> 10
+    check("Nuvem: PV máximo 60 -> 54", h["max_hp"] == 54, h["max_hp"])
+    for _ in range(3):
+        await r._processar_venenos_turno(h)
+    check("Nuvem expirou: tudo de volta", (h["con_"], h["max_hp"], h["fort"]) == (14, 60, 3),
+          (h["con_"], h["max_hp"], h["fort"]))
+    r = sala()
+    m = monstro(r)
+    await r._reduzir_con_temporario(m, 4, 2)     # monstro: mesma regra (2 x ND 2)
+    check("Nuvem no monstro: PV máximo 40 -> 36", m["max_hp"] == 36, m["max_hp"])
+    for _ in range(3):
+        await r._processar_venenos_turno(m)
+    check("Nuvem no monstro expirou: PV máximo 40", m["max_hp"] == 40, m["max_hp"])
 
 
 asyncio.run(main())
