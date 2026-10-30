@@ -2969,7 +2969,7 @@ function openShop(pointId, type, sceneOverride){
   const shopTabs = (shopId==='ferreiro'
     ? ['armas','armaduras','municao','reparar','vender']
     : shopId==='mercador'
-    ? ['comprar','instrumentos','arremessaveis','venenos','pergaminhos','vender']
+    ? ['equipamentos','consumiveis','instrumentos','arremessaveis','venenos','pergaminhos','vender']
     : shopId==='templo'
     ? ['comprar','servicos']
     : shopId==='taverna'
@@ -3234,7 +3234,7 @@ function _renderShopItems(){
   // Todas as abas de venda exibem o inventário completo: equipamento e bolsa.
   // A venda continua autoritativa no servidor, independentemente da loja.
   if(GS.activeShop==='ferreiro'&&aba===4){ _renderSellItems('all'); return; }
-  if(GS.activeShop==='mercador'&&aba===5){ _renderSellItems('all'); return; }
+  if(GS.activeShop==='mercador'&&aba===6){ _renderSellItems('all'); return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
   const gold=_ouroDisponivelCidade(myP);
@@ -3248,18 +3248,21 @@ function _renderShopItems(){
     else                       { items=shops.ferreiro.ammo;    shopKey='ferreiro_ammo';   }
   } else if(GS.activeShop==='mercador') {
     const mercadorItems=shops.mercador||[];
-    if(aba===1) {
+    if(aba===2) {
       items=mercadorItems.filter(item=>item.tipo_item==='instrumento');
-    } else if(aba===2) {
-      items=mercadorItems.filter(item=>item.effect==='throwable');
     } else if(aba===3) {
-      items=mercadorItems.filter(item=>item.effect==='coat_poison');
+      items=mercadorItems.filter(item=>item.effect==='throwable');
     } else if(aba===4) {
+      items=mercadorItems.filter(item=>item.effect==='coat_poison');
+    } else if(aba===5) {
       items=mercadorItems.filter(item=>item.effect==='scroll');
     } else {
-      // Itens gerais: mantém o mercado normal sem duplicar as categorias próprias.
-      items=mercadorItems.filter(item=>item.tipo_item!=='instrumento'
+      // Itens gerais, sem duplicar as categorias próprias: o que se equipa (efeito
+      // enquanto equipado) vai em Equipamentos; o resto da bolsa, em Consumíveis.
+      const geral=mercadorItems.filter(item=>item.tipo_item!=='instrumento'
         && item.effect!=='throwable' && item.effect!=='coat_poison' && item.effect!=='scroll');
+      const equipavel=item=>!!item.item_slot && item.item_slot!=='bag';
+      items=geral.filter(item=>aba===0 ? equipavel(item) : !equipavel(item));
     }
   } else if(GS.activeShop==='templo') {
     const temploItems=shops.templo||[];

@@ -6015,6 +6015,14 @@ window.LANG_INTERFACE = {
     "en": "Conversations",
     "pt": "Conversas"
   },
+  "ui.loja.aba.equipamentos": {
+    "en": "⚔️ Equipment",
+    "pt": "⚔️ Equipamentos"
+  },
+  "ui.loja.aba.consumiveis": {
+    "en": "🧪 Consumables",
+    "pt": "🧪 Consumíveis"
+  },
   "ui.loja.aba.instrumentos": {
     "en": "🎵 Instruments",
     "pt": "🎵 Instrumentos"
