@@ -3507,12 +3507,15 @@ function _itemDesc(item){
     return item.descricao || resumo;
   }
   if(item.effect==='ammo'){
+    if(item.descricao) return item.descricao;
     const detalhes=[`×${item.ammo_count ?? 0}`];
     if(item.damage_bonus) detalhes.push(t('ui.item.desc.mais_dano', {n: item.damage_bonus}));
     if(item.silver) detalhes.push(t('ui.item.desc.prata'));
     return detalhes.join(' • ');
   }
   if(item.ac_bonus!=null){
+    // A descrição autoral cobre bônus extras (resistência, PV…) que o resumo de CA não mostra.
+    if(item.descricao) return item.descricao;
     const kindTxt=item.kind==='shield'?t('ui.item.desc.escudo_soma'):t('ui.item.desc.armadura');
     if(item.kind==='armor'){
       const cat=_rotulo(item.armor_category, 'ui.item.armadura_cat', '');
@@ -3554,10 +3557,13 @@ function _itemDesc(item){
   if(item.effect==='veil_shadow')
     return item.descricao || t('ui.item.acao_bonus_fica_oculto_ate_o_fim_do_turno');
   const rotuloEfeito=_rotulo(item.effect, 'ui.item.efeito', '');
+  // A descrição do item (a mesma do tooltip) vale mais que o rótulo genérico do efeito:
+  // um item com vários bônus mostrava só o principal ("+1 CA" na Tiara Arcana).
+  if(item.descricao) return item.descricao;
   if(!rotuloEfeito){
     // Efeito sem rótulo traduzido: mostrar o id técnico (ex.: ILLUSION_LURE) vazaria
-    // inglês na lista da loja. Prefere a descrição do item e depois a do catálogo.
-    const descricao=item.descricao || ((typeof GS!=='undefined' && GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {}).descricao;
+    // inglês na lista da loja. Prefere a descrição do catálogo.
+    const descricao=((typeof GS!=='undefined' && GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[item.id]) || {}).descricao;
     if(descricao) return descricao;
   }
   const v=item.value?` ${item.value}`:'';
