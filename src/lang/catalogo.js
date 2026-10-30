@@ -1055,11 +1055,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
   },
   "cat.guilda.lenda_cavalo_sela.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Saddle Horse.",
     "pt": "+1 de ataque e +1 nos saves contra Cavalo de Sela."
   },
   "cat.guilda.lenda_cavalo_sela.nome": {
-    "en": "",
+    "en": "Lore: Saddle Horse",
     "pt": "Lenda: Cavalo de Sela"
   },
   "cat.guilda.lenda_ciclope.desc": {
@@ -1599,11 +1599,11 @@ window.LANG_CATALOGO = {
     "pt": "Lenda: Urso Pardo"
   },
   "cat.guilda.lenda_vaca.desc": {
-    "en": "",
+    "en": "+1 to attack and +1 to saving throws against Skittish Cow.",
     "pt": "+1 de ataque e +1 nos saves contra Vaca Arisca."
   },
   "cat.guilda.lenda_vaca.nome": {
-    "en": "",
+    "en": "Lore: Skittish Cow",
     "pt": "Lenda: Vaca Arisca"
   },
   "cat.guilda.lenda_vampiro_anciao.desc": {
@@ -4239,7 +4239,7 @@ window.LANG_CATALOGO = {
     "pt": "Bugbear — Bicho-Papão das Sombras"
   },
   "cat.monstro.cavalo_sela.nome": {
-    "en": "",
+    "en": "Saddle Horse",
     "pt": "Cavalo de Sela"
   },
   "cat.monstro.ciclope.nome": {

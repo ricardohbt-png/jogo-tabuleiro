@@ -27200,10 +27200,11 @@ function _escolherCasaDesmontar(me){
   overlay.style.cssText = 'position:fixed;inset:0;z-index:12000;background:#000b;display:flex;align-items:center;justify-content:center';
   const card = document.createElement('section');
   card.style.cssText = 'background:#17120d;border:1px solid #9a6a2a;padding:16px;width:min(340px,92vw);color:#eee;font-family:Cinzel,serif';
-  card.innerHTML = `<b>Escolha onde desmontar</b><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px"></div><button style="width:100%;margin-top:10px;padding:8px">Cancelar</button>`;
+  card.innerHTML = `<b>${_esc(t('ui.montaria.escolha_desmontar'))}</b><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px"></div><button style="width:100%;margin-top:10px;padding:8px">${_esc(t('ui.geral.cancelar'))}</button>`;
   const grid = card.querySelector('div');
   const [x,y] = me.pos || [0,0];
-  for(const [dx,dy,nome] of [[0,-1,'Norte'],[1,0,'Leste'],[0,1,'Sul'],[-1,0,'Oeste']]){
+  for(const [dx,dy,dirId] of [[0,-1,'norte'],[1,0,'leste'],[0,1,'sul'],[-1,0,'oeste']]){
+    const nome=t('ui.montaria.dir.'+dirId);
     const tx=x+dx, ty=y+dy;
     if(tx<0||ty<0||tx>=(GS.gameState?.tiles?.[0]?.length||0)||ty>=(GS.gameState?.tiles?.length||0)) continue;
     const b=document.createElement('button'); b.textContent=`${nome} (${tx}, ${ty})`; b.style.padding='8px';
@@ -27651,13 +27652,13 @@ function renderMyPanel(state){
     dash.className = 'skill-btn guild-tec';
     dash.disabled = !(GS.isMyTurn && me.alive && state.phase === 'playing' && !me.bonus_action_used
       && !me.moved_this_turn && !cooldown && !(Number(me.velocidade_rodadas || 0) > 0));
-    dash.innerHTML = `<div class="skill-info"><div class="skill-name">💨 Disparada</div><div class="skill-desc">${cooldown ? `Recarga: ${cooldown} rodada(s)` : 'Dobra o movimento do cavalo neste turno.'}</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
+    dash.innerHTML = `<div class="skill-info"><div class="skill-name">💨 ${_esc(t('ui.montaria.disparada'))}</div><div class="skill-desc">${cooldown ? t('ui.montaria.disparada_recarga',{n:cooldown}) : t('ui.montaria.disparada_desc')}</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
     dash.onclick = () => send({type:'disparada_cavalo'});
     sl.appendChild(dash);
     const desmontar = document.createElement('button');
     desmontar.className = 'skill-btn';
     desmontar.disabled = !(GS.isMyTurn && me.alive && state.phase === 'playing' && !me.bonus_action_used);
-    desmontar.innerHTML = `<div class="skill-info"><div class="skill-name">🐎 Desmontar</div><div class="skill-desc">Escolha uma casa ortogonal adjacente.</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
+    desmontar.innerHTML = `<div class="skill-info"><div class="skill-name">🐎 ${_esc(t('ui.montaria.desmontar'))}</div><div class="skill-desc">${_esc(t('ui.montaria.desmontar_desc'))}</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
     desmontar.onclick = () => _escolherCasaDesmontar(me);
     sl.appendChild(desmontar);
   } else {
@@ -27668,7 +27669,7 @@ function renderMyPanel(state){
       const montar = document.createElement('button');
       montar.className = 'skill-btn';
       montar.disabled = !(GS.isMyTurn && me.alive && state.phase === 'playing' && !me.bonus_action_used);
-      montar.innerHTML = `<div class="skill-info"><div class="skill-name">🐎 Montar ${_esc(cavalo.name || 'Cavalo de Sela')}</div><div class="skill-desc">Usa movimento 8 · ação bônus.</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
+      montar.innerHTML = `<div class="skill-info"><div class="skill-name">🐎 ${t('ui.montaria.montar',{nome:_esc(cavalo.name || t('ui.montaria.cavalo'))})}</div><div class="skill-desc">${_esc(t('ui.montaria.montar_desc'))}</div></div><div class="skill-cost">${t('ui.recursos.acao_bonus')}</div>`;
       montar.onclick = () => send({type:'montar_cavalo',monster_id:cavalo.id});
       sl.appendChild(montar);
     }

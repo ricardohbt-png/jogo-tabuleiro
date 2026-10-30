@@ -11494,6 +11494,19 @@ window.LANG_INTERFACE = {
   "ui.veneno.municao_bolsa": {"en":"bag #{n}","pt":"bolsa #{n}"},
   "ui.veneno.municao_completa": {"en":"→ poisons {n} (tops up with identical stacks)","pt":"→ envenena {n} (completa com pilhas iguais)"},
   "ui.ladino.cargas_veneno": {"en":"{n} poison charges","pt":"{n} cargas de veneno"},
-  "ui.mestre.veneno_ativo": {"en":"Poison already applied","pt":"Veneno já aplicado"}
+  "ui.mestre.veneno_ativo": {"en":"Poison already applied","pt":"Veneno já aplicado"},
+  "ui.montaria.escolha_desmontar": {"en":"Choose where to dismount","pt":"Escolha onde desmontar"},
+  "ui.montaria.dir.norte": {"en":"North","pt":"Norte"},
+  "ui.montaria.dir.leste": {"en":"East","pt":"Leste"},
+  "ui.montaria.dir.sul": {"en":"South","pt":"Sul"},
+  "ui.montaria.dir.oeste": {"en":"West","pt":"Oeste"},
+  "ui.montaria.disparada": {"en":"Dash","pt":"Disparada"},
+  "ui.montaria.disparada_recarga": {"en":"Cooldown: {n} round(s)","pt":"Recarga: {n} rodada(s)"},
+  "ui.montaria.disparada_desc": {"en":"Doubles the horse's movement this turn.","pt":"Dobra o movimento do cavalo neste turno."},
+  "ui.montaria.desmontar": {"en":"Dismount","pt":"Desmontar"},
+  "ui.montaria.desmontar_desc": {"en":"Choose an adjacent orthogonal tile.","pt":"Escolha uma casa ortogonal adjacente."},
+  "ui.montaria.montar": {"en":"Mount {nome}","pt":"Montar {nome}"},
+  "ui.montaria.montar_desc": {"en":"Uses 8 movement · bonus action.","pt":"Usa movimento 8 · ação bônus."},
+  "ui.montaria.cavalo": {"en":"Saddle Horse","pt":"Cavalo de Sela"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

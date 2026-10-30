@@ -133,6 +133,10 @@ window.LANG_ERROS = {
     "en": "The trip still takes {rodadas} round(s).",
     "pt": "A viagem ainda leva {rodadas} rodada(s)."
   },
+  "erro.acao_bonus_ja_usada": {
+    "en": "Bonus action already used.",
+    "pt": "Ação bônus já usada."
+  },
   "erro.acao_bonus_ja_usada_neste_turno": {
     "en": "Bonus action already used this turn.",
     "pt": "Ação bônus já usada neste turno."
