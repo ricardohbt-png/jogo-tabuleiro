@@ -10591,9 +10591,11 @@ SHOP_TAVERN = [
     {"id": "refeicao_simples", "name": "Refeição Simples", "emoji": "🍲", "price": 4,  "effect": "meal_survival", "fome": 25, "sede": 25},
     {"id": "banquete",         "name": "Banquete",         "emoji": "🍗", "price": 10, "effect": "meal_survival", "fome": 50, "sede": 50},
     {"id": "banquete_comemoracao", "name": "Banquete de Comemoração", "emoji": "🎉", "price": 5,
-     "preco_fixo": True, "refeicao_grupo": True, "effect": "meal_survival", "fome": 40, "sede": 40},
+     "preco_fixo": True, "refeicao_grupo": True, "effect": "meal_survival", "fome": 40, "sede": 40,
+     "descricao": "+40 de fome e +40 de sede para cada herói • 5 moedas por herói • uma vez por visita para o grupo"},
     {"id": "grande_celebracao", "name": "Grande Celebração", "emoji": "🥂", "price": 12,
-     "preco_fixo": True, "refeicao_grupo": True, "effect": "meal_survival", "fome": 75, "sede": 75},
+     "preco_fixo": True, "refeicao_grupo": True, "effect": "meal_survival", "fome": 75, "sede": 75,
+     "descricao": "+75 de fome e +75 de sede para cada herói • 12 moedas por herói • uma vez por visita para o grupo"},
     # â”€â”€ ProvisÃµes: vÃ£o para a mochila (1 slot cada), consumidas depois via "usar item" â”€â”€
     {"id": "pao",            "name": "Pão",              "emoji": "🥖", "price": 1,  "item_slot": "bag", "effect": "food", "fome": 10, "sede": 0},
     {"id": "garrafa_agua",   "name": "Garrafa de Água",  "emoji": "💧", "price": 2,  "item_slot": "bag", "effect": "food", "fome": 0,  "sede": 10},
@@ -10610,9 +10612,11 @@ SHOP_TAVERN = [
     {"id": "banquete_viagem", "name": "Banquete de Viagem", "emoji": "🍗", "price": 100, "item_slot": "bag",
      "effect": "meal_survival", "fome": 40, "sede": 40, "icon": "assets/itens/banquete.png"},
     {"id": "carne_bovina", "name": "Carne Bovina", "emoji": "🍖", "icon": "assets/itens/carne_bovina.png",
-     "price": 3, "item_slot": "bag", "effect": "food", "fome": 25, "sede": 0},
+     "price": 3, "item_slot": "bag", "effect": "food", "fome": 25, "sede": 0,
+     "descricao": "+25 de fome."},
     {"id": "leite", "name": "Leite", "emoji": "🥛", "icon": "assets/itens/leite.png",
-     "price": 1, "item_slot": "bag", "effect": "food", "fome": 5, "sede": 5},
+     "price": 1, "item_slot": "bag", "effect": "food", "fome": 5, "sede": 5,
+     "descricao": "+5 de fome e +5 de sede."},
 ]
 
 

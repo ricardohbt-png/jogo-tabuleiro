@@ -394,6 +394,10 @@ window.LANG_CATALOGO = {
     "en": "Crypt",
     "pt": "Cripta"
   },
+  "cat.decor.espantalho.nome": {
+    "en": "Scarecrow",
+    "pt": "Espantalho"
+  },
   "cat.decor.esqueleto_tiranossauro.nome": {
     "en": "Tyrannosaurus Skeleton",
     "pt": "Esqueleto de tiranossauro"
@@ -417,10 +421,6 @@ window.LANG_CATALOGO = {
   "cat.decor.estatua_divindade.nome": {
     "en": "Deity Statue",
     "pt": "Estátua de divindade"
-  },
-  "cat.decor.espantalho.nome": {
-    "en": "Scarecrow",
-    "pt": "Espantalho"
   },
   "cat.decor.estatua_soterrada.nome": {
     "en": "Buried Statue",
