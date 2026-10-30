@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Cura Completa do grupo no Templo (2026-10-29)
+
+`full_heal` em `SHOP_TEMPLE` deixou de ser o serviço individual de 15 moedas: é "Cura Completa do Grupo" (`cura_grupo`, `preco_fixo`, `pv_por_moeda: 3`). `GameRoom._plano_cura_grupo_templo` soma os PV que faltam aos heróis vivos e presentes (`class_id`, sem Mestre ou heróis de teste) e cobra `faltando // 3`, mínimo de 1 moeda quando alguém está ferido; `preco_fixo` ignora o ágio da cidade. Sem ouro suficiente a cura é parcial (3 PV por moeda), começando por quem tem mais PV faltando (desempate por `slot` e id); ninguém ferido recusa sem cobrar (`erro.ninguem_precisa_de_cura`). O servidor recalcula o plano ao comprar, então o cliente é só prévia. `GS.planoCuraGrupoTemplo(cityState, myPid)` (puro, em `gameState.js`) espelha o plano e soma o ouro do grupo quando `solo_grupo && ouro_compartilhado`; **mudou a regra no servidor, mude o espelho**. Em `game.js`, `curarGrupoNoTemplo` compra direto se o ouro cobre tudo; se a cura é parcial, abre `_confirmarCuraParcialTemplo` com a vida antes→depois de cada herói e quem ficará sem cura. Textos em `ui.templo.cura_grupo_*`. Nota de integração: o commit usa o ouro de quem compra; com `ouro_compartilhado` o débito e `_saldo_ouro_disponivel` entram junto do WIP de ouro compartilhado. Testes: `python -X utf8 tools/test_templo_cura_grupo.py` e `node tools/test_templo_cura_grupo_cliente.js`.
+
 ### Kit de Reparo de Campo (2026-10-25)
 
 `kit_reparo_campo` custa 60 moedas e é vendido em `ferreiro_ammo` nas cinco cidades. É consumível de ação principal: o inventário abre a seleção entre armas, armaduras e escudos com corrosão; o servidor valida o alvo, remove exatamente 1 nível e consome um kit. Peças destruídas continuam irrecuperáveis. O reparo de cidade segue distinto e remove todos os níveis por seu preço calculado.
