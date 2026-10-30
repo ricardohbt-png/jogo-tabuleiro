@@ -11873,6 +11873,15 @@ def make_player(pid, name, cls_id, slot):
         # nas compras. Isso deixa todos os personagens prontos para as futuras
         # penalidades por peso e para a corrosÃ£o por material.
         armor_meta = ARMOR_CATALOG.get(starting_armor_item.get("id"), {})
+def _preco_inicial(item_id):
+    """price/buy_price do item inicial, copiados do catálogo das lojas (vazio se não vendido)."""
+    for loja in (SHOP_WEAPONS, SHOP_ARMORS):
+        for it in loja:
+            if it.get("id") == item_id and it.get("price") is not None:
+                return {"price": it["price"], "buy_price": it["price"]}
+    return {}
+
+
         starting_armor_item["armor_category"] = armor_meta.get("armor_category")
         starting_armor_item["corrosion_materials"] = list(armor_meta.get("corrosion_materials", []))
 
@@ -11881,6 +11890,10 @@ def make_player(pid, name, cls_id, slot):
         "class_name": cls["name"], "emoji": cls["emoji"], "color": cls["color"],
         "hp": hp_total, "max_hp": hp_total,
         # D20 ability scores
+    # Equipamento inicial vale o mesmo que o item da loja (venda = buy_price // 3).
+    for _it in (starting_armor_item, starting_offhand_item):
+        if _it:
+            _it.update(_preco_inicial(_it.get("id")))
         "str_": s, "dex": d, "con_": c, "int_": i_,
         # Combat stats â€” AC = armor_base + DEX mod
         "ac": ac_start,
@@ -11897,13 +11910,14 @@ def make_player(pid, name, cls_id, slot):
         "spd": cls["spd"],
         "xp": 0, "level": 1, "renome_individual": 0,
         "gold": cls.get("start_gold", 0),
+        **_preco_inicial(w_id),
         "bag": [],
         "bag_size": 6,            # inventÃ¡rio base (expansÃ­vel por mochilas)
         "auto_equip_arrows_enabled": False,
         "auto_equip_arrows_order": list(AUTO_EQUIP_ARROW_TYPES),
         "gear": {
             "weapon":   starting_weapon_item,  # mÃ£o direita (arma principal)
-            "off_hand": deepcopy(_STARTING_OFFHAND.get(cls_id)),  # mÃ£o esquerda: arma 2Âª / escudo (dual-wield inicial)
+            "off_hand": starting_offhand_item,  # mÃ£o esquerda: arma 2Âª / escudo (dual-wield inicial)
             "armor":    starting_armor_item,   # corpo
             "head":     None,                  # elmo / tiara / capuz
             "boots":    None,                  # bota (slot dedicado)
