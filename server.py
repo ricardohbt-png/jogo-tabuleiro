@@ -15238,7 +15238,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                           + self._cacador_trevas_ca_bonus(alvo)
                           - self._pressao_ca_pen(alvo)
                           - self._furia_cega_ca_pen(alvo)
-                          - self._lento_previsivel_ca_pen(alvo))
+                          - self._lento_previsivel_ca_pen(alvo)
+                          + self._ca_veneno_atributo(alvo))
                 eff_ac = self._ponto_vulneravel_ac(alvo, tile, eff_ac, attacker_id=pid)
                 hit = bool(roll == 20 or roll + eff_atk >= eff_ac)
                 crit = bool(hit and roll == 20)
@@ -15904,7 +15905,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          + self._cacador_trevas_ca_bonus(target)        # Caçador das Trevas: +2 CA em área escura
                          - self._pressao_ca_pen(target)                 # Pressão Constante: -2 CA
                          - self._furia_cega_ca_pen(target)
-                         - self._lento_previsivel_ca_pen(target))       # Ogro: -2 CA após errar
+                         - self._lento_previsivel_ca_pen(target)
+                         + self._ca_veneno_atributo(target))       # Ogro: -2 CA após errar
         eff_target_ac = self._ponto_vulneravel_ac(target, target_tile, eff_target_ac, attacker_id=attacker_id)
         # Meia cobertura: objeto de visão "baixo" entre o herói e o alvo (+2 CA).
         cobertura = self._cobertura_baixa_bonus(p, target, target_tile)
@@ -20600,7 +20602,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Raio de visão: movimento base + bônus de visão + INT/DES."""
         base = max(1, int(m.get("base_movement", 6)))
         bonus_visao = max(-30, min(30, int(m.get("vision_base", 0))))
-        bonus_atributos = (mod(m.get("int_", 10)) + mod(m.get("dex", 10))) // 2
+        bonus_atributos = (mod(m.get("int_", 10) - self._reducao_atributo_veneno(m, "int_"))
+                           + mod(m.get("dex", 10) - self._reducao_atributo_veneno(m, "dex"))) // 2
         bonus_duas_cabecas = 2 if self._tem_habilidade(m, "duas_cabecas") else 0
         raio = max(1, base + bonus_atributos + bonus_visao + bonus_duas_cabecas)
         for efeito in m.get("efeitos_veneno", []) or []:
@@ -27320,6 +27323,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if efeito.get("fort_delta"):
                     alvo["fort"] = alvo.get("fort", 0) + efeito["fort_delta"]
             else:                          # monstro â€” desfaz traduÃ§Ã£o
+                if efeito.get("attr_mon"):
+                    efeito["revertido"] = True          # derivados deixam de contar
+                    self._sincronizar_hp_veneno(alvo)
                 if efeito.get("hp_perdido"):
                     alvo["max_hp"] = alvo.get("max_hp", alvo.get("hp", 1)) + efeito["hp_perdido"]
                 if efeito.get("pen_dano"):
@@ -38396,8 +38402,83 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return bool(alvo) and self._eh_jogador(alvo) and alvo.get("fosso_oculto")
 
     def _pen(self, alvo, chave):
-        """Penalidade ativa de veneno para uma chave (valor já assinado, ≤ 0)."""
-        return alvo.get("penalidades", {}).get(chave, 0)
+        """Penalidade ativa de veneno para uma chave (valor já assinado, ≤ 0).
+
+        No monstro, a FOR reduzida por veneno entra aqui como dano (derivada ao vivo
+        dos efeitos ativos, sem guardar estado que possa dessincronizar)."""
+        base = alvo.get("penalidades", {}).get(chave, 0)
+        if chave == "dano" and not self._eh_jogador(alvo):
+            base -= self._queda_modificador_veneno(alvo, "str_")
+        return base
+
+    # ── Redução de atributo por veneno em MONSTRO ─────────────────────────────
+    # O herói tem o score bruto reduzido. O monstro NÃO: o score bruto é lido por
+    # Fúria, agarrar etc. Em vez disso o efeito carrega `attr_mon` (str_/dex/con_/
+    # int_) e tudo que depende do atributo é derivado AO VIVO dos efeitos ativos
+    # (dano, Fortitude/Reflexos/Vontade, CA, visão). O único estado guardado é o PV
+    # máximo perdido (`_veneno_hp_perdido`), recalculado por _sincronizar_hp_veneno.
+    def _reducao_atributo_veneno(self, alvo, chave):
+        total = 0
+        for e in alvo.get("efeitos_veneno", []) or []:
+            if (e.get("operacao") == "reduzir" and e.get("attr_mon") == chave
+                    and not e.get("revertido")):
+                try:
+                    total += int(e.get("valor", 0) or 0)
+                except (TypeError, ValueError):
+                    pass
+        return total
+
+    def _queda_modificador_veneno(self, alvo, chave):
+        """Quanto o modificador do atributo cai (≥ 0) com os venenos ativos."""
+        red = self._reducao_atributo_veneno(alvo, chave)
+        if not red:
+            return 0
+        try:
+            base = int(alvo.get(chave, 10))
+        except (TypeError, ValueError):
+            base = 10
+        if chave == "con_":
+            f = lambda v: get_bonus_constituicao(max(0, min(25, v)))
+        else:
+            f = lambda v: mod(max(0, v))
+        return max(0, f(base) - f(base - red))
+
+    def _veneno_save_delta(self, alvo, chave):
+        """CON->Fortitude, DES->Reflexos, INT->Vontade (monstro, ao vivo)."""
+        atr = {"fort": "con_", "ref_": "dex", "will": "int_"}.get(chave)
+        return -self._queda_modificador_veneno(alvo, atr) if atr else 0
+
+    def _ca_veneno_atributo(self, alvo):
+        """Penalidade de CA (≤ 0) do monstro por DES reduzida por veneno."""
+        if self._eh_jogador(alvo):
+            return 0
+        return -self._queda_modificador_veneno(alvo, "dex")
+
+    def _sincronizar_hp_veneno(self, m):
+        """PV máximo do monstro = original - (queda do mod de CON x ND), sem nunca
+        passar de 1. Idempotente: recalcula a partir dos efeitos ativos."""
+        if self._eh_jogador(m):
+            return
+        nivel_eq = max(1, int(round(monster_cr(m))))
+        alvo_perda = self._queda_modificador_veneno(m, "con_") * nivel_eq
+        aplicado = int(m.get("_veneno_hp_perdido", 0) or 0)
+        delta = alvo_perda - aplicado
+        if not delta:
+            return          # nada a recalcular (e fichas sem max_hp não são tocadas)
+        if "max_hp" not in m:
+            m["max_hp"] = max(1, int(m.get("hp", 1) or 1))
+        if delta > 0:
+            real = min(delta, max(0, int(m.get("max_hp", 1)) - 1))
+            m["max_hp"] = int(m.get("max_hp", 1)) - real
+            aplicado += real
+        elif delta < 0:
+            m["max_hp"] = int(m.get("max_hp", 1)) + (-delta)
+            aplicado = alvo_perda
+        m["hp"] = min(m.get("hp", m["max_hp"]), m["max_hp"])
+        if aplicado:
+            m["_veneno_hp_perdido"] = aplicado
+        else:
+            m.pop("_veneno_hp_perdido", None)
 
     def _privacao_monstro_penalidade(self, monstro, chave):
         """Soma as penalidades de combate das privações alimentares ativas."""
@@ -39114,9 +39195,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             tipo = {"fort": "fortitude", "ref_": "reflexos", "will": "vontade"}.get(chave, chave)
             return (alvo[chave]
                     + int((alvo.get("save_bonuses") or {}).get(tipo, 0) or 0)
-                    + int((alvo.get("save_penalties") or {}).get(tipo, 0) or 0))
+                    + int((alvo.get("save_penalties") or {}).get(tipo, 0) or 0)
+                    + self._veneno_save_delta(alvo, chave))
         # Fallback legado: tier + 1
-        return alvo.get("tier", 1) + 1
+        return alvo.get("tier", 1) + 1 + self._veneno_save_delta(alvo, chave)
 
     def _registrar_resultado_resistencia(self, alvo, tipo_save, dificuldade,
                                          d20, bonus, total, passou,
@@ -39371,14 +39453,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             alvo["fort"] = alvo.get("fort", 0) - fort_delta
                             efeito["fort_delta"] = fort_delta
                 else:
-                    if attr == "constituicao":
-                        alvo["max_hp"] = max(1, alvo.get("max_hp", alvo.get("hp", 1)) - valor)
-                        alvo["hp"] = min(alvo.get("hp", 1), alvo["max_hp"])
-                        efeito["hp_perdido"] = valor
-                    else:
-                        alvo["penalidades"]["dano"] = alvo["penalidades"].get("dano", 0) - max(1, math.ceil(valor / 2))
-                        efeito["pen_dano"] = max(1, math.ceil(valor / 2))
+                    efeito["attr_mon"] = _VENENO_ATTR_MAP[attr]
                 alvo["efeitos_veneno"].append(efeito)
+            if not self._eh_jogador(alvo):
+                self._sincronizar_hp_veneno(alvo)
             await self.gm_say(T("narracao.sofre_de_veneno_da_medusa_e_recebe_2_for", nome_criatura_alvo=nome_criatura(alvo), dano_extra=dano_extra, duracao=duracao))
             return
 
@@ -39410,14 +39488,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                              if efeito.get("hp_delta") else ""))
             else:
                 # Monstro: traduz FORâ†’menos dano, CONâ†’menos HP mÃ¡ximo.
-                if attr == "constituicao":
-                    alvo["max_hp"] = max(1, alvo.get("max_hp", alvo.get("hp", 1)) - valor)
-                    alvo["hp"]     = min(alvo.get("hp", 1), alvo["max_hp"])
-                    efeito["hp_perdido"] = valor
-                else:
-                    alvo["penalidades"]["dano"] = alvo["penalidades"].get("dano", 0) - 1
-                    efeito["pen_dano"] = 1
+                # Monstro: mesma regra do herói (modificador real), derivada ao vivo.
+                efeito["attr_mon"] = _VENENO_ATTR_MAP.get(attr, "str_")
             alvo["efeitos_veneno"].append(efeito)
+            if not self._eh_jogador(alvo):
+                self._sincronizar_hp_veneno(alvo)
             await self.gm_say(T("narracao.de_em_por_rodada_s", nome=nome_cat("item", veneno_id, nome), valor=valor, attr=attr, alvo_nome=nome_criatura(alvo), duracao=duracao))
 
         elif op == "penalidade":
@@ -39801,6 +39876,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     if efeito.get("fort_delta"):
                         alvo["fort"] = alvo.get("fort", 0) + efeito["fort_delta"]
                 else:                          # monstro â€” desfaz traduÃ§Ã£o
+                    if efeito.get("attr_mon"):
+                        efeito["revertido"] = True      # recalculado após filtrar a lista
                     if efeito.get("hp_perdido"):
                         alvo["max_hp"] = alvo.get("max_hp", alvo.get("hp", 1)) + efeito["hp_perdido"]
                     if efeito.get("pen_dano"):
@@ -39847,6 +39924,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     continue
             await self.gm_say(T("narracao.efeito_de_expirou_em", efeito_get_nome_veneno=nome_criatura(efeito), alvo_nome=nome_criatura(alvo)))
         alvo["efeitos_veneno"] = restantes
+        if not self._eh_jogador(alvo):
+            self._sincronizar_hp_veneno(alvo)
 
         if alvo.get("petrificado") and not alvo.get("petrificado_permanente"):
             alvo["petrificado_rodadas"] = max(0, alvo.get("petrificado_rodadas", 0) - 1)
