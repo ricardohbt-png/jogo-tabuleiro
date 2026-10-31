@@ -66,6 +66,8 @@ def servo(r, dono, pos, **extra):
          "porte": "medio", "acted": False}
     a.update(extra)
     r.players[dono].setdefault("animados", []).append(a)
+    # A janela dos servos é estrita: só age quem está na fila (como o jogo monta).
+    r.animados_order.append(a["id"])
     return a
 
 

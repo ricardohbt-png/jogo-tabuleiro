@@ -56,16 +56,16 @@ check('janela de outro jogador', GS.animadoPendenteParaEncerrar(null) === null);
 estado({ atual: null, ordem: [], animados: [], janela: null });
 check('sem janela aberta', GS.animadoPendenteParaEncerrar(null) === null);
 
-console.log('\n[3] Override manual: servo AINDA nao usado e respeitado');
+console.log('\n[3] Ordem estrita: escolher outro servo nao muda a vez');
 estado({ atual: 'a', ordem: ['a', 'b', 'c'], animados: [A, B, C] });
-check('escolher o "c" encerra o "c"', GS.animadoPendenteParaEncerrar('c') === 'c');
+check('escolher o "c" ainda encerra o "a"', GS.animadoPendenteParaEncerrar('c') === 'a');
 check('escolher o proprio atual', GS.animadoPendenteParaEncerrar('a') === 'a');
 
 console.log('\n[4] Servo JA encerrado cai de volta no atual (nao gera recusa)');
 // A fila avancou para "b": logo "a" ja encerrou, mesmo estando vivo na tela.
 estado({ atual: 'b', ordem: ['a', 'b', 'c'], animados: [A, B, C], done: ['a'] });
 check('"a" ficou para tras -> devolve "b"', GS.animadoPendenteParaEncerrar('a') === 'b');
-check('"c" ainda nao foi -> devolve "c"', GS.animadoPendenteParaEncerrar('c') === 'c');
+check('"c" ainda nao foi -> devolve "b" (ordem estrita)', GS.animadoPendenteParaEncerrar('c') === 'b');
 
 console.log('\n[5] Vez do prisioneiro: todo servo ja passou');
 estado({
@@ -74,6 +74,11 @@ estado({
 });
 check('clicar num servo devolve o prisioneiro', GS.animadoPendenteParaEncerrar('a') === 'prisoner');
 check('selecao do prisioneiro se mantem', GS.animadoPendenteParaEncerrar('prisoner') === 'prisoner');
+estado({
+  atual: 'a', ordem: ['a'], animados: [A],
+  prisioneiro: { alive: true, freed: true, rescuer_pid: 'm', pos: [2, 2] },
+});
+check('prisioneiro antes da vez dele devolve o servo', GS.animadoPendenteParaEncerrar('prisoner') === 'a');
 
 console.log('\n[6] Servo morto ou dominado nao pode ser encerrado');
 const morto = servo('d', { vida_atual: 0 });
@@ -193,7 +198,7 @@ check('encerrar com "c" selecionado cai no atual',
       GS.animadoPendenteParaEncerrar('c') === 'a');
 check('a selecao em "c" e reconhecida como obsoleta',
       GS.animadoSelecaoValida('c') === false);
-check('a selecao em "b" continua valida', GS.animadoSelecaoValida('b') === true);
+check('a selecao em "b" (fora da vez) e obsoleta', GS.animadoSelecaoValida('b') === false);
 check('"a" (o atual) continua valido', GS.animadoSelecaoValida('a') === true);
 
 console.log('\n[10] animadoSelecaoValida — bordas');

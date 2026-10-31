@@ -1248,6 +1248,10 @@ window.LANG_ERROS = {
     "en": "No prisoner to move.",
     "pt": "Não há prisioneiro para mover."
   },
+  "erro.nao_e_a_vez_deste_servo": {
+    "en": "It's not this minion's turn. Minions act in initiative order.",
+    "pt": "Não é a vez deste servo. Os servos agem na ordem de iniciativa."
+  },
   "erro.nao_ha_servo_seu_para_encerrar_agora": {
     "en": "You have no minion to end right now.",
     "pt": "Não há servo seu para encerrar agora."

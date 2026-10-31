@@ -237,15 +237,55 @@ class TransacaoViagemTests(unittest.IsolatedAsyncioTestCase):
             "mode": "road", "charged": True, "roll_resolved": True, "phase": "combat",
         }
         r.monsters = {}
+        r.broadcast = AsyncMock()
         await r._check_objectives()
-        # Vencer abre a escolha do anfitrião; o destino só vale depois dela.
+        # Vencer NÃO fecha o mapa: o grupo explora e recolhe o saque, e o
+        # encerramento é manual, como o de uma masmorra.
+        self.assertEqual(r.phase, "playing")
+        self.assertEqual(r.pending_world_travel["phase"], "cleared")
+        self.assertTrue(r.mission_complete_pending)
+        tipos = [c.args[0].get("type") for c in r.broadcast.await_args_list]
+        self.assertNotIn("world_adventure_encounter_choice", tipos)
+        await r._check_objectives()      # atualizações seguintes não desligam o botão
+        self.assertTrue(r.mission_complete_pending)
+        self.assertEqual(r.phase, "playing")
+        await r.handle_encerrar_missao("p1")
+        # Encerrar abre a escolha do anfitrião; o destino só vale depois dela.
         self.assertEqual(r.phase, "city")
         self.assertEqual(r.pending_world_travel["phase"], "choice")
+        self.assertFalse(r.mission_complete_pending)
         self.assertEqual(r.world_location, "alva_e_luz")
         await r.handle_world_adventure_encounter_choice("p1", "continue")
         self.assertEqual(r.world_location, "vila_riacho")
         self.assertIsNone(r.pending_world_travel)
         self.assertFalse(r.mission_complete_pending)
+
+    async def test_emboscada_vencida_no_mapa_real_mantem_saque_e_mostra_encerrar(self):
+        """Mapa de verdade: depois da vitória o grupo segue na estrada, anda e
+        pega itens; o HUD mostra o objetivo cumprido e o botão de encerrar."""
+        r = self.sala()
+        r.players["p1"] = S.make_player("p1", "Ana", "warrior", 0)
+        r.broadcast = AsyncMock()
+        r.send_to = AsyncMock()
+        pending = {"destination_type": "city", "origin": "alva_e_luz", "destination": "vila_riacho",
+                   "mode": "road", "charged": True, "roll_resolved": True,
+                   "composition": ["kobold_besteiro"]}
+        await r._iniciar_encontro_viagem("p1", pending)
+        await r._liberar_intro_masmorra(True)
+        self.assertEqual(r.phase, "playing")
+        for m in r.monsters.values():
+            m["hp"] = 0
+        await r._check_objectives()
+        self.assertEqual(r.phase, "playing")
+        self.assertTrue(r._game_state_payload()["mission_complete_pending"])
+        self.assertTrue(r._game_state_payload()["emboscada_vencida"])
+        self.assertEqual(r.objective_status["primary"]["status"], "done")
+        # Quem não é anfitrião também encerra; a escolha do destino segue com o anfitrião.
+        await r.handle_encerrar_missao("p1")
+        self.assertEqual(r.phase, "city")
+        self.assertFalse(r._game_state_payload()["emboscada_vencida"])
+        tipos = [c.args[0].get("type") for c in r.broadcast.await_args_list]
+        self.assertIn("world_adventure_encounter_choice", tipos)
 
     async def test_emboscada_de_masmorra_oferece_continuar_ou_retornar_sem_reembolso(self):
         adventure_id = "viagem_emboscada_teste"
@@ -266,6 +306,8 @@ class TransacaoViagemTests(unittest.IsolatedAsyncioTestCase):
             r.phase = "playing"
             r.monsters = {}
             await r._check_objectives()
+            self.assertEqual(r.phase, "playing")
+            await r.handle_encerrar_missao("p1")
             self.assertEqual(r.phase, "city")
             self.assertEqual(r.pending_world_travel["phase"], "choice")
             await r.handle_world_adventure_encounter_choice("p1", "continue")
@@ -287,6 +329,7 @@ class TransacaoViagemTests(unittest.IsolatedAsyncioTestCase):
         r.phase = "playing"
         r.monsters = {}
         await r._check_objectives()
+        await r.handle_encerrar_missao("p1")
         await r.handle_world_adventure_encounter_choice("p1", "return")
         self.assertEqual(r.players["p1"]["fome"], 34)
         self.assertEqual(r.world_location, "alva_e_luz")

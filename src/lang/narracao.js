@@ -2012,6 +2012,10 @@ window.LANG_NARRACAO = {
     "en": "🧭 The group traveled from **{origem}** to **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} per hero).",
     "pt": "🧭 O grupo viajou de **{origem}** para **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} por herói)."
   },
+  "narracao.emboscada_vencida_recolham_o_saque": {
+    "en": "🏁 The ambush is defeated! Explore the road and gather the loot; when you're ready, use \"End mission\" to move on.",
+    "pt": "🏁 A emboscada foi derrotada! Explorem a estrada e recolham o saque; quando estiverem prontos, usem \"Encerrar missão\" para seguir viagem."
+  },
   "narracao.emboscada_derrotada_escolha_destino": {
     "en": "The ambush is over. The host can continue to the dungeon or return to the city of origin.",
     "pt": "A emboscada terminou. O anfitrião pode seguir para a masmorra ou retornar à cidade de origem."

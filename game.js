@@ -6323,7 +6323,7 @@ function encerrarMissaoConfirm(){
     + 'box-shadow:0 8px 30px #000b;">'
     + '<div style="color:var(--gold,#ffcc44);font-weight:700;font-size:1rem;margin-bottom:8px;">' + t('ui.missao.encerrar_titulo') + '</div>'
     + '<div style="color:#e8dcc0;font-size:.82rem;line-height:1.4;margin-bottom:16px;">'
-    + t('ui.missao.encerrar_aviso') + '</div>'
+    + t(GS.gameState?.emboscada_vencida ? 'ui.missao.encerrar_aviso_emboscada' : 'ui.missao.encerrar_aviso') + '</div>'
     + '<div style="display:flex;gap:10px;">'
     + '<button id="em-cancel" data-gamepad-cancel style="flex:1;padding:8px;border-radius:8px;border:1px solid #6a5a3a;'
     + 'background:rgba(40,32,16,0.9);color:#cbbe9c;font-weight:700;font-size:.78rem;cursor:pointer;">' + t('ui.geral.cancelar') + '</button>'
@@ -57160,8 +57160,11 @@ function handleTileClick(tx, ty, opts){
     // ── Prisioneiro liberto: o resgatador o controla (só movimento) ───────────
     const _prisC = _st.prisoner;
     const meuPrisClk = _prisC && _prisC.alive && _prisC.freed && _prisC.rescuer_pid === GS.myPid;
+    // Ordem estrita: só a peça da vez (GS.animadoAtual) pode ser escolhida.
+    const _pecaVez = GS.animadoAtual();
     if(meuPrisClk && _prisC.pos[0]===tx && _prisC.pos[1]===ty){
-      _prisSel = !_prisSel; _animadoSel = null; renderMap(_st); return;
+      if(_pecaVez !== 'prisoner'){ toast(t('ui.animar.nao_e_a_vez')); return; }
+      _prisSel = true; _animadoSel = null; renderMap(_st); return;
     }
     if(meuPrisClk && _prisSel){
       const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
@@ -57172,7 +57175,7 @@ function handleTileClick(tx, ty, opts){
         GS.pendingMove = null; _clearMovePreviewVisual();
         _animarEEnviarMoverPrisioneiroCaminho(_prisC, passosP); return;
       }
-      _prisSel=false; renderMap(_st); return;   // sem caminho/alcance → desseleciona
+      renderMap(_st); return;   // sem caminho/alcance: o refém continua selecionado
     }
     const meP  = _st.players.find(p=>p.id===GS.myPid && p.alive);
     const meus = (meP && meP.animados) ? meP.animados.filter(a=>a.pos && a.vida_atual>0) : [];
@@ -57183,7 +57186,8 @@ function handleTileClick(tx, ty, opts){
            (window._animadoAbilityPending.animadoId !== sobre.id || _animadoSel === sobre.id)){
           window._animadoAbilityPending = null;
         }
-        _animadoSel = (_animadoSel===sobre.id) ? null : sobre.id;
+        if(String(sobre.id) !== String(_pecaVez)){ toast(t('ui.animar.nao_e_a_vez')); return; }
+        _animadoSel = sobre.id; _prisSel = false;
         renderMap(_st);
         renderMyPanel(_st);
         return;
@@ -57231,7 +57235,7 @@ function handleTileClick(tx, ty, opts){
             GS.pendingMove = null; _clearMovePreviewVisual();
             _animarEEnviarMoverCaminhoMinino(a, passosMin); return;
           }
-          _animadoSel=null; renderMap(_st); return;   // sem caminho/alcance → desseleciona
+          renderMap(_st); return;   // sem caminho/alcance: a peça da vez continua selecionada
         }
       }
     }

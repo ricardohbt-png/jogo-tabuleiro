@@ -2418,25 +2418,12 @@ const GS = (() => {
   }
 
   // Devolve a peça cuja vez o botão de encerrar deve fechar, ou null quando o
-  // botão significa "encerrar o turno do herói". `selId` é a seleção visual do
-  // renderer (o jogador pode ter clicado noutro servo, e a fila respeita isso).
+  // botão significa "encerrar o turno do herói". A fila é ESTRITA (ordem de
+  // iniciativa): só a peça da vez pode agir ou encerrar, seja qual for a
+  // seleção visual. `selId` fica na assinatura para os chamadores existentes.
   function animadoPendenteParaEncerrar(selId) {
     if (!gameState || gameState.animados_turn !== myPid) return null;
-    const atual = animadoAtual();
-    if (atual == null) return null;
-    if (selId == null) return atual;
-    if (selId === 'prisoner') return 'prisoner';
-    const me = (gameState.players || []).find(p => p.id === myPid);
-    const vivo = (me?.animados || []).some(
-      a => a && a.id === selId && a.vida_atual > 0 && !a.dominado_por_monstro);
-    if (!vivo) return atual;
-    // Peca que ja encerrou a vez cai de volta no atual. Deduzir isso pela ordem
-    // so pegava quem ficou ATRAS do atual -- e escolher um servo fora de ordem
-    // (que a fila permite de proposito) deixa a peca usada ADIANTE dele. Por
-    // isso o servidor publica o conjunto exato.
-    if (animadoJaEncerrou(selId)) return atual;
-    if (!(gameState.animados_order || []).includes(selId)) return atual;
-    return selId;
+    return animadoAtual();
   }
 
   // Uma peca da janela pos-turno ja gastou a vez? Autoritativo: vem do servidor.
@@ -2451,6 +2438,8 @@ const GS = (() => {
   function animadoSelecaoValida(selId) {
     if (!gameState || gameState.animados_turn !== myPid || selId == null) return false;
     if (animadoJaEncerrou(selId)) return false;
+    // Ordem estrita: só a peça da vez é seleção válida.
+    if (String(selId) !== String(animadoAtual())) return false;
     if (selId === 'prisoner') {
       const pr = gameState.prisoner;
       return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === myPid);

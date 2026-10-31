@@ -25250,7 +25250,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def handle_comandar_animados(self, pid):
         """No turno dos servos: cada animado move até `movimento` casas em direção
         ao monstro vivo mais próximo e ataca se ficar adjacente."""
-        if not self._is_turn(pid):
+        if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         if self.animados_phase_pid != pid:
@@ -25270,7 +25270,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Ã© cobrado por turno). Ãštil durante o turno dos servos.
         await self.gm_say(T("narracao.comanda_seus_servos_mortos_vivos", heroi=p['name']))
 
-        for a in list(animados):
+        ordem = {aid: i for i, aid in enumerate(self.animados_order)}
+        for a in sorted(animados, key=lambda x: ordem.get(x.get("id"), len(ordem))):
+            if a.get("id") in self.animados_done:
+                continue
             if a.get("vida_atual", 0) <= 0 or a.get("acted") or a.get("dormindo"):
                 continue
             if a.get("dominado_por_monstro"):   # roubado por necromante â€” nÃ£o obedece
@@ -26792,7 +26795,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def handle_mover_animado(self, pid, animado_id, dx, dy, _push=True, _atravessar=False):
         """Controle manual: move UM animado uma casa (gasta 1 de movimento)."""
-        if not self._is_turn(pid):
+        if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         if self.animados_phase_pid != pid:
@@ -26802,6 +26805,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         a = next((x for x in p.get("animados", []) if x.get("id") == animado_id), None)
         if not a or a.get("vida_atual", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
+        if await self._fora_da_vez_do_servo(pid, animado_id):
+            return
         if a.get("_piche_movimento_encerrado"):
             return
         if a.get("rodamoinho_preso"):
@@ -26867,7 +26872,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def handle_atacar_animado(self, pid, animado_id, target_id, target_pos=None):
         """Controle manual de ataque do servo; alguns ataques miram uma direção."""
-        if not self._is_turn(pid):
+        if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         if self.animados_phase_pid != pid:
@@ -26877,6 +26882,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         a = next((x for x in p.get("animados", []) if x.get("id") == animado_id), None)
         if not a or a.get("vida_atual", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")}); return
+        if await self._fora_da_vez_do_servo(pid, animado_id):
+            return
         if a.get("dominado_por_monstro"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_servo_esta_sob_controle_de_um_necro")}); return
         if a.get("dormindo"):
@@ -26983,7 +26990,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         original mantenha saves, magias, recargas, venenos e efeitos especiais.
         O dono escolhe o alvo entre os monstros vivos da masmorra.
         """
-        if not self._is_turn(pid) or self.animados_phase_pid != pid:
+        if not self._is_turn_servos(pid) or self.animados_phase_pid != pid:
             await self._avisar_controle_de_monstro(pid)
             return
         p = self.players.get(pid)
@@ -26994,6 +27001,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not p or not p.get("alive") or not a or not controlavel \
                 or a.get("vida_atual", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.animado_invalido")})
+            return
+        if await self._fora_da_vez_do_servo(pid, animado_id):
             return
         if a.get("dominado_por_monstro") or a.get("dormindo"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_animado_indisponivel")})
@@ -43531,6 +43540,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return "prisoner"
         return None
 
+    async def _fora_da_vez_do_servo(self, pid, animado_id):
+        """Ordem estrita na janela pós-turno: só a peça da vez age. Recusa
+        (e avisa) qualquer outra; devolve True quando recusou."""
+        atual = self._animados_atual(pid)
+        if atual is not None and str(animado_id) == str(atual):
+            return False
+        await self.send_to(pid, {"type": "error",
+            "msg": T("erro.nao_e_a_vez_deste_servo")})
+        return True
+
     async def _consumir_animados_travados(self, pid):
         """Tira da fila, narrando, todo servo que não tem como agir.
 
@@ -43588,12 +43607,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # phase == "playing". _voltar_para_cidade muda a fase SEM limpar
         # animados_phase_pid, entao sem isto um encerrar_animado atrasado
         # dispararia um push_state de masmorra em quem ja esta na cidade.
-        if not self._is_turn(pid):
+        if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         if self.animados_phase_pid != pid:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.nao_ha_servo_seu_para_encerrar_agora")}); return
+        if await self._fora_da_vez_do_servo(pid, animado_id):
+            return
         if animado_id == "prisoner":
             pr = self.prisoner
             if (self.prisioneiro_done or not pr or not pr.get("freed")
@@ -43667,7 +43688,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def handle_end_turn(self, pid, _forcado=False):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
-        if not self._is_turn(pid):
+        if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         # Antes da primeira colocação ainda não há tempestade ativa; exija ao
@@ -55001,11 +55022,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         itens) e sinaliza `mission_complete_pending` para o encerramento manual."""
         travel = self.pending_world_travel
         if (self.phase == "playing" and isinstance(travel, dict)
-                and travel.get("phase") == "combat"):
+                and travel.get("phase") in ("combat", "cleared")):
             hostile_alive = [m for m in self.monsters.values()
                              if m.get("hp", 0) > 0 and not m.get("summoned_by")]
             if not hostile_alive:
-                await self._concluir_encontro_viagem()
+                # Emboscada vencida: o mapa fica aberto para explorar e recolher o
+                # saque; a escolha do destino só vem pelo "Encerrar missão".
+                if travel.get("phase") != "cleared":
+                    travel["phase"] = "cleared"
+                    await self.gm_say(T("narracao.emboscada_vencida_recolham_o_saque"))
+                    self._checkpoint_savegame()
+                self.mission_complete_pending = True
+                if self.objectives:
+                    self.objective_status = {
+                        "primary": self._objetivo_payload(self.objectives.get("primary")),
+                        "secondary": [self._objetivo_payload(s)
+                                      for s in (self.objectives.get("secondary") or [])],
+                    }
                 return
         if not self.objectives:
             return
@@ -55071,6 +55104,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Encerramento manual da fase apos o objetivo principal cumprido.
         Faz a transicao que antes era automatica em _check_objectives."""
         if pid not in self.players:
+            return
+        travel = self.pending_world_travel
+        if (self.phase == "playing" and self.mission_complete_pending
+                and isinstance(travel, dict) and travel.get("phase") == "cleared"):
+            self.mission_complete_pending = False
+            travel["phase"] = "combat"   # _concluir_encontro_viagem parte da fase de combate
+            await self._concluir_encontro_viagem()
             return
         if (self.phase != "playing" or not self.mission_complete_pending
                 or not self._objetivo_concluido or not self._route_exits_complete()):
@@ -55242,7 +55282,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def handle_mover_prisioneiro(self, pid, dx, dy, _push=True, _atravessar=False):
         """Controle manual: o resgatador move o prisioneiro liberto 1 casa na
         janela pós-turno (gasta 1 de movimento). Não ataca."""
-        if not self._is_turn(pid):
+        if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         if self.animados_phase_pid != pid:
@@ -55254,6 +55294,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         if pr.get("rescuer_pid") != pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_controla_este_prisioneiro")}); return
+        if await self._fora_da_vez_do_servo(pid, "prisoner"):
+            return
         if pr.get("moves_left", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.prisioneiro_sem_movimento_neste_turno")}); return
         if abs(dx) > 1 or abs(dy) > 1 or (dx == 0 and dy == 0):
@@ -55399,8 +55441,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     # â”€â”€ state serialisation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+    def _is_turn_servos(self, pid):
+        """Vez de agir para os handlers dos servos/refém e do encerramento:
+        também vale dentro da janela dos servos, que _is_turn recusa."""
+        if (self.animados_phase_pid == pid and self.phase == "playing"
+                and not self._intro_masmorra_bloqueada()):
+            return True
+        return self._is_turn(pid)
+
     def _is_turn(self, pid):
+        """Este jogador pode agir agora? Na janela dos servos a iniciativa ainda
+        aponta para o dono, mas o turno do HERÓI já acabou: só os servos, o refém
+        e o encerramento agem, e esses handlers usam _is_turn_servos."""
         if self.phase != "playing" or self._intro_masmorra_bloqueada():
+            return False
+        if self.animados_phase_pid == pid:
             return False
         # A fila do simulador é deliberadamente independente da iniciativa de
         # partidas reais. Só heróis efêmeros da sala de teste passam por aqui.
@@ -55934,6 +55989,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "story": self._story_encadeada,   # beat da emenda; cliente faz de-dup por key
             "objectives": self.objective_status,
             "mission_complete_pending": self.mission_complete_pending,
+            # Emboscada vencida: o "Encerrar missão" leva à escolha da viagem.
+            "emboscada_vencida": bool(isinstance(self.pending_world_travel, dict)
+                                      and self.pending_world_travel.get("phase") == "cleared"),
             "exit_pos": self.exit_pos,
             "route_exit_progress": self._route_exit_payload(),
             "prisoner": self.prisoner,

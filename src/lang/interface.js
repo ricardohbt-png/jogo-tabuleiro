@@ -875,6 +875,10 @@ window.LANG_INTERFACE = {
     "en": "At 0 HP it turns to dust permanently",
     "pt": "A 0 de vida vira pó permanentemente"
   },
+  "ui.animar.nao_e_a_vez": {
+    "en": "Not this minion's turn yet. Minions act in initiative order.",
+    "pt": "Ainda não é a vez deste servo. Os servos agem na ordem de iniciativa."
+  },
   "ui.animar.servo_selecionado": {
     "en": "— {nome} is selected.",
     "pt": "— {nome} está selecionado."
@@ -8370,6 +8374,10 @@ window.LANG_INTERFACE = {
   "ui.missao.encerrar_aviso": {
     "en": "Take the reward items before ending. The mission will be completed and the campaign moves on to the next adventure.",
     "pt": "Pegue os itens de recompensa antes de encerrar. A missão será concluída e a campanha seguirá para a próxima aventura."
+  },
+  "ui.missao.encerrar_aviso_emboscada": {
+    "en": "Pick up everything you want before leaving: the road map closes and the host chooses how the journey continues.",
+    "pt": "Pegue tudo o que quiser antes de sair: o mapa da estrada será fechado e o anfitrião escolherá como a viagem continua."
   },
   "ui.missao.encerrar_botao": {
     "en": "🏁 End mission",
