@@ -7566,7 +7566,8 @@ SHOP_WEAPONS = [
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
-    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante"},
+    {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante",
+     "allowed_classes": ["warrior", "rogue", "cleric", "ranger", "paladin"]},
     {"id": "machadinha_arremesso_ana","name": "Machadinha de Arremesso Anã", "emoji": "🪓", "icon": "assets/itens/machadinha_arremesso_ana.png", "die": "1d6", "stat": "str_", "price": 35, "off_hand_weapon": True, "off_hand_forca": True, "off_hand_stat": "str_", "throw_range": 3, "throw_nat1_damage_levels": 2, "corrosion_max": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante",
      "allowed_classes": ["warrior"]},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
@@ -7665,7 +7666,8 @@ for _weapon in list(SHOP_WEAPONS):
     if _weapon["id"] in SILVER_WEAPON_EXCLUSIONS:
         continue
     _silver = deepcopy(_weapon)
-    _silver.update({"id": f"{_weapon['id']}_prata", "name": f"{_weapon['name']} de Prata",
+    _nome_base = _weapon["name"][:-len(" de Ferro")] if _weapon["name"].endswith(" de Ferro") else _weapon["name"]
+    _silver.update({"id": f"{_weapon['id']}_prata", "name": f"{_nome_base} de Prata",
                     "price": int(_weapon.get("price", 0) or 0) * 10, "silver": True,
                     "corrosion_max": 5, "corrosion_free_levels": 2})
     if _weapon["id"] == "machadinha_arremesso_ana":

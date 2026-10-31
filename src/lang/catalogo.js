@@ -3307,12 +3307,12 @@ window.LANG_CATALOGO = {
     "pt": "Machado de Ferro"
   },
   "cat.item.machado_basico_prata.desc": {
-    "en": "Silver Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
+    "pt": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_basico_prata.nome": {
-    "en": "Silver Iron Axe",
-    "pt": "Machado de Ferro de Prata"
+    "en": "Silver Axe",
+    "pt": "Machado de Prata"
   },
   "cat.item.machado_duplo.desc": {
     "en": "Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack.",

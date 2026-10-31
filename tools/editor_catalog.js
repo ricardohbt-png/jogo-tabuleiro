@@ -12163,7 +12163,7 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "machado_basico_prata",
-      "name": "Machado de Ferro de Prata",
+      "name": "Machado de Prata",
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
@@ -12171,7 +12171,7 @@ window.EDITOR_CATALOG = {
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machadinha_ana_prata",
