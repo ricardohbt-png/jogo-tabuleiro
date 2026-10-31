@@ -19609,6 +19609,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             and self.pending_world_travel.get("phase") == "combat"
             and self.pending_world_travel.get("encounter_map") == "estrada_floresta_emboscada.json"
         )
+        # O cliente descarta o gameState ao receber enter_dungeon: o próximo
+        # game_state tem de ir completo. Vindo da cidade isto já estava zerado
+        # (broadcast_city_state), mas a emenda entre etapas não passa por lá.
+        self._diferidos_enviados.clear()
         await self.broadcast({
             "type": "enter_dungeon",
             "intro": True,
@@ -29076,6 +29080,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.dungeon_intro_active = True
         self.dungeon_intro_until_ms = int(time.time() * 1000) + 3000
         self._cancelar_intro_masmorra()
+        # O cliente descarta o gameState ao receber enter_dungeon: o próximo
+        # game_state tem de ir completo. Vindo da cidade isto já estava zerado
+        # (broadcast_city_state), mas a emenda entre etapas não passa por lá.
+        self._diferidos_enviados.clear()
         await self.broadcast({
             "type": "enter_dungeon",
             "intro": True,
@@ -56471,6 +56479,9 @@ MENSAGENS_DA_CONEXAO = frozenset({
     "set_atravessar_aliados", "start_scene",
     "set_velocidade_inimigos", "continuar_turno_inimigo",
     "carregar_ponto", "apagar_ponto", "novo_capitulo", "arquivar_jogo",
+    # O registro do que já foi enviado é por conexão; traduzir para o herói em
+    # foco (um extra do Solo com grupo, sem conexão própria) não limpava nada.
+    "pedir_estado_completo",
 })
 _PREFIXOS_DA_CONEXAO = ("mestre_", "teste_", "upload_", "save_", "load_")
 
