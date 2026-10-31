@@ -7885,8 +7885,14 @@ function _congeladoFiltro2D(){
     ?? 'grayscale(0.24) sepia(0.28) hue-rotate(155deg) saturate(1.55) brightness(1.08) contrast(1.04)';
 }
 function _estaParalisado(x){ return !!x?.paralisado; }
+function _servoFiltro2D(){
+  return VC.feedback?.servo?.filtro2D
+    ?? 'grayscale(0.4) sepia(0.7) hue-rotate(225deg) saturate(2.4) brightness(1.05)';
+}
 function _filtroEstadoPeao2D(x){
-  return x?.petrificado ? _petrificadoFiltro2D() : (_estaParalisado(x) ? _congeladoFiltro2D() : 'none');
+  return x?.petrificado ? _petrificadoFiltro2D()
+    : (_estaParalisado(x) ? _congeladoFiltro2D()
+    : (x?.servo ? _servoFiltro2D() : 'none'));
 }
 
 // Seta dourada apontando para o herói da vez (ponta em `yPonta`). Estática no 2D:
@@ -13177,7 +13183,7 @@ function renderMap(state){
         // Sprite original do monstro (goblin/orc/etc.) — fallback p/ ícone via emoji.
         drawMonsterSprite(ctx, cx, cy-3, {
           type:a.tipo, image:a.image, porte:a.porte, emoji:a.icone, name:a.nome,
-          facing:_aFacing
+          facing:_aFacing, servo:true
         });
       });
       // Anel roxo de "animado aliado"; branco e grosso se selecionado.
@@ -48649,6 +48655,7 @@ function startLoop3D(){
     _updateSombras3D(now);
     _updateChamasFx3D(now);
     _updateCongelamentoFx3D(now);
+    _updateServosTom3D();
 
     // ── Floating dust motes (upward drift, reset at ceiling, re-randomise XZ) ─
     if(g3.dustPts && g3.dustPts.visible &&
@@ -52046,6 +52053,8 @@ function renderMap3D(state){
         }, ax, ay);
       _setMonsterMeshFacing3D(_aniFig3D, a.facing);
       _aniFig3D.userData.whirlpoolTrapped = !!(a.rodamoinho_preso || a.rodamoinho_profundo_preso);
+      _servosTom3D.add(_aniFig3D);
+      _tingirServo3D(_aniFig3D);
     }
   }
 
@@ -52757,6 +52766,56 @@ function _makeFrozen3D(T, root) {
     o.material = Array.isArray(o.material) ? gelados : gelados[0];
     o.userData.materialCongelado = true;
   });
+}
+// Servos do jogador: tinge só o corpo (base, contorno e anéis ficam). O GLB e o
+// PNG chegam depois da montagem, então o laço 3D repassa pelas figuras
+// registradas (_updateServosTom3D) e tinge o que ainda não foi tingido.
+const _servosTom3D = new Set();
+function _tingirServo3D(fig){
+  const T = g3.T;
+  if(!T || !fig) return;
+  const tom = VC.feedback?.servo || {};
+  const c = tom.cor || [0.66, 0.42, 1.00], e = tom.emissiva || [0.06, 0.015, 0.10];
+  const s = tom.sprite || [0.80, 0.60, 1.00];
+  const ganho = Number(tom.ganho) || 1.5;
+  const brilho = new T.Color().setRGB(e[0], e[1], e[2]);
+  const k = Number(tom.mistura) || 0.75;
+  const tingir = cor => {
+    const lum = (0.2126 * cor.r + 0.7152 * cor.g + 0.0722 * cor.b) * ganho;
+    cor.lerp(new T.Color().setRGB(Math.min(1, lum * c[0]), Math.min(1, lum * c[1]),
+                                  Math.min(1, lum * c[2])), k);
+  };
+  (fig.userData.flightBody || fig).traverse(o => {
+    if(o.userData.tomServo || o.userData.isOutline || o.userData.isPulseRing) return;
+    // Sombra e base (criatura orientada não tem grupo de corpo): o GLB também
+    // leva isGroundDecal, por isso o teste do isGLB.
+    if(o.userData.isGroundDecal && !o.userData.isGLB) return;
+    if(!o.material) return;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    // Efeitos (chamas, gelo, brilho aditivo) mantêm a cor própria.
+    if(mats.some(m => m.toneMapped === false || m.blending === T.AdditiveBlending)) return;
+    if(o.isSprite){
+      // Material do sprite é próprio de cada peão; a cor multiplica a textura.
+      o.material.color.setRGB(s[0], s[1], s[2]);
+    } else if(o.isMesh){
+      // O GLB clonado compartilha materiais com o modelo-base: clona antes.
+      const novos = mats.map(src => {
+        const m = src.clone();
+        if(m.color) tingir(m.color);
+        if(m.emissive) m.emissive.lerp(brilho, 0.6);
+        m.needsUpdate = true;
+        return m;
+      });
+      o.material = Array.isArray(o.material) ? novos : novos[0];
+    } else return;
+    o.userData.tomServo = true;
+  });
+}
+function _updateServosTom3D(){
+  for(const fig of _servosTom3D){
+    if(!fig.parent){ _servosTom3D.delete(fig); continue; }
+    _tingirServo3D(fig);
+  }
 }
 function _tingirSpriteCongelado3D(mat){
   const tom = VC.feedback?.congelamento || {};
@@ -58015,6 +58074,13 @@ GS.on('gameState', msg => {
       toast(t('ui.animar.turno_servos') + ' ' + t('ui.animar.servo_selecionado', {nome}));
     }
     if (mode3D && g3) renderMap3D(msg); else renderMap(msg);
+    // A câmera vai até o servo (ou refém) da vez, como faz com o herói da vez.
+    if (_atualServo != null && (_atualServo !== _lastAnimadosAtual || _entrouNaJanela)) {
+      const _posVez = _atualServo === 'prisoner'
+        ? msg.prisoner?.pos
+        : (meNow?.animados || []).find(a => a.id === _atualServo)?.pos;
+      if (mode3D && Array.isArray(_posVez) && _posVez[0] >= 0) centralizarCamera3DNoPeao(_posVez);
+    }
   }
   _lastAnimadosAtual = _atualServo;
   // Janela de controle encerrou → limpa seleções.

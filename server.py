@@ -25311,8 +25311,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             await self._tempestade_verificar_entrada(a, frm, a["pos"])
                             await self._aplicar_piso_congelado_se_pisar(a)
                             await self._emit_entity_step(a["id"], frm, a["pos"], "animado")
+                            await self._animado_pisou_armadilha(a)
                             break
-                    if not moved:
+                    if not moved or a.get("vida_atual", 0) <= 0:
                         break
                     if not self._sobre_aliado(a):
                         ultima_livre_cmd = list(a["pos"])
@@ -26833,8 +26834,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._tempestade_verificar_entrada(a, old_pos, a["pos"])
         if a.get("vida_atual", 0) > 0:
             await self._verificar_entrada_zona_molochus(a, nx, ny)
+        await self._animado_pisou_armadilha(a)
         await self._verificar_avistamento()
         if _push: await self.push_state()
+
+    async def _animado_pisou_armadilha(self, a):
+        """Servo que pisa numa armadilha a dispara, como herói e monstro: é o
+        jeito de sacrificar um morto-vivo para limpar o caminho."""
+        if a.get("vida_atual", 0) <= 0:
+            return
+        arm = self._armadilha_no_tile(a["pos"][0], a["pos"][1])
+        if arm:
+            await self._disparar_armadilha(a, arm)
 
     async def handle_atacar_animado(self, pid, animado_id, target_id, target_pos=None):
         """Controle manual de ataque do servo; alguns ataques miram uma direção."""
@@ -41355,6 +41366,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvos += [m for m in self.monsters.values()
                   if m["hp"] > 0 and not self._voo_imune_terreno(m)
                   and abs(m["pos"][0]-cx) <= r and abs(m["pos"][1]-cy) <= r]
+        alvos += [a for a in self._all_animados()
+                  if not self._voo_imune_terreno(a)
+                  and abs(a["pos"][0]-cx) <= r and abs(a["pos"][1]-cy) <= r]
         pr = self.prisoner
         if pr and pr.get("alive") and pr.get("freed") \
                 and not self._voo_imune_terreno(pr) \
@@ -43777,6 +43791,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         self._limpar_tempestade_ciclones_presos(a)
                     if not a.get("_rodamoinho_profundo_bloqueado_turno"):
                         a["acted"] = False
+                    if a.pop("perde_turno", False):     # rede, atordoamento
+                        a["moves_left"] = 0
+                        a["acted"] = True
                     # Sono/LentidÃ£o em minions (de magias em Ã¡rea): expiram aqui.
                     for flag, rod in (("dormindo", "dormindo_rodadas"), ("lento", "lento_rodadas")):
                         if a.get(flag):
