@@ -14234,7 +14234,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         pid = alvo["id"]          # religa identidade antiga
         self.connections[pid] = ws
         alvo["connected"] = True   # volta a contar nos turnos
-        alvo.pop("_pos_ao_cair", None)   # só a retomada de jogo salvo a usa
+        # Fora do treino, quem volta na mesma sessão reentra pela escada; no Campo de
+        # Treinamento a escada fica longe da sala da classe e o herói "teleportava".
+        casa_caida = alvo.pop("_pos_ao_cair", None)   # só a retomada de jogo salvo a usa
+        if not getattr(self, "training_mode", False):
+            casa_caida = None
         self._religar_extras(pid)
         self._assumir_anfitriao_se_vago(pid)
         # Reenvia a sequência de mensagens que coloca o cliente na tela
@@ -14260,11 +14264,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.push_state()
             await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
         else:   # playing — o personagem REENTRA pela escada de entrada
-            casa = self._entrada_para_religar(alvo)
+            casa = casa_caida or self._entrada_para_religar(alvo)
             if casa:
                 # Os extras já ocuparam a entrada: o principal usa a livre mais próxima.
                 alvo["pos"] = self._casa_livre_retomada(list(casa), pid)
-            alvo.pop("facing", None)
+            if not casa_caida:
+                alvo.pop("facing", None)
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             self._iniciar_timer_turno()   # reativa o timer caso estivesse parado
@@ -14435,6 +14440,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _city_state_payload(self):
         self._ensure_utility_belt_tokens()
+            await self._reenviar_licao(alvo)
         players_city = [dict(p,
                             maldicoes=[{**m, "preco_remocao": self._preco_remover_maldicao(p, m["id"])}
                                        for m in self._maldicoes(p)],
@@ -14446,6 +14452,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             # cache de combate interno. Expor só este metadado
                             # permite ao painel de status mostrar o bônus sem
                             # alterar a regra nem tornar o cache parte do save.
+            await self._reenviar_licao(alvo)
                             bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
                         for p in self.players.values()]
         return {
@@ -22773,6 +22780,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _arma_do_slot(self, p, slot="weapon"):
         """Arma equipada no slot, completa o bastante para checar dado e tipo. A arma inicial da mão principal
+    async def _reenviar_licao(self, p):
+        """Quem religa perdeu a janela da lição: reenvia a fala da lição em andamento,
+        no passo atual, sem reaplicar efeito nem preparo (o progresso fica como está)."""
+        fala = next((l for l in getattr(self, "licoes", []) if l["id"] == (p or {}).get("licao_atual")), None)
+        if not fala:
+            return
+        await self.send_to(p["id"], {"type": "fala",
+                                     "falante": fala.get("falante") or {},
+                                     "texto": fala.get("texto", ""),
+                                     "pos": fala.get("pos"),
+                                     "licao_id": fala["id"],
+                                     "passo": _guia_payload(fala, p.get("licao_passo", 0))})
+
         pode estar em `gear.weapon` só com id, nome e veneno (sem `die`); o resto vive na cópia de combate
         `p["weapon"]`. Sem essa fusão a mão principal nunca podia receber veneno."""
         gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
@@ -22837,7 +22857,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if (slot == "weapon" and isinstance(combat_weapon, dict)
                 and (not isinstance(gear_item, dict) or combat_weapon.get("id") == gear_item.get("id"))):
             combat_weapon["poison_slots"] = list(slots)
+        # Ponte de classe (`porta_<classe>`, alvo na porta da sala) só vale perto do
+        # alvo se estiver EM ANDAMENTO: a que nunca abriu (o herói saiu da sala de
+        # combate com outra lição pendente) segurava as lições da sala inteira
+        # enquanto ele estivesse a 2 casas da porta. As comuns seguem como antes.
 
+                and (not lic.get("classe") or lic.get("id") == p.get("licao_atual")) \
     def _weapon_poison_slots(self, p):
         """Compatibilidade para caminhos existentes que usam a arma principal."""
         return self._poison_slots_do_item(p, "weapon")
@@ -43692,7 +43717,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         controla_prisioneiro = False
         if pr and pr.get("freed") and pr.get("alive"):
             resc = self.players.get(pr.get("rescuer_pid"))
-            if not resc or not self._ativo(resc):
+            if not pr.get("training_refem") and (not resc or not self._ativo(resc)):
                 vivos = [h for h in self.players.values() if self._ativo(h)]
                 if vivos:
                     novo = min(vivos, key=lambda h: max(abs(h["pos"][0] - pr["pos"][0]),
@@ -44535,6 +44560,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         Guerreiro da Luz/corrosão de armadura/penalidade de veneno/maldição
         Marca do Caçador)."""
         gl_ca = (p.get("guerreiro_luz_bonus", {}).get("ca", 0)
+            # O controle é só emprestado: quem libertou o retoma ao voltar. O refém do
+            # exercício do Paladino nunca passa a outra classe (ninguém mais o move na
+            # sala exclusiva, e a janela vazia prendia o outro herói a cada turno).
+            if pr.get("training_refem"):
+                dono = next((h for h in self.players.values()
+                             if h.get("class_id") == "paladin"), None)
+                dono_id = dono["id"] if dono else pr.get("rescuer_original")
+            else:
+                dono_id = pr.setdefault("rescuer_original", pr.get("rescuer_pid"))
+                dono = self.players.get(dono_id)
+            if pr.get("training_refem") or (dono and self._ativo(dono)):
+                pr["rescuer_pid"] = dono_id
                  if p.get("guerreiro_luz_ativo") else 0)
         pressao_minotauro = (int(p.get("minotauro_pressao_ca", 0) or 0)
                              if p.get("minotauro_pressao_ate", 0) >= self.round_num else 0)
@@ -55993,6 +56030,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     ids = listas[k][0]
                     deltas[k] = {"orden": ids,
                                  "mudou": [e for e, i in zip(state[k], ids) if i not in iguais]}
+        self.prisoner["rescuer_original"] = pid
                     del red[k]
                 if novas is not None:
                     deltas["explored"] = {"add": sorted(list(c) for c in novas)}
