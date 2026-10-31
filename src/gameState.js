@@ -2275,6 +2275,9 @@ const GS = (() => {
         _emit('entityStep', msg);
         break;
 
+      case 'servos_viram_po':
+        _emit('servosViramPo', msg);
+        break;
       case 'explosion_area':
         _emit('explosionArea', msg);
         break;

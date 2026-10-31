@@ -3536,6 +3536,7 @@ _DURABLE_FIELDS = (
     "guild_owned", "guild_equip", "magias_conhecidas",
     "maldicoes",
     "renome_individual", "metamorfose_formas_desbloqueadas", "tutorial_history",
+    "animados",
 )
 
 SHORTCUT_SLOT_COUNT = 10
@@ -3578,12 +3579,29 @@ def snapshot_character(player):
     """Extrai a ficha durável do jogador (deep copy). Ver _DURABLE_FIELDS."""
     return {k: deepcopy(player[k]) for k in _DURABLE_FIELDS if k in player}
 
+def _restaurar_servos(player):
+    """Servos voltam com o herói. Só os vivos e leais; cada um ganha id novo
+    (new_id recomeça a cada boot e colidiria com monstros da sessão nova) e
+    passa a apontar para o pid desta conexão. A posição é do mapa antigo e é
+    reancorada ao entrar na masmorra (_reposicionar_animados_perto_dos_donos)."""
+    servos = []
+    for a in player.get("animados") or []:
+        if not isinstance(a, dict) or a.get("vida_atual", 0) <= 0 or a.get("dominado_por_monstro"):
+            continue
+        a["id"] = new_id()
+        a["owner"] = player["id"]
+        if "summoned_by" in a:
+            a["summoned_by"] = player["id"]
+        servos.append(a)
+    player["animados"] = servos
+
 def restore_character(player, snap):
     """Sobrepõe a ficha durável num make_player fresco (deep copy). Mantém
     id/nome/class_id/slot do shell; ignora chaves fora da whitelist."""
     for k in _DURABLE_FIELDS:
         if k in snap:
             player[k] = deepcopy(snap[k])
+    _restaurar_servos(player)
     # Botas Velozes já foram persistidas no slot genérico de itens. Migra a
     # peça para o slot dedicado quando disponível para liberar o espaço antigo.
     gear = player.get("gear") or {}
@@ -54591,7 +54609,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         # Se o mestre morre, seus animados viram pÃ³ imediatamente.
         if p.get("animados"):
+            posicoes = [list(a["pos"]) for a in p["animados"]
+                        if a.get("vida_atual", 0) > 0 and isinstance(a.get("pos"), (list, tuple))]
             p["animados"] = []
+            if posicoes:
+                await self.broadcast({"type": "servos_viram_po", "owner": pid, "posicoes": posicoes})
             await self.gm_say(T("narracao.sem_seu_mestre_os_servos_mortos_vivos_de"))
 
         if not any(p["alive"] for p in self.players.values()):

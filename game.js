@@ -17274,7 +17274,8 @@ function _positiveEffectKind(id){
 }
 
 function _positiveEffectColor(kind){
-  return kind === 'regeneration' ? '#91ffbd'
+  return kind === 'po' ? '#b89ad6'
+    : kind === 'regeneration' ? '#91ffbd'
     : kind === 'shield' ? '#76d8ff'
     : kind === 'armor' ? '#ffd76b'
     : kind === 'flash' ? '#fff2a6' : '#f4d98b';
@@ -17295,8 +17296,11 @@ function _spawnPositiveBurst(entry, kind='heal', amount=0, source=''){
 function _buildPositiveBurst3D(b){
   if(!g3?.scene || !window.THREE || b.group) return;
   const T = g3.T, group = new T.Group(); group.name = `positive-${b.kind}`;
-  const color = Number(`0x${_positiveEffectColor(b.kind).slice(1)}`);
-  const mat = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
+  // Pó de servo: tom escuro em mistura normal — aditivo some sobre o piso claro.
+  const po = b.kind === 'po';
+  const color = po ? 0x5a4570 : Number(`0x${_positiveEffectColor(b.kind).slice(1)}`);
+  const blending = po ? T.NormalBlending : T.AdditiveBlending;
+  const mat = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending});
   b.ring = new T.Mesh(new T.TorusGeometry(.22, .025, 8, 28), mat);
   b.ring.rotation.x = Math.PI / 2; b.ring.renderOrder = 126; group.add(b.ring);
   if(b.kind === 'flash'){
@@ -17306,8 +17310,8 @@ function _buildPositiveBurst3D(b){
     b.core.position.y = .88; b.core.renderOrder = 127; group.add(b.core);
   }
   for(let i=0;i<11;i++){
-    const pm = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending:T.AdditiveBlending});
-    const mote = new T.Mesh(new T.SphereGeometry(.025 + (i%3)*.010, 7, 5), pm);
+    const pm = new T.MeshBasicMaterial({color, transparent:true, opacity:0, depthWrite:false, depthTest:false, blending});
+    const mote = new T.Mesh(new T.SphereGeometry((po ? .045 : .025) + (i%3)*.010, 7, 5), pm);
     mote.userData.i = i; group.add(mote); b.particles.push(mote);
   }
   g3.scene.add(group); b.group = group;
@@ -17392,7 +17396,7 @@ function _drawPositiveBursts2D(ctx, state, now){
       const py = y - q * CELL * (.70 + (i%3)*.10) + Math.sin(a) * CELL * (.10 + q*.08);
       ctx.fillStyle = color; ctx.beginPath(); ctx.arc(px, py, Math.max(1.5, CELL*.025), 0, Math.PI*2); ctx.fill();
     }
-    const label = b.kind === 'regeneration' ? '🌿' : b.kind === 'shield' ? '🛡' : b.kind === 'armor' ? '⬆ CA' : '+';
+    const label = b.kind === 'po' ? '💀' : b.kind === 'regeneration' ? '🌿' : b.kind === 'shield' ? '🛡' : b.kind === 'armor' ? '⬆ CA' : '+';
     ctx.font = `900 ${Math.max(14, CELL * .19)}px Arial, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = color;
     ctx.fillText(label, x, y - CELL * (.42 + q * .56));
@@ -59786,6 +59790,15 @@ function _detonarMunicaoExplosiva(pos){
     if(GS.gameState) renderMap(GS.gameState);
   }, 1200);
 }
+// O mago morreu: cada servo vira pó na própria casa (só nas casas à vista).
+GS.on('servosViramPo', msg => {
+  const st = GS.gameState;
+  for(const pos of (msg.posicoes || [])){
+    if(!Array.isArray(pos) || !_combatFeedbackVisible({pos}, st)) continue;
+    _spawnPositiveBurst({pos}, 'po');
+    if(mode3D && g3) _spawnBurstParticles(g3.T, g3.scene, {x:pos[0], y:.3, z:pos[1]}, 0x5e4a72, 22);
+  }
+});
 GS.on('explosionArea', msg => {
   if(_explosionTimer) clearTimeout(_explosionTimer);
   _explosionTiles = new Set((msg.tiles||[]).map(([x,y])=>`${x},${y}`));
