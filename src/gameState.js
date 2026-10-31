@@ -1759,7 +1759,11 @@ const GS = (() => {
     clearWarriorSelected();
   }
   function _focarVez(msg) {
-    const vez = [msg.current_turn, msg.last_stand_pid, msg.animados_turn]
+    // A janela de Comando/Dominar Mente é a vez do herói que lançou: o foco vai
+    // para ele, senão a ficha de controle do monstro não aparece.
+    const vez = [msg.current_turn, msg.last_stand_pid, msg.animados_turn,
+                 msg.command_control ? msg.command_control_pid : null,
+                 msg.mind_control ? msg.mind_control_pid : null]
       .find(id => id && meusHerois.includes(id)) || null;
     if (vez && vez !== _focoTurno) {
       if (vez !== myPid) _limparPendentesDeFoco();
@@ -2763,10 +2767,12 @@ const GS = (() => {
     const st = lobbyState || cityState || gameState;
     return !!(st && st.master_pid && st.master_pid === myPid);
   }
+  // O controle é do herói que lançou; no Solo com grupo vale para a conexão
+  // inteira (o servidor aceita as ordens mestre_* vindas dela).
   function isCommandController() {
     return !!(gameState && (
-      (gameState.command_control_pid === myPid && gameState.command_control) ||
-      (gameState.mind_control_pid === myPid && gameState.mind_control)
+      (gameState.command_control && ehMeuHeroi(gameState.command_control_pid)) ||
+      (gameState.mind_control && ehMeuHeroi(gameState.mind_control_pid))
     ));
   }
   function canControlMonster() { return isMaster() || isCommandController(); }

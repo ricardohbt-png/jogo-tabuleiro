@@ -26478,11 +26478,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Retorna o dono da janela manual atual: mestre, Comando ou Dominar Mente."""
         if pid == self.master_pid and monster_id == self.master_manual_mid:
             return "master"
-        if pid == self.command_control_pid and monster_id == self.command_control_mid:
+        if self._mesma_conexao(pid, self.command_control_pid) and monster_id == self.command_control_mid:
             return "command"
-        if pid == self.mind_control_pid and monster_id == self.mind_control_mid:
+        if self._mesma_conexao(pid, self.mind_control_pid) and monster_id == self.mind_control_mid:
             return "mind"
         return None
+
+    def _mesma_conexao(self, pid, controlador_pid):
+        """Comando/Dominar Mente guardam o pid do HERÓI que lançou. No Solo com
+        grupo ele pode ser um herói extra, mas as mensagens mestre_* chegam
+        com o pid da CONEXÃO (não são traduzidas para o herói). Os dois valem."""
+        if not controlador_pid or not pid:
+            return False
+        return pid == controlador_pid or self._conexao_de(pid) == self._conexao_de(controlador_pid)
 
     def _manual_control_active(self, monster_id):
         return (monster_id == self.master_manual_mid
@@ -26497,9 +26505,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         So fala com quem realmente controla algo -- estar fora do proprio turno
         e o caso comum e nao deve gerar mensagem nenhuma."""
         mid = None
-        if self.command_control_pid == pid and self.command_control_mid:
+        if self._mesma_conexao(pid, self.command_control_pid) and self.command_control_mid:
             mid = self.command_control_mid
-        elif self.mind_control_pid == pid and self.mind_control_mid:
+        elif self._mesma_conexao(pid, self.mind_control_pid) and self.mind_control_mid:
             mid = self.mind_control_mid
         if not mid:
             return
