@@ -3815,6 +3815,10 @@ const GS = (() => {
   //   {type:'move',   path}                  — execute move sends
   function resolveTileClick(tx, ty) {
     if (!gameState || gameState.phase !== 'playing' || !isMyTurn) return null;
+    // Na janela dos servos o herói não age (o servidor recusa): o clique é
+    // dos servos. Sem isto, com a ação do herói livre, clicar num monstro
+    // virava ataque do herói e o servo nunca atacava.
+    if (gameState.animados_turn != null && gameState.animados_turn === myPid) return null;
     const myP = gameState.players.find(p => p.id === myPid && p.alive);
     if (!myP) return null;
 

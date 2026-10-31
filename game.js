@@ -56536,6 +56536,8 @@ function _alvoAtaqueDoMonstroSobPonteiro(monster){
   if(!monster || monster.hp <= 0 || !GS.gameState || GS.canControlMonster?.()) return null;
   const me = GS.gameState.players?.find(p => p.id === GS.myPid && p.alive);
   if(!me || !GS.isMyTurn || me.action_done) return null;
+  // Janela dos servos: o clique no monstro é do servo, não do herói.
+  if(GS.gameState.animados_turn === GS.myPid) return null;
   const tiles = (GS.monsterTiles?.(monster) || [monster.pos]).filter(Boolean);
   const attack = tiles
     .map(pos => ({ pos, action: GS.resolveTileClick(pos[0], pos[1]) }))
@@ -56695,6 +56697,13 @@ function on3DClick(e){
     return;
   }
   const monsterUnderPointer = get3DMonsterAtPointer(e);
+  // Janela dos servos: clicar na miniatura do monstro é ordem de ataque do
+  // servo. Vai direto ao handleTileClick, sem passar por baú/objeto/item.
+  if(monsterUnderPointer && monsterUnderPointer.hp > 0 && GS.isMyTurn
+     && GS.gameState?.animados_turn === GS.myPid){
+    handleTileClick(monsterUnderPointer.pos[0], monsterUnderPointer.pos[1]);
+    return;
+  }
   const attackUnderPointer = _alvoAtaqueDoMonstroSobPonteiro(monsterUnderPointer);
   if(attackUnderPointer?.action?.type === 'attack'){
     handleTileClick(attackUnderPointer.pos[0], attackUnderPointer.pos[1], {preferirAtaque:true});
@@ -57067,7 +57076,10 @@ function handleTileClick(tx, ty, opts){
   if(window._modoThrowItem){ _clickTileThrow(tx, ty); return; }
   // ── Escada: sair é INDIVIDUAL — custa fome/sede e tem espera em rodadas ────
   const _st = GS.gameState;
-  if(_st && _st.stairs_pos){
+  // Janela dos servos: o clique é do servo da vez. Escada, item no chão, baú e
+  // objeto decidiam pelo herói (que não age agora) e engoliam o clique.
+  const _janelaServos = !!(_st && GS.isMyTurn && _st.animados_turn === GS.myPid);
+  if(_st && _st.stairs_pos && !_janelaServos){
     const [sx,sy] = _st.stairs_pos;
     if(tx===sx && ty===sy){
       const me = (_st.players||[]).find(p=>p.id===GS.myPid && p.alive);
@@ -57099,7 +57111,7 @@ function handleTileClick(tx, ty, opts){
   }
   // ── Item no chão (2D e 3D): clicar num item adjacente pega; senão avisa ──────
   // Não-guardado por modo: o 3D funil por handleTileClick(tx,ty) via on3DClick.
-  if(_st && Array.isArray(_st.ground_items)){
+  if(_st && Array.isArray(_st.ground_items) && !_janelaServos){
     const gi = _st.ground_items.find(g => g.pos[0]===tx && g.pos[1]===ty);
     if(gi){
       const me = _st.players.find(p=>p.id===GS.myPid&&p.alive);
@@ -57123,7 +57135,7 @@ function handleTileClick(tx, ty, opts){
   }
 
   // ── Chest click (2D canvas path — 3D path handled in on3DClick) ────────────
-  if(_st){
+  if(_st && !_janelaServos){
     const chest = (_st.chests||[]).find(c=>c.pos[0]===tx&&c.pos[1]===ty);
     if(chest){
       const myP = _st.players.find(p=>p.id===GS.myPid&&p.alive);
@@ -57139,7 +57151,7 @@ function handleTileClick(tx, ty, opts){
   // ── Decoration click (2D canvas path — 3D path handled in on3DClick) ─────────
   // Interativa (loot/fonte) → interage. Sólida → bloqueia o clique. Pisável
   // (chão/fogueira) sem interação → deixa passar p/ a lógica de movimento.
-  if(_st){
+  if(_st && !_janelaServos){
     const decsHere = GS.decorations.filter(d =>
       GS.decorTilesOf(d).some(t => t[0] === tx && t[1] === ty));
     if(decsHere.length){
