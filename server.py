@@ -11843,6 +11843,15 @@ def _recalculate_ac(p):
     p["ac_base"] = 10 + mod(p["dex"]) + armor_val
     p["ac"]      = p["ac_base"] + bonus
 
+def _preco_inicial(item_id):
+    """price/buy_price do item inicial, copiados do catálogo das lojas (vazio se não vendido)."""
+    for loja in (SHOP_WEAPONS, SHOP_ARMORS):
+        for it in loja:
+            if it.get("id") == item_id and it.get("price") is not None:
+                return {"price": it["price"], "buy_price": it["price"]}
+    return {}
+
+
 def make_player(pid, name, cls_id, slot):
     cls = CLASSES[cls_id]
     w_id = cls["weapon"]
@@ -11851,6 +11860,10 @@ def make_player(pid, name, cls_id, slot):
     sb = cls["saves_base"]
     starting_armor_item = deepcopy(_STARTING_ARMOR.get(cls_id))
     starting_offhand_item = deepcopy(_STARTING_OFFHAND.get(cls_id))
+    # Equipamento inicial vale o mesmo que o item da loja (venda = buy_price // 3).
+    for _it in (starting_armor_item, starting_offhand_item):
+        if _it:
+            _it.update(_preco_inicial(_it.get("id")))
     # Fórmula universal: base 10 + modificador de DES + armadura corporal.
     ac_base_start = 10 + mod(d) + _armor_ac_bonus(starting_armor_item)
     offhand_ac = int((starting_offhand_item or {}).get("value", 0) or 0) if (starting_offhand_item or {}).get("effect") == "def_" else 0
@@ -11867,6 +11880,7 @@ def make_player(pid, name, cls_id, slot):
         "id": w_id, "name": weapon["name"],
         "emoji": _WEAPON_EMOJI.get(w_id, "⚔️"),
         "item_slot": "weapon", "effect": "atk", "value": 0,
+        **_preco_inicial(w_id),
         # As cargas pertencem a esta arma, e nÃ£o ao personagem/slot equipado.
         "poison_slots": [],
     }
@@ -11875,15 +11889,6 @@ def make_player(pid, name, cls_id, slot):
         # nas compras. Isso deixa todos os personagens prontos para as futuras
         # penalidades por peso e para a corrosÃ£o por material.
         armor_meta = ARMOR_CATALOG.get(starting_armor_item.get("id"), {})
-def _preco_inicial(item_id):
-    """price/buy_price do item inicial, copiados do catálogo das lojas (vazio se não vendido)."""
-    for loja in (SHOP_WEAPONS, SHOP_ARMORS):
-        for it in loja:
-            if it.get("id") == item_id and it.get("price") is not None:
-                return {"price": it["price"], "buy_price": it["price"]}
-    return {}
-
-
         starting_armor_item["armor_category"] = armor_meta.get("armor_category")
         starting_armor_item["corrosion_materials"] = list(armor_meta.get("corrosion_materials", []))
 
@@ -11892,10 +11897,6 @@ def _preco_inicial(item_id):
         "class_name": cls["name"], "emoji": cls["emoji"], "color": cls["color"],
         "hp": hp_total, "max_hp": hp_total,
         # D20 ability scores
-    # Equipamento inicial vale o mesmo que o item da loja (venda = buy_price // 3).
-    for _it in (starting_armor_item, starting_offhand_item):
-        if _it:
-            _it.update(_preco_inicial(_it.get("id")))
         "str_": s, "dex": d, "con_": c, "int_": i_,
         # Combat stats â€” AC = armor_base + DEX mod
         "ac": ac_start,
@@ -11912,7 +11913,6 @@ def _preco_inicial(item_id):
         "spd": cls["spd"],
         "xp": 0, "level": 1, "renome_individual": 0,
         "gold": cls.get("start_gold", 0),
-        **_preco_inicial(w_id),
         "bag": [],
         "bag_size": 6,            # inventÃ¡rio base (expansÃ­vel por mochilas)
         "auto_equip_arrows_enabled": False,
@@ -14263,6 +14263,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._iniciar_timer_turno()
             await self.push_state()
             await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
+            await self._reenviar_licao(alvo)
         else:   # playing — o personagem REENTRA pela escada de entrada
             casa = casa_caida or self._entrada_para_religar(alvo)
             if casa:
@@ -14275,6 +14276,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._iniciar_timer_turno()   # reativa o timer caso estivesse parado
             await self.push_state()
             await self.gm_say(T("narracao.reconectou_se_e_voltou_a_masmorra", name=name))
+            await self._reenviar_licao(alvo)
         pending = self._smoke_reaction
         if pending and time.monotonic() < pending["deadline"] and not pending["resolved"]:
             fresh = self._smoke_reaction_candidates(pending["attacker"], pending["target_obj"])
@@ -14440,7 +14442,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _city_state_payload(self):
         self._ensure_utility_belt_tokens()
-            await self._reenviar_licao(alvo)
         players_city = [dict(p,
                             maldicoes=[{**m, "preco_remocao": self._preco_remover_maldicao(p, m["id"])}
                                        for m in self._maldicoes(p)],
@@ -14452,7 +14453,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             # cache de combate interno. Expor só este metadado
                             # permite ao painel de status mostrar o bônus sem
                             # alterar a regra nem tornar o cache parte do save.
-            await self._reenviar_licao(alvo)
                             bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
                         for p in self.players.values()]
         return {
@@ -22325,6 +22325,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not fala.get("tarefa"):
             await self._licao_concluir(p, fala)   # lição que só explica
 
+    async def _reenviar_licao(self, p):
+        """Quem religa perdeu a janela da lição: reenvia a fala da lição em andamento,
+        no passo atual, sem reaplicar efeito nem preparo (o progresso fica como está)."""
+        fala = next((l for l in getattr(self, "licoes", []) if l["id"] == (p or {}).get("licao_atual")), None)
+        if not fala:
+            return
+        await self.send_to(p["id"], {"type": "fala",
+                                     "falante": fala.get("falante") or {},
+                                     "texto": fala.get("texto", ""),
+                                     "pos": fala.get("pos"),
+                                     "licao_id": fala["id"],
+                                     "passo": _guia_payload(fala, p.get("licao_passo", 0))})
+
     async def _licao_efeito(self, p, fala):
         """Aplica o `efeito` da lição ao herói que a recebeu.
 
@@ -22389,7 +22402,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         px, py = p["pos"]
         perto = lambda c, r: max(abs(px - c[0]), abs(py - c[1])) <= r
         tar = lic.get("tarefa") or {}
+        # Ponte de classe (`porta_<classe>`, alvo na porta da sala) só vale perto do
+        # alvo se estiver EM ANDAMENTO: a que nunca abriu (o herói saiu da sala de
+        # combate com outra lição pendente) segurava as lições da sala inteira
+        # enquanto ele estivesse a 2 casas da porta. As comuns seguem como antes.
         if tar.get("tipo") == "mover_ate" and isinstance(tar.get("alvo"), (list, tuple)) \
+                and (not lic.get("classe") or lic.get("id") == p.get("licao_atual")) \
                 and perto(tar["alvo"], max(raio, 2)):
             return True
         if trig.get("tipo") == "sala" and player_room(self.rooms, pos[0], pos[1]):
@@ -22780,19 +22798,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _arma_do_slot(self, p, slot="weapon"):
         """Arma equipada no slot, completa o bastante para checar dado e tipo. A arma inicial da mão principal
-    async def _reenviar_licao(self, p):
-        """Quem religa perdeu a janela da lição: reenvia a fala da lição em andamento,
-        no passo atual, sem reaplicar efeito nem preparo (o progresso fica como está)."""
-        fala = next((l for l in getattr(self, "licoes", []) if l["id"] == (p or {}).get("licao_atual")), None)
-        if not fala:
-            return
-        await self.send_to(p["id"], {"type": "fala",
-                                     "falante": fala.get("falante") or {},
-                                     "texto": fala.get("texto", ""),
-                                     "pos": fala.get("pos"),
-                                     "licao_id": fala["id"],
-                                     "passo": _guia_payload(fala, p.get("licao_passo", 0))})
-
         pode estar em `gear.weapon` só com id, nome e veneno (sem `die`); o resto vive na cópia de combate
         `p["weapon"]`. Sem essa fusão a mão principal nunca podia receber veneno."""
         gear = p.get("gear") if isinstance(p.get("gear"), dict) else {}
@@ -22857,12 +22862,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if (slot == "weapon" and isinstance(combat_weapon, dict)
                 and (not isinstance(gear_item, dict) or combat_weapon.get("id") == gear_item.get("id"))):
             combat_weapon["poison_slots"] = list(slots)
-        # Ponte de classe (`porta_<classe>`, alvo na porta da sala) só vale perto do
-        # alvo se estiver EM ANDAMENTO: a que nunca abriu (o herói saiu da sala de
-        # combate com outra lição pendente) segurava as lições da sala inteira
-        # enquanto ele estivesse a 2 casas da porta. As comuns seguem como antes.
 
-                and (not lic.get("classe") or lic.get("id") == p.get("licao_atual")) \
     def _weapon_poison_slots(self, p):
         """Compatibilidade para caminhos existentes que usam a arma principal."""
         return self._poison_slots_do_item(p, "weapon")
@@ -43716,6 +43716,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         pr = self.prisoner
         controla_prisioneiro = False
         if pr and pr.get("freed") and pr.get("alive"):
+            # O controle é só emprestado: quem libertou o retoma ao voltar. O refém do
+            # exercício do Paladino nunca passa a outra classe (ninguém mais o move na
+            # sala exclusiva, e a janela vazia prendia o outro herói a cada turno).
+            if pr.get("training_refem"):
+                dono = next((h for h in self.players.values()
+                             if h.get("class_id") == "paladin"), None)
+                dono_id = dono["id"] if dono else pr.get("rescuer_original")
+            else:
+                dono_id = pr.setdefault("rescuer_original", pr.get("rescuer_pid"))
+                dono = self.players.get(dono_id)
+            if pr.get("training_refem") or (dono and self._ativo(dono)):
+                pr["rescuer_pid"] = dono_id
             resc = self.players.get(pr.get("rescuer_pid"))
             if not pr.get("training_refem") and (not resc or not self._ativo(resc)):
                 vivos = [h for h in self.players.values() if self._ativo(h)]
@@ -44560,18 +44572,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         Guerreiro da Luz/corrosão de armadura/penalidade de veneno/maldição
         Marca do Caçador)."""
         gl_ca = (p.get("guerreiro_luz_bonus", {}).get("ca", 0)
-            # O controle é só emprestado: quem libertou o retoma ao voltar. O refém do
-            # exercício do Paladino nunca passa a outra classe (ninguém mais o move na
-            # sala exclusiva, e a janela vazia prendia o outro herói a cada turno).
-            if pr.get("training_refem"):
-                dono = next((h for h in self.players.values()
-                             if h.get("class_id") == "paladin"), None)
-                dono_id = dono["id"] if dono else pr.get("rescuer_original")
-            else:
-                dono_id = pr.setdefault("rescuer_original", pr.get("rescuer_pid"))
-                dono = self.players.get(dono_id)
-            if pr.get("training_refem") or (dono and self._ativo(dono)):
-                pr["rescuer_pid"] = dono_id
                  if p.get("guerreiro_luz_ativo") else 0)
         pressao_minotauro = (int(p.get("minotauro_pressao_ca", 0) or 0)
                              if p.get("minotauro_pressao_ate", 0) >= self.round_num else 0)
@@ -55162,6 +55162,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aproxime_se_do_prisioneiro")}); return
         self.prisoner["freed"] = True
         self.prisoner["rescuer_pid"] = pid
+        self.prisoner["rescuer_original"] = pid
         p["action_done"] = True
         await self.gm_say(T("narracao.libertou_o_prisioneiro", heroi=p['name']))
         await self._licao_evento(p, "libertar_refem", alvo="__prisioneiro__")
@@ -56030,7 +56031,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     ids = listas[k][0]
                     deltas[k] = {"orden": ids,
                                  "mudou": [e for e, i in zip(state[k], ids) if i not in iguais]}
-        self.prisoner["rescuer_original"] = pid
                     del red[k]
                 if novas is not None:
                     deltas["explored"] = {"add": sorted(list(c) for c in novas)}
