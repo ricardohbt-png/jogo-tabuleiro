@@ -141,6 +141,7 @@ async def main():
     mage["animados"] = [a]
     room.players["p"] = mage
     room.animados_phase_pid = "p"
+    room.animados_order = ["a1"]   # fila estrita da janela dos servos
     antes = a["vida_atual"]
     await room.handle_mover_animado("p", "a1", -1, 0)
     check("servo que entra na área sofre", a["vida_atual"] < antes)

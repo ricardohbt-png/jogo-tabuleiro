@@ -338,11 +338,13 @@ async def main():
     servo = {"id": "a1", "tipo": "goblin", "nome_base": "Goblin", "vida_atual": 30, "vida_max": 30,
              "pos": [8, 9], "moves_left": 3, "ataque": 1, "dano": "1d6"}
     cleric["animados"] = [servo]
+    room.animados_order = ["a1"]   # fila estrita da janela dos servos
     await room.handle_mover_animado("c", "a1", 0, -1)          # (8,9) → (8,8)
     check("servo andou para a chama", servo["pos"] == [8, 8])
     check("servo sofreu o dano da chama", servo["vida_atual"] < 30)
     room.prisoner = {"name": "Prisioneiro", "freed": True, "alive": True, "rescuer_pid": "c",
                      "moves_left": 3, "pos": [9, 2], "hp": 20, "max_hp": 20}
+    room.animados_done.add("a1")   # o servo já encerrou: a vez é do refém
     await room.handle_mover_prisioneiro("c", -1, 0)            # (9,2) → (8,2)
     check("prisioneiro andou para a chama", room.prisoner["pos"] == [8, 2])
     check("prisioneiro sofreu o dano da chama", room.prisoner["hp"] < 20)
