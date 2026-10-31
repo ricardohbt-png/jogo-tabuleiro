@@ -281,7 +281,7 @@ cada) e o tratamento do bardo (`elara_t1_*`); 3) o endereço do barman (`elara_r
 estava sem `dialog`.
 **A casa do Tomé (2026-10-29):** `masmorra_casa()` (`tools/elara_riacho_mapas.py`) foi refeita: sala da frente, quarto e **porão escondido**
 atrás da `estante_livros` `casa_estante` (duas passagens `mechanism` em `(22,6)`/`(22,7)`; a estante **não** leva `key_objective`, senão
-acioná-la já cumpriria o `open_key_chest`). O porão tem Tomé (`bandido` com `boss`/`target`, objetivo secundário `kill_target`), um `ogro_clava`,
+acioná-la já cumpriria o `open_key_chest`; ela é clicável porque `_decor_e_mecanismo` marca `interactive` em todo objeto que ainda desliga armadilha, abre passagem ou cumpre condição de porta — antes só o objeto-chave era clicável e a estante não podia ser acionada; teste `tools/test_mecanismo_clicavel.py`). O porão tem Tomé (`bandido` com `boss`/`target`, objetivo secundário `kill_target`), um `ogro_clava`,
 bandidos e o baú-chave com a carta; 12 monstros, ND 3,0/4,0/6,0 (0,38/0,50/0,75 do poder 8), 6 armadilhas e cenário de casa. Uma fala no quarto
 aponta a estante. O gerador ganhou `--ignorar-editados`: grava os mapas não editados e mantém os que o autor mexeu à mão (hoje o celeiro).
 Testes: `python -X utf8 tools/test_conversa_fatos.py`, `test_elara_riacho_mapas.py`,

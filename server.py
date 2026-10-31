@@ -46091,6 +46091,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not progresso:
                 break
 
+    def _decor_e_mecanismo(self, d):
+        """Objeto que ainda aciona algo: desliga armadilha, abre passagem secreta
+        ou cumpre a condição de uma porta. Mesmas listas de `handle_interagir_decor`."""
+        if d.get("disable_trap_ids"):
+            return True
+        if any(not sp["opened"] and d["id"] in sp["key_decor_ids"] for sp in self.secret_passages):
+            return True
+        return any(cond.get("type") == "decor" and d["id"] in cond.get("key_decor_ids", [])
+                   and not self._door_condition_satisfied(pos)
+                   for pos, cond in self.door_conditions.items())
+
     def _serializar_decoracoes(self):
         """Payload de render do cliente (sem vazar o conteúdo do loot)."""
         out = []
@@ -46111,8 +46122,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "trap_revelada_vela": bool(self._decor_tem_armadilha_pendente(d)
                                             and self._vela_reveladora_cobre_decor(d)),
                 "key_objective": bool(d.get("key_objective")),
-                # mecanismo que desliga armadilhas: o cliente o trata como objeto clicável
-                **({"interactive": True} if d.get("disable_trap_ids") else {}),
+                # mecanismo (desliga armadilha, abre passagem ou porta): o cliente o
+                # trata como objeto clicável mesmo sem ser objeto-chave
+                **({"interactive": True} if self._decor_e_mecanismo(d) else {}),
                 "charges": d.get("charges"),
                 **({"intervalo_rodadas": d.get("intervalo_rodadas", 2)}
                    if d.get("type") == "fumarola" else {}),
