@@ -3486,7 +3486,9 @@
       36,
       6
     ],
-    "room_id": 2
+    "room_id": 2,
+    "image": "moca_ruiva.png",
+    "model3d": "moca_ruiva.glb"
   },
   "materiais": {
     "0,0": "madeira",
