@@ -2283,6 +2283,7 @@ window.LANG_ERROS = {
   "erro.mecanismo_ja_ativado": {
     "en": "The mechanism has already been activated.",
     "pt": "O mecanismo já foi ativado."
-  }
+  },
+  "erro.alvo_fora_do_alcance_de_arremesso": {"en":"{alvo} is out of throwing range ({alcance} squares).","pt":"{alvo} está fora do alcance de arremesso ({alcance} casas)."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

@@ -3422,6 +3422,8 @@ window.LANG_NARRACAO = {
   "narracao.portao_levadico_preso": {"en":"💥 **{alvo}** fails to dodge, takes {dano} damage, and is trapped beneath the portcullis.","pt":"💥 **{alvo}** não consegue desviar, sofre {dano} de dano e fica preso sob o portão."},
   "narracao.portao_levadico_escapa": {"en":"💪 **{alvo}** escapes from under the portcullis (Strength {total}).","pt":"💪 **{alvo}** escapa debaixo do portão (Força {total})."},
   "narracao.portao_levadico_saida_bloqueada": {"en":"🚧 **{alvo}** passes the Strength check, but both sides of the portcullis are blocked and remains trapped.","pt":"🚧 **{alvo}** passa no teste de Força, mas os dois lados do portão estão bloqueados e continua preso."},
-  "narracao.portao_levadico_falha_escapar": {"en":"⛓️ **{alvo}** fails to escape (Strength {total}) and takes {dano} damage.","pt":"⛓️ **{alvo}** falha ao escapar (Força {total}) e sofre {dano} de dano."}
+  "narracao.portao_levadico_falha_escapar": {"en":"⛓️ **{alvo}** fails to escape (Strength {total}) and takes {dano} damage.","pt":"⛓️ **{alvo}** falha ao escapar (Força {total}) e sofre {dano} de dano."},
+  "narracao.relampago_de_mao_acerta": {"en":"{heroi} hits {alvo} with the Hand Lightning spear ({total} vs AC {ca}; damage {dano}).","pt":"{heroi} acerta {alvo} com a lança Relâmpago de Mão ({total} contra CA {ca}; dano {dano})."},
+  "narracao.arma_retorna_a_mao": {"en":"{arma} returns to {heroi}'s hand.","pt":"{arma} retorna à mão de {heroi}."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

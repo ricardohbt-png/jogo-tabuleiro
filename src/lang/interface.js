@@ -167,6 +167,9 @@ window.LANG_INTERFACE = {
     "en": "Poisoned Magic Bolts +2",
     "pt": "Virotes Mágicos +2 Envenenados"
   },
+  "dado.ataque_da_lanca": {"en":"Spear attack","pt":"Ataque da lança"},
+  "dado.dano_perfurante": {"en":"Piercing damage","pt":"Dano perfurante"},
+  "dado.dano_eletrico": {"en":"Lightning damage","pt":"Dano elétrico"},
   "dado.acerto": {
     "en": "To-hit",
     "pt": "Acerto"
@@ -11603,6 +11606,11 @@ window.LANG_INTERFACE = {
   "ui.montaria.desmontar_desc": {"en":"Choose an adjacent orthogonal tile.","pt":"Escolha uma casa ortogonal adjacente."},
   "ui.montaria.montar": {"en":"Mount {nome}","pt":"Montar {nome}"},
   "ui.montaria.montar_desc": {"en":"Uses 8 movement · bonus action.","pt":"Usa movimento 8 · ação bônus."},
-  "ui.montaria.cavalo": {"en":"Saddle Horse","pt":"Cavalo de Sela"}
+  "ui.montaria.cavalo": {"en":"Saddle Horse","pt":"Cavalo de Sela"},
+  "ui.relampago_mao.nome": {"en":"Line Discharge","pt":"Descarga em Linha"},
+  "ui.relampago_mao.desc": {"en":"Line up to 4 squares: creatures in the path, allies included, take 3d6 lightning (Reflex DC 13 halves). The final target also takes a normal attack. Cooldown: 10 rounds.","pt":"Linha de até 4 casas: criaturas na trajetória, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também recebe um ataque normal. Recarga: 10 rodadas."},
+  "ui.relampago_mao.cancelada": {"en":"Discharge cancelled.","pt":"Descarga cancelada."},
+  "ui.relampago_mao.escolha_alvo": {"en":"Choose a highlighted enemy in the line of reach.","pt":"Escolha um inimigo destacado na linha de alcance."},
+  "ui.gamepad.cursor_fechado": {"en":"🖱 Interface cursor closed.","pt":"🖱 Cursor de interface fechado."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

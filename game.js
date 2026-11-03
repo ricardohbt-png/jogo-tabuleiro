@@ -31781,9 +31781,9 @@ function _weaponThrowSkillEntries(player){
     }
     if(item.lightning_line){
       add({
-        id: `relampago_de_mao_${slot}`, source: 'arma', name: 'Descarga em Linha', icon: '⚡',
+        id: `relampago_de_mao_${slot}`, source: 'arma', name: t('ui.relampago_mao.nome'), icon: '⚡',
         tipo: 'acao_principal', target: 'enemy', throw_slot: slot, weapon_id: item.id,
-        description: 'Linha de até 4 casas: criaturas na trajetória, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também recebe um ataque normal. Recarga: 10 rodadas.',
+        description: t('ui.relampago_mao.desc'),
         granted_origem: 'weapon',
       });
     }
@@ -31906,8 +31906,8 @@ function beginLightningLineWeapon(slot='weapon'){
   window._modoRelampagoDeMao = {slot, range, targets};
   _aimStart({kind:'relampago_de_mao', title:`⚡ ${t('ui.item.relampago_de_mao_habilidade')}`,
     instruction:t('ui.item.relampago_de_mao_mira'),
-    color:'#7edfff', targetLabel:'Inimigo', range, area:targets,
-    cancelText:'Descarga cancelada.', cleanup:()=>{window._modoRelampagoDeMao=null;}});
+    color:'#7edfff', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
+    cancelText:t('ui.relampago_mao.cancelada'), cleanup:()=>{window._modoRelampagoDeMao=null;}});
 }
 
 function _clickTileLightningLineWeapon(tx, ty){
@@ -31915,7 +31915,7 @@ function _clickTileLightningLineWeapon(tx, ty){
   if(!mode || !state) return;
   const monster=(state.monsters||[]).find(m=>m?.hp>0 && GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
   if(!monster || !mode.targets.has(`${tx},${ty}`)){
-    _aimSetStatus('Escolha um inimigo destacado na linha de alcance.', '#ffb168'); return;
+    _aimSetStatus(t('ui.relampago_mao.escolha_alvo'), '#ffb168'); return;
   }
   GS.useLightningLineWeapon(mode.slot, monster.id, [tx,ty]);
   _aimEnd({silent:true, reason:'resolved'});
@@ -32719,7 +32719,7 @@ function _gamepadToggleUiPointer(){
     toast(t('ui.joystick.cursor_interface_ativo', {botao: _gamepadButtonLabel(_gamepadBinding('nextTarget'))}), 'var(--cyan)');
   } else {
     _gamepadSetUiFocus(null);
-    toast('🖱 Cursor de interface fechado.', 'var(--text2)');
+    toast(t('ui.gamepad.cursor_fechado'), 'var(--text2)');
   }
   _gamepadRumble('target');
   return true;

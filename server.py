@@ -3731,6 +3731,8 @@ FOTO_SALA_CATEGORIAS = {
     "dungeon_generated": "foto", "tiles": "foto", "map_w": "foto", "map_h": "foto",
     "rooms": "foto", "door_rooms": "foto", "opened_doors": "foto",
     "portcullis_raised": "foto",
+    # recriados do arquivo da masmorra por _load_portcullis_def
+    "door_styles": "derivado", "portcullis_groups": "derivado", "portcullis_members": "derivado",
     "route_exits": "derivado", "dungeon_routes": "derivado",
     "stairs_pos": "foto", "exit_pos": "foto", "materiais": "foto",
     "elevacoes": "foto", "alturas_parede": "foto", "pontes": "foto", "secret_passages": "foto",
@@ -7811,6 +7813,13 @@ SHOP_WEAPONS.extend([
      "allowed_classes": ["cleric", "paladin", "warrior"],
      "descricao": "Raridade: Muito rara. Martelo de guerra mágico +1 no acerto e no dano; causa 1d8 contundente + Força e +1d4 elétrico por acerto. No crítico, se sobreviver, o alvo testa Força CD 13; falha é empurrada 1 casa. Como ação principal, o portador libera um pulso nas oito casas adjacentes: todas as criaturas, inclusive aliados, exceto o portador, sofrem 2d6 elétrico (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Clérigo, Paladino e Guerreiro."},
 ])
+
+# A arma da loja e a cópia de combate (WEAPONS) são o mesmo item: as armas mágicas
+# acima têm descrição escrita, que vale também para a cópia (senão o mesmo id teria
+# dois textos e o gerador de vocabulário recusa).
+for _weapon in SHOP_WEAPONS:
+    if _weapon.get("descricao") and _weapon["id"] in WEAPONS:
+        WEAPONS[_weapon["id"]]["descricao"] = _weapon["descricao"]
 
 SHOP_ARMORS = [
     # â”€â”€ ProteÃ§Ãµes / Escudos (slot acessÃ³rio â€” somam com armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -20985,6 +20994,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.door_styles = {}
         self.portcullis_groups = {}
         self.portcullis_members = {}
+        defn = defn or {}     # masmorra procedural: sem portão levadiço
         grid = defn.get("grid") or {}
         tiles = defn.get("tiles") or []
         height, width = int(grid.get("h", 0)), int(grid.get("w", 0))
@@ -25032,9 +25042,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 mods["eff_atk"], mods["eff_target_ac"],
                 mods["vantagem"], mods["desvantagem"], atacante=p)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
-                                  "label": "Ataque da lança", "hit": hit, "crit": crit})
+                                  "label": T("dado.ataque_da_lanca"), "hit": hit, "crit": crit})
             if hit:
-                raw = await self._rolar_dano_mostrado(1, 6, "Dano perfurante", DMG_PHYSICAL)
+                raw = await self._rolar_dano_mostrado(1, 6, T("dado.dano_perfurante"), DMG_PHYSICAL)
                 bonus_extra = (2 if mods["mira_ranged"] else 0) + (2 if mods["investida"] else 0)
                 dano_arma = raw + self._bonus_atributo_dano_arma(attack_view, weapon)
                 if crit:
@@ -25047,7 +25057,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 dano_arma = self._apply_damage_types(
                     dano_arma, [DMG_PHYSICAL], target, weapon, p.get("pos"), [tx, ty], pid)
                 await self._aplicar_dano_alvo(target, dano_arma, DMG_PHYSICAL, pid, is_attack=True)
-                await self.gm_say(f"{p['name']} acerta {nome_criatura(target)} com a lança Relâmpago de Mão ({total} contra CA {mods['eff_target_ac']}; dano {dano_arma}).")
+                await self.gm_say(T("narracao.relampago_de_mao_acerta", heroi=p['name'], alvo=nome_criatura(target),
+                                    total=total, ca=mods['eff_target_ac'], dano=dano_arma))
 
             hit_ids = set()
             impacted_tiles = []
@@ -25066,7 +25077,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     if aid in hit_ids:
                         continue
                     hit_ids.add(aid)
-                    dano = await self._rolar_dano_mostrado(3, 6, "Dano elétrico", DMG_LIGHTNING)
+                    dano = await self._rolar_dano_mostrado(3, 6, T("dado.dano_eletrico"), DMG_LIGHTNING)
                     passou, *_ = await self._save_mostrado(alvo, "reflexos", 13, mitigacao="half_damage")
                     if passou:
                         dano //= 2
@@ -25144,7 +25155,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.gm_say(T("narracao.choque_trovao_pulso", heroi=p.get("name", "")))
             self._rx_origem_atual(cd=13)
             for alvo in unicos:
-                dano = await self._rolar_dano_mostrado(2, 6, "Dano elétrico", DMG_LIGHTNING)
+                dano = await self._rolar_dano_mostrado(2, 6, T("dado.dano_eletrico"), DMG_LIGHTNING)
                 passou, *_ = await self._save_mostrado(alvo, "reflexos", 13,
                                                         mitigacao="half_damage")
                 if passou:
@@ -25314,7 +25325,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # RecuperaÃ§Ã£o: 1 natural = perdida; qualquer outro valor = cai no chÃ£o.
         # O item caÃ­do Ã© uma adaga funcional (carrega die/throw_range p/ reuso).
         if return_on_throw:
-            await self.gm_say(f"{nome_item(dagger)} retorna à mão de {p['name']}.")
+            await self.gm_say(T("narracao.arma_retorna_a_mao", arma=nome_item(dagger), heroi=p['name']))
         elif not nat1 or (_weapon_nat1_wear(dagger) and not dagger.get("corrosion_destroyed")):
             drop_item = deepcopy(dagger)
             drop_item.setdefault("emoji", "🗡️")

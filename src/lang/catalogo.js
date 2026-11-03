@@ -518,6 +518,10 @@ window.LANG_CATALOGO = {
     "en": "Torture Table",
     "pt": "Mesa de tortura"
   },
+  "cat.decor.moita.nome": {
+    "en": "Bush",
+    "pt": "Moita"
+  },
   "cat.decor.moita_espinhosa.nome": {
     "en": "Thorny Bush",
     "pt": "Moita espinhosa"
@@ -1070,8 +1074,12 @@ window.LANG_CATALOGO = {
     "en": "Lore: Bugbear — Shadow Boogeyman",
     "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
   },
+  "cat.guilda.lenda_capanga.desc": {
+    "en": "+1 attack and +1 saves against Thug.",
+    "pt": "+1 de ataque e +1 nos saves contra Capanga."
+  },
   "cat.guilda.lenda_capanga.nome": {
-    "en": "",
+    "en": "Legend: Thug",
     "pt": "Lenda: Capanga"
   },
   "cat.guilda.lenda_cavalo_sela.desc": {
@@ -2656,7 +2664,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.chicote_fogo.desc": {
     "en": "Rare magical whip: 1d4 slashing damage, +1 to hit and damage. A critical hit deals +1d6 fire damage. Each successful hit sets the target on fire for 1d4 rounds; it takes 1 fire damage per round. Burning damage does not stack. New hits keep the longer duration. Water or spending an action extinguishes it. Bard, Rogue, Paladin, and Warrior only.",
-    "pt": "Chicote mágico raro: 1d4 de dano cortante, +1 no acerto e no dano. Um acerto crítico causa +1d6 de dano de fogo. Cada acerto bem-sucedido deixa o alvo em chamas por 1d4 rodadas; ele sofre 1 ponto de dano de fogo por rodada. O dano das chamas não acumula. Novos acertos mantêm a maior duração. Água ou uma ação apagam o fogo. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "pt": "Raridade: Rara. Chicote mágico +1 no acerto e no dano. Em um crítico, causa +1d6 de dano de fogo. Cada acerto bem-sucedido deixa o alvo em chamas por 1d4 rodadas; ele sofre 1 ponto de dano de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Água ou uma ação apagam as chamas. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.chicote_fogo.nome": {
     "en": "Fire Whip",
@@ -2672,7 +2680,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.choque_do_trovao.desc": {
     "en": "Very rare magical warhammer: 1d8 bludgeoning + Strength, +1 to hit and damage, and +1d4 lightning damage on each hit. On a critical hit, a surviving target makes a Strength check (DC 13) or is pushed 1 square away. As a principal action, the wielder releases a pulse that hits all creatures in the eight adjacent squares, including allies but not the wielder, for 2d6 lightning damage (Reflex DC 13 halves). Recharge: 10 rounds. Cleric, Paladin, and Warrior only.",
-    "pt": "Martelo de guerra mágico muito raro: 1d8 contundente + Força, +1 no acerto e no dano, e +1d4 elétrico por acerto. Em um crítico, um alvo sobrevivente faz um teste de Força (CD 13) ou é empurrado 1 casa para longe. Como ação principal, o portador libera um pulso que atinge todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não o próprio portador, causando 2d6 de eletricidade (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Uso de Clérigo, Paladino e Guerreiro."
+    "pt": "Raridade: Muito rara. Martelo de guerra mágico +1 no acerto e no dano; causa 1d8 contundente + Força e +1d4 elétrico por acerto. No crítico, se sobreviver, o alvo testa Força CD 13; falha é empurrada 1 casa. Como ação principal, o portador libera um pulso nas oito casas adjacentes: todas as criaturas, inclusive aliados, exceto o portador, sofrem 2d6 elétrico (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Clérigo, Paladino e Guerreiro."
   },
   "cat.item.choque_do_trovao.nome": {
     "en": "Thunder Shock",
@@ -2796,7 +2804,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.escudo_torre.desc": {
     "en": "Paladin-only metal tower shield. Grants +3 AC and reduces each instance of incoming damage by 2. Can be corroded by the Metal Devourer.",
-    "pt": "Escudo torre metálico exclusivo do Paladino. Concede +3 CA e reduz em 2 cada instância de dano recebido. Pode ser corroído pelo Devorador de Metal."
+    "pt": "Escudo torre metálico, exclusivo do Paladino. Concede +3 CA e reduz em 2 cada instância de dano recebido. Pode ser corroído pelo Devorador de Metal."
   },
   "cat.item.escudo_torre.nome": {
     "en": "Roman Tower Shield",
@@ -2828,7 +2836,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_magica.desc": {
     "en": "Uncommon magical short sword: 1d6 slashing damage using Strength, +1 to hit and damage, and natural critical on 19–20. Bard, Rogue, Paladin, and Warrior only.",
-    "pt": "Espada curta mágica incomum: 1d6 de dano cortante usando Força, +1 no acerto e no dano e crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "pt": "Raridade: Incomum. Espada curta mágica +1 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.espada_magica.nome": {
     "en": "Magic Sword",
@@ -2836,7 +2844,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_magica_mais_2.desc": {
     "en": "Rare magical short sword: 1d6 slashing damage using Strength, +2 to hit and damage, and natural critical on 19–20. Bard, Rogue, Paladin, and Warrior only.",
-    "pt": "Espada curta mágica rara: 1d6 de dano cortante usando Força, +2 no acerto e no dano e crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "pt": "Raridade: Rara. Espada curta mágica +2 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.espada_magica_mais_2.nome": {
     "en": "Magic Sword +2",
@@ -2844,7 +2852,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_magica_mais_3.desc": {
     "en": "Very rare magical short sword: 1d6 slashing damage using Strength, +3 to hit and damage, and natural critical on 19–20. Bard, Rogue, Paladin, and Warrior only.",
-    "pt": "Espada curta mágica muito rara: 1d6 de dano cortante usando Força, +3 no acerto e no dano e crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "pt": "Raridade: Muito rara. Espada curta mágica +3 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.espada_magica_mais_3.nome": {
     "en": "Magic Sword +3",
@@ -2852,7 +2860,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_sangramento_bastarda.desc": {
     "en": "Very rare magical bastard sword: 1d10 slashing damage, +1 to hit and damage, natural critical on 19–20. Each successful hit applies the game's stacking Bleeding. A critical hit that applies Bleeding also causes Hemorrhage. Warrior and Paladin only.",
-    "pt": "Espada bastarda mágica muito rara: 1d10 de dano cortante, +1 no acerto e no dano, crítico natural com 19–20. Cada acerto bem-sucedido aplica o Sangramento cumulativo do jogo. Um crítico que aplique Sangramento também causa Hemorragia. Exclusiva de Guerreiro e Paladino."
+    "pt": "Raridade: Muito rara. Arma mágica +1 no acerto e no dano. Cada acerto bem-sucedido aplica Sangramento, seguindo a progressão normal do jogo; um acerto crítico também aplica Hemorragia. Uso exclusivo de Guerreiro e Paladino."
   },
   "cat.item.espada_sangramento_bastarda.nome": {
     "en": "Bleeding Bastard Sword",
@@ -2860,7 +2868,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_sangramento_longa.desc": {
     "en": "Rare magical longsword: 1d8 slashing damage, +1 to hit and damage, natural critical on 19–20. Each successful hit applies the game's stacking Bleeding. A critical hit that applies Bleeding also causes Hemorrhage. Warrior and Paladin only.",
-    "pt": "Espada longa mágica rara: 1d8 de dano cortante, +1 no acerto e no dano, crítico natural com 19–20. Cada acerto bem-sucedido aplica o Sangramento cumulativo do jogo. Um crítico que aplique Sangramento também causa Hemorragia. Exclusiva de Guerreiro e Paladino."
+    "pt": "Raridade: Rara. Arma mágica +1 no acerto e no dano. Cada acerto bem-sucedido aplica Sangramento, seguindo a progressão normal do jogo; um acerto crítico também aplica Hemorragia. Uso exclusivo de Guerreiro e Paladino."
   },
   "cat.item.espada_sangramento_longa.nome": {
     "en": "Bleeding Longsword",
@@ -2888,7 +2896,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.ferroada.desc": {
     "en": "Rare magical barbed whip: 1d4 slashing damage using Dexterity, +1 to hit and damage, range 2, and usable in the off hand. Each successful hit applies the game's Bleeding with no per-round limit. A natural 20 critical hit that applies Bleeding also causes Hemorrhage. Bard, Rogue, Paladin, and Warrior only.",
-    "pt": "Chicote mágico farpado raro: 1d4 de dano cortante usando Destreza, +1 no acerto e no dano, alcance 2 e uso na mão secundária. Cada acerto bem-sucedido aplica o Sangramento do jogo, sem limite por rodada. Um crítico natural 20 que aplique Sangramento também causa Hemorragia. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "pt": "Raridade: Rara. Chicote mágico farpado +1 no acerto e no dano; causa 1d4 de dano cortante usando Destreza, tem alcance 2 e pode ser usado na mão secundária. Cada acerto bem-sucedido aplica Sangramento, sem limite por rodada, seguindo a progressão normal do jogo. Um crítico natural 20 que aplique Sangramento também causa Hemorragia. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.ferroada.nome": {
     "en": "Sting",
@@ -2912,7 +2920,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.flechas_magicas.desc": {
     "en": "Pack of 10 magic arrows. Each shot gains +1 to attack and damage.",
-    "pt": "Pacote com 10 flechas mágicas. Cada disparo recebe +1 no acerto e no dano."
+    "pt": "Pacote com 10 flechas mágicas. Cada disparo concede +1 no acerto e no dano."
   },
   "cat.item.flechas_magicas.nome": {
     "en": "Magic Arrows (×10)",
@@ -2920,7 +2928,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.flechas_magicas_mais_2.desc": {
     "en": "Pack of 10 magic arrows. Each shot gains +2 to attack and damage.",
-    "pt": "Pacote com 10 flechas mágicas. Cada disparo recebe +2 no acerto e no dano."
+    "pt": "Pacote com 10 flechas mágicas. Cada disparo concede +2 no acerto e no dano."
   },
   "cat.item.flechas_magicas_mais_2.nome": {
     "en": "Magic Arrows +2 (×10)",
@@ -3400,7 +3408,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.maca_zero_absoluto.desc": {
     "en": "Very rare magical mace: 1d6 bludgeoning damage + Strength, +1 to hit and damage, and +1d4 cold damage on each hit. Once per target per round, a critical hit traps the target in ice. At the start of each turn, it can make a free Strength check (DC 16) to escape; on a failure it remains frozen, for at most 2 rounds. Bard, Rogue, Paladin, and Warrior only.",
-    "pt": "Maça mágica muito rara: 1d6 de dano contundente + Força, +1 no acerto e no dano e +1d4 de frio por acerto. Uma vez por alvo por rodada, um acerto crítico o prende em gelo. No início de cada turno, ele pode fazer um teste livre de Força CD 16 para escapar; se falhar, continua congelado, por no máximo 2 rodadas. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "pt": "Raridade: Muito rara. Maça mágica +1 no acerto e no dano; causa 1d6 contundente + Força e +1d4 de frio por acerto. Em um acerto crítico, uma vez por alvo por rodada, prende o alvo em gelo: no início de cada turno, ele faz um teste livre de Força CD 16 para escapar. Se falhar, permanece preso; o efeito termina após no máximo 2 rodadas. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.maca_zero_absoluto.nome": {
     "en": "Mace of Absolute Zero",
@@ -3536,7 +3544,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.mini_aljava.desc": {
     "en": "Equipped in an item slot, raises each stack capacity to 20 arrows or 20 bolts, including special variants.",
-    "pt": "Equipada em um espaço de item, aumenta cada pilha para até 20 flechas ou 20 virotes, incluindo variantes especiais."
+    "pt": "Equipada em um espaço de item, permite pilhas de até 20 flechas ou 20 virotes, incluindo variantes especiais."
   },
   "cat.item.mini_aljava.nome": {
     "en": "Mini Quiver",
@@ -3696,7 +3704,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.rede_corrosiva.desc": {
     "en": "Thrown attack (range 4, Dexterity). On a hit, traps the target. At the start of each turn, Fortitude DC 13: success ends the effect and the target may act; failure costs the turn, deals 1 acid damage, and corrodes one equipped item in this order: armor, shield, head, weapon, boots. Each item is destroyed after three corrosion failures. Once all equipment is destroyed, each further failure reduces AC by 1 (minimum 5). Consumable.",
-    "pt": "Arremesso (alcance 4, ataque por Destreza). Ao acertar, prende o alvo. No início de cada turno, Fortitude CD 13: sucesso encerra o efeito e permite agir; falha consome o turno, causa 1 de dano ácido e corrói um equipamento na ordem armadura, escudo, cabeça, arma e botas. Cada peça é destruída após três falhas que a atinjam. Sem equipamentos, cada falha reduz a CA em 1 (mínimo 5). Consumível."
+    "pt": "Arremesso (alcance 4, ataque por Destreza). Ao acertar, prende o alvo. No início de cada turno, teste de Fortitude CD 13: sucesso encerra o efeito e permite agir; falha consome o turno, causa 1 de dano ácido e corrói um equipamento na ordem armadura, escudo, cabeça, arma e botas. Cada peça é destruída após 3 falhas que a atinjam; sem equipamento restante, cada falha reduz a CA em 1 (mínimo 5). Consumível."
   },
   "cat.item.rede_corrosiva.nome": {
     "en": "Corrosive Net",
@@ -3712,7 +3720,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.relampago_de_mao.desc": {
     "en": "Very rare magical short spear: 1d6 piercing damage + Strength, +1 to hit and damage, thrown range 4, and returns to hand. As a principal action, throw a straight line up to 4 squares: all creatures in the line, including allies, take 3d6 lightning damage (Reflex DC 13 halves). The final target also takes a normal spear attack if hit. Recharge: 10 rounds.",
-    "pt": "Lança curta mágica muito rara: 1d6 perfurante + Força, +1 no acerto e no dano, alcance de arremesso 4 e retorno à mão. Como ação principal, arremesse em linha reta até 4 casas: todas as criaturas na linha, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também sofre um ataque normal da lança se for atingido. Recarga: 10 rodadas."
+    "pt": "Raridade: Muito rara. Lança curta mágica +1 no acerto e no dano; causa 1d6 perfurante + Força e pode ser arremessada até 4 casas, retornando à mão. Como ação principal, arremesse-a em linha reta até 4 casas: todas as criaturas no caminho, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também sofre o dano normal da lança se o ataque acertar. Recarga de 10 rodadas."
   },
   "cat.item.relampago_de_mao.nome": {
     "en": "Hand Lightning",
@@ -3984,7 +3992,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.virotes_magicos.desc": {
     "en": "Pack of 10 magic bolts. Each shot gains +1 to attack and damage.",
-    "pt": "Pacote com 10 virotes mágicos. Cada disparo recebe +1 no acerto e no dano."
+    "pt": "Pacote com 10 virotes mágicos. Cada disparo concede +1 no acerto e no dano."
   },
   "cat.item.virotes_magicos.nome": {
     "en": "Magic Bolts (×10)",
@@ -3992,7 +4000,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.virotes_magicos_mais_2.desc": {
     "en": "Pack of 10 magic bolts. Each shot gains +2 to attack and damage.",
-    "pt": "Pacote com 10 virotes mágicos. Cada disparo recebe +2 no acerto e no dano."
+    "pt": "Pacote com 10 virotes mágicos. Cada disparo concede +2 no acerto e no dano."
   },
   "cat.item.virotes_magicos_mais_2.nome": {
     "en": "Magic Bolts +2 (×10)",
@@ -4403,7 +4411,7 @@ window.LANG_CATALOGO = {
     "pt": "Bugbear — Bicho-Papão das Sombras"
   },
   "cat.monstro.capanga.nome": {
-    "en": "",
+    "en": "Thug",
     "pt": "Capanga"
   },
   "cat.monstro.cavalo_sela.nome": {
