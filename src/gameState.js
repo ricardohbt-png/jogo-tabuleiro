@@ -936,6 +936,11 @@ const GS = (() => {
   function _custoElevacao(moveCtx, fromX, fromY, x, y) {
     const actor = moveCtx?.actor || {};
     if (actor.voo && alturaDe(actor) > 0) return 0;
+    const state = moveCtx?.state || gameState;
+    const hatch = (state?.decorations || []).some(d => d?.special === 'sewer_hatch'
+      && d.opened && decorTilesOf(d).some(([hx, hy]) => hx === x && hy === y));
+    if (hatch && _ponteEm(fromX, fromY, state)
+        && _elevacaoTerreno(fromX, fromY, moveCtx) > _elevacaoTerreno(x, y, moveCtx)) return 1;
     const diferenca = Math.abs(_elevacaoTerreno(x, y, moveCtx) -
       _elevacaoTerreno(fromX, fromY, moveCtx));
     return diferenca > 1 ? 9999 : diferenca;
@@ -943,8 +948,8 @@ const GS = (() => {
 
   // Espelho de `_queda_no_passo` do server.py. Existe para o azul não oferecer
   // casa que o servidor recusaria: o jogador clicaria e nada aconteceria, sem
-  // explicação — pior que o defeito original. Movimento voluntário nunca cai;
-  // queda por desnível só por empurrão, que não passa por aqui.
+  // explicação — pior que o defeito original. Movimento voluntário nunca cai,
+  // salvo a entrada explícita por grade de esgoto aberta.
   function _quedaNoPasso(moveCtx, fromX, fromY, x, y) {
     const actor = moveCtx?.actor || {};
     if (actor.voo && alturaDe(actor) > 0) return false;
@@ -952,6 +957,9 @@ const GS = (() => {
                 - _elevacaoTerreno(x, y, moveCtx);
     if (queda <= 0) return false;
     const estado = moveCtx?.state || gameState;
+    const hatch = (estado?.decorations || []).some(d => d?.special === 'sewer_hatch'
+      && d.opened && decorTilesOf(d).some(([hx, hy]) => hx === x && hy === y));
+    if (hatch && _ponteEm(fromX, fromY, estado)) return false;
     // A ponte não tem rampa lateral: sair dela é queda mesmo com desnível 1.
     const saiuDaPonte = _ponteEm(fromX, fromY, estado) && !_ponteEm(x, y, estado);
     const modo = estado?.transicao_altura || 'rampa';

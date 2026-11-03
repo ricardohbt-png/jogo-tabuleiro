@@ -198,10 +198,10 @@ def test_catalog():
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
     check("pisáveis: não bloqueiam movimento", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "arco_pedra_deserto", "brasa_chao", "brasao_leao", "braseiro_parede", "capim_alto",
+        "arco_pedra_deserto", "brasa_chao", "brasao_leao", "braseiro_parede", "caminho_pedras_terra", "capim_alto",
         "capim_amarelado", "cerca_quebrada", "chama_viva", "chao", "cortina_branca",
         "cortina_vermelha", "fenda_fumegante", "fogueira", "fumarola", "gargula_pedra",
-        "geiser_lava", "grilhoes_parede", "gruta_parede", "juncos", "moita_espinhosa",
+        "geiser_lava", "grade_esgoto", "grilhoes_parede", "gruta_parede", "juncos", "moita_espinhosa",
         "monte_ossos", "ninho_abutres", "ossos_semi_enterrados", "placa", "porteira_aberta",
         "rochas_rachadas", "tocha_parede", "vitral_templo"])
 

@@ -1063,6 +1063,8 @@ resistência enquanto o herói permanecia na mesma sala.
 > físico e consome 1 ponto do movimento total na primeira moita do turno
 > (criaturas voadoras ignoram os espinhos). `capim_alto` ocupa 1×1 e é
 > atravessável. Ambos têm miniaturas PNG/GLB próprias.
+> `moita` é uma decoração verde densa de 1×1, alta e sólida, sem efeito
+> mecânico; usa miniaturas PNG/GLB próprias.
 > `tronco_podre_fungos` ocupa 2×1, e `tocos_alagados` ocupa 1×1; ambos bloqueiam
 > movimento e têm miniaturas PNG/GLB próprias.
 > `juncos` ocupa 1×1 e permite passagem; `raizes_torcidas` ocupa 2×1,
@@ -1218,12 +1220,25 @@ da ponte em `pontes[].tiles`; cliente e pathfinding usam essa lista para mostrar
 e bloquear corretamente a parte colapsada. Editor e `validar_dungeon` verificam
 ponte vinculada, tipo de piso e altura inferior.
 
+**Grade de esgoto (`grade_esgoto`):** no editor, clicar e arrastar seleciona
+uma área retangular de qualquer tamanho. A decoração cria a própria cobertura
+pisável, serializada como ponte vinculada ao ID da grade; o nível é o mais alto
+dos pisos no contorno e cada casa coberta precisa ter `FLOOR` inferior. O piso
+original e sua elevação permanecem sob a tampa. Ao confirmar a interação, a
+abertura é permanente: toda a cobertura some de uma vez, todas as casas viram
+buracos e ocupantes caem para o piso de suas próprias casas, com dano calculado
+por desnível individual. O pathfinding aceita entrar em qualquer casa aberta e
+resolve a descida no mesmo mapa. Saves antigos que colocavam a grade sobre uma
+ponte manual continuam válidos. Asset: PNG de edição, GLB de jogo e fonte
+Blender em `assets/objetos/grade_esgoto*` e `tools/create_grade_esgoto.py`.
+
 **Parede acompanha a elevação do terreno (2026-10-04):** no 3D, cada parede sobe sozinha até o
 chão mais alto das 8 casas ao redor (`nivelParede3D` em `game.js`; chão/porta, chão afundado não
 rebaixa) — antes um platô de nível alto passava por cima do próprio muro. A faixa de terreno é
 −1 a +40; cada nível continua usando o passo visual existente de 0,24 no 3D. O limite de voo (10)
-é independente. O autor fixa a altura de uma parede com a ferramenta **altura** do editor pintando
-sobre ela: 0 a +40 grava em
+é independente. A ferramenta **altura** do editor aplica o nível selecionado a uma área retangular:
+arrastar entre dois cantos e soltar pinta todos os pisos, portas e paredes elegíveis naquela área. Em parede,
+0 a +40 grava em
 `alturas_parede` (`"x,y"` → nível, só parede), −1 ou apagar volta ao automático; selo "▮n" no mapa
 do editor. O campo é **só visual** (as regras seguem lendo `elevacoes`): validado em
 `validar_dungeon`, carregado em `load_authored_dungeon`, enviado no `game_state` (o 0 vai junto —
@@ -3140,6 +3155,24 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > **Slides de história condicionais (2026-10-17):** cada slide de `intro`/`outro`/`outro_rota` aceita `requisito` (o mesmo vocabulário de `_clean_requirement`: item, fato, renome, nível, rota anterior) e `negar`. `_story_beat(key, parts, avaliar)` só mantém o slide quando `avaliar(requisito)` bate (ou NÃO bate, com `negar`) e remove os dois campos antes de mandar ao cliente; sem `avaliar` o slide condicional é descartado. Todos os sítios de chamada passam `self._requisito_do_slide` (= `_avaliar_requisito`, com o grupo como está no momento de montar o beat). `_story_norm`/`_clean_story_field`/`_validar_story` conservam e validam o campo, e o painel de história do editor (`tools/editor_story.js`) ganhou o seletor "mostrar sempre / só se o grupo TEM / NÃO tem o item" e conserva a condição ao salvar. Uso: o final do Covil da Garra Negra só diz que o segredo da estante "talvez ninguém tenha encontrado" quando o grupo NÃO tem o Anel da Garra Negra; "Outras estradas esperam por vocês no mapa." sai sempre. A rota termina em `_voltar_para_cidade(story=fim)`: não é fim de jogo, e o mapa-múndi segue aberto (destinos novos destravam por `requisito: {aventura_id: sombras_covil}`). O gerador `tools/gerar_campanha_sombras.py` reproduz o final e o anel (preço 1000, descrição) — rode-o com `--simular` e confira `world_adventures.json` antes de reexecutar. Testes: `tools/test_final_condicional.py` e `tools/test_editor_story_condicao.js`.
 
 > **Campanha "A Maré do Charco" (2026-10-17):** 4 destinos e 5 masmorras ocultas em cadeia a partir da Vila dos Charcos (`charcos_bordas` → `palafitas` → `travessia` → `aldeia`, esta com duas etapas emendadas: Arredores + A Aldeia). Gerada por `tools/gerar_campanha_charcos.py` (reexecutável; `--simular` relata ND/XP/artes; mapas em `tools/charcos_mapas.py`, determinísticos por semente; só toca em `charcos_*`, nas conversas `charcos_*` da taverna da vila, em `cidade_modificadores.json` e no troféu `ferrao_do_brejo`). Gancho: a mãe Ysa (slot `npc_ms42peq8`) dá o fato `charcos_criancas_sumidas`. O chefe é o **Ferrão dos Charcos Adulto** (ND 5) preso numa cela murada DENTRO da praça (a hostilidade entre monstros só vale na mesma sala): a corrente (`aldeia_corrente`, decoração-chave) abre 3 casas da parede; ele é hostil a todos e os bruxos revidam só contra ele (`hostility_override` por tipo). O cercado das crianças (refém único "As Crianças") abre pelo sino ritual (`aldeia_sino`) ao lado do necromante-chefe: **monstro autorado não carrega item**, por isso a "chave" é mecanismo e não item. Peças novas do motor: requisito `sem_fato` (marcador que NÃO existe; `_clean_requirement`/`_avaliar_requisito`, 3 editores); objetivo com `renome` (delta com sinal, piso zero no total) e `fato` (`_aplicar_renome_fato`); `primary.se_falhar {renome, fato}` aplicado UMA vez na morte do refém (`_consequencia_refem_aplicada`, na foto; a missão NÃO termina); `objectives.alternativo` (kill_target que vira o objetivo efetivo depois de `rescue_failed`, sem pagar o secundário do mesmo tipo nem o `renome_recompensa` da rota: final amargo); preço por marcador nas lojas da cidade (`cidade_modificadores.json`, `_itens_da_loja`/`_ajustar_preco`: o preço mostrado é o cobrado, `preco_base` vira o `buy_price` e a venda não sobe); `_resolve_reward_item` passou a olhar o catálogo mesclado (item de baú do editor sem loja não era resolvido). Se as crianças morrem: renome −5, marcador `charcos_criancas_mortas` e a vila fica hostil (conversas do gancho somem, as hostis aparecem, taverna/ferreiro +50%); matar o Ferrão conclui a missão com XP reduzido, fugir pela escada deixa a rota aberta. Final em slides condicionais por marcador (vitória / fuga / amargo). Calibração: a curva de XP do jogo (nível N→N+1 = N×1040 por herói) faz a campanha render ~1 nível (vitória ~1850, fuga ~1600 por herói), não do 2 ao 4; para mais, suba o `xp` dos objetivos. Testes: `tools/test_requisito_sem_fato.py/.js`, `test_objetivo_renome.py`, `test_editor_objetivo.js`, `test_refem_consequencia.py`, `test_objetivo_alternativo.py`, `test_preco_por_fato.py`, `test_campanha_charcos.py`, `test_campanha_charcos_mapas.py`, `test_charcos_fluxo.py`. Spec/plano: `docs/superpowers/{specs,plans}/2026-10-17-campanha-mare-do-charco*`.
+
+**Caminho de pedras na terra (`caminho_pedras_terra`):** decoração `special:"floor"`,
+1×1, caminhável e sem loot. `assets/objetos/caminho_pedras_terra.png` é um decal
+top-down de lajes irregulares sobre terra. A ferramenta **Chão** oferece o
+caminho no mesmo seletor dos materiais: pintar grava terra no tile e cria a
+camada visual; pintar depois outro piso ou parede remove essa camada. O editor
+recalcula conexões cardinais entre `caminho_pedras_terra` ao renderizar e salvar;
+`image` escolhe a forma base (isolado, ponta, reta, curva, T ou cruzamento) e
+`facing` guarda o giro horário de 90°. O jogo aplica o mesmo giro no decal 2D/3D;
+diagonais não conectam. A construção usa clique e arrasto com prévia do segmento
+reto horizontal/vertical pelo eixo dominante até o cursor, sem modificar o mapa
+durante o arrasto. Soltar confirma todas as casas; Esc/botão direito cancela.
+Recuar o cursor encurta a prévia. Outro segmento em outra direção cria a curva
+pela conexão automática. Referência de interação: manual SimCity 2013, p. 10,
+https://eaassets-a.akamaihd.net/eahelp/manuals/simcity-manuals_PC.pdf.
+Texturas: `assets/objetos/caminho_pedras_terra*.png`.
+`server.py:DECOR_TYPES` é a fonte autoritativa e `tools/export_catalog.py` publica
+a peça no seletor de decorações.
 
 > **Prévia fiel do editor (`index.html?preview=1`):** o botão "◈ Visualizar em 3D" do
 > editor deixou de ter renderer próprio — `tools/editor_preview_3d.js` era uma

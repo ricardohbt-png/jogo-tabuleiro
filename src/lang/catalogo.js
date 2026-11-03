@@ -322,6 +322,10 @@ window.LANG_CATALOGO = {
     "en": "Double Bed",
     "pt": "Cama de casal"
   },
+  "cat.decor.caminho_pedras_terra.nome": {
+    "en": "Stone path on dirt",
+    "pt": "Caminho de pedra na terra"
+  },
   "cat.decor.capim_alto.nome": {
     "en": "Tall Grass",
     "pt": "Capim alto"
@@ -466,6 +470,10 @@ window.LANG_CATALOGO = {
     "en": "Lava Geyser",
     "pt": "Gêiser de lava"
   },
+  "cat.decor.grade_esgoto.nome": {
+    "en": "Sewer grate",
+    "pt": "Grade de esgoto"
+  },
   "cat.decor.grades_prisao.nome": {
     "en": "Prison Bars",
     "pt": "Grades de prisão"
@@ -505,6 +513,10 @@ window.LANG_CATALOGO = {
   "cat.decor.mesa_tortura.nome": {
     "en": "Torture Table",
     "pt": "Mesa de tortura"
+  },
+  "cat.decor.moita.nome": {
+    "en": "Bush",
+    "pt": "Moita"
   },
   "cat.decor.moita_espinhosa.nome": {
     "en": "Thorny Bush",

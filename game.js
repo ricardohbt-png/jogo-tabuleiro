@@ -645,6 +645,8 @@ const DECOR_MINI_ESCALA = 2.0;
 // Modelos GLB usados por decorações específicas. A chave é a imagem que já
 // identifica o objeto no mapa, para não trocar outras decorações do tipo tumba.
 const DECOR_GLB_MODELS = {
+  // Grade de esgoto medieval (PNG editor/2D, GLB no tabuleiro 3D).
+  'grade_esgoto.png': 'assets/objetos/grade_esgoto.glb',
   'sarcofagocima.png': 'assets/objetos/sarcofago.glb',
   // A Arca de Tesouros usa o mesmo modelo 3D dos baús de loot.
   'bau.png': 'assets/objetos/bau.glb',
@@ -9276,6 +9278,9 @@ function _bridgeTiles2D(bridge){
 }
 function _drawBridges2D(ctx, state, terrainSet){
   for(const bridge of (state.pontes || [])){
+    // A grade de esgoto usa a entrada de ponte para colisão/altura, mas sua
+    // própria decoração é a superfície visual. Não desenhar tábuas por cima.
+    if(bridge.tipo === 'grade_esgoto') continue;
     const tiles = _bridgeTiles2D(bridge);
     if(!tiles.length) continue;
     const horizontal = bridge.inicio[1] === bridge.fim[1];
@@ -12827,13 +12832,32 @@ function renderMap(state){
       const _oy = Math.max(-.45, Math.min(.45, Number(_vo[1]) || 0)) * CELL;
       const ecx = (avgX + 0.5) * CELL + _ox;
       const ecy = (avgY + 0.5) * CELL + _oy;
+      if (d.special === 'sewer_hatch' && d.opened) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(8,12,11,.96)';
+        ctx.strokeStyle = '#5e5545'; ctx.lineWidth = 3;
+        for (const [hx, hy] of tiles) {
+          ctx.fillRect(hx * CELL + 2, hy * CELL + 2, CELL - 4, CELL - 4);
+          ctx.strokeRect(hx * CELL + 2, hy * CELL + 2, CELL - 4, CELL - 4);
+        }
+        ctx.restore();
+        continue;
+      }
       // Escala visual (vscale): largura ×sx, altura ×sy (cresce p/ cima, base ancorada).
       const _vs = Array.isArray(d.vscale) ? d.vscale : [1, 1];
       const _sx = _vs[0] || 1, _sy = _vs[1] || 1;
       const _oImg = d.image ? (d.special === 'wall' ? _getWallObjeto2DImg(d.image) : _getObjeto2DImg(d.image)) : null;
       if (_oImg && d.special === 'floor') {
         // Chão: preenche cada casa do footprint borda-a-borda (sem manter proporção).
-        for (const [tx2, ty2] of tiles) ctx.drawImage(_oImg, tx2 * CELL, ty2 * CELL, CELL, CELL);
+        const roadAngle = d.type === 'caminho_pedras_terra'
+          ? _facingAngle2D(d.facing, d.type, d.image) : 0;
+        for (const [tx2, ty2] of tiles) {
+          if (!roadAngle) ctx.drawImage(_oImg, tx2 * CELL, ty2 * CELL, CELL, CELL);
+          else {
+            ctx.save(); ctx.translate((tx2 + .5) * CELL, (ty2 + .5) * CELL); ctx.rotate(roadAngle);
+            ctx.drawImage(_oImg, -CELL / 2, -CELL / 2, CELL, CELL); ctx.restore();
+          }
+        }
       } else if (_oImg) {
         const minX = Math.min(...tiles.map(t => t[0])), maxX = Math.max(...tiles.map(t => t[0]));
         const minY = Math.min(...tiles.map(t => t[1])), maxY = Math.max(...tiles.map(t => t[1]));
@@ -47296,6 +47320,9 @@ function init3D(state){
   const bridgeDeckGeoH = new T.BoxGeometry(TW * 0.88, 0.105, 0.88);
   const bridgeDeckGeoV = new T.BoxGeometry(0.88, 0.105, TW * 0.88);
   for(const bridge of (state.pontes || [])){
+    // A grade fechada cobre este deck; a superfície visual vem do GLB da
+    // decoração, enquanto a entrada continua no estado para movimento.
+    if(bridge.tipo === 'grade_esgoto') continue;
     const bridgeTiles = _bridgeTiles2D(bridge);
     if(!bridgeTiles.length) continue;
     const bridgeMats = bridgeMaterials(bridge.material);
@@ -51633,6 +51660,11 @@ function renderMap3D(state){
 
       let mesh = g3.decorMeshes[d.id];
 
+      if (d.special === 'sewer_hatch' && d.opened) {
+        if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); delete g3.decorMeshes[d.id]; }
+        continue;
+      }
+
       if (d.special === 'wall' && d.image) {
         const faceSig = (d.facing || [0,1]).join(',');
         const scaleSig = (Array.isArray(d.vscale) ? d.vscale : [1,1]).join(',');
@@ -51669,6 +51701,9 @@ function renderMap3D(state){
           g3.decorMeshes[d.id] = mesh;
         }
         mesh.position.set(worldX, 0.222 + dFloorY, worldZ);   // logo acima do piso, sob os realces
+        if (d.type === 'caminho_pedras_terra')
+          // O eixo Z do tabuleiro inverte o sentido visual do canvas 2D.
+          mesh.rotation.y = -_facingAngle2D(d.facing, d.type, d.image);
         mesh.visible = visivel;
         continue;
       }

@@ -11848,6 +11848,13 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
@@ -12167,6 +12174,13 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
       "corrosion_max": 5,
       "throw_range": 2,
       "categoria": "cortante",
@@ -13904,7 +13918,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🍖",
       "icon": "assets/itens/carne_bovina.png",
       "item_slot": "bag",
-      "effect": "food"
+      "effect": "food",
+      "descricao": "+25 de fome."
     },
     {
       "id": "leite",
@@ -13912,7 +13927,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🥛",
       "icon": "assets/itens/leite.png",
       "item_slot": "bag",
-      "effect": "food"
+      "effect": "food",
+      "descricao": "+5 de fome e +5 de sede."
     },
     {
       "id": "agua_benta",
@@ -14906,6 +14922,21 @@ window.EDITOR_CATALOG = {
   ],
   "decorations": [
     {
+      "type": "grade_esgoto",
+      "nome": "Grade de esgoto",
+      "emoji": "🕳️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "sewer_hatch",
+      "image": "grade_esgoto.png"
+    },
+    {
       "type": "cama",
       "nome": "Cama",
       "emoji": "🛏️",
@@ -15748,6 +15779,21 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "caminho_pedras_terra",
+      "nome": "Caminho de pedra na terra",
+      "emoji": "🪨",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "floor",
+      "image": "caminho_pedras_terra.png"
+    },
+    {
       "type": "brasao_leao",
       "nome": "Brasão do Leão",
       "emoji": "🦁",
@@ -16016,6 +16062,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "moita_espinhosa.png"
+    },
+    {
+      "type": "moita",
+      "nome": "Moita",
+      "emoji": "🌿",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "moita.png"
     },
     {
       "type": "capim_alto",

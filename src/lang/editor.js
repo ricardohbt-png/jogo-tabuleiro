@@ -463,6 +463,10 @@ window.LANG_EDITOR = {
     "en": "Drag to fill; invalid squares are ignored.",
     "pt": "Arraste para preencher; casas inválidas são ignoradas."
   },
+  "ui.editor.masmorra.barra.grade_esgoto_arraste": {
+    "en": "Drag from one corner and release to size the walkable grate.",
+    "pt": "Arraste entre dois cantos e solte para definir o tamanho da grade pisável."
+  },
   "ui.editor.masmorra.barra.porta_girar": {
     "en": "↻ door 90° (R)",
     "pt": "↻ porta 90° (R)"
@@ -2388,6 +2392,18 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.valid.chao_sem_queda": {
     "en": "chao_illusorio at {pos} needs at least 1 level of drop",
     "pt": "chao_illusorio em {pos} precisa ter pelo menos 1 nível de queda"
+  },
+  "ui.editor.masmorra.valid.grade_esgoto_sem_ponte": {
+    "en": "sewer grate at {pos} needs a walkable cover",
+    "pt": "grade de esgoto em {pos} precisa ter uma cobertura pisável"
+  },
+  "ui.editor.masmorra.valid.grade_esgoto_sem_queda": {
+    "en": "sewer grate at {pos} needs lower FLOOR beneath a higher surrounding floor",
+    "pt": "grade de esgoto em {pos} precisa cobrir FLOOR mais baixo que o piso ao redor"
+  },
+  "ui.editor.masmorra.valid.grade_esgoto_abismo": {
+    "en": "sewer grate at {pos} cannot open over the abyss",
+    "pt": "grade de esgoto em {pos} não pode abrir sobre o abismo"
   },
   "ui.editor.masmorra.valid.bau_permanente_invalido": {
     "en": "trapped chest at {pos} with invalid permanent flag",

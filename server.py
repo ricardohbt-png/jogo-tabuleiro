@@ -294,6 +294,16 @@ def _pontes_tiles(ponte):
     Pontes autoradas são sempre retas nos eixos cardeais. A fórmula fica
     centralizada de forma determinística para larguras pares também.
     """
+    if ponte.get("tipo") == "grade_esgoto":
+        tiles = []
+        for p in (ponte.get("tiles") or []):
+            if isinstance(p, (list, tuple)) and len(p) >= 2:
+                try:
+                    tiles.append((int(p[0]), int(p[1])))
+                except (TypeError, ValueError):
+                    continue
+    else:
+        tiles = []
     inicio = ponte.get("inicio") or ponte.get("start")
     fim = ponte.get("fim") or ponte.get("end")
     try:
@@ -302,14 +312,13 @@ def _pontes_tiles(ponte):
         largura = max(1, min(3, int(ponte.get("largura", ponte.get("width", 1)))))
     except (TypeError, ValueError, IndexError):
         return []
-    tiles = []
-    if y0 == y1 and x0 != x1:
+    if ponte.get("tipo") != "grade_esgoto" and y0 == y1 and x0 != x1:
         a, b = sorted((x0, x1))
         lateral0 = y0 - (largura // 2)
         for y in range(lateral0, lateral0 + largura):
             for x in range(a, b + 1):
                 tiles.append((x, y))
-    elif x0 == x1 and y0 != y1:
+    elif ponte.get("tipo") != "grade_esgoto" and x0 == x1 and y0 != y1:
         a, b = sorted((y0, y1))
         lateral0 = x0 - (largura // 2)
         for x in range(lateral0, lateral0 + largura):
@@ -8743,6 +8752,33 @@ def validar_dungeon(defn):
             return False, f"decoração com facing inválido: {facing!r}."
         if de.get("visao") is not None and de.get("visao") not in DECOR_VISAO_NIVEIS:
             return False, f"decoração {dtype} com visão inválida: {de.get('visao')!r}."
+        if meta["special"] == "sewer_hatch":
+            ponte = next((p for p in (defn.get("pontes") or [])
+                          if isinstance(p, dict) and p.get("tipo") == "grade_esgoto"
+                          and p.get("decor_id") == de.get("id")), None)
+            if ponte is None:
+                ponte = next((p for p in (defn.get("pontes") or [])
+                              if isinstance(p, dict) and tuple(pos) in set(_pontes_tiles(p))), None)
+            if not ponte:
+                return False, f"grade_esgoto em {pos} precisa estar sobre uma ponte."
+            if tile_at(pos) != FLOOR:
+                return False, f"grade_esgoto em {pos} precisa ter FLOOR sob a ponte."
+            if (defn.get("materials") or {}).get(f"{pos[0]},{pos[1]}") == "ceu_abismo":
+                return False, f"grade_esgoto em {pos} não pode abrir sobre o abismo."
+            try:
+                elev = defn.get("elevacoes") or {}
+                abaixo = int(elev.get(f"{pos[0]},{pos[1]}", 0))
+                if ponte.get("tipo") == "grade_esgoto":
+                    altura_ponte = int(ponte.get("altura", abaixo))
+                else:
+                    inicio = ponte.get("inicio") or ponte.get("start")
+                    fim = ponte.get("fim") or ponte.get("end")
+                    altura_ponte = min(int(elev.get(f"{inicio[0]},{inicio[1]}", 0)),
+                                       int(elev.get(f"{fim[0]},{fim[1]}", 0)))
+                if altura_ponte <= abaixo:
+                    return False, f"grade_esgoto em {pos} precisa ter ao menos 1 nível livre abaixo."
+            except (TypeError, ValueError, IndexError):
+                return False, f"grade_esgoto em {pos} tem ponte ou altura inválida."
         if meta["special"] == "wall":
             # A face aponta para a casa jogÃ¡vel diante da parede. Assim a arte
             # nunca aparece do lado externo/fechado da masmorra.
@@ -9317,6 +9353,57 @@ def validar_dungeon(defn):
             if not isinstance(pid, str) or not pid or pid in ponte_ids:
                 return False, f"id de ponte duplicado ou inválido: {pid!r}."
             ponte_ids.add(pid)
+            if ponte.get("tipo") == "grade_esgoto":
+                decor = next((d for d in decors if isinstance(d, dict)
+                              and d.get("id") == ponte.get("decor_id")
+                              and DECOR_TYPES.get(d.get("type"), {}).get("special") == "sewer_hatch"), None)
+                if not decor:
+                    return False, f"cobertura de grade {pid} sem decoração vinculada."
+                pos = decor.get("pos")
+                size = decor.get("size")
+                if not (isinstance(size, list) and len(size) == 2
+                        and all(isinstance(v, int) and not isinstance(v, bool) and v >= 1 for v in size)):
+                    size = DECOR_TYPES[decor["type"]]["size"]
+                facing = decor.get("facing") or [0, 1]
+                w_d, h_d = (size[1], size[0]) if facing[0] != 0 else size
+                expected = {(pos[0] + dx, pos[1] + dy)
+                            for dx in range(w_d) for dy in range(h_d)}
+                covered_tiles = _pontes_tiles(ponte)
+                if set(covered_tiles) != expected or len(covered_tiles) != len(expected):
+                    return False, f"cobertura de grade {pid} não coincide com o tamanho da decoração."
+                altura = ponte.get("altura")
+                if (isinstance(altura, bool) or not isinstance(altura, int)
+                        or not ELEVACAO_TERRENO_MIN <= altura <= ELEVACAO_TERRENO_MAX):
+                    return False, f"cobertura de grade {pid} tem altura inválida."
+                borda = set()
+                for x, y in expected:
+                    for nx, ny in ((x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)):
+                        if (nx, ny) in expected or not in_grid([nx, ny]) or tiles[ny][nx] not in (FLOOR, DOOR):
+                            continue
+                        nivel = nivel_em(nx, ny)
+                        for vizinha in pontes:
+                            if vizinha is ponte or vizinha.get("tipo") == "grade_esgoto":
+                                continue
+                            if (nx, ny) in set(_pontes_tiles(vizinha)):
+                                va = vizinha.get("inicio") or vizinha.get("start") or [nx, ny]
+                                vb = vizinha.get("fim") or vizinha.get("end") or va
+                                nivel = min(nivel_em(*va), nivel_em(*vb))
+                                break
+                        borda.add(nivel)
+                if not borda or altura != max(borda):
+                    return False, f"cobertura de grade {pid} deve acompanhar a altura mais alta do piso ao redor."
+                for tile in covered_tiles:
+                    x, y = tile
+                    if not in_grid([x, y]) or tiles[y][x] != FLOOR:
+                        return False, f"grade {pid} precisa cobrir somente FLOOR dentro do mapa."
+                    if (defn.get("materials") or {}).get(f"{x},{y}") == "ceu_abismo":
+                        return False, f"grade {pid} não pode cobrir abismo."
+                    if nivel_em(x, y) >= altura:
+                        return False, f"grade {pid} precisa estar acima do piso inferior em ({x},{y})."
+                    if tile in ponte_ocupacao:
+                        return False, f"pontes sobrepostas na casa {x},{y}."
+                    ponte_ocupacao.add(tile)
+                continue
             inicio = ponte.get("inicio") or ponte.get("start")
             fim = ponte.get("fim") or ponte.get("end")
             if not in_grid(inicio) or not in_grid(fim) or inicio == fim:
@@ -10108,7 +10195,7 @@ GUILD_CATALOG.update(_gerar_catalogo_lendas())
 # Objetos colocÃ¡veis no editor. size=[w,h] no facing canÃ´nico (vertical).
 # gira: rotaÃ§Ã£o 90Â°. alto: oclui a revelaÃ§Ã£o de nÃ©voa (raycast). pisavel: nÃ£o
 # bloqueia movimento. loot_capaz: pode conter ouro/itens (abre como baÃº).
-# special: None|"fountain"|"campfire"|"living_flame"|"plaque"|"floor"|"wall".
+# special: None|"fountain"|"campfire"|"living_flame"|"plaque"|"floor"|"wall"|"sewer_hatch".
 def _decor(nome, emoji, size, gira=False, alto=False, pisavel=False,
            loot_capaz=True, special=None, image=None, model3d=None, charges=None,
            intervalo_rodadas=None):
@@ -10196,6 +10283,7 @@ DECOR_MODEL3D = {
     "grilhoes_parede": "assets/objetos/grilhoes_parede.glb",
     "tronco_musgo": "assets/objetos/tronco_musgo.glb",
     "moita_espinhosa": "assets/objetos/moita_espinhosa.glb",
+    "moita": "assets/objetos/moita.glb",
     "capim_alto": "assets/objetos/capim_alto.glb",
     "tronco_podre_fungos": "assets/objetos/tronco_podre_fungos.glb",
     "tocos_alagados": "assets/objetos/tocos_alagados.glb",
@@ -10223,9 +10311,13 @@ DECOR_MODEL3D = {
     # apenas a regra autoritativa de dano ao entrar na casa.
     "chama_viva": "assets/objetos/chama_viva.glb",
     "monte_ossos": "assets/objetos/monte_ossos.glb",
+    "grade_esgoto": "assets/objetos/grade_esgoto.glb",
 }
 
 DECOR_TYPES = {
+    "grade_esgoto": _decor("Grade de esgoto", "🕳️", [1, 1], pisavel=True,
+                            loot_capaz=False, special="sewer_hatch",
+                            image="grade_esgoto.png"),
     "cama":           _decor("Cama", "🛏️", [1, 2], gira=True),
     "lareira":        _decor("Lareira", "🪵", [1, 2], gira=True, alto=True),
     "fonte":          _decor("Fonte", "⛲", [2, 2], special="fountain"),
@@ -10324,6 +10416,9 @@ DECOR_TYPES = {
     "caldeirao":      _decor("Caldeirão", "⚗️", [1, 1], gira=True,
                               loot_capaz=False),
     "chao":           _decor("Chão (grama)", "🌿", [1, 1], pisavel=True, loot_capaz=False, special="floor"),
+    "caminho_pedras_terra": _decor(
+        "Caminho de pedra na terra", "🪨", [1, 1], pisavel=True,
+        loot_capaz=False, special="floor", image="caminho_pedras_terra.png"),
     # DecoraÃ§Ãµes de parede: ficam presas a uma face de WALL, sem ocupar nem
     # bloquear o chÃ£o. A arte Ã© um decal vertical no modo 3D.
     "brasao_leao": _decor("Brasão do Leão", "🦁", [1, 1], gira=True, pisavel=True,
@@ -10373,6 +10468,8 @@ DECOR_TYPES = {
     "moita_espinhosa": _decor("Moita espinhosa", "🌵", [1, 1], gira=True,
                                 pisavel=True, loot_capaz=False,
                                 image="moita_espinhosa.png"),
+    "moita": _decor("Moita", "🌿", [1, 1], gira=True, alto=True,
+                     loot_capaz=False, image="moita.png"),
     # Capim ornamental alto visualmente, mas atravessável e sem oclusão da névoa.
     "capim_alto": _decor("Capim alto", "🌾", [1, 1], gira=True, pisavel=True,
                            loot_capaz=False, image="capim_alto.png"),
@@ -18057,10 +18154,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             material = ponte.get("material", "madeira")
             if not isinstance(material, str) or material.strip().lower() not in {"madeira", "pedra_rustica"}:
                 material = "madeira"
-            self.pontes.append({"id": ponte.get("id") or f"ponte_{i}",
-                                "inicio": inicio, "fim": fim,
-                                "largura": largura, "altura": altura,
-                                "material": material.strip().lower(), "buracos": []})
+            reg = {"id": ponte.get("id") or f"ponte_{i}",
+                   "inicio": inicio, "fim": fim,
+                   "largura": largura, "altura": altura,
+                   "material": material.strip().lower(), "buracos": []}
+            if ponte.get("tipo") == "grade_esgoto":
+                reg.update({"tipo": "grade_esgoto", "decor_id": ponte.get("decor_id"),
+                            "tiles": [list(p) for p in ponte.get("tiles", [])
+                                      if isinstance(p, (list, tuple)) and len(p) >= 2]})
+            self.pontes.append(reg)
         self._rebuild_pontes_index()
         self.transicao_altura = defn.get("transicao_altura", "rampa")
         if self.transicao_altura not in ("rampa", "declive"):
@@ -18212,6 +18314,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "trap_triggered": False,
                 "trap_disarmed": False,
                 "trap_revealed": False,
+                **({"opened": False} if meta.get("special") == "sewer_hatch" else {}),
                 "disable_trap_ids": ([i for i in d["disable_trap_ids"] if isinstance(i, str)]
                                      if isinstance(d.get("disable_trap_ids"), list) else None),
                 "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
@@ -20563,6 +20666,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         A ponta mais alta vira um degrau comum — de 1, transponível; de 2 ou
         mais, bloqueado pela regra de passo.
         """
+        if ponte.get("tipo") == "grade_esgoto":
+            try:
+                return max(ELEVACAO_TERRENO_MIN,
+                           min(ELEVACAO_TERRENO_MAX, int(ponte.get("altura", 0))))
+            except (TypeError, ValueError):
+                return 0
         inicio = ponte.get("inicio") or ponte.get("start") or [0, 0]
         fim = ponte.get("fim") or ponte.get("end") or inicio
         try:
@@ -20690,6 +20799,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False
         return True
 
+    def _grade_esgoto_aberta_em(self, x, y):
+        return any(d.get("opened")
+                   and DECOR_TYPES.get(d.get("type"), {}).get("special") == "sewer_hatch"
+                   and (int(x), int(y)) in {tuple(tile) for tile in self._decor_tiles(d)}
+                   for d in getattr(self, "decorations", []))
+
     def _passo_seguro(self, criatura, origem, destino, facing_destino=None):
         """Portão do movimento VOLUNTÁRIO: permitido pela elevação E sem queda.
 
@@ -20699,6 +20814,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         passa a existir só quando alguém é EMPURRADO: `_empurrar` nunca
         consultou este portão e continua sem consultá-lo.
         """
+        if (not self._voo_imune_terreno(criatura)
+                and self._ponte_em(*origem[:2])
+                and self._grade_esgoto_aberta_em(*destino[:2])
+                and self._elevacao_terreno(*origem[:2]) > self._elevacao_terreno(*destino[:2])):
+            return True
         if not self._passo_elevacao_permitido(criatura, origem, destino,
                                               facing_destino):
             return False
@@ -21745,6 +21865,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if cavalo_montado:
             cavalo_montado["pos"] = list(p["pos"])
         p["facing"] = [dx, dy]
+        if (self._ponte_em(*old_pos) and self._grade_esgoto_aberta_em(nx, ny)
+                and not self._voo_imune_terreno(p)):
+            await self._aplicar_queda_altura(
+                p, self._elevacao_terreno(*old_pos), self._elevacao_terreno(nx, ny), "grade_esgoto")
+            if not p.get("alive"):
+                await self._push_se(_push)
+                return
         if p["moves_left"] < step_cost:
             p["moves_left"] = 0
             p["_water_min_step_used"] = True
@@ -41744,26 +41871,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "dano_bruto": dano_bruto,
                 "expressao": _expressao_queda(quantidade, faces, mult)}
 
-    async def _aplicar_queda_terreno(self, alvo, origem, destino, killer_pid=None):
-        """Aplica a queda ao descer um desnível sem rampa.
-
-        O terreno usa a mesma tabela autoritativa do voo (2d6/4d6/6d6).
-        Uma rampa permite a descida normal de um nível; no modo declive,
-        qualquer descida causa a queda. Criaturas voando acima do chão não
-        interagem com o desnível do piso.
-        """
-        if await self._matar_no_abismo(alvo, killer_pid):
-            return {"morte": "abismo", "pos": list(alvo.get("pos", destino))}
-        if not self._queda_no_passo(alvo, origem, destino):
-            return None
-        nivel_origem = self._elevacao_terreno(*origem[:2])
-        nivel_destino = self._elevacao_terreno(*destino[:2])
-        queda = nivel_origem - nivel_destino
+    async def _aplicar_queda_altura(self, alvo, nivel_origem, nivel_destino,
+                                   motivo="desnivel_terreno", killer_pid=None):
+        queda = int(nivel_origem) - int(nivel_destino)
         dados = dados_dano_queda(queda)
         if not dados or not (alvo.get("alive", True)
                              and alvo.get("hp", alvo.get("vida_atual", 1)) > 0):
             return None
-
         quantidade, faces = dados
         mult = multiplicador_queda(alvo)
         dano_bruto = await self._rolar_dano_mostrado(
@@ -41775,10 +41889,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         nome = nome_criatura(alvo)
         await self.broadcast({
             "type": "fall_result", "target_id": alvo.get("id"),
-            "pos": list(alvo.get("pos", destino)), "altura": queda,
+            "pos": list(alvo.get("pos", [0, 0])), "altura": queda,
             "faixa": faixa, "expressao": _expressao_queda(quantidade, faces, mult),
             "dano_bruto": dano_bruto, "dano": dano, "multiplicador": mult,
-            "motivo": "desnivel_terreno", "tipo": "queda", "_fall": True,
+            "motivo": motivo, "tipo": "queda", "_fall": True,
             "nome": T("ui.terreno.queda_titulo"), "icone": "💥",
             "descricao": T("ui.terreno.queda_descricao", nome=nome,
                             origem=nivel_origem, destino=nivel_destino,
@@ -41793,6 +41907,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return {"queda": queda, "faixa": faixa, "dano": dano, "multiplicador": mult,
                 "dano_bruto": dano_bruto,
                 "expressao": _expressao_queda(quantidade, faces, mult)}
+
+    async def _aplicar_queda_terreno(self, alvo, origem, destino, killer_pid=None):
+        """Aplica a queda ao descer um desnível sem rampa.
+
+        O terreno usa a mesma tabela autoritativa do voo (2d6/4d6/6d6).
+        Uma rampa permite a descida normal de um nível; no modo declive,
+        qualquer descida causa a queda. Criaturas voando acima do chão não
+        interagem com o desnível do piso.
+        """
+        if await self._matar_no_abismo(alvo, killer_pid):
+            return {"morte": "abismo", "pos": list(alvo.get("pos", destino))}
+        if not self._queda_no_passo(alvo, origem, destino):
+            return None
+        nivel_origem = self._elevacao_terreno(*origem[:2])
+        nivel_destino = self._elevacao_terreno(*destino[:2])
+        return await self._aplicar_queda_altura(
+            alvo, nivel_origem, nivel_destino, "desnivel_terreno", killer_pid)
 
     async def _dano_em_alvo(self, alvo, dano, elemento, killer_pid=None,
                             *, is_attack=False, _protetor_bypass=False):
@@ -45870,9 +46001,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                        and d["id"] in cond.get("key_decor_ids", [])
                        and not self._door_condition_satisfied(pos)]
         trap_linked = self._armadilhas_do_mecanismo(d)
+        hatch_closed = (DECOR_TYPES[d["type"]].get("special") == "sewer_hatch"
+                        and not d.get("opened"))
         # A ativaÃ§Ã£o Ã© uma escolha explÃ­cita para evitar abrir a passagem ao
         # apenas inspecionar um altar, estÃ¡tua ou outro objeto-chave.
-        if linked or door_linked or trap_linked:
+        if linked or door_linked or trap_linked or hatch_closed:
             await self.send_to(pid, {"type": "decor_mechanism", "decor_id": d["id"],
                                      "linked_count": len(linked) + len(door_linked) + len(trap_linked)})
             return
@@ -45970,8 +46103,47 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                        and d["id"] in cond.get("key_decor_ids", [])
                        and not self._door_condition_satisfied(pos)]
         trap_linked = self._armadilhas_do_mecanismo(d)
-        if not d.get("key_objective") and not linked and not door_linked and not trap_linked:
+        hatch_closed = DECOR_TYPES[d["type"]].get("special") == "sewer_hatch" and not d.get("opened")
+        if not d.get("key_objective") and not linked and not door_linked and not trap_linked and not hatch_closed:
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_objeto_nao_possui_mecanismo")}); return
+        if hatch_closed:
+            cells = self._decor_tiles(d)
+            ponte = next((pb for pb in self.pontes or []
+                          if pb.get("tipo") == "grade_esgoto" and pb.get("decor_id") == d["id"]), None)
+            if ponte is None:
+                ponte = next((pb for pb in self.pontes or []
+                              if all(tuple(tile) in set(_pontes_tiles(pb)) for tile in cells)), None)
+            if not ponte:
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_e_possivel_ativar_este_mecanismo")}); return
+            nivel_topo = self._ponte_altura(ponte)
+            if not cells or any(nivel_topo <= self._elevacao_bruta(x, y) for x, y in cells):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.nao_e_possivel_ativar_este_mecanismo")}); return
+            d["opened"] = True
+            ponte.setdefault("buracos", []).extend([list(tile) for tile in cells])
+            ponte["buracos"] = [list(q) for q in {tuple(q) for q in ponte["buracos"]}]
+            self._rebuild_pontes_index()
+            # A tampa inteira some de uma vez. Cada ocupante cai para o piso
+            # original da própria casa, portanto o dano usa o desnível local.
+            por_casa = {tuple(tile): (nivel_topo, self._elevacao_bruta(*tile)) for tile in cells}
+            ocupantes = []
+            for q in self.players.values():
+                if q.get("alive") and tuple(q.get("pos") or ()) in por_casa:
+                    ocupantes.append((q, tuple(q["pos"])))
+                for animado in (q.get("animados") or []):
+                    if animado.get("vida_atual", 0) > 0 and tuple(animado.get("pos") or ()) in por_casa:
+                        ocupantes.append((animado, tuple(animado["pos"])))
+            for q in self.monsters.values():
+                if q.get("hp", 0) > 0 and tuple(q.get("pos") or ()) in por_casa:
+                    ocupantes.append((q, tuple(q["pos"])))
+            if self.prisoner and self.prisoner.get("alive") and tuple(self.prisoner.get("pos") or ()) in por_casa:
+                ocupantes.append((self.prisoner, tuple(self.prisoner["pos"])))
+            vistos = set()
+            for ocupante, casa in ocupantes:
+                if id(ocupante) in vistos:
+                    continue
+                vistos.add(id(ocupante))
+                topo, baixo = por_casa[casa]
+                await self._aplicar_queda_altura(ocupante, topo, baixo, "grade_esgoto")
         if trap_linked:
             for arm in trap_linked:
                 arm["desativada"] = True
@@ -46096,6 +46268,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ou cumpre a condição de uma porta. Mesmas listas de `handle_interagir_decor`."""
         if d.get("disable_trap_ids"):
             return True
+        if (DECOR_TYPES.get(d.get("type"), {}).get("special") == "sewer_hatch"
+                and not d.get("opened")):
+            return True
         if any(not sp["opened"] and d["id"] in sp["key_decor_ids"] for sp in self.secret_passages):
             return True
         return any(cond.get("type") == "decor" and d["id"] in cond.get("key_decor_ids", [])
@@ -46122,6 +46297,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "trap_revelada_vela": bool(self._decor_tem_armadilha_pendente(d)
                                             and self._vela_reveladora_cobre_decor(d)),
                 "key_objective": bool(d.get("key_objective")),
+                **({"opened": bool(d.get("opened"))}
+                   if meta.get("special") == "sewer_hatch" else {}),
                 # mecanismo (desliga armadilha, abre passagem ou porta): o cliente o
                 # trata como objeto clicável mesmo sem ser objeto-chave
                 **({"interactive": True} if self._decor_e_mecanismo(d) else {}),
@@ -46247,6 +46424,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
              "fim": list(p.get("fim", [0, 0])),
              "largura": int(p.get("largura", 1)), "altura": int(p.get("altura", 0)),
              "material": p.get("material", "madeira"),
+             **({"tipo": "grade_esgoto", "decor_id": p.get("decor_id")}
+                if p.get("tipo") == "grade_esgoto" else {}),
              "tiles": [[x, y] for x, y in _pontes_tiles(p)]}
             for p in (getattr(self, "pontes", []) or [])
         ]
