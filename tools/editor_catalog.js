@@ -2435,6 +2435,87 @@ window.EDITOR_CATALOG = {
       "percepcao": 14
     },
     {
+      "type": "capanga",
+      "name": "Capanga",
+      "emoji": "🗡️",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 14,
+      "ac": 10,
+      "natural_armor": 0,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "capanga",
+      "portrait": "capanga",
+      "atk_bonus": 5,
+      "base_attack_bonus": 2,
+      "str_": 16,
+      "dex": 10,
+      "con_": 14,
+      "int_": 8,
+      "fort": 4,
+      "ref_": 1,
+      "will": 0,
+      "attacks": [
+        {
+          "name": "Arma",
+          "atk_bonus": 5,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "str_",
+          "damage_attribute": "str_",
+          "apply_attribute_damage": true,
+          "categoria": "cortante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "capanga_mira_certeira",
+          "name": "Mira Certeira",
+          "action_type": "passiva",
+          "cooldown_turns": 2,
+          "descricao": "+2 no próximo ataque."
+        },
+        {
+          "id": "capanga_golpe_devastador",
+          "name": "Golpe Devastador",
+          "action_type": "passiva",
+          "cooldown_turns": 4,
+          "descricao": "Aumenta em 50% o dado do próximo ataque."
+        },
+        {
+          "id": "capanga_furia_berserker",
+          "name": "Fúria Berserker",
+          "action_type": "passiva",
+          "cooldown_turns": 8,
+          "descricao": "Desfere um ataque adicional."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment": [],
+      "equipment_enabled": true,
+      "equipped_items": [],
+      "gold_range": [
+        5,
+        20
+      ],
+      "ai_type": "capanga",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 12
+    },
+    {
       "type": "kobold_lanceiro",
       "name": "Kobold Lanceiro",
       "emoji": "🐊",
@@ -7543,6 +7624,30 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "capanga_mira_certeira",
+      "name": "Mira Certeira",
+      "action_type": "passiva",
+      "cooldown_turns": 2,
+      "descricao": "+2 no próximo ataque.",
+      "source": "monstro"
+    },
+    {
+      "id": "capanga_golpe_devastador",
+      "name": "Golpe Devastador",
+      "action_type": "passiva",
+      "cooldown_turns": 4,
+      "descricao": "Aumenta em 50% o dado do próximo ataque.",
+      "source": "monstro"
+    },
+    {
+      "id": "capanga_furia_berserker",
+      "name": "Fúria Berserker",
+      "action_type": "passiva",
+      "cooldown_turns": 8,
+      "descricao": "Desfere um ataque adicional.",
+      "source": "monstro"
+    },
+    {
       "id": "covardia_kobold",
       "name": "Covardia Instintiva",
       "action_type": "passiva",
@@ -10525,6 +10630,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_capanga",
+      "source": "guilda",
+      "source_id": "lenda_capanga",
+      "name": "Lenda: Capanga",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Capanga.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_goblin_xama",
       "source": "guilda",
       "source_id": "lenda_goblin_xama",
@@ -11962,6 +12078,7 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "cleric",
         "rogue",
+        "bard",
         "paladin",
         "warrior"
       ],
@@ -12360,6 +12477,220 @@ window.EDITOR_CATALOG = {
       "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
+      "id": "espada_sangramento_longa",
+      "name": "Espada Longa do Sangramento",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_vorpal.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Rara. Arma mágica +1 no acerto e no dano. Cada acerto bem-sucedido aplica Sangramento, seguindo a progressão normal do jogo; um acerto crítico também aplica Hemorragia. Uso exclusivo de Guerreiro e Paladino."
+    },
+    {
+      "id": "espada_sangramento_bastarda",
+      "name": "Espada Bastarda do Sangramento",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_vorpal.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Arma mágica +1 no acerto e no dano. Cada acerto bem-sucedido aplica Sangramento, seguindo a progressão normal do jogo; um acerto crítico também aplica Hemorragia. Uso exclusivo de Guerreiro e Paladino."
+    },
+    {
+      "id": "chicote_fogo",
+      "name": "Chicote de Fogo",
+      "emoji": "🔥",
+      "die": "1d4",
+      "stat": "dex",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/chicote_flamejante.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 2,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "fire_on_hit": true,
+      "fire_crit_damage": "1d6",
+      "descricao": "Raridade: Rara. Chicote mágico +1 no acerto e no dano. Em um crítico, causa +1d6 de dano de fogo. Cada acerto bem-sucedido deixa o alvo em chamas por 1d4 rodadas; ele sofre 1 ponto de dano de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Água ou uma ação apagam as chamas. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "ferroada",
+      "name": "Ferroada",
+      "emoji": "🪢",
+      "die": "1d4",
+      "stat": "dex",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/ferroada.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 2,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Rara. Chicote mágico farpado +1 no acerto e no dano; causa 1d4 de dano cortante usando Destreza, tem alcance 2 e pode ser usado na mão secundária. Cada acerto bem-sucedido aplica Sangramento, sem limite por rodada, seguindo a progressão normal do jogo. Um crítico natural 20 que aplique Sangramento também causa Hemorragia. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "maca_zero_absoluto",
+      "name": "Maça do Zero Absoluto",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/maca_do_zero_absoluto.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "cold"
+        }
+      ],
+      "descricao": "Raridade: Muito rara. Maça mágica +1 no acerto e no dano; causa 1d6 contundente + Força e +1d4 de frio por acerto. Em um acerto crítico, uma vez por alvo por rodada, prende o alvo em gelo: no início de cada turno, ele faz um teste livre de Força CD 16 para escapar. Se falhar, permanece preso; o efeito termina após no máximo 2 rodadas. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "relampago_de_mao",
+      "name": "Relâmpago de Mão",
+      "emoji": "⚡",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/relampago_de_mao.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Lança curta mágica +1 no acerto e no dano; causa 1d6 perfurante + Força e pode ser arremessada até 4 casas, retornando à mão. Como ação principal, arremesse-a em linha reta até 4 casas: todas as criaturas no caminho, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também sofre o dano normal da lança se o ataque acertar. Recarga de 10 rodadas."
+    },
+    {
+      "id": "espada_magica",
+      "name": "Espada Mágica",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_magica.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Incomum. Espada curta mágica +1 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "espada_magica_mais_2",
+      "name": "Espada Mágica +2",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_magica.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Rara. Espada curta mágica +2 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "espada_magica_mais_3",
+      "name": "Espada Mágica +3",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_magica.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 3,
+      "damage_bonus": 3,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Espada curta mágica +3 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "choque_do_trovao",
+      "name": "Choque do Trovão",
+      "emoji": "⚡",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/choque_do_trovao.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "lightning"
+        }
+      ],
+      "thunder_push_on_crit": true,
+      "thunder_pulse": true,
+      "thunder_pulse_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Martelo de guerra mágico +1 no acerto e no dano; causa 1d8 contundente + Força e +1d4 elétrico por acerto. No crítico, se sobreviver, o alvo testa Força CD 13; falha é empurrada 1 casa. Como ação principal, o portador libera um pulso nas oito casas adjacentes: todas as criaturas, inclusive aliados, exceto o portador, sofrem 2d6 elétrico (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Clérigo, Paladino e Guerreiro."
+    },
+    {
       "id": "escudo_p",
       "name": "Escudo Pequeno",
       "emoji": "🛡️",
@@ -12385,6 +12716,40 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 2,
       "damage_reduction": 2,
       "descricao": "Bônus de CA +2. Reduz em 2 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução."
+    },
+    {
+      "id": "escudo_torre",
+      "name": "Escudo Torre Romano",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "damage_reduction": 2,
+      "descricao": "Escudo torre metálico, exclusivo do Paladino. Concede +3 CA e reduz em 2 cada instância de dano recebido. Pode ser corroído pelo Devorador de Metal."
+    },
+    {
+      "id": "escudo_madeira_grande",
+      "name": "Escudo Grande de Madeira Reforçado",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_grande.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 1,
+      "descricao": "Escudo grande de madeira reforçado. Concede +2 CA e reduz em 1 cada instância de dano recebido. Pode ser usado por Clérigo, Guerreiro e Paladino; pode ser corroído pelo Devorador Orgânico."
     },
     {
       "id": "cloak",
@@ -12622,6 +12987,17 @@ window.EDITOR_CATALOG = {
       "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."
     },
     {
+      "id": "mini_aljava",
+      "name": "Mini Aljava",
+      "emoji": "🏹",
+      "icon": "assets/itens/aljava.png",
+      "item_slot": "item",
+      "effect": "quiver",
+      "quiver_arrow_capacity": 20,
+      "quiver_bolt_capacity": 20,
+      "descricao": "Equipada em um espaço de item, permite pilhas de até 20 flechas ou 20 virotes, incluindo variantes especiais."
+    },
+    {
       "id": "kit_reparo_campo",
       "name": "Kit de Reparo",
       "emoji": "🧰",
@@ -12652,6 +13028,7 @@ window.EDITOR_CATALOG = {
       "id": "flechas_prata",
       "name": "Flechas de Prata (×10)",
       "emoji": "🏹",
+      "damage_bonus": 1,
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "flechas_prata",
@@ -12661,10 +13038,67 @@ window.EDITOR_CATALOG = {
       "id": "virotes_prata",
       "name": "Virotes de Prata (×10)",
       "emoji": "🏹",
+      "damage_bonus": 1,
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "virotes_prata",
       "ammo_count": 10
+    },
+    {
+      "id": "flechas_magicas",
+      "name": "Flechas Mágicas (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/flechas_magicas.png",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_magicas",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 flechas mágicas. Cada disparo concede +1 no acerto e no dano."
+    },
+    {
+      "id": "flechas_magicas_mais_2",
+      "name": "Flechas Mágicas +2 (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/flechas_magicas.png",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_magicas_mais_2",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 flechas mágicas. Cada disparo concede +2 no acerto e no dano."
+    },
+    {
+      "id": "virotes_magicos",
+      "name": "Virotes Mágicos (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/virotes_magicos.png",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_magicos",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 virotes mágicos. Cada disparo concede +1 no acerto e no dano."
+    },
+    {
+      "id": "virotes_magicos_mais_2",
+      "name": "Virotes Mágicos +2 (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/virotes_magicos.png",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_magicos_mais_2",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 virotes mágicos. Cada disparo concede +2 no acerto e no dano."
     },
     {
       "id": "virote_incendiario",
@@ -13390,6 +13824,16 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
+    },
+    {
+      "id": "rede_corrosiva",
+      "name": "Rede Corrosiva",
+      "emoji": "🧪",
+      "icon": "assets/itens magicos/rede_corrosiva.png",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0,
+      "descricao": "Arremesso (alcance 4, ataque por Destreza). Ao acertar, prende o alvo. No início de cada turno, teste de Fortitude CD 13: sucesso encerra o efeito e permite agir; falha consome o turno, causa 1 de dano ácido e corrói um equipamento na ordem armadura, escudo, cabeça, arma e botas. Cada peça é destruída após 3 falhas que a atinjam; sem equipamento restante, cada falha reduz a CA em 1 (mínimo 5). Consumível."
     },
     {
       "id": "instrumento_harpa_velho",
@@ -14264,6 +14708,9 @@ window.EDITOR_CATALOG = {
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "extra_damages": [],
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
@@ -14278,6 +14725,9 @@ window.EDITOR_CATALOG = {
       "finesse": true,
       "categoria": "perfurante",
       "granted_ability": null,
+      "atk_bonus": 1,
+      "damage_bonus": 0,
+      "extra_damages": [],
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
@@ -15176,6 +15626,36 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "cocho.png"
+    },
+    {
+      "type": "barco_medieval",
+      "nome": "Barco medieval",
+      "emoji": "🛶",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "barco_medieval.png"
+    },
+    {
+      "type": "navio_medieval",
+      "nome": "Navio medieval",
+      "emoji": "⛵",
+      "size": [
+        3,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "navio_medieval.png"
     },
     {
       "type": "saco_grao",

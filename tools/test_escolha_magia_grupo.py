@@ -67,6 +67,9 @@ def magia_de(p, circ):
 async def secao_ordem():
     print("\n[1]/[2] Um aviso por vez, na ordem do grupo")
     r, ws, cle, mag = sala_grupo()
+    # Na cidade o painel abre na hora; na masmorra ele espera a vez de cada um
+    # (tools/test_escolha_magia_pausa.py).
+    r.phase = "city"
     await subir_todos(r)
     check("os dois ficaram com escolha pendente",
           cle.get("pending_spell_pick") and mag.get("pending_spell_pick"))
@@ -125,9 +128,11 @@ async def secao_multiplayer():
     r.connections = {"a": wa, "b": wb}
     r.players = {"a": S.make_player("a", "Ana", "cleric", 0),
                  "b": S.make_player("b", "Bia", "mage", 1)}
-    r.phase = "playing"
+    r.phase = "city"   # na masmorra cada um recebe o seu na própria vez
     async def nada(*a, **k): pass
     r.push_state = nada; r.gm_say = nada
+    async def nada_cidade(*a, **k): pass
+    r.push_state_or_city = nada_cidade
     await subir_todos(r)
     check("Ana recebe o dela", len(wa.prompts()) == 1)
     check("Bia recebe o dela ao mesmo tempo", len(wb.prompts()) == 1)

@@ -2048,10 +2048,6 @@ window.LANG_ERROS = {
     "en": "You are already maintaining a creature under Polymorph.",
     "pt": "Você já mantém uma criatura sob Metamorfose."
   },
-  "erro.voce_ja_pode_voltar_a_masmorra": {
-    "en": "You can already return to the dungeon.",
-    "pt": "Você já pode voltar à masmorra."
-  },
   "erro.voce_ja_possui_isto": {
     "en": "You already own this.",
     "pt": "Você já possui isto."

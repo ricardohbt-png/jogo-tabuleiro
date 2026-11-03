@@ -3487,8 +3487,8 @@
       6
     ],
     "room_id": 2,
-    "image": "menina_cabelos_castanhos.png",
-    "model3d": "moca_cabelo_castanho.glb"
+    "image": "moca_ruiva_preview_frente.png",
+    "model3d": "moca_ruiva.glb"
   },
   "materiais": {
     "0,0": "madeira",

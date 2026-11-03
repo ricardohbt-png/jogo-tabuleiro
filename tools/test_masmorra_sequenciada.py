@@ -478,7 +478,8 @@ async def test_saida_efetiva():
     p["fome"] = 10; p["sede"] = 10
     await r.handle_exit_dungeon("p1")
     check("marcado como fora", isinstance(p.get("fora_masmorra"), dict))
-    check("espera fixa de 2 rodadas", p["fora_masmorra"]["rodadas_restantes"] == 2)
+    check("na cidade, a espera ainda não começou", p["fora_masmorra"].get("fase") == "cidade"
+          and "rodadas_restantes" not in p["fora_masmorra"])
     check("cobrou ida e volta (2×1 fome)", p["fome"] == 8)
     check("cobrou ida e volta (2×1 sede)", p["sede"] == 8)
     check("peão saiu do tabuleiro", p["pos"] == [-1, -1])
@@ -538,14 +539,16 @@ async def test_contador_e_retorno():
     p = await _entrar_e_posicionar_na_escada(r)
     p["fome"] = 10; p["sede"] = 10
     await r.handle_exit_dungeon("p1")
+    await r._tick_retorno_masmorra()
+    check("na cidade a espera não conta", p["fora_masmorra"].get("fase") == "cidade")
+    await r.handle_voltar_masmorra("p1")
     check("espera inicial 2", p["fora_masmorra"]["rodadas_restantes"] == 2)
+    await r._tick_retorno_masmorra()   # fecho da rodada do clique
     await r._tick_retorno_masmorra()
     check("após 1 rodada resta 1", p["fora_masmorra"]["rodadas_restantes"] == 1)
+    check("ainda está fora", r._ativo(p) is False)
     await r._tick_retorno_masmorra()
-    check("após 2 rodadas resta 0", p["fora_masmorra"]["rodadas_restantes"] == 0)
-    check("ainda está fora (rodada de tolerância)", r._ativo(p) is False)
-    await r._tick_retorno_masmorra()
-    check("na rodada seguinte volta sozinho", p.get("fora_masmorra") is None)
+    check("ao zerar volta sozinho", p.get("fora_masmorra") is None)
     check("voltou ativo", r._ativo(p) is True)
     check("reapareceu na escada", list(p["pos"]) == list(r.stairs_pos))
     check("com turno cheio", p["action_done"] is False and p["moves_left"] > 0)
@@ -557,9 +560,11 @@ async def test_volta_manual():
     p["fome"] = 10; p["sede"] = 10
     await r.handle_exit_dungeon("p1")
     await r.handle_voltar_masmorra("p1")
+    check("o botão começa a espera", p["fora_masmorra"].get("fase") == "voltando")
     check("não volta antes de zerar", p.get("fora_masmorra") is not None)
     p["fora_masmorra"]["rodadas_restantes"] = 0
-    await r.handle_voltar_masmorra("p1")
+    p["fora_masmorra"].pop("ignorar_primeiro_fecho", None)
+    await r._tick_retorno_masmorra()
     check("volta ao zerar", p.get("fora_masmorra") is None)
     check("de volta ao tabuleiro", list(p["pos"]) == list(r.stairs_pos))
 

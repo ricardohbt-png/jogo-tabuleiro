@@ -1,5 +1,21 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Juntar pilhas de munição (2026-11-01)
+
+No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até `_max_ammo_stack_for` (10, ou o da aljava) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
+
+### Mini Aljava (2026-11-01)
+
+`mini_aljava` custa 30 moedas, usa `assets/itens/aljava.png`, é vendida nos cinco ferreiros e ocupa um espaço `item1`/`item2`. Equipada, amplia pilhas na bolsa para 20 flechas ou 20 virotes, incluindo variantes especiais; equipar cópias não soma capacidade. A detecção de aljavas em `off_hand`, `item1` e `item2` é centralizada em `_quivers_equipped`; quando há mais de uma aljava, vale a maior capacidade por família. Arcos podem consumir munição compatível diretamente da bolsa com qualquer aljava equipada. `GS.maxAmmoStackFor` espelha o limite no cliente para a coleta de munição em baús. O catálogo autoritativo é `SHOP_AMMO`; mudanças devem ser exportadas por `tools/export_catalog.py` para `tools/editor_catalog.js`.
+
+### Tutorial com vários heróis: uma lição por herói (2026-11-01)
+
+No Solo com grupo, uma conexão recebe as lições de vários heróis (o servidor marca `heroi` em toda mensagem privada). O cliente tinha **um** espaço só (`_licaoUltima`): a `fala` de um herói apagava a do outro, os avisos de passo/pulada do herói fora de foco eram descartados, e a troca de foco fechava a janela (`_guiaTick` compara com a lição do herói em foco) sem nunca reabri-la. Agora `GuiaTutorial.criarLicoesPorHeroi()` (puro, `src/guiaTutorial.js`) guarda a lição de cada herói; `game.js` roteia `fala`/`licaoPasso`/`licaoPassoOk`/`licaoConcluida`/`licaoPulada`/`licaoDica`/`licaoResultado` pelo dono (`msg.heroi`, ou o herói em foco sem grupo), mostra na janela só a do herói em foco e, no `focoHeroi`, `_licaoTrocarFoco` reabre a lição do novo herói (`emAndamento` confere com `tutorial.por_classe` e fica com o passo mais adiantado, porque o aviso de passo chega antes do `game_state`). `_licaoUltima` segue sendo a lição exibida. Servidor: na entrada não-nova (retomada do jogo salvo ou volta da cidade) `_liberar_intro_masmorra` reenvia a lição em andamento de cada herói (`_reenviar_licao`), e o religar usa `_reenviar_licoes_da_conexao` (antes só o principal). Testes: `node tools/test_licoes_por_heroi_cliente.js` e `python -X utf8 tools/test_licoes_grupo_reenvio.py`.
+
+### Saída pela escada: cidade primeiro, espera depois (2026-11-01)
+
+`fora_masmorra` ganhou `fase`: `"cidade"` (comprando; a espera não conta) e `"voltando"` (clicou em "Voltar à masmorra"; `rodadas_restantes` + `ignorar_primeiro_fecho`). Estado antigo sem `fase` conta como `"voltando"` (`_fase_fora`). `handle_exit_dungeon` grava `{"fase": "cidade"}`; `handle_voltar_masmorra` só aceita a fase cidade, rola a espera e muda para voltando; `_tick_retorno_masmorra` ignora quem está na cidade e, ao zerar, chama `_reentrar_masmorra` na hora (saiu a rodada de tolerância e o aviso "você já pode voltar"). `_em_cidade(pid)` = sala na cidade ou fase cidade, também no Solo com grupo. **Solo** (`_jogo_salvo_solo`): a masmorra fica parada na vez de quem saiu — o timer de turno é cancelado e a vez só acaba no clique de voltar (`_forcar_fim_turno`); `_conexao_na_cidade` põe a conexão na tela da cidade enquanto um herói dela estiver na fase cidade, e o clique manda `enter_dungeon` se outros heróis dela estão lá dentro. **Multiplayer:** a vez acaba na saída e é pulada (não está `_ativo`) enquanto ele compra. **Espera:** `_espera_saida_def` usa o `espera_retorno` do destino; ausente ou "fixa 0" vira `ESPERA_SAIDA_PADRAO` = 1d4; `espera_saida` do `game_state` vem de `_espera_saida_texto`. Cliente: `GS.faseForaDe`/`minhaFaseFora`; o aviso no alto da cidade tem o botão (com confirmação) só na fase cidade e o contador na fase voltando; o cartão do herói mostra "na cidade, fazendo compras" ou "a caminho, chega em N". **Foco e templo:** com a sala em `playing` e um herói meu na fase cidade, o cliente prende o foco nele (`_heroiFazendoCompras` no `city_state`; `_trocarFoco` recusa sair dele), e `GS.voltarMasmorra` manda `heroi` explícito — antes um clique no cartão de outro herói fazia a volta (e as compras) saírem em nome dele, e o servidor ignorava. `handle_templo_ressuscitar` também atende quem está na fase cidade com o grupo na masmorra: o ressuscitado fica na cidade (`fora_masmorra {fase: "cidade", acompanha: <quem pagou>}`, fora do tabuleiro) e `handle_voltar_masmorra` o leva junto, com a mesma espera (clicar em voltar em nome dele vale para quem o trouxe). Testes: `python -X utf8 tools/test_saida_cidade.py`, `node tools/test_saida_cidade_cliente.js`, `test_masmorra_sequenciada.py` e `test_solo_grupo.py` [4].
+
 ### Servos disparam armadilhas e têm tom arroxeado (2026-10-31)
 
 Servos do jogador (mortos-vivos reanimados e elementais, `players[].animados`) disparam as armadilhas de `self.armadilhas` (catálogo e autoradas) ao pisar, como herói, monstro e refém: `_animado_pisou_armadilha` roda no fim de `handle_mover_animado` (e, portanto, em `handle_mover_animado_caminho`, que para na casa) e em cada passo de `handle_comandar_animados`, que para se o servo morrer. Servem de sacrifício para limpar o caminho. `_aplicar_armadilha_area` inclui os servos no raio. `perde_turno` (rede) é consumido na abertura da janela dos servos em `handle_end_turn`: o servo fica sem movimento e sem ação. Buracos procedurais (`self.traps`) e armadilhas de objeto continuam só para heróis. Monstros já tratam servos como alvos (`_alvos_hostis_para_monstros`), então eles servem de distração. Visual: tom violeta em `VC.feedback.servo`; no 2D, `_filtroEstadoPeao2D` aplica `filtro2D` quando o objeto do sprite traz `servo:true`. No 3D, `_tingirServo3D` tinge só o corpo (`userData.flightBody`; base, contorno, anéis e efeitos `toneMapped:false`/aditivos ficam) por luminância × cor × ganho, clonando os materiais do GLB. Como o GLB e o PNG chegam depois da montagem, `_updateServosTom3D` repassa a cada quadro pelas figuras registradas em `_servosTom3D`. Câmera: na janela dos servos, quando `animados_atual` passa a outro servo (ou ao refém), o `game.js` chama `centralizarCamera3DNoPeao` na casa dele, como faz com o herói da vez (só no 3D). Teste: `python -X utf8 tools/test_servo_armadilha.py`.
@@ -11,6 +27,14 @@ Servos do jogador (mortos-vivos reanimados e elementais, `players[].animados`) d
 ### Munição Explosiva (2026-10-30)
 
 `flechas_explosivas` e `virotes_explosivos` são munições separadas, aceitas respectivamente por arcos e bestas. Cada item compra 5 projéteis por 60 moedas e aparece em `ferreiro_ammo` nas cinco cidades; ambos usam `assets/itens magicos/municao_explosiva.png`. O disparo consome 1 munição mesmo se errar. Ao acertar, o alvo principal sofre o dano normal da arma +1d6 físico; as outras criaturas vivas no raio 1 sofrem 1d6 físico, com Reflexos CD 12 para metade. A explosão atinge aliados e não repete o dano de área no alvo principal. `special_effect: explosive_ammo` persiste na pilha; o servidor aplica área com linha de visão e resistências físicas. `attack_feedback.start` carrega posição e marcador da explosão; clientes 2D/3D só tocam o som e a animação no impacto de acerto. Não entram no sorteio de munição dos monstros.
+
+### Munição Mágica (2026-10-31)
+
+`flechas_magicas` e `virotes_magicos` custam 50 moedas por pacote de 10 e concedem +1 no acerto e no dano por disparo; `flechas_magicas_mais_2` e `virotes_magicos_mais_2` custam 120 moedas por pacote de 10 e concedem +2/+2. Flechas só são aceitas por arcos e usam `assets/itens magicos/flechas_magicas.png`; virotes só são aceitos por bestas e usam `assets/itens magicos/virotes_magicos.png`. Cada ataque consome um projétil mesmo se errar. O bônus é aplicado no ataque normal, na prévia de chance/dano e no Disparo Duplo; dano mágico e bônus só acompanham o disparo, sem alterar permanentemente a arma. As pilhas respeitam aljavas e flechas mágicas entram na ordem configurável de autoequipar. Os quatro itens aparecem nos cinco estoques `ferreiro_ammo`, nos nomes/descrições localizados e no catálogo do editor; não alteram efeitos de munição existente.
+
+### Rede Corrosiva (2026-10-30)
+
+`rede_corrosiva` é consumível de bolsa, vendido por 100 moedas nos cinco mercados e vinculado à imagem `assets/itens magicos/rede_corrosiva.png`. É um arremesso de alcance 4 que exige ataque por Destreza; é consumido ao usar, inclusive se errar. Ao acertar, prende o monstro. No início de cada turno preso, ele faz Fortitude CD 13: sucesso encerra o efeito antes de perder a ação ou sofrer corrosão e permite agir; falha consome o turno e causa 1 de dano ácido. Cada falha corrói uma peça equipada na ordem armadura → escudo → cabeça → arma → botas. Usa o modelo N/M padrão (N=0, M=2): o primeiro nível não penaliza, o segundo aplica −1 à CA/ataque/dano/movimento conforme a peça e o terceiro destrói a peça. Arma destruída deixa de fornecer o ataque equipado; o equipamento danificado que sobreviver pode cair como loot preservando o nível de corrosão. Sem equipamento restante, cada falha posterior reduz a CA em 1, até o piso 5.
 
 ### Veneno de redução de atributo em monstros (2026-10-30)
 
@@ -68,6 +92,36 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 ### Manto das Sombras (2026-10-26)
 
 `manto_das_sombras` custa 1.500 moedas e é exclusivo do Ladino. Ocupa `armor`, concede +2 CA total e +2 a Esconder nas Sombras, cumulativo com a especialização do Ladino. Usa `assets/itens/manto_das_sombras.png` e está à venda nos cinco ferreiros. Como ação principal, concede a magia Manto da Escuridão sem gastar slot, com recarga de 20 rodadas guardada na instância do item; o uso paga 1 fome e 1 sede.
+
+### Espadas do Sangramento (2026-10-30)
+
+`espada_sangramento_longa` (Rara) custa 1.500 moedas e causa 1d8 cortante; `espada_sangramento_bastarda` (Muito rara) custa 2.000 e causa 1d10 cortante. Ambas concedem +1 no acerto e dano, são mágicas, têm crítico natural com 19–20 e só podem ser usadas por Guerreiro e Paladino. Cada acerto bem-sucedido aplica o Sangramento existente, sem limite por rodada: níveis sobem até 3, aplicações seguintes abrem Ferida Aberta e cada aplicação após a primeira soma 2 rodadas; crítico que aplica Sangramento também ativa Hemorragia pela regra corrente. Não mudam dano, duração, resistência ou imunidades globais do Sangramento. Ambas usam `assets/itens magicos/espada_vorpal.png` e estão em `ferreiro_weapon` nas cinco cidades. O servidor preserva `magical` e `causa_sangramento` ao converter a compra em arma de inventário; `tools/export_catalog.py` gera a entrada do catálogo do editor.
+
+`chicote_fogo` (Raro) custa 1.200 moedas, causa 1d4 cortante com Destreza, tem alcance 2, pode ser usado na mão secundária e mantém as classes do chicote comum (Bardo, Ladino, Paladino e Guerreiro). É mágico, concede +1 no acerto e no dano e usa `assets/itens magicos/chicote_flamejante.png`. Um acerto crítico causa +1d6 de dano de fogo. Cada acerto bem-sucedido aplica `em_chamas_rodadas` por 1d4 rodadas, inclusive na mão secundária e em técnicas que acertem com a arma: o estado causa 1 de fogo por rodada, não soma dano e, em novos acertos, conserva a maior duração por `_aplicar_em_chamas`. Água ou gastar uma ação apagam o fogo segundo a regra existente. O servidor preserva `fire_on_hit`, `fire_crit_damage`, `magical` e os bônus ao comprar e reequipar; todos os ataques consideram os bônus próprios da arma. Está nos cinco ferreiros e no catálogo gerado por `tools/export_catalog.py`.
+
+`ferroada` (Rara) custa 1.500 moedas, usa `assets/itens magicos/ferroada.png` e mantém o perfil do chicote: 1d4 cortante com Destreza, alcance 2, mão secundária e classes Bardo, Ladino, Paladino e Guerreiro. É mágica e concede +1 no acerto e dano. Cada acerto bem-sucedido aplica Sangramento sem limite por rodada, inclusive ataques da mão secundária, seguindo a mesma progressão das espadas do Sangramento; um crítico natural 20 que aplique Sangramento também causa Hemorragia. Não amplia a faixa de crítico. Está nos cinco `ferreiro_weapon`; o servidor usa `causa_sangramento` e o catálogo do editor é gerado por `tools/export_catalog.py`.
+
+`maca_zero_absoluto` (Muito Rara) custa 2.000 moedas, usa `assets/itens magicos/maca_do_zero_absoluto.png`, causa 1d6 contundente + Força, concede +1 no acerto e no dano e adiciona 1d4 de frio a cada acerto. Um crítico aplica o estado `paralisado` no máximo uma vez por alvo por rodada, com teste automático e gratuito de Força CD 16 no início de cada turno; sucesso encerra o efeito imediatamente e falhas mantêm o alvo preso até o limite de 2 rodadas. Reaproveita o visual de gelo e o fluxo de paralisia do Raio Congelante; alvos imunes a paralisia não ficam presos. Mantém as classes da maça (Bardo, Ladino, Paladino e Guerreiro), aparece nos cinco ferreiros e no catálogo gerado por `tools/export_catalog.py`. `freeze_on_crit` e `magical` são preservados ao comprar e reequipar.
+
+### Relâmpago de Mão (2026-10-30)
+
+`relampago_de_mao` é uma lança curta mágica Muito Rara, custa 2.000 moedas, causa 1d6 perfurante + Força, dá +1 no acerto e no dano e pode ser arremessada a 4 casas; o arremesso comum a devolve imediatamente à mão. Uma habilidade concedida pela arma, `Descarga em Linha`, usa ação principal e tem recarga de 10 rodadas guardada na instância equipada. O jogador seleciona um inimigo em linha reta ortogonal ou diagonal até 4 casas; criaturas em cada casa atravessada, inclusive aliados, fazem Reflexos CD 13 para metade de 3d6 elétrico. O inimigo escolhido também recebe um ataque normal da lança se acertar. Paredes bloqueiam a trajetória; o evento visual reaproveita raio e som de `spell_animation` `relampago`. Classes: Bardo, Ladino, Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `return_on_throw`, `lightning_line` e `lightning_line_cooldown` são preservados ao comprar e reequipar.
+
+### Espada Mágica (2026-10-31)
+
+`espada_magica`, `espada_magica_mais_2` e `espada_magica_mais_3` usam `assets/itens magicos/espada_magica.png`, causam 1d6 cortante com Força, mantêm crítico natural 19–20 e podem ser usadas por Bardo, Ladino, Paladino e Guerreiro. Concedem, respectivamente, +1/+1 por 500 moedas (Incomum), +2/+2 por 1.500 (Rara) e +3/+3 por 3.500 (Muito rara), sem efeito adicional. Estão à venda nos cinco ferreiros e no catálogo do editor; o fluxo de compra/equipamento preserva `magical`, `atk_bonus` e `damage_bonus`.
+
+### Besta para Bardo (2026-10-31)
+
+A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A lista `allowed_classes` do item em `SHOP_WEAPONS` governa compra/equipamento; o catálogo do editor é regenerado por `tools/export_catalog.py`.
+
+### Choque do Trovão (2026-10-31)
+
+`choque_do_trovao` é um martelo de guerra mágico Muito Raro, custa 2.500 moedas e usa `assets/itens magicos/choque_do_trovao.png`. Causa 1d8 contundente + Força, tem crítico natural 20 que triplica o dano, concede +1 no acerto e no dano e acrescenta 1d4 elétrico a cada acerto. Em um crítico natural 20, um alvo sobrevivente testa Força CD 13; na falha, é empurrado uma casa para longe do portador; obstáculos e criaturas bloqueiam o deslocamento sem dano de colisão. Como ação principal, `Pulso do Trovão` causa 2d6 elétrico a todas as criaturas vivas nas oito casas adjacentes, incluindo aliados e excluindo o portador; Reflexos CD 13 reduz o dano à metade. A habilidade tem recarga de 10 rodadas persistida na instância equipada. Uso de Clérigo, Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `extra_damages`, `thunder_push_on_crit`, `thunder_pulse` e `thunder_pulse_cooldown` são preservados ao comprar e reequipar.
+
+### Escudos Torre e Grande de Madeira (2026-10-30)
+
+`escudo_p` (Escudo Pequeno) custa 20 moedas e concede +1 CA/redução 1; `escudo_g` (Escudo Grande) custa 50 e concede +2 CA/redução 2. `escudo_torre` custa 70 moedas, ocupa a mão secundária, concede +3 CA e reduz em 2 cada instância de dano. É exclusivo do Paladino e tem `corrosion_materials: ["metal"]`, portanto o Devorador de Metal pode corroê-lo. `escudo_madeira_grande` custa 35 moedas, concede +2 CA e reduz em 1 cada instância de dano; pode ser usado por Clérigo, Guerreiro e Paladino e tem `corrosion_materials: ["organic"]`, portanto o Devorador Orgânico pode corroê-lo. Todos aproveitam a Guarda Máxima do Paladino, que dobra os bônus do escudo, e estão em `ferreiro_armor` nas cinco cidades. Ícones: `assets/itens/escudo_torre.png` e `assets/itens/escudo_madeira_grande.png`; nomes, regras e ícones são exportados para o catálogo do editor.
 
 ### Veste da Égide Arcana (2026-10-26)
 
@@ -662,6 +716,19 @@ comida dos kobolds. A miniatura 3D está em `assets/models3d/monstros/kobold_mag
 `game.js` vincula o GLB pelo tipo `kobold_mago`. O catálogo do editor vem de
 `tools/export_catalog.py`.
 
+### Capanga (ND 1)
+
+`capanga` é um humanoide de combate inspirado no Guerreiro Anão: 14 PV, CA base 10
+mais armadura e escudo, FOR 16, movimento 6 e ataque base +5. No spawn recebe
+uma habilidade (Mira 60%, recarga 2; Golpe Devastador 30%, recarga 4 e ×1,5 no
+dado; Fúria Berserker 10%, recarga 8 e ataque extra), uma das quatro armaduras
+(manto 30%, couro 20%, couro e placas 30%, malha 20%) e uma entre oito armas com
+chance igual. Besta/arco longo carregam 20 projéteis; o arco longo não pode vir
+com escudo. Escudos são sorteados em resultado único: pequeno 10%, grande de
+madeira 5%, grande 1%, nenhum no restante. O saque tem 5–20 moedas, 10% veneno,
+5% óleo/piche e 10% comida. Miniaturas: `assets/pawns/monstros/capanga/capanga.png`
+e `assets/models3d/monstros/capanga.glb`.
+
 ### Campo de Treinamento — salas por herói (2026-10-01)
 
 `tutorial_training.py` é o mixin autoritativo de `GameRoom` para cenários de treinamento. A flag autorada `tutorial_training` prepara aliados NPC separados de `players`, bonecos privados e o refém de Richard. `allowed_class` nas salas bloqueia movimento, porta, voo, teleporte e servos incompatíveis; cliente e editor conservam o contrato.
@@ -1003,7 +1070,7 @@ resistência enquanto o herói permanecia na mesma sala.
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
 > ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 89 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> autoritativo `DECOR_TYPES` (server.py, 101 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
@@ -1041,6 +1108,9 @@ resistência enquanto o herói permanecia na mesma sala.
 > combina `assets/objetos/tocha_parede.png` com o loop GLB de `chama_viva.glb` no 3D.
 > `cocho` é uma decoração baixa 2×1, sólida, girável e sem interação; o PNG transparente
 > e o GLB ficam em `assets/objetos/cocho.png` e `assets/objetos/cocho.glb`.
+> `barco_medieval` é uma decoração baixa, sólida e girável de 2×1; `navio_medieval`
+> ocupa 3×2, é alto, sólido e girável. Ambos não têm interação nem loot e usam PNG/GLB
+> próprios em `assets/objetos/`, com fontes Blender em `tools/create_*_medieval_glb.py`.
 > `saco_grao` e `caixa_ferramentas` são props 1×1 sólidos e sem interação, com PNG/GLB
 > próprios em `assets/objetos/`. `ancinho` e `forcado` são peças altas 1×1; `balde_agua_chao`
 > é um balde decorativo 1×1 com água visível, sem cargas ou interação. Seus assets ficam em
@@ -5049,3 +5119,7 @@ armadilhas permanentes) e não recupera ouro nem dispara armadilhas. PNG:
 ### Refeições de grupo na taverna (2026-10-27)
 
 `banquete_comemoracao` restaura 40 de fome e sede para cada herói por 5 moedas por herói; `grande_celebracao` restaura 75 por recurso por 12 moedas por herói. São refeições imediatas de grupo, cada uma utilizável uma vez por visita à cidade. O servidor calcula o total pelo número de fichas de herói (`class_id`, sem Mestre ou heróis de teste), cobra o comprador e restaura cada ficha até seu máximo normal; procurações do Solo contam separadamente. Os preços unitários são fixos e ignoram modificadores de preço da cidade. Ambas estão nas cinco tavernas.
+
+### Portão levadiço nativo (2026-10-30)
+
+Uma porta nativa pode receber `door_styles["x,y"] = "portao_levadico"` no mapa autorado. O estilo permanece em `DOOR`, aproveita orientação e condições existentes e não é uma decoração de chão. Para um vão com largura ajustável, `portcullis_groups["anchor_x,anchor_y"]` lista em ordem canônica `(y,x)` as casas `DOOR` contíguas do grupo, incluindo a âncora; ausência do grupo mantém compatibilidade com portões antigos de uma casa. O editor seleciona o vão arrastando pelas portas alinhadas e só aceita casas com a mesma orientação, salas e condição de abertura. `portcullis_raised` guarda uma única coordenada âncora por portão. O conjunto inteiro abre/fecha, bloqueia movimento e linha de visão, e aceita interação por qualquer trecho. Ao abaixar sobre criaturas vivas, cada criatura cujo footprint toca o vão faz Reflexos CD 13 contra 4d6 físico uma vez: sucesso recebe metade e tenta sair para um dos lados; falha recebe dano integral e fica presa. No início de cada turno preso, a criatura gasta sua ação tentando Força CD 16; sucesso escapa para um lado livre, falha causa 1d6 físico e mantém a prisão para nova tentativa no turno seguinte. A resolução considera o footprint completo e não soma dano de colisão. A primeira elevação ainda passa pela abertura nativa para destrancar/revelar a sala e despertar monstros. PNG e GLB: `assets/objetos/portao_levadico_{baixado,levantado}`; fonte Blender: `assets/objetos/portao_levadico.blend`.

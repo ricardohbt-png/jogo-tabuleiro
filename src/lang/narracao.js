@@ -316,6 +316,10 @@ window.LANG_NARRACAO = {
     "en": "📖 **{heroi}** learned **{m_nome}**!",
     "pt": "📖 **{heroi}** aprendeu **{m_nome}**!"
   },
+  "narracao.escolhendo_nova_magia": {
+    "en": "✨ **{heroi}** reached a new level and is choosing a new spell. The game waits.",
+    "pt": "✨ **{heroi}** subiu de nível e está escolhendo uma nova magia. O jogo espera."
+  },
   "narracao.aprendeu_a_forma_de_para_metamorfose": {
     "en": "🦋 **{nome_criatura_atacante}** learned the form of **{forma_get_name_tipo}** for Polymorph.",
     "pt": "🦋 **{nome_criatura_atacante}** aprendeu a forma de **{forma_get_name_tipo}** para Metamorfose."
@@ -1288,6 +1292,26 @@ window.LANG_NARRACAO = {
     "en": "💪 **{alvo}** breaks free of the freezing paralysis (Strength DC {dc}).",
     "pt": "💪 **{alvo}** escapa da paralisia congelante (Força CD {dc})."
   },
+  "narracao.maca_zero_absoluto_congela": {
+    "en": "❄️ **{alvo}** is trapped in supernatural ice by the Mace of Absolute Zero!",
+    "pt": "❄️ **{alvo}** fica preso em gelo sobrenatural pela Maça do Zero Absoluto!"
+  },
+  "narracao.choque_trovao_resiste_empurrao": {
+    "en": "💪 **{alvo}** resists Thunder Shock's push (Strength {total} vs. DC {dc}).",
+    "pt": "💪 **{alvo}** resiste ao empurrão do Choque do Trovão (Força {total} contra CD {dc})."
+  },
+  "narracao.choque_trovao_empurra": {
+    "en": "⚡ The critical blow from Thunder Shock pushes **{alvo}** one square away (failed Strength DC {dc}).",
+    "pt": "⚡ O golpe crítico do Choque do Trovão empurra **{alvo}** uma casa (falha no teste de Força CD {dc})."
+  },
+  "narracao.choque_trovao_empurrao_bloqueado": {
+    "en": "⚡ **{alvo}** fails the Strength check (DC {dc}), but an obstacle or creature blocks the push.",
+    "pt": "⚡ **{alvo}** falha no teste de Força CD {dc}, mas um obstáculo ou criatura bloqueia o empurrão."
+  },
+  "narracao.choque_trovao_pulso": {
+    "en": "⚡ **{heroi}** releases a Thunder Pulse from the warhammer! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 lightning damage; success halves it.",
+    "pt": "⚡ **{heroi}** libera um Pulso do Trovão pelo martelo! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de eletricidade; sucesso reduz à metade."
+  },
   "narracao.escapa_do_rodamoinho_profundo_e_pode_agi": {
     "en": "🌊 **{nome_criatura_criatura}** escapes the deep whirlpool and can act normally.",
     "pt": "🌊 **{nome_criatura_criatura}** escapa do rodamoinho profundo e pode agir normalmente."
@@ -1491,6 +1515,22 @@ window.LANG_NARRACAO = {
   "narracao.fica_preso_na_rede_escapar_cd": {
     "en": "🕸️ **{nome}** is caught in the net! (escape: {es_tipo} DC {es_cd})",
     "pt": "🕸️ **{nome}** fica preso na rede! (escapar: {es_tipo} CD {es_cd})"
+  },
+  "narracao.rede_corrosiva_acerta": {
+    "en": "🧪 **{nome}** is trapped in the corrosive net! Fortitude DC {cd} at the start of each turn to escape.",
+    "pt": "🧪 **{nome}** fica preso na Rede Corrosiva! Teste de Fortitude CD {cd} no início de cada turno para escapar."
+  },
+  "narracao.rede_corrosiva_escapa": {
+    "en": "🟢 **{monstro}** breaks free of the corrosive net and can act this turn!",
+    "pt": "🟢 **{monstro}** escapa da Rede Corrosiva e pode agir nesta rodada!"
+  },
+  "narracao.rede_corrosiva_perde_turno": {
+    "en": "🧪 **{monstro}** fails to escape, loses its turn, and takes 1 acid damage.",
+    "pt": "🧪 **{monstro}** falha ao escapar, perde o turno e sofre 1 de dano ácido."
+  },
+  "narracao.rede_corrosiva_corrói_equipamento": {
+    "en": "🛡️ The corrosive net damages **{item}** ({estado}).",
+    "pt": "🛡️ A Rede Corrosiva danifica **{item}** ({estado})."
   },
   "narracao.fica_protegido_absorve_ate_de_dano_eleme": {
     "en": "🛡️ **{caster}** becomes protected: absorbs up to {reducao} elemental damage per round ({dur} round(s)).",
@@ -2817,9 +2857,13 @@ window.LANG_NARRACAO = {
     "en": "🧵 **{heroi}** can only stack {self_teto_metamagia_p} metamagic(s) per cast — the rest were ignored.",
     "pt": "🧵 **{heroi}** só pode empilhar {self_teto_metamagia_p} metamagia(s) por lançamento — as demais foram ignoradas."
   },
-  "narracao.sobe_as_escadas_rumo_a_cidade_e_volta_em": {
-    "en": "🚪 **{heroi}** climbs the stairs toward the city (🍖-{fome} 💧-{sede}) and returns in {espera} round(s).",
-    "pt": "🚪 **{heroi}** sobe as escadas rumo à cidade (🍖-{fome} 💧-{sede}) e volta em {espera} rodada(s)."
+  "narracao.sobe_as_escadas_rumo_a_cidade": {
+    "en": "🚪 **{heroi}** climbs the stairs toward the city (🍖-{fome} 💧-{sede}).",
+    "pt": "🚪 **{heroi}** sobe as escadas rumo à cidade (🍖-{fome} 💧-{sede})."
+  },
+  "narracao.parte_de_volta_a_masmorra": {
+    "en": "⛓️ **{heroi}** heads back to the dungeon and arrives in {espera} round(s).",
+    "pt": "⛓️ **{heroi}** parte de volta à masmorra e chega em {espera} rodada(s)."
   },
   "narracao.sofre": {
     "en": "🎵 **{monstro}** takes **{dano}**{metade_if_save_ok_else}.",
@@ -3370,6 +3414,14 @@ window.LANG_NARRACAO = {
   "narracao.habilidade_instrumento.lira": {"en":"Martial Duet","pt":"Dueto Marcial"},
   "narracao.habilidade_instrumento.flauta": {"en":"Phantom Duet","pt":"Dueto Fantasma"},
   "narracao.habilidade_instrumento.violino": {"en":"Final Requiem","pt":"Réquiem Final"},
-  "narracao.habilidade_instrumento.gaita": {"en":"Improvisation","pt":"Improviso"}
+  "narracao.habilidade_instrumento.gaita": {"en":"Improvisation","pt":"Improviso"},
+  "narracao.portao_levadico_levanta": {"en":"⚙️ **{heroi}** raises the portcullis.","pt":"⚙️ **{heroi}** levanta o portão levadiço."},
+  "narracao.portao_levadico_abaixa": {"en":"⛓️ **{heroi}** lowers the portcullis.","pt":"⛓️ **{heroi}** abaixa o portão levadiço."},
+  "narracao.portao_levadico_reflexos_sucesso": {"en":"🏃 **{alvo}** dodges the portcullis, takes {dano} damage, and is pushed aside.","pt":"🏃 **{alvo}** desvia do portão, sofre {dano} de dano e é empurrado para o lado."},
+  "narracao.portao_levadico_desvia_sem_saida": {"en":"🧱 **{alvo}** dodges the portcullis and takes {dano} damage, but both exits are blocked and remains trapped without collision damage.","pt":"🧱 **{alvo}** desvia do portão e sofre {dano} de dano, mas as duas saídas estão bloqueadas e continua preso, sem dano de colisão."},
+  "narracao.portao_levadico_preso": {"en":"💥 **{alvo}** fails to dodge, takes {dano} damage, and is trapped beneath the portcullis.","pt":"💥 **{alvo}** não consegue desviar, sofre {dano} de dano e fica preso sob o portão."},
+  "narracao.portao_levadico_escapa": {"en":"💪 **{alvo}** escapes from under the portcullis (Strength {total}).","pt":"💪 **{alvo}** escapa debaixo do portão (Força {total})."},
+  "narracao.portao_levadico_saida_bloqueada": {"en":"🚧 **{alvo}** passes the Strength check, but both sides of the portcullis are blocked and remains trapped.","pt":"🚧 **{alvo}** passa no teste de Força, mas os dois lados do portão estão bloqueados e continua preso."},
+  "narracao.portao_levadico_falha_escapar": {"en":"⛓️ **{alvo}** fails to escape (Strength {total}) and takes {dano} damage.","pt":"⛓️ **{alvo}** falha ao escapar (Força {total}) e sofre {dano} de dano."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

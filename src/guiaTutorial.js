@@ -185,5 +185,49 @@
     return 'ui.tutorial.atalho.' + id + '.' + (controleAtivo ? 'controle' : 'teclado');
   }
 
-  window.GuiaTutorial = { parseUi, demonstracaoValidada, demonstracaoDisponivel, controlesDemonstracao, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho, CAMERA };
+  // Lições por herói. No Solo com grupo, uma conexão recebe as lições de vários
+  // heróis (o servidor marca `heroi` em toda mensagem privada); sem grupo não há
+  // `heroi` e o dono é o herói em foco. Cada herói guarda a sua; a janela mostra a
+  // do herói em foco.
+  function criarLicoesPorHeroi() {
+    const porHeroi = new Map();
+    const dono = (msg, foco) => (msg && msg.heroi) || foco;
+    return {
+      dono,
+      guardar(msg, foco) { const d = dono(msg, foco); porHeroi.set(d, msg); return d; },
+      daVez(pid) { return porHeroi.get(pid) || null; },
+      // licao_passo: atualiza só a lição daquele herói (ignora id que não é o dela).
+      passo(msg, foco) {
+        const d = dono(msg, foco), atual = porHeroi.get(d);
+        if (!atual || atual.licao_id !== msg.licao_id) return null;
+        const licao = Object.assign({}, atual, { passo: msg.passo });
+        porHeroi.set(d, licao);
+        return { dono: d, licao };
+      },
+      // licao_concluida / licao_pulada: tira a lição se for a que está guardada.
+      remover(msg, foco) {
+        const d = dono(msg, foco), atual = porHeroi.get(d);
+        if (!atual || atual.licao_id !== msg.licao_id) return null;
+        porHeroi.delete(d);
+        return d;
+      },
+      // A lição guardada do herói, se o servidor ainda a tem em andamento; senão
+      // null. Fica com o passo mais adiantado entre o guardado e o do game_state:
+      // o aviso de passo chega antes do estado ser reenviado, e o passo de uma
+      // lição só anda para a frente.
+      emAndamento(pid, state) {
+        const atual = porHeroi.get(pid);
+        if (!atual || !state) return null;
+        const me = (state.players || []).find(p => p && p.id === pid);
+        const srv = me && ((state.tutorial || {}).por_classe || {})[me.class_id];
+        if (!srv || srv.licao_id !== atual.licao_id) return null;
+        const iGuardado = atual.passo ? (atual.passo.i | 0) : -1;
+        const iServidor = srv.passo ? (srv.passo.i | 0) : -1;
+        return iServidor > iGuardado ? Object.assign({}, atual, { passo: srv.passo }) : atual;
+      },
+      limpar() { porHeroi.clear(); },
+    };
+  }
+
+  window.GuiaTutorial = { criarLicoesPorHeroi, parseUi, demonstracaoValidada, demonstracaoDisponivel, controlesDemonstracao, seletor, alvoTabuleiro, placaEmEvidencia, caminhoAbsoluto, nivelDica, textoDica, segmentos, ATALHOS, chaveAtalho, CAMERA };
 })();

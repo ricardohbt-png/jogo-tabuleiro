@@ -645,6 +645,8 @@ const DECOR_MINI_ESCALA = 2.0;
 // Modelos GLB usados por decorações específicas. A chave é a imagem que já
 // identifica o objeto no mapa, para não trocar outras decorações do tipo tumba.
 const DECOR_GLB_MODELS = {
+  // Caixotes medievais empilhados; o PNG segue como miniatura/fallback.
+  'caixotes_medievais.png': 'assets/objetos/caixotes_medievais.glb',
   // Grade de esgoto medieval (PNG editor/2D, GLB no tabuleiro 3D).
   'grade_esgoto.png': 'assets/objetos/grade_esgoto.glb',
   'sarcofagocima.png': 'assets/objetos/sarcofago.glb',
@@ -707,6 +709,8 @@ const DECOR_GLB_MODELS = {
   'acampamento_abandonado.png': 'assets/objetos/acampamento_abandonado.glb',
   'ruinas_pedra.png': 'assets/objetos/ruinas_pedra.glb',
   'esqueleto_tiranossauro.png': 'assets/objetos/esqueleto_tiranossauro.glb',
+  'barco_medieval.png': 'assets/objetos/barco_medieval.glb',
+  'navio_medieval.png': 'assets/objetos/navio_medieval.glb',
   'galinheiro.png': 'assets/objetos/galinheiro.glb',
   'cabana_rustica.png': 'assets/objetos/cabana_rustica.glb',
   'choupana_palha_escura.png': 'assets/objetos/choupana_palha_escura.glb',
@@ -793,6 +797,8 @@ const DECOR_GLB_TYPES = {
   ancinho: 'assets/objetos/ancinho.glb',
   forcado: 'assets/objetos/forcado.glb',
   balde_agua_chao: 'assets/objetos/balde_agua_chao.glb',
+  barco_medieval: 'assets/objetos/barco_medieval.glb',
+  navio_medieval: 'assets/objetos/navio_medieval.glb',
   tronco_musgo: 'assets/objetos/tronco_musgo.glb',
   moita_espinhosa: 'assets/objetos/moita_espinhosa.glb',
   capim_alto: 'assets/objetos/capim_alto.glb',
@@ -1944,7 +1950,7 @@ function _ammoStackKeyClient(it){
   return JSON.stringify([it.id,it.ammo_type||it.id,stats,[...poisons].sort()]);
 }
 function _nomeMuncaoEnvenenada(it){
-  const keys={flechas_prata:'cat.item.flechas_prata_envenenadas.nome',flechas_incendiarias:'cat.item.flechas_incendiarias_envenenadas.nome',flechas_explosivas:'cat.item.flechas_explosivas_envenenadas.nome',virotes_prata:'cat.item.virotes_prata_envenenados.nome',virotes_incendiarios:'cat.item.virotes_incendiarios_envenenados.nome',virotes_explosivos:'cat.item.virotes_explosivos_envenenados.nome'};
+  const keys={flechas_prata:'cat.item.flechas_prata_envenenadas.nome',flechas_incendiarias:'cat.item.flechas_incendiarias_envenenadas.nome',flechas_explosivas:'cat.item.flechas_explosivas_envenenadas.nome',flechas_magicas:'cat.item.flechas_magicas_envenenadas.nome',flechas_magicas_mais_2:'cat.item.flechas_magicas_mais_2_envenenadas.nome',virotes_prata:'cat.item.virotes_prata_envenenados.nome',virotes_incendiarios:'cat.item.virotes_incendiarios_envenenados.nome',virotes_explosivos:'cat.item.virotes_explosivos_envenenados.nome',virotes_magicos:'cat.item.virotes_magicos_envenenados.nome',virotes_magicos_mais_2:'cat.item.virotes_magicos_mais_2_envenenados.nome'};
   return t(keys[it?.ammo_type]||(String(it?.ammo_type||'').includes('virote')?'cat.item.virote_envenenado.nome':'cat.item.flecha_envenenada.nome'));
 }
 window._nomeMuncaoEnvenenada = _nomeMuncaoEnvenenada;
@@ -3343,7 +3349,10 @@ function _renderShopItems(){
       return `<div class="shop-item"><span class="shop-item-emoji">☠️</span><div class="shop-item-info"><div class="shop-item-name">${t('ui.loja.remover_maldicao',{nome:_rotulo(m.id,'ui.maldicao',m.id)})}</div><div class="shop-item-desc">${t('ui.loja.desc_remover_maldicao')}</div></div><span class="shop-item-price">💰 ${preco}</span><button class="btn-buy" ${semOuro?'disabled':''} onclick="removerMaldicaoTemplo('${m.id}')">${t('ui.loja.curar')}</button></div>`;
     }).join(''));
   }
-  if(shopKey === 'templo' && aba===1 && GS.cityState.phase==='city' && myP?.alive){
+  // Ressurreição: com o grupo na cidade ou, com ele ainda na masmorra, para quem
+  // saiu pela escada e está comprando (o ressuscitado volta junto com ele).
+  if(shopKey === 'templo' && aba===1 && myP?.alive
+      && (GS.cityState.phase==='city' || GS.faseForaDe(myP)==='cidade')){
     const herois=GS.cityState.players.filter(p=>p.class_id&&!p.is_master&&!p.test_hero);
     const mortos=herois.filter(p=>!p.alive&&p.id!==GS.myPid);
     const podeUsar=herois.length>1;
@@ -14765,6 +14774,15 @@ function drawEntulho2D(ctx, x, y){
 // editor's optional door_orientations (90° clockwise per unit).
 function drawDoor2D(ctx, state, x, y, closed){
   const X=x*CELL, Y=y*CELL, T=state.tiles, H=T.length, W=T[0].length;
+  const gate = GS.portcullisGroupAt(state, x, y);
+  if(gate && gate.anchor !== `${x},${y}`) return;
+  const gateTiles = gate ? gate.tiles : null;
+  const gateMinX = gateTiles ? Math.min(...gateTiles.map(p => p[0])) : x;
+  const gateMaxX = gateTiles ? Math.max(...gateTiles.map(p => p[0])) : x;
+  const gateMinY = gateTiles ? Math.min(...gateTiles.map(p => p[1])) : y;
+  const gateMaxY = gateTiles ? Math.max(...gateTiles.map(p => p[1])) : y;
+  const centerX = (gateMinX + gateMaxX + 1) * CELL / 2;
+  const centerY = (gateMinY + gateMaxY + 1) * CELL / 2;
   const isWall=(tx,ty)=> ty<0||tx<0||ty>=H||tx>=W || T[ty][tx]===TILE_WALL;
   // Eixo da passagem: paredes à esquerda E direita ⇒ corredor sobe/desce, então
   // a folha atravessa na horizontal (vertical=true). Senão, folha vertical.
@@ -14772,7 +14790,21 @@ function drawDoor2D(ctx, state, x, y, closed){
   const extraTurns = GS.doorOrientation(state, x, y);
   const angle = (vertical ? 0 : Math.PI/2) + (extraTurns == null ? 0 : extraTurns * Math.PI/2);
   ctx.save();
-  ctx.translate(X+CELL/2, Y+CELL/2); ctx.rotate(angle); ctx.translate(-(X+CELL/2), -(Y+CELL/2));
+  ctx.translate(centerX, centerY); ctx.rotate(angle);
+  if(GS.doorStyle(state, x, y) === 'portao_levadico'){
+    const gateImg = _getObjeto2DImg(closed ? 'portao_levadico_baixado.png' : 'portao_levadico_levantado.png');
+    const span = gateTiles ? Math.max(gateMaxX-gateMinX+1, gateMaxY-gateMinY+1) : 1;
+    if(gateImg) ctx.drawImage(gateImg, -CELL*0.95*span, -CELL*0.95, CELL*1.9*span, CELL*1.9);
+    else {
+      const width=CELL*0.76*span, height=CELL*(closed?0.84:0.34);
+      ctx.fillStyle='#3a3d40'; ctx.fillRect(-width/2,-height/2,width,height);
+      const bars=Math.max(5,span*5);
+      for(let i=0;i<bars;i++){ const bx=-width/2+width*(i+.5)/bars; ctx.fillStyle='#a5a7a8'; ctx.fillRect(bx,-height/2,CELL*0.045, height); }
+      ctx.fillStyle='#b08a42'; ctx.fillRect(-width/2,-CELL*0.06,width,CELL*0.12);
+    }
+    ctx.restore();
+    return;
+  }
   if(closed){
     const m=8;                         // margem dentro da casa
     let dx, dy, dw, dh;
@@ -18788,7 +18820,7 @@ function renderPlayers(state){
         ${_csong ? `<span title="${t('ui.hud.inspirado_cancao')}" style="color:#4db8ff;font-size:11px;">🎵</span>` : ''}
         <span class="pcard-lvl">Lv${p.level}</span>
       </div>
-      ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${t('ui.hud.na_cidade_volta_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
+      ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${GS.faseForaDe(p) === 'cidade' ? t('ui.hud.na_cidade_comprando') : t('ui.hud.voltando_chega_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
       ${disc && !fora ? `<div class="pcard-ausente" style="font-size:11px;color:#c8b98a;">${t('ui.hud.aguardando_jogador', {nome: p.name})}</div>` : ''}
       ${meu && (isCur || p.id === state.animados_turn || p.id === state.last_stand_pid) ? `<div class="pcard-vez">${t('ui.hud.na_vez')}</div>` : ''}
       <div class="bars">
@@ -28061,8 +28093,10 @@ function _renderChestWindow(chest){
       const me2 = GS.gameState && GS.gameState.players.find(p=>p.id===GS.myPid&&p.alive);
       const off = me2 && me2.gear && me2.gear.off_hand;
       const key=_ammoStackKeyClient(item);
-      if(key&&off && _ammoStackKeyClient(off)===key && (off.ammo_count||0)<10) return true;
-      const bagSlot = key&&me2 && (me2.bag||[]).find(b=>_ammoStackKeyClient(b)===key&&(b.ammo_count||0)<10);
+      if(key&&off && _ammoStackKeyClient(off)===key
+          && (off.ammo_count||0)<GS.maxAmmoStackFor(me2,off)) return true;
+      const bagSlot = key&&me2 && (me2.bag||[]).find(b=>_ammoStackKeyClient(b)===key
+        &&(b.ammo_count||0)<GS.maxAmmoStackFor(me2,b));
       return !!bagSlot;
     })();
 
@@ -31222,6 +31256,13 @@ function ativarHabilidadeDoMenu(skillId){
     return;
   }
   const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
+  const lightningSlot = /^relampago_de_mao_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  if(lightningSlot){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginLightningLineWeapon(lightningSlot);
+    return;
+  }
   if(weaponThrowSlot){
     fecharMenuHabilidades();
     fecharMenuMagias();
@@ -31719,23 +31760,42 @@ function _weaponThrowSkillEntries(player){
     ['off_hand', player.gear?.off_hand],
   ];
   for(const [slot, item] of slots){
-    if(!item || !item.throw_range || !item.die) continue;
+    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse)) continue;
     const nome = item.name || item.id || 'arma';
     const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
       ? t('ui.arremesso.forca')
       : (item.finesse || item.id === 'dagger' ? t('ui.arremesso.forca_ou_destreza') : t('ui.arremesso.destreza'));
-    add({
-      id: `arremesso_arma_${slot}`,
-      source: 'arma',
-      name: t('ui.arremesso.nome_habilidade', {nome}),
-      icon: item.emoji || '🎯',
-      tipo: 'acao_principal',
-      target: 'enemy',
-      description: t('ui.arremesso.descricao_arma', {nome, alcance: item.throw_range + _bonusAlcanceArremessoCli(player), atributo}),
-      throw_slot: slot,
-      weapon_id: item.id,
-      granted_origem: 'weapon',
-    });
+    if(item.throw_range){
+      add({
+        id: `arremesso_arma_${slot}`,
+        source: 'arma',
+        name: t('ui.arremesso.nome_habilidade', {nome}),
+        icon: item.emoji || '🎯',
+        tipo: 'acao_principal',
+        target: 'enemy',
+        description: t('ui.arremesso.descricao_arma', {nome, alcance: item.throw_range + _bonusAlcanceArremessoCli(player), atributo}),
+        throw_slot: slot,
+        weapon_id: item.id,
+        granted_origem: 'weapon',
+      });
+    }
+    if(item.lightning_line){
+      add({
+        id: `relampago_de_mao_${slot}`, source: 'arma', name: 'Descarga em Linha', icon: '⚡',
+        tipo: 'acao_principal', target: 'enemy', throw_slot: slot, weapon_id: item.id,
+        description: 'Linha de até 4 casas: criaturas na trajetória, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também recebe um ataque normal. Recarga: 10 rodadas.',
+        granted_origem: 'weapon',
+      });
+    }
+    if(item.thunder_pulse){
+      add({
+        id:'choque_do_trovao_pulso', source:'arma',
+        name:t('ui.item.choque_trovao_pulso'), icon:'⚡',
+        tipo:'acao_principal', target:'self', weapon_id:item.id,
+        description:t('ui.item.choque_trovao_pulso_desc'),
+        granted_origem:'weapon',
+      });
+    }
   }
   return result;
 }
@@ -31748,6 +31808,10 @@ function _weaponThrowStatLabel(item){
 }
 
 function _weaponThrowSkillBtn(me, skill){
+  if(String(skill?.id || '').startsWith('relampago_de_mao_'))
+    return _lightningLineWeaponSkillBtn(me, skill);
+  if(skill?.id === 'choque_do_trovao_pulso')
+    return _thunderPulseWeaponSkillBtn(me, skill);
   const state = GS.gameState;
   const slot = skill.throw_slot || _weaponThrowSlotFromSkillId(skill.id);
   const item = slot === 'off_hand' ? me.gear?.off_hand : me.weapon;
@@ -31772,6 +31836,89 @@ function _weaponThrowSkillBtn(me, skill){
     <div class="skill-cost">${targets.length ? '🎯' : '—'}</div>`;
   btn.onclick = () => beginThrowSlot(slot);
   return btn;
+}
+
+function _thunderPulseWeaponSkillBtn(me, skill){
+  const item = me?.gear?.weapon || me?.weapon;
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.thunder_pulse_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.id === 'choque_do_trovao' && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '⚡')} ${skill.name}${recarga}</div>
+    <div class="skill-desc">${skill.description || t('ui.item.choque_trovao_pulso_desc')}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '⚡'}</div>`;
+  btn.onclick = () => {
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    GS.useThunderPulseWeapon();
+  };
+  return btn;
+}
+
+function _lightningLineWeaponSkillBtn(me, skill){
+  const slot = skill.throw_slot || String(skill.id).replace('relampago_de_mao_', '');
+  const item = slot === 'off_hand' ? me.gear?.off_hand : (me.gear?.weapon || me.weapon);
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.lightning_line_pronta_em || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const targets = (GS.gameState?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx = x - me.pos[0], dy = y - me.pos[1];
+      const d = Math.max(Math.abs(dx), Math.abs(dy));
+      return d >= 1 && d <= 4 && (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))
+        && GS.hasLineOfSight(GS.gameState, me.pos[0], me.pos[1], x, y);
+    }));
+  const podeUsar = !!(item?.id === 'relampago_de_mao' && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0 && targets);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '⚡')} ${t('ui.item.relampago_de_mao_habilidade')}${recarga}</div>
+    <div class="skill-desc">${skill.description || t('ui.item.relampago_de_mao_descarga')}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '⚡'}</div>`;
+  btn.onclick = () => beginLightningLineWeapon(slot);
+  return btn;
+}
+
+function beginLightningLineWeapon(slot='weapon'){
+  getAudioContext();
+  const state = GS.gameState, me = GS.me;
+  const item = slot === 'off_hand' ? me?.gear?.off_hand : (me?.gear?.weapon || me?.weapon);
+  if(!state || !me || item?.id !== 'relampago_de_mao') return;
+  const range = new Set(), targets = new Set(), origin = me.pos || [0,0];
+  for(let y=0; y<state.map_h; y++) for(let x=0; x<state.map_w; x++){
+    const dx=x-origin[0], dy=y-origin[1], d=Math.max(Math.abs(dx),Math.abs(dy));
+    if(d<1 || d>4 || (dx!==0 && dy!==0 && Math.abs(dx)!==Math.abs(dy))) continue;
+    if(!GS.hasLineOfSight(state, origin[0], origin[1], x, y)) continue;
+    range.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0 && GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y)))
+      targets.add(`${x},${y}`);
+  }
+  if(!targets.size){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:4})); return; }
+  window._modoRelampagoDeMao = {slot, range, targets};
+  _aimStart({kind:'relampago_de_mao', title:`⚡ ${t('ui.item.relampago_de_mao_habilidade')}`,
+    instruction:t('ui.item.relampago_de_mao_mira'),
+    color:'#7edfff', targetLabel:'Inimigo', range, area:targets,
+    cancelText:'Descarga cancelada.', cleanup:()=>{window._modoRelampagoDeMao=null;}});
+}
+
+function _clickTileLightningLineWeapon(tx, ty){
+  const mode=window._modoRelampagoDeMao, state=GS.gameState;
+  if(!mode || !state) return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0 && GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster || !mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus('Escolha um inimigo destacado na linha de alcance.', '#ffb168'); return;
+  }
+  GS.useLightningLineWeapon(mode.slot, monster.id, [tx,ty]);
+  _aimEnd({silent:true, reason:'resolved'});
 }
 
 function _crystalBallSkillBtn(me, skill){
@@ -33282,7 +33429,9 @@ function _gamepadCancel(){
 
 function _gamepadAdjacentClosedDoor(state, player){
   if(!state || !player?.pos) return null;
-  return [...GS.doorSets(state).closed]
+  const keys = new Set(GS.doorSets(state).closed);
+  for(const [key, style] of Object.entries(state.door_styles || {})) if(style === 'portao_levadico') keys.add(key);
+  return [...keys]
     .map(key => key.split(',').map(Number))
     .filter(([x, y]) => Math.max(Math.abs(player.pos[0] - x), Math.abs(player.pos[1] - y)) <= 1)
     .sort(([ax, ay], [bx, by]) =>
@@ -33336,7 +33485,8 @@ function _gamepadActivateNearbyInteraction(state, player){
   const interaction = _gamepadNearbyInteraction(state, player);
   if(!interaction) return false;
   if(interaction.kind === 'door'){
-    if(GS.resolveTileClick(interaction.pos[0], interaction.pos[1])?.type !== 'open_door') return false;
+    const action = GS.resolveTileClick(interaction.pos[0], interaction.pos[1]);
+    if(!['open_door','toggle_portcullis'].includes(action?.type)) return false;
     handleTileClick(interaction.pos[0], interaction.pos[1]);
   } else if(interaction.kind === 'attack') {
     const attack = GS.resolveTileClick(interaction.ground.pos[0], interaction.ground.pos[1]);
@@ -33507,8 +33657,8 @@ function _gamepadUsefulTargetTiles(state){
   if(!state || !me || !GS.isMyTurn) return [];
   if(state.animados_turn === GS.myPid) return [];   // fila de servos: sem ciclo do heroi
   const out = [], seen = new Set();
-  const add = (x, y, priority) => {
-    const key = `${x},${y}`;
+  const add = (x, y, priority, identity = `${x},${y}`) => {
+    const key = identity;
     if(!seen.has(key)){ seen.add(key); out.push({x, y, priority}); }
   };
   const aiming = !!(_aimSessionIs() || window._modoInstrumento || window._modoMagia || window._modoAnimarMortos
@@ -33539,7 +33689,13 @@ function _gamepadUsefulTargetTiles(state){
     for(const key of closed){
       const [x,y] = key.split(',').map(Number);
       const action = GS.resolveTileClick(x, y);
-      if(action?.type === 'open_door' || action?.type === 'move') add(x, y, 4);
+      const gate = GS.portcullisGroupAt(state, x, y);
+      const [tx,ty] = gate ? gate.anchor.split(',').map(Number) : [x,y];
+      if(action?.type === 'open_door' || action?.type === 'toggle_portcullis' || action?.type === 'move')
+        add(tx, ty, 4, gate ? `portcullis:${gate.anchor}` : `${x},${y}`);
+    }
+    for(const [key, style] of Object.entries(state.door_styles || {})) if(style === 'portao_levadico'){
+      const [x,y] = key.split(',').map(Number); add(x, y, 4, `portcullis:${key}`);
     }
   }
   return out.sort((a,b) => a.priority - b.priority || a.y - b.y || a.x - b.x);
@@ -35407,6 +35563,7 @@ function _gamepadContextForCursor(state, player){
   if(!action) return label('ui.joystick.contexto_sem_acao', '—');
   if(action.type === 'attack') return label('ui.joystick.contexto_atacar', '⚔');
   if(action.type === 'open_door') return label('ui.joystick.contexto_abrir_porta', '🚪');
+  if(action.type === 'toggle_portcullis') return label('ui.joystick.contexto_operar_portao', '⚙️');
   if(action.type === 'move') return label('ui.joystick.contexto_mover', '👣');
   if(['skill', 'instrumento', 'throw', 'throw_area', 'disarm_trap'].includes(action.type))
     return label('ui.joystick.contexto_confirmar_alvo', '🎯');
@@ -46188,7 +46345,7 @@ function _assinaturaVisualTabuleiro3D(state){
   const alturasParede = Object.keys(state.alturas_parede || {}).sort()
     .map(key => `${key}:${state.alturas_parede[key]}`).join('|');
   const pontes = (state.pontes || []).map(p =>
-    `${p.id || ''}:${(p.inicio || []).join(',')}-${(p.fim || []).join(',')}:${p.largura || 1}:${p.altura || 0}:${p.material || 'madeira'}`).sort().join('|');
+    `${p.id || ''}:${(p.inicio || []).join(',')}-${(p.fim || []).join(',')}:${p.largura || 1}:${p.altura || 0}:${p.material || 'madeira'}:${Array.isArray(p.tiles) ? p.tiles.map(q => q.join(',')).join(';') : ''}`).sort().join('|');
   const segredos = (state.secret_passages || []).map(sp =>
     `${sp.pos?.[0]},${sp.pos?.[1]}:${sp.wall_material || ''}`).sort().join('|');
   return `${tiles}#${pintura}#${elevacoes}#${alturasParede}#${pontes}#${state.transicao_altura || 'rampa'}#${segredos}`;
@@ -47533,6 +47690,37 @@ function init3D(state){
     for(let y=0; y<H; y++){
       for(let x=0; x<W; x++){
         if(state.tiles[y][x] !== TILE_DOOR) continue;
+        const gateGroup = GS.portcullisGroupAt(state, x, y);
+        if(gateGroup){
+          if(gateGroup.anchor !== `${x},${y}`) continue;
+          const grp = new T.Group();
+          const vertical = isWall3D(x-1,y) && isWall3D(x+1,y);
+          const extraTurns = GS.doorOrientation(state, x, y);
+          grp.rotation.y = (vertical ? 0 : Math.PI/2) + (extraTurns == null ? 0 : extraTurns * Math.PI/2);
+          const minX = Math.min(...gateGroup.tiles.map(p => p[0])), maxX = Math.max(...gateGroup.tiles.map(p => p[0]));
+          const minY = Math.min(...gateGroup.tiles.map(p => p[1])), maxY = Math.max(...gateGroup.tiles.map(p => p[1]));
+          const cx = (minX + maxX) / 2, cz = (minY + maxY) / 2;
+          grp.position.set(cx, TH + elevacaoTerreno(state, x, y) * TERRENO_ELEVACAO_STEP_3D, cz);
+          grp.userData.portcullis = true;
+          grp.userData.gateTiles = gateGroup.tiles.map(([tx, ty]) => `${tx},${ty}`);
+          grp.userData.lowered = null;
+          grp.userData.raised = null;
+          scene.add(grp);
+          const span = Math.max(maxX-minX+1, maxY-minY+1);
+          const addGateModel = (path, keyName) => _loadDecorGLB(T, path, template => {
+            if(!template) return;
+            const model = template.clone(true);
+            model.scale.x *= span;
+            model.visible = false;
+            model.traverse(o => { if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+            grp.add(model);
+            grp.userData[keyName] = model;
+          });
+          addGateModel('assets/objetos/portao_levadico_baixado.glb', 'lowered');
+          addGateModel('assets/objetos/portao_levadico_levantado.glb', 'raised');
+          doorMeshes[`${x},${y}`] = grp;
+          continue;
+        }
         const dMat = new T.MeshStandardMaterial({ map:doorTex, bumpMap:doorTex, bumpScale:0.06, color:0x8a5b32, roughness:0.78, metalness:0.06,
                                                   emissive:0x110a04, emissiveIntensity:1.0 });
         const grp = new T.Group();
@@ -51415,8 +51603,15 @@ function renderMap3D(state){
 
   // ── Door leaves: visible only while closed AND the door tile is visível ──────
   if(doorMeshes){
-    for(const [key, grp] of Object.entries(doorMeshes))
-      grp.visible = terrainSet.has(key) && doorClosed3D.has(key);
+    const raisedGates = new Set((state.portcullis_raised || []).map(pos =>
+      Array.isArray(pos) ? `${pos[0]},${pos[1]}` : String(pos)));
+    for(const [key, grp] of Object.entries(doorMeshes)){
+      if(grp.userData.portcullis){
+        grp.visible = (grp.userData.gateTiles || [key]).some(tile => terrainSet.has(tile));
+        if(grp.userData.lowered) grp.userData.lowered.visible = !raisedGates.has(key);
+        if(grp.userData.raised) grp.userData.raised.visible = raisedGates.has(key);
+      } else grp.visible = terrainSet.has(key) && doorClosed3D.has(key);
+    }
   }
 
   // Os realces por casa nascem sob demanda: em vez de varrer o dicionário,
@@ -51832,7 +52027,7 @@ function renderMap3D(state){
     state.corpses || [],
     state.hero_corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
-    (state.decorations||[]).map(d => [d.id, d.pos, d.facing, d.trap, d.chest_trap, d.trap_revealed, d.tem_loot]),
+    (state.decorations||[]).map(d => [d.id, d.pos, d.facing, d.trap, d.chest_trap, d.trap_revealed, d.tem_loot, d.opened]),
     state.rooms.map(r => [r.cx, r.cy, r.role, r.cleared]),
     state.current_turn, state.animados_turn, GS.myPid, gamepadAttackTarget3D?.targetId || null,
     g3.selectedPos, _animadoSel,
@@ -52490,6 +52685,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   vaca:              'assets/models3d/monstros/vaca.glb',
   goblin_assassino: 'assets/models3d/monstros/assassino_goblin.glb',
   bandido:           'assets/models3d/monstros/bandido.glb',
+  capanga:           'assets/models3d/monstros/capanga.glb',
   gilo_dedos_sujos:  'assets/models3d/monstros/gilo_dedos_sujos.glb',
   bardo:              'assets/models3d/monstros/bardo.glb',
   bardo_da_caravana:  'assets/models3d/monstros/bardo_da_caravana.glb',
@@ -53026,6 +53222,7 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     wrap.userData._monsterCenteredLength = !!(oriented && fillFootprint && !is2x2);
     // Ajustes individuais de proporção sem afetar as demais miniaturas.
     // O Bandido fica 5% maior sobre a escala anterior (1,05 × 1,05 = 1,1025);
+    // o Capanga fica 20% menor.
     // Gilo recebe mais uma redução de 5% (0,847875 × 0,95 = 0,80548125);
     // o Assassino da Serra recebe mais 5% (0,85 × 0,95 = 0,8075).
     // O Bardo fica 15% menor; o Bardo da Caravana, 10% menor.
@@ -53040,8 +53237,8 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     // de 1,30); o Molochus Jovem, 20% menor; o Zumbi (tipo real `zumbi_infectado` —
     // não existe tipo `zumbi`, e a regra antiga só casava esse nome, por isso as
     // reduções anteriores nunca valiam) fica em 0,85, calibrado lado a lado com o
-    // vampiro jovem (mesma altura e volume); o Soldado fica 20%
-    // menor; os dois tipos de Orc ficam em 90% do tamanho original; o
+    // vampiro jovem (mesma altura e volume); o Soldado passa de 0,92 para
+    // 1,012 (10% maior); os dois tipos de Orc ficam em 90% do tamanho original; o
     // Escorpião de Pedra e a Aranha
     // Sombria ficam 30% menores; o Minotauro fica 10% maior e o Minotauro
     // Elite, 20% maior; a Cobra Venenosa e a Cobra Constritora ficam 15% e
@@ -53049,6 +53246,7 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     // o Garaloux Jovem fica 20% menor e o Alfa fica 15% menor sobre a escala
     // atual (1,30 × 0,85 = 1,105).
     const monsterVisualScale = monsterType === 'bandido' ? 1.1025
+      : monsterType === 'capanga' ? 0.80
       : monsterType === 'gilo_dedos_sujos' ? 0.80548125
       : monsterType === 'assassino_da_caravana' ? 0.8075
       : monsterType === 'bardo_da_caravana' ? 0.90
@@ -53077,7 +53275,7 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : monsterType === 'tirano_ancestral' ? 1.54
       : (monsterType === 'molochus_jovem' || monsterType === 'molochos_jovem') ? 0.80
       : (monsterType === 'molochus_anciao' || monsterType === 'molochos_anciao') ? 1.17
-      : monsterType === 'soldado' ? 0.80
+      : monsterType === 'soldado' ? 1.012
       : (monsterType === 'cobra_venenosa' || imageName === 'cobraVenenosa'
           || imageName === 'cobra_venenosa') ? 0.85
       : (monsterType === 'cobra_constritora' || imageName === 'cobraConstritora'
@@ -53197,7 +53395,7 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     // O GLB do Bardo também precisa do quarto de volta para a frente seguir o movimento.
     'bardo',
     // Estes modelos também precisam alinhar a frente ao sentido do movimento.
-    'bandido', 'gilo_dedos_sujos', 'goblin_assassino', 'jacare',
+    'bandido', 'capanga', 'gilo_dedos_sujos', 'goblin_assassino', 'jacare',
     'ciclope',
     'harpia',
     // O Goblin Arqueiro também precisa do giro de 90° para acompanhar a
@@ -57096,6 +57294,7 @@ function handleTileClick(tx, ty, opts){
   if(window._modoAtaqueMira){ _clickTileAtaque(tx, ty); return; }
   if(window._modoInstrumentoAlvo){ _clickTileInstrumentoAlvo(tx, ty); return; }
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
+  if(window._modoRelampagoDeMao){ _clickTileLightningLineWeapon(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
   if(window._modoCongelamentoInverno){ _clickTileCongelamentoInverno(tx, ty); return; }
@@ -57321,6 +57520,9 @@ function handleTileClick(tx, ty, opts){
   switch(action.type){
     case 'open_door':
       send({type:'open_door', tx:action.x, ty:action.y});
+      break;
+    case 'toggle_portcullis':
+      send({type:'toggle_portcullis', tx:action.x, ty:action.y});
       break;
     case 'door_far':
       toast(t('ui.hud.aproxime_se_da_porta_para_abri_la'), 'var(--gold)');
@@ -57746,7 +57948,6 @@ function _renderBannerForaMasmorra(){
   const host = document.getElementById('screen-city');
   let el = document.getElementById('fora-masmorra-banner');
   if(!GS.estouForaDaMasmorra()){ if(el) el.remove(); return; }
-  const n = GS.rodadasParaVoltar();
   if(!el){
     el = document.createElement('div');
     el.id = 'fora-masmorra-banner';
@@ -57755,12 +57956,17 @@ function _renderBannerForaMasmorra(){
       + 'padding:8px 14px;color:#dce8ff;font-size:13px;display:flex;gap:10px;align-items:center;';
     host.appendChild(el);
   }
-  el.innerHTML = `<span>${t('ui.fora.banner', {estado: n>0 ? t('ui.fora.volta_em', {n}) : t('ui.fora.pronto')})}</span>`;
-  const btn = document.createElement('button');
-  btn.textContent = t('ui.fora.voltar_masmorra');
-  btn.disabled = n > 0;
-  btn.onclick = () => GS.voltarMasmorra();
-  el.appendChild(btn);
+  // Comprando: o botão encerra a visita e começa a espera. A caminho (multiplayer):
+  // só o contador; as lojas já não atendem.
+  if(GS.minhaFaseFora() === 'cidade'){
+    el.innerHTML = `<span>${t('ui.fora.banner', {estado: t('ui.fora.comprando')})}</span>`;
+    const btn = document.createElement('button');
+    btn.textContent = t('ui.fora.voltar_masmorra');
+    btn.onclick = () => { if(confirm(t('ui.fora.confirmar_volta'))) GS.voltarMasmorra(); };
+    el.appendChild(btn);
+  } else {
+    el.innerHTML = `<span>${t('ui.fora.banner', {estado: t('ui.fora.chega_em', {n: GS.rodadasParaVoltar()})})}</span>`;
+  }
 }
 
 GS.on('sceneStart', _sceneStart);
@@ -58173,6 +58379,8 @@ GS.on('focoHeroi', ev => {
   try { if(typeof InventoryModal !== 'undefined' && InventoryModal.isOpen()) InventoryModal.close(); } catch(e){}
   if(typeof fecharQuadrosFlutuantes === 'function') fecharQuadrosFlutuantes();
   if(typeof _aimEnd === 'function') _aimEnd({ silent: true, reason: 'focus_changed' });
+  // A janela do Mestre de Armas passa a mostrar a lição do herói em foco.
+  if(typeof _licaoTrocarFoco === 'function') _licaoTrocarFoco();
   const st = GS.gameState;
   if(st){
     if(!ev.auto) handleGameState(st);
@@ -58212,7 +58420,10 @@ function _avancarFala(){ if(_falaTimer) clearTimeout(_falaTimer); _mostrarProxim
 // para instrução: quem se distrai perde o texto e fica sem saber o que fazer.
 // A lição vai para uma janela fixa no canto, que só sai quando o jogador
 // fecha — ou quando a lição seguinte chega e toma o lugar.
-let _licaoUltima = null;
+let _licaoUltima = null;        // a lição na janela: sempre a do herói em foco
+// Solo com grupo: cada herói tem a própria lição. A janela mostra a do herói em
+// foco; as dos outros ficam guardadas e voltam quando o foco passa a eles.
+const _licoesHeroi = GuiaTutorial.criarLicoesPorHeroi();
 let _guiaPasso = null;          // passo atual recebido do servidor
 let _guiaDesde = 0;             // performance.now() do último progresso
 let _guiaTimer = null;
@@ -59709,10 +59920,21 @@ function _fecharJanelaLicao(){
 function _reabrirJanelaLicao(){ if(_licaoUltima) _mostrarJanelaLicao(_licaoUltima, true); }
 
 GS.on('licaoPasso', msg => {
-  if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
-  _licaoUltima = Object.assign({}, _licaoUltima, { passo: msg.passo });
-  _mostrarJanelaLicao(_licaoUltima);
+  if(!msg) return;
+  const r = _licoesHeroi.passo(msg, GS.myPid);
+  if(r && r.dono === GS.myPid) _mostrarJanelaLicao(r.licao);
 });
+
+// Aviso de lição de OUTRO herói meu (Solo com grupo): não mexe na janela do herói em foco.
+function _licaoDeOutroHeroi(msg){ return !!msg && _licoesHeroi.dono(msg, GS.myPid) !== GS.myPid; }
+
+// O foco passou a outro herói: a janela passa a mostrar a lição dele (ou fecha, se
+// ele não tem lição em andamento). A do anterior fica guardada para quando voltar.
+function _licaoTrocarFoco(){
+  const lic = _licoesHeroi.emAndamento(GS.myPid, GS.gameState);
+  if(lic){ _mostrarJanelaLicao(lic); return; }
+  if(_licaoUltima){ _licaoUltima = null; _guiaEncerrar(); }
+}
 
 // ✓ no passo que acabou de fechar. Dura ~1,2 s por cima da janela da lição.
 function _guiaPassoOk(){
@@ -59727,13 +59949,16 @@ function _guiaPassoOk(){
   sfx('moedas');
 }
 GS.on('licaoPassoOk', msg => {
-  if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
+  if(!msg || _licaoDeOutroHeroi(msg) || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
   _guiaPassoOk();
 });
 
 // Selo ao fim da lição, com o ganho (só na 1ª vez do personagem).
 GS.on('licaoConcluida', msg => {
   if(!msg) return;
+  // Lição de outro herói meu: só sai da memória; o selo é da janela do herói em foco.
+  if(_licaoDeOutroHeroi(msg)){ _licoesHeroi.remover(msg, GS.myPid); return; }
+  _licoesHeroi.remover(msg, GS.myPid);
   _guiaDemonstracaoCancelar('licao_concluida');
   const r = msg.recompensa || {};
   const host = $('licao-janela');
@@ -59773,27 +59998,33 @@ GS.on('licaoConcluida', msg => {
 // O jogador seguiu para a etapa seguinte sem terminar esta lição: fecha a janela e
 // o destaque dela (a lição nova, se houver, chega logo depois, numa `fala`).
 GS.on('licaoPulada', msg => {
-  if(!msg || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
+  if(!msg) return;
+  _licoesHeroi.remover(msg, GS.myPid);
+  if(_licaoDeOutroHeroi(msg) || !_licaoUltima || msg.licao_id !== _licaoUltima.licao_id) return;
   _licaoUltima = null;
   _guiaEncerrar();
 });
 
 GS.on('licaoDica', msg => {
-  if(!msg || !/^[a-z_]+$/.test(msg.motivo || '')) return;
+  if(!msg || _licaoDeOutroHeroi(msg) || !/^[a-z_]+$/.test(msg.motivo || '')) return;
   const chave = 'ui.tutorial.dica_erro.' + msg.motivo;
   const texto = t(chave);
   if(texto && texto !== chave) _guiaAviso(texto);
 });
 
 GS.on('licaoResultado', msg => {
-  if(!msg || !/^[a-z_]+$/.test(msg.chave || '')) return;
+  if(!msg || _licaoDeOutroHeroi(msg) || !/^[a-z_]+$/.test(msg.chave || '')) return;
   const chave = 'ui.tutorial.resultado.' + msg.chave;
   const texto = t(chave, {roll: msg.roll, bonus: msg.bonus, total: msg.total, ca: msg.ca});
   if(texto && texto !== chave) _guiaAviso(texto);
 });
 
 GS.on('fala', msg => {
-  if(msg && msg.licao_id){ _mostrarJanelaLicao(msg); return; }
+  if(msg && msg.licao_id){
+    // Guarda a lição no herói dono; só aparece agora se ele está em foco.
+    if(_licoesHeroi.guardar(msg, GS.myPid) === GS.myPid) _mostrarJanelaLicao(msg);
+    return;
+  }
   _falaFila.push(msg);
   if(!$('fala-popup').classList.contains('open')) _mostrarProximaFala();
 });
@@ -61250,7 +61481,7 @@ function mostrarOverlayEscolhaMagia(msg){
   const cartas = opcoes.map(id => {
     const m = GRIMORIO_CLIENT[id];
     return `
-      <div onclick="window._escolherMagiaNivel('${id}')"
+      <div onclick="window._confirmarMagiaNivel('${id}')"
            onmouseenter="mostrarTooltipMagia('${id}', event)"
            onmouseleave="ocultarTooltipMagia()"
            style="position:relative; display:inline-block; overflow:hidden;
@@ -61263,15 +61494,66 @@ function mostrarOverlayEscolhaMagia(msg){
   }).join('');
   const existente = document.getElementById('overlay-escolha-magia');
   if (existente) existente.remove();
+  document.getElementById('btn-escolha-magia-reabrir')?.remove();
   const el = document.createElement('div');
   el.id = 'overlay-escolha-magia';
   el.dataset.heroi = msg.heroi || '';
+  // Clicar fora das cartas não faz nada: a escolha só sai pela confirmação.
   el.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;';
   el.innerHTML = `
+    <button type="button" data-escolha-minimizar data-gamepad-action="activate" onclick="window._minimizarEscolhaMagia()"
+            style="position:absolute; top:14px; right:16px; padding:6px 12px; border-radius:6px; border:1px solid #6a5a3a; background:rgba(40,32,16,.9); color:#cbbe9c; font-weight:700; cursor:pointer;">${t('ui.magia.minimizar')}</button>
     <div style="color:#c8a951; font-family:'Cinzel Decorative',serif; font-size:15px; letter-spacing:3px; text-align:center;">${msg.heroi_nome ? t('ui.magia.subiu_de_nivel_heroi', {nome: _esc(msg.heroi_nome)}) : t('ui.magia.subiu_de_nivel')}<br><span style="font-size:11px; color:#8a7a5a; letter-spacing:2px;">${escolhas > 1 ? t('ui.magia.escolha_n_do_circulo', {n:escolhas, circulo:rotulo}) : t('ui.magia.escolha_1_do_circulo', {circulo:rotulo})}</span></div>
-    <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas || `<div style="color:#8a7a5a;">${t('ui.magia.nenhuma_disponivel')}</div>`}</div>`;
+    <div style="display:flex; flex-wrap:wrap; gap:6px; max-width:680px; justify-content:center;">${cartas || `<div style="color:#8a7a5a;">${t('ui.magia.nenhuma_disponivel')}</div>`}</div>
+    <div style="color:#8a7a5a; font-size:11px;">${t('ui.magia.jogo_espera_escolha')}</div>`;
   document.body.appendChild(el);
 }
+
+// Clicar numa carta só pergunta; a magia é aprendida no "Confirmar".
+window._confirmarMagiaNivel = function(id){
+  ocultarTooltipMagia();
+  esconderTooltip();
+  const m = window.GRIMORIO_CLIENT && GRIMORIO_CLIENT[id];
+  const painel = document.getElementById('overlay-escolha-magia');
+  if (!m || !painel) return;
+  painel.querySelector('[data-escolha-confirmacao]')?.remove();
+  const cor = (_COR_CIRCULO && _COR_CIRCULO[m.circulo]) || '#c8a951';
+  const caixa = document.createElement('div');
+  caixa.dataset.escolhaConfirmacao = '1';
+  caixa.style.cssText = 'position:absolute; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center;';
+  caixa.innerHTML = `
+    <div style="background:rgba(10,8,5,0.98); border:1px solid ${cor}; border-radius:10px; padding:18px 20px; width:min(340px, calc(100vw - 32px)); font-family:'Cinzel',serif; box-shadow:0 8px 30px #000b;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+        <span style="font-size:28px;">${magiaIconHTML(m, 34)}</span>
+        <div style="color:${cor}; font-size:14px; font-weight:bold;">${t('ui.magia.confirmar_aprender', {nome: _esc(m.nome)})}</div>
+      </div>
+      <div style="color:#c8b89a; font-size:11px; line-height:1.7; max-height:40vh; overflow:auto;">${m.descricao || ''}</div>
+      <div style="color:#8a7a5a; font-size:10px; margin-top:10px;">${t('ui.magia.escolha_definitiva')}</div>
+      <div style="display:flex; gap:10px; margin-top:14px;">
+        <button type="button" data-gamepad-cancel style="flex:1; padding:8px; border-radius:8px; border:1px solid #6a5a3a; background:rgba(40,32,16,.9); color:#cbbe9c; font-weight:700; cursor:pointer;">${t('ui.geral.cancelar')}</button>
+        <button type="button" data-gamepad-action="activate" data-escolha-confirmar style="flex:1; padding:8px; border-radius:8px; border:1px solid ${cor}; background:rgba(60,45,12,.96); color:${cor}; font-weight:700; cursor:pointer;">${t('ui.magia.confirmar')}</button>
+      </div>
+    </div>`;
+  caixa.querySelector('[data-gamepad-cancel]').onclick = () => caixa.remove();
+  caixa.querySelector('[data-escolha-confirmar]').onclick = () => window._escolherMagiaNivel(id);
+  painel.appendChild(caixa);
+};
+
+// Minimizar: o painel some e fica um botão para reabrir. A escolha continua
+// pendente (o servidor não deixa o herói agir até escolher).
+window._minimizarEscolhaMagia = function(){
+  const painel = document.getElementById('overlay-escolha-magia');
+  if (!painel) return;
+  painel.style.display = 'none';
+  if (document.getElementById('btn-escolha-magia-reabrir')) return;
+  const b = document.createElement('button');
+  b.id = 'btn-escolha-magia-reabrir';
+  b.type = 'button';
+  b.textContent = t('ui.magia.reabrir_escolha');
+  b.style.cssText = 'position:fixed; left:50%; transform:translateX(-50%); bottom:96px; z-index:9998; padding:10px 18px; border-radius:10px; border:1px solid #c8a951; background:rgba(28,20,6,.96); color:#ffcc44; font-weight:700; cursor:pointer; box-shadow:0 4px 18px #000a;';
+  b.onclick = () => { painel.style.display = 'flex'; b.remove(); };
+  document.body.appendChild(b);
+};
 
 window._escolherMagiaNivel = function(id){
   // O clique remove a carta que está em hover; mouseleave não ocorrerá.
@@ -61280,6 +61562,7 @@ window._escolherMagiaNivel = function(id){
   const el = document.getElementById('overlay-escolha-magia');
   GS.escolherMagiaNivel(id, (el && el.dataset.heroi) || undefined);
   if (el) el.remove();
+  document.getElementById('btn-escolha-magia-reabrir')?.remove();
 };
 
 GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);

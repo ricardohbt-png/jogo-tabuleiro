@@ -528,8 +528,8 @@ window.LANG_EDITOR = {
     "pt": "transição: declive"
   },
   "ui.editor.masmorra.barra.altura_hint": {
-    "en": "Click and drag on the floor; height is only visual in this phase.",
-    "pt": "Clique e arraste no chão; a altura é apenas visual nesta fase."
+    "en": "Drag to select a rectangular area and release to apply the chosen level.",
+    "pt": "Arraste para selecionar uma área retangular e solte para aplicar o nível escolhido."
   },
   "ui.editor.masmorra.barra.ponte_largura_singular": {
     "en": "width: {n} square",
@@ -739,6 +739,34 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.painel.seta_dourada_hint": {
     "en": "The golden arrow on the map shows the front. The orientation is saved on this door.",
     "pt": "A seta dourada no mapa mostra a frente. A orientação é salva nesta porta."
+  },
+  "ui.editor.masmorra.painel.estilo_porta": {
+    "en": "Door style",
+    "pt": "Estilo da porta"
+  },
+  "ui.editor.masmorra.painel.porta_comum": {
+    "en": "Ordinary door",
+    "pt": "Porta comum"
+  },
+  "ui.editor.masmorra.painel.portao_levadico": {
+    "en": "Portcullis",
+    "pt": "Portão levadiço"
+  },
+  "ui.editor.masmorra.painel.portao_largura": {
+    "en": "Width: {casas} tile(s)",
+    "pt": "Largura: {casas} quadrado(s)"
+  },
+  "ui.editor.masmorra.painel.portao_ajustar_largura": {
+    "en": "Adjust width by dragging",
+    "pt": "Ajustar largura arrastando"
+  },
+  "ui.editor.masmorra.painel.portao_arraste_hint": {
+    "en": "Drag from the first to the last contiguous door tile.",
+    "pt": "Arraste da primeira até a última casa contígua da porta."
+  },
+  "ui.editor.masmorra.painel.portao_span_invalido": {
+    "en": "Select a straight run of compatible native doors.",
+    "pt": "Selecione um trecho reto de portas nativas compatíveis."
   },
   "ui.editor.masmorra.painel.condicao_abertura": {
     "en": "Optional opening condition",
@@ -2051,6 +2079,10 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.valid.porta_cond_invalida": {
     "en": "invalid door opening condition: {chave}",
     "pt": "condição de abertura em porta inválida: {chave}"
+  },
+  "ui.editor.masmorra.valid.porta_estilo_invalido": {
+    "en": "invalid style on door {chave}",
+    "pt": "estilo inválido na porta {chave}"
   },
   "ui.editor.masmorra.valid.porta_cond_tipo": {
     "en": "invalid door condition type at {chave}",

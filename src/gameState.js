@@ -576,6 +576,10 @@ const GS = (() => {
     virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
     flechas_explosivas:    { id:'flechas_explosivas',    nome:'Flechas Explosivas (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     virotes_explosivos:    { id:'virotes_explosivos',    nome:'Virotes Explosivos (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
+    flechas_magicas:       { id:'flechas_magicas',       nome:'Flechas Mágicas (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    flechas_magicas_mais_2:{ id:'flechas_magicas_mais_2',nome:'Flechas Mágicas +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_magicos:       { id:'virotes_magicos',       nome:'Virotes Mágicos (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
+    virotes_magicos_mais_2:{ id:'virotes_magicos_mais_2',nome:'Virotes Mágicos +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
 
     // ── TAVERNA — Itens de sobrevivência ──
     carta:             { id:'carta',             nome:'Carta',               tipo:'carta',      loja:'masmorra', preco:0, item_slot:'bag', effect:'letter', value:0, texto:'Esta carta não contém nenhuma mensagem.', descricao:'Ao ler, abre a mensagem escrita sem consumir a carta.', permitidoPara:['todos'] },
@@ -773,6 +777,13 @@ const GS = (() => {
       descricao: 'Arremesse (4 quad., ataque por DES). O alvo fica preso; para ' +
                  'escapar gasta o turno num teste de Fortitude CD 12.',
     },
+    rede_corrosiva: {
+      id: 'rede_corrosiva', nome: 'Rede Corrosiva', emoji: '🧪',
+      icon: 'assets/itens magicos/rede_corrosiva.png', tipo: 'consumivel', loja: 'mercado', preco: 100,
+      slot: 'bag', arremessavel: true, alcance: 4, saveTipo: 'fortitude', saveCD: 13,
+      permitidoPara: ['todos'],
+      descricao: 'Arremesso de alcance 4, ataque por DES. Ao acertar, prende o alvo. No início de cada turno, Fortitude CD 13: sucesso encerra o efeito e permite agir; falha consome o turno, causa 1 de dano ácido e corrói um equipamento na ordem armadura, escudo, cabeça, arma e botas. Após destruir todos os equipamentos, cada falha reduz a CA em 1 (mínimo 5). Consumível.',
+    },
   };
 
   // class_id (servidor) → heroKey (HERO_DATA / EQUIPAMENTOS_INICIAIS).
@@ -834,7 +845,36 @@ const GS = (() => {
     for (const [k, condition] of Object.entries((state && state.door_conditions) || {})) {
       if (!condition || !condition.opened) { closed.add(k); open.delete(k); }
     }
+    const raisedGates = new Set(((state && state.portcullis_raised) || []).map(pos =>
+      Array.isArray(pos) ? `${pos[0]},${pos[1]}` : String(pos)));
+    for (const [key, style] of Object.entries((state && state.door_styles) || {})) {
+      if (style !== 'portao_levadico') continue;
+      const tiles = (state.portcullis_groups && state.portcullis_groups[key]) || [key.split(',').map(Number)];
+      for (const tile of tiles) {
+        const tileKey = Array.isArray(tile) ? `${tile[0]},${tile[1]}` : String(tile);
+        if (raisedGates.has(key)) { closed.delete(tileKey); open.add(tileKey); }
+        else { closed.add(tileKey); open.delete(tileKey); }
+      }
+    }
     return { open, closed };
+  }
+
+  function doorStyle(state, x, y) {
+    return portcullisGroupAt(state, x, y) ? 'portao_levadico' : null;
+  }
+
+  function portcullisGroupAt(state, x, y) {
+    const key = `${x},${y}`;
+    const styles = (state && state.door_styles) || {};
+    const groups = (state && state.portcullis_groups) || {};
+    if (styles[key] === 'portao_levadico')
+      return { anchor: key, tiles: groups[key] || [[x, y]] };
+    for (const [anchor, tiles] of Object.entries(groups)) {
+      if (styles[anchor] === 'portao_levadico'
+          && Array.isArray(tiles) && tiles.some(p => Array.isArray(p) && p[0] === x && p[1] === y))
+        return { anchor, tiles };
+    }
+    return null;
   }
 
   // Retorna os giros de 90° gravados pelo editor. O valor é relativo à
@@ -1781,8 +1821,12 @@ const GS = (() => {
     _focoTurno = vez;
   }
   function _calcIsMyTurn(msg) {
-    return msg.test_mode ? msg.master_pid === myPid
-      : msg.current_turn === myPid || msg.last_stand_pid === myPid || msg.animados_turn === myPid;
+    if (msg.test_mode) return msg.master_pid === myPid;
+    // Subiu de nível e ainda escolhe a magia nova: o jogo espera (o servidor recusa
+    // as ações) — a tela também não oferece nenhuma.
+    const me = (msg.players || []).find(p => p && p.id === myPid);
+    if (me && Array.isArray(me.pending_spell_pick) && me.pending_spell_pick.length) return false;
+    return msg.current_turn === myPid || msg.last_stand_pid === myPid || msg.animados_turn === myPid;
   }
   // Respondido o aviso, o foco volta ao herói em que o jogador estava — a menos
   // que ele tenha trocado de herói à mão no meio (aí a escolha dele vale).
@@ -1799,8 +1843,20 @@ const GS = (() => {
     _voltaFoco = null;   // troca à mão: o jogador decidiu onde quer estar
     return _trocarFoco(pid);
   }
+  // Com a sala na masmorra, o herói meu que está na cidade e ainda não clicou em
+  // "Voltar à masmorra" (o que fez a saída, antes de quem ele ressuscitou). Null
+  // com a sala inteira na cidade.
+  function _heroiFazendoCompras() {
+    if (!cityState || cityState.phase !== 'playing') return null;
+    const meus = (cityState.players || []).filter(p => p && p.fora_masmorra
+      && p.fora_masmorra.fase === 'cidade' && (p.id === myPid || meusHerois.includes(p.id)));
+    return meus.find(p => !p.fora_masmorra.acompanha) || meus[0] || null;
+  }
   function _trocarFoco(pid) {
     if (!meusHerois.includes(pid) || pid === myPid) return false;
+    // Na cidade com o grupo na masmorra, o foco não sai de quem está comprando:
+    // os outros estão lá dentro e a ação seria recusada (o cartão ainda abre a ficha).
+    if (_heroiFazendoCompras()) return false;
     _limparPendentesDeFoco();
     myPid = pid;
     if (gameState) isMyTurn = _calcIsMyTurn(gameState);
@@ -1903,6 +1959,10 @@ const GS = (() => {
         // Aviso respondido na cidade (ex.: escolha de magia): o foco volta à
         // origem, como no game_state da masmorra.
         _devolverFocoAposAviso();
+        // Grupo na masmorra e um herói meu na cidade (saiu pela escada): compras,
+        // templo e "Voltar à masmorra" são dele — o foco fica nele.
+        { const h = _heroiFazendoCompras();
+          if (h && h.id !== myPid) { myPid = h.id; _emit('focoHeroi', { pid: h.id, auto: true }); } }
         // Quem entra num jogo salvo já em andamento cai direto na cidade, sem
         // lobby_state: a sessão de reconexão (F5/queda) é gravada daqui.
         if (msg.code && msg.code !== _sessCode) { _sessCode = msg.code; _saveSession(); }
@@ -2603,6 +2663,10 @@ const GS = (() => {
   // Arremesso de arma equipada. O slot é parte da ação para que o servidor
   // não precise adivinhar entre uma arma principal e uma segunda arma.
   function throwWeapon(slot, targetId) { send({ type: 'throw', slot, target_id: targetId }); }
+  function useLightningLineWeapon(slot, targetId, targetPos) {
+    send({ type: 'lightning_line_weapon', slot, target_id: targetId, target_pos: targetPos });
+  }
+  function useThunderPulseWeapon() { send({ type: 'thunder_pulse_weapon' }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function estancarSangramento()   { send({ type: 'estancar_sangramento' }); }
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
@@ -2636,6 +2700,35 @@ const GS = (() => {
                     Math.abs(player.pos[1] - gi.pos[1])) <= 1;
   }
   function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
+  // Juntar pilhas de munição: origem/destino = {bolsa: i} ou {equip: 'off_hand'}.
+  function juntarMunicao(origem, destino) { send({ type: 'juntar_municao', origem, destino }); }
+  // Espelho de `_ammo_stack_key` do servidor: mesmo item, tipo, propriedades do
+  // disparo e a mesma combinação de venenos. Mudou lá, mude aqui.
+  const _CAMPOS_PILHA_MUNICAO = ['ammo_type', 'atk_bonus', 'damage_bonus', 'magical', 'silver',
+    'extra_damage', 'extra_damage_types', 'damage_type', 'ammo_bonus', 'special_effect'];
+  const _TIPOS_FLECHA = new Set(['flechas', 'flechas_prata', 'flechas_incendiarias', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2']);
+  const _TIPOS_VIROTE = new Set(['virotes', 'virotes_prata', 'virotes_incendiarios', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2']);
+  function _ehMunicao(it) { return !!it && (it.effect === 'ammo' || it.item_slot === 'ammo'); }
+  function mesmaPilhaMunicao(a, b) {
+    if (!_ehMunicao(a) || !_ehMunicao(b) || a.id !== b.id) return false;
+    const venenos = it => JSON.stringify([...new Set(it.poison_ids || [])].sort());
+    if (venenos(a) !== venenos(b)) return false;
+    return _CAMPOS_PILHA_MUNICAO.every(c => (c in a) === (c in b)
+      && JSON.stringify(a[c]) === JSON.stringify(b[c]));
+  }
+  function maxAmmoStackFor(player, item) {
+    if (!_ehMunicao(item)) return 10;
+    const capacityKey = _TIPOS_FLECHA.has(item.ammo_type) ? 'quiver_arrow_capacity'
+      : _TIPOS_VIROTE.has(item.ammo_type) ? 'quiver_bolt_capacity' : null;
+    if (!capacityKey) return 10;
+    const gear = player && player.gear || {};
+    return ['off_hand', 'item1', 'item2'].reduce((max, slot) => {
+      const quiver = gear[slot];
+      if (!quiver || quiver.effect !== 'quiver') return max;
+      const capacity = Number(quiver[capacityKey]);
+      return Math.max(max, Number.isFinite(capacity) && capacity > 0 ? capacity : 10);
+    }, 10);
+  }
   function equipOffhand(i)                { send({ type: 'equip_offhand',   slot_index: i }); }
   // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
   function setKnownSpells(ids, heroi) {
@@ -3231,12 +3324,33 @@ const GS = (() => {
   // O herói sai sozinho, vai para a cidade e volta N rodadas depois. Enquanto
   // está fora, o servidor manda city_state só para ele (nunca game_state), então
   // o estado do ausente é lido do cityState.
-  function voltarMasmorra() { send({ type: 'voltar_masmorra' }); }
+  // Fases: 'cidade' (comprando; a espera ainda não começou) e 'voltando' (clicou
+  // em Voltar à masmorra e espera as rodadas). Estado antigo sem fase = 'voltando'.
+  // A volta é pedida em nome do herói que está na cidade, não do herói em foco:
+  // no Solo com grupo o jogador pode ter clicado no cartão de outro herói.
+  function voltarMasmorra() {
+    const h = _meNaCidade();
+    send(h && h.fora_masmorra ? { type: 'voltar_masmorra', heroi: h.id } : { type: 'voltar_masmorra' });
+  }
   function foraMasmorraDe(p) { return (p && p.fora_masmorra) || null; }
+  function faseForaDe(p) {
+    const fora = foraMasmorraDe(p);
+    if (!fora) return null;
+    return fora.fase === 'cidade' ? 'cidade' : 'voltando';
+  }
+  // O herói meu que está na cidade (com a sala na masmorra): o em foco, se for ele;
+  // senão o primeiro herói meu que saiu (o que fez a saída, antes de quem ele
+  // ressuscitou no templo). Sem ninguém fora, o herói em foco.
   function _meNaCidade() {
-    return cityState && (cityState.players || []).find(p => p.id === myPid);
+    if (!cityState) return null;
+    const ps = cityState.players || [];
+    const foco = ps.find(p => p.id === myPid);
+    if (foco && foco.fora_masmorra && !foco.fora_masmorra.acompanha) return foco;
+    const meus = ps.filter(p => p.fora_masmorra && (p.id === myPid || meusHerois.includes(p.id)));
+    return meus.find(p => !p.fora_masmorra.acompanha) || meus[0] || foco || null;
   }
   function estouForaDaMasmorra() { return !!foraMasmorraDe(_meNaCidade()); }
+  function minhaFaseFora() { return faseForaDe(_meNaCidade()); }
   function rodadasParaVoltar() {
     const fora = foraMasmorraDe(_meNaCidade());
     return fora ? (fora.rodadas_restantes | 0) : 0;
@@ -3677,10 +3791,10 @@ const GS = (() => {
     const maxFrasco = Number(opts.maxPorFrasco) || 10;
     const limiteDistintos = opts.doisVenenos ? 2 : 1;
     const MUNICAO = {
-      arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas'],
-      longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas'],
-      besta: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos'],
-      hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos'],
+      arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      besta: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
     };
     const gear = (me && me.gear) || {};
     // O item inicial da mão principal pode vir reduzido em gear.weapon (sem dado de dano): completa
@@ -3694,7 +3808,7 @@ const GS = (() => {
     const semVeneno = (it) => !Array.isArray(it && it.poison_ids) || it.poison_ids.length === 0;
     const assinatura = (it) => JSON.stringify([
       it && it.id, (it && (it.ammo_type || it.id)),
-      ...['damage_bonus', 'silver', 'extra_damage', 'extra_damage_types', 'damage_type', 'ammo_bonus', 'special_effect']
+      ...['atk_bonus', 'damage_bonus', 'magical', 'silver', 'extra_damage', 'extra_damage_types', 'damage_type', 'ammo_bonus', 'special_effect']
         .filter(k => it && Object.prototype.hasOwnProperty.call(it, k)).map(k => [k, it[k]]),
     ]);
 
@@ -3897,6 +4011,17 @@ const GS = (() => {
 
     // ── Closed door: click to open (free action, must be adjacent) ────────────
     const { closed } = doorSets(gameState);
+    if (doorStyle(gameState, tx, ty) === 'portao_levadico') {
+      const ch = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
+      if (ch <= 1) return { type: 'toggle_portcullis', x: tx, y: ty };
+      if (closed.has(`${tx},${ty}`)) {
+        const expSet = new Set(gameState.explored.map(([x, y]) => `${x},${y}`));
+        const path = findPath(gameState.tiles, expSet, myP.pos[0], myP.pos[1], tx, ty,
+          myP.moves_left, true, { state: gameState, materiais: gameState.materiais, actor: myP });
+        if (path && path.length) return { type: 'move', path, stopAtDoor: true };
+        return { type: 'door_far' };
+      }
+    }
     if (closed.has(`${tx},${ty}`)) {
       const ch = Math.max(Math.abs(myP.pos[0] - tx), Math.abs(myP.pos[1] - ty));
       if (ch <= 1) return { type: 'open_door', x: tx, y: ty };
@@ -4049,6 +4174,8 @@ const GS = (() => {
 
     // ── Portas ──
     doorSets,
+    doorStyle,
+    portcullisGroupAt,
     doorOrientation,
 
     // ── Linha de visão (paredes/portas barram ataques/magias à distância) ──
@@ -4207,6 +4334,8 @@ const GS = (() => {
     throwItem,
     throwItemArea,
     throwWeapon,
+    useLightningLineWeapon,
+    useThunderPulseWeapon,
     apagarChamas,
     estancarSangramento,
     escaparEstomago,
@@ -4217,6 +4346,9 @@ const GS = (() => {
     unequip,
     repairItem,
     reorderBag,
+    juntarMunicao,         // sender: junta duas pilhas de munição iguais
+    mesmaPilhaMunicao,     // puro: duas pilhas de munição podem se juntar?
+    maxAmmoStackFor,       // puro: capacidade de pilha conforme aljavas equipadas
     equipOffhand,
     dropItem,
     transferItem,
@@ -4359,7 +4491,9 @@ const GS = (() => {
 
     // ── Saída individual pela escada ──
     voltarMasmorra,        // sender (chamado com parênteses)
-    foraMasmorraDe,        // {rodadas_restantes} de um player, ou null
+    foraMasmorraDe,        // {fase, rodadas_restantes} de um player, ou null
+    faseForaDe,            // 'cidade' | 'voltando' | null
+    minhaFaseFora,
     estouForaDaMasmorra,
     rodadasParaVoltar,
 

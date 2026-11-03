@@ -131,6 +131,14 @@ window.LANG_INTERFACE = {
     "en": "Poisoned Explosive Arrows",
     "pt": "Flechas Explosivas Envenenadas"
   },
+  "cat.item.flechas_magicas_envenenadas.nome": {
+    "en": "Poisoned Magic Arrows",
+    "pt": "Flechas Mágicas Envenenadas"
+  },
+  "cat.item.flechas_magicas_mais_2_envenenadas.nome": {
+    "en": "Poisoned Magic Arrows +2",
+    "pt": "Flechas Mágicas +2 Envenenadas"
+  },
   "cat.item.municao_envenenada": {
     "en": "{nome}",
     "pt": "{nome}"
@@ -150,6 +158,14 @@ window.LANG_INTERFACE = {
   "cat.item.virotes_explosivos_envenenados.nome": {
     "en": "Poisoned Explosive Bolts",
     "pt": "Virotes Explosivos Envenenados"
+  },
+  "cat.item.virotes_magicos_envenenados.nome": {
+    "en": "Poisoned Magic Bolts",
+    "pt": "Virotes Mágicos Envenenados"
+  },
+  "cat.item.virotes_magicos_mais_2_envenenados.nome": {
+    "en": "Poisoned Magic Bolts +2",
+    "pt": "Virotes Mágicos +2 Envenenados"
   },
   "dado.acerto": {
     "en": "To-hit",
@@ -1242,6 +1258,26 @@ window.LANG_INTERFACE = {
   "ui.arremesso.descricao_arma": {
     "en": "Throws {nome} up to {alcance} squares. Uses {atributo} for the attack roll and damage; the weapon leaves your hand.",
     "pt": "Arremessa {nome} até {alcance} casas. Usa {atributo} para acerto e dano; a arma deixa a mão."
+  },
+  "ui.item.relampago_de_mao_habilidade": {
+    "en": "Line Discharge",
+    "pt": "Descarga em Linha"
+  },
+  "ui.item.relampago_de_mao_descarga": {
+    "en": "A straight line up to 4 squares deals 3d6 lightning damage (Reflex DC 13 halves) to every creature, including allies. The final target also takes a normal spear attack. Recharge: 10 rounds.",
+    "pt": "Linha reta de até 4 casas causa 3d6 de eletricidade (Reflexos CD 13 reduz à metade) em todas as criaturas, inclusive aliados. O alvo final também recebe um ataque normal da lança. Recarga: 10 rodadas."
+  },
+  "ui.item.relampago_de_mao_mira": {
+    "en": "Choose an enemy in a straight line up to 4 squares. Allies along the path are hit too.",
+    "pt": "Escolha um inimigo em linha reta até 4 casas. Aliados na trajetória também serão atingidos."
+  },
+  "ui.item.choque_trovao_pulso": {
+    "en": "Thunder Pulse",
+    "pt": "Pulso do Trovão"
+  },
+  "ui.item.choque_trovao_pulso_desc": {
+    "en": "Main action: all creatures in the eight adjacent squares, including allies but not you, take 2d6 lightning damage (Reflex DC 13 halves). Recharge: 10 rounds.",
+    "pt": "Ação principal: todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você, sofrem 2d6 de eletricidade (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
   },
   "ui.arremesso.destreza": {
     "en": "Dexterity",
@@ -2963,13 +2999,17 @@ window.LANG_INTERFACE = {
     "en": "🏙️ You left the dungeon — {estado}",
     "pt": "🏙️ Você deixou a masmorra — {estado}"
   },
-  "ui.fora.pronto": {
-    "en": "<b>ready to return</b>",
-    "pt": "<b>pronto para voltar</b>"
+  "ui.fora.comprando": {
+    "en": "shop as long as you like; the wait starts when you head back",
+    "pt": "compre à vontade; a espera começa quando você voltar"
   },
-  "ui.fora.volta_em": {
-    "en": "back in <b>{n}</b> round(s)",
-    "pt": "volta em <b>{n}</b> rodada(s)"
+  "ui.fora.chega_em": {
+    "en": "heading back, arriving in <b>{n}</b> round(s)",
+    "pt": "a caminho, chega em <b>{n}</b> rodada(s)"
+  },
+  "ui.fora.confirmar_volta": {
+    "en": "Head back to the dungeon now?\nThe return wait starts and you can no longer shop on this trip.",
+    "pt": "Voltar à masmorra agora?\nA espera da volta começa e você não poderá mais comprar nesta visita."
   },
   "ui.fora.voltar_masmorra": {
     "en": "⛓️ Back to the dungeon",
@@ -4251,9 +4291,13 @@ window.LANG_INTERFACE = {
     "en": "{n} targets hit",
     "pt": "{n} alvos atingidos"
   },
-  "ui.hud.na_cidade_volta_em": {
-    "en": "🏙️ in town — back in {n} round(s)",
-    "pt": "🏙️ na cidade — volta em {n} rodada(s)"
+  "ui.hud.na_cidade_comprando": {
+    "en": "🏙️ in town, shopping",
+    "pt": "🏙️ na cidade, fazendo compras"
+  },
+  "ui.hud.voltando_chega_em": {
+    "en": "⛓️ heading back, arrives in {n} round(s)",
+    "pt": "⛓️ a caminho, chega em {n} rodada(s)"
   },
   "ui.hud.nenhum_aliado_no_alcance": {
     "en": "No ally within range.",
@@ -5022,6 +5066,14 @@ window.LANG_INTERFACE = {
   "ui.inv.auto_arrow.explosive": {
     "en": "Explosive arrows",
     "pt": "Flechas explosivas"
+  },
+  "ui.inv.auto_arrow.magic": {
+    "en": "Magic arrows +1",
+    "pt": "Flechas mágicas +1"
+  },
+  "ui.inv.auto_arrow.magic_2": {
+    "en": "Magic arrows +2",
+    "pt": "Flechas mágicas +2"
   },
   "ui.inv.auto_arrow.up": {
     "en": "Move up",
@@ -5817,6 +5869,10 @@ window.LANG_INTERFACE = {
     "en": "Open door",
     "pt": "Abrir porta"
   },
+  "ui.joystick.contexto_operar_portao": {
+    "en": "Raise/lower portcullis",
+    "pt": "Levantar/abaixar portão"
+  },
   "ui.joystick.contexto_aguarde": {
     "en": "Wait for your turn",
     "pt": "Aguarde o turno"
@@ -6015,10 +6071,6 @@ window.LANG_INTERFACE = {
     "en": "🛒 Buy",
     "pt": "🛒 Comprar"
   },
-  "ui.loja.aba.conversas": {
-    "en": "Conversations",
-    "pt": "Conversas"
-  },
   "ui.loja.aba.equipamentos": {
     "en": "⚔️ Equipment",
     "pt": "⚔️ Equipamentos"
@@ -6026,6 +6078,10 @@ window.LANG_INTERFACE = {
   "ui.loja.aba.consumiveis": {
     "en": "🧪 Consumables",
     "pt": "🧪 Consumíveis"
+  },
+  "ui.loja.aba.conversas": {
+    "en": "Conversations",
+    "pt": "Conversas"
   },
   "ui.loja.aba.instrumentos": {
     "en": "🎵 Instruments",
@@ -7118,6 +7174,30 @@ window.LANG_INTERFACE = {
   "ui.magia.subiu_de_nivel_heroi": {
     "en": "{nome} — LEVEL UP",
     "pt": "{nome} — SUBIU DE NÍVEL"
+  },
+  "ui.magia.minimizar": {
+    "en": "— Minimize",
+    "pt": "— Minimizar"
+  },
+  "ui.magia.jogo_espera_escolha": {
+    "en": "The game waits for your choice. Click a spell to see it before confirming.",
+    "pt": "O jogo espera a sua escolha. Clique numa magia para vê-la antes de confirmar."
+  },
+  "ui.magia.confirmar_aprender": {
+    "en": "Learn {nome}?",
+    "pt": "Aprender {nome}?"
+  },
+  "ui.magia.escolha_definitiva": {
+    "en": "This choice is permanent.",
+    "pt": "Esta escolha é definitiva."
+  },
+  "ui.magia.confirmar": {
+    "en": "Confirm",
+    "pt": "Confirmar"
+  },
+  "ui.magia.reabrir_escolha": {
+    "en": "✨ Choose new spell",
+    "pt": "✨ Escolher nova magia"
   },
   "ui.magia.tecla_m": {
     "en": "M key",
@@ -10509,8 +10589,8 @@ window.LANG_INTERFACE = {
     "pt": "Clique para retornar à cidade"
   },
   "ui.tabuleiro.confirmar_saida": {
-    "en": "Leaving by the stairs costs 🍖{f} and 💧{s} (round trip).\nYou return in {n} round(s) and the dungeon carries on without you.\n\nLeave?",
-    "pt": "Sair pela escada custa 🍖{f} e 💧{s} (ida e volta).\nVocê volta em {n} rodada(s) e a masmorra continua sem você.\n\nSair?"
+    "en": "Leaving by the stairs costs 🍖{f} and 💧{s} (round trip).\nIn town you can shop. When you click Back to the dungeon, you arrive in {n} round(s).\n\nLeave?",
+    "pt": "Sair pela escada custa 🍖{f} e 💧{s} (ida e volta).\nNa cidade você pode fazer compras. Ao clicar em Voltar à masmorra, você chega em {n} rodada(s).\n\nSair?"
   },
   "ui.tabuleiro.elemental_linha": {
     "en": "⚡ The lightning elemental attacks in a straight line (max 3 squares).",

@@ -407,7 +407,8 @@
     transicaoAltura: "rampa",      // transição visual entre níveis diferentes
     elevacaoValor: 1,              // nível aplicado pela ferramenta de altura
     doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
-    doorStyles: {},                 // {"x,y": "portao_levadico"}
+    doorStyles: {},                 // {"x,y": "portao_levadico"}, keyed by group anchor
+    portcullisGroups: {},           // {"anchorX,anchorY": [[x,y], ...]}
     matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
@@ -425,12 +426,15 @@
   let lastPointerCell = null;
   let regionSelection = null, regionClipboard = null;
   let regionDrag = null, regionMoveDrag = null;
+  let portcullisSpanPick = false, portcullisSpanDrag = null, portcullisSpanMessage = "", portcullisSpanSource = null;
 
   function initGrid(w, h) {
     S.grid = { w, h };
     S.tiles = [];
     S.doorRotations = {};
     S.doorStyles = {};
+    S.portcullisGroups = {};
+    portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanMessage = ""; portcullisSpanSource = null;
     S.elevacoes = {};
     S.alturasParede = {};
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
@@ -562,6 +566,81 @@
     return order[(i < 0 ? 0 : i + 1) % 4];
   }
   function doorKey(x, y) { return x + "," + y; }
+  function portcullisGroupAt(x, y) {
+    const key = doorKey(x, y);
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {})) {
+      if (Array.isArray(cells) && cells.some(p => Array.isArray(p) && p[0] === x && p[1] === y))
+        return { anchor, cells: cells.map(p => p.slice()) };
+    }
+    if (S.doorStyles[key] === "portao_levadico") return { anchor: key, cells: [[x, y]] };
+    return null;
+  }
+  function removePortcullisGroup(anchor) {
+    const cells = S.portcullisGroups[anchor] || [anchor.split(",").map(Number)];
+    for (const [x, y] of cells) delete S.doorStyles[doorKey(x, y)];
+    delete S.doorStyles[anchor];
+    delete S.portcullisGroups[anchor];
+  }
+  function doorOwnersAt(x, y) {
+    return S.rooms.filter(r => (r.doors || []).some(p => p[0] === x && p[1] === y))
+      .map(r => String(r.id)).sort();
+  }
+  function doorFinalQuarter(x, y) {
+    return ((Math.round((doorBaseAngle(x, y) + doorRotationAt(x, y) * Math.PI / 2) / (Math.PI / 2)) % 4) + 4) % 4;
+  }
+  function portcullisSpanCells(start, end) {
+    const [sx, sy] = start, [ex, ey] = end;
+    if (sx !== ex && sy !== ey) return null;
+    const dx = Math.sign(ex - sx), dy = Math.sign(ey - sy);
+    const length = Math.max(Math.abs(ex - sx), Math.abs(ey - sy)) + 1;
+    const cells = Array.from({ length }, (_, i) => [sx + dx * i, sy + dy * i]);
+    cells.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    return cells;
+  }
+  function validPortcullisSpan(cells, sourceAnchor = null) {
+    if (!Array.isArray(cells) || !cells.length
+        || !cells.every(p => Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]))
+        || cells.some(([x, y]) => S.tiles[y]?.[x] !== DOOR)) return false;
+    const sorted = cells.slice().sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    if (new Set(cells.map(([x, y]) => doorKey(x, y))).size !== cells.length
+        || sorted.some((p, i) => p[0] !== cells[i][0] || p[1] !== cells[i][1])) return false;
+    const horizontal = cells.every(p => p[1] === cells[0][1]);
+    const vertical = cells.every(p => p[0] === cells[0][0]);
+    if (!horizontal && !vertical) return false;
+    const direction = horizontal ? 0 : 1;
+    if (cells.length > 1 && doorFinalQuarter(...cells[0]) % 2 !== direction) return false;
+    const quarter = doorFinalQuarter(...cells[0]);
+    const owners = JSON.stringify(doorOwnersAt(...cells[0]));
+    const condition = JSON.stringify(S.doorConditions[doorKey(...cells[0])] || null);
+    for (const [x, y] of cells) {
+      if (doorFinalQuarter(x, y) !== quarter
+          || JSON.stringify(doorOwnersAt(x, y)) !== owners
+          || JSON.stringify(S.doorConditions[doorKey(x, y)] || null) !== condition) return false;
+    }
+    const selected = new Set(cells.map(([x, y]) => doorKey(x, y)));
+    for (const [anchor, group] of Object.entries(S.portcullisGroups || {})) {
+      if (!group.some(([x, y]) => selected.has(doorKey(x, y)))) continue;
+      if (anchor !== sourceAnchor && !group.every(([x, y]) => selected.has(doorKey(x, y)))) return false;
+    }
+    if (sourceAnchor) {
+      const sourceCells = S.portcullisGroups[sourceAnchor] || [sourceAnchor.split(",").map(Number)];
+      if (!sourceCells.some(([x, y]) => selected.has(doorKey(x, y)))) return false;
+    }
+    return true;
+  }
+  function setPortcullisSpan(cells, sourceAnchor = null) {
+    if (!validPortcullisSpan(cells, sourceAnchor)) return false;
+    const normalized = cells.map(p => p.slice()).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    const anchor = doorKey(...normalized[0]);
+    const selected = new Set(normalized.map(([x, y]) => doorKey(x, y)));
+    for (const [oldAnchor, group] of Object.entries(S.portcullisGroups || {})) {
+      if (group.some(([x, y]) => selected.has(doorKey(x, y)))) removePortcullisGroup(oldAnchor);
+    }
+    for (const key of selected) delete S.doorStyles[key];
+    S.doorStyles[anchor] = "portao_levadico";
+    if (normalized.length > 1) S.portcullisGroups[anchor] = normalized;
+    return true;
+  }
   function doorRotationAt(x, y) {
     const n = Number(S.doorRotations[doorKey(x, y)]);
     return Number.isFinite(n) ? ((Math.round(n) % 4) + 4) % 4 : 0;
@@ -577,8 +656,10 @@
     return t("ui.editor.masmorra.direcao." + ["norte", "leste", "sul", "oeste"][quarter]);
   }
   function rotateDoorAt(x, y) {
-    const k = doorKey(x, y);
-    S.doorRotations[k] = (doorRotationAt(x, y) + 1) % 4;
+    const group = portcullisGroupAt(x, y);
+    const cells = group ? group.cells : [[x, y]];
+    const next = (doorRotationAt(x, y) + 1) % 4;
+    for (const [tx, ty] of cells) S.doorRotations[doorKey(tx, ty)] = next;
     renderPanel(); render();
   }
   function rotateDoorSelected() {
@@ -671,10 +752,11 @@
       } else if (!regionClipboard && lastPointerCell && pasteDecorAt(lastPointerCell[0], lastPointerCell[1])) ev.preventDefault();
       return;
     }
-    if (ev.key === "Escape" && (regionDrag || regionMoveDrag || regionSelection || decorBrushActive)) {
+    if (ev.key === "Escape" && (regionDrag || regionMoveDrag || regionSelection || decorBrushActive || portcullisSpanPick || portcullisSpanDrag)) {
       regionDrag = null; regionMoveDrag = null; regionSelection = null;
       if (decorBrushActive) { decorBrushActive = false; decorAreaPaint = null; buildToolbar(); }
-      render(); ev.preventDefault(); return;
+      portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanMessage = ""; portcullisSpanSource = null;
+      renderPanel(); render(); ev.preventDefault(); return;
     }
     if (ev.key === "r" || ev.key === "R") {
       if (S.sel && S.sel.kind === "door") rotateDoorSelected();
@@ -1264,6 +1346,37 @@
     ctx.restore();
   }
 
+  function drawPortcullisEditor(cells, preview = false, valid = true) {
+    if (!Array.isArray(cells) || !cells.length) return;
+    const xs = cells.map(p => p[0]), ys = cells.map(p => p[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const x = minX * CELL + CELL * .12, y = minY * CELL + CELL * .12;
+    const w = (maxX - minX + 1) * CELL - CELL * .24, h = (maxY - minY + 1) * CELL - CELL * .24;
+    const tint = preview ? (valid ? "#ffe08a" : "#ff6767") : "#b9a35d";
+    ctx.save();
+    ctx.fillStyle = preview ? "rgba(29,32,36,.82)" : "rgba(29,32,36,.90)";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = tint; ctx.lineWidth = Math.max(2, CELL * .055); ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = preview ? "rgba(215,220,225,.92)" : "#c3c7ca";
+    ctx.lineWidth = Math.max(1, CELL * .035);
+    if (maxX > minX) {
+      for (let i = 1; i < maxX - minX + 1; i++) {
+        const bx = minX * CELL + i * CELL;
+        ctx.beginPath(); ctx.moveTo(bx, y + 1); ctx.lineTo(bx, y + h - 1); ctx.stroke();
+      }
+      for (let i = 0; i <= maxX - minX; i++) {
+        const bx = minX * CELL + (i + .5) * CELL;
+        ctx.beginPath(); ctx.moveTo(bx, y + 2); ctx.lineTo(bx, y + h - 2); ctx.stroke();
+      }
+    } else {
+      for (let i = 0; i <= maxY - minY; i++) {
+        const by = minY * CELL + (i + .5) * CELL;
+        ctx.beginPath(); ctx.moveTo(x + 2, by); ctx.lineTo(x + w - 2, by); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   function render() {
     _refreshStoneRoadConnections();
     board.width = S.grid.w * CELL;
@@ -1302,6 +1415,16 @@
           ctx.fillRect(x * CELL + CELL * 0.3, y * CELL + CELL * 0.3, CELL * 0.4, CELL * 0.4);
         }
       }
+    }
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {}))
+      drawPortcullisEditor(cells);
+    for (const [anchor, style] of Object.entries(S.doorStyles || {})) {
+      if (style !== "portao_levadico" || S.portcullisGroups[anchor]) continue;
+      drawPortcullisEditor([anchor.split(",").map(Number)]);
+    }
+    if (portcullisSpanDrag) {
+      const cells = portcullisSpanCells(portcullisSpanDrag.start, portcullisSpanDrag.end);
+      if (cells) drawPortcullisEditor(cells, true, validPortcullisSpan(cells, portcullisSpanSource));
     }
     for (let y = 0; y < S.grid.h; y++)
       for (let x = 0; x < S.grid.w; x++)
@@ -1746,7 +1869,7 @@
       sel.innerHTML = `<optgroup label="${t("ui.editor.masmorra.barra.decor_chao")}">${floor.map(d =>
         `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup><optgroup label="${t("ui.editor.masmorra.barra.decor_parede")}">${walls.map(d =>
         `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup>`;
-      sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
+      sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; buildToolbar(); render(); };
       tb.appendChild(sel);
       if (S.decorType === "grade_esgoto") {
         const hint = document.createElement("small");
@@ -1875,7 +1998,18 @@
   function doorConditionAt(x, y) {
     return S.doorConditions[doorKey(x, y)] || null;
   }
+  function setDoorConditionGroup(x, y, condition) {
+    const group = portcullisGroupAt(x, y);
+    const cells = group ? group.cells : [[x, y]];
+    for (const [tx, ty] of cells) {
+      const key = doorKey(tx, ty);
+      if (condition == null) delete S.doorConditions[key];
+      else S.doorConditions[key] = condition;
+    }
+  }
   function doorUnlink(x, y) {
+    const group = portcullisGroupAt(x, y);
+    if (group) removePortcullisGroup(group.anchor);
     for (const r of S.rooms) r.doors = r.doors.filter(d => !(d[0] === x && d[1] === y));
     delete S.doorRotations[doorKey(x, y)];
     delete S.doorConditions[doorKey(x, y)];
@@ -3213,8 +3347,11 @@
     }
     if (k === "door") {
       const rot = doorRotationAt(ref.x, ref.y);
-      const conditionKey = doorKey(ref.x, ref.y);
-      const condition = doorConditionAt(ref.x, ref.y);
+      const group = portcullisGroupAt(ref.x, ref.y);
+      const conditionKey = group ? group.anchor : doorKey(ref.x, ref.y);
+      const [conditionX, conditionY] = conditionKey.split(",").map(Number);
+      const condition = doorConditionAt(conditionX, conditionY);
+      if (group && condition) for (const [x, y] of group.cells) S.doorConditions[doorKey(x, y)] = condition;
       const keyItems = CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) }));
       const keyDecors = S.decorations.filter(d => d.key_objective);
       const selectedDecorKeys = new Set(condition?.key_decor_ids || []);
@@ -3225,9 +3362,13 @@
         <small style="display:block;color:#8a7a5a;margin-top:6px">${t("ui.editor.masmorra.painel.seta_dourada_hint")}</small>
         <label style="margin-top:10px;display:block">${t("ui.editor.masmorra.painel.estilo_porta")}</label>
         <select id="door-style">
-          <option value=""${!S.doorStyles[conditionKey] ? " selected" : ""}>${t("ui.editor.masmorra.painel.porta_comum")}</option>
-          <option value="portao_levadico"${S.doorStyles[conditionKey] === "portao_levadico" ? " selected" : ""}>${t("ui.editor.masmorra.painel.portao_levadico")}</option>
+          <option value=""${!group ? " selected" : ""}>${t("ui.editor.masmorra.painel.porta_comum")}</option>
+          <option value="portao_levadico"${group ? " selected" : ""}>${t("ui.editor.masmorra.painel.portao_levadico")}</option>
         </select>
+        ${group ? `<div style="font-size:11px;color:#b9a87f;margin-top:5px">${t("ui.editor.masmorra.painel.portao_largura", { casas: group.cells.length })}</div>
+          <button id="door-span-pick" style="margin-top:6px">↔ ${t("ui.editor.masmorra.painel.portao_ajustar_largura")}</button>
+          ${portcullisSpanPick ? `<small style="display:block;color:#f0c867;margin-top:5px">${t("ui.editor.masmorra.painel.portao_arraste_hint")}</small>` : ""}
+          ${portcullisSpanMessage ? `<small style="display:block;color:#e07868;margin-top:5px">${portcullisSpanMessage}</small>` : ""}` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>🔐 ${t("ui.editor.masmorra.painel.condicao_abertura")}</b>
           <select id="door-condition-type">
@@ -3259,16 +3400,25 @@
         </div>`;
       document.getElementById("door-rotate").onclick = rotateDoorSelected;
       document.getElementById("door-style").onchange = e => {
-        if (e.target.value === "portao_levadico") S.doorStyles[conditionKey] = e.target.value;
-        else delete S.doorStyles[conditionKey];
+        const current = portcullisGroupAt(ref.x, ref.y);
+        if (current) removePortcullisGroup(current.anchor);
+        if (e.target.value === "portao_levadico") S.doorStyles[doorKey(ref.x, ref.y)] = e.target.value;
+        portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanSource = null;
+        renderPanel(); render();
+      };
+      const spanButton = document.getElementById("door-span-pick");
+      if (spanButton) spanButton.onclick = () => {
+        portcullisSpanPick = true; portcullisSpanDrag = null; portcullisSpanMessage = "";
+        portcullisSpanSource = group.anchor;
+        S.tool = "select"; regionSelection = null;
         renderPanel(); render();
       };
       document.getElementById("door-condition-type").onchange = e => {
-        if (e.target.value === "none") delete S.doorConditions[conditionKey];
-        else if (e.target.value === "item") S.doorConditions[conditionKey] = { type: "item", item_id: keyItems[0]?.v || "" };
-        else if (e.target.value === "licao") S.doorConditions[conditionKey] = { type: "licao", licao_id: (S.falas.find(f => f.tarefa && f.tarefa.tipo) || {}).id || "" };
-        else if (e.target.value === "requirement") S.doorConditions[conditionKey] = { type: "requirement", requirement: { renome_min: 0, nivel_grupo_min: 0, item_id: "", fato: "", aventura_id: "" } };
-        else S.doorConditions[conditionKey] = { type: "decor", key_decor_ids: [], keys_mode: "any" };
+        if (e.target.value === "none") setDoorConditionGroup(ref.x, ref.y, null);
+        else if (e.target.value === "item") setDoorConditionGroup(ref.x, ref.y, { type: "item", item_id: keyItems[0]?.v || "" });
+        else if (e.target.value === "licao") setDoorConditionGroup(ref.x, ref.y, { type: "licao", licao_id: (S.falas.find(f => f.tarefa && f.tarefa.tipo) || {}).id || "" });
+        else if (e.target.value === "requirement") setDoorConditionGroup(ref.x, ref.y, { type: "requirement", requirement: { renome_min: 0, nivel_grupo_min: 0, item_id: "", fato: "", aventura_id: "" } });
+        else setDoorConditionGroup(ref.x, ref.y, { type: "decor", key_decor_ids: [], keys_mode: "any" });
         renderPanel(); render();
       };
       const conditionLicao = document.getElementById("door-condition-licao");
@@ -4092,6 +4242,15 @@
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
     const [x, y] = c;
+    if (portcullisSpanPick) {
+      if (S.tiles[y]?.[x] !== DOOR) {
+        portcullisSpanMessage = t("ui.editor.masmorra.painel.portao_span_invalido");
+        renderPanel(); return;
+      }
+      portcullisSpanMessage = "";
+      portcullisSpanDrag = { start: c.slice(), end: c.slice() };
+      render(); return;
+    }
     if (S.teleportExitPick) {
       if (S.tiles[y][x] !== FLOOR) {
         const help = document.getElementById("p-out-help") || document.getElementById("d-trap-out-help");
@@ -4190,7 +4349,7 @@
     const b = _regionBounds(rect); if (!b) return null;
     const data = { tiles: [], rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
       secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null,
-      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {}, doorStyles: {} };
+      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {}, doorStyles: {}, portcullisGroups: {} };
     const refs = { rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
       secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null };
     for (let y = b.y; y <= b.y2; y++) data.tiles.push(S.tiles[y].slice(b.x, b.x2 + 1));
@@ -4245,6 +4404,14 @@
       if (S.materiais[key] != null) data.materials[local] = S.materiais[key];
       if (S.elevacoes[key] != null) data.elevations[local] = S.elevacoes[key];
       if (S.alturasParede[key] != null) data.wallHeights[local] = S.alturasParede[key];
+    }
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {})) {
+      const relation = _regionContainsCells(cells, b);
+      if (relation < 0) { alert(t(K_CM + "regiao_objeto_parcial")); return null; }
+      if (relation) {
+        const [ax, ay] = anchor.split(",").map(Number);
+        data.portcullisGroups[doorKey(ax - b.x, ay - b.y)] = cells.map(([x, y]) => [x - b.x, y - b.y]);
+      }
     }
     return { x: b.x, y: b.y, w: b.w, h: b.h, data, refs };
   }
@@ -4318,6 +4485,10 @@
     }));
     d.doorRotations = remapKeys(d.doorRotations); d.doorConditions = remapKeys(d.doorConditions);
     d.doorStyles = remapKeys(d.doorStyles || {});
+    d.portcullisGroups = Object.fromEntries(Object.entries(d.portcullisGroups || {}).map(([key, cells]) => {
+      const [x, y] = key.split(",").map(Number);
+      return [doorKey(x + target[0], y + target[1]), cells.map(([cx, cy]) => [cx + target[0], cy + target[1]])];
+    }));
     d.materials = remapKeys(d.materials); d.elevations = remapKeys(d.elevations);
     d.wallHeights = remapKeys(d.wallHeights || {});
     d.doorConditions = Object.fromEntries(Object.entries(d.doorConditions).map(([key, c]) => [key,
@@ -4336,6 +4507,7 @@
     S.chests.push(...d.chests); S.traps.push(...d.traps); S.decorations.push(...d.decorations);
     S.secretPassages.push(...d.secretPassages); S.falas.push(...d.falas); S.pontes.push(...d.pontes);
     Object.assign(S.doorStyles, d.doorStyles);
+    Object.assign(S.portcullisGroups, d.portcullisGroups);
     if (d.entrance) S.entrance = d.entrance;
     if (d.exit) S.exit = d.exit;
     if (d.prisoner) S.prisoner = d.prisoner;
@@ -4347,10 +4519,14 @@
   }
   function removeRegion(clip) {
     const b = _regionBounds(clip); if (!b) return false;
+    for (const cells of Object.values(S.portcullisGroups || {})) {
+      if (_regionContainsCells(cells, b) < 0) { alert(t(K_CM + "regiao_objeto_parcial")); return false; }
+    }
     for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) S.tiles[y][x] = WALL;
-    for (const key of ["materials", "elevations", "wallHeights", "doorRotations", "doorConditions"]) {
+    for (const key of ["materials", "elevations", "wallHeights", "doorRotations", "doorConditions", "doorStyles", "portcullisGroups"]) {
       const target = key === "materials" ? S.materiais : key === "elevations" ? S.elevacoes
-        : key === "wallHeights" ? S.alturasParede : key === "doorRotations" ? S.doorRotations : S.doorConditions;
+        : key === "wallHeights" ? S.alturasParede : key === "doorRotations" ? S.doorRotations
+        : key === "doorStyles" ? S.doorStyles : key === "portcullisGroups" ? S.portcullisGroups : S.doorConditions;
       for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) delete target[doorKey(x, y)];
     }
     for (const key of ["rooms", "heroSpawns", "monsters", "chests", "traps", "decorations", "secretPassages", "falas", "pontes"])
@@ -4447,8 +4623,7 @@
       return;
     }
     if (painting) {
-      if (S.tool === "altura") { paintElevation(c[0], c[1]); updateStatus(); }
-      else if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
+      if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
       else { paintTile(c[0], c[1]); updateStatus(); }
       render(); return;
     }
@@ -4619,6 +4794,13 @@
         const [x, y] = key.split(",").map(Number);
         return style === "portao_levadico" && S.tiles[y]?.[x] === DOOR;
       })) } : {}),
+      ...(Object.keys(S.portcullisGroups).length ? { portcullis_groups: Object.fromEntries(Object.entries(S.portcullisGroups).filter(([anchor, cells]) => {
+        const [x, y] = anchor.split(",").map(Number);
+        return Array.isArray(cells) && cells.length > 1 && cells.every(p => Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]))
+          && S.doorStyles[anchor] === "portao_levadico"
+          && doorKey(...cells[0]) === anchor && validPortcullisSpan(cells)
+          && cells.some(p => p[0] === x && p[1] === y);
+      }).map(([anchor, cells]) => [anchor, cells.map(p => p.slice())])) } : {}),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
@@ -4998,6 +5180,26 @@
         }
       }
     }
+    for (const [key, style] of Object.entries(S.doorStyles || {})) {
+      const pos = key.split(",").map(Number);
+      if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1])
+          || S.tiles[pos[1]]?.[pos[0]] !== DOOR || style !== "portao_levadico")
+        e.push(V("porta_estilo_invalido", { chave: key }));
+    }
+    const portcullisMembers = new Set();
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {})) {
+      const parsedAnchor = anchor.split(",").map(Number);
+      const valid = /^\d+,\d+$/.test(anchor) && Array.isArray(cells) && cells.length > 1
+        && cells.every(p => Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]))
+        && doorKey(...cells[0]) === anchor && S.doorStyles[anchor] === "portao_levadico"
+        && validPortcullisSpan(cells)
+        && cells.every(([x, y]) => {
+          const key = doorKey(x, y);
+          if (portcullisMembers.has(key)) return false;
+          portcullisMembers.add(key); return true;
+        });
+      if (!valid || parsedAnchor.length !== 2) e.push(V("porta_estilo_invalido", { chave: anchor }));
+    }
     const decorIds = new Set(S.decorations.map(d => d.id));
     for (const [key, c] of Object.entries(S.doorConditions || {})) {
       const pos = key.split(",").map(Number);
@@ -5129,6 +5331,7 @@
   }
 
   function loadJSON(obj) {
+    portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanMessage = ""; portcullisSpanSource = null;
     S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || t("ui.editor.masmorra.salvar.nome_padrao"),
                ambiente: ["penumbra", "masmorra", "ar_livre", "bruma_tenebrosa"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
@@ -5163,6 +5366,20 @@
       if (!/^\d+,\d+$/.test(key) || style !== "portao_levadico") continue;
       const [x, y] = key.split(",").map(Number);
       if (S.tiles[y]?.[x] === DOOR) S.doorStyles[key] = style;
+    }
+    S.portcullisGroups = {};
+    for (const [anchor, cells] of Object.entries(obj.portcullis_groups || {})) {
+      if (!/^\d+,\d+$/.test(anchor) || !Array.isArray(cells) || cells.length < 2
+          || S.doorStyles[anchor] !== "portao_levadico") continue;
+      const parsed = cells.filter(p => Array.isArray(p) && p.length === 2
+        && Number.isInteger(p[0]) && Number.isInteger(p[1])).map(p => p.slice());
+      const sorted = parsed.slice().sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+      const members = new Set(parsed.map(([x, y]) => doorKey(x, y)));
+      const overlaps = Object.values(S.portcullisGroups).some(old => old.some(([x, y]) => members.has(doorKey(x, y))));
+      const otherStyle = parsed.some(([x, y]) => doorKey(x, y) !== anchor && S.doorStyles[doorKey(x, y)]);
+      if (parsed.length === cells.length && sorted.every((p, i) => p[0] === parsed[i][0] && p[1] === parsed[i][1])
+          && !overlaps && !otherStyle && doorKey(...parsed[0]) === anchor && validPortcullisSpan(parsed))
+        S.portcullisGroups[anchor] = parsed;
     }
     S.nextRoomId = S.rooms.reduce((m, r) => Math.max(m, r.id + 1), 0);
     S.startMode = obj.start_mode === "hero_spawns" || (!obj.entrance && Array.isArray(obj.hero_spawns) && obj.hero_spawns.length)

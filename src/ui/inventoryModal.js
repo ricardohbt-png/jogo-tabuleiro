@@ -70,6 +70,8 @@ const InventoryModal = (() => {
     { id: 'flechas_incendiarias', key: 'ui.inv.auto_arrow.fire' },
     { id: 'flechas_prata', key: 'ui.inv.auto_arrow.silver' },
     { id: 'flechas_explosivas', key: 'ui.inv.auto_arrow.explosive' },
+    { id: 'flechas_magicas', key: 'ui.inv.auto_arrow.magic' },
+    { id: 'flechas_magicas_mais_2', key: 'ui.inv.auto_arrow.magic_2' },
   ];
   // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
   const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);
@@ -1097,6 +1099,13 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
     const player = _currentPlayer();
     const item = player && player.bag ? player.bag[sel.index] : null;
+    // Munição solta sobre a pilha igual equipada: junta em vez de trocar.
+    if(sel.kind === 'bag' && slotKey === 'off_hand'
+        && GS.mesmaPilhaMunicao(item, (player.gear || {}).off_hand)){
+      _selected = null;
+      GS.juntarMunicao({ bolsa: sel.index }, { equip: 'off_hand' });
+      return;
+    }
     if(!item || !GS.canPlaceItem(item, slotKey, player.gear || {})){ refresh(); return; }
     const ehOffhand = slotKey === 'off_hand' && GS.isOffhandWeapon(item);
     const trocaBotaEmVoo = slotKey === 'boots'
@@ -1122,12 +1131,23 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       GS.moveUtilityBeltItem('to_bag', sel.gearSlot, sel.pocketIndex, Math.min(toIndex, _currentPlayer()?.bag?.length || 0));
       _selected = null; _gamepadAction = null; return;
     }
+    const player = _currentPlayer();
+    const alvo = player && player.bag ? player.bag[toIndex] : null;
     if(sel.kind === 'bag'){
-      if(sel.index !== toIndex) GS.reorderBag(sel.index, toIndex);
-      else refresh();
+      if(sel.index === toIndex){ refresh(); return; }
+      // Pilha de munição solta sobre outra igual: junta (até o limite da pilha).
+      if(GS.mesmaPilhaMunicao(player && player.bag ? player.bag[sel.index] : null, alvo)){
+        _selected = null;
+        GS.juntarMunicao({ bolsa: sel.index }, { bolsa: toIndex });
+      } else GS.reorderBag(sel.index, toIndex);
       return;
     }
-    const player = _currentPlayer();
+    if(sel.kind === 'gear' && sel.slotKey === 'off_hand'
+        && GS.mesmaPilhaMunicao((player.gear || {}).off_hand, alvo)){
+      _selected = null; _gamepadAction = null;
+      GS.juntarMunicao({ equip: 'off_hand' }, { bolsa: toIndex });
+      return;
+    }
     if(sel.kind === 'gear' && _botaAladaEmVoo(player, sel.slotKey)){
       _confirmarDesequiparBota(player, sel.slotKey, () => {
         _selected = null; _gamepadAction = null; GS.unequip(sel.slotKey);
