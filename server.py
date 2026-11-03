@@ -44964,6 +44964,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def handle_end_turn(self, pid, _forcado=False):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
+        # Escolha de magia pendente: recusa antes de qualquer efeito de fim de
+        # turno (senão cada tentativa cobrava a Dor Constante) e reenvia o aviso,
+        # que pode ter se perdido (página recarregada, conexão que caiu). Vem
+        # antes do _is_turn: na vez dele a escolha pausa o turno e _is_turn recusa.
+        p_pend = self.players.get(pid)
+        if (p_pend and p_pend.get("pending_spell_pick")
+                and (self._is_turn_servos(pid) or self._escolha_magia_agora(p_pend))):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.escolha_sua_nova_magia_antes_de_encerrar")})
+            await self._enviar_spell_pick_prompt(p_pend)
+            return
         if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
@@ -44977,15 +44988,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                for z in self.zonas_especiais):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.tempestade_ciclones_posicionamento_pendente")})
-            return
-        # Escolha de magia pendente: recusa antes de qualquer efeito de fim de
-        # turno (senão cada tentativa cobrava a Dor Constante) e reenvia o aviso,
-        # que pode ter se perdido (página recarregada, conexão que caiu).
-        p_pend = self.players.get(pid)
-        if p_pend and p_pend.get("pending_spell_pick"):
-            await self.send_to(pid, {"type": "error",
-                "msg": T("erro.escolha_sua_nova_magia_antes_de_encerrar")})
-            await self._enviar_spell_pick_prompt(p_pend)
             return
         # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
         # conhecido e aceito: o turno também termina por estouro de timer, e por

@@ -1,5 +1,6 @@
 """Verificações objetivas do modelo e da calibração 3D de Gilo."""
 import json
+import re
 from pathlib import Path
 
 import trimesh
@@ -27,7 +28,9 @@ def test_editor_and_runtime_keep_gilo_scale_and_bandit_movement_calibration():
     game = (ROOT / "game.js").read_text(encoding="utf-8")
     assert f"gilo_dedos_sujos:  '{MODEL}'" in game
     assert "monsterType === 'gilo_dedos_sujos' ? 0.80548125" in game
-    assert "'bandido', 'gilo_dedos_sujos', 'goblin_assassino', 'jacare'" in game
+    # Gilo segue na calibração de movimento do bandido (a lista cresce com outras fichas).
+    calib = re.search(r"'bandido',[^\]]*\]", game)
+    assert calib and "'gilo_dedos_sujos'" in calib.group(0)
 
 
 def test_gilo_glb_contains_body_and_added_accessory_meshes():

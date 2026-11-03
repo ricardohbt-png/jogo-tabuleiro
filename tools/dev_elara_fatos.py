@@ -66,6 +66,8 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
             fatos.add(P1.F_LENTO)
     if n >= 2:
         fatos.add(RI.F_RAMO_A if ramo == "a" else GI.F_RAMO_B)
+        if ramo == "a":   # a casa só abre depois das pistas e do endereço na taverna
+            fatos |= {RI.F_SONDOU, RI.F_PISTA_BOLSA, RI.F_PISTA_RUA, RI.F_CASA_DESCOBERTA}
     if n >= 3:
         if ramo == "a":
             fatos |= {RI.F_T1_FEITO, RI.F_EXPOSTO}
@@ -78,6 +80,7 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
     if n >= 4:
         if ramo == "a":
             fatos.add(RI.F_DECIDIDO)
+            fatos.add(RI.F_CELEIRO_DESCOBERTO)   # a garçonete aponta o celeiro
             if bardo == "morto":
                 fatos |= {RI.F_MORTO, RI.F_LEONEL_CAUTELOSO}
             elif bardo == "interrogado":
