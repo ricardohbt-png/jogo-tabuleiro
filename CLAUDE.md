@@ -1074,7 +1074,7 @@ resistência enquanto o herói permanecia na mesma sala.
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
 > ocupam a área definida por `size:[w,h]` + `facing` (giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 112 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> autoritativo `DECOR_TYPES` (server.py, 113 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
@@ -4654,6 +4654,8 @@ a peça no seletor de decorações.
 > **Banca de flores (2026-11-03):** decoração 1×1, alta e girável, com toldo listrado, balcão de madeira e vasos ornamentais com flores coloridas. PNG e GLB consolidados são gerados por `tools/create_banca_flores.py` em `assets/objetos/banca_flores.*`.
 
 > **Carrinho de entregas (2026-11-03):** decoração 1×2, alta e girável, distinta da carroça 2×2. Tem duas rodas, cabos para puxar, sacos, lenha e jarro de cerâmica. Arquivos de origem e miniaturas: `tools/create_carrinho_entregas.py` e `assets/objetos/carrinho_entregas.{blend,glb,png}`.
+
+> **Sino de anúncio (2026-11-03):** decoração 1×1, alta e girável, numa armação de madeira com telhado, campana de bronze e corda de puxar. É estático e distinto do sino ritualístico; usa `assets/objetos/sino_anuncio.{blend,glb,png}` e `tools/create_sino_anuncio.py`.
 
 > **Água profunda e redemoinho nas reações (2026-10-14):** o estado `agua` (`_rx_estado`, qualquer
 > `_water_tile_kind` fora de ponte: `agua`, `agua_profunda`, `rodamoinho`, `rodamoinho_profundo`) substituiu

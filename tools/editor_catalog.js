@@ -16544,6 +16544,21 @@ window.EDITOR_CATALOG = {
       "image": "sino_ritualistico.png"
     },
     {
+      "type": "sino_anuncio",
+      "nome": "Sino de anúncio",
+      "emoji": "🔔",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "sino_anuncio.png"
+    },
+    {
       "type": "estatua_divindade",
       "nome": "Estátua de divindade",
       "emoji": "🛐",

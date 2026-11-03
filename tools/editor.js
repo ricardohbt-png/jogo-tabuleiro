@@ -104,6 +104,13 @@
       loot_capaz: false, special: null, image: "sino_ritualistico.png",
     });
   }
+  if (!(CAT.decorations || []).some(d => d && d.type === "sino_anuncio")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "sino_anuncio", nome: nomeCat("decor", "sino_anuncio", "Sino de anúncio"), emoji: "🔔",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "sino_anuncio.png",
+    });
+  }
   if (!(CAT.decorations || []).some(d => d && d.type === "estatua_divindade")) {
     CAT.decorations = (CAT.decorations || []).concat({
       type: "estatua_divindade", nome: nomeCat("decor", "estatua_divindade", "Estátua de divindade"), emoji: "🛐",
