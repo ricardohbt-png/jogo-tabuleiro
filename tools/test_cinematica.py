@@ -32,25 +32,10 @@ class SlideTests(unittest.TestCase):
         self.assertEqual(b["slides"][0]["cinematica"], "gilo_morte")
 
 
-class PracaVivaTests(unittest.TestCase):
-    def test_so_quem_viu_o_gilo_cair_assiste(self):
-        d = GG.destinos()["elara_graciero_praca_viva"]
-        outro = d["dungeons"][0]["outro"]
-        self.assertEqual(outro["slides"][0]["cinematica"], "gilo_morte")
-        viu = S._story_beat("k", [outro], lambda r: r.get("fato") == "elara_viu_gilo_morrer")
-        nao = S._story_beat("k", [outro], lambda r: False)
-        self.assertEqual(viu["slides"][0]["cinematica"], "gilo_morte")
-        self.assertIsNone(nao)
-
+class PracaMortaTests(unittest.TestCase):
     def test_praca_morta_nao_tem_cinematica(self):
         d = GG.destinos()["elara_graciero_praca_morta"]
         self.assertEqual(d["dungeons"][0]["outro"], "")
-
-    def test_gravado_em_disco(self):
-        import json
-        with open(os.path.join(RAIZ, "world_adventures.json"), encoding="utf-8") as f:
-            d = json.load(f)["elara_graciero_praca_viva"]
-        self.assertEqual(d["dungeons"][0]["outro"]["slides"][0]["cinematica"], "gilo_morte")
 
 
 @unittest.skipUnless(shutil.which("node"), "node ausente")

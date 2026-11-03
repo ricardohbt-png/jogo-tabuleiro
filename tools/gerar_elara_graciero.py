@@ -141,15 +141,24 @@ SLIDES_FINAIS = [
 ]
 
 
-def outro_gilo():
-    """Encerramento da Praça viva: a cinemática cartum da morte do Gilo (src/cinematica.js), só para quem chegou a
-    tempo de vê-lo cair (o mesmo fato que a Praça viva grava). A legenda fica sob a animação."""
-    import elara_graciero_mapas as M
-    return {"slides": [{
-        "cinematica": "gilo_morte",
-        "text": ("Os escorpiões se fecham sobre o Gilo. Ele não solta a moeda sem cunho até o fim, e as últimas "
-                 "palavras ficam com vocês."),
-        "requisito": _req(fato=M.F_VIU_MORRER)}]}
+def intro_gilo():
+    """Abertura da Praça viva: as últimas palavras do Gilo e o vídeo da morte dele, antes de o tabuleiro aparecer. Ao
+    fim do vídeo os escorpiões voltam às grades, onde o mapa os coloca. Quem chega tarde vai para a Praça morta, então
+    o vídeo não precisa de condição (`elara_viu_gilo_morrer` só existe depois de vencer a praça). No ramo B o Olho
+    ainda está com o Gilo: nada de pista da montanha."""
+    imagem = "assets/story/gilo_escorpioes_praca.png"
+    return {"slides": [
+        {"image": imagem, "requisito": _req(fato=F_RAMO_A),
+         "text": ("O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele.\n"
+                  "\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da "
+                  "cidade paga em ouro... Eles... estão vindo...\"")},
+        {"image": imagem, "requisito": _req(sem_fato=F_RAMO_A),
+         "text": ("O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele. "
+                  "Aperta contra o peito um embrulho de pano.\n"
+                  "\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... "
+                  "estão vindo...\"")},
+        {"video": "assets/story/gilo_escorpioes_animacao.mp4", "image": imagem},
+    ]}
 
 
 def outro_rota():
@@ -172,10 +181,10 @@ def destinos():
     def perto(dx, dy):
         return round(min(100, max(0, base["x"] + dx)), 2), round(min(100, max(0, base["y"] + dy)), 2)
 
-    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False, outro_etapa=""):
+    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False, intro_etapa=""):
         x, y = perto(dx, dy)
         return {"id": did, "nome": nome, "x": x, "y": y, "fome": 1, "sede": 1,
-                "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": outro_etapa} for arq, enc in etapas],
+                "dungeons": [{"file": arq, "encadear": enc, "intro": intro_etapa, "outro": ""} for arq, enc in etapas],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
                 "outro_rota": outro_rota() if final else "", "requisito": requisito, "renome_recompensa": renome}
@@ -188,7 +197,7 @@ def destinos():
         "elara_graciero_praca_viva": destino("elara_graciero_praca_viva", "A Praça dos Escorpiões", 3.0, 0.5,
                                              [("elara_graciero_praca_viva.json", False)],
                                              _req(aventura_id="elara_graciero_cais", sem_fato=F_LENTO), 2,
-                                             outro_etapa=outro_gilo()),
+                                             intro_etapa=intro_gilo()),
         "elara_graciero_praca_morta": destino("elara_graciero_praca_morta", "A Praça dos Escorpiões", 3.0, 0.5,
                                               [("elara_graciero_praca_morta.json", False)],
                                               _req(aventura_id="elara_graciero_cais", fato=F_LENTO), 2),

@@ -1153,23 +1153,39 @@
       {
         "file": "elara_graciero_praca_viva.json",
         "encadear": false,
-        "intro": "",
-        "outro": {
+        "intro": {
           "slides": [
             {
-              "cinematica": "gilo_morte",
-              "text": "Os escorpiões se fecham sobre o Gilo. Ele não solta a moeda sem cunho até o fim, e as últimas palavras ficam com vocês.",
+              "image": "assets/story/gilo_escorpioes_praca.png",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
                 "item_id": "",
-                "fato": "elara_viu_gilo_morrer",
+                "fato": "elara_ramo_a",
                 "sem_fato": "",
                 "aventura_id": ""
-              }
+              },
+              "text": "O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele.\n\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da cidade paga em ouro... Eles... estão vindo...\""
+            },
+            {
+              "image": "assets/story/gilo_escorpioes_praca.png",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "text": "O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_escorpioes_animacao.mp4",
+              "image": "assets/story/gilo_escorpioes_praca.png"
             }
           ]
-        }
+        },
+        "outro": ""
       }
     ],
     "espera_retorno": {

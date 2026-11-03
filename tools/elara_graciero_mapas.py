@@ -101,12 +101,10 @@ def _praca(prefixo, did, nome, viva):
     c.espalha("barril", 0, 3); c.espalha("carroca", 0, 1)
     c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 5, 3)})
     if viva:
-        c.fala(prefixo + "_ultimas", m.em(0, 2, hs // 2), "Gilo Dedos Sujos", "🗡️",
-               "Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da "
-               "cidade paga em ouro... Eles... estão vindo...", 12)
+        # A morte do Gilo já passou na abertura da etapa (gerar_elara_graciero.intro_gilo).
         c.fala(prefixo + "_silencio", m.em(0, 8, hs // 2), "Narrador", "🦂",
-               "Escorpiões grandes como cães saem dos esgotos e cobrem o Gilo. O grito dura pouco. Depois só "
-               "o estalar das garras vem na direção de vocês.", 12)
+               "O grito do Gilo já se foi. Agora só o estalar das garras atravessa a praça, vindo das grades "
+               "na direção de vocês.", 12)
     else:
         c.deco("monte_ossos", 0, 9, 5)
         c.fala(prefixo + "_corpo", m.em(0, 2, hs // 2), "Narrador", "🦂",

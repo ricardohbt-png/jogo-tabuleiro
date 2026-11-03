@@ -2731,6 +2731,59 @@ function _storyCinePaint(ov, img, slide, chave) {
     textos: _storyCineTextos(), onFim: () => { if (rv) rv.style.display = 'block'; } }) };
 }
 
+// Slide com `video`: toca uma vez e para no último quadro. A `image` do mesmo slide fica por trás, cobrindo a carga
+// e a falha. Idempotente por chave, como a cinemática: renderStory repinta a cada game_state.
+let _storyVideoChave = null;
+function _storyVideoEl(ov, img) {
+  let v = document.getElementById('story-video');
+  if (v) return v;
+  v = document.createElement('video'); v.id = 'story-video';
+  v.playsInline = true; v.preload = 'auto';
+  v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:none';
+  img.appendChild(v);
+  const rv = document.createElement('button'); rv.id = 'story-video-rever'; rv.textContent = '↻ ' + t('ui.cinematica.rever');
+  rv.style.cssText = 'position:absolute;top:14px;left:14px;z-index:3;display:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-weight:bold';
+  rv.onclick = () => { rv.style.display = 'none'; v.currentTime = 0; _storyVideoTocar(v); };
+  ov.appendChild(rv);
+  v.onended = () => { rv.style.display = 'block'; };
+  v.onerror = () => { v.style.display = 'none'; };
+  return v;
+}
+function _storyVideoFonte(v, src) {
+  if (v.dataset.src !== src) { v.dataset.src = src; v.src = src; }
+}
+function _storyVideoTocar(v) {
+  v.muted = _storyMuted;
+  const p = v.play();
+  if (p) p.catch(() => { v.muted = true; v.play().catch(() => {}); });   // navegador só deixa tocar sem som
+}
+function _storyVideoAplicarMudo() {
+  const v = document.getElementById('story-video');
+  if (v) v.muted = _storyMuted;
+}
+function _storyVideoParar() {
+  _storyVideoChave = null;
+  const v = document.getElementById('story-video');
+  if (v) { v.pause(); v.style.display = 'none'; }
+  const r = document.getElementById('story-video-rever'); if (r) r.style.display = 'none';
+}
+function _storyVideoPaint(ov, img, slide, chave, proximo) {
+  if (!slide.video) {
+    if (_storyVideoChave) _storyVideoParar();
+    if (proximo && proximo.video) _storyVideoFonte(_storyVideoEl(ov, img), proximo.video);   // adianta a carga
+    return;
+  }
+  const v = _storyVideoEl(ov, img);
+  v.style.objectFit = slide.fit === 'contain' ? 'contain' : 'cover';
+  if (_storyVideoChave === chave) return;
+  _storyVideoParar();
+  _storyVideoChave = chave;
+  _storyVideoFonte(v, slide.video);
+  v.style.display = 'block';
+  v.currentTime = 0;
+  _storyVideoTocar(v);
+}
+
 function _storyPaint() {
   const beat = GS.pendingStory && GS.pendingStory();
   const ov = document.getElementById('story-overlay');
@@ -2738,6 +2791,7 @@ function _storyPaint() {
   const slide = beat.slides[_storyIdx] || {};
   const img = ov.querySelector('#story-img');
   _storyCinePaint(ov, img, slide, beat.key + ':' + _storyIdx);
+  _storyVideoPaint(ov, img, slide, beat.key + ':' + _storyIdx, beat.slides[_storyIdx + 1]);
   if (slide.image) {
     img.style.backgroundImage = 'url("' + slide.image + '")';
     img.style.backgroundSize = (slide.fit === 'contain') ? 'contain' : 'cover';
@@ -2766,6 +2820,7 @@ function _storyComplete(msg){
   ov.style.display='none';
   _storyAudioStop();
   _storyCineParar();
+  _storyVideoParar();
   _cidadeTourTentarMostrar();
 }
 
@@ -2776,6 +2831,7 @@ function renderStory() {
     if (ov) ov.style.display = 'none';
     _storyAudioStop();
     _storyCineParar();
+    _storyVideoParar();
     return;
   }
   if (!ov) {
@@ -2804,6 +2860,7 @@ function renderStory() {
         GS.marcarStoryVista(b.key);
         _storyAudioStop();
         _storyCineParar();
+        _storyVideoParar();
         _defeatMusicActive = false;
         _defeatAudioStop();
         ov.style.display = 'none';
@@ -2813,6 +2870,7 @@ function renderStory() {
     ov.querySelector('#story-mute').onclick = () => {
       _storyMuted = !_storyMuted;
       if (_storyAudioEl) _storyAudioEl.muted = _storyMuted;
+      _storyVideoAplicarMudo();
       _storyPaintMute();
     };
   }

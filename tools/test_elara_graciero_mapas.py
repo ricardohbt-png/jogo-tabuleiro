@@ -60,7 +60,7 @@ class MapasTests(unittest.TestCase):
         self.assertNotIn("fatos", pm)
         self.assertFalse(any(x["type"] == "monte_ossos" for x in v["decorations"]))
         self.assertTrue(any(x["type"] == "monte_ossos" for x in m["decorations"]))
-        self.assertTrue(any("montanha" in fl["texto"] for fl in v["falas"]))
+        self.assertFalse(any("montanha" in fl["texto"] for fl in v["falas"]), "a pista mora na abertura da etapa")
 
     def test_alerta_acrescenta_sem_deslocar(self):
         n, a = M.masmorra_leonel_1(), M.masmorra_leonel_1_alerta()

@@ -225,10 +225,14 @@ a perde ao salvar). O cliente (`_storyCinePaint` em `game.js`) troca a imagem po
 `Cinematica.iniciar(canvas, id, {textos, onFim})` toca em tempo real, escala sem distorcer (cobre a tela, corta as laterais),
 para sozinha quando o overlay fecha, e o botão "↻ Rever" aparece no fim. O slide é condicional como qualquer outro. Falas e
 onomatopeia vêm do dicionário (`ui.cinematica.*`). **Primeira cena, `gilo_morte`** (22 s): os escorpiões cercam o Gilo na
-Praça dos Escorpiões, ele atira (TEC!), tropeça, derruba a moeda de prata sem cunho, rasteja até ela e diz a dica da serra;
-é o `outro` da etapa de `elara_graciero_praca_viva`, só com `fato elara_viu_gilo_morrer` (gerador
-`tools/gerar_elara_graciero.py`, `outro_gilo()`). **Não mostra o Olho:** quem o tem em cada ramo já foi decidido em outro
-lugar. Cena nova = função em `CENAS` + id em `STORY_CINEMATICAS`. Teste: `python -X utf8 tools/test_cinematica.py`.
+Praça dos Escorpiões, ele atira (TEC!), tropeça, derruba a moeda de prata sem cunho, rasteja até ela e diz a dica da serra.
+Fica disponível, mas nenhuma etapa a usa desde que o vídeo da morte do Gilo entrou (ver abaixo). Cena nova = função em `CENAS` + id em `STORY_CINEMATICAS`. Teste: `python -X utf8 tools/test_cinematica.py`.
+
+### Vídeo nos slides de história e a morte do Gilo (2026-11-03)
+
+Um slide de `intro`/`outro`/`outro_rota` aceita `video` (`.mp4`/`.webm` em `assets/story/`, `_story_video_ok`; vale sozinho, sem texto nem imagem). `_story_norm`, `_clean_story_field` e `_validar_story` o conservam; o painel de história do editor (`tools/editor_story.js`) escolhe, envia, remove e pré-visualiza. No cliente, `_storyVideoPaint` toca uma vez e para no último quadro, com o botão "↻ Rever"; o slide anterior adianta a carga, e a `image` do mesmo slide fica por trás durante a carga ou se o vídeo falhar. O botão de som vale para o vídeo. `_resposta_video` responde a pedidos de faixa (`Range`), que o Safari exige.
+
+**Praça viva:** a morte do Gilo passou do encerramento para a abertura de `elara_graciero_praca_viva` (`intro_gilo()` em `tools/gerar_elara_graciero.py`), porque ele morre antes do combate. São 2 slides: as últimas palavras e o vídeo, que termina com os escorpiões voltando às grades, onde o mapa os coloca. As palavras variam por ramo: `elara_ramo_a` tem a pista da montanha; sem ele o Gilo aperta o embrulho, porque no ramo B o Olho ainda está com ele. O vídeo não leva condição: `elara_viu_gilo_morrer` só é gravado ao vencer a praça, e quem chega tarde já vai para a Praça morta. A fala `pracav_ultimas` saiu do mapa e `pracav_silencio` só anuncia as garras. Testes: `python -X utf8 tools/test_video_historia.py` e `node tools/test_video_historia_cliente.js`.
 
 ### O Resgate de Elara — rota do Olho (2026-10-22)
 

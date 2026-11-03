@@ -105910,22 +105910,6 @@ window.EDITOR_DUNGEONS = [
       "secret_passages": [],
       "falas": [
         {
-          "id": "pracav_ultimas",
-          "pos": [
-            3,
-            7
-          ],
-          "falante": {
-            "nome": "Gilo Dedos Sujos",
-            "emoji": "🗡️"
-          },
-          "texto": "Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da cidade paga em ouro... Eles... estão vindo...",
-          "trigger": {
-            "tipo": "proximidade",
-            "raio": 12
-          }
-        },
-        {
           "id": "pracav_silencio",
           "pos": [
             9,
@@ -105935,7 +105919,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Narrador",
             "emoji": "🦂"
           },
-          "texto": "Escorpiões grandes como cães saem dos esgotos e cobrem o Gilo. O grito dura pouco. Depois só o estalar das garras vem na direção de vocês.",
+          "texto": "O grito do Gilo já se foi. Agora só o estalar das garras atravessa a praça, vindo das grades na direção de vocês.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 12
@@ -171538,4 +171522,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

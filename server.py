@@ -10006,6 +10006,8 @@ def _story_norm(val):
                 slide["image"] = s["image"]
             if s.get("cinematica") in STORY_CINEMATICAS:
                 slide["cinematica"] = s["cinematica"]
+            if _story_video_ok(s.get("video")):
+                slide["video"] = s["video"]
             if not slide:
                 continue
             slide["fit"] = "contain" if s.get("fit") == "contain" else "cover"
@@ -10029,6 +10031,12 @@ def _story_media_ok(caminho):
     return (isinstance(caminho, str) and caminho.startswith(_STORY_MEDIA_PREFIX)
             and ".." not in caminho)
 
+_STORY_VIDEO_EXT = (".mp4", ".webm")
+
+def _story_video_ok(caminho):
+    """Vídeo de slide: mídia de história com extensão que o navegador toca."""
+    return _story_media_ok(caminho) and caminho.lower().endswith(_STORY_VIDEO_EXT)
+
 def _clean_story_field(raw):
     """Normaliza um campo de história do editor para persistência.
     Aceita string (legado/1 slide de texto) ou {'slides':[...], 'audio':...};
@@ -10045,6 +10053,8 @@ def _clean_story_field(raw):
             slide["image"] = s["image"]
         if s.get("cinematica") in STORY_CINEMATICAS:
             slide["cinematica"] = s["cinematica"]
+        if s.get("video"):
+            slide["video"] = s["video"]
         if not slide:
             continue
         if s.get("fit") == "contain":
@@ -10126,8 +10136,10 @@ def _validar_story(val, rotulo):
             return False, f"{rotulo}: slide {j+1} 'requisito' deve ser um objeto."
         if "cinematica" in s and s["cinematica"] not in STORY_CINEMATICAS:
             return False, f"{rotulo}: slide {j+1} 'cinematica' desconhecida."
-        if not (s.get("text") or s.get("image") or s.get("cinematica")):
-            return False, f"{rotulo}: slide {j+1} precisa de texto, imagem ou cinemática."
+        if "video" in s and not _story_video_ok(s["video"]):
+            return False, f"{rotulo}: slide {j+1} 'video' deve ser .mp4 ou .webm em assets/story/."
+        if not (s.get("text") or s.get("image") or s.get("cinematica") or s.get("video")):
+            return False, f"{rotulo}: slide {j+1} precisa de texto, imagem, cinemática ou vídeo."
     if "audio" in val and not isinstance(val["audio"], str):
         return False, f"{rotulo}: 'audio' deve ser texto."
     return True, "ok"
@@ -61639,6 +61651,7 @@ for _ext, _ct in (
     (".jpeg", "image/jpeg"), (".gif", "image/gif"),
     (".mp3", "audio/mpeg"), (".ogg", "audio/ogg"),
     (".wav", "audio/wav"), (".m4a", "audio/mp4"),
+    (".mp4", "video/mp4"), (".webm", "video/webm"),
 ):
     mimetypes.add_type(_ct, _ext)
 
@@ -61784,7 +61797,7 @@ SCENES_ASSET_DIR = os.path.join(BASE_DIR, "assets", "cenas")
 STORY_UPLOAD_MAX = 25 * 1024 * 1024            # 25 MB por arquivo
 _STORY_IMG_EXT = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 _STORY_AUDIO_EXT = {".mp3", ".ogg", ".wav", ".m4a"}
-_STORY_OK_EXT = _STORY_IMG_EXT | _STORY_AUDIO_EXT
+_STORY_OK_EXT = _STORY_IMG_EXT | _STORY_AUDIO_EXT | set(_STORY_VIDEO_EXT)
 
 def _save_story_upload(name, data_b64):
     """Grava uma mídia de história em assets/story/. Sobrescreve se já existir.
@@ -62140,6 +62153,25 @@ def _cliente_ja_tem(request, etag, mtime):
     return int(mtime) <= int(quando.timestamp()) + 1
 
 
+def _resposta_video(request, body, ctype, extra):
+    """Vídeo responde a pedidos de faixa: o Safari só toca assim."""
+    extra = dict(extra, **{"Accept-Ranges": "bytes"})
+    total = len(body)
+    m = re.fullmatch(r"bytes=(\d*)-(\d*)", (request.headers.get("Range") or "").strip())
+    if not m or not (m.group(1) or m.group(2)):
+        return _http(200, "OK", body, ctype, extra=extra)
+    if m.group(1):
+        inicio = int(m.group(1))
+        fim = min(int(m.group(2)), total - 1) if m.group(2) else total - 1
+    else:
+        inicio, fim = max(0, total - int(m.group(2))), total - 1
+    if inicio >= total or inicio > fim:
+        return _http(416, "Range Not Satisfiable", b"", ctype,
+                     extra=dict(extra, **{"Content-Range": f"bytes */{total}"}))
+    return _http(206, "Partial Content", body[inicio:fim + 1], ctype,
+                 extra=dict(extra, **{"Content-Range": f"bytes {inicio}-{fim}/{total}"}))
+
+
 def _serve_static(request):
     """Resolve o caminho pedido pelo navegador para um arquivo do cliente.
     Protege contra path traversal e só expõe o necessário para jogar."""
@@ -62181,6 +62213,9 @@ def _serve_static(request):
             body = f.read()
     except OSError:
         return _http(404, "Not Found", "404 Not Found")
+    tipo_video = mimetypes.guess_type(full)[0] or ""
+    if tipo_video.startswith("video/"):
+        return _resposta_video(request, body, tipo_video, validadores)
     if not _aceita_gzip(request):
         ctype0 = mimetypes.guess_type(full)[0] or "application/octet-stream"
         if ctype0.startswith("text/") or ctype0 in (
