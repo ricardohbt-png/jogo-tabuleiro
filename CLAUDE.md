@@ -1073,8 +1073,8 @@ resistência enquanto o herói permanecia na mesma sala.
 > objetivo (principal e secundários).
 
 > **Decorações (`game_state.decorations`):** objetos colocáveis no editor que
-> ocupam 1/2/4 casas (footprint `size:[w,h]` + `facing`, giro 90°). Catálogo
-> autoritativo `DECOR_TYPES` (server.py, 101 tipos) com `alto`/`pisavel`/`loot_capaz`/
+> ocupam a área definida por `size:[w,h]` + `facing` (giro 90°). Catálogo
+> autoritativo `DECOR_TYPES` (server.py, 112 tipos) com `alto`/`pisavel`/`loot_capaz`/
 > `special`. Decorações sólidas bloqueiam movimento (entram em `_blocks_tile` via
 > `_decor_block_tiles`); as **altas** ocluem a revelação de névoa por raycast
 > (`_tall_oclui_caminho` em `_reveal_around`). **Fogueira** (`special:campfire`,
@@ -1112,6 +1112,9 @@ resistência enquanto o herói permanecia na mesma sala.
 > combina `assets/objetos/tocha_parede.png` com o loop GLB de `chama_viva.glb` no 3D.
 > `cocho` é uma decoração baixa 2×1, sólida, girável e sem interação; o PNG transparente
 > e o GLB ficam em `assets/objetos/cocho.png` e `assets/objetos/cocho.glb`.
+> `barraca_mercador` ocupa 2×2, é alta e sólida; tem toldo listrado, balcão,
+> cestos de frutas e pães e balança de pratos. `cestos_feira` ocupa 1×1 e pode
+> ser colocado à parte. Ambos são decorativos e têm PNG/GLB próprios.
 > `barco_medieval` é uma decoração baixa, sólida e girável de 2×1; `navio_medieval`
 > ocupa 3×2, é alto, sólido e girável. Ambos não têm interação nem loot e usam PNG/GLB
 > próprios em `assets/objetos/`, com fontes Blender em `tools/create_*_medieval_glb.py`.
@@ -4637,6 +4640,20 @@ a peça no seletor de decorações.
 
 > **Fogo + feno (2026-10-17):** sétima reação do motor (`incendiar_feno` em `REACOES`, estado `feno` = casa de um `monte_feno` intacto, `_rx_feno_em`). Fogo de qualquer fonte numa casa de feno o acende, junto com os montes encostados (4 vizinhos, teto `RX_FENO_TETO`=24), como o piche: cria uma zona `chamas_piche` com `feno: true`, `dado: "1d4"` (dano de fogueira, sem pôr ninguém em chamas) e `expira_em = rodada + RX_DURACAO_FENO` (3), então valem as mesmas chamas vivas, o `spell_animation` `ignicao_piche`, o clarão `incendio` e os ganchos de entrada/início de turno do piche (`_rx_fogo_piche` lê `zona["dado"]`). O monte **mantém a imagem** (nada de trocar por fogueira); `queimando` só o deixa de barrar o passo. Quem está na casa queima na ignição. Ao fim (`_rx_feno_acabou`, chamado no ramo `chamas_piche` de `_processar_zonas_turno`) os montes queimados somem e o servidor manda `reacao_elemental` `fuligem`, que o cliente trata como a marca da explosão de gás (`_reacoesFuligens`, ~30 s, só no cliente). Só o feno reage; para outro tipo inflamável, generalize `_rx_feno_em` por um campo `inflamavel`. `queimando` e a zona vão na foto. Testes: `tools/test_feno_fogo.py`.
 > **Carroça com feno e espantalho (2026-10-30):** decorações próprias em `DECOR_TYPES`; a carroça usa o modelo da carroça-base com fardos de feno. `incendiar_carroca_feno` é uma linha separada de `REACOES`, sem espalhar fogo aos vizinhos. A zona `chamas_piche` marcada `carroca_feno` conserva o dano de contato de feno (`1d4`), mantém o bloqueio do objeto e troca `image`/`model3d` ao passar da etapa de feno (rodadas 1–2) para fogo total (rodadas 3–4); no começo da rodada 5 remove a carroça e anuncia `fuligem`. Assets/fonte Blender: `assets/objetos/{espantalho,carroca_feno}.*` e `tools/create_espantalho_carroca_feno.py`.
+
+> **Templo de Alva e Luz (2026-11-03):** decoração 6×6, sólida e girável, inspirada na referência do pátio de Alva e Luz. O servidor registra PNG e GLB em `DECOR_TYPES`/`DECOR_MODEL3D`, e o catálogo do editor é gerado por `tools/export_catalog.py`. Arquivos de origem e assets: `tools/create_templo_alva_e_luz.py` e `assets/objetos/templo_alva_e_luz.{blend,glb,png}`; a prévia transparente fica em `templo_alva_e_luz_preview.png`.
+
+> **Mesa de banquete luxuosa (2026-11-03):** decoração 2×3 girável e alta, com oito cadeiras estofadas, toalha bordô e azul, louça, talheres e três castiçais. O GLB de jogo combina a geometria em um objeto com materiais separados para reduzir draw calls; o `.blend` conserva as peças editáveis. Assets/fonte: `assets/objetos/mesa_banquete_luxo.{blend,glb,png}` e `tools/create_mesa_banquete_luxo.py`.
+
+> **Espelho dourado (2026-11-03):** decoração de parede 1×1, girável e sem footprint caminhável. Usa moldura oval dourada com entalhes, reflexo prateado azulado e pequenos detalhes de lápis-lazúli. Arquivos: `assets/objetos/espelho_dourado.{blend,glb,png}` e `tools/create_espelho_dourado.py`; o modelo fica apoiado na face da parede pelo fluxo `special:wall`.
+
+> **Sofá e poltrona de luxo (2026-11-03):** tipos separados e giráveis, cada um 1×2, com estrutura de nogueira, veludo bordô e filetes dourados. O sofá tem dois assentos; a poltrona inclui apoio para os pés no segundo tile. PNG e GLB são gerados pelo script `tools/create_sofa_poltrona_luxo.py`; cada GLB exporta a geometria consolidada com materiais separados.
+
+> **Poste de iluminação (2026-11-03):** decoração 1×1, alta e girável, com base de ferro, haste forjada, lanterna âmbar e chama emissiva estática. Usa PNG/GLB próprios em `assets/objetos/poste_iluminacao.*`, gerados por `tools/create_poste_iluminacao.py`.
+
+> **Banca de flores (2026-11-03):** decoração 1×1, alta e girável, com toldo listrado, balcão de madeira e vasos ornamentais com flores coloridas. PNG e GLB consolidados são gerados por `tools/create_banca_flores.py` em `assets/objetos/banca_flores.*`.
+
+> **Carrinho de entregas (2026-11-03):** decoração 1×2, alta e girável, distinta da carroça 2×2. Tem duas rodas, cabos para puxar, sacos, lenha e jarro de cerâmica. Arquivos de origem e miniaturas: `tools/create_carrinho_entregas.py` e `assets/objetos/carrinho_entregas.{blend,glb,png}`.
 
 > **Água profunda e redemoinho nas reações (2026-10-14):** o estado `agua` (`_rx_estado`, qualquer
 > `_water_tile_kind` fora de ponte: `agua`, `agua_profunda`, `rodamoinho`, `rodamoinho_profundo`) substituiu

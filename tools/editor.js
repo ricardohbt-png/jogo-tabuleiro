@@ -146,6 +146,48 @@
       loot_capaz: false, special: "wall", image: "grilhoes_parede.png",
     });
   }
+  if (!(CAT.decorations || []).some(d => d && d.type === "espelho_dourado")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "espelho_dourado", nome: nomeCat("decor", "espelho_dourado", "Espelho dourado"), emoji: "🪞",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "espelho_dourado.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "sofa_luxo")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "sofa_luxo", nome: nomeCat("decor", "sofa_luxo", "Sofá de luxo"), emoji: "🛋️",
+      size: [1, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "sofa_luxo.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "poltrona_luxo")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "poltrona_luxo", nome: nomeCat("decor", "poltrona_luxo", "Poltrona estofada"), emoji: "🪑",
+      size: [1, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "poltrona_luxo.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "poste_iluminacao")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "poste_iluminacao", nome: nomeCat("decor", "poste_iluminacao", "Poste de iluminação"), emoji: "🏮",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "poste_iluminacao.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "banca_flores")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "banca_flores", nome: nomeCat("decor", "banca_flores", "Banca de flores"), emoji: "💐",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "banca_flores.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "carrinho_entregas")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "carrinho_entregas", nome: nomeCat("decor", "carrinho_entregas", "Carrinho de entregas"), emoji: "🛒",
+      size: [1, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "carrinho_entregas.png",
+    });
+  }
   if (!(CAT.decorations || []).some(d => d && d.type === "tronco_musgo")) {
     CAT.decorations = (CAT.decorations || []).concat({
       type: "tronco_musgo", nome: nomeCat("decor", "tronco_musgo", "Tronco caído com musgo"), emoji: "🪵",

@@ -15658,6 +15658,51 @@ window.EDITOR_CATALOG = {
       "image": "navio_medieval.png"
     },
     {
+      "type": "barraca_mercador",
+      "nome": "Barraca de mercador",
+      "emoji": "🏮",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "barraca_mercador.png"
+    },
+    {
+      "type": "cestos_feira",
+      "nome": "Cestos de frutas e pães",
+      "emoji": "🧺",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cestos_feira.png"
+    },
+    {
+      "type": "banca_flores",
+      "nome": "Banca de flores",
+      "emoji": "💐",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "banca_flores.png"
+    },
+    {
       "type": "saco_grao",
       "nome": "Saco de grãos",
       "emoji": "🌾",
@@ -15899,6 +15944,66 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "poste_iluminacao",
+      "nome": "Poste de iluminação",
+      "emoji": "🏮",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "poste_iluminacao.png"
+    },
+    {
+      "type": "sofa_luxo",
+      "nome": "Sofá de luxo",
+      "emoji": "🛋️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "sofa_luxo.png"
+    },
+    {
+      "type": "poltrona_luxo",
+      "nome": "Poltrona estofada",
+      "emoji": "🪑",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "poltrona_luxo.png"
+    },
+    {
+      "type": "mesa_banquete_luxo",
+      "nome": "Mesa de banquete luxuosa",
+      "emoji": "🍷",
+      "size": [
+        2,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "mesa_banquete_luxo.png"
+    },
+    {
       "type": "estante",
       "nome": "Estante",
       "emoji": "🗄️",
@@ -15927,6 +16032,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": true,
       "special": null,
       "image": "carroca.png"
+    },
+    {
+      "type": "carrinho_entregas",
+      "nome": "Carrinho de entregas",
+      "emoji": "🛒",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "carrinho_entregas.png"
     },
     {
       "type": "coluna",
@@ -16377,6 +16497,36 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": "wall",
       "image": "vitral_templo.png"
+    },
+    {
+      "type": "espelho_dourado",
+      "nome": "Espelho dourado",
+      "emoji": "🪞",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "espelho_dourado.png"
+    },
+    {
+      "type": "templo_alva_e_luz",
+      "nome": "Templo de Alva e Luz",
+      "emoji": "⛪",
+      "size": [
+        6,
+        6
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "templo_alva_e_luz.png"
     },
     {
       "type": "sino_ritualistico",

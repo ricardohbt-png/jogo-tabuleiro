@@ -662,6 +662,12 @@ const DECOR_GLB_MODELS = {
   'fontedecanto.png': 'assets/objetos/fonte_de_parede.glb',
   'fonte_de_parede.png': 'assets/objetos/fonte_de_parede.glb',
   'armadura.png': 'assets/objetos/armadura.glb',
+  'mesa_banquete_luxo.png': 'assets/objetos/mesa_banquete_luxo.glb',
+  'sofa_luxo.png': 'assets/objetos/sofa_luxo.glb',
+  'poltrona_luxo.png': 'assets/objetos/poltrona_luxo.glb',
+  'poste_iluminacao.png': 'assets/objetos/poste_iluminacao.glb',
+  'banca_flores.png': 'assets/objetos/banca_flores.glb',
+  'carrinho_entregas.png': 'assets/objetos/carrinho_entregas.glb',
   // Variante circular da fogueira usada na masmorra de Elara.
   'fogueiracircular.png': 'assets/objetos/fogueira_animada.glb',
   // Cama de casal da masmorra de Elara.
@@ -680,6 +686,8 @@ const DECOR_GLB_MODELS = {
   'gruta_parede.png': 'assets/objetos/gruta_parede.glb',
   'braseiro_parede.png': 'assets/objetos/braseiro_parede.glb',
   'vitral_templo.png': 'assets/objetos/vitral_templo.glb',
+  'espelho_dourado.png': 'assets/objetos/espelho_dourado.glb',
+  'templo_alva_e_luz.png': 'assets/objetos/templo_alva_e_luz.glb',
   'gargula_pedra.png': 'assets/objetos/gargula_pedra.glb',
   'sino_ritualistico.png': 'assets/objetos/sino_ritualistico.glb',
   'estatua_divindade.png': 'assets/objetos/estatua_divindade.glb',
@@ -762,6 +770,12 @@ const DECOR_GLB_TYPES = {
   // Armorial/estante de armas vertical (1×2 casas).
   estante_armas: 'assets/objetos/armorial.glb',
   mesa_cadeiras: 'assets/objetos/mesa.glb',
+  mesa_banquete_luxo: 'assets/objetos/mesa_banquete_luxo.glb',
+  sofa_luxo: 'assets/objetos/sofa_luxo.glb',
+  poltrona_luxo: 'assets/objetos/poltrona_luxo.glb',
+  poste_iluminacao: 'assets/objetos/poste_iluminacao.glb',
+  banca_flores: 'assets/objetos/banca_flores.glb',
+  carrinho_entregas: 'assets/objetos/carrinho_entregas.glb',
   trono: 'assets/objetos/trono.glb',
   barril: 'assets/objetos/barril.glb',
   barril_cerveja: 'assets/objetos/barril_cerveja.glb',
@@ -781,6 +795,8 @@ const DECOR_GLB_TYPES = {
   gruta_parede: 'assets/objetos/gruta_parede.glb',
   braseiro_parede: 'assets/objetos/braseiro_parede.glb',
   vitral_templo: 'assets/objetos/vitral_templo.glb',
+  espelho_dourado: 'assets/objetos/espelho_dourado.glb',
+  templo_alva_e_luz: 'assets/objetos/templo_alva_e_luz.glb',
   gargula_pedra: 'assets/objetos/gargula_pedra.glb',
   sino_ritualistico: 'assets/objetos/sino_ritualistico.glb',
   estatua_divindade: 'assets/objetos/estatua_divindade.glb',
@@ -7868,6 +7884,7 @@ function _getWallObjeto2DImg(imageName){
 const DECOR_FACING_OFFSETS = Object.freeze({
   prisao: Math.PI,
   estante_livros: Math.PI,
+  sofa_luxo: -Math.PI / 2,
   fonte_de_parede: Math.PI,
   'fonte_de_parede.png': Math.PI,
   'fontedecanto.png': Math.PI,
@@ -50926,12 +50943,13 @@ function _buildWallDecorGLB(d, path, liftY = 0){
     const inst = template.clone();
     const backingMounted = d.type === 'tocha_parede' || d.type === 'braseiro_parede'
       || d.type === 'vitral_templo' || d.type === 'grilhoes_parede'
-      || d.type === 'gargula_pedra' || d.type === 'gruta_parede';
+      || d.type === 'gargula_pedra' || d.type === 'gruta_parede'
+      || d.type === 'espelho_dourado';
     // O Blender exporta a frente desta tocha para -Z. O facing da parede
     // aponta para o chão da sala: alinhe a frente a +Z antes de medir e girar.
     if(d.type === 'tocha_parede' || d.type === 'braseiro_parede'
         || d.type === 'vitral_templo' || d.type === 'gargula_pedra'
-        || d.type === 'gruta_parede')
+        || d.type === 'gruta_parede' || d.type === 'espelho_dourado')
       inst.rotation.y += Math.PI;
     const animations = (template.userData && template.userData._gltfAnimations) || [];
     const animationMixer = animations.length ? new T.AnimationMixer(inst) : null;
@@ -50967,13 +50985,14 @@ function _buildWallDecorGLB(d, path, liftY = 0){
     const WALL_DECOR_GLB_SURFACE =
       (d.type === 'tocha_parede' || d.type === 'braseiro_parede'
         || d.type === 'vitral_templo' || d.type === 'grilhoes_parede'
-        || d.type === 'gargula_pedra' || d.type === 'gruta_parede') ? 0.516 : 0.575;
+        || d.type === 'gargula_pedra' || d.type === 'gruta_parede'
+        || d.type === 'espelho_dourado') ? 0.516 : 0.575;
     // O brasão é uma placa suspensa: sua base acompanha a altura do decal PNG
     // (em vez de começar no piso), deixando o topo dentro do terço superior da
     // parede de 1,75 unidades.
     const wallBaseY = (d.type === 'tocha_parede' || d.type === 'braseiro_parede'
       || d.type === 'vitral_templo' || d.type === 'gargula_pedra'
-      || d.type === 'gruta_parede') ? 0.595
+      || d.type === 'gruta_parede' || d.type === 'espelho_dourado') ? 0.595
       : (d.type === 'brasao_leao' ? 0.58 : DECOR_GLB_FLOOR_Y);
     grp.position.set(
       d.pos[0] + face[0] * WALL_DECOR_GLB_SURFACE,
