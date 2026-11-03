@@ -14869,7 +14869,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "solo_grupo": bool(self._jogo_salvo_solo()
                                 and any(p.get("controlador") for p in self.players.values())),
             "ouro_compartilhado": bool(self._jogo_salvo_solo()
-                                       and self.savegame.get("ouro_compartilhado", False)
+                                       and (self.savegame or {}).get("ouro_compartilhado", False)
                                        and any(p.get("controlador") for p in self.players.values())),
             "turn_timer_enabled": self.turn_timer_enabled,
             "visao_compartilhada_permitida": self.visao_compartilhada_permitida,
@@ -56918,7 +56918,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False
         # Escolhendo a magia nova (subiu de nível): o jogo espera; nada além do
         # painel. Encerrar o turno passa por _is_turn_servos e recusa reabrindo o painel.
-        if self._escolha_magia_pausa(self.players.get(pid)):
+        if self._escolha_magia_pausa(getattr(self, "players", {}).get(pid)):
             return False
         # A fila do simulador é deliberadamente independente da iniciativa de
         # partidas reais. Só heróis efêmeros da sala de teste passam por aqui.

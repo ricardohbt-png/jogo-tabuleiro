@@ -31,7 +31,7 @@ if (GS.setCooperativeVisionPreference) {
 
 console.log('\n[2] Integração de seleção');
 const game = fs.readFileSync(path.join(root, 'game.js'), 'utf8');
-check('modo de seleção intercepta o clique antes de ações normais', /function handleTileClick\(tx, ty\)\{[\s\S]{0,350}_handleCooperativeMarkerTarget\(tx, ty\)/.test(game));
+check('modo de seleção intercepta o clique antes de ações normais', /function handleTileClick\(tx, ty(?:, opts)?\)\{[\s\S]{0,350}_handleCooperativeMarkerTarget\(tx, ty\)/.test(game));
 check('modo de seleção intercepta clique 3D antes da mira de habilidades', /function on3DClick\(e\)\{[\s\S]{0,240}_handleCooperativeMarkerTarget[\s\S]{0,100}return;/.test(game));
 check('Escape cancela a seleção de marcador', /Escape[\s\S]{0,180}_cancelCooperativeMarkerTarget/.test(game));
 check('controle de categorias oferece foco de teclado e gamepad', /data-cooperative-marker-category[\s\S]{0,180}data-gamepad-action="activate"/.test(game));

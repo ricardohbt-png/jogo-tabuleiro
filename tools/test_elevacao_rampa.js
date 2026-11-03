@@ -254,7 +254,7 @@ check("editor.js tem um helper bridgeAltura", /function\s+bridgeAltura\s*\(/.tes
 check("placeBridge usa o helper em vez de elevationAt cru",
       /placeBridge[\s\S]{0,400}altura:\s*bridgeAltura\(/.test(editorSrc));
 check("a serialização também deriva",
-      /pontes:\s*S\.pontes\.map[\s\S]{0,200}altura:\s*bridgeAltura\(/.test(editorSrc));
+      /pontes:\s*\[?\s*(?:\.\.\.)?S\.pontes\.map[\s\S]{0,200}altura:\s*bridgeAltura\(/.test(editorSrc));
 
 console.log("\n" + "=".repeat(62));
 console.log(`  ${PASS} passaram, ${FAIL} falharam`);

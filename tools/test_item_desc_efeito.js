@@ -29,7 +29,9 @@ check('efeito sem rótulo usa a descrição do próprio item',
 check('sem descrição no item, usa a do catálogo do cliente',
   d({ id: 'frasco_x', effect: 'throwable' }) === 'Descrição do catálogo.');
 check('efeito COM rótulo traduzido continua mostrando o rótulo + valor',
-  d({ id: 'mochila', effect: 'bagslots', value: 2, descricao: 'ignorada' }) === 'Slots de mochila 2');
+  d({ id: 'mochila', effect: 'bagslots', value: 2 }) === 'Slots de mochila 2');
+check('a descrição do próprio item vale mais que o rótulo genérico do efeito',
+  d({ id: 'mochila', effect: 'bagslots', value: 2, descricao: '+2 espaços na bolsa.' }) === '+2 espaços na bolsa.');
 check('sem rótulo e sem descrição, o id técnico ainda é o último recurso (comportamento antigo)',
   d({ id: 'sem_nada', effect: 'efeito_novo', value: 3 }) === 'efeito_novo 3');
 process.exit(falhas ? 1 : 0);

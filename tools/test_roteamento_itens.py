@@ -171,7 +171,7 @@ async def main():
     r = setup()
     w = make_player("p1", "Victor", "warrior", 0); r.players["p1"] = w
     w["gold"] = 9999; w["bag"] = []; w["gear"]["off_hand"] = None
-    ammo_id = SHOP_AMMO[0]["id"]
+    ammo_id = next(i["id"] for i in SHOP_AMMO if i.get("effect") == "ammo")   # o 1º item da loja é uma aljava
     await r.handle_shop_buy("p1", "ferreiro_ammo", ammo_id)
     check("munição equipou na mão esquerda (não foi pra bolsa)",
           (w["gear"].get("off_hand") or {}).get("effect") == "ammo")

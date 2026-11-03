@@ -32,7 +32,7 @@ class Element {
 const potion={id:'potion',name:'Potion',item_slot:'bag',effect:'heal'};
 const oil={id:'oil',name:'Oil',item_slot:'bag',arremessavel:true};
 const player={id:'p',alive:true,bag:[potion,{id:'cinto_utilidades'}],gear:{item1:{id:'cinto_utilidades',utility_belt_token:'belt-A',utility_belt_slots:[{item:potion,quantity:4},{item:oil,quantity:2}]},item2:{id:'cinto_com_bolsos'}}};
-const sent=[],host=new Element(),doc={addEventListener(){},createElement:()=>new Element(),getElementById:()=>null,querySelector:()=>null,activeElement:null};
+const sent=[],host=new Element(),doc={body:new Element(),addEventListener(){},createElement:()=>new Element(),getElementById:()=>null,querySelector:()=>null,activeElement:null};
 const context={document:doc,localStorage:{getItem:()=>null},window:{_iniciarMiraArremesso:(...a)=>sent.push(['throw',...a])},GS:{gameState:{phase:'playing',players:[player]},myPid:'p',isMyTurn:true,CATALOGO_ITENS:{},moveUtilityBeltItem:(...a)=>sent.push(['move',...a])},t:x=>x,_rotulo:x=>x,itemIconHTML:()=>'',performance:{now:()=>1000},requestAnimationFrame:f=>f(),useItem:(...a)=>sent.push(['use',...a])};
 context._ligarTooltipItem = () => {}; // O hover compartilhado é coberto por test_item_tooltip_hover.js.
 vm.createContext(context);
