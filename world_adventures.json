@@ -1157,7 +1157,7 @@
           "slides": [
             {
               "image": "assets/story/gilo_cena_1_chegada.jpg",
-              "text": "A Praça dos Escorpiões dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto."
+              "text": "A Praça de Graciero dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto."
             },
             {
               "video": "assets/story/gilo_cena_2_susto.mp4",
@@ -1175,7 +1175,7 @@
                 "sem_fato": "",
                 "aventura_id": ""
               },
-              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr.\n\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da cidade paga em ouro... Eles... estão vindo...\""
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... A pedra já foi entregue aos que sobem a montanha... Eles... estão vindo...\""
             },
             {
               "video": "assets/story/gilo_cena_3_cerco.mp4",
@@ -1188,7 +1188,7 @@
                 "sem_fato": "elara_ramo_a",
                 "aventura_id": ""
               },
-              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... estão vindo...\""
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... Só mais uma rua... eu vou conseguir... Eles... estão vindo...\""
             },
             {
               "video": "assets/story/gilo_cena_4_queda.mp4",
@@ -1218,7 +1218,7 @@
       "renome_min": 0,
       "nivel_grupo_min": 0,
       "item_id": "",
-      "fato": "",
+      "fato": "elara_ramo_a",
       "sem_fato": "elara_graciero_lento",
       "aventura_id": "elara_graciero_cais"
     },
@@ -1625,6 +1625,88 @@
       "sem_fato": "elara_leonel_vencido",
       "aventura_id": "",
       "tambem_fato": "elara_ramo_a"
+    },
+    "renome_recompensa": 2
+  },
+  "elara_graciero_praca_pedra": {
+    "id": "elara_graciero_praca_pedra",
+    "nome": "A Praça dos Escorpiões",
+    "x": 66.06,
+    "y": 28.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_graciero_praca_pedra.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "A Praça de Graciero dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto."
+            },
+            {
+              "video": "assets/story/gilo_cena_2_susto.mp4",
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois outro. O Gilo recua e aponta a besta para um, para o outro, sem saber em qual atirar."
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... A pedra já foi entregue aos que sobem a montanha... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... Só mais uma rua... eu vou conseguir... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_cena_4_queda.mp4",
+              "image": "assets/story/gilo_escorpioes_praca.png",
+              "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."
+            },
+            {
+              "video": "assets/story/gilo_cena_5_roupas.mp4",
+              "image": "assets/story/gilo_cena_4_queda.jpg",
+              "text": "Depois, silêncio. Os escorpiões voltam às grades. Da praça sobram o chapéu, a capa em tiras e as manchas nas pedras."
+            }
+          ]
+        },
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_ramo_b",
+      "sem_fato": "elara_graciero_lento",
+      "aventura_id": "elara_graciero_cais"
     },
     "renome_recompensa": 2
   }

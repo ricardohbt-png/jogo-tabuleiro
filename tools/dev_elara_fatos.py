@@ -109,8 +109,13 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
         if lento:
             prog["elara_graciero_praca_morta"] = 1
         else:
-            fatos |= {GRM.F_VIU_MORRER, GR.F_DICA_MONTANHA}
-            prog["elara_graciero_praca_viva"] = 1
+            fatos.add(GRM.F_VIU_MORRER)
+            if GR.F_RAMO_B in fatos:
+                fatos.add(GR.F_OLHO)
+                prog["elara_graciero_praca_pedra"] = 1
+            else:
+                fatos.add(GR.F_DICA_MONTANHA)
+                prog["elara_graciero_praca_viva"] = 1
     return fatos, prog, local
 
 

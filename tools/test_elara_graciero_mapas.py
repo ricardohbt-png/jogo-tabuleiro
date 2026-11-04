@@ -34,8 +34,25 @@ class MapasTests(unittest.TestCase):
             d = f()
             self.assertEqual(len(salas_alcancaveis(d)), len(d["rooms"]), arq)
             poder = d["expected_party"]["heroes"] * d["expected_party"]["level"]
+            teto = 1.2 if arq == "elara_graciero_praca_pedra.json" else 0.8   # luta pela pedra: Difícil de propósito
             for rid, nd in M.nd_por_sala(d).items():
-                self.assertLessEqual(nd, 0.8 * poder, f"{arq} sala {rid}")
+                self.assertLess(nd, teto * poder, f"{arq} sala {rid}") if teto > 1 else \
+                    self.assertLessEqual(nd, teto * poder, f"{arq} sala {rid}")
+
+    def test_praca_da_pedra_e_a_viva_com_o_dobro_de_escorpioes(self):
+        viva = S.carregar_dungeon("elara_graciero_praca_viva.json")
+        pedra = M.masmorra_praca_pedra()
+        self.assertEqual(len(viva["monsters"]), 6)
+        self.assertEqual([m["type"] for m in pedra["monsters"]], [M.TIPO_ESCORPIAO] * 12)
+        self.assertEqual(len({tuple(m["pos"]) for m in pedra["monsters"]}), 12)
+        self.assertEqual(len({m["source_id"] for m in pedra["monsters"]}), 12)
+        self.assertEqual(pedra["decorations"], viva["decorations"])
+        r = S.GameRoom("PEDRA")
+        r.load_authored_dungeon(pedra)
+        self.assertEqual(len(r.monsters), 12)
+        for m in r.monsters.values():
+            self.assertFalse(r._blocks_tile(*m["pos"]), m["pos"])
+        self.assertIn("embrulho", pedra["falas"][0]["texto"])
 
     def test_frentes_tem_relogio_baus_e_fatos(self):
         for f, fato in ((M.masmorra_beco, M.F_BECO), (M.masmorra_cais, M.F_CAIS)):

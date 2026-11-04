@@ -10,7 +10,7 @@ Plano: docs/superpowers/plans/2026-10-22-campanha-elara-parte4-graciero.md
 
 Só toca no que é dele: as conversas `elara_*` dos slots ativos da taverna de Graciero (as conversas do
 autor ficam), os destinos `elara_graciero_*`/`elara_leonel_*` do mapa-múndi, as fichas `escorpiao_gigante` e
-`leonel`, o item `olho_de_arveluz` e os sete mapas (protegidos por assinatura: mapa editado depois de gerado
+`leonel`, o item `olho_de_arveluz` e os oito mapas (protegidos por assinatura: mapa editado depois de gerado
 só é regravado com --forcar).
 """
 import argparse
@@ -70,7 +70,8 @@ def conversas():
                       "Os guardas da cidade, ainda pálidos por causa dos escorpiões, entregam ao grupo o que "
                       "acharam entre os ossos do mercenário: um embrulho de pano que pesa mais do que devia. "
                       "Está quente ao toque.",
-                      _req(fato=F_GILO_MORREU, sem_fato=F_RAMO_A), fato=F_OLHO, item_id=F.ID_OLHO, uma_vez=True),
+                      _req(fato=F_GILO_MORREU, tambem_fato=F_RAMO_B, sem_fato=F_OLHO),
+                      fato=F_OLHO, item_id=F.ID_OLHO, uma_vez=True),
         ],
         "npc_ms2ee41a": [
             _conversa("elara_graciero_garconete",
@@ -152,7 +153,7 @@ def intro_gilo():
     antes_da_fala = "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr."
     return {"slides": [
         {"image": pasta + "gilo_cena_1_chegada.jpg",
-         "text": ("A Praça dos Escorpiões dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, "
+         "text": ("A Praça de Graciero dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, "
                   "olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto.")},
         {"video": pasta + "gilo_cena_2_susto.mp4", "image": pasta + "gilo_cena_1_chegada.jpg",
          "text": ("Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois "
@@ -160,13 +161,14 @@ def intro_gilo():
         {"video": pasta + "gilo_cena_3_cerco.mp4", "image": pasta + "gilo_cena_2_susto.jpg",
          "requisito": _req(fato=F_RAMO_A),
          "text": (antes_da_fala + "\n"
-                  "\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da "
-                  "cidade paga em ouro... Eles... estão vindo...\"")},
+                  "\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou "
+                  "ouro demais para eu dizer não... A pedra já foi entregue aos que sobem a montanha... Eles... "
+                  "estão vindo...\"")},
         {"video": pasta + "gilo_cena_3_cerco.mp4", "image": pasta + "gilo_cena_2_susto.jpg",
          "requisito": _req(sem_fato=F_RAMO_A),
          "text": (antes_da_fala + " Aperta contra o peito um embrulho de pano.\n"
-                  "\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... "
-                  "estão vindo...\"")},
+                  "\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou "
+                  "ouro demais para eu dizer não... Só mais uma rua... eu vou conseguir... Eles... estão vindo...\"")},
         {"video": pasta + "gilo_cena_4_queda.mp4", "image": cerco,
          "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."},
         {"video": pasta + "gilo_cena_5_roupas.mp4", "image": pasta + "gilo_cena_4_queda.jpg",
@@ -210,8 +212,12 @@ def destinos():
                                        _req(aventura_id="elara_graciero_beco"), 1),
         "elara_graciero_praca_viva": destino("elara_graciero_praca_viva", "A Praça dos Escorpiões", 3.0, 0.5,
                                              [("elara_graciero_praca_viva.json", False)],
-                                             _req(aventura_id="elara_graciero_cais", sem_fato=F_LENTO), 2,
-                                             intro_etapa=intro_gilo()),
+                                             _req(aventura_id="elara_graciero_cais", fato=F_RAMO_A, sem_fato=F_LENTO),
+                                             2, intro_etapa=intro_gilo()),
+        "elara_graciero_praca_pedra": destino("elara_graciero_praca_pedra", "A Praça dos Escorpiões", 3.0, 0.5,
+                                              [("elara_graciero_praca_pedra.json", False)],
+                                              _req(aventura_id="elara_graciero_cais", fato=F_RAMO_B, sem_fato=F_LENTO),
+                                              2, intro_etapa=intro_gilo()),
         "elara_graciero_praca_morta": destino("elara_graciero_praca_morta", "A Praça dos Escorpiões", 3.0, 0.5,
                                               [("elara_graciero_praca_morta.json", False)],
                                               _req(aventura_id="elara_graciero_cais", fato=F_LENTO), 2),

@@ -5,6 +5,7 @@ A Praça viva e a morta partem da MESMA planta e das mesmas sementes: só mudam 
 O esconderijo alerta é o normal com guardas e uma armadilha a mais, acrescentados DEPOIS dos básicos
 (assim as casas sorteadas antes não mudam).
 """
+import copy
 import os
 import sys
 
@@ -14,7 +15,7 @@ for _p in (RAIZ, os.path.join(RAIZ, "tools")):
         sys.path.insert(0, _p)
 import server as S  # noqa: E402
 from charcos_mapas import montar_fila, obj  # noqa: E402
-from elara_graciero_fichas import TIPO_ESCORPIAO, TIPO_LEONEL  # noqa: E402
+from elara_graciero_fichas import ID_OLHO, TIPO_ESCORPIAO, TIPO_LEONEL  # noqa: E402
 
 SOLDADO, ORC, DUAL, ARQUEIRO = "soldado", "orc", "goblin_dual", "goblin_arqueiro"
 
@@ -25,6 +26,7 @@ F_CAIS = "elara_cais_vencido"
 F_GILO_MORREU = "elara_gilo_morreu"
 F_VIU_MORRER = "elara_viu_gilo_morrer"
 F_DICA_MONTANHA = "elara_dica_montanha"
+F_OLHO = "elara_olho_recuperado"
 F_ELARA = "elara_elara_salva"
 F_LEONEL = "elara_leonel_vencido"
 
@@ -121,6 +123,26 @@ def masmorra_praca_viva():
     return _praca("pracav", "elara_graciero_praca_viva", "A Praça dos Escorpiões", True)
 
 
+# Casas dos escorpiões extras da Praça da pedra: junto às grades, longe da entrada.
+ESCORPIOES_DA_PEDRA = ([20, 6], [21, 8], [21, 10], [20, 11], [19, 12], [21, 12])
+
+
+def masmorra_praca_pedra():
+    """Ramo B: o Olho ainda está com o Gilo e os escorpiões vêm por ele. É a Praça viva como o autor a deixou, com o
+    dobro de escorpiões, e quem vence recebe a pedra ali. Sem a dica da montanha: a pedra nunca saiu da cidade."""
+    d = copy.deepcopy(S.carregar_dungeon("elara_graciero_praca_viva.json") or masmorra_praca_viva())
+    d["id"] = "elara_graciero_praca_pedra"
+    base = len(d["monsters"])
+    d["monsters"] += [{"type": TIPO_ESCORPIAO, "pos": list(pos), "room_id": 0, "boss": False, "target": False,
+                       "source_id": f"mob_{base + i}"} for i, pos in enumerate(ESCORPIOES_DA_PEDRA)]
+    d["falas"][0]["texto"] = ("O grito do Gilo já se foi. O embrulho dele ficou caído entre as pedras, e as garras "
+                              "saem de todas as grades, atrás dele e de vocês.")
+    principal = d["objectives"]["primary"]
+    principal["fatos"] = [F_VIU_MORRER, F_OLHO]
+    principal["reward"]["items"] = [{"id": ID_OLHO}]
+    return d
+
+
 def masmorra_praca_morta():
     return _praca("pracam", "elara_graciero_praca_morta", "A Praça dos Escorpiões", False)
 
@@ -195,6 +217,7 @@ def masmorra_leonel_2():
 
 ARQUIVOS = {
     "elara_graciero_beco.json": masmorra_beco, "elara_graciero_cais.json": masmorra_cais,
-    "elara_graciero_praca_viva.json": masmorra_praca_viva, "elara_graciero_praca_morta.json": masmorra_praca_morta,
+    "elara_graciero_praca_viva.json": masmorra_praca_viva, "elara_graciero_praca_pedra.json": masmorra_praca_pedra,
+    "elara_graciero_praca_morta.json": masmorra_praca_morta,
     "elara_leonel_1.json": masmorra_leonel_1, "elara_leonel_1_alerta.json": masmorra_leonel_1_alerta,
     "elara_leonel_2.json": masmorra_leonel_2}

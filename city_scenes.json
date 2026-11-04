@@ -1672,8 +1672,9 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "elara_gilo_morreu",
-                "sem_fato": "elara_ramo_a",
-                "aventura_id": ""
+                "sem_fato": "elara_olho_recuperado",
+                "aventura_id": "",
+                "tambem_fato": "elara_ramo_b"
               },
               "efeito": {
                 "renome": 0,

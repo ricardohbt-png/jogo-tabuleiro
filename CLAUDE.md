@@ -268,8 +268,7 @@ Cais (relógio `elara_graciero`, limite 30, fato `elara_graciero_lento`) → Pra
 fala com as últimas palavras do Gilo; grava `elara_gilo_morreu`, `elara_viu_gilo_morrer` e `elara_dica_montanha`) ou morta
 (só o corpo; grava `elara_gilo_morreu`) → Casa de Leilões/Porões do Leonel, normal ou **alerta** (`elara_leonel_cauteloso`,
 vinda do bardo morto ou da traição do bardo maltratado: mais guardas e uma armadilha, sem deslocar o resto). A morte do Gilo é
-**narrada** (o validador força movimento 6 em ficha personalizada, então um Gilo ferido não ficaria parado). O ramo B recebe o
-Olho na conversa `elara_gilo_pertences` (`sem_fato elara_ramo_a`); o ramo A nunca. A Elara é o baú-chave da cela
+**narrada** (o validador força movimento 6 em ficha personalizada, então um Gilo ferido não ficaria parado). No ramo B a Praça é `elara_graciero_praca_pedra`: a Praça viva do arquivo com 12 escorpiões, porque eles vêm atrás do Olho, e a pedra é recompensa do objetivo ali (grava `elara_olho_recuperado`), sem dica da montanha. A conversa `elara_gilo_pertences` (`tambem_fato elara_ramo_b`, `sem_fato elara_olho_recuperado`) fica para quem chegou tarde à Praça morta; o ramo A nunca recebe o Olho na cidade. A Elara é o baú-chave da cela
 (`elara_elara_salva`, objetivo secundário): o final sempre a diz salva. O `outro_rota` dos dois destinos do Leonel é uma
 matriz de slides condicionais (ramo, moças, Olho, bardo, Pedro/Henrique) que sempre fecha com o mistério. **Plano 5 (rota do
 Olho):** abre com `elara_dica_montanha` + `elara_ramo_a`. Testes: `python -X utf8 tools/test_tambem_fato.py`,

@@ -57,6 +57,7 @@ class PontosTests(unittest.TestCase):
         self.assertEqual(visiveis("etapa1", "b"), {"elara_corvin"})
         self.assertEqual(visiveis("etapa2", "b"), set())
         self.assertEqual(visiveis("rumo", "b"), {"elara_graciero_beco"})
+        self.assertEqual(visiveis("cais", "b"), {"elara_graciero_praca_pedra"})
 
     def test_praca_leva_ao_leonel_e_a_rota_do_olho_so_no_ramo_a(self):
         a = visiveis("praca", "a", "gentil")

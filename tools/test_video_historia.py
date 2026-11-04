@@ -95,11 +95,24 @@ class PracaVivaTests(unittest.TestCase):
 
     def test_a_ordem_dos_fatos_vai_da_chegada_as_roupas(self):
         slides = self._abertura({"elara_ramo_a"})
-        self.assertNotIn("escorpi", slides[0]["text"].replace("Praça dos Escorpiões", "").lower())
+        self.assertIn("Praça de Graciero", slides[0]["text"])
+        self.assertNotIn("escorpi", slides[0]["text"].lower())
         self.assertIn("besta", slides[1]["text"])
         self.assertIn("derruba", slides[3]["text"])
         self.assertIn("capa", slides[4]["text"])
         self.assertIn("grades", slides[4]["text"])
+
+    def test_gilo_culpa_o_leonel_nos_dois_ramos(self):
+        for fatos in ({"elara_ramo_a"}, {"elara_ramo_b"}):
+            fala = self._abertura(fatos)[2]["text"]
+            self.assertIn("A culpa é do Leonel!", fala)
+            self.assertIn("pagou ouro demais para eu dizer não", fala)
+        self.assertIn("Só mais uma rua... eu vou conseguir", self._abertura({"elara_ramo_b"})[2]["text"])
+
+    def test_as_duas_pracas_abrem_com_a_mesma_cena(self):
+        d = GG.destinos()
+        self.assertEqual(d["elara_graciero_praca_pedra"]["dungeons"][0]["intro"],
+                         d["elara_graciero_praca_viva"]["dungeons"][0]["intro"])
 
     def test_cada_transicao_parte_da_cena_anterior(self):
         """A imagem atrás do vídeo é a cena de onde ele parte: trocar de slide não pisca."""
