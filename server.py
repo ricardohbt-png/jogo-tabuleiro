@@ -1531,7 +1531,7 @@ MONSTRO_EQUIP_ALEATORIO = {
         "arma_chance": 70,
         "armas": ("dagger", "shortsword", "lanca_curta", "maca", "machado_basico", "bordao"),
         "instrumento_chance": 60,
-        "instrumentos": ("harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta"),
+        "instrumentos": ("harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta", "violino"),
         "qualidades": (("velho", 45), ("rustico", 35), ("padrao", 20)),
         "uso_chance": 50,
         "recarga": 3,
@@ -18753,6 +18753,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if p.get("class_id") == "bard" and p.get("cancao_ativa"):
             await self._cobrar_manutencao_cancao(p)
         if p.get("class_id") == "bard": await self._cobrar_manutencao_requiem(p)
+        if p.get("requiem_monstro_por"):
+            await self._processar_requiem_monstro_heroi(p)
+            if not p.get("alive"):
+                return
         if p.get("class_id") == "paladin": await self._processar_manutencao_richard(p)
         if p.get("class_id") == "rogue": await self._processar_inicio_turno_luccas(p)
         await self._processar_venenos_turno(p)
@@ -46231,6 +46235,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         `targets` (opcional) são os alvos que a IA já enxerga; só a Provocação e o
         instrumento precisam dele, e sem ele esses dois simplesmente não disparam.
         """
+        await self._requiem_monstro_manter(m)
         # Provocação é ação bônus: acontece antes e NÃO consome a ação principal.
         await self._monster_bardo_provocar(m, targets)
         abilities = list(m.get("special_abilities", []))
@@ -46368,6 +46373,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not melhor or random.random() * 100 >= cfg.get("uso_chance", 50):
                 return False
             usou = await self._bardo_monstro_chamado(m, inst, st, cd, *melhor)
+        elif tipo == "requiem_final":
+            if m.get("requiem_monstro_alvo"):
+                return False   # já está tocando para alguém
+            cand = [h for h in herois if not h.get("requiem_monstro_por")
+                    and self._alcance_com_altura(m, h["pos"], st["alcance"], destino=h)
+                    and self._tem_linha_de_visao(m["pos"], h["pos"])]
+            if not cand or random.random() * 100 >= cfg.get("uso_chance", 50):
+                return False
+            alvo = min(cand, key=lambda h: _distancia_chebyshev(m["pos"], h["pos"]))
+            usou = await self._bardo_monstro_requiem(m, inst, st, alvo)
         elif tipo in ("ecos_dolorosos", "dueto_marcial", "dueto_fantasma"):
             # Auras de 1 mão: ele toca E ataca no mesmo turno (como o herói).
             alcance_gatilho = {"ecos_dolorosos": 3, "dueto_marcial": 6, "dueto_fantasma": 3}[tipo]
@@ -46387,6 +46402,92 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if usou:
             m["instrumento_pronto_em"] = self.round_num + int(cfg.get("recarga", 3))
         return usou
+
+    async def _bardo_monstro_requiem(self, m, inst, st, alvo):
+        """Réquiem Final do monstro (Violino, 2 mãos): enquanto toca, o herói alvo é
+        forçado a atacar o bardo (mesmo estado da Provocação) e, no início de cada
+        turno dele, testa Vontade ou sofre contador×dado (o contador sobe até o teto).
+        Encerra se o bardo morre, perde o violino, falha na concentração ou o herói cai."""
+        m["requiem_monstro_alvo"] = alvo["id"]
+        m["requiem_monstro_contador"] = 0
+        m["requiem_monstro_hp_ref"] = m.get("hp", 0)
+        alvo["requiem_monstro_por"] = m["id"]
+        alvo["runico_provocado_por"] = m["id"]
+        alvo["runico_provocacao_ate"] = self.round_num
+        alvo["runico_provocacao_efeito"] = True
+        await self._broadcast_requiem_animation(m, "start", alvo)
+        await self.gm_say(T("narracao.bardo_monstro.requiem_inicia", monstro=nome_criatura(m),
+                            instrumento=inst.get("name", ""), alvo=nome_criatura(alvo)))
+        return True
+
+    async def _encerrar_requiem_monstro(self, m, motivo):
+        hid = m.get("requiem_monstro_alvo")
+        if not hid:
+            return
+        h = self.players.get(hid)
+        await self._broadcast_requiem_animation(m, "end", h)
+        m["requiem_monstro_alvo"] = None
+        m["requiem_monstro_contador"] = 0
+        m.pop("requiem_monstro_hp_ref", None)
+        if h:
+            h.pop("requiem_monstro_por", None)
+            if h.get("runico_provocado_por") == m.get("id"):
+                h.pop("runico_provocado_por", None)
+                h.pop("runico_provocacao_ate", None)
+                h.pop("runico_provocacao_efeito", None)
+        await self.gm_say(T("narracao.bardo_monstro.requiem_encerra", monstro=nome_criatura(m),
+                            motivo=T(motivo)))
+
+    async def _requiem_monstro_manter(self, m):
+        """Início do turno do bardo: confere o violino e a concentração. Dano sofrido
+        desde o último turno vira UM teste de Vontade CD 8+dano (cobre qualquer fonte)."""
+        hid = m.get("requiem_monstro_alvo")
+        if not hid:
+            return
+        h = self.players.get(hid)
+        inst = m.get("instrumento") or {}
+        if not h or not h.get("alive") or h.get("hp", 0) <= 0:
+            await self._encerrar_requiem_monstro(m, "narracao.bardo_monstro.motivo_alvo")
+            return
+        if inst.get("base") != "violino" or m.get("hp", 0) <= 0:
+            await self._encerrar_requiem_monstro(m, "narracao.bardo_monstro.motivo_violino")
+            return
+        perda = int(m.get("requiem_monstro_hp_ref", m["hp"])) - m["hp"]
+        m["requiem_monstro_hp_ref"] = m["hp"]
+        if perda > 0:
+            ok, *_ = await self._save_mostrado(m, "vontade", 8 + perda)
+            if not ok:
+                await self._encerrar_requiem_monstro(m, "narracao.bardo_monstro.motivo_concentracao")
+
+    async def _processar_requiem_monstro_heroi(self, h):
+        """Início do turno do herói sob o Réquiem de um monstro bardo."""
+        bid = h.get("requiem_monstro_por")
+        if not bid:
+            return
+        m = self.monsters.get(bid)
+        inst = (m or {}).get("instrumento") or {}
+        if not (m and m.get("hp", 0) > 0 and m.get("requiem_monstro_alvo") == h["id"]
+                and inst.get("base") == "violino"):
+            h.pop("requiem_monstro_por", None)
+            if h.get("runico_provocado_por") == bid:
+                for k in ("runico_provocado_por", "runico_provocacao_ate", "runico_provocacao_efeito"):
+                    h.pop(k, None)
+            if m and m.get("requiem_monstro_alvo") == h["id"]:
+                await self._encerrar_requiem_monstro(m, "narracao.bardo_monstro.motivo_violino")
+            return
+        st = self._instrumento_stats(inst)
+        m["requiem_monstro_contador"] = min(int(m.get("requiem_monstro_contador", 0)) + 1, st["teto"])
+        n = m["requiem_monstro_contador"]
+        h["runico_provocacao_ate"] = self.round_num     # mantém o alvo forçado nesta rodada
+        passou, *_ = self._testar_save(h, "vontade", 8 + mod(m.get("dex", 10)), fonte=m)
+        if passou:
+            await self.gm_say(T("narracao.bardo_monstro.requiem_resiste", alvo=nome_criatura(h)))
+            return
+        dano = roll_dice(f"{n}{st['dado']}")
+        await self._aplicar_dano_alvo(h, dano, DMG_MAGIC, m.get("id"))
+        await self._broadcast_requiem_animation(m, "attack", h, damage=dano, attack_ms=680)
+        await self.gm_say(T("narracao.bardo_monstro.requiem_dilacera", alvo=nome_criatura(h),
+                            n=n, dado=st["dado"], dano=dano))
 
     async def _bardo_monstro_aura(self, m, inst, st, tipo):
         """Liga a aura do Sino (Ecos Dolorosos), da Lira (Dueto Marcial) ou da Flauta

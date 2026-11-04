@@ -75,7 +75,7 @@ class FichaTests(unittest.TestCase):
         self.assertAlmostEqual(arma / n, 0.70, delta=0.07)
         self.assertAlmostEqual(inst / n, 0.60, delta=0.07)
         self.assertGreater(ambos, 0)
-        self.assertEqual(bases, {"harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta"})
+        self.assertEqual(bases, {"harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta", "violino"})
 
 
 class IaTests(unittest.TestCase):
@@ -244,6 +244,95 @@ class AurasTests(unittest.TestCase):
         antes = h["hp"]
         asyncio.run(r._bardo_monstro_apos_acerto(longe, {"kind": "player", "obj": h}, 3))
         self.assertEqual(h["hp"], antes)                  # aliado longe do bardo: nada
+
+
+class RequiemTests(unittest.TestCase):
+    """Violino: Réquiem Final do monstro sobre um herói."""
+
+    def _cena(self, pos_heroi=(8, 5), qual="padrao"):
+        r = sala(); m = bardo(r, (5, 5), ("violino", qual))
+        h = r.players["p0"]; h["pos"] = list(pos_heroi); h["hp"] = h["max_hp"] = 200
+        return r, m, h
+
+    def _abrir(self, r, m):
+        with mock.patch.object(S.random, "random", return_value=0.0):
+            return asyncio.run(r._monster_usar_instrumento(m, alvos(r)))
+
+    def test_abre_forca_o_alvo_e_gasta_a_acao(self):
+        r, m, h = self._cena()
+        m["monster_ability_uses"] = {"hero_bard_cancao_heroica": 0, "hero_bard_provocacao": 0}
+        with mock.patch.object(S.random, "random", return_value=0.0):
+            consumiu = asyncio.run(r._monster_try_editor_ability(m, alvos(r)))
+        self.assertTrue(consumiu)                         # violino é de 2 mãos
+        self.assertEqual(m["requiem_monstro_alvo"], h["id"])
+        self.assertEqual(h["runico_provocado_por"], m["id"])
+        self.assertEqual(h["requiem_monstro_por"], m["id"])
+        self.assertFalse(self._abrir(r, m))               # já está tocando
+
+    def test_fora_do_alcance_ou_sem_visao_nao_abre(self):
+        r, m, h = self._cena((18, 10))
+        self.assertFalse(self._abrir(r, m))
+        self.assertNotIn("requiem_monstro_alvo", m)
+
+    def test_dano_cresce_ate_o_teto(self):
+        r, m, h = self._cena(qual="velho")                # teto 3, d2
+        self._abrir(r, m)
+        r._testar_save = lambda *a, **k: (False, 1, 0, 1)
+        antes = h["hp"]
+        for _ in range(6):
+            asyncio.run(r._processar_requiem_monstro_heroi(h))
+        self.assertEqual(m["requiem_monstro_contador"], 3)
+        self.assertLess(h["hp"], antes)
+        self.assertLessEqual(antes - h["hp"], 2 * (1 + 2 + 3 + 3 + 3 + 3))
+
+    def test_save_bem_sucedido_nao_causa_dano_mas_mantem_o_alvo_forcado(self):
+        r, m, h = self._cena(); self._abrir(r, m)
+        r._testar_save = lambda *a, **k: (True, 20, 0, 20)
+        r.round_num += 1
+        asyncio.run(r._processar_requiem_monstro_heroi(h))
+        self.assertEqual(h["hp"], 200)
+        self.assertEqual(h["runico_provocacao_ate"], r.round_num)
+
+    def test_dano_no_bardo_testa_concentracao_e_falha_encerra(self):
+        r, m, h = self._cena(); self._abrir(r, m)
+        m["hp"] -= 5
+        async def falha(*a, **k): return (False, 1, 0, 1)
+        r._save_mostrado = falha
+        asyncio.run(r._requiem_monstro_manter(m))
+        self.assertFalse(m["requiem_monstro_alvo"])
+        self.assertNotIn("requiem_monstro_por", h)
+        self.assertNotIn("runico_provocado_por", h)
+
+    def test_concentracao_passa_mantem(self):
+        r, m, h = self._cena(); self._abrir(r, m)
+        m["hp"] -= 5
+        async def passa(*a, **k): return (True, 20, 0, 20)
+        r._save_mostrado = passa
+        asyncio.run(r._requiem_monstro_manter(m))
+        self.assertEqual(m["requiem_monstro_alvo"], h["id"])
+
+    def test_bardo_morto_ou_violino_trocado_encerra(self):
+        r, m, h = self._cena(); self._abrir(r, m)
+        m["hp"] = 0
+        asyncio.run(r._processar_requiem_monstro_heroi(h))
+        self.assertNotIn("requiem_monstro_por", h)
+        self.assertNotIn("runico_provocado_por", h)
+        r2, m2, h2 = self._cena(); self._abrir(r2, m2)
+        m2["instrumento"] = S.criar_instrumento("harpa", "padrao")
+        asyncio.run(r2._requiem_monstro_manter(m2))
+        self.assertFalse(m2["requiem_monstro_alvo"])
+
+    def test_heroi_caido_encerra(self):
+        r, m, h = self._cena(); self._abrir(r, m)
+        h["alive"] = False
+        asyncio.run(r._requiem_monstro_manter(m))
+        self.assertFalse(m["requiem_monstro_alvo"])
+
+    def test_tick_roda_no_inicio_do_turno_do_heroi(self):
+        r, m, h = self._cena(); self._abrir(r, m)
+        r._testar_save = lambda *a, **k: (False, 1, 0, 1)
+        asyncio.run(r._start_initiative_player_turn(h))
+        self.assertLess(h["hp"], 200)
 
 
 if __name__ == "__main__":

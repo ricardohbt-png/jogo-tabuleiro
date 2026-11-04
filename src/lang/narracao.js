@@ -3355,6 +3355,34 @@ window.LANG_NARRACAO = {
   "narracao.bardo_monstro.dueto_revida": {
     "en": "{monstro} answers its ally's strike with a free attack on {alvo}!",
     "pt": "{monstro} responde ao golpe do aliado com um ataque grátis em {alvo}!"
+  },
+  "narracao.bardo_monstro.requiem_inicia": {
+    "en": "{monstro} draws {instrumento}: a deadly Final Requiem begins over {alvo}, who can only attack the bard!",
+    "pt": "{monstro} empunha {instrumento}: um Réquiem Final mortal começa sobre {alvo}, que só pode atacar o bardo!"
+  },
+  "narracao.bardo_monstro.requiem_resiste": {
+    "en": "**{alvo}** resists the Requiem this round.",
+    "pt": "**{alvo}** resiste ao Réquiem nesta rodada."
+  },
+  "narracao.bardo_monstro.requiem_dilacera": {
+    "en": "🎻 The Final Requiem tears at **{alvo}** ({n}{dado}): **{dano}** damage!",
+    "pt": "🎻 O Réquiem Final dilacera **{alvo}** ({n}{dado}): **{dano}** de dano!"
+  },
+  "narracao.bardo_monstro.requiem_encerra": {
+    "en": "{monstro}'s Final Requiem ends ({motivo}).",
+    "pt": "O Réquiem Final de {monstro} se encerra ({motivo})."
+  },
+  "narracao.bardo_monstro.motivo_alvo": {
+    "en": "the target is down",
+    "pt": "o alvo caiu"
+  },
+  "narracao.bardo_monstro.motivo_violino": {
+    "en": "the violin is gone",
+    "pt": "o violino se foi"
+  },
+  "narracao.bardo_monstro.motivo_concentracao": {
+    "en": "concentration broken",
+    "pt": "concentração quebrada"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);
