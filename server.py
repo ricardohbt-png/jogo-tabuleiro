@@ -11635,6 +11635,19 @@ def _sortear_equipamento_monstro(m):
         base = random.choice(tuple(cfg["instrumentos"]))
         m["instrumento"] = criar_instrumento(base, _weighted_choice(list(cfg["qualidades"])))
         m["instrumento_pronto_em"] = 0
+        # Entrada na ficha: é por ela que o Mestre toca o instrumento no modo Manual
+        # (`handle_mestre_usar_habilidade`). Alaúde é passivo e só aparece na lista de passivas.
+        b = INSTRUMENTOS_BASE[base]
+        st = GameRoom._instrumento_stats(m["instrumento"])
+        m.setdefault("special_abilities", []).append({
+            "id": "instrumento_monstro", "source": "instrumento", "source_id": base,
+            "name": b["habilidade_nome"], "icon": b["icon"], "descricao": b["desc"],
+            "action_type": ("passiva" if b["modo"] != "ativada"
+                            else "acao" if b["maos"] >= 2 else "acao_livre"),
+            "range": st.get("alcance") or st.get("cone"),
+            "sem_mira": b["efeito"]["tipo"] in {"acorde_trovejante", "ecos_dolorosos", "dueto_marcial",
+                                                 "dueto_fantasma", "improviso"},
+        })
 
 def _aplicar_equipamentos_monstro(m):
     """Equipa a criatura com itens da mesma loja usada pelos heróis.
@@ -46273,13 +46286,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # 1 mão: tocou e ainda ataca neste turno.
         return False
 
-    async def _monster_bardo_provocar(self, m, targets):
-        """Provocação do monstro bardo (ação bônus): o herói mais próximo, até
-        PROVOCACAO_RAIO casas e à vista, só pode atacá-lo por PROVOCACAO_MONSTRO_RODADAS.
-        Reusa o estado da Provocação Rúnica do Gigante (`runico_provocado_por`), que o
-        `handle_attack` já impõe e que expira/limpa sozinho."""
+    async def _monster_bardo_provocar(self, m, targets, alvo_escolhido=None):
+        """Provocação do monstro bardo (ação bônus): o herói mais próximo (ou o escolhido
+        pelo Mestre), até PROVOCACAO_RAIO casas e à vista, só pode atacá-lo por
+        PROVOCACAO_MONSTRO_RODADAS. Reusa o estado da Provocação Rúnica do Gigante
+        (`runico_provocado_por`), que o `handle_attack` já impõe e que expira/limpa sozinho."""
         ab = self._habilidade_monstro(m, "hero_bard_provocacao")
-        if not ab or not targets:
+        if not ab or not (targets or alvo_escolhido):
             return False
         aid = ab["id"]
         uses = m.setdefault("monster_ability_uses", {})
@@ -46287,8 +46300,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         usos = uses.get(aid, ab.get("uses_per_day", 1))
         if (usos is not None and usos <= 0) or cds.get(aid, 0) > 0:
             return False
+        lista = ([{"kind": "player", "obj": alvo_escolhido}] if alvo_escolhido else targets)
         candidatos = []
-        for t in targets:
+        for t in lista:
             h = t.get("obj")
             if (t.get("kind") != "player" or not h or not h.get("alive") or h.get("hp", 1) <= 0
                     or (h.get("runico_provocado_por")
@@ -46327,81 +46341,124 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             out[d] = casas
         return out
 
-    async def _monster_usar_instrumento(self, m, targets):
+    def _bardo_monstro_marcar_recarga(self, m):
+        """Põe o instrumento em recarga e espelha o prazo para o painel do Mestre
+        (`spell_cooldowns` guarda a rodada em que a habilidade volta)."""
+        cfg = MONSTRO_EQUIP_ALEATORIO.get(m.get("type")) or {}
+        m["instrumento_pronto_em"] = self.round_num + int(cfg.get("recarga", 3))
+        m.setdefault("spell_cooldowns", {})["instrumento_monstro"] = m["instrumento_pronto_em"]
+
+    async def _monster_usar_instrumento(self, m, targets, manual=False, alvo_escolhido=None):
         """Habilidade do instrumento do monstro bardo contra os heróis.
 
-        Só roda se ele tem instrumento ativado, a recarga passou, a habilidade tem
-        pelo menos um herói no formato dela e a chance de uso (`uso_chance`) saiu.
-        Sem herói no formato, devolve False e o monstro segue andando e atacando.
+        IA (`manual=False`): só roda se ele tem instrumento ativado, a recarga passou, a
+        habilidade tem pelo menos um herói no formato dela e a chance de uso
+        (`uso_chance`) saiu; sem herói no formato devolve False e ele segue andando e
+        atacando. Mestre (`manual=True`): sem sorteio, e `alvo_escolhido` (herói) fixa a
+        linha/cone/violino; o motivo da recusa fica em `m["_instrumento_motivo"]`.
         O Alaúde é passivo: ele age na Canção (ver `_cancao_monstro_bonus`)."""
+        m.pop("_instrumento_motivo", None)
         inst = m.get("instrumento")
         if not inst or not targets or m.get("hp", 0) <= 0:
+            m["_instrumento_motivo"] = "sem_alvo"
             return False
         base = INSTRUMENTOS_BASE.get(inst.get("base"))
         if not base or base.get("modo") != "ativada":
+            m["_instrumento_motivo"] = "passivo"
             return False
         cfg = MONSTRO_EQUIP_ALEATORIO.get(m.get("type")) or {}
         if m.get("instrumento_pronto_em", 0) > self.round_num:
+            m["_instrumento_motivo"] = "recarga"
             return False
         herois = [t["obj"] for t in targets
                   if t.get("kind") == "player" and t.get("obj", {}).get("alive")
                   and t["obj"].get("hp", 1) > 0]
         if not herois:
+            m["_instrumento_motivo"] = "sem_alvo"
             return False
+
+        def sorteio():
+            return manual or random.random() * 100 < cfg.get("uso_chance", 50)
+
         tipo = base["efeito"]["tipo"]
         st = self._instrumento_stats(inst)
         cd = self._bardo_monstro_cd(m)
         usou = False
         if tipo == "nota_cortante":
-            linha = self._bardo_monstro_achar_linha(m, st, herois)
-            if not linha or random.random() * 100 >= cfg.get("uso_chance", 50):
+            linha = self._bardo_monstro_achar_linha(m, st, herois, alvo_escolhido)
+            if not linha or not sorteio():
+                m["_instrumento_motivo"] = "sem_alvo"
                 return False
             usou = await self._bardo_monstro_nota_cortante(m, inst, st, cd, *linha)
         elif tipo == "acorde_trovejante":
             alvos = [h for h in herois if self._alcance_com_altura(m, h["pos"], st["raio"], destino=h)]
-            if not alvos or random.random() * 100 >= cfg.get("uso_chance", 50):
+            if not alvos or not sorteio():
+                m["_instrumento_motivo"] = "sem_alvo"
                 return False
             usou = await self._bardo_monstro_acorde(m, inst, st, cd, alvos)
         elif tipo == "chamado_general":
-            melhor = self._bardo_monstro_achar_cone(m, st, herois)
-            if not melhor or random.random() * 100 >= cfg.get("uso_chance", 50):
+            melhor = self._bardo_monstro_achar_cone(m, st, herois, alvo_escolhido)
+            if not melhor or not sorteio():
+                m["_instrumento_motivo"] = "sem_alvo"
                 return False
             usou = await self._bardo_monstro_chamado(m, inst, st, cd, *melhor)
         elif tipo == "improviso":
-            if (not any(_distancia_chebyshev(m["pos"], h["pos"]) <= 6
-                        and self._tem_linha_de_visao(m["pos"], h["pos"]) for h in herois)
-                    or random.random() * 100 >= cfg.get("uso_chance", 50)):
+            if not manual and not any(_distancia_chebyshev(m["pos"], h["pos"]) <= 6
+                                      and self._tem_linha_de_visao(m["pos"], h["pos"]) for h in herois):
+                return False
+            if not sorteio():
                 return False
             usou = await self._bardo_monstro_improviso(m, inst, herois)
         elif tipo == "requiem_final":
             if m.get("requiem_monstro_alvo"):
+                m["_instrumento_motivo"] = "ja_tocando"
                 return False   # já está tocando para alguém
-            cand = [h for h in herois if not h.get("requiem_monstro_por")
+            cand = [h for h in ([alvo_escolhido] if alvo_escolhido else herois)
+                    if h and not h.get("requiem_monstro_por")
                     and self._alcance_com_altura(m, h["pos"], st["alcance"], destino=h)
                     and self._tem_linha_de_visao(m["pos"], h["pos"])]
-            if not cand or random.random() * 100 >= cfg.get("uso_chance", 50):
+            if not cand or not sorteio():
+                m["_instrumento_motivo"] = "sem_alvo"
                 return False
             alvo = min(cand, key=lambda h: _distancia_chebyshev(m["pos"], h["pos"]))
             usou = await self._bardo_monstro_requiem(m, inst, st, alvo)
         elif tipo in ("ecos_dolorosos", "dueto_marcial", "dueto_fantasma"):
             # Auras de 1 mão: ele toca E ataca no mesmo turno (como o herói).
-            alcance_gatilho = {"ecos_dolorosos": 3, "dueto_marcial": 6, "dueto_fantasma": 3}[tipo]
-            perto = [h for h in herois if _distancia_chebyshev(m["pos"], h["pos"]) <= alcance_gatilho
-                     and self._tem_linha_de_visao(m["pos"], h["pos"])]
-            if not perto or random.random() * 100 >= cfg.get("uso_chance", 50):
-                return False
-            if tipo == "dueto_marcial":
-                # Só vale com um aliado por perto para completar o dueto.
-                if not any(o is not m and o.get("hp", 0) > 0
-                           and _distancia_chebyshev(m["pos"], o["pos"]) <= 2
-                           for o in self.monsters.values()):
+            if not manual:
+                alcance_gatilho = {"ecos_dolorosos": 3, "dueto_marcial": 6, "dueto_fantasma": 3}[tipo]
+                perto = [h for h in herois if _distancia_chebyshev(m["pos"], h["pos"]) <= alcance_gatilho
+                         and self._tem_linha_de_visao(m["pos"], h["pos"])]
+                if not perto or not sorteio():
                     return False
+                if tipo == "dueto_marcial":
+                    # Só vale com um aliado por perto para completar o dueto.
+                    if not any(o is not m and o.get("hp", 0) > 0
+                               and _distancia_chebyshev(m["pos"], o["pos"]) <= 2
+                               for o in self.monsters.values()):
+                        return False
             if m.get(f"{tipo}_ate", -1) >= self.round_num:
+                m["_instrumento_motivo"] = "ja_ativa"
                 return False   # já ativa: não gasta a recarga à toa
             usou = await self._bardo_monstro_aura(m, inst, st, tipo)
         if usou:
-            m["instrumento_pronto_em"] = self.round_num + int(cfg.get("recarga", 3))
+            self._bardo_monstro_marcar_recarga(m)
         return usou
+
+    async def _mestre_usar_instrumento(self, pid, m, ability, target_id):
+        """Manual: o Mestre toca a habilidade do instrumento do monstro bardo.
+        `target_id` (herói) fixa a linha da Nota, o cone do Chamado ou o alvo do Réquiem."""
+        alvo = self.players.get(target_id) if target_id else None
+        todos = [{"kind": "player", "obj": h} for h in self.players.values()]
+        usou = await self._monster_usar_instrumento(m, todos, manual=True, alvo_escolhido=alvo)
+        if not usou:
+            motivo = m.pop("_instrumento_motivo", "sem_alvo")
+            chave = {"recarga": "erro.habilidade_sem_usos_ou_em_recarga",
+                     "ja_ativa": "erro.o_efeito_do_instrumento_ja_esta_ativo",
+                     "ja_tocando": "erro.o_requiem_ja_esta_tocando"}.get(
+                         motivo, "erro.o_instrumento_nao_alcanca_ninguem")
+            await self.send_to(pid, {"type": "error", "msg": T(chave)})
+            return False
+        return True
 
     async def _bardo_monstro_requiem(self, m, inst, st, alvo):
         """Réquiem Final do monstro (Violino, 2 mãos): enquanto toca, o herói alvo é
@@ -46574,19 +46631,27 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """CD dos testes dos instrumentos do monstro: 8 + DES (−1 se Desafinado)."""
         return 8 + mod(m.get("dex", 10)) - (1 if m.get("desafinado_ate", -1) >= self.round_num else 0)
 
-    def _bardo_monstro_achar_linha(self, m, st, herois):
-        """(direção, casas, heróis) da linha ortogonal com mais heróis, ou None."""
+    def _bardo_monstro_achar_linha(self, m, st, herois, alvo=None):
+        """(direção, casas, heróis) da linha ortogonal com mais heróis, ou None.
+        Com `alvo`, só vale a linha que o contém."""
         linhas = self._bardo_monstro_linhas(m, st["alcance"], self._blocks_tile)
         pos_herois = {tuple(h["pos"]): h for h in herois}
+        if alvo is not None:
+            linhas = {d: c for d, c in linhas.items() if tuple(alvo["pos"]) in c}
+            if not linhas:
+                return None
         d, caminho = max(linhas.items(), key=lambda kv: sum(1 for c in kv[1] if c in pos_herois))
         alvos = [pos_herois[c] for c in caminho if c in pos_herois]
         return (d, caminho, alvos) if alvos else None
 
-    def _bardo_monstro_achar_cone(self, m, st, herois):
-        """(direção, casas, heróis) do cone (8 direções) com mais heróis à vista, ou None."""
+    def _bardo_monstro_achar_cone(self, m, st, herois, alvo=None):
+        """(direção, casas, heróis) do cone (8 direções) com mais heróis à vista, ou None.
+        Com `alvo`, só vale o cone que o contém."""
         melhor = None
         for d in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
             tiles = self._cone_tiles(m["pos"][0], m["pos"][1], d[0], d[1], st["cone"], st["cone"])
+            if alvo is not None and tuple(alvo["pos"]) not in tiles:
+                continue
             al = [h for h in herois if tuple(h["pos"]) in tiles
                   and self._tem_linha_de_visao(m["pos"], h["pos"])]
             if al and (melhor is None or len(al) > len(melhor[2])):
@@ -46979,6 +47044,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if ((ability or {}).get("source") == "heroi"
                 and (ability or {}).get("source_id") == "golpe_devastador"):
             return "bonus"
+        if ((ability or {}).get("source") == "heroi" and (ability or {}).get("source_class") == "bard"
+                and (ability or {}).get("source_id") == "provocacao"):
+            return "bonus"   # a Provocação do bardo é ação bônus
         if (ability or {}).get("id") in {"investida_brutal_troll", "dominar_morto_vivo"}:
             # Investida: preparação automática do golpe após o deslocamento;
             # Dominar: pergaminho — na IA é uma conjuração antes do ataque.
@@ -47009,6 +47077,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         O resto aparece na ficha como 'IA apenas' ou 'não implementada'."""
         if not ability:
             return False
+        if ability.get("source") == "instrumento":
+            return ability.get("action_type") != "passiva"
         aid = ability.get("id")
         if aid in {"mestre_dos_mortos", "sopro_dragao", "explosao_vapor", "amaldicoar_monstro",
                    "golpe_brutal", "desaparecer_nas_sombras", "mira_certeira",
@@ -47112,6 +47182,24 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._emitir_animacao_cancao_monstro(m)
             nomes = ", ".join(m.get("cancao_atributos", []))
             await self.gm_say(T("narracao.cancao_monstro.entoa_atributos", nome=nome_criatura(m), atributos=nomes))
+            await self.push_state(); return
+        if ability_id == "hero_bard_provocacao":
+            alvo = self.players.get(target_id)
+            if not alvo or not alvo.get("alive"):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")}); return
+            if not (self._alcance_com_altura(m, alvo["pos"], PROVOCACAO_RAIO, destino=alvo)
+                    and self._tem_linha_de_visao(m["pos"], alvo["pos"])):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance")}); return
+            if not await self._monster_bardo_provocar(m, None, alvo):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")}); return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            await self.push_state(); return
+        if ability_id == "instrumento_monstro":
+            if not await self._mestre_usar_instrumento(pid, m, ability, target_id):
+                return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            if custo == "principal":
+                m["_ja_executou_acao"] = True
             await self.push_state(); return
         if ability_id in {"golpe_devastador_troll", "pressao_constante_troll",
                           "investida_brutal_troll"} and m.get("type") == "troll":

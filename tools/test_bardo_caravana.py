@@ -440,5 +440,111 @@ class GaitaTests(unittest.TestCase):
 
 
 
+class ManualTests(unittest.TestCase):
+    """Modo Manual do Mestre: Canção, Provocação e a habilidade do instrumento."""
+
+    def _cena(self, instrumento=None, pos_heroi=(7, 5)):
+        r = sala(); m = bardo(r, (5, 5), instrumento)
+        # a habilidade sintética do instrumento nasce no sorteio; aqui o instrumento é forçado
+        if instrumento:
+            base = S.INSTRUMENTOS_BASE[instrumento[0]]
+            st = S.GameRoom._instrumento_stats(m["instrumento"])
+            m["special_abilities"] = [a for a in m["special_abilities"] if a["id"] != "instrumento_monstro"]
+            m["special_abilities"].append({
+                "id": "instrumento_monstro", "source": "instrumento", "source_id": instrumento[0],
+                "name": base["habilidade_nome"], "icon": base["icon"], "descricao": base["desc"],
+                "action_type": "passiva" if base["modo"] != "ativada" else ("acao" if base["maos"] >= 2 else "acao_livre"),
+                "range": st.get("alcance") or st.get("cone"), "sem_mira": False})
+        h = r.players["p0"]; h["pos"] = list(pos_heroi); h["hp"] = h["max_hp"] = 200
+        r.master_pid = "mestre"; r.master_manual_mid = m["id"]
+        m["_master_acted"] = False; m["_master_bonus_acted"] = False
+        erros = []
+
+        async def send(pid, msg):
+            if msg.get("type") == "error": erros.append(str(msg["msg"]))
+        r.send_to = send
+        r.erros = erros
+        return r, m, h
+
+    def _usar(self, r, m, aid, alvo=None, **k):
+        asyncio.run(r.handle_mestre_usar_habilidade("mestre", m["id"], aid, alvo, **k))
+
+    def test_a_sintetica_nasce_com_o_sorteio(self):
+        random.seed(3)
+        r = sala()
+        for _ in range(200):
+            m = S.make_monster(ficha(), r.rooms[0])
+            ab = [a for a in m["special_abilities"] if a["id"] == "instrumento_monstro"]
+            self.assertEqual(bool(ab), bool(m.get("instrumento")))
+            if ab:
+                self.assertEqual(ab[0]["source_id"], m["instrumento"]["base"])
+
+    def test_provocacao_e_acao_bonus_e_exige_alvo_ao_alcance(self):
+        r, m, h = self._cena()
+        self._usar(r, m, "hero_bard_provocacao", h["id"])
+        self.assertEqual(h["runico_provocado_por"], m["id"])
+        self.assertTrue(m["_master_bonus_acted"])
+        self.assertFalse(m["_master_acted"])
+        r2, m2, h2 = self._cena(pos_heroi=(15, 9))
+        self._usar(r2, m2, "hero_bard_provocacao", h2["id"])
+        self.assertNotIn("runico_provocado_por", h2)
+        self.assertTrue(r2.erros)
+
+    def test_cancao_manual_continua_funcionando(self):
+        r, m, h = self._cena()
+        self._usar(r, m, "hero_bard_cancao_heroica", None, atributos=["acerto"])
+        self.assertTrue(m["cancao_ativa"])
+
+    def test_nota_cortante_manual_usa_a_linha_do_alvo_e_gasta_a_acao(self):
+        r, m, h = self._cena(("harpa", "padrao"), (8, 5))
+        self._usar(r, m, "instrumento_monstro", h["id"])
+        self.assertLess(h["hp"], 200)
+        self.assertTrue(m["_master_acted"])
+        self.assertEqual(r.round_num + 3, m["instrumento_pronto_em"])
+        self.assertEqual(m["spell_cooldowns"]["instrumento_monstro"], m["instrumento_pronto_em"])
+        m["_master_acted"] = False                         # outro turno, mas ainda em recarga
+        self._usar(r, m, "instrumento_monstro", h["id"])
+        self.assertIn("recarga", " ".join(r.erros).lower())
+
+    def test_nota_cortante_alvo_fora_da_linha_recusa_sem_gastar(self):
+        r, m, h = self._cena(("harpa", "padrao"), (7, 7))
+        self._usar(r, m, "instrumento_monstro", h["id"])
+        self.assertEqual(h["hp"], 200)
+        self.assertFalse(m["_master_acted"])
+        self.assertEqual(m["instrumento_pronto_em"], 0)
+        self.assertTrue(r.erros)
+
+    def test_chamado_manual(self):
+        r, m, h = self._cena(("trompa", "padrao"), (7, 5))
+        r._testar_save = lambda *a, **k: (False, 1, 0, 1)
+        self._usar(r, m, "instrumento_monstro", h["id"])
+        self.assertIn("ciclope_ataque_penalty_ate", h)
+
+    def test_violino_manual_abre_o_requiem_no_alvo_escolhido(self):
+        r, m, h = self._cena(("violino", "padrao"), (8, 5))
+        self._usar(r, m, "instrumento_monstro", h["id"])
+        self.assertEqual(m["requiem_monstro_alvo"], h["id"])
+        self._usar(r, m, "instrumento_monstro", h["id"])      # já tocando: recusa
+        self.assertTrue(r.erros)
+
+    def test_aura_de_uma_mao_nao_gasta_a_acao_principal(self):
+        r, m, h = self._cena(("sino", "padrao"), (7, 5))
+        self._usar(r, m, "instrumento_monstro", None)
+        self.assertGreaterEqual(m["ecos_dolorosos_ate"], r.round_num)
+        self.assertFalse(m["_master_acted"])
+
+    def test_gaita_manual(self):
+        r, m, h = self._cena(("gaita", "padrao"), (8, 5))
+        r._rolar_2d6 = lambda: 7
+        self._usar(r, m, "instrumento_monstro", None)
+        self.assertLess(h["hp"], 200)
+
+    def test_alaude_e_passivo_e_nao_ativa(self):
+        r, m, h = self._cena(("alaude", "padrao"))
+        self._usar(r, m, "instrumento_monstro", None)
+        self.assertTrue(r.erros)
+        self.assertFalse(m["_master_acted"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

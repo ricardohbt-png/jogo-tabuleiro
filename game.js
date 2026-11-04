@@ -24928,6 +24928,7 @@ function _mpCustoDe(a){
   // a ação principal disponível no mesmo turno.
   if(a && a.source === 'heroi' && a.source_id === 'golpe_devastador') return 'bonus';
   if(a && a.id === 'investida_brutal_troll') return 'livre';   // espelha _custo_acao_ability
+  if(a && a.source === 'heroi' && a.source_class === 'bard' && a.source_id === 'provocacao') return 'bonus';   // idem
   const at = a && a.action_type;
   if(at === 'acao_bonus') return 'bonus';
   if(at === 'acao_livre') return 'livre';
@@ -24972,7 +24973,7 @@ function _mpAtivavel(a, monster = null){
   if(a.action_type === 'passiva') return false;
   if(a.action_type === 'magia') return true;   // servidor recusa as não implementadas
   if(a.save != null && a.dc != null) return true;
-  return a.source === 'heroi' || a.source === 'guilda';
+  return a.source === 'heroi' || a.source === 'guilda' || a.source === 'instrumento';
 }
 
 function _mpCondicoes(m){
@@ -26252,6 +26253,20 @@ function _mestreAtivarHabilidade(m, abid){
   }
   if(abid === 'hero_bard_cancao_heroica' || ab.source_id === 'cancao_heroica'){
     abrirPainelCancao({monstro:m});
+    return;
+  }
+  // Provocação do monstro bardo: ação bônus sobre um herói a até 3 casas.
+  if(abid === 'hero_bard_provocacao'){
+    _iniciarMiraMestre({kind:'ability', caster:m, id:abid, range:3,
+      icon:ab.icon||ab.icone, label:ab.name||abid});
+    return;
+  }
+  // Instrumento do monstro bardo: as auras e o Acorde/Improviso se resolvem sozinhos; a
+  // Nota Cortante, o Chamado e o Réquiem pedem um herói (o servidor deriva linha/cone).
+  if(ab.source === 'instrumento'){
+    if(ab.sem_mira){ GS.mestreUsarHabilidade(m.id, abid, null); return; }
+    _iniciarMiraMestre({kind:'ability', caster:m, id:abid, range:Number(ab.range) || 4,
+      icon:ab.icon||ab.icone, label:ab.name||abid});
     return;
   }
   // Habilidade de editor (herói/guilda): self-buff, ativa direto sem alvo.

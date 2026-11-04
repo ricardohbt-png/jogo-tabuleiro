@@ -2248,6 +2248,18 @@ window.LANG_ERROS = {
   "erro.a_provocacao_do_monstro_obriga_voce_a_ataca_lo": {
     "en": "The taunt forces you to attack the one who taunted you for as long as the effect lasts.",
     "pt": "A Provocação obriga você a atacar quem o provocou enquanto o efeito durar."
+  },
+  "erro.o_instrumento_nao_alcanca_ninguem": {
+    "en": "The instrument has nobody in its line, cone or area. Pick a target within reach.",
+    "pt": "O instrumento não alcança ninguém na linha, no cone ou na área. Escolha um alvo ao alcance."
+  },
+  "erro.o_efeito_do_instrumento_ja_esta_ativo": {
+    "en": "This instrument effect is already active.",
+    "pt": "O efeito deste instrumento já está ativo."
+  },
+  "erro.o_requiem_ja_esta_tocando": {
+    "en": "The Requiem is already playing.",
+    "pt": "O Réquiem já está tocando."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);
