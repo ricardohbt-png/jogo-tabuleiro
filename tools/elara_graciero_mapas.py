@@ -111,7 +111,8 @@ def _praca(prefixo, did, nome, viva):
         c.deco("monte_ossos", 0, 9, 5)
         c.fala(prefixo + "_corpo", m.em(0, 2, hs // 2), "Narrador", "🦂",
                "Chegaram tarde. No meio da praça, o que sobrou do mercenário: ossos limpos, botas fundas de lama "
-               "e um cheiro doce de peçonha. As garras ainda estalam na sombra.", 12)
+               "e um cheiro doce de peçonha. Entre os ossos há um bilhete amassado: \"Pelas moças, o ouro "
+               "combinado. Leonel.\" As garras ainda estalam na sombra.", 12)
     fatos = {"fato": F_GILO_MORREU}
     if viva:
         fatos["fatos"] = [F_VIU_MORRER, F_DICA_MONTANHA]

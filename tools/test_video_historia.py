@@ -147,6 +147,14 @@ class PracaVivaTests(unittest.TestCase):
         for caminho in caminhos:
             self.assertTrue(os.path.isfile(os.path.join(RAIZ, caminho)), caminho)
 
+    def test_quem_chega_tarde_descobre_o_leonel_na_praca_vazia(self):
+        with open(os.path.join(RAIZ, "dungeons", "elara_graciero_praca_morta.json"), encoding="utf-8") as f:
+            fala = next(x for x in json.load(f)["falas"] if x["id"] == "pracam_corpo")
+        self.assertIn("Leonel", fala["texto"])
+        self.assertIn("bilhete", fala["texto"])
+        self.assertEqual(fala["texto"], next(x for x in GG.mapas()["elara_graciero_praca_morta.json"]["falas"]
+                                             if x["id"] == "pracam_corpo")["texto"])
+
     def test_mapa_nao_faz_o_morto_falar(self):
         with open(os.path.join(RAIZ, "dungeons", "elara_graciero_praca_viva.json"), encoding="utf-8") as f:
             falas = {x["id"]: x for x in json.load(f)["falas"]}

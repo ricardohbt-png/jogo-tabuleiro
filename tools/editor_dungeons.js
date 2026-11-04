@@ -102140,7 +102140,7 @@ window.EDITOR_DUNGEONS = [
             "nome": "Narrador",
             "emoji": "🦂"
           },
-          "texto": "Chegaram tarde. No meio da praça, o que sobrou do mercenário: ossos limpos, botas fundas de lama e um cheiro doce de peçonha. As garras ainda estalam na sombra.",
+          "texto": "Chegaram tarde. No meio da praça, o que sobrou do mercenário: ossos limpos, botas fundas de lama e um cheiro doce de peçonha. Entre os ossos há um bilhete amassado: \"Pelas moças, o ouro combinado. Leonel.\" As garras ainda estalam na sombra.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 12
@@ -175623,4 +175623,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).
