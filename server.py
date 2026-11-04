@@ -1306,6 +1306,7 @@ CANCAO_ATRIBUTOS = [
 CANCAO_RAIO      = 5    # alcance (Chebyshev) dos buffs da canÃ§Ã£o
 PROVOCACAO_RAIO  = 3    # alcance (Chebyshev) da ProvocaÃ§Ã£o
 PROVOCACAO_TURNOS = 4   # 1 turno de desvantagem + 3 turnos de alvo forÃ§ado
+PROVOCACAO_MONSTRO_RODADAS = 2   # Provocação usada por um monstro bardo: o herói só pode atacá-lo por 2 rodadas
 
 def _calcular_custo_cancao(atributos_escolhidos):
     """Soma o custo de fome/sede dos atributos escolhidos (1 por atributo)."""
@@ -1521,6 +1522,23 @@ def instrumento_sku(base, qualidade="padrao", preco=100, refinado_bonus=None,
     return inst
 
 # â”€â”€â”€ Roller procedural de instrumentos (Fase 4a) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# Monstros bardo: arma e instrumento sorteados ao nascer (cada um com a sua chance, em %).
+# Só os instrumentos cuja habilidade o monstro sabe executar contra heróis entram aqui
+# (ver `_monster_usar_instrumento`). `uso_chance` é a chance, a cada turno em que a
+# habilidade tem alvo, de ele tocá-la; `recarga` são as rodadas até poder tocar de novo.
+MONSTRO_EQUIP_ALEATORIO = {
+    "bardo_da_caravana": {
+        "arma_chance": 70,
+        "armas": ("dagger", "shortsword", "lanca_curta", "maca", "machado_basico", "bordao"),
+        "instrumento_chance": 60,
+        "instrumentos": ("harpa", "tambor", "trompa", "alaude"),
+        "qualidades": (("velho", 45), ("rustico", 35), ("padrao", 20)),
+        "uso_chance": 50,
+        "recarga": 3,
+        "drop_chance": 50,
+    },
+}
+
 _ROLLER_BASES = ["harpa", "tambor", "sino", "alaude", "trompa", "lira", "flauta", "violino", "gaita"]
 _ROLLER_QUALIDADES = [("velho", 35), ("rustico", 30), ("padrao", 25), ("refinado", 10)]
 _ROLLER_ORIGENS = [("humana", 70), ("elfica", 15), ("ana", 15)]
@@ -11600,6 +11618,24 @@ def trap_xp(cr):
     """XP de uma armadilha derivado do seu cr (dividido entre os heróis vivos)."""
     return round(float(cr) * TRAP_XP_POR_CR)
 
+def _sortear_equipamento_monstro(m):
+    """Arma e instrumento aleatórios de um monstro listado em MONSTRO_EQUIP_ALEATORIO.
+
+    A arma entra em `equipped_items` (o `_aplicar_equipamentos_monstro` troca o ataque por
+    ela); o instrumento fica em `m["instrumento"]`, uma instância comum de `criar_instrumento`
+    (sem origem nem encantamento: o monstro só executa a versão base de cada habilidade).
+    Cada sorteio é independente, então ele pode sair sem nada, só com um dos dois ou com ambos."""
+    cfg = MONSTRO_EQUIP_ALEATORIO.get(m.get("type"))
+    if not cfg:
+        return
+    if random.random() * 100 < cfg.get("arma_chance", 0) and cfg.get("armas"):
+        m["equipment_enabled"] = True
+        m["equipped_items"] = [random.choice(tuple(cfg["armas"]))]
+    if random.random() * 100 < cfg.get("instrumento_chance", 0) and cfg.get("instrumentos"):
+        base = random.choice(tuple(cfg["instrumentos"]))
+        m["instrumento"] = criar_instrumento(base, _weighted_choice(list(cfg["qualidades"])))
+        m["instrumento_pronto_em"] = 0
+
 def _aplicar_equipamentos_monstro(m):
     """Equipa a criatura com itens da mesma loja usada pelos heróis.
 
@@ -11779,6 +11815,7 @@ def make_monster(mdef, room):
         m["kobold_shield_id"] = "escudo_p" if m["kobold_weapon_id"] == "shortsword" else None
         if m["kobold_shield_id"]:
             m["equipped_items"].append(m["kobold_shield_id"])
+    _sortear_equipamento_monstro(m)
     _aplicar_equipamentos_monstro(m)
     if combatant_potion:
         m.setdefault("equipment_consumables", []).append(
@@ -22041,8 +22078,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             provocado_id = p.get("runico_provocado_por")
             if (provocado_id and p.get("runico_provocacao_ate", 0) >= self.round_num
                     and target_id != provocado_id):
+                _prov = self.monsters.get(provocado_id) or {}
                 await self.send_to(pid, {"type": "error",
-                    "msg": T("erro.a_provocacao_do_gigante_runico_obriga_vo")})
+                    "msg": T("erro.a_provocacao_do_gigante_runico_obriga_vo"
+                             if _prov.get("type") == "gigante_runico"
+                             else "erro.a_provocacao_do_monstro_obriga_voce_a_ataca_lo")})
                 return
             target_tile = self._target_tile(target, target_pos)
             # O Grotão só expõe o ponto lateral a um personagem adjacente por
@@ -46025,6 +46065,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             ids = {str(ab.get("source_id") or ab.get("id") or "")
                    for ab in caster.get("special_abilities", [])}
             nivel = 2 if f"bardo_cancao_{attr_id}" in ids else 1
+            # Sinfonia Heroica: um Alaúde empunhado reforça em +1 os atributos que a
+            # qualidade dele cobre (mesma regra do herói).
+            inst = caster.get("instrumento")
+            if inst and inst.get("base") == "alaude":
+                if attr_id in self._instrumento_stats(inst).get("atributos", []):
+                    nivel += 1
             melhor = max(melhor, nivel)
         return melhor
 
@@ -46170,13 +46216,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             m["editor_ability_expires_at"] = self.round_num + duration
         return True
 
-    async def _monster_try_editor_ability(self, m):
+    async def _monster_try_editor_ability(self, m, targets=None):
         """IA ofensiva das habilidades reutilizadas de heróis e Guilda.
 
         A criatura sempre procura vantagem para eliminar o grupo: ativa uma
         habilidade disponível antes de atacar, respeitando simultaneamente os
         usos por dia e a recarga configurados na ficha.
+
+        `targets` (opcional) são os alvos que a IA já enxerga; só a Provocação e o
+        instrumento precisam dele, e sem ele esses dois simplesmente não disparam.
         """
+        # Provocação é ação bônus: acontece antes e NÃO consome a ação principal.
+        await self._monster_bardo_provocar(m, targets)
         abilities = list(m.get("special_abilities", []))
         # Prioriza a Canção; caso contrário as magias heroicas anteriores na
         # ficha fariam o Xamã gastar a oportunidade antes de cantá-la.
@@ -46185,6 +46236,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         for ab in abilities:
             if ab.get("source") not in {"heroi", "guilda"} or ab.get("action_type") == "passiva":
                 continue
+            if ab.get("source_id") == "provocacao" and ab.get("source_class") == "bard":
+                continue   # já tratada acima (ação bônus, com alvo próprio)
             if (ab.get("source_id") == "cancao_heroica"
                     or ab.get("id") == "hero_bard_cancao_heroica"):
                 # A IA não tem um painel para escolher; usa todos os cinco
@@ -46198,7 +46251,184 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if self._ativar_editor_ability(m, ab):
                 await self.gm_say(T("narracao.ativa_para_ganhar_vantagem_no_combate", m_get_name_o_monstro=nome_criatura(m), ab_get_name_ab_get_id=nome_criatura(ab)))
                 return True
+        # Instrumento equipado: a habilidade dele é a ação principal do turno.
+        if await self._monster_usar_instrumento(m, targets):
+            m["_monster_editor_action_consumed"] = True
+            return True
         return False
+
+    async def _monster_bardo_provocar(self, m, targets):
+        """Provocação do monstro bardo (ação bônus): o herói mais próximo, até
+        PROVOCACAO_RAIO casas e à vista, só pode atacá-lo por PROVOCACAO_MONSTRO_RODADAS.
+        Reusa o estado da Provocação Rúnica do Gigante (`runico_provocado_por`), que o
+        `handle_attack` já impõe e que expira/limpa sozinho."""
+        ab = self._habilidade_monstro(m, "hero_bard_provocacao")
+        if not ab or not targets:
+            return False
+        aid = ab["id"]
+        uses = m.setdefault("monster_ability_uses", {})
+        cds = m.setdefault("monster_ability_cooldowns", {})
+        usos = uses.get(aid, ab.get("uses_per_day", 1))
+        if (usos is not None and usos <= 0) or cds.get(aid, 0) > 0:
+            return False
+        candidatos = []
+        for t in targets:
+            h = t.get("obj")
+            if (t.get("kind") != "player" or not h or not h.get("alive") or h.get("hp", 1) <= 0
+                    or (h.get("runico_provocado_por")
+                        and h.get("runico_provocacao_ate", 0) >= self.round_num)):
+                continue
+            if (self._alcance_com_altura(m, h["pos"], PROVOCACAO_RAIO, destino=h)
+                    and self._tem_linha_de_visao(m["pos"], h["pos"])):
+                candidatos.append(h)
+        if not candidatos:
+            return False
+        alvo = min(candidatos, key=lambda h: _distancia_chebyshev(m["pos"], h["pos"]))
+        if usos is not None:
+            uses[aid] = usos - 1
+        if ab.get("cooldown_turns"):
+            cds[aid] = int(ab["cooldown_turns"])
+        alvo["runico_provocado_por"] = m["id"]
+        alvo["runico_provocacao_ate"] = self.round_num + PROVOCACAO_MONSTRO_RODADAS
+        alvo["runico_provocacao_efeito"] = True
+        await self.gm_say(T("narracao.bardo_monstro.provoca", monstro=nome_criatura(m),
+                            alvo=nome_criatura(alvo), rodadas=PROVOCACAO_MONSTRO_RODADAS))
+        return True
+
+    @staticmethod
+    def _bardo_monstro_linhas(m, alcance, blocos):
+        """As quatro linhas ortogonais a partir do monstro, cada uma como lista de
+        casas livres até `alcance` (parede/porta/objeto sólido corta a linha)."""
+        out = {}
+        for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            x, y = m["pos"]
+            casas = []
+            for _ in range(alcance):
+                x, y = x + d[0], y + d[1]
+                if blocos(x, y):
+                    break
+                casas.append((x, y))
+            out[d] = casas
+        return out
+
+    async def _monster_usar_instrumento(self, m, targets):
+        """Habilidade do instrumento do monstro bardo contra os heróis.
+
+        Só roda se ele tem instrumento ativado, a recarga passou, a habilidade tem
+        pelo menos um herói no formato dela e a chance de uso (`uso_chance`) saiu.
+        Sem herói no formato, devolve False e o monstro segue andando e atacando.
+        O Alaúde é passivo: ele age na Canção (ver `_cancao_monstro_bonus`)."""
+        inst = m.get("instrumento")
+        if not inst or not targets or m.get("hp", 0) <= 0:
+            return False
+        base = INSTRUMENTOS_BASE.get(inst.get("base"))
+        if not base or base.get("modo") != "ativada":
+            return False
+        cfg = MONSTRO_EQUIP_ALEATORIO.get(m.get("type")) or {}
+        if m.get("instrumento_pronto_em", 0) > self.round_num:
+            return False
+        herois = [t["obj"] for t in targets
+                  if t.get("kind") == "player" and t.get("obj", {}).get("alive")
+                  and t["obj"].get("hp", 1) > 0]
+        if not herois:
+            return False
+        tipo = base["efeito"]["tipo"]
+        st = self._instrumento_stats(inst)
+        cd = 8 + mod(m.get("dex", 10))
+        usou = False
+        if tipo == "nota_cortante":
+            linhas = self._bardo_monstro_linhas(m, st["alcance"], self._blocks_tile)
+            pos_herois = {tuple(h["pos"]): h for h in herois}
+            melhor = max(linhas.items(), key=lambda kv: sum(1 for c in kv[1] if c in pos_herois))
+            alvos = [pos_herois[c] for c in melhor[1] if c in pos_herois]
+            if not alvos or random.random() * 100 >= cfg.get("uso_chance", 50):
+                return False
+            usou = await self._bardo_monstro_nota_cortante(m, inst, st, cd, melhor[0], melhor[1], alvos)
+        elif tipo == "acorde_trovejante":
+            alvos = [h for h in herois if self._alcance_com_altura(m, h["pos"], st["raio"], destino=h)]
+            if not alvos or random.random() * 100 >= cfg.get("uso_chance", 50):
+                return False
+            usou = await self._bardo_monstro_acorde(m, inst, st, cd, alvos)
+        elif tipo == "chamado_general":
+            melhor = None
+            for d in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+                tiles = self._cone_tiles(m["pos"][0], m["pos"][1], d[0], d[1], st["cone"], st["cone"])
+                al = [h for h in herois if tuple(h["pos"]) in tiles
+                      and self._tem_linha_de_visao(m["pos"], h["pos"])]
+                if al and (melhor is None or len(al) > len(melhor[2])):
+                    melhor = (d, tiles, al)
+            if not melhor or random.random() * 100 >= cfg.get("uso_chance", 50):
+                return False
+            usou = await self._bardo_monstro_chamado(m, inst, st, cd, *melhor)
+        if usou:
+            m["instrumento_pronto_em"] = self.round_num + int(cfg.get("recarga", 3))
+        return usou
+
+    async def _bardo_monstro_nota_cortante(self, m, inst, st, cd, d, caminho, alvos):
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "nota_cortante", "phase": "start",
+            "animation_id": f"nota_cortante_{m['id']}_{time.time_ns()}", "caster_id": m["id"],
+            "origin": list(m["pos"]), "path": [list(c) for c in caminho],
+            "targets": [{"target_id": h.get("id"), "pos": list(h["pos"])} for h in alvos],
+            "travel_ms": 620, "impact_ms": 760,
+        })
+        await self.gm_say(T("narracao.bardo_monstro.nota_cortante", monstro=nome_criatura(m),
+                            instrumento=inst.get("name", "")))
+        for h in alvos:
+            passou, d20, bonus, total = self._testar_save(h, "reflexos", cd, fonte=m)
+            bruto = roll_dice(st["dano"])
+            dano = max(1, bruto // 2) if passou else bruto
+            await self._aplicar_dano_alvo(h, dano, DMG_MAGIC, m.get("id"))
+            await self.gm_say(T("narracao.bardo_monstro.sofre_dano_sonoro", alvo=nome_criatura(h),
+                                dano=dano, resultado=T("narracao.bardo_monstro.metade" if passou
+                                                         else "narracao.bardo_monstro.cheio")))
+        return True
+
+    async def _bardo_monstro_acorde(self, m, inst, st, cd, alvos):
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "acorde_trovejante", "phase": "start",
+            "animation_id": f"acorde_trovejante_{m['id']}_{time.time_ns()}",
+            "caster_id": m["id"], "origin": list(m["pos"]),
+            "radius": st["raio"], "expand_ms": 690, "shatter_ms": 720, "shard_ms": 610,
+        })
+        await self.gm_say(T("narracao.bardo_monstro.acorde", monstro=nome_criatura(m),
+                            instrumento=inst.get("name", ""), raio=st["raio"]))
+        for h in alvos:
+            passou, d20, bonus, total = self._testar_save(h, "reflexos", cd, fonte=m)
+            bruto = roll_dice(st["dano"])
+            dano = bruto // 2 if passou else bruto
+            if dano > 0:
+                await self._aplicar_dano_alvo(h, dano, DMG_MAGIC, m.get("id"))
+            if not passou and st.get("push", 0) > 0 and h.get("alive"):
+                dx = (h["pos"][0] > m["pos"][0]) - (h["pos"][0] < m["pos"][0])
+                dy = (h["pos"][1] > m["pos"][1]) - (h["pos"][1] < m["pos"][1])
+                await self._empurrar(h, dx, dy, st["push"])
+            await self.gm_say(T("narracao.bardo_monstro.sofre_dano_sonoro", alvo=nome_criatura(h),
+                                dano=dano, resultado=T("narracao.bardo_monstro.metade" if passou
+                                                         else "narracao.bardo_monstro.cheio")))
+        return True
+
+    async def _bardo_monstro_chamado(self, m, inst, st, cd, d, tiles, alvos):
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "chamado_general", "phase": "start",
+            "animation_id": f"chamado_general_{m['id']}_{time.time_ns()}", "caster_id": m["id"],
+            "origin": list(m["pos"]), "dir": [d[0], d[1]], "cone": st["cone"],
+            "tiles": [list(t) for t in sorted(tiles)],
+            "targets": [{"target_id": h.get("id"), "pos": list(h["pos"])} for h in alvos],
+            "travel_ms": 780, "impact_ms": 720,
+        })
+        await self.gm_say(T("narracao.bardo_monstro.chamado", monstro=nome_criatura(m),
+                            instrumento=inst.get("name", ""), cone=st["cone"]))
+        for h in alvos:
+            passou, d20, bonus, total = self._testar_save(h, "vontade", cd, fonte=m)
+            if passou:
+                await self.gm_say(T("narracao.bardo_monstro.resiste_chamado", alvo=nome_criatura(h)))
+                continue
+            # Medo: reaproveita a penalidade de ataque da Presença Aterradora.
+            h["ciclope_ataque_penalty_ate"] = self.round_num + max(1, int(st.get("medo", 1)))
+            await self.gm_say(T("narracao.bardo_monstro.amedrontado", alvo=nome_criatura(h),
+                                rodadas=max(1, int(st.get("medo", 1)))))
+        return True
 
     def _sopro_dragao_tiles(self, m, target_pos, ability):
         """Casas alcançadas pelo sopro, sempre a partir da frente do monstro.
@@ -49315,7 +49545,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._monster_try_reposition_specialist(m, target_obj)
         # Habilidades configuradas pelo editor sÃ£o usadas com prioridade
         # ofensiva; em seguida a IA continua perseguindo e atacando os herÃ³is.
-        await self._monster_try_editor_ability(m)
+        await self._monster_try_editor_ability(m, targets)
         if m.pop("_monster_editor_action_consumed", False):
             return
         if ai not in {"goblin_xama", "necromante", "bugbear_sombras"}:
@@ -49484,7 +49714,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if profile == "conjurador" and await self._monster_try_spell(m, [target]):
             return
         if profile in {"agressivo", "tatico", "cacador", "emboscador", "protetor"} or "usar_habilidades_fortes" in tactics:
-            await self._monster_try_editor_ability(m)
+            await self._monster_try_editor_ability(m, alive)
             if m.pop("_monster_editor_action_consumed", False):
                 return
         if profile == "emboscador":
@@ -51259,7 +51489,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for gid in dict.fromkeys([*m.get("guaranteed_loot", []), *equipped_drop]):
                 gdef = (
                     (_DUNGEON_ITEM_CATALOG.get(gid)
-                     if m.get("type") in {"goblin_combatente", "orc"} else None) or
+                     if m.get("type") in {"goblin_combatente", "orc", "bardo_da_caravana"} else None) or
                     next((i for i in CHEST_ITEMS   if i["id"] == gid), None) or
                     next((i for i in SHOP_WEAPONS  if i["id"] == gid), None) or
                     next((i for i in SHOP_AMMO     if i["id"] == gid), None) or
@@ -51267,6 +51497,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 )
                 if gdef:
                     loot_items.append(deepcopy(gdef))
+            _cfg_equip = MONSTRO_EQUIP_ALEATORIO.get(m.get("type")) or {}
+            if m.get("instrumento") and random.random() * 100 < _cfg_equip.get("drop_chance", 0):
+                loot_items.append(deepcopy(m["instrumento"]))
             if m.get("type") == "goblin_combatente":
                 # A bolsa é a instância restante: não recriar poções consumidas.
                 loot_items.extend(deepcopy(m.get("equipment_consumables", [])))

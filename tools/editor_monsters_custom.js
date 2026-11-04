@@ -4712,34 +4712,45 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "special_abilities": [
       {
-        "id": "hero_warrior_mira_certeira",
+        "id": "hero_bard_cancao_heroica",
         "source": "heroi",
-        "source_id": "mira_certeira",
-        "source_class": "warrior",
-        "name": "Mira Certeira",
-        "icon": "⚔️",
-        "descricao": "+2 no dado de acerto neste turno",
+        "source_id": "cancao_heroica",
+        "source_class": "bard",
+        "name": "Canção Heroica",
+        "icon": "🎵",
+        "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
         "action_type": "acao",
         "monster_effect": "vantagem_combate",
-        "guild_progressions": [
-          {
-            "id": "guerreiro_mira_3",
-            "level": 3,
-            "requires": "guerreiro_combinar_2",
-            "name": "Mira Certeira III",
-            "icon": "🎯",
-            "description": "Mira Certeira também concede +2 de dano (além do +2 de acerto)."
-          }
-        ],
-        "uses_per_day": 3,
-        "cooldown_turns": 4
+        "monster_maintenance": true,
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "duration_rounds": 4
+      },
+      {
+        "id": "hero_bard_provocacao",
+        "source": "heroi",
+        "source_id": "provocacao",
+        "source_class": "bard",
+        "name": "Provocação",
+        "icon": "😤",
+        "descricao": "Impõe desvantagem ao inimigo e o força a atacar Henrique por 3 turnos",
+        "action_type": "acao",
+        "monster_effect": "vantagem_combate",
+        "uses_per_day": 2,
+        "cooldown_turns": 3
       }
     ],
     "monster_abilities": [
       {
-        "id": "hero_warrior_mira_certeira",
-        "uses_per_day": 3,
-        "cooldown_turns": 4
+        "id": "hero_bard_cancao_heroica",
+        "uses_per_day": 1,
+        "cooldown_turns": 0,
+        "duration_rounds": 4
+      },
+      {
+        "id": "hero_bard_provocacao",
+        "uses_per_day": 2,
+        "cooldown_turns": 3
       }
     ],
     "monster_spells": [],
@@ -4754,7 +4765,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "multiplier": 2
       }
     ],
-    "equipment_enabled": false,
+    "equipment_enabled": true,
     "equipped_items": [],
     "equipment": [],
     "guaranteed_loot": [],

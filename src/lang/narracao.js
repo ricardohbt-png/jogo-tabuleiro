@@ -3295,6 +3295,42 @@ window.LANG_NARRACAO = {
   "narracao.mecanismo_desliga_armadilha": {
     "en": "⚙️ **{heroi}** activated the mechanism: a trap has been switched off!",
     "pt": "⚙️ **{heroi}** ativou o mecanismo: uma armadilha foi desligada!"
+  },
+  "narracao.bardo_monstro.provoca": {
+    "en": "{monstro} taunts {alvo}: for {rodadas} rounds, {alvo} can only attack it!",
+    "pt": "{monstro} provoca {alvo}: por {rodadas} rodadas, {alvo} só pode atacá-lo!"
+  },
+  "narracao.bardo_monstro.nota_cortante": {
+    "en": "{monstro} plucks {instrumento}: a Cutting Note slices down the line!",
+    "pt": "{monstro} dedilha {instrumento}: uma Nota Cortante varre a linha!"
+  },
+  "narracao.bardo_monstro.acorde": {
+    "en": "{monstro} strikes {instrumento}: a thunderous chord rolls out ({raio} square radius)!",
+    "pt": "{monstro} golpeia {instrumento}: um acorde trovejante se espalha (raio {raio})!"
+  },
+  "narracao.bardo_monstro.chamado": {
+    "en": "{monstro} blows {instrumento}: the General's Call sweeps a {cone}-square cone!",
+    "pt": "{monstro} sopra {instrumento}: o Chamado do General varre um cone de {cone} casas!"
+  },
+  "narracao.bardo_monstro.sofre_dano_sonoro": {
+    "en": "🎵 **{alvo}** takes **{dano}** sound damage{resultado}!",
+    "pt": "🎵 **{alvo}** sofre **{dano}** de dano sonoro{resultado}!"
+  },
+  "narracao.bardo_monstro.metade": {
+    "en": " (half, Reflex save passed)",
+    "pt": " (metade, Reflexos passou)"
+  },
+  "narracao.bardo_monstro.cheio": {
+    "en": " (Reflex save failed)",
+    "pt": " (Reflexos falhou)"
+  },
+  "narracao.bardo_monstro.resiste_chamado": {
+    "en": "**{alvo}** resists the General's Call.",
+    "pt": "**{alvo}** resiste ao Chamado do General."
+  },
+  "narracao.bardo_monstro.amedrontado": {
+    "en": "**{alvo}** is terrified: -1 to attacks for {rodadas} round(s).",
+    "pt": "**{alvo}** fica amedrontado: -1 nos ataques por {rodadas} rodada(s)."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

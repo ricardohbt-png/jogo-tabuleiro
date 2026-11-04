@@ -16,10 +16,20 @@ def ficha_assassino():
 
 
 def ficha_bardo_agente():
+    """Bardo da caravana: Canção Heroica e Provocação (habilidades de herói reaproveitadas) e, ao nascer,
+    arma e instrumento sorteados (`MONSTRO_EQUIP_ALEATORIO["bardo_da_caravana"]` em server.py: o validador
+    de ficha descarta campos desconhecidos, então as chances moram lá). `equipment_enabled` fica ligado
+    para a arma sorteada entrar no ataque; sem sorteio ele luta com o golpe básico da ficha."""
     f = GF._base("soldado")
     f.update({"type": TIPO_BARDO, "name": "Bardo da Caravana", "emoji": "🎻", "tier": 2, "cr": 2,
-              "base_hp": 30, "hp": 30, "ac": 14, "movement": 6, "equipment_enabled": False,
+              "base_hp": 30, "hp": 30, "ac": 14, "movement": 6, "equipment_enabled": True,
               "equipped_items": [], "equipment": [], "xp": 70, "boss": False,
               "image": "soldado", "portrait": "soldado"})
+    # Substitui a Mira Certeira herdada do soldado: o bardo canta e provoca, não mira.
+    f["monster_abilities"] = [
+        {"id": "hero_bard_cancao_heroica", "uses_per_day": 1, "cooldown_turns": 0, "duration_rounds": 4},
+        {"id": "hero_bard_provocacao", "uses_per_day": 2, "cooldown_turns": 3},
+    ]
+    f.pop("special_abilities", None)
     f["loot_drops"] = [{"kind": "gold", "amount": 40, "chance": 100}]
     return f

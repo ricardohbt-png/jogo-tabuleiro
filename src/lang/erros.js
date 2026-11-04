@@ -2244,6 +2244,10 @@ window.LANG_ERROS = {
   "erro.mecanismo_ja_ativado": {
     "en": "The mechanism has already been activated.",
     "pt": "O mecanismo já foi ativado."
+  },
+  "erro.a_provocacao_do_monstro_obriga_voce_a_ataca_lo": {
+    "en": "The taunt forces you to attack the one who taunted you for as long as the effect lasts.",
+    "pt": "A Provocação obriga você a atacar quem o provocou enquanto o efeito durar."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);
