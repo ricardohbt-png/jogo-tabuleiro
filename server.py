@@ -1531,7 +1531,7 @@ MONSTRO_EQUIP_ALEATORIO = {
         "arma_chance": 70,
         "armas": ("dagger", "shortsword", "lanca_curta", "maca", "machado_basico", "bordao"),
         "instrumento_chance": 60,
-        "instrumentos": ("harpa", "tambor", "trompa", "alaude"),
+        "instrumentos": ("harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta"),
         "qualidades": (("velho", 45), ("rustico", 35), ("padrao", 20)),
         "uso_chance": 50,
         "recarga": 3,
@@ -36483,6 +36483,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _dano_retaliacao(self, criatura, atacante, melee=True, dano_sofrido=1):
         """Aplica a retaliação configurável de qualquer criatura."""
+        if melee and criatura.get("ecos_dolorosos_ate") is not None:
+            await self._ecos_monstro_retaliar(criatura, atacante)
         ability = self._habilidade_monstro(criatura, "dano_retaliacao")
         if not ability or not melee or not atacante or not self._vivo(atacante):
             return
@@ -45556,6 +45558,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._rx_registrar(_rx_t, self._rx_tiles_da(target), dano=dano_sofrido, atingidos={target.get("id")})
             if not atk_def.get("range"):
                 await self._dano_retaliacao(target, m, True, dano_sofrido)
+            if is_player and (m.get("dueto_fantasma_ate") is not None or any(
+                    o.get("dueto_marcial_ate") is not None for o in self.monsters.values())):
+                await self._bardo_monstro_apos_acerto(m, target_obj, dano_sofrido)
             if not self._alvo_vivo(target_obj) and not m.get("_predador_supremo_reacao"):
                 await self._garaloux_predador_supremo(m)
             if target.get("hp", target.get("vida_atual", 0)) > 0 and charge:
@@ -46253,8 +46258,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return True
         # Instrumento equipado: a habilidade dele é a ação principal do turno.
         if await self._monster_usar_instrumento(m, targets):
-            m["_monster_editor_action_consumed"] = True
-            return True
+            base_inst = INSTRUMENTOS_BASE.get((m.get("instrumento") or {}).get("base"), {})
+            if base_inst.get("maos", 2) >= 2:
+                m["_monster_editor_action_consumed"] = True
+                return True
+            # 1 mão: tocou e ainda ataca neste turno.
         return False
 
     async def _monster_bardo_provocar(self, m, targets):
@@ -46360,9 +46368,106 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not melhor or random.random() * 100 >= cfg.get("uso_chance", 50):
                 return False
             usou = await self._bardo_monstro_chamado(m, inst, st, cd, *melhor)
+        elif tipo in ("ecos_dolorosos", "dueto_marcial", "dueto_fantasma"):
+            # Auras de 1 mão: ele toca E ataca no mesmo turno (como o herói).
+            alcance_gatilho = {"ecos_dolorosos": 3, "dueto_marcial": 6, "dueto_fantasma": 3}[tipo]
+            perto = [h for h in herois if _distancia_chebyshev(m["pos"], h["pos"]) <= alcance_gatilho
+                     and self._tem_linha_de_visao(m["pos"], h["pos"])]
+            if not perto or random.random() * 100 >= cfg.get("uso_chance", 50):
+                return False
+            if tipo == "dueto_marcial":
+                # Só vale com um aliado por perto para completar o dueto.
+                if not any(o is not m and o.get("hp", 0) > 0
+                           and _distancia_chebyshev(m["pos"], o["pos"]) <= 2
+                           for o in self.monsters.values()):
+                    return False
+            if m.get(f"{tipo}_ate", -1) >= self.round_num:
+                return False   # já ativa: não gasta a recarga à toa
+            usou = await self._bardo_monstro_aura(m, inst, st, tipo)
         if usou:
             m["instrumento_pronto_em"] = self.round_num + int(cfg.get("recarga", 3))
         return usou
+
+    async def _bardo_monstro_aura(self, m, inst, st, tipo):
+        """Liga a aura do Sino (Ecos Dolorosos), da Lira (Dueto Marcial) ou da Flauta
+        (Dueto Fantasma) no monstro; o efeito dispara nos ganchos de ataque."""
+        nome = inst.get("name", "")
+        if tipo == "ecos_dolorosos":
+            m["ecos_dolorosos_ate"] = self.round_num + st["duracao"]
+            m["ecos_dano"] = st["dano"]
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "ecos_dolorosos", "phase": "start",
+                "animation_id": f"ecos_dolorosos_{m['id']}_{time.time_ns()}",
+                "caster_id": m["id"], "origin": list(m["pos"]),
+                "duration_rounds": st["duracao"], "pulse_ms": 760,
+            })
+            await self.gm_say(T("narracao.bardo_monstro.ecos", monstro=nome_criatura(m),
+                                instrumento=nome, rodadas=st["duracao"]))
+        elif tipo == "dueto_marcial":
+            m["dueto_marcial_ate"] = self.round_num + st["duracao"]
+            await self.gm_say(T("narracao.bardo_monstro.dueto_marcial", monstro=nome_criatura(m),
+                                instrumento=nome, rodadas=st["duracao"]))
+        else:
+            m["dueto_fantasma_ate"] = self.round_num + st["duracao"]
+            m["dueto_fantasma_fracao"] = st["fracao"]
+            await self.gm_say(T("narracao.bardo_monstro.dueto_fantasma", monstro=nome_criatura(m),
+                                instrumento=nome, rodadas=st["duracao"]))
+        return True
+
+    async def _ecos_monstro_retaliar(self, bardo, atacante):
+        """Retaliação sonora dos Ecos Dolorosos do monstro bardo contra quem o acerta de perto."""
+        inst = bardo.get("instrumento") or {}
+        if (bardo.get("hp", 0) <= 0 or bardo.get("ecos_dolorosos_ate", -1) < self.round_num
+                or inst.get("base") != "sino" or not atacante or not self._vivo(atacante)):
+            return
+        dano = self._apply_damage_types(roll_dice(str(bardo.get("ecos_dano", "1d4"))), [DMG_MAGIC], atacante)
+        if dano <= 0:
+            return
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "ecos_dolorosos", "phase": "retaliate",
+            "animation_id": f"ecos_retalhar_{bardo['id']}_{time.time_ns()}",
+            "caster_id": bardo["id"], "target_id": atacante.get("id"),
+            "origin": list(bardo["pos"]), "target_pos": list(atacante.get("pos") or []),
+            "travel_ms": 360, "impact_ms": 430,
+        })
+        await self._dano_em_alvo(atacante, dano, DMG_MAGIC, bardo.get("id"))
+        await self.gm_say(T("narracao.bardo_monstro.ecos_ferem", alvo=nome_criatura(atacante), dano=dano))
+
+    async def _bardo_monstro_apos_acerto(self, m, target_obj, dano_sofrido):
+        """Ganchos de Lira e Flauta depois que um monstro ACERTA um herói.
+        Flauta: o eco do próprio ataque do bardo repete uma fração do dano.
+        Lira: um aliado do bardo acerta um herói que também está colado nele, e o
+        bardo, adjacente a ambos, desfere um ataque grátis (1 por rodada)."""
+        if target_obj.get("kind") != "player":
+            return
+        alvo = target_obj["obj"]
+        if m.get("instrumento", {}).get("base") == "flauta" \
+                and m.get("dueto_fantasma_ate", -1) >= self.round_num and alvo.get("hp", 0) > 0:
+            eco = (int(dano_sofrido or 0) * int(m.get("dueto_fantasma_fracao", 0))) // 100
+            if eco > 0:
+                await self._aplicar_dano_alvo(alvo, eco, DMG_MAGIC, m.get("id"))
+                await self.gm_say(T("narracao.bardo_monstro.eco_fantasma", alvo=nome_criatura(alvo), eco=eco))
+        if m.get("instrumento", {}).get("base") == "lira":
+            return   # o bardo não dispara o próprio dueto
+        if alvo.get("hp", 0) <= 0:
+            return
+        for bardo in list(self.monsters.values()):
+            if (bardo is m or bardo.get("hp", 0) <= 0
+                    or bardo.get("instrumento", {}).get("base") != "lira"
+                    or bardo.get("dueto_marcial_ate", -1) < self.round_num
+                    or bardo.get("_dueto_marcial_rodada") == self.round_num):
+                continue
+            if (_distancia_chebyshev(bardo["pos"], m["pos"]) > 1
+                    or _distancia_chebyshev(bardo["pos"], alvo["pos"]) > 1):
+                continue
+            ataque = (bardo.get("attacks") or [None])[0]
+            if not ataque:
+                continue
+            bardo["_dueto_marcial_rodada"] = self.round_num
+            await self.gm_say(T("narracao.bardo_monstro.dueto_revida", monstro=nome_criatura(bardo),
+                                alvo=nome_criatura(alvo)))
+            await self._execute_one_monster_attack(bardo, ataque, target_obj)
+            return
 
     async def _bardo_monstro_nota_cortante(self, m, inst, st, cd, d, caminho, alvos):
         await self.broadcast({

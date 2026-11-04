@@ -3331,6 +3331,30 @@ window.LANG_NARRACAO = {
   "narracao.bardo_monstro.amedrontado": {
     "en": "**{alvo}** is terrified: -1 to attacks for {rodadas} round(s).",
     "pt": "**{alvo}** fica amedrontado: -1 nos ataques por {rodadas} rodada(s)."
+  },
+  "narracao.bardo_monstro.ecos": {
+    "en": "{monstro} rings {instrumento}: Painful Echoes will punish melee attackers for {rodadas} round(s).",
+    "pt": "{monstro} faz {instrumento} ressoar: Ecos Dolorosos punirão quem o atacar de perto por {rodadas} rodada(s)."
+  },
+  "narracao.bardo_monstro.ecos_ferem": {
+    "en": "🔔 The echoes wound **{alvo}** for **{dano}**!",
+    "pt": "🔔 Os ecos ferem **{alvo}** em **{dano}**!"
+  },
+  "narracao.bardo_monstro.dueto_marcial": {
+    "en": "{monstro} plays {instrumento}: a Martial Duet for {rodadas} round(s).",
+    "pt": "{monstro} toca {instrumento}: um Dueto Marcial por {rodadas} rodada(s)."
+  },
+  "narracao.bardo_monstro.dueto_fantasma": {
+    "en": "{monstro} plays {instrumento}: a Phantom Duet for {rodadas} round(s).",
+    "pt": "{monstro} toca {instrumento}: um Dueto Fantasma por {rodadas} rodada(s)."
+  },
+  "narracao.bardo_monstro.eco_fantasma": {
+    "en": "👻 The phantom repeats the blow on **{alvo}**: **{eco}** damage.",
+    "pt": "👻 A ilusão repete o golpe em **{alvo}**: **{eco}** de dano."
+  },
+  "narracao.bardo_monstro.dueto_revida": {
+    "en": "{monstro} answers its ally's strike with a free attack on {alvo}!",
+    "pt": "{monstro} responde ao golpe do aliado com um ataque grátis em {alvo}!"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

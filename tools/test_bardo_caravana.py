@@ -75,7 +75,7 @@ class FichaTests(unittest.TestCase):
         self.assertAlmostEqual(arma / n, 0.70, delta=0.07)
         self.assertAlmostEqual(inst / n, 0.60, delta=0.07)
         self.assertGreater(ambos, 0)
-        self.assertEqual(bases, {"harpa", "tambor", "trompa", "alaude"})
+        self.assertEqual(bases, {"harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta"})
 
 
 class IaTests(unittest.TestCase):
@@ -167,6 +167,83 @@ class IaTests(unittest.TestCase):
             asyncio.run(r._run_monster_ai(m, alvos(r)))
             r.round_num += 1
         self.assertLess(r.players["p0"]["hp"], 80)
+
+
+class AurasTests(unittest.TestCase):
+    """Sino, Lira e Flauta: instrumentos de 1 mão (tocam e ainda atacam no turno)."""
+
+    def _cena(self, base, pos_heroi=(7, 5)):
+        r = sala(); m = bardo(r, (5, 5), (base, "padrao"))
+        r.players["p0"]["pos"] = list(pos_heroi)
+        r.players["p0"]["hp"] = r.players["p0"]["max_hp"] = 80
+        return r, m
+
+    def _tocar(self, r, m):
+        with mock.patch.object(S.random, "random", return_value=0.0):
+            return asyncio.run(r._monster_usar_instrumento(m, alvos(r)))
+
+    def test_instrumento_de_uma_mao_nao_gasta_a_acao(self):
+        r2, m2 = self._cena("sino")
+        m2["monster_ability_uses"] = {"hero_bard_cancao_heroica": 0}
+        with mock.patch.object(S.random, "random", return_value=0.0):
+            consumiu = asyncio.run(r2._monster_try_editor_ability(m2, alvos(r2)))
+        self.assertFalse(consumiu)                       # continua e ataca
+        self.assertGreaterEqual(m2["ecos_dolorosos_ate"], r2.round_num)
+        self.assertFalse(m2.pop("_monster_editor_action_consumed", False))
+
+    def test_ecos_ferem_quem_ataca_de_perto(self):
+        r, m = self._cena("sino")
+        self.assertTrue(self._tocar(r, m))
+        self.assertFalse(self._tocar(r, m))              # recarga
+        h = r.players["p0"]; antes = h["hp"]
+        asyncio.run(r._dano_retaliacao(m, h, True, 5))
+        self.assertLess(h["hp"], antes)
+        asyncio.run(r._dano_retaliacao(m, h, False, 5))   # à distância não retalia
+        meio = h["hp"]
+        asyncio.run(r._dano_retaliacao(m, h, False, 5))
+        self.assertEqual(h["hp"], meio)
+
+    def test_ecos_expiram(self):
+        r, m = self._cena("sino"); self._tocar(r, m)
+        r.round_num += 10; h = r.players["p0"]; antes = h["hp"]
+        asyncio.run(r._dano_retaliacao(m, h, True, 5))
+        self.assertEqual(h["hp"], antes)
+
+    def test_flauta_ecoa_o_golpe_do_proprio_bardo(self):
+        r, m = self._cena("flauta", (6, 5))
+        self.assertTrue(self._tocar(r, m))
+        h = r.players["p0"]; antes = h["hp"]
+        asyncio.run(r._bardo_monstro_apos_acerto(m, {"kind": "player", "obj": h}, 20))
+        self.assertEqual(antes - h["hp"], 20 * m["dueto_fantasma_fracao"] // 100)
+
+    def test_lira_revida_com_ataque_gratis_uma_vez_por_rodada(self):
+        r, m = self._cena("lira", (6, 6))
+        aliado = bardo(r, (6, 5))
+        self.assertTrue(self._tocar(r, m))
+        h = r.players["p0"]; h["ac"] = 0
+        golpes = []
+        orig = r._execute_one_monster_attack
+
+        async def espia(mm, atk, tobj):
+            golpes.append(mm["id"]); return await orig(mm, atk, tobj)
+        r._execute_one_monster_attack = espia
+        alvo = {"kind": "player", "obj": h}
+        asyncio.run(r._bardo_monstro_apos_acerto(aliado, alvo, 3))
+        asyncio.run(r._bardo_monstro_apos_acerto(aliado, alvo, 3))
+        self.assertEqual(golpes, [m["id"]])               # 1x por rodada
+        r.round_num += 1; m["dueto_marcial_ate"] = r.round_num
+        asyncio.run(r._bardo_monstro_apos_acerto(aliado, alvo, 3))
+        self.assertEqual(golpes, [m["id"], m["id"]])
+
+    def test_lira_exige_aliado_perto_e_aliado_colado(self):
+        r, m = self._cena("lira", (6, 6))
+        self.assertFalse(self._tocar(r, m))               # sozinho: sem dueto
+        longe = bardo(r, (12, 9))
+        h = r.players["p0"]
+        m["dueto_marcial_ate"] = r.round_num + 3
+        antes = h["hp"]
+        asyncio.run(r._bardo_monstro_apos_acerto(longe, {"kind": "player", "obj": h}, 3))
+        self.assertEqual(h["hp"], antes)                  # aliado longe do bardo: nada
 
 
 if __name__ == "__main__":
