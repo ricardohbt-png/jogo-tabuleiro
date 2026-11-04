@@ -1328,6 +1328,8 @@ de saída e os anéis de início dos heróis assentam no topo da casa (`topoSupe
 ponte). Testes: `tools/test_altura_parede.py`,
 `tools/test_altura_parede_cliente.js`.
 
+**Sala trancada sem porta (2026-11-04):** só porta destranca sala, e monstro de sala trancada dorme (`_monstro_ativo_em_combate`). Sala com `locked` que nenhuma porta controla nunca abriria: o Cais perdeu as portas na redecoração e os monstros das salas 1 e 2 ficaram parados. `_destrancar_salas_sem_porta` (por `door_rooms`) a destranca em `load_authored_dungeon` e em `_foto_aplicar_sala`, então partidas salvas se consertam ao continuar; foto sem `door_rooms` não é tocada. O editor avisa com a regra R7 em `_validarDesign`. Teste: `python -X utf8 tools/test_sala_trancada_sem_porta.py`.
+
 **Porta só onde o autor criou (2026-10-07):** o `buildWallDetails` punha arco de pedras, pilares, folha de porta de madeira e dobradiças em toda casa de chão com parede dos dois lados ao lado de uma sala (resto da era procedural), sem olhar as portas do mapa — 53 no Calabouço da Morte. Removido: porta é só a casa `DOOR` (`doorMeshes`). Teste: `tools/test_porta_so_onde_autor.js`.
 
 ## Classes de Personagem

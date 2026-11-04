@@ -2297,6 +2297,10 @@ window.LANG_EDITOR = {
     "en": "R4: room {sala} is cut off from the main map.",
     "pt": "R4: sala {sala} isolada do mapa principal."
   },
+  "ui.editor.masmorra.design.r7": {
+    "en": "R7: room {sala} is locked but has no door. The game will unlock it when the map loads.",
+    "pt": "R7: sala {sala} está trancada, mas não tem porta. O jogo vai destrancá-la ao carregar o mapa."
+  },
   "ui.editor.masmorra.design.r2r5_sem_boss": {
     "en": "R2/R5: no room with role 'boss' (rules skipped).",
     "pt": "R2/R5: sem sala com role 'boss' (regras puladas)."

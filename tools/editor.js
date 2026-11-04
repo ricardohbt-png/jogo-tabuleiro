@@ -2989,6 +2989,7 @@
     var g = _grafoSalas(), nd = _ndSalaMap();
     var pod = window.Difficulty ? window.Difficulty.poder(S.expectedParty.heroes, S.expectedParty.level) : Math.max(1, S.expectedParty.heroes * S.expectedParty.level);
     S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push(t("ui.editor.masmorra.design.r4", { sala: _salaRef(r.id) })); });
+    S.rooms.forEach(function (r) { if (r.locked && !(r.doors || []).length) avisos.push(t("ui.editor.masmorra.design.r7", { sala: _salaRef(r.id) })); });
     if (g.bossId == null) { avisos.push(t("ui.editor.masmorra.design.r2r5_sem_boss")); }
     else {
       var dist = _distSalas(g.adj, g.entradaId, g.bossId);

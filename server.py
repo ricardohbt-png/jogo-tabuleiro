@@ -18618,6 +18618,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         for room in self.rooms:
             for dx, dy in room.get("doors", []):
                 self.door_rooms.setdefault((dx, dy), []).append(room["id"])
+        self._destrancar_salas_sem_porta()
 
         self.door_conditions = {}
         for key, cond in (defn.get("door_conditions") or {}).items():
@@ -21092,6 +21093,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if rid is None:
             return None
         return next((r for r in self.rooms if r["id"] == rid), None)
+
+    def _destrancar_salas_sem_porta(self):
+        """Só porta destranca sala. Sala trancada que nenhuma porta controla (a porta saiu do
+        mapa, e a marca ficou) nunca abriria, e os monstros dela dormiriam até o fim."""
+        com_porta = {rid for ids in self.door_rooms.values() for rid in ids}
+        for room in self.rooms:
+            if room.get("locked") and room["id"] not in com_porta:
+                room["locked"] = False
 
     def _door_owner_rooms(self, x, y):
         """Salas que a porta em (x,y) controla."""
@@ -30057,6 +30066,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         for campo in foto_campos_sala("foto") + foto_campos_sala("foto_pid"):
             if campo in sala:
                 setattr(self, campo, sala[campo])
+        if "door_rooms" in sala:
+            self._destrancar_salas_sem_porta()
         if "world_adventure_id" not in sala:
             self._deduzir_aventura_da_foto()
         self._load_portcullis_def(defn)
