@@ -1,4 +1,4 @@
-"""Aljavas: ampliam o limite de pilha de flechas/virotes enquanto equipadas na mão secundária.
+"""Aljavas: oferecem slots próprios sem ampliar pilhas na bolsa.
 Rode da raiz: python -X utf8 tools/test_aljavas.py"""
 import json
 import sys
@@ -42,17 +42,15 @@ class AljavasTests(unittest.TestCase):
         for tipo in ("flechas", "flechas_prata", "virotes", "virotes_incendiarios"):
             self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": tipo}), 10, tipo)
 
-    def test_aljava_pequena_amplia_20_flechas_ou_25_virotes(self):
+    def test_aljava_pequena_mantem_limite_da_bolsa(self):
         p = jogador(aljava("aljava_pequena"))
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas"}), 20)
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas_prata"}), 20)
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "virotes"}), 25)
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "virotes_incendiarios"}), 25)
+        for tipo in ("flechas", "flechas_prata", "virotes", "virotes_incendiarios"):
+            self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": tipo}), 10)
 
-    def test_aljava_grande_amplia_40_flechas_ou_50_virotes(self):
+    def test_aljava_grande_mantem_limite_da_bolsa(self):
         p = jogador(aljava("aljava_grande"))
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas_incendiarias"}), 40)
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "virotes_prata"}), 50)
+        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas_incendiarias"}), 10)
+        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "virotes_prata"}), 10)
 
     def test_outro_item_na_mao_secundaria_nao_amplia(self):
         p = jogador({"id": "escudo_p", "name": "Escudo", "effect": "def_"})

@@ -110,7 +110,7 @@ def build_catalog():
         "atk_bonus", "damage_bonus", "magical", "extra_damages", "fire_on_hit", "fire_crit_damage",
         "thunder_push_on_crit", "thunder_pulse", "thunder_pulse_cooldown",
         "damage_reduction", "item_slot", "effect", "value", "bonuses", "veneno_id",
-        "ammo_type", "ammo_count", "quiver_arrow_capacity", "quiver_bolt_capacity",
+        "ammo_type", "ammo_count", "quiver_slots_capacity",
         "extra_damage", "extra_damage_types", "loot_only", "descricao", "texto",
         "magic_ids", "fixed_magic_ids", "extra_spell_circle", "extra_spell_cooldown",
         "curse_mode", "curse_id", "curse_category"

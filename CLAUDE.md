@@ -2,11 +2,11 @@
 
 ### Juntar pilhas de munição (2026-11-01)
 
-No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até `_max_ammo_stack_for` (10, ou o da aljava) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
+No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até `_max_ammo_stack_for` (10) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
 
 ### Mini Aljava (2026-11-01)
 
-`mini_aljava` custa 30 moedas, usa `assets/itens/aljava.png`, é vendida nos cinco ferreiros e ocupa um espaço `item1`/`item2`. Equipada, amplia pilhas na bolsa para 20 flechas ou 20 virotes, incluindo variantes especiais; equipar cópias não soma capacidade. A detecção de aljavas em `off_hand`, `item1` e `item2` é centralizada em `_quivers_equipped`; quando há mais de uma aljava, vale a maior capacidade por família. Arcos podem consumir munição compatível diretamente da bolsa com qualquer aljava equipada. `GS.maxAmmoStackFor` espelha o limite no cliente para a coleta de munição em baús. O catálogo autoritativo é `SHOP_AMMO`; mudanças devem ser exportadas por `tools/export_catalog.py` para `tools/editor_catalog.js`.
+`mini_aljava` custa 30 moedas, usa `assets/itens/aljava.png`, é vendida nos cinco ferreiros e ocupa `item1`/`item2`. Veja as regras atuais de slots em Aljavas abaixo. O catálogo autoritativo é `SHOP_AMMO`; mudanças devem ser exportadas por `tools/export_catalog.py` para `tools/editor_catalog.js`.
 
 ### Tutorial com vários heróis: uma lição por herói (2026-11-01)
 
@@ -151,7 +151,7 @@ Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` conc
 
 ### Aljavas (2026-10-25)
 
-`aljava_pequena` (30 moedas) e `aljava_grande` (60) são vendidas em `ferreiro_ammo` nos cinco ferreiros, usam `assets/itens/aljava.png` e equipam em `gear.off_hand`. Sem aljava, cada pilha mantém o limite de 10. Equipada, aumenta o limite de pilha da bolsa para 20/40 flechas ou 25/50 virotes (`_max_ammo_stack_for`). Arcos equipados com aljava consomem flechas diretamente da bolsa, na ordem de preferência de flechas; bestas continuam consumindo virotes da bolsa e a aljava usa o espaço secundário. Flechas e virotes são munições separadas; prata/incendiária respeitam o limite correspondente ao tipo. Não altera dano nem concede munição.
+`mini_aljava`, `aljava_pequena` e `aljava_grande` oferecem respectivamente 1, 2 e 3 slots `quiver_slots` no próprio item equipado. Cada slot comporta até 40 projéteis de uma mesma pilha de flechas ou virotes, incluindo variantes especiais; o conteúdo permanece na aljava ao desequipá-la. A mini ocupa `item1`/`item2`; as demais ocupam `off_hand`. `move_quiver_ammo` transfere munição entre bolsa e aljava; ataques e prévias consideram as aljavas equipadas. O limite da bolsa é 10, sem truncar pilhas antigas maiores. Arcos com aljava e bestas também podem consumir munição da bolsa, conforme as preferências existentes. A aljava não concede munição nem altera dano.
 
 ### Mochila de Carga (2026-10-25)
 
@@ -1652,8 +1652,8 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > e a ordem entre flechas comuns, incendiárias e de prata; o painel inicia recolhido
 > e pode ser expandido/recolhido sem fechar o inventário. Ao consumir a última
 > flecha equipada em arco, o servidor move da bolsa a primeira pilha disponível
-> conforme a ordem, respeitando os tipos aceitos pela arma. Com aljava na mão
-> secundária, o arco consome diretamente da bolsa e usa a mesma ordem de preferência;
+> conforme a ordem, respeitando os tipos aceitos pela arma. Com aljava equipada,
+> o arco consome das aljavas ou da bolsa usando a mesma ordem de preferência;
 > bestas/virotes não usam essa preferência. Mensagem autoritativa de troca:
 > `narracao.auto_equipou_municao`.
 
@@ -1805,8 +1805,7 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > armadilha. **Veneno Rápido:** em armas à distância, o veneno acompanha cada projétil
 > na pilha (`poison_ids`), não a arma. Cada frasco envenena até 10 flechas/virotes;
 > `ladino_veneno_2` eleva esse teto a 20, reunindo munição ainda não envenenada
-> de pilhas compatíveis, sem exceder a capacidade efetiva da pilha (10 por padrão,
-> ampliada pela aljava equipada). A pilha escolhida
+> de pilhas compatíveis, sem exceder 10 projéteis por pilha na bolsa. A pilha escolhida
 > define tipo e atributos; munição compatível é consumida primeiro do slot escolhido,
 > depois da mão esquerda e da bolsa por ordem. Quantidades abaixo do teto aplicável
 > pedem confirmação com a dose perdida e consomem o frasco inteiro. `ladino_veneno_3`
@@ -4669,7 +4668,7 @@ a peça no seletor de decorações.
 
 > **Quartel medieval (2026-11-03):** decoração 3×3, alta e girável, com base de pedra, enxaimel, telhado de duas águas, porta reforçada, escudo com espadas cruzadas e bandeira vermelha. O servidor registra PNG e GLB em `DECOR_TYPES`/`DECOR_MODEL3D`; os arquivos são gerados por `tools/create_quartel_medieval.py` em `assets/objetos/quartel_medieval.{blend,glb,png}`.
 
-> **Torre de Alva e Luz (2026-11-03):** decoração 2×2, alta e girável, inspirada na torre cilíndrica de pedra escura da imagem da cidade, com frestas de vigia e coroamento aberto com ameias. Os arquivos Blender/GLB/PNG são gerados por `tools/create_torre_alva_e_luz.py` em `assets/objetos/torre_alva_e_luz.*`.
+> **Torre de Alva e Luz (2026-11-03; arte 3D revisada em 2026-11-04):** decoração 2×2, alta e girável, inspirada na torre cilíndrica de pedra escura da imagem da cidade, com frestas de vigia e coroamento aberto com ameias. A revisão baseada na nova arte usa `torre_alva_e_luz_v2.png` e `torre_alva_e_luz_v2.glb`, gerados a partir da cena Blender anterior por `tools/create_torre_alva_e_luz_v2.py`; o servidor e o cliente resolvem o modelo em `DECOR_MODEL3D`/`DECOR_GLB_TYPES` e o catálogo do editor usa o PNG v2. A textura PBR está em `torre_alva_e_luz_v2_basecolor.png`; a cena original permanece preservada.
 
 > **Água profunda e redemoinho nas reações (2026-10-14):** o estado `agua` (`_rx_estado`, qualquer
 > `_water_tile_kind` fora de ponte: `agua`, `agua_profunda`, `rodamoinho`, `rodamoinho_profundo`) substituiu

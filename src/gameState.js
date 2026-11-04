@@ -2717,17 +2717,10 @@ const GS = (() => {
       && JSON.stringify(a[c]) === JSON.stringify(b[c]));
   }
   function maxAmmoStackFor(player, item) {
-    if (!_ehMunicao(item)) return 10;
-    const capacityKey = _TIPOS_FLECHA.has(item.ammo_type) ? 'quiver_arrow_capacity'
-      : _TIPOS_VIROTE.has(item.ammo_type) ? 'quiver_bolt_capacity' : null;
-    if (!capacityKey) return 10;
-    const gear = player && player.gear || {};
-    return ['off_hand', 'item1', 'item2'].reduce((max, slot) => {
-      const quiver = gear[slot];
-      if (!quiver || quiver.effect !== 'quiver') return max;
-      const capacity = Number(quiver[capacityKey]);
-      return Math.max(max, Number.isFinite(capacity) && capacity > 0 ? capacity : 10);
-    }, 10);
+    return 10;
+  }
+  function moveQuiverAmmo(direction, gearSlot, slotIndex, bagIndex, token) {
+    send({type:'move_quiver_ammo', direction, gear_slot:gearSlot, slot_index:slotIndex, bag_index:bagIndex, quiver_token:token});
   }
   function equipOffhand(i)                { send({ type: 'equip_offhand',   slot_index: i }); }
   // Magias conhecidas (Pedro/Lewis): escolha de 2 magias de 1º círculo no lobby.
@@ -4348,7 +4341,8 @@ const GS = (() => {
     reorderBag,
     juntarMunicao,         // sender: junta duas pilhas de munição iguais
     mesmaPilhaMunicao,     // puro: duas pilhas de munição podem se juntar?
-    maxAmmoStackFor,       // puro: capacidade de pilha conforme aljavas equipadas
+    maxAmmoStackFor,       // puro: limite das pilhas comuns de munição
+    moveQuiverAmmo,
     equipOffhand,
     dropItem,
     transferItem,

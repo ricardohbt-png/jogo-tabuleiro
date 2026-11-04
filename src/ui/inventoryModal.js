@@ -217,6 +217,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
 .inv-belt-heading{font:12px Georgia,serif;color:#ead8b0;margin-bottom:7px;}
 .inv-belt-row{display:flex;gap:8px;}
 .inv-belt-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
+.inv-quiver-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
 .inv-belt-pocket .inv-bagslot-emoji{font-size:.8rem;}
 .inv-belt-pocket .inv-bagslot-emoji img{width:65%;height:65%;}
 .inv-belt-count{position:absolute;bottom:1px;right:2px;background:#26170d;color:#ffe7b2;border-radius:3px;padding:1px 3px;font:700 11px Georgia,serif;pointer-events:none;}
@@ -398,6 +399,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       const selector = selected.kind === 'bag'
         ? `.inv-bagslot[data-bag-index="${selected.index}"]`
         : selected.kind === 'belt' ? `.inv-belt-pocket[data-gear-slot="${selected.gearSlot}"][data-pocket-index="${selected.pocketIndex}"]`
+        : selected.kind === 'quiver' ? `.inv-quiver-pocket[data-gear-slot="${selected.gearSlot}"][data-pocket-index="${selected.pocketIndex}"]`
         : selected.kind === 'gear' ? `.inv-slot[data-slot-key="${selected.slotKey}"]` : '';
       const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
       if(slot) slot.focus({ preventScroll:true });
@@ -412,6 +414,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       return Number.isInteger(index) ? { kind:'bag', index } : null;
     }
     if(slot.dataset.inventorySlot === 'belt') return {kind:'belt', gearSlot:slot.dataset.gearSlot, pocketIndex:Number(slot.dataset.pocketIndex)};
+    if(slot.dataset.inventorySlot === 'quiver') return {kind:'quiver', gearSlot:slot.dataset.gearSlot, pocketIndex:Number(slot.dataset.pocketIndex)};
     if(slot.dataset.inventorySlot === 'gear' && slot.dataset.slotKey)
       return { kind:'gear', slotKey:slot.dataset.slotKey };
     return null;
@@ -423,6 +426,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       const selector = focus.kind === 'bag'
         ? `.inv-bagslot[data-bag-index="${focus.index}"]`
         : focus.kind === 'belt' ? `.inv-belt-pocket[data-gear-slot="${focus.gearSlot}"][data-pocket-index="${focus.pocketIndex}"]`
+        : focus.kind === 'quiver' ? `.inv-quiver-pocket[data-gear-slot="${focus.gearSlot}"][data-pocket-index="${focus.pocketIndex}"]`
         : focus.kind === 'gear'
           ? `.inv-slot[data-slot-key="${focus.slotKey}"]` : '';
       const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
@@ -686,6 +690,57 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   }
 
   const BELT_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:2 };
+  const QUIVER_CAPACITIES = { mini_aljava:1, aljava_pequena:2, aljava_grande:3 };
+
+  function _onQuiverSlotClick(gearSlot, pocketIndex){
+    if(_readOnly) return;
+    if(_selected?.kind === 'bag'){
+      GS.moveQuiverAmmo('to_quiver', gearSlot, pocketIndex, _selected.index, _currentPlayer()?.gear?.[gearSlot]?.quiver_token);
+      _selected = null; _gamepadAction = null; return;
+    }
+    const item = _currentPlayer()?.gear?.[gearSlot]?.quiver_slots?.[pocketIndex];
+    _selected = _selected?.kind === 'quiver' && _selected.gearSlot === gearSlot && _selected.pocketIndex === pocketIndex
+      ? null : item ? {kind:'quiver', gearSlot, pocketIndex, quiverToken:_currentPlayer()?.gear?.[gearSlot]?.quiver_token} : null;
+    _gamepadAction = null; refresh(); _focusSelectedSlot();
+  }
+
+  function _renderQuivers(host, player){
+    for(const gearSlot of ['off_hand', 'item1', 'item2']){
+      const quiver = player.gear?.[gearSlot], capacity = QUIVER_CAPACITIES[quiver?.id];
+      if(!capacity) continue;
+      const section = document.createElement('section'); section.className = 'inv-belt-section';
+      const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
+      heading.textContent = `${quiver.name} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
+      const row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
+      for(let i = 0; i < capacity; i++){
+        const item = quiver.quiver_slots?.[i];
+        const slot = document.createElement('div');
+        slot.className = 'inv-bagslot inv-quiver-pocket' + (item ? ' filled' : ' empty');
+        slot.dataset.gearSlot = gearSlot; slot.dataset.pocketIndex = String(i);
+        slot.title = item ? `${_itemDisplayName(item)} ×${item.ammo_count}` : t('ui.inv.aljava_slot_vazio', {n:i + 1});
+        slot.setAttribute('aria-label', slot.title);
+        if(item){
+          slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🏹')}</span><span class="inv-belt-count">${item.ammo_count}</span>`;
+          _wireTooltip(slot, item.id, null, item);
+        }
+        if(_selected?.kind === 'quiver' && _selected.gearSlot === gearSlot && _selected.pocketIndex === i) slot.classList.add('selected');
+        if(!_readOnly){
+          slot.tabIndex = 0; slot.dataset.inventorySlot = 'quiver'; slot.setAttribute('role', 'button');
+          slot.onclick = () => _onQuiverSlotClick(gearSlot, i);
+          slot.addEventListener('keydown', e => {if(e.key === 'Enter' || e.key === ' '){e.preventDefault(); slot.click();}});
+          if(item){ slot.draggable = true; slot.addEventListener('dragstart', e => {
+            _selected = {kind:'quiver', gearSlot, pocketIndex:i, quiverToken:quiver.quiver_token};
+            e.dataTransfer.setData('text/plain', JSON.stringify(_selected)); e.dataTransfer.effectAllowed = 'move';
+          }); }
+          slot.addEventListener('dragover', e => {if(_selected?.kind === 'bag'){e.preventDefault(); slot.classList.add('drop-hover');}});
+          slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
+          slot.addEventListener('drop', e => {e.preventDefault(); e.stopPropagation(); slot.classList.remove('drop-hover'); _onQuiverSlotClick(gearSlot, i);});
+        }
+        row.appendChild(slot);
+      }
+      host.appendChild(section);
+    }
+  }
 
   function _beltEntry(player, gearSlot, pocketIndex){
     const belt = player?.gear?.[gearSlot];
@@ -779,6 +834,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       }
       host.appendChild(section);
     }
+    _renderQuivers(host, player);
   }
 
   function _renderBag(overlay, player){
@@ -1091,7 +1147,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   function _attemptMoveToGear(slotKey){
     const sel = _selected;
     _gamepadAction = null;
-    if(!sel || sel.kind === 'gear' || sel.kind === 'belt'){ refresh(); return; }   // gear→gear: sem suporte, ignora
+    if(!sel || sel.kind === 'gear' || sel.kind === 'belt' || sel.kind === 'quiver'){ refresh(); return; }   // gear→gear: sem suporte, ignora
     // Soltar um item do baú no paperdoll é a mesma retirada de sempre: quem escolhe
     // o encaixe é o servidor, que já manda o item para o slot livre compatível.
     // (Cuidado: `sel.index` é índice DO BAÚ — tratá-lo como índice da bolsa
@@ -1129,6 +1185,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
     if(sel.kind === 'belt'){
       GS.moveUtilityBeltItem('to_bag', sel.gearSlot, sel.pocketIndex, Math.min(toIndex, _currentPlayer()?.bag?.length || 0));
+      _selected = null; _gamepadAction = null; return;
+    }
+    if(sel.kind === 'quiver'){
+      GS.moveQuiverAmmo('to_bag', sel.gearSlot, sel.pocketIndex, Math.min(toIndex, _currentPlayer()?.bag?.length || 0), sel.quiverToken);
       _selected = null; _gamepadAction = null; return;
     }
     const player = _currentPlayer();
@@ -1550,6 +1610,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const focused = _gamepadFocusedSlot();
     if(!focused) return false;
     const kind = focused.dataset.inventorySlot;
+    if(kind === 'quiver'){
+      _onQuiverSlotClick(focused.dataset.gearSlot, Number(focused.dataset.pocketIndex));
+      return true;
+    }
     if(kind === 'belt'){
       const gearSlot = focused.dataset.gearSlot, pocketIndex = Number(focused.dataset.pocketIndex);
       if(_selected?.kind === 'belt' && _selected.gearSlot === gearSlot && _selected.pocketIndex === pocketIndex){

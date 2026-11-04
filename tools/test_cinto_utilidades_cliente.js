@@ -78,3 +78,14 @@ for(const [lang,beltLabel,emptyLabel] of [['pt','Cinto','Bolso 1 vazio'],['en','
   check('actual inventory belt section and empty pocket '+lang, localized.children[0].children[0].textContent.startsWith(beltLabel+' — ') && localized.children[0].children[1].children[0].attrs['aria-label']===emptyLabel);
 }
 console.log(`Review final: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
+const arrows={id:'flechas',name:'Flechas',effect:'ammo',ammo_type:'flechas',ammo_count:30};
+player.gear.off_hand={id:'aljava_grande',name:'Aljava Grande',quiver_token:'q1',quiver_slots:[arrows,null,null]};
+context.GS.moveQuiverAmmo=(...args)=>sent.push(['quiver',...args]);
+const quiverHost=new Element();modal.testRender({querySelector:()=>quiverHost},player);
+const quiverSlots=quiverHost.children.at(-1).children[1].children;
+check('runtime large quiver renders three slots and ammunition count',quiverSlots.length===3&&quiverSlots[0].innerHTML.includes('>30</span>'));
+modal.testSelect({kind:'bag',index:0});quiverSlots[1].onclick();
+check('runtime bag to quiver request',JSON.stringify(sent.pop())===JSON.stringify(['quiver','to_quiver','off_hand',1,0,'q1']));
+modal.testSelect({kind:'quiver',gearSlot:'off_hand',pocketIndex:0,quiverToken:'q1'});modal.testBag(1);
+check('runtime quiver to bag request',JSON.stringify(sent.pop())===JSON.stringify(['quiver','to_bag','off_hand',0,1,'q1']));
+console.log(`Quiver: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;

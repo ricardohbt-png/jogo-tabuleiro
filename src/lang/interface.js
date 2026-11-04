@@ -111,6 +111,7 @@ window.LANG_INTERFACE = {
   "ui.diario.tentar_novamente": {"en": "Try again", "pt": "Tentar novamente"},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
+  "ui.inv.aljava_slot_vazio": {"pt": "Munição {n} (até 40)", "en": "Ammunition {n} (up to 40)"},
   "dado.bomba_de_flash_de_gilo": {
     "en": "Gilo's Flash Bomb",
     "pt": "Bomba de Flash de Gilo"

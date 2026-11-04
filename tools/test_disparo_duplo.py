@@ -146,6 +146,31 @@ class DisparoDuploTests(unittest.IsolatedAsyncioTestCase):
                     if isinstance(m, dict) and m.get("type") == "attack_feedback"]
         self.assertEqual([m["phase"] for m in feedback], ["start", "result", "start", "result"])
 
+    async def test_two_shots_consume_bolts_from_mini_quiver(self):
+        self.player["guild_owned"]["especializacoes"].append("disparo_duplo")
+        self.equip_pair()
+        quiver = deepcopy(S._DUNGEON_ITEM_CATALOG["mini_aljava"])
+        ammo = deepcopy(S._DUNGEON_ITEM_CATALOG["virotes"])
+        ammo["ammo_count"] = 2
+        quiver["quiver_slots"] = [ammo]
+        self.player["gear"]["item1"] = quiver
+        rolls = await self.attack()
+        self.assertEqual(rolls.call_count, 2)
+        self.assertEqual(quiver["quiver_slots"], [None])
+
+    async def test_bow_consumes_arrows_from_offhand_quiver(self):
+        bow = deepcopy(S.WEAPONS['arco_curto'])
+        self.player['gear']['weapon'] = bow
+        self.room._sincronizar_arma_de_combate(self.player, bow)
+        quiver = deepcopy(S._DUNGEON_ITEM_CATALOG['aljava_pequena'])
+        arrow = deepcopy(S._DUNGEON_ITEM_CATALOG['flechas_magicas'])
+        arrow['ammo_count'] = 1
+        quiver['quiver_slots'] = [arrow, None]
+        self.player['gear']['off_hand'] = quiver
+        rolls = await self.attack((True,))
+        self.assertEqual(rolls.call_count, 1)
+        self.assertEqual(quiver['quiver_slots'], [None, None])
+
     async def test_each_shot_consumes_bolt_even_when_it_misses(self):
         self.player["guild_owned"]["especializacoes"].append("disparo_duplo")
         self.equip_pair()

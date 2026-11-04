@@ -2391,16 +2391,16 @@ window.LANG_CATALOGO = {
     "pt": "Alabarda de Prata"
   },
   "cat.item.aljava_grande.desc": {
-    "en": "Equipped in the off hand, raises each stack capacity to 40 arrows or 50 bolts.",
-    "pt": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."
+    "en": "Equipped in the off hand, provides 3 slots for up to 40 arrows or bolts each. Contents remain inside when unequipped.",
+    "pt": "Equipada na mão secundária, oferece 3 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."
   },
   "cat.item.aljava_grande.nome": {
     "en": "Large Quiver",
     "pt": "Aljava Grande"
   },
   "cat.item.aljava_pequena.desc": {
-    "en": "Equipped in the off hand, raises each stack capacity to 20 arrows or 25 bolts.",
-    "pt": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 20 flechas ou 25 virotes."
+    "en": "Equipped in the off hand, provides 2 slots for up to 40 arrows or bolts each. Contents remain inside when unequipped.",
+    "pt": "Equipada na mão secundária, oferece 2 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."
   },
   "cat.item.aljava_pequena.nome": {
     "en": "Small Quiver",
@@ -3599,8 +3599,8 @@ window.LANG_CATALOGO = {
     "pt": "Martelo Rúnico Colossal"
   },
   "cat.item.mini_aljava.desc": {
-    "en": "Equipped in an item slot, raises each stack capacity to 20 arrows or 20 bolts, including special variants.",
-    "pt": "Equipada em um espaço de item, permite pilhas de até 20 flechas ou 20 virotes, incluindo variantes especiais."
+    "en": "Equipped in an item slot, provides 1 slot for up to 40 arrows or bolts. Contents remain inside when unequipped.",
+    "pt": "Equipada em um espaço de item, oferece 1 espaço para até 40 flechas ou virotes. O conteúdo permanece na aljava ao desequipá-la."
   },
   "cat.item.mini_aljava.nome": {
     "en": "Mini Quiver",

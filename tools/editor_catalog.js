@@ -12979,9 +12979,8 @@ window.EDITOR_CATALOG = {
       "icon": "assets/itens/aljava.png",
       "item_slot": "off_hand",
       "effect": "quiver",
-      "quiver_arrow_capacity": 20,
-      "quiver_bolt_capacity": 25,
-      "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 20 flechas ou 25 virotes."
+      "quiver_slots_capacity": 2,
+      "descricao": "Equipada na mão secundária, oferece 2 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."
     },
     {
       "id": "aljava_grande",
@@ -12990,9 +12989,8 @@ window.EDITOR_CATALOG = {
       "icon": "assets/itens/aljava.png",
       "item_slot": "off_hand",
       "effect": "quiver",
-      "quiver_arrow_capacity": 40,
-      "quiver_bolt_capacity": 50,
-      "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."
+      "quiver_slots_capacity": 3,
+      "descricao": "Equipada na mão secundária, oferece 3 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."
     },
     {
       "id": "mini_aljava",
@@ -13001,9 +12999,8 @@ window.EDITOR_CATALOG = {
       "icon": "assets/itens/aljava.png",
       "item_slot": "item",
       "effect": "quiver",
-      "quiver_arrow_capacity": 20,
-      "quiver_bolt_capacity": 20,
-      "descricao": "Equipada em um espaço de item, permite pilhas de até 20 flechas ou 20 virotes, incluindo variantes especiais."
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipada em um espaço de item, oferece 1 espaço para até 40 flechas ou virotes. O conteúdo permanece na aljava ao desequipá-la."
     },
     {
       "id": "kit_reparo_campo",
@@ -16579,7 +16576,7 @@ window.EDITOR_CATALOG = {
       "pisavel": false,
       "loot_capaz": false,
       "special": null,
-      "image": "torre_alva_e_luz.png"
+      "image": "torre_alva_e_luz_v2.png"
     },
     {
       "type": "sino_ritualistico",

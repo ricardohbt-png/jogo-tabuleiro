@@ -59,11 +59,11 @@ async def main():
     await r.handle_juntar_municao("p", {"bolsa": 0}, {"bolsa": 1})
     check("destino já cheio: nada muda", contagens(p) == [5, 10], contagens(p))
 
-    print("\n[3] com aljava o limite é o da aljava")
+    print("\n[3] com aljava o limite da bolsa continua 10")
     aljava = deepcopy(next(i for i in S.SHOP_AMMO if i["id"] == "aljava_pequena"))
     r, p = sala([municao("virotes", 15), municao("virotes", 18)], off_hand=aljava)
     await r.handle_juntar_municao("p", {"bolsa": 0}, {"bolsa": 1})
-    check("limite 25 dos virotes: destino 25, origem 8", contagens(p) == [8, 25], contagens(p))
+    check("pilhas antigas acima de 10 permanecem intactas", contagens(p) == [15, 18], contagens(p))
 
     print("\n[4] envenenadas juntam só com o mesmo veneno")
     veneno = next(iter(S.VENENOS))

@@ -8094,14 +8094,14 @@ SHOP_MERCHANT = [
 # por pacote nas bÃ¡sicas, vendidas individualmente nas incendiÃ¡rias).
 SHOP_AMMO = [
     {"id": "aljava_pequena", "name": "Aljava Pequena", "emoji": "🏹", "icon": "assets/itens/aljava.png", "price": 30,
-     "item_slot": "off_hand", "effect": "quiver", "quiver_arrow_capacity": 20, "quiver_bolt_capacity": 25,
-     "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 20 flechas ou 25 virotes."},
+     "item_slot": "off_hand", "effect": "quiver", "quiver_slots_capacity": 2,
+     "descricao": "Equipada na mão secundária, oferece 2 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."},
     {"id": "aljava_grande", "name": "Aljava Grande", "emoji": "🏹", "icon": "assets/itens/aljava.png", "price": 60,
-     "item_slot": "off_hand", "effect": "quiver", "quiver_arrow_capacity": 40, "quiver_bolt_capacity": 50,
-     "descricao": "Equipada na mão secundária, aumenta a capacidade de cada pilha para 40 flechas ou 50 virotes."},
+     "item_slot": "off_hand", "effect": "quiver", "quiver_slots_capacity": 3,
+     "descricao": "Equipada na mão secundária, oferece 3 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."},
     {"id": "mini_aljava", "name": "Mini Aljava", "emoji": "🏹", "icon": "assets/itens/aljava.png", "price": 30,
-     "item_slot": "item", "effect": "quiver", "quiver_arrow_capacity": 20, "quiver_bolt_capacity": 20,
-     "descricao": "Equipada em um espaço de item, permite pilhas de até 20 flechas ou 20 virotes, incluindo variantes especiais."},
+     "item_slot": "item", "effect": "quiver", "quiver_slots_capacity": 1,
+     "descricao": "Equipada em um espaço de item, oferece 1 espaço para até 40 flechas ou virotes. O conteúdo permanece na aljava ao desequipá-la."},
     {"id": "kit_reparo_campo", "name": "Kit de Reparo", "emoji": "🧰", "price": 60, "item_slot": "bag", "effect": "repair_corrosion", "value": 1,
      "descricao": "Ação principal. Remove 1 nível de corrosão de uma arma, armadura ou escudo danificado. Não recupera peças destruídas."},
     {"id": "flechas",  "name": "Flechas (×10)",  "emoji": "🏹", "price": 3,
@@ -8253,7 +8253,7 @@ _ACIDO_AC_MIN = 5    # piso da CA corroÃ­da por Ã¡cido (nÃ£o vira acerto a
 #   â€¢ reduÃ§Ã£o de FOR â†’ menos dano corpo a corpo; reduÃ§Ã£o de CON â†’ recalcula max_hp
 #   â€¢ status petrificado/cego usam flags + contador prÃ³prio de rodadas
 VENENO_CARGAS  = 3    # nÂº de golpes certeiros que uma untada de veneno envenena
-MAX_AMMO_STACK = 10   # limite padrão por pilha; aljavas equipadas ampliam flechas/virotes na bolsa
+MAX_AMMO_STACK = 10   # limite padrão por pilha na bolsa
 QUIVER_ARROW_TYPES = {"flechas", "flechas_prata", "flechas_incendiarias", "flechas_explosivas", "flechas_magicas", "flechas_magicas_mais_2"}
 QUIVER_BOLT_TYPES = {"virotes", "virotes_prata", "virotes_incendiarios", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"}
 
@@ -8272,18 +8272,8 @@ def _quivers_equipped(p):
 
 
 def _max_ammo_stack_for(p, item):
-    """Capacidade da pilha conforme as aljavas equipadas."""
-    ammo_type = item.get("ammo_type") if isinstance(item, dict) else None
-    if ammo_type in QUIVER_ARROW_TYPES:
-        capacity_key = "quiver_arrow_capacity"
-    elif ammo_type in QUIVER_BOLT_TYPES:
-        capacity_key = "quiver_bolt_capacity"
-    else:
-        return MAX_AMMO_STACK
-    capacity = MAX_AMMO_STACK
-    for quiver in _quivers_equipped(p):
-        capacity = max(capacity, int(quiver.get(capacity_key, MAX_AMMO_STACK) or MAX_AMMO_STACK))
-    return capacity
+    """Limite das pilhas comuns; os slots da aljava têm limite próprio."""
+    return MAX_AMMO_STACK
 
 # atributo do veneno (PT, igual ao cliente) â†’ chave de score do jogador no servidor
 _VENENO_ATTR_MAP = {
@@ -10533,7 +10523,7 @@ DECOR_MODEL3D = {
     "templo_alva_e_luz": "assets/objetos/templo_alva_e_luz.glb",
     "igreja_corvin": "assets/objetos/igreja_corvin.glb",
     "quartel_medieval": "assets/objetos/quartel_medieval.glb",
-    "torre_alva_e_luz": "assets/objetos/torre_alva_e_luz.glb",
+    "torre_alva_e_luz": "assets/objetos/torre_alva_e_luz_v2.glb",
     "sino_ritualistico": "assets/objetos/sino_ritualistico.glb",
     "sino_anuncio": "assets/objetos/sino_anuncio.glb",
     "gargula_pedra": "assets/objetos/gargula_pedra.glb",
@@ -10749,7 +10739,7 @@ DECOR_TYPES = {
                                  image="quartel_medieval.png"),
     "torre_alva_e_luz": _decor("Torre de Alva e Luz", "🗼", [2, 2], gira=True,
                                  alto=True, pisavel=False, loot_capaz=False,
-                                 image="torre_alva_e_luz.png"),
+                                 image="torre_alva_e_luz_v2.png"),
     "sino_ritualistico": _decor("Sino ritualístico", "🔔", [1, 1], gira=True,
                                   alto=False, pisavel=False, loot_capaz=False,
                                   image="sino_ritualistico.png"),
@@ -16654,6 +16644,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     ammo_preview = candidates[0]
             elif off_type in ammo_types and int(off.get("ammo_count", 0) or 0) > 0:
                 ammo_preview = off
+            if has_quiver and not (is_crossbow and ammo_preview is off):
+                order = list(ammo_types) if is_crossbow else list(p.get("auto_equip_arrows_order") or AUTO_EQUIP_ARROW_TYPES)
+                order.extend(kind for kind in ammo_types if kind not in order)
+                choices = [source[2] for source in self._quiver_ammo_sources(p, ammo_types)]
+                if ammo_preview:
+                    choices.append(ammo_preview)
+                if choices:
+                    ammo_preview = min(choices, key=lambda item: order.index(item["ammo_type"]))
         ammo_atk_bonus = int((ammo_preview or {}).get("atk_bonus", 0) or 0)
         ammo_damage_bonus = int((ammo_preview or {}).get("damage_bonus", 0) or 0)
         mods = self._modificadores_ataque_heroi(p, target, target_tile, w_range,
@@ -24059,7 +24057,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                        and item.get("ammo_type") in ammo_types
                        and int(item.get("ammo_count", 0) or 0) > 0),
                       key=lambda item: ammo_types.index(item["ammo_type"]))
-        if not ammo:
+        quiver_sources = self._quiver_ammo_sources(p, ammo_types)
+        candidates = [(None, item) for item in ammo] + [(source, source[2]) for source in quiver_sources]
+        candidates.sort(key=lambda choice: ammo_types.index(choice[1]["ammo_type"]))
+        if not candidates:
             return False
 
         off_view = dict(p, weapon=off)
@@ -24076,7 +24077,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 desvantagem = True
 
         # O projétil só é debitado depois de confirmar alvo, alcance, visão e ação.
-        projectile = ammo[0]
+        quiver_source, projectile = candidates[0]
         ammo_atk_bonus = int(projectile.get("atk_bonus", 0) or 0)
         ammo_bonus = int(projectile.get("damage_bonus", 0) or 0)
         ammo_silver = bool(projectile.get("silver"))
@@ -24085,9 +24086,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ammo_extra_types = projectile.get("extra_damage_types", [])
         ammo_explosive = projectile.get("special_effect") == "explosive_ammo"
         ammo_poison_ids = list(_ammo_stack_poison_ids(projectile) or ())
-        projectile["ammo_count"] = int(projectile.get("ammo_count", 1) or 1) - 1
+        if quiver_source:
+            self._consume_quiver_ammo(quiver_source)
+        else:
+            projectile["ammo_count"] = int(projectile.get("ammo_count", 1) or 1) - 1
         if projectile["ammo_count"] <= 0:
-            p["bag"].remove(projectile)
+            if not quiver_source:
+                p["bag"].remove(projectile)
             await self.gm_say(T("narracao.usou_o_ultimo_projetil", heroi=p["name"]))
 
         p["bonus_action_used"] = True
@@ -24341,6 +24346,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         _ammo_source = ("bag", _bag_candidatas[0])
                 elif _off and _off_type in _valid_ammo and _off.get("ammo_count", 0) > 0:
                     _ammo_source = ("off_hand", _off)
+                if _quiver_equipped and not (_ammo_source and _ammo_source[0] == "off_hand"):
+                    order = list(_valid_ammo) if _is_crossbow else list(p.get("auto_equip_arrows_order") or AUTO_EQUIP_ARROW_TYPES)
+                    order.extend(kind for kind in _valid_ammo if kind not in order)
+                    choices = [(source, source[2]) for source in self._quiver_ammo_sources(p, _valid_ammo)]
+                    if _ammo_source:
+                        choices.append(_ammo_source)
+                    if choices:
+                        _ammo_source = min(choices, key=lambda choice: order.index(choice[1]["ammo_type"]))
                 if not _ammo_source:
                     nome_proj = T("erro._municao_flechas") if _valid_ammo[0] == "flechas" else T("erro._municao_virotes")
                     onde = T("erro._local_bolsa_ou_mao_esquerda") if (_is_crossbow or _quiver_equipped) else T("erro._local_mao_esquerda")
@@ -24642,11 +24655,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 _ammo_silver = bool(_ammo_item.get("silver"))
                 _ammo_explosive = _ammo_item.get("special_effect") == "explosive_ammo"
                 _ammo_poison_list = list(_ammo_stack_poison_ids(_ammo_item) or ())
-                _ammo_item["ammo_count"] = _ammo_item.get("ammo_count", 1) - 1
+                if isinstance(_ammo_slot, tuple):
+                    self._consume_quiver_ammo(_ammo_slot)
+                else:
+                    _ammo_item["ammo_count"] = _ammo_item.get("ammo_count", 1) - 1
                 if _ammo_item["ammo_count"] <= 0:
                     if _ammo_slot == "off_hand":
                         p["gear"]["off_hand"] = None
-                    else:
+                    elif _ammo_slot == "bag":
                         p["bag"].remove(_ammo_item)
                     await self.gm_say(T("narracao.usou_o_ultimo_projetil", heroi=p['name']))
                     if (_ammo_slot == "off_hand"
@@ -30803,6 +30819,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._matar_no_abismo(alvo)
 
     def _apply_gear_effect(self, p, item, equipping):
+        if equipping and self._quiver_capacity(item):
+            item["quiver_token"] = os.urandom(16).hex()
         if equipping and self._is_utility_belt_item(item):
             self._normalize_utility_belt(item)
             # An equipment activation is distinct even when the same belt returns.
@@ -30919,6 +30937,101 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return 0
         return {"cinto_utilidades": 4, "cinto_com_bolsos": 2}.get(item.get("id"), 0)
 
+    @staticmethod
+    def _quiver_capacity(item):
+        if not isinstance(item, dict):
+            return 0
+        return {"mini_aljava": 1, "aljava_pequena": 2, "aljava_grande": 3}.get(item.get("id"), 0)
+
+    @classmethod
+    def _quiver_ammo_sources(cls, p, ammo_types):
+        result = []
+        for quiver in _quivers_equipped(p):
+            slots = quiver.get("quiver_slots", [])
+            if not isinstance(slots, list):
+                continue
+            for i, ammo in enumerate(slots[:cls._quiver_capacity(quiver)]):
+                if (isinstance(ammo, dict) and ammo.get("effect") == "ammo"
+                        and ammo.get("ammo_type") in ammo_types
+                        and type(ammo.get("ammo_count")) is int and ammo["ammo_count"] > 0):
+                    result.append((quiver, i, ammo))
+        return result
+
+    @staticmethod
+    def _consume_quiver_ammo(source):
+        quiver, index, ammo = source
+        ammo["ammo_count"] -= 1
+        if ammo["ammo_count"] <= 0:
+            quiver["quiver_slots"][index] = None
+
+    async def handle_move_quiver_ammo(self, pid, data):
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self.phase not in ("city", "playing") or not isinstance(data, dict):
+            return False
+        gear_slot, index, bag_index = data.get("gear_slot"), data.get("slot_index"), data.get("bag_index")
+        direction = data.get("direction")
+        if (gear_slot not in ("off_hand", "item1", "item2") or type(index) is not int
+                or type(bag_index) is not int or direction not in ("to_quiver", "to_bag")):
+            return False
+        quiver = p.get("gear", {}).get(gear_slot)
+        capacity = self._quiver_capacity(quiver)
+        bag = p.get("bag")
+        if (not capacity or not 0 <= index < capacity or not isinstance(bag, list)
+                or (data.get("quiver_token") is not None and data.get("quiver_token") != quiver.get("quiver_token"))):
+            return False
+        raw = quiver.get("quiver_slots", [None] * capacity)
+        if not isinstance(raw, list) or len(raw) != capacity:
+            return False
+        slots = deepcopy(raw)
+        entry = slots[index]
+        if direction == "to_quiver":
+            if not 0 <= bag_index < len(bag):
+                return False
+            src = bag[bag_index]
+            if (not isinstance(src, dict) or src.get("effect") != "ammo"
+                    or src.get("ammo_type") not in QUIVER_ARROW_TYPES | QUIVER_BOLT_TYPES
+                    or type(src.get("ammo_count")) is not int or src["ammo_count"] <= 0):
+                return False
+            if entry and _ammo_stack_key(entry) != _ammo_stack_key(src):
+                return False
+            count = min(src["ammo_count"], 40 - (entry.get("ammo_count", 0) if entry else 0))
+            if count <= 0:
+                return False
+            if entry:
+                entry["ammo_count"] += count
+            else:
+                slots[index] = deepcopy(src)
+                slots[index]["ammo_count"] = count
+            src["ammo_count"] -= count
+            if not src["ammo_count"]:
+                bag.pop(bag_index)
+        else:
+            if not isinstance(entry, dict) or type(entry.get("ammo_count")) is not int or entry["ammo_count"] <= 0:
+                return False
+            if not 0 <= bag_index <= len(bag):
+                return False
+            dst = bag[bag_index] if bag_index < len(bag) else None
+            if dst:
+                if _ammo_stack_key(dst) != _ammo_stack_key(entry):
+                    return False
+                count = min(entry["ammo_count"], max(0, MAX_AMMO_STACK - dst.get("ammo_count", 0)))
+                if not count:
+                    return False
+                dst["ammo_count"] += count
+            else:
+                if len(bag) >= p.get("bag_size", 6):
+                    return False
+                count = min(entry["ammo_count"], MAX_AMMO_STACK)
+                dst = deepcopy(entry)
+                dst["ammo_count"] = count
+                bag.insert(bag_index, dst)
+            entry["ammo_count"] -= count
+            if not entry["ammo_count"]:
+                slots[index] = None
+        quiver["quiver_slots"] = slots
+        await self.push_state_or_city()
+        return True
+
     @classmethod
     def _is_utility_belt_item(cls, item):
         return cls._utility_belt_capacity(item) > 0
@@ -30978,6 +31091,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _ensure_utility_belt_tokens(self):
         """Publish an identity for already-equipped belts from older saves."""
         for p in self.players.values():
+            for key in ("off_hand", "item1", "item2"):
+                quiver = p.get("gear", {}).get(key)
+                if self._quiver_capacity(quiver) and not quiver.get("quiver_token"):
+                    quiver["quiver_token"] = os.urandom(16).hex()
             for key in ("item1", "item2"):
                 belt = p.get("gear", {}).get(key)
                 if self._is_utility_belt_item(belt):
@@ -59118,6 +59235,9 @@ async def handler(ws):
 
                 elif t == "move_utility_belt_item":
                     if room: await room.handle_move_utility_belt_item(pid, msg)
+
+                elif t == "move_quiver_ammo":
+                    if room: await room.handle_move_quiver_ammo(pid, msg)
 
                 elif t == "unequip":
                     if room: await room.handle_unequip(pid, msg.get("slot_key"))
