@@ -3383,6 +3383,34 @@ window.LANG_NARRACAO = {
   "narracao.bardo_monstro.motivo_concentracao": {
     "en": "concentration broken",
     "pt": "concentração quebrada"
+  },
+  "narracao.bardo_monstro.improviso": {
+    "en": "{monstro} improvises on {instrumento}...",
+    "pt": "{monstro} improvisa em {instrumento}..."
+  },
+  "narracao.bardo_monstro.encore": {
+    "en": "Encore! {monstro} rolls extra improvisations ({n}).",
+    "pt": "Bis! {monstro} rola improvisos extras ({n})."
+  },
+  "narracao.bardo_monstro.improviso_falha": {
+    "en": "{monstro} fumbles a note; nothing happens.",
+    "pt": "{monstro} erra uma nota; nada acontece."
+  },
+  "narracao.bardo_monstro.improviso_desafina": {
+    "en": "{monstro} goes off-key: -1 to attacks and save DCs this round.",
+    "pt": "{monstro} desafina: -1 nos ataques e nas CDs nesta rodada."
+  },
+  "narracao.bardo_monstro.improviso_sinfonia": {
+    "en": "{monstro} improvises a Heroic Symphony for 1 round, bolstering the Song.",
+    "pt": "{monstro} improvisa uma Sinfonia Heroica por 1 rodada, reforçando a Canção."
+  },
+  "narracao.bardo_monstro.improviso_ao_vento": {
+    "en": "{monstro}'s improvised tune finds no one in its path.",
+    "pt": "A melodia improvisada de {monstro} não encontra ninguém no caminho."
+  },
+  "narracao.bardo_monstro.improviso_requiem": {
+    "en": "🎻 The improvised Requiem wounds **{alvo}** for **{dano}**.",
+    "pt": "🎻 O Réquiem improvisado fere **{alvo}** em **{dano}**."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

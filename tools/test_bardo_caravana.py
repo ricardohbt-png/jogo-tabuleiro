@@ -75,7 +75,7 @@ class FichaTests(unittest.TestCase):
         self.assertAlmostEqual(arma / n, 0.70, delta=0.07)
         self.assertAlmostEqual(inst / n, 0.60, delta=0.07)
         self.assertGreater(ambos, 0)
-        self.assertEqual(bases, {"harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta", "violino"})
+        self.assertEqual(bases, {"harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta", "violino", "gaita"})
 
 
 class IaTests(unittest.TestCase):
@@ -333,6 +333,111 @@ class RequiemTests(unittest.TestCase):
         r._testar_save = lambda *a, **k: (False, 1, 0, 1)
         asyncio.run(r._start_initiative_player_turn(h))
         self.assertLess(h["hp"], 200)
+
+
+class GaitaTests(unittest.TestCase):
+    """Gaita: Improviso (2d6) com os efeitos dos outros instrumentos, no tier dela."""
+
+    def _cena(self, pos_heroi=(7, 5), qual="padrao"):
+        r = sala(); m = bardo(r, (5, 5), ("gaita", qual))
+        h = r.players["p0"]; h["pos"] = list(pos_heroi); h["hp"] = h["max_hp"] = 200
+        return r, m, h
+
+    def _improvisar(self, r, m, rolagens):
+        it = iter(rolagens)
+        r._rolar_2d6 = lambda: next(it)
+        with mock.patch.object(S.random, "random", return_value=0.0):
+            return asyncio.run(r._monster_usar_instrumento(m, alvos(r)))
+
+    def test_nao_gasta_a_acao_e_entra_em_recarga(self):
+        r, m, h = self._cena()
+        r._rolar_2d6 = lambda: 3
+        m["monster_ability_uses"] = {"hero_bard_cancao_heroica": 0, "hero_bard_provocacao": 0}
+        with mock.patch.object(S.random, "random", return_value=0.0):
+            consumiu = asyncio.run(r._monster_try_editor_ability(m, alvos(r)))
+        self.assertFalse(consumiu)
+        self.assertGreater(m["instrumento_pronto_em"], r.round_num)
+
+    def test_7_nota_cortante_na_linha(self):
+        r, m, h = self._cena((8, 5))
+        self.assertTrue(self._improvisar(r, m, [7]))
+        self.assertLess(h["hp"], 200)
+
+    def test_7_sem_heroi_na_linha_vai_ao_vento(self):
+        r, m, h = self._cena((7, 7))
+        self.assertTrue(self._improvisar(r, m, [7]))
+        self.assertEqual(h["hp"], 200)
+        self.assertTrue(any("não encontra" in str(x) for x in r.msgs))
+
+    def test_8_acorde_em_area(self):
+        r, m, h = self._cena((6, 6))
+        self.assertTrue(self._improvisar(r, m, [8]))
+        self.assertLess(h["hp"], 200)
+
+    def test_11_chamado_amedronta(self):
+        r, m, h = self._cena((7, 5))
+        r._testar_save = lambda *a, **k: (False, 1, 0, 1)
+        self._improvisar(r, m, [11])
+        self.assertGreaterEqual(h["ciclope_ataque_penalty_ate"], r.round_num + 1)
+
+    def test_9_requiem_de_um_pulso(self):
+        r, m, h = self._cena((8, 5))
+        r._testar_save = lambda *a, **k: (False, 1, 0, 1)
+        self._improvisar(r, m, [9])
+        self.assertLess(h["hp"], 200)
+        self.assertNotIn("requiem_monstro_alvo", m)       # só a 1ª rodada, sem sustentar
+
+    def test_4_ecos_5_dueto_6_fantasma_duram_uma_rodada(self):
+        for res, campo in ((4, "ecos_dolorosos_ate"), (5, "dueto_marcial_ate"), (6, "dueto_fantasma_ate")):
+            r, m, h = self._cena()
+            bardo(r, (6, 5))                               # aliado perto, para a Lira valer
+            self._improvisar(r, m, [res])
+            self.assertEqual(m[campo], r.round_num + 1, campo)
+
+    def test_ecos_da_gaita_retaliam(self):
+        r, m, h = self._cena(); self._improvisar(r, m, [4])
+        asyncio.run(r._dano_retaliacao(m, h, True, 5))
+        self.assertLess(h["hp"], 200)
+
+    def test_fantasma_da_gaita_ecoa(self):
+        r, m, h = self._cena((6, 5)); self._improvisar(r, m, [6])
+        asyncio.run(r._bardo_monstro_apos_acerto(m, {"kind": "player", "obj": h}, 20))
+        self.assertLess(h["hp"], 200)
+
+    def test_dueto_marcial_da_gaita_revida(self):
+        r, m, h = self._cena((6, 6)); aliado = bardo(r, (6, 5))
+        self._improvisar(r, m, [5]); h["ac"] = 0
+        golpes = []
+        orig = r._execute_one_monster_attack
+        async def espia(mm, atk, t): golpes.append(mm["id"]); return await orig(mm, atk, t)
+        r._execute_one_monster_attack = espia
+        asyncio.run(r._bardo_monstro_apos_acerto(aliado, {"kind": "player", "obj": h}, 3))
+        self.assertEqual(golpes, [m["id"]])
+
+    def test_2_desafina_e_3_falha(self):
+        r, m, h = self._cena(); self._improvisar(r, m, [2])
+        self.assertEqual(m["acorde_atk_pen_ate"], r.round_num + 1)
+        self.assertEqual(r._bardo_monstro_cd(m), 8 + S.mod(m["dex"]) - 1)
+        r2, m2, h2 = self._cena(); self._improvisar(r2, m2, [3])
+        self.assertEqual(h2["hp"], 200)
+
+    def test_10_sinfonia_reforca_a_cancao_por_uma_rodada(self):
+        r, m, h = self._cena(); aliado = bardo(r, (6, 5))
+        r._ativar_cancao_monstro(m, ["acerto"])
+        self.assertEqual(r._cancao_monstro_bonus(aliado, "acerto"), 1)
+        self._improvisar(r, m, [10])
+        self.assertEqual(r._cancao_monstro_bonus(aliado, "acerto"), 2)
+        r.round_num += 1                       # mesma regra do herói: vale até a rodada seguinte
+        self.assertEqual(r._cancao_monstro_bonus(aliado, "acerto"), 2)
+        r.round_num += 1
+        self.assertEqual(r._cancao_monstro_bonus(aliado, "acerto"), 1)
+
+    def test_12_encore_rola_mais_dois(self):
+        r, m, h = self._cena((8, 5))
+        self.assertTrue(self._improvisar(r, m, [12, 7, 3]))     # 12 → 2 rolagens extras
+        self.assertLess(h["hp"], 200)                            # o 7 acertou a linha
+        self.assertTrue(any("Bis" in str(x) for x in r.msgs))
+
 
 
 if __name__ == "__main__":

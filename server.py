@@ -1531,7 +1531,7 @@ MONSTRO_EQUIP_ALEATORIO = {
         "arma_chance": 70,
         "armas": ("dagger", "shortsword", "lanca_curta", "maca", "machado_basico", "bordao"),
         "instrumento_chance": 60,
-        "instrumentos": ("harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta", "violino"),
+        "instrumentos": ("harpa", "tambor", "trompa", "alaude", "sino", "lira", "flauta", "violino", "gaita"),
         "qualidades": (("velho", 45), ("rustico", 35), ("padrao", 20)),
         "uso_chance": 50,
         "recarga": 3,
@@ -46080,6 +46080,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if inst and inst.get("base") == "alaude":
                 if attr_id in self._instrumento_stats(inst).get("atributos", []):
                     nivel += 1
+            elif caster.get("sinfonia_temp_ate", -1) >= self.round_num \
+                    and attr_id in caster.get("sinfonia_temp_atributos", []):
+                nivel += 1   # Improviso (Gaita): Sinfonia por 1 rodada
             melhor = max(melhor, nivel)
         return melhor
 
@@ -46347,32 +46350,29 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False
         tipo = base["efeito"]["tipo"]
         st = self._instrumento_stats(inst)
-        cd = 8 + mod(m.get("dex", 10))
+        cd = self._bardo_monstro_cd(m)
         usou = False
         if tipo == "nota_cortante":
-            linhas = self._bardo_monstro_linhas(m, st["alcance"], self._blocks_tile)
-            pos_herois = {tuple(h["pos"]): h for h in herois}
-            melhor = max(linhas.items(), key=lambda kv: sum(1 for c in kv[1] if c in pos_herois))
-            alvos = [pos_herois[c] for c in melhor[1] if c in pos_herois]
-            if not alvos or random.random() * 100 >= cfg.get("uso_chance", 50):
+            linha = self._bardo_monstro_achar_linha(m, st, herois)
+            if not linha or random.random() * 100 >= cfg.get("uso_chance", 50):
                 return False
-            usou = await self._bardo_monstro_nota_cortante(m, inst, st, cd, melhor[0], melhor[1], alvos)
+            usou = await self._bardo_monstro_nota_cortante(m, inst, st, cd, *linha)
         elif tipo == "acorde_trovejante":
             alvos = [h for h in herois if self._alcance_com_altura(m, h["pos"], st["raio"], destino=h)]
             if not alvos or random.random() * 100 >= cfg.get("uso_chance", 50):
                 return False
             usou = await self._bardo_monstro_acorde(m, inst, st, cd, alvos)
         elif tipo == "chamado_general":
-            melhor = None
-            for d in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
-                tiles = self._cone_tiles(m["pos"][0], m["pos"][1], d[0], d[1], st["cone"], st["cone"])
-                al = [h for h in herois if tuple(h["pos"]) in tiles
-                      and self._tem_linha_de_visao(m["pos"], h["pos"])]
-                if al and (melhor is None or len(al) > len(melhor[2])):
-                    melhor = (d, tiles, al)
+            melhor = self._bardo_monstro_achar_cone(m, st, herois)
             if not melhor or random.random() * 100 >= cfg.get("uso_chance", 50):
                 return False
             usou = await self._bardo_monstro_chamado(m, inst, st, cd, *melhor)
+        elif tipo == "improviso":
+            if (not any(_distancia_chebyshev(m["pos"], h["pos"]) <= 6
+                        and self._tem_linha_de_visao(m["pos"], h["pos"]) for h in herois)
+                    or random.random() * 100 >= cfg.get("uso_chance", 50)):
+                return False
+            usou = await self._bardo_monstro_improviso(m, inst, herois)
         elif tipo == "requiem_final":
             if m.get("requiem_monstro_alvo"):
                 return False   # já está tocando para alguém
@@ -46519,7 +46519,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Retaliação sonora dos Ecos Dolorosos do monstro bardo contra quem o acerta de perto."""
         inst = bardo.get("instrumento") or {}
         if (bardo.get("hp", 0) <= 0 or bardo.get("ecos_dolorosos_ate", -1) < self.round_num
-                or inst.get("base") != "sino" or not atacante or not self._vivo(atacante)):
+                or inst.get("base") not in ("sino", "gaita") or not atacante or not self._vivo(atacante)):
             return
         dano = self._apply_damage_types(roll_dice(str(bardo.get("ecos_dano", "1d4"))), [DMG_MAGIC], atacante)
         if dano <= 0:
@@ -46542,19 +46542,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if target_obj.get("kind") != "player":
             return
         alvo = target_obj["obj"]
-        if m.get("instrumento", {}).get("base") == "flauta" \
+        if m.get("instrumento", {}).get("base") in ("flauta", "gaita") \
                 and m.get("dueto_fantasma_ate", -1) >= self.round_num and alvo.get("hp", 0) > 0:
             eco = (int(dano_sofrido or 0) * int(m.get("dueto_fantasma_fracao", 0))) // 100
             if eco > 0:
                 await self._aplicar_dano_alvo(alvo, eco, DMG_MAGIC, m.get("id"))
                 await self.gm_say(T("narracao.bardo_monstro.eco_fantasma", alvo=nome_criatura(alvo), eco=eco))
-        if m.get("instrumento", {}).get("base") == "lira":
+        if m.get("dueto_marcial_ate", -1) >= self.round_num:
             return   # o bardo não dispara o próprio dueto
         if alvo.get("hp", 0) <= 0:
             return
         for bardo in list(self.monsters.values()):
             if (bardo is m or bardo.get("hp", 0) <= 0
-                    or bardo.get("instrumento", {}).get("base") != "lira"
+                    or bardo.get("instrumento", {}).get("base") not in ("lira", "gaita")
                     or bardo.get("dueto_marcial_ate", -1) < self.round_num
                     or bardo.get("_dueto_marcial_rodada") == self.round_num):
                 continue
@@ -46569,6 +46569,120 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                 alvo=nome_criatura(alvo)))
             await self._execute_one_monster_attack(bardo, ataque, target_obj)
             return
+
+    def _bardo_monstro_cd(self, m):
+        """CD dos testes dos instrumentos do monstro: 8 + DES (−1 se Desafinado)."""
+        return 8 + mod(m.get("dex", 10)) - (1 if m.get("desafinado_ate", -1) >= self.round_num else 0)
+
+    def _bardo_monstro_achar_linha(self, m, st, herois):
+        """(direção, casas, heróis) da linha ortogonal com mais heróis, ou None."""
+        linhas = self._bardo_monstro_linhas(m, st["alcance"], self._blocks_tile)
+        pos_herois = {tuple(h["pos"]): h for h in herois}
+        d, caminho = max(linhas.items(), key=lambda kv: sum(1 for c in kv[1] if c in pos_herois))
+        alvos = [pos_herois[c] for c in caminho if c in pos_herois]
+        return (d, caminho, alvos) if alvos else None
+
+    def _bardo_monstro_achar_cone(self, m, st, herois):
+        """(direção, casas, heróis) do cone (8 direções) com mais heróis à vista, ou None."""
+        melhor = None
+        for d in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+            tiles = self._cone_tiles(m["pos"][0], m["pos"][1], d[0], d[1], st["cone"], st["cone"])
+            al = [h for h in herois if tuple(h["pos"]) in tiles
+                  and self._tem_linha_de_visao(m["pos"], h["pos"])]
+            if al and (melhor is None or len(al) > len(melhor[2])):
+                melhor = (d, tiles, al)
+        return melhor
+
+    async def _bardo_monstro_improviso(self, m, inst, herois):
+        """Improviso da Gaita (1 mão): cascata 2d6 que improvisa a habilidade de outro
+        instrumento no tier da Gaita. Passos que precisam de alvo escolhem o melhor
+        sozinhos e, sem herói no formato, não dão em nada. 12 = Encore (+2 rolagens)."""
+        passos, meta = self._improviso_rolar_cascata(False)
+        await self.gm_say(T("narracao.bardo_monstro.improviso", monstro=nome_criatura(m),
+                            instrumento=inst.get("name", "")))
+        if meta["encore_count"] > 0:
+            origem = list(m["pos"])
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "gaita_encore", "phase": "start",
+                "animation_id": f"gaita_encore_{m['id']}_{self.round_num}_{new_id()}",
+                "caster_id": m["id"], "origin": origem, "encore_count": meta["encore_count"],
+                "encore_menor": meta["encore_menor"], "grande_encore": False,
+                "encore_menor_targets": [{"id": o["id"], "pos": list(o["pos"])}
+                                         for o in self.monsters.values()
+                                         if o.get("hp", 0) > 0
+                                         and _distancia_chebyshev(o["pos"], m["pos"]) <= 5],
+                "grande_targets": [], "duration_ms": 1420,
+            })
+            await self.gm_say(T("narracao.bardo_monstro.encore", monstro=nome_criatura(m),
+                                n=meta["encore_count"]))
+        for res in passos:
+            if m.get("hp", 0) <= 0:
+                break
+            herois = [h for h in herois if h.get("alive") and h.get("hp", 0) > 0]
+            await self._bardo_monstro_improviso_passo(m, inst, res, herois)
+        return True
+
+    async def _bardo_monstro_improviso_passo(self, m, inst, res, herois):
+        nome = nome_criatura(m)
+        cd = self._bardo_monstro_cd(m)
+        if res == 3:
+            await self.gm_say(T("narracao.bardo_monstro.improviso_falha", monstro=nome)); return
+        if res == 2:
+            m["desafinado_ate"] = self.round_num + 1
+            m["acorde_atk_pen_ate"] = self.round_num + 1          # −1 no ataque do monstro
+            await self.broadcast({
+                "type": "spell_animation", "spell_id": "desafinado_gaita", "phase": "start",
+                "animation_id": f"desafinado_gaita_{m['id']}_{time.time_ns()}",
+                "caster_id": m["id"], "origin": list(m["pos"]), "duration_ms": 1120,
+            })
+            await self.gm_say(T("narracao.bardo_monstro.improviso_desafina", monstro=nome)); return
+        if res == 10:
+            _v, vst = self._improviso_virt_st(inst, "alaude")
+            m["sinfonia_temp_ate"] = self.round_num + 1
+            m["sinfonia_temp_atributos"] = list(vst.get("atributos", []))
+            await self.gm_say(T("narracao.bardo_monstro.improviso_sinfonia", monstro=nome)); return
+        if res in self._IMPROVISO_AUTO:
+            base, forca_dur = self._IMPROVISO_AUTO[res]
+            virt, vst = self._improviso_virt_st(inst, base)
+            if forca_dur:
+                vst = dict(vst); vst["duracao"] = 1
+            if base == "tambor":
+                alvos = [h for h in herois if self._alcance_com_altura(m, h["pos"], vst["raio"], destino=h)]
+                if alvos:
+                    await self._bardo_monstro_acorde(m, virt, vst, cd, alvos)
+                else:
+                    await self.gm_say(T("narracao.bardo_monstro.improviso_ao_vento", monstro=nome))
+            else:
+                tipo = {"sino": "ecos_dolorosos", "lira": "dueto_marcial", "flauta": "dueto_fantasma"}[base]
+                await self._bardo_monstro_aura(m, virt, vst, tipo)
+            return
+        if res == 7:
+            virt, vst = self._improviso_virt_st(inst, "harpa")
+            linha = self._bardo_monstro_achar_linha(m, vst, herois)
+            if linha:
+                await self._bardo_monstro_nota_cortante(m, virt, vst, cd, *linha)
+            else:
+                await self.gm_say(T("narracao.bardo_monstro.improviso_ao_vento", monstro=nome))
+        elif res == 11:
+            virt, vst = self._improviso_virt_st(inst, "trompa")
+            cone = self._bardo_monstro_achar_cone(m, vst, herois)
+            if cone:
+                await self._bardo_monstro_chamado(m, virt, vst, cd, *cone)
+            else:
+                await self.gm_say(T("narracao.bardo_monstro.improviso_ao_vento", monstro=nome))
+        elif res == 9:
+            virt, vst = self._improviso_virt_st(inst, "violino")
+            cand = [h for h in herois if self._alcance_com_altura(m, h["pos"], vst["alcance"], destino=h)
+                    and self._tem_linha_de_visao(m["pos"], h["pos"])]
+            if not cand:
+                await self.gm_say(T("narracao.bardo_monstro.improviso_ao_vento", monstro=nome)); return
+            alvo = min(cand, key=lambda h: _distancia_chebyshev(m["pos"], h["pos"]))
+            passou, *_ = self._testar_save(alvo, "vontade", cd, fonte=m)
+            if passou:
+                await self.gm_say(T("narracao.bardo_monstro.requiem_resiste", alvo=nome_criatura(alvo))); return
+            dano = roll_dice(vst["dado"])
+            await self._aplicar_dano_alvo(alvo, dano, DMG_MAGIC, m.get("id"))
+            await self.gm_say(T("narracao.bardo_monstro.improviso_requiem", alvo=nome_criatura(alvo), dano=dano))
 
     async def _bardo_monstro_nota_cortante(self, m, inst, st, cd, d, caminho, alvos):
         await self.broadcast({
