@@ -82,17 +82,40 @@ class PracaVivaTests(unittest.TestCase):
     def test_ultimas_palavras_vem_antes_do_video(self):
         for fatos in ({"elara_ramo_a"}, {"elara_ramo_b"}):
             slides = self._abertura(fatos)
-            self.assertEqual(len(slides), 2, fatos)
-            self.assertEqual(slides[0]["image"], IMAGEM)
+            self.assertEqual(len(slides), 5, fatos)
+            self.assertTrue(all(s.get("text") for s in slides), fatos)
             self.assertIn("Gilo", slides[0]["text"])
-            self.assertEqual(slides[1]["video"], VIDEO)
+
+    def test_a_fala_vem_no_meio_com_ele_ja_cercado(self):
+        for fatos in ({"elara_ramo_a"}, {"elara_ramo_b"}):
+            slides = self._abertura(fatos)
+            com_fala = [i for i, s in enumerate(slides) if "não era para ser assim" in s["text"]]
+            self.assertEqual(com_fala, [2], fatos)
+            self.assertEqual(slides[2]["video"], "assets/story/gilo_cena_3_cerco.mp4")
+
+    def test_a_ordem_dos_fatos_vai_da_chegada_as_roupas(self):
+        slides = self._abertura({"elara_ramo_a"})
+        self.assertNotIn("escorpi", slides[0]["text"].replace("Praça dos Escorpiões", "").lower())
+        self.assertIn("besta", slides[1]["text"])
+        self.assertIn("derruba", slides[3]["text"])
+        self.assertIn("capa", slides[4]["text"])
+        self.assertIn("grades", slides[4]["text"])
+
+    def test_cada_transicao_parte_da_cena_anterior(self):
+        """A imagem atrás do vídeo é a cena de onde ele parte: trocar de slide não pisca."""
+        slides = self._abertura({"elara_ramo_a"})
+        self.assertNotIn("video", slides[0])
+        self.assertEqual([s["image"] for s in slides[1:]],
+                         ["assets/story/gilo_cena_1_chegada.jpg", "assets/story/gilo_cena_2_susto.jpg",
+                          IMAGEM, "assets/story/gilo_cena_4_queda.jpg"])
 
     def test_pista_da_montanha_so_no_ramo_em_que_o_olho_ja_partiu(self):
-        self.assertIn("montanha", self._abertura({"elara_ramo_a"})[0]["text"])
-        self.assertNotIn("montanha", self._abertura({"elara_ramo_b"})[0]["text"])
+        self.assertIn("montanha", self._abertura({"elara_ramo_a"})[2]["text"])
+        self.assertNotIn("montanha", self._abertura({"elara_ramo_b"})[2]["text"])
+        self.assertIn("embrulho", self._abertura({"elara_ramo_b"})[2]["text"])
 
-    def test_video_nao_depende_de_fato_gravado_so_ao_vencer(self):
-        self.assertEqual(self._abertura(set())[-1]["video"], VIDEO)
+    def test_cenas_nao_dependem_de_fato_gravado_so_ao_vencer(self):
+        self.assertEqual(self._abertura(set())[-1]["video"], "assets/story/gilo_cena_5_roupas.mp4")
 
     def test_encerramento_nao_repete_a_morte(self):
         self.assertEqual(GG.destinos()["elara_graciero_praca_viva"]["dungeons"][0]["outro"], "")
@@ -105,7 +128,10 @@ class PracaVivaTests(unittest.TestCase):
         self.assertEqual(etapa["outro"], "")
 
     def test_midia_existe(self):
-        for caminho in (VIDEO, IMAGEM):
+        caminhos = {VIDEO, IMAGEM}
+        for slide in self._abertura({"elara_ramo_a"}):
+            caminhos |= {slide["image"], slide.get("video", slide["image"])}
+        for caminho in caminhos:
             self.assertTrue(os.path.isfile(os.path.join(RAIZ, caminho)), caminho)
 
     def test_mapa_nao_faz_o_morto_falar(self):

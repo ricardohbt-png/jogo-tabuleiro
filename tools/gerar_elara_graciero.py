@@ -142,22 +142,36 @@ SLIDES_FINAIS = [
 
 
 def intro_gilo():
-    """Abertura da Praça viva: as últimas palavras do Gilo e o vídeo da morte dele, antes de o tabuleiro aparecer. Ao
-    fim do vídeo os escorpiões voltam às grades, onde o mapa os coloca. Quem chega tarde vai para a Praça morta, então
-    o vídeo não precisa de condição (`elara_viu_gilo_morrer` só existe depois de vencer a praça). No ramo B o Olho
+    """Abertura da Praça viva: a morte do Gilo, cena a cena, antes de o tabuleiro aparecer. Cada vídeo dissolve a cena
+    anterior na seguinte (`tools/gerar_gilo_cenas.py`), e a imagem do slide é a cena de onde ele parte, para a troca não
+    piscar. Ao fim os escorpiões voltam às grades, onde o mapa os coloca. Quem chega tarde vai para a Praça morta, então
+    as cenas não precisam de condição (`elara_viu_gilo_morrer` só existe depois de vencer a praça). No ramo B o Olho
     ainda está com o Gilo: nada de pista da montanha."""
-    imagem = "assets/story/gilo_escorpioes_praca.png"
+    pasta = "assets/story/"
+    cerco = pasta + "gilo_escorpioes_praca.png"
+    antes_da_fala = "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr."
     return {"slides": [
-        {"image": imagem, "requisito": _req(fato=F_RAMO_A),
-         "text": ("O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele.\n"
+        {"image": pasta + "gilo_cena_1_chegada.jpg",
+         "text": ("A Praça dos Escorpiões dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, "
+                  "olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto.")},
+        {"video": pasta + "gilo_cena_2_susto.mp4", "image": pasta + "gilo_cena_1_chegada.jpg",
+         "text": ("Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois "
+                  "outro. O Gilo recua e aponta a besta para um, para o outro, sem saber em qual atirar.")},
+        {"video": pasta + "gilo_cena_3_cerco.mp4", "image": pasta + "gilo_cena_2_susto.jpg",
+         "requisito": _req(fato=F_RAMO_A),
+         "text": (antes_da_fala + "\n"
                   "\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da "
                   "cidade paga em ouro... Eles... estão vindo...\"")},
-        {"image": imagem, "requisito": _req(sem_fato=F_RAMO_A),
-         "text": ("O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele. "
-                  "Aperta contra o peito um embrulho de pano.\n"
+        {"video": pasta + "gilo_cena_3_cerco.mp4", "image": pasta + "gilo_cena_2_susto.jpg",
+         "requisito": _req(sem_fato=F_RAMO_A),
+         "text": (antes_da_fala + " Aperta contra o peito um embrulho de pano.\n"
                   "\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... "
                   "estão vindo...\"")},
-        {"video": "assets/story/gilo_escorpioes_animacao.mp4", "image": imagem},
+        {"video": pasta + "gilo_cena_4_queda.mp4", "image": cerco,
+         "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."},
+        {"video": pasta + "gilo_cena_5_roupas.mp4", "image": pasta + "gilo_cena_4_queda.jpg",
+         "text": ("Depois, silêncio. Os escorpiões voltam às grades. Da praça sobram o chapéu, a capa em tiras e as "
+                  "manchas nas pedras.")},
     ]}
 
 

@@ -1156,7 +1156,17 @@
         "intro": {
           "slides": [
             {
-              "image": "assets/story/gilo_escorpioes_praca.png",
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "A Praça dos Escorpiões dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto."
+            },
+            {
+              "video": "assets/story/gilo_cena_2_susto.mp4",
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois outro. O Gilo recua e aponta a besta para um, para o outro, sem saber em qual atirar."
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
@@ -1165,10 +1175,11 @@
                 "sem_fato": "",
                 "aventura_id": ""
               },
-              "text": "O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele.\n\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da cidade paga em ouro... Eles... estão vindo...\""
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr.\n\"Não... não era para ser assim! A pedra já foi entregue aos que sobem a montanha. O nobre da cidade paga em ouro... Eles... estão vindo...\""
             },
             {
-              "image": "assets/story/gilo_escorpioes_praca.png",
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
               "requisito": {
                 "renome_min": 0,
                 "nivel_grupo_min": 0,
@@ -1177,11 +1188,17 @@
                 "sem_fato": "elara_ramo_a",
                 "aventura_id": ""
               },
-              "text": "O Gilo Dedos Sujos está no meio da praça, de besta em punho, e o chão se abre em volta dele. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... estão vindo...\""
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! O nobre da cidade paga em ouro... Só mais uma rua... Eles... estão vindo...\""
             },
             {
-              "video": "assets/story/gilo_escorpioes_animacao.mp4",
-              "image": "assets/story/gilo_escorpioes_praca.png"
+              "video": "assets/story/gilo_cena_4_queda.mp4",
+              "image": "assets/story/gilo_escorpioes_praca.png",
+              "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."
+            },
+            {
+              "video": "assets/story/gilo_cena_5_roupas.mp4",
+              "image": "assets/story/gilo_cena_4_queda.jpg",
+              "text": "Depois, silêncio. Os escorpiões voltam às grades. Da praça sobram o chapéu, a capa em tiras e as manchas nas pedras."
             }
           ]
         },
