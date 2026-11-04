@@ -203,6 +203,8 @@ ficha gravada em `monstros_personalizados.json` saíram. Junto: o Bardo sorteand
 por `tools/recolor_bardo_caravana.py`; a prévia é gerada com `tools/render_bardo_caravana_preview.py`. Testes:
 `python -X utf8 tools/test_elara_montanha_fichas.py`.
 
+**IA do bardo inimigo (2026-11-04, vale para o `bardo` e o Bardo da Caravana):** a Provocação vai em quem tem a menor Vontade a até 3 casas (empate: o mais próximo) e nunca em quem já está provocado (`_bardo_alvo_provocacao`); sem candidato, o turno segue para o instrumento e o ataque. Com besta ou besta de mão, herói a até `BARDO_DISTANCIA_SEGURA` casas faz o bardo recuar antes de atirar, para a casa alcançável mais longe de todos os heróis que mantenha alcance e linha de visão do alvo (`_bardo_casa_de_recuo`, que evita armadilhas conhecidas); agarrado ou sem casa melhor, atira de onde está. Com chicote segue avançando. Teste: `python -X utf8 tools/test_bardo_ia.py`.
+
 ### Urso Pardo (ND 3)
 
 Ficha nativa `urso_pardo` em `server.py`, derivada do Urso Negro: 48 PV, CA 15, For 22, Des 12, Con 16, visão 7 casas,

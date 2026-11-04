@@ -6791,6 +6791,9 @@ MONSTER_DEFS = [
     {"type":"vampiro_anciao","name":"Vampiro Ancião","emoji":"🧛","tier":7,"cr":7,"hp":42,"ac":19,"size":[1,1],"movement":6,"str_":18,"dex":20,"con_":10,"int_":16,"fort":6,"ref_":8,"will":8,"attacks":[{"name":"Espada Bastarda","atk_bonus":9,"damage":"1d10+5","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":8,"damage":"1d8+5","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_area_vampirico","name":"Encantar em Área","action_type":"acao","dc":13,"range":4,"cooldown_turns":2},{"id":"comandar_escravos","name":"Comandar Escravos","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"mestre_vampiro","subtipo":"morto_vivo","undead":True,"boss":False},
     {"type":"lorde_vampiro","name":"Lorde Vampiro","emoji":"👑🧛","tier":9,"cr":9,"hp":60,"ac":21,"size":[1,1],"movement":6,"str_":20,"dex":22,"con_":10,"int_":18,"fort":8,"ref_":10,"will":10,"attacks":[{"name":"Espada Longa Mágica","atk_bonus":12,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":11,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_supremo_vampirico","name":"Encantar Supremo em Área","action_type":"acao","dc":14,"range":6,"cooldown_turns":2},{"id":"comandar_vampiros","name":"Comandar Vampiros","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lorde_vampiro","subtipo":"morto_vivo","undead":True,"boss":True},
 ]
+BARDO_DISTANCIA_SEGURA = 2   # herói a esta distância ou menos faz o bardo atirador recuar
+
+
 def _variante_bardo_caravana():
     """O Bardo da Caravana é o Bardo (mesma IA, Canção Heroica, Provocação e instrumento sorteado), só mais forte:
     mais vida, ataque e defesa, CD de Provocação 13, recarga de 3 rodadas e um equipamento melhor."""
@@ -52751,8 +52754,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.bardo_entoa_a_cancao", bardo=nome_criatura(m), duracao=duracao))
                 return
 
-        provocacao = next((entry["obj"] for entry in vivos if entry.get("kind") == "player"
-                           and _distancia_chebyshev(entry["obj"].get("pos", [0, 0]), m.get("pos", [0, 0])) <= PROVOCACAO_RAIO), None)
+        provocacao = self._bardo_alvo_provocacao(m, vivos)
         if provocacao and cds.get("bardo_provocacao", 0) <= 0:
             if await self._bardo_iniciar_provocacao(m, provocacao):
                 return
@@ -52761,6 +52763,43 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if await self._bardo_usar_instrumento(m, vivos):
                 return
         await self._ai_bardo_ataque_basico(m, vivos)
+
+    def _bardo_alvo_provocacao(self, m, vivos):
+        """Quem mais tende a falhar em Vontade; no empate, o mais próximo. Herói já
+        provocado fica de fora: renovar o efeito gastaria o turno sem ganho."""
+        candidatos = [entry["obj"] for entry in vivos if entry.get("kind") == "player"
+                      and _distancia_chebyshev(entry["obj"].get("pos", [0, 0]), m.get("pos", [0, 0])) <= PROVOCACAO_RAIO
+                      and not (entry["obj"].get("bardo_provocado_por")
+                               and int(entry["obj"].get("bardo_provocacao_turnos", 0) or 0) > 0)]
+        return min(candidatos, default=None,
+                   key=lambda p: (int(p.get("will", 0) or 0), _distancia_chebyshev(p["pos"], m["pos"])))
+
+    def _bardo_casa_de_recuo(self, m, alvo, atk):
+        """Casa alcançável mais longe dos heróis, sem perder o tiro no alvo. None quando
+        nenhum herói ameaça o bardo ou quando recuar não melhora a posição."""
+        herois = [p["pos"] for p in self.players.values() if self._ativo(p) and p.get("alive")]
+
+        def perigo(x, y):
+            return min((max(abs(x - hx), abs(y - hy)) for hx, hy in herois), default=99)
+
+        atual = perigo(*m["pos"])
+        if atual > BARDO_DISTANCIA_SEGURA or self._captor_ativo(m):
+            return None
+        orcamento = max(0, int(m.get("_water_moves_left", m.get("movement", 0)) or 0))
+        evitar = self._monster_known_hazard_tiles(m) | getattr(self, "_monster_ai_reserved_tiles", set())
+        pos_alvo = alvo["obj"]["pos"]
+        melhor = None
+        for (x, y) in self._master_reach_bfs(m, orcamento):
+            distancia = perigo(x, y)
+            if (x, y) in evitar or distancia <= atual:
+                continue
+            if (not self._monster_attack_in_range({**m, "pos": [x, y]}, pos_alvo, atk)
+                    or not self._tem_linha_de_visao([x, y], pos_alvo)):
+                continue
+            nota = (-distancia, abs(x - m["pos"][0]) + abs(y - m["pos"][1]), y, x)
+            if melhor is None or nota < melhor:
+                melhor = nota
+        return [melhor[3], melhor[2]] if melhor else None
 
     async def _ai_bardo_ataque_basico(self, m, targets):
         """Usa a arma sorteada, consumindo munição e o lote incendiário inteiro por tiro."""
@@ -52799,6 +52838,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 else:
                     await self._monster_move_step(m, alvo["obj"]["pos"])
                 if m["pos"] == antes or pode_atirar():
+                    break
+        elif (recuo := self._bardo_casa_de_recuo(m, alvo, atk)):
+            for _ in range(max(0, int(m.get("movement", 6) or 0))):
+                if m["pos"] == recuo or not await self._monster_move_to_goal(m, recuo):
                     break
         if not self._alvo_vivo(alvo) or not pode_atirar():
             return
