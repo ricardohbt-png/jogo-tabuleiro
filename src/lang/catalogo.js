@@ -270,9 +270,17 @@ window.LANG_CATALOGO = {
     "en": "Water Bucket",
     "pt": "Balde com água"
   },
+  "cat.decor.banca_flores.nome": {
+    "en": "Flower Stall",
+    "pt": "Banca de flores"
+  },
   "cat.decor.barco_medieval.nome": {
     "en": "Medieval Boat",
     "pt": "Barco medieval"
+  },
+  "cat.decor.barraca_mercador.nome": {
+    "en": "Merchant Stall",
+    "pt": "Barraca de mercador"
   },
   "cat.decor.barril.nome": {
     "en": "Barrel",
@@ -338,6 +346,10 @@ window.LANG_CATALOGO = {
     "en": "Yellowed Grass",
     "pt": "Capim amarelado"
   },
+  "cat.decor.carrinho_entregas.nome": {
+    "en": "Delivery Cart",
+    "pt": "Carrinho de entregas"
+  },
   "cat.decor.carroca.nome": {
     "en": "Cart",
     "pt": "Carroça"
@@ -369,6 +381,10 @@ window.LANG_CATALOGO = {
   "cat.decor.cerca_reta.nome": {
     "en": "Straight Wooden Fence",
     "pt": "Cerca de madeira reta"
+  },
+  "cat.decor.cestos_feira.nome": {
+    "en": "Fruit and Bread Baskets",
+    "pt": "Cestos de frutas e pães"
   },
   "cat.decor.chama_viva.nome": {
     "en": "Living Flame",
@@ -405,6 +421,10 @@ window.LANG_CATALOGO = {
   "cat.decor.espantalho.nome": {
     "en": "Scarecrow",
     "pt": "Espantalho"
+  },
+  "cat.decor.espelho_dourado.nome": {
+    "en": "Golden Mirror",
+    "pt": "Espelho dourado"
   },
   "cat.decor.esqueleto_tiranossauro.nome": {
     "en": "Tyrannosaurus Skeleton",
@@ -490,6 +510,10 @@ window.LANG_CATALOGO = {
     "en": "Cave Wall Relief",
     "pt": "Gruta na parede"
   },
+  "cat.decor.igreja_corvin.nome": {
+    "en": "Corvin Church",
+    "pt": "Igreja de Corvin"
+  },
   "cat.decor.juncos.nome": {
     "en": "Reeds",
     "pt": "Juncos"
@@ -505,6 +529,10 @@ window.LANG_CATALOGO = {
   "cat.decor.lareira.nome": {
     "en": "Fireplace",
     "pt": "Lareira"
+  },
+  "cat.decor.mesa_banquete_luxo.nome": {
+    "en": "Luxurious Banquet Table",
+    "pt": "Mesa de banquete luxuosa"
   },
   "cat.decor.mesa_cadeiras.nome": {
     "en": "Table with Chairs",
@@ -566,6 +594,10 @@ window.LANG_CATALOGO = {
     "en": "Well with Bucket",
     "pt": "Poço com balde"
   },
+  "cat.decor.poltrona_luxo.nome": {
+    "en": "Upholstered Armchair",
+    "pt": "Poltrona estofada"
+  },
   "cat.decor.porteira_aberta.nome": {
     "en": "Open Gate",
     "pt": "Porteira aberta"
@@ -574,9 +606,17 @@ window.LANG_CATALOGO = {
     "en": "Closed Gate",
     "pt": "Porteira fechada"
   },
+  "cat.decor.poste_iluminacao.nome": {
+    "en": "Lamp Post",
+    "pt": "Poste de iluminação"
+  },
   "cat.decor.prisao.nome": {
     "en": "Prison",
     "pt": "Prisão"
+  },
+  "cat.decor.quartel_medieval.nome": {
+    "en": "Medieval Barracks",
+    "pt": "Quartel medieval"
   },
   "cat.decor.raizes_torcidas.nome": {
     "en": "Twisted Roots",
@@ -598,9 +638,21 @@ window.LANG_CATALOGO = {
     "en": "Grain Sack",
     "pt": "Saco de grãos"
   },
+  "cat.decor.sino_anuncio.nome": {
+    "en": "Announcement Bell",
+    "pt": "Sino de anúncio"
+  },
   "cat.decor.sino_ritualistico.nome": {
     "en": "Ritual Bell",
     "pt": "Sino ritualístico"
+  },
+  "cat.decor.sofa_luxo.nome": {
+    "en": "Luxury Sofa",
+    "pt": "Sofá de luxo"
+  },
+  "cat.decor.templo_alva_e_luz.nome": {
+    "en": "Temple of Alva e Luz",
+    "pt": "Templo de Alva e Luz"
   },
   "cat.decor.tocha_parede.nome": {
     "en": "Wall Torch",
@@ -609,6 +661,10 @@ window.LANG_CATALOGO = {
   "cat.decor.tocos_alagados.nome": {
     "en": "Flooded Stumps",
     "pt": "Tocos alagados"
+  },
+  "cat.decor.torre_alva_e_luz.nome": {
+    "en": "Tower of Alva e Luz",
+    "pt": "Torre de Alva e Luz"
   },
   "cat.decor.tronco_musgo.nome": {
     "en": "Mossy Fallen Log",

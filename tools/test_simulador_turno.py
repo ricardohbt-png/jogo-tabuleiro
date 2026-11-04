@@ -206,12 +206,73 @@ async def main():
     r = sala([{"type": "lobo_cinzento", "pos": [6, 6]}, {"type": "lobo_cinzento", "pos": [5, 7]}])
     h = await heroi(r, "warrior", 5, 6); h["hp"] = h["max_hp"] = 500; h["ac"] = 0; h["ref_"] = -50
     await iniciar(r); m = monstro(r)
+    outros_lobos = [l for l in r.monsters.values() if l["id"] != m["id"]]
+    outro_lobo = outros_lobos[0]
+    m["alertado"] = outro_lobo["alertado"] = True
+    outro_lobo["pos"] = [10, 10]  # Mesmo combate, longe do alvo.
+    base_atk = m["attacks"][0]["atk_bonus"]
+    atk_bando = await r._lobo_bando_atk(m, h, dict(m["attacks"][0]))
+    check("+1 no acerto quando outro lobo ativo está na mesma sala, mesmo longe do alvo",
+          atk_bando["atk_bonus"] == base_atk + 1)
+    outro_lobo["hp"] = 0
+    atk_bando = await r._lobo_bando_atk(m, h, dict(m["attacks"][0]))
+    check("lobo morto não conta para Caça em Bando", atk_bando["atk_bonus"] == base_atk)
+    outro_lobo["hp"] = outro_lobo["max_hp"]
+    outro_lobo["room_id"] = 1
+    atk_bando = await r._lobo_bando_atk(m, h, dict(m["attacks"][0]))
+    check("lobo ativo em outra sala não conta para Caça em Bando",
+          atk_bando["atk_bonus"] == base_atk)
+    outro_lobo["room_id"] = m["room_id"]
+    outro_lobo["alertado"] = False
+    atk_bando = await r._lobo_bando_atk(m, h, dict(m["attacks"][0]))
+    check("lobo dormente não conta para Caça em Bando", atk_bando["atk_bonus"] == base_atk)
+    outro_lobo["alertado"] = True
     await ir_para(r, "monster", m["id"]); acerta_sempre(r)
     n = len(r._narr); h["moves_left"] = 6
     await r.handle_mestre_atacar_monstro(MASTER, m["id"], h["id"], 0)
     falas = " ".join(r._narr[n:])
-    check("Caça em Bando anunciada (+2) com outro lobo adjacente ao alvo", "bando" in falas.lower())
+    check("Caça em Bando anuncia o bônus de +1", "bando" in falas.lower() and "+1" in falas)
     check("Derrubar: herói perde o movimento ao falhar o save", h.get("moves_left") == 0 and "derrubad" in falas.lower())
+
+    print("\n[9b] Líder da Matilha acumula com Caça em Bando")
+    r = sala([{"type": "lobo_cinzento", "pos": [6, 6]},
+              {"type": "lobo_cinzento_customizado", "pos": [8, 8]}])
+    h = await heroi(r, "warrior", 5, 6)
+    dupla = list(r.monsters.values())
+    for lobo in dupla:
+        lobo["alertado"] = True
+    alfa = next(l for l in dupla if l["type"] == "lobo_cinzento_customizado")
+    habilidade_alfa = next(a for a in alfa["special_abilities"] if a["id"] == "lider_matilha")
+    check("a ficha do Alfa chama a passiva de Líder da Matilha",
+          habilidade_alfa["name"] == "Líder da Matilha"
+          and "+1" in habilidade_alfa.get("descricao", ""))
+    for lobo in dupla:
+        atk_base = lobo["attacks"][0]["atk_bonus"]
+        atk_lider = await r._lobo_bando_atk(lobo, h, dict(lobo["attacks"][0]))
+        check(f"{lobo['name']} recebe +2 no ataque e +1 no dano com um aliado",
+              atk_lider["atk_bonus"] == atk_base + 2
+              and atk_lider.get("damage_bonus") == 1)
+
+    r = sala([{"type": "lobo_cinzento_customizado", "pos": [6, 6]}])
+    alfa = monstro(r, "lobo_cinzento_customizado")
+    atk_solo = await r._lobo_bando_atk(alfa, {}, dict(alfa["attacks"][0]))
+    check("Alfa sozinho não ganha bônus de matilha",
+          atk_solo["atk_bonus"] == alfa["attacks"][0]["atk_bonus"]
+          and not atk_solo.get("damage_bonus"))
+
+    r = sala([{"type": "lobo_cinzento", "pos": [6, 6]},
+              {"type": "lobo_cinzento", "pos": [8, 8]},
+              {"type": "lobo_cinzento_customizado", "pos": [9, 8]}])
+    h = await heroi(r, "warrior", 5, 6)
+    matilha = list(r.monsters.values())
+    for lobo in matilha:
+        lobo["alertado"] = True
+    for lobo in matilha:
+        atk_base = lobo["attacks"][0]["atk_bonus"]
+        atk_lider = await r._lobo_bando_atk(lobo, h, dict(lobo["attacks"][0]))
+        check(f"{lobo['name']} acumula +1/+1 por cada um dos 2 outros lobos",
+              atk_lider["atk_bonus"] == atk_base + 3
+              and atk_lider.get("damage_bonus") == 2)
 
     print("\n[10] Troll no controle manual: técnicas armadas pelo Mestre")
     r = sala([{"type": "troll", "pos": [6, 6]}])

@@ -1571,11 +1571,11 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "special_abilities": [
       {
-        "id": "caca_em_bando",
-        "name": "Caça em Bando",
+        "id": "lider_matilha",
+        "name": "Líder da Matilha",
         "action_type": "passiva",
         "source": "monstro",
-        "uses_per_day": 1,
+        "descricao": "Com o Alfa e outros lobos vivos e ativos na mesma sala, cada lobo recebe +1 no ataque e no dano por cada outro lobo. Soma com Caça em Bando.",
         "cooldown_turns": 0
       },
       {
@@ -1591,8 +1591,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "monster_abilities": [
       {
-        "id": "caca_em_bando",
-        "uses_per_day": 1,
+        "id": "lider_matilha",
         "cooldown_turns": 0
       },
       {
@@ -1694,7 +1693,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "name": "Caça em Bando",
         "action_type": "passiva",
         "source": "monstro",
-        "uses_per_day": 1,
+        "descricao": "Com 2 ou mais lobos vivos e ativos na mesma sala, todos recebem +1 no acerto.",
         "cooldown_turns": 0
       },
       {
@@ -1711,7 +1710,6 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "monster_abilities": [
       {
         "id": "caca_em_bando",
-        "uses_per_day": 1,
         "cooldown_turns": 0
       },
       {

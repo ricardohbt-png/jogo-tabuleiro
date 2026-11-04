@@ -472,9 +472,13 @@ window.LANG_NARRACAO = {
     "en": "⚔️ **{a_nome}** attacks **{target}** and misses (d20={roll}+{bonus_ataque}={total} vs AC {target_ac}).",
     "pt": "⚔️ **{a_nome}** ataca **{target}** e erra (d20={roll}+{bonus_ataque}={total} vs CA {target_ac})."
   },
-  "narracao.ataca_em_bando_2_acerto": {
-    "en": "🐺 **{monstro}** attacks as a pack! (+2 to hit)",
-    "pt": "🐺 **{monstro}** ataca em bando! (+2 acerto)"
+  "narracao.ataca_em_bando_1_acerto": {
+    "en": "🐺 **{monstro}** attacks with its pack! (+1 to hit)",
+    "pt": "🐺 **{monstro}** ataca em bando! (+1 no acerto)"
+  },
+  "narracao.lider_da_matilha_bonus": {
+    "en": "🐺 **{monstro}** is empowered by the Pack Leader! (+{bonus} to hit and damage)",
+    "pt": "🐺 **{monstro}** é fortalecido pelo Líder da Matilha! (+{bonus} no ataque e no dano)"
   },
   "narracao.ataca_enquanto_preso_2_no_acerto": {
     "en": "⛓️ **{heroi}** attacks while restrained — **-2** to hit!",

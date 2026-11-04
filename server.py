@@ -5584,7 +5584,8 @@ MONSTER_DEFS = [
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None},
         ],
         "special_abilities": [
-            {"id": "caca_em_bando", "name": "Caça em Bando",   "action_type": "passiva"},
+            {"id": "caca_em_bando", "name": "Caça em Bando",   "action_type": "passiva",
+             "descricao": "Com 2 ou mais lobos vivos e ativos na mesma sala, todos recebem +1 no acerto."},
             {"id": "derrubar",      "name": "Derrubar",         "action_type": "passiva",
              "dc": 11, "save": "reflexos"},
         ],
@@ -51456,19 +51457,40 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._lobo_derrubar(m, target_obj, hit)
 
     async def _lobo_bando_atk(self, m, target, atk):
-        """Caça em Bando: +2 ataque se outro lobo adjacente ao alvo. Devolve o
-        ataque (possivelmente bonificado). Compartilhado pela IA e pelo ataque
-        manual do Mestre — antes vivia só dentro de `_ai_lobo_cinzento`."""
+        """Aplica Caça em Bando e a aura passiva do Líder da Matilha.
+        Ambos valem para lobos vivos e ativos na mesma sala, na IA e no Manual."""
         tipos_lobo = {"lobo_cinzento", "lobo_cinzento_customizado"}
+        sala_id = m.get("room_id")
         outros_lobos = [m2 for m2 in self.monsters.values()
-                        if m2["id"] != m["id"]
+                        if m2.get("id") != m.get("id")
                         and m2.get("type") in tipos_lobo
-                        and m2["hp"] > 0]
-        bando_bonus = 2 if any(self._is_adjacent_to_monster(target["pos"], m2)
-                                for m2 in outros_lobos) else 0
+                        and m2.get("hp", 0) > 0
+                        and sala_id is not None
+                        and m2.get("room_id") == sala_id
+                        and self._monstro_ativo_em_combate(m2)]
+        bando_bonus = 1 if outros_lobos else 0
+        matilha_bonus = 0
+        alfa_na_sala = any(
+            lobo.get("type") == "lobo_cinzento_customizado"
+            and lobo.get("hp", 0) > 0
+            and lobo.get("room_id") == sala_id
+            and sala_id is not None
+            and self._monstro_ativo_em_combate(lobo)
+            for lobo in self.monsters.values())
+        if alfa_na_sala:
+            # Conta os companheiros: o próprio atacante não se concede bônus.
+            matilha_bonus = len(outros_lobos)
+        if bando_bonus or matilha_bonus:
+            atk = {
+                **atk,
+                "atk_bonus": atk["atk_bonus"] + bando_bonus + matilha_bonus,
+                "damage_bonus": int(atk.get("damage_bonus", 0) or 0) + matilha_bonus,
+            }
         if bando_bonus:
-            atk = {**atk, "atk_bonus": atk["atk_bonus"] + bando_bonus}
-            await self.gm_say(T("narracao.ataca_em_bando_2_acerto", monstro=nome_criatura(m)))
+            await self.gm_say(T("narracao.ataca_em_bando_1_acerto", monstro=nome_criatura(m)))
+        if matilha_bonus:
+            await self.gm_say(T("narracao.lider_da_matilha_bonus",
+                                monstro=nome_criatura(m), bonus=matilha_bonus))
         return atk
 
     async def _lobo_derrubar(self, m, target_obj, hit):
