@@ -4201,9 +4201,9 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_type": "agressivo",
     "ai_profile": "agressivo",
     "ai_tactics": [],
-    "image": "soldado",
+    "image": "leonel",
     "portrait": "soldado",
-    "model3d": null,
+    "model3d": "assets/models3d/monstros/leonel.glb",
     "armor_description": null,
     "size": [
       1,
@@ -4221,7 +4221,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "altura_max": 0,
     "pode_alterar_altura": false,
     "custo_mov_altura": 1,
-    "ignora_obstaculos_voo": false
+    "ignora_obstaculos_voo": false,
+    "level": 1
   },
   {
     "type": "assassino_da_caravana",

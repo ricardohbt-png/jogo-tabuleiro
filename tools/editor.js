@@ -111,6 +111,27 @@
       loot_capaz: false, special: null, image: "sino_anuncio.png",
     });
   }
+  if (!(CAT.decorations || []).some(d => d && d.type === "igreja_corvin")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "igreja_corvin", nome: nomeCat("decor", "igreja_corvin", "Igreja de Corvin"), emoji: "⛪",
+      size: [3, 3], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "igreja_corvin.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "quartel_medieval")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "quartel_medieval", nome: nomeCat("decor", "quartel_medieval", "Quartel medieval"), emoji: "🏰",
+      size: [3, 3], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "quartel_medieval.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "torre_alva_e_luz")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "torre_alva_e_luz", nome: nomeCat("decor", "torre_alva_e_luz", "Torre de Alva e Luz"), emoji: "🗼",
+      size: [2, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "torre_alva_e_luz.png",
+    });
+  }
   if (!(CAT.decorations || []).some(d => d && d.type === "estatua_divindade")) {
     CAT.decorations = (CAT.decorations || []).concat({
       type: "estatua_divindade", nome: nomeCat("decor", "estatua_divindade", "Estátua de divindade"), emoji: "🛐",

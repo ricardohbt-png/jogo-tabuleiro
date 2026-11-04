@@ -2694,6 +2694,130 @@
       "loot": null,
       "key_objective": false,
       "image": "moita.png"
+    },
+    {
+      "id": "decor_184",
+      "type": "barraca_mercador",
+      "pos": [
+        9,
+        5
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "barraca_mercador.png",
+      "vscale": [
+        0.8,
+        0.7
+      ]
+    },
+    {
+      "id": "decor_185",
+      "type": "cestos_feira",
+      "pos": [
+        8,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "cestos_feira.png"
+    },
+    {
+      "id": "decor_186",
+      "type": "banca_flores",
+      "pos": [
+        11,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "banca_flores.png"
+    },
+    {
+      "id": "decor_187",
+      "type": "poste_iluminacao",
+      "pos": [
+        19,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "poste_iluminacao.png"
+    },
+    {
+      "id": "decor_188",
+      "type": "poste_iluminacao",
+      "pos": [
+        19,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "poste_iluminacao.png"
+    },
+    {
+      "id": "decor_189",
+      "type": "poste_iluminacao",
+      "pos": [
+        8,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "poste_iluminacao.png"
+    },
+    {
+      "id": "decor_190",
+      "type": "poste_iluminacao",
+      "pos": [
+        8,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "poste_iluminacao.png"
+    },
+    {
+      "id": "decor_191",
+      "type": "carrinho_entregas",
+      "pos": [
+        15,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "carrinho_entregas.png"
     }
   ],
   "secret_passages": [],

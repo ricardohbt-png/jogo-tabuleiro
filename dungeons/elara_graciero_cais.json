@@ -1827,7 +1827,7 @@
       "w": 11,
       "h": 10,
       "role": "monster",
-      "locked": true,
+      "locked": false,
       "doors": []
     },
     {
@@ -1837,7 +1837,7 @@
       "w": 10,
       "h": 10,
       "role": "monster",
-      "locked": true,
+      "locked": false,
       "doors": []
     }
   ],

@@ -51,7 +51,8 @@ def ficha_leonel():
     f = _base("soldado")
     f.update({"type": TIPO_LEONEL, "name": "Leonel", "emoji": "🎩", "tier": 3, "cr": 3, "base_hp": 55,
               "hp": 55, "ac": 15, "movement": 6, "equipment_enabled": False, "equipped_items": [],
-              "equipment": [], "xp": 120, "boss": True, "image": "soldado", "portrait": "soldado"})
+              "equipment": [], "xp": 120, "boss": True, "image": "leonel", "portrait": "soldado",
+              "model3d": "assets/models3d/monstros/leonel.glb"})
     f["attacks"] = [{"name": "Florete", "damage": "1d8", "damage_types": ["physical"], "num_attacks": 2,
                      "attack_attribute": "dex", "damage_attribute": "dex", "apply_attribute_damage": True,
                      "attribute_mod_base": 2, "base_attack_bonus": 0, "atk_bonus": 5, "range": None,

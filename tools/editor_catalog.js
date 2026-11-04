@@ -16529,6 +16529,51 @@ window.EDITOR_CATALOG = {
       "image": "templo_alva_e_luz.png"
     },
     {
+      "type": "igreja_corvin",
+      "nome": "Igreja de Corvin",
+      "emoji": "⛪",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "igreja_corvin.png"
+    },
+    {
+      "type": "quartel_medieval",
+      "nome": "Quartel medieval",
+      "emoji": "🏰",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "quartel_medieval.png"
+    },
+    {
+      "type": "torre_alva_e_luz",
+      "nome": "Torre de Alva e Luz",
+      "emoji": "🗼",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "torre_alva_e_luz.png"
+    },
+    {
       "type": "sino_ritualistico",
       "nome": "Sino ritualístico",
       "emoji": "🔔",
