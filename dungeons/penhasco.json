@@ -4,6 +4,7 @@
   "name": "penhasco",
   "ambiente": "masmorra",
   "saida_permitida": true,
+  "marcador_entrada": "poste",
   "start_mode": "entrance",
   "grid": {
     "w": 26,
@@ -562,6 +563,8 @@
   },
   "hero_spawns": [],
   "exit": null,
+  "routes": [],
+  "route_exits": [],
   "monsters": [],
   "chests": [],
   "traps": [],
@@ -744,7 +747,11 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "arvore_seca.png"
+      "image": "arvore_seca.png",
+      "vscale": [
+        2,
+        2
+      ]
     },
     {
       "id": "decor_12",
@@ -820,6 +827,505 @@
       "loot": null,
       "key_objective": false,
       "image": "cerca_reta.png"
+    },
+    {
+      "id": "decor_17",
+      "type": "ninho_abutres",
+      "pos": [
+        12,
+        1
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "ninho_abutres.png",
+      "size": [
+        2,
+        1
+      ]
+    },
+    {
+      "id": "decor_36",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        16
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_37",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        16
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_38",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        17
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_39",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        17
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_40",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        18
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_41",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        18
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_42",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        5
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_43",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        5
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_44",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        4
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_45",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_cruzamento.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_46",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        3
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_47",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        3
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_48",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        14,
+        3
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_49",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        14,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_51",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        15,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_53",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        16,
+        4
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_54",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        16,
+        2
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_55",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        16,
+        3
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_56",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        15,
+        2
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_57",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        15,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_cruzamento.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_58",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        15,
+        0
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_59",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        15,
+        1
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_60",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        16,
+        0
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_61",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        16,
+        1
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_62",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        6
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_64",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        6
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_66",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        14
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_67",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        13,
+        15
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_68",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        14
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_curva.png",
+      "road_wide": true
+    },
+    {
+      "id": "decor_69",
+      "type": "caminho_pedras_terra",
+      "pos": [
+        12,
+        15
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "caminho_pedras_terra_t.png",
+      "road_wide": true
     }
   ],
   "secret_passages": [],

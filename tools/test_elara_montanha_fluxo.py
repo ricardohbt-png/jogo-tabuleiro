@@ -91,6 +91,19 @@ class ObjetivosTests(unittest.IsolatedAsyncioTestCase):
             await r._check_objectives()
             self.assertIn(fato, r.fatos, arq)
 
+    async def test_a_pe_da_entrada_ate_a_saida_pela_ponte(self):
+        r = masmorra("elara_montanha_2.json")
+        r.monsters.clear(); r.armadilhas = type(r.armadilhas)()
+        p = r.players["p0"]
+        p["alive"] = True; p["connected"] = True; p["pos"] = list(r.stairs_pos)
+        r.player_order = ["p0"]; r.initiative_active = True; r._rebuild_initiative()
+        caminho = [(0, -1)] * 13 + [(1, 0)] * 4 + [(0, -1)] * 5
+        self.assertEqual(tuple(r.stairs_pos), (12, 18))
+        for passo in caminho:
+            p["moves_left"] = 6
+            await r.handle_move("p0", *passo)
+        self.assertEqual(p["pos"], list(r.exit_pos))
+
     async def _caravana(self):
         r = masmorra("elara_montanha_3.json")
         a = next(m for m in r.monsters.values() if m["type"] == F.TIPO_ASSASSINO)

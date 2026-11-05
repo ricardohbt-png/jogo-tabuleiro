@@ -117096,98 +117096,70 @@ window.EDITOR_DUNGEONS = [
       "name": "O Desfiladeiro",
       "ambiente": "ar_livre",
       "saida_permitida": false,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
-        "w": 40,
-        "h": 14
+        "w": 26,
+        "h": 19
       },
       "tiles": [
         [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117200,7 +117172,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117213,23 +117184,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117242,7 +117200,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117255,23 +117212,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117284,7 +117228,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117297,23 +117240,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117326,7 +117256,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117339,23 +117268,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117368,7 +117284,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117381,23 +117296,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117410,7 +117312,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          2,
           1,
           1,
           1,
@@ -117423,23 +117324,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          2,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117452,7 +117340,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117465,23 +117352,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117494,7 +117368,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117507,23 +117380,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117536,7 +117396,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117549,23 +117408,10 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
           1,
           1,
           1,
@@ -117578,7 +117424,6 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
           1,
           1,
@@ -117591,172 +117436,246 @@ window.EDITOR_DUNGEONS = [
           1,
           1,
           1,
-          0,
           1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          1,
-          0
+          1
         ],
         [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ],
         [
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
         ]
       ],
       "rooms": [
         {
           "id": 0,
-          "x": 1,
-          "y": 2,
-          "w": 12,
-          "h": 10,
+          "x": 0,
+          "y": 13,
+          "w": 26,
+          "h": 6,
           "role": "entrance",
           "locked": false,
-          "doors": [
-            [
-              13,
-              7
-            ]
-          ]
+          "doors": []
         },
         {
           "id": 1,
-          "x": 14,
-          "y": 2,
-          "w": 12,
-          "h": 10,
+          "x": 0,
+          "y": 0,
+          "w": 26,
+          "h": 7,
           "role": "monster",
-          "locked": true,
-          "doors": [
-            [
-              13,
-              7
-            ],
-            [
-              26,
-              7
-            ]
-          ]
-        },
-        {
-          "id": 2,
-          "x": 27,
-          "y": 2,
-          "w": 12,
-          "h": 10,
-          "role": "monster",
-          "locked": true,
-          "doors": [
-            [
-              26,
-              7
-            ]
-          ]
+          "locked": false,
+          "doors": []
         }
       ],
       "door_conditions": {},
       "entrance": {
-        "x": 2,
-        "y": 7
+        "x": 12,
+        "y": 18
       },
+      "hero_spawns": [],
       "exit": {
-        "x": 37,
-        "y": 7
+        "x": 16,
+        "y": 0
       },
+      "routes": [],
+      "route_exits": [],
       "monsters": [
         {
           "type": "soldado",
           "pos": [
-            10,
-            5
+            12,
+            14
           ],
           "room_id": 0,
           "boss": false,
@@ -117765,8 +117684,38 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "soldado",
           "pos": [
+            13,
+            14
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "orc",
+          "pos": [
             10,
-            9
+            14
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "orc",
+          "pos": [
+            15,
+            14
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "orc",
+          "pos": [
+            16,
+            15
           ],
           "room_id": 0,
           "boss": false,
@@ -117775,8 +117724,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_dual",
           "pos": [
-            3,
-            4
+            6,
+            16
           ],
           "room_id": 0,
           "boss": false,
@@ -117784,21 +117733,141 @@ window.EDITOR_DUNGEONS = [
         },
         {
           "type": "goblin_dual",
+          "pos": [
+            19,
+            17
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_dual",
+          "pos": [
+            20,
+            16
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_arqueiro",
+          "pos": [
+            9,
+            13
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_arqueiro",
+          "pos": [
+            16,
+            13
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_arqueiro",
+          "pos": [
+            5,
+            16
+          ],
+          "room_id": 0,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "soldado",
           "pos": [
             11,
-            3
+            5
           ],
-          "room_id": 0,
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "soldado",
+          "pos": [
+            14,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "soldado",
+          "pos": [
+            10,
+            4
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "soldado",
+          "pos": [
+            15,
+            4
+          ],
+          "room_id": 1,
           "boss": false,
           "target": false
         },
         {
           "type": "goblin_dual",
           "pos": [
-            4,
-            7
+            9,
+            5
           ],
-          "room_id": 0,
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_dual",
+          "pos": [
+            16,
+            5
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "goblin_dual",
+          "pos": [
+            12,
+            2
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "orc",
+          "pos": [
+            13,
+            2
+          ],
+          "room_id": 1,
+          "boss": false,
+          "target": false
+        },
+        {
+          "type": "orc",
+          "pos": [
+            18,
+            3
+          ],
+          "room_id": 1,
           "boss": false,
           "target": false
         },
@@ -117806,166 +117875,6 @@ window.EDITOR_DUNGEONS = [
           "type": "orc",
           "pos": [
             6,
-            4
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            5,
-            7
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            9,
-            10
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            8,
-            5
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            9,
-            8
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            4,
-            10
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            9,
-            7
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            8,
-            8
-          ],
-          "room_id": 0,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            23,
-            5
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            23,
-            8
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            20,
-            4
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            19,
-            8
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            22,
-            10
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            17,
-            7
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_dual",
-          "pos": [
-            23,
-            3
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_dual",
-          "pos": [
-            20,
-            7
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_dual",
-          "pos": [
-            22,
             3
           ],
           "room_id": 1,
@@ -117975,27 +117884,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_arqueiro",
           "pos": [
-            21,
-            7
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            22,
-            5
-          ],
-          "room_id": 1,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            18,
+            10,
             6
           ],
           "room_id": 1,
@@ -118005,183 +117894,277 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_arqueiro",
           "pos": [
-            22,
-            7
+            15,
+            6
           ],
           "room_id": 1,
           "boss": false,
           "target": false
         },
         {
-          "type": "goblin_dual",
+          "type": "goblin_arqueiro",
           "pos": [
-            34,
-            5
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_dual",
-          "pos": [
-            34,
-            9
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            32,
+            9,
             6
           ],
-          "room_id": 2,
+          "room_id": 1,
           "boss": false,
           "target": false
         },
         {
-          "type": "soldado",
+          "type": "goblin_arqueiro",
           "pos": [
-            31,
+            16,
             6
           ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            35,
-            8
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "soldado",
-          "pos": [
-            32,
-            3
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            32,
-            5
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            36,
-            10
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "orc",
-          "pos": [
-            37,
-            5
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            31,
-            8
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            28,
-            9
-          ],
-          "room_id": 2,
-          "boss": false,
-          "target": false
-        },
-        {
-          "type": "goblin_arqueiro",
-          "pos": [
-            31,
-            4
-          ],
-          "room_id": 2,
+          "room_id": 1,
           "boss": false,
           "target": false
         }
       ],
-      "chests": [],
+      "chests": [
+        {
+          "pos": [
+            16,
+            17
+          ],
+          "gold": 0,
+          "items": [
+            {
+              "id": "health_potion_improved"
+            },
+            {
+              "id": "health_potion_improved"
+            },
+            {
+              "id": "health_potion_improved"
+            },
+            {
+              "id": "health_potion_improved"
+            }
+          ],
+          "key_objective": false
+        }
+      ],
       "traps": [
         {
           "tipo": "fosso_estacas",
           "pos": [
-            6,
-            4
-          ]
-        },
-        {
-          "tipo": "armadilha_urso",
-          "pos": [
-            18,
-            7
+            8,
+            15
           ]
         },
         {
           "tipo": "rede",
           "pos": [
-            20,
-            4
+            15,
+            2
+          ]
+        },
+        {
+          "tipo": "armadilha_urso",
+          "pos": [
+            16,
+            2
           ]
         },
         {
           "tipo": "armadilha_dardos_envenenados",
           "pos": [
-            31,
-            6
+            15,
+            1
           ],
           "veneno_id": "veneno_escorpiao_pedra"
         }
       ],
       "decorations": [
         {
-          "id": "desfil_rocha_grande_1",
+          "id": "decor_0",
           "type": "rocha_grande",
           "pos": [
             7,
-            10
+            3
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "rocha_grande.png"
         },
         {
-          "id": "desfil_rochas_rachadas_2",
+          "id": "decor_1",
+          "type": "rocha_grande",
+          "pos": [
+            0,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "rocha_grande.png"
+        },
+        {
+          "id": "decor_2",
           "type": "rochas_rachadas",
+          "pos": [
+            5,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "rochas_rachadas.png"
+        },
+        {
+          "id": "decor_3",
+          "type": "rochas_rachadas",
+          "pos": [
+            17,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "rochas_rachadas.png"
+        },
+        {
+          "id": "decor_4",
+          "type": "ninho_abutres",
+          "pos": [
+            21,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "ninho_abutres.png"
+        },
+        {
+          "id": "decor_5",
+          "type": "arbusto_seco",
+          "pos": [
+            17,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arbusto_seco.png"
+        },
+        {
+          "id": "decor_6",
+          "type": "arbusto_seco",
+          "pos": [
+            20,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arbusto_seco.png"
+        },
+        {
+          "id": "decor_7",
+          "type": "arbusto_seco",
+          "pos": [
+            2,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arbusto_seco.png"
+        },
+        {
+          "id": "decor_8",
+          "type": "arbusto_seco",
+          "pos": [
+            3,
+            16
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arbusto_seco.png"
+        },
+        {
+          "id": "decor_9",
+          "type": "arbusto_seco",
+          "pos": [
+            2,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arbusto_seco.png"
+        },
+        {
+          "id": "decor_10",
+          "type": "arbusto_seco",
+          "pos": [
+            3,
+            17
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arbusto_seco.png"
+        },
+        {
+          "id": "decor_11",
+          "type": "arvore_seca",
+          "pos": [
+            19,
+            5
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "arvore_seca.png",
+          "vscale": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "decor_12",
+          "type": "arvore_seca",
           "pos": [
             3,
             2
@@ -118190,89 +118173,316 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "arvore_seca.png"
         },
         {
-          "id": "desfil_rochas_rachadas_3",
-          "type": "rochas_rachadas",
-          "pos": [
-            10,
-            11
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null
-        },
-        {
-          "id": "desfil_rochas_rachadas_4",
-          "type": "rochas_rachadas",
+          "id": "decor_13",
+          "type": "cerca_reta",
           "pos": [
             11,
-            2
+            6
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
-          "id": "desfil_estalactites_estalagmites_5",
-          "type": "estalactites_estalagmites",
+          "id": "decor_14",
+          "type": "cerca_reta",
           "pos": [
-            23,
-            11
+            14,
+            6
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
-          "id": "desfil_estalactites_estalagmites_6",
-          "type": "estalactites_estalagmites",
+          "id": "decor_15",
+          "type": "cerca_reta",
           "pos": [
-            20,
-            2
+            11,
+            13
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
         },
         {
-          "id": "desfil_estalactites_estalagmites_7",
-          "type": "estalactites_estalagmites",
+          "id": "decor_16",
+          "type": "cerca_reta",
           "pos": [
-            25,
+            14,
+            13
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "cerca_reta.png"
+        },
+        {
+          "id": "decor_17",
+          "type": "ninho_abutres",
+          "pos": [
+            12,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "ninho_abutres.png",
+          "size": [
+            2,
+            1
+          ]
+        },
+        {
+          "id": "decor_36",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            16
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_37",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            16
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_38",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            17
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_39",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_40",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_41",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            18
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_42",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            5
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_43",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            5
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_44",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            4
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_45",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_cruzamento.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_46",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            3
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_47",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
             3
           ],
           "facing": [
             0,
-            1
+            -1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
         },
         {
-          "id": "desfil_rochas_rachadas_8",
-          "type": "rochas_rachadas",
+          "id": "decor_48",
+          "type": "caminho_pedras_terra",
           "pos": [
-            24,
-            9
+            14,
+            3
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_49",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            14,
+            4
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
         },
         {
-          "id": "desfil_rochas_rachadas_9",
-          "type": "rochas_rachadas",
+          "id": "decor_51",
+          "type": "caminho_pedras_terra",
           "pos": [
             15,
             4
@@ -118281,75 +118491,265 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
         },
         {
-          "id": "desfil_rocha_grande_10",
-          "type": "rocha_grande",
+          "id": "decor_53",
+          "type": "caminho_pedras_terra",
           "pos": [
-            35,
+            16,
+            4
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_54",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
             2
           ],
           "facing": [
-            0,
-            1
+            -1,
+            0
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
         },
         {
-          "id": "desfil_rochas_rachadas_11",
-          "type": "rochas_rachadas",
+          "id": "decor_55",
+          "type": "caminho_pedras_terra",
           "pos": [
-            30,
+            16,
+            3
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_56",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            2
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_57",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
             3
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_cruzamento.png",
+          "road_wide": true
         },
         {
-          "id": "desfil_rochas_rachadas_12",
-          "type": "rochas_rachadas",
+          "id": "decor_58",
+          "type": "caminho_pedras_terra",
           "pos": [
-            35,
-            10
+            15,
+            0
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_59",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            1
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_60",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            0
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_61",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            1
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_62",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            6
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
         },
         {
-          "id": "desfil_rochas_rachadas_13",
-          "type": "rochas_rachadas",
+          "id": "decor_64",
+          "type": "caminho_pedras_terra",
           "pos": [
-            28,
-            4
+            13,
+            6
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_66",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            14
           ],
           "facing": [
             0,
-            1
+            -1
           ],
-          "loot": null
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_67",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            15
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_68",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            14
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_69",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            15
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
         }
       ],
       "secret_passages": [],
-      "master_reinforcements": [],
       "falas": [
         {
           "id": "desfil_chegada",
           "pos": [
-            2,
-            4
+            12,
+            17
           ],
           "falante": {
             "nome": "Narrador",
             "emoji": "🌬️"
           },
-          "texto": "O desfiladeiro é uma fenda estreita entre dois paredões. O vento assobia por ela como um aviso.",
+          "texto": "A trilha acaba na beira do desfiladeiro. Uma ponte de madeira range sobre o vazio, e o vento sobe do abismo como um aviso.",
           "trigger": {
             "tipo": "proximidade",
             "raio": 4
@@ -118358,17 +118758,17 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "desfil_morte",
           "pos": [
-            16,
-            7
+            13,
+            13
           ],
           "falante": {
             "nome": "Narrador",
             "emoji": "🏹"
           },
-          "texto": "Um zumbido seco. O bardo, que ia à frente, cai de joelhos com uma flecha de ponta tingida no peito e uma moeda de prata sem cunho na mão aberta. Não houve tempo. Nem de gritar.",
+          "texto": "Um zumbido seco vindo da outra margem. O bardo, que ia à frente, cai de joelhos na cabeceira da ponte com uma flecha de ponta tingida no peito e uma moeda de prata sem cunho na mão aberta. Não houve tempo. Nem de gritar.",
           "trigger": {
             "tipo": "proximidade",
-            "raio": 5
+            "raio": 1
           },
           "requisito": {
             "renome_min": 0,
@@ -118382,17 +118782,17 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "desfil_rastro",
           "pos": [
-            16,
-            7
+            13,
+            13
           ],
           "falante": {
             "nome": "Narrador",
             "emoji": "🩸"
           },
-          "texto": "Ao pé de um rochedo, o rastro de alguém que subiu antes de vocês e foi calado no caminho: pegadas, sangue seco e uma flecha de ponta tingida.",
+          "texto": "Na cabeceira da ponte, o rastro de alguém que subiu antes de vocês e foi calado no caminho: pegadas, sangue seco e uma flecha de ponta tingida, vinda da outra margem.",
           "trigger": {
             "tipo": "proximidade",
-            "raio": 5
+            "raio": 1
           },
           "requisito": {
             "renome_min": 0,
@@ -118402,12 +118802,788 @@ window.EDITOR_DUNGEONS = [
             "sem_fato": "elara_bardo_ajudou",
             "aventura_id": ""
           }
+        },
+        {
+          "id": "desfil_margem",
+          "pos": [
+            13,
+            4
+          ],
+          "falante": {
+            "nome": "Narrador",
+            "emoji": "🌬️"
+          },
+          "texto": "A ponte fica para trás. O caminho de pedras segue margem acima, e ao longe sobe a fumaça de um acampamento.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 2
+          }
         }
       ],
+      "master_reinforcements": [],
       "expected_party": {
         "heroes": 4,
         "level": 5
       },
+      "prisoner": null,
+      "materiais": {
+        "14,4": "terra",
+        "9,6": "terra",
+        "9,5": "terra",
+        "9,4": "terra",
+        "9,3": "terra",
+        "9,2": "terra",
+        "9,1": "terra",
+        "9,0": "terra",
+        "8,0": "terra",
+        "7,0": "terra",
+        "7,1": "terra",
+        "7,2": "terra",
+        "7,3": "terra",
+        "7,4": "terra",
+        "7,5": "terra",
+        "7,6": "ceu_abismo",
+        "7,7": "ceu_abismo",
+        "7,8": "ceu_abismo",
+        "7,9": "ceu_abismo",
+        "7,10": "ceu_abismo",
+        "7,11": "ceu_abismo",
+        "7,12": "ceu_abismo",
+        "7,13": "ceu_abismo",
+        "7,14": "ceu_abismo",
+        "7,15": "terra",
+        "7,16": "terra",
+        "7,17": "terra",
+        "7,18": "terra",
+        "6,18": "terra",
+        "5,18": "terra",
+        "5,17": "terra",
+        "5,16": "terra",
+        "5,15": "terra",
+        "5,14": "ceu_abismo",
+        "5,13": "ceu_abismo",
+        "5,12": "ceu_abismo",
+        "5,11": "ceu_abismo",
+        "5,10": "ceu_abismo",
+        "5,9": "ceu_abismo",
+        "5,8": "ceu_abismo",
+        "5,7": "ceu_abismo",
+        "5,6": "ceu_abismo",
+        "5,5": "ceu_abismo",
+        "5,4": "ceu_abismo",
+        "5,3": "terra",
+        "5,2": "terra",
+        "5,1": "terra",
+        "4,0": "terra",
+        "3,0": "terra",
+        "3,1": "terra",
+        "3,2": "terra",
+        "3,3": "ceu_abismo",
+        "3,4": "ceu_abismo",
+        "3,5": "ceu_abismo",
+        "3,6": "ceu_abismo",
+        "3,7": "ceu_abismo",
+        "3,8": "ceu_abismo",
+        "3,9": "ceu_abismo",
+        "3,10": "ceu_abismo",
+        "3,11": "ceu_abismo",
+        "3,12": "ceu_abismo",
+        "3,13": "ceu_abismo",
+        "3,14": "ceu_abismo",
+        "3,15": "ceu_abismo",
+        "3,16": "terra",
+        "3,17": "terra",
+        "3,18": "terra",
+        "2,18": "terra",
+        "1,18": "terra",
+        "1,17": "terra",
+        "1,16": "ceu_abismo",
+        "1,15": "ceu_abismo",
+        "1,14": "ceu_abismo",
+        "1,13": "ceu_abismo",
+        "1,12": "ceu_abismo",
+        "1,11": "ceu_abismo",
+        "1,10": "ceu_abismo",
+        "1,9": "ceu_abismo",
+        "1,8": "ceu_abismo",
+        "1,7": "ceu_abismo",
+        "1,6": "ceu_abismo",
+        "1,5": "ceu_abismo",
+        "1,4": "ceu_abismo",
+        "1,3": "ceu_abismo",
+        "1,2": "terra",
+        "1,1": "terra",
+        "1,0": "terra",
+        "0,0": "terra",
+        "0,1": "terra",
+        "0,2": "terra",
+        "0,3": "ceu_abismo",
+        "0,4": "ceu_abismo",
+        "0,5": "ceu_abismo",
+        "0,6": "ceu_abismo",
+        "0,7": "ceu_abismo",
+        "0,8": "ceu_abismo",
+        "0,9": "ceu_abismo",
+        "0,10": "ceu_abismo",
+        "0,11": "ceu_abismo",
+        "0,12": "ceu_abismo",
+        "0,13": "ceu_abismo",
+        "0,14": "ceu_abismo",
+        "0,15": "ceu_abismo",
+        "0,16": "ceu_abismo",
+        "0,17": "terra",
+        "0,18": "terra",
+        "2,17": "terra",
+        "2,16": "terra",
+        "2,15": "ceu_abismo",
+        "2,14": "ceu_abismo",
+        "2,13": "ceu_abismo",
+        "2,12": "ceu_abismo",
+        "2,11": "ceu_abismo",
+        "2,10": "ceu_abismo",
+        "2,9": "ceu_abismo",
+        "2,8": "ceu_abismo",
+        "2,7": "ceu_abismo",
+        "2,6": "ceu_abismo",
+        "2,5": "ceu_abismo",
+        "2,4": "ceu_abismo",
+        "2,3": "ceu_abismo",
+        "2,2": "terra",
+        "2,1": "terra",
+        "2,0": "terra",
+        "4,1": "terra",
+        "4,2": "terra",
+        "4,3": "terra",
+        "4,4": "ceu_abismo",
+        "4,5": "ceu_abismo",
+        "4,6": "ceu_abismo",
+        "4,7": "ceu_abismo",
+        "4,8": "ceu_abismo",
+        "4,9": "ceu_abismo",
+        "4,10": "ceu_abismo",
+        "4,11": "ceu_abismo",
+        "4,12": "ceu_abismo",
+        "4,13": "ceu_abismo",
+        "4,14": "ceu_abismo",
+        "4,15": "ceu_abismo",
+        "4,16": "terra",
+        "4,17": "terra",
+        "4,18": "terra",
+        "8,18": "terra",
+        "9,18": "terra",
+        "9,17": "terra",
+        "9,16": "terra",
+        "9,15": "terra",
+        "9,14": "terra",
+        "9,13": "terra",
+        "9,12": "ceu_abismo",
+        "9,11": "ceu_abismo",
+        "9,10": "ceu_abismo",
+        "9,9": "ceu_abismo",
+        "9,8": "ceu_abismo",
+        "10,8": "ceu_abismo",
+        "10,7": "ceu_abismo",
+        "11,7": "ceu_abismo",
+        "11,6": "terra",
+        "11,5": "terra",
+        "11,4": "terra",
+        "11,3": "terra",
+        "11,2": "terra",
+        "11,1": "terra",
+        "11,0": "terra",
+        "12,0": "terra",
+        "13,0": "terra",
+        "13,1": "terra",
+        "13,2": "terra",
+        "13,3": "terra",
+        "13,4": "terra",
+        "13,5": "terra",
+        "13,6": "terra",
+        "13,7": "ceu_abismo",
+        "13,8": "ceu_abismo",
+        "13,9": "ceu_abismo",
+        "13,10": "ceu_abismo",
+        "13,11": "ceu_abismo",
+        "13,12": "ceu_abismo",
+        "13,13": "terra",
+        "13,14": "terra",
+        "13,15": "terra",
+        "13,16": "terra",
+        "13,17": "terra",
+        "13,18": "terra",
+        "12,18": "terra",
+        "11,18": "terra",
+        "11,17": "terra",
+        "11,16": "terra",
+        "11,15": "terra",
+        "11,14": "terra",
+        "11,13": "terra",
+        "11,12": "ceu_abismo",
+        "11,11": "ceu_abismo",
+        "11,10": "ceu_abismo",
+        "11,9": "ceu_abismo",
+        "14,18": "terra",
+        "15,18": "terra",
+        "15,17": "terra",
+        "15,16": "terra",
+        "15,15": "terra",
+        "15,14": "terra",
+        "15,13": "terra",
+        "15,12": "ceu_abismo",
+        "15,11": "ceu_abismo",
+        "15,10": "ceu_abismo",
+        "15,9": "ceu_abismo",
+        "15,8": "ceu_abismo",
+        "15,7": "ceu_abismo",
+        "15,6": "terra",
+        "15,5": "terra",
+        "15,4": "terra",
+        "15,3": "terra",
+        "15,2": "terra",
+        "15,1": "terra",
+        "15,0": "terra",
+        "16,0": "terra",
+        "17,0": "terra",
+        "17,1": "terra",
+        "17,2": "terra",
+        "17,3": "terra",
+        "17,4": "terra",
+        "17,5": "terra",
+        "17,6": "terra",
+        "17,7": "ceu_abismo",
+        "17,8": "ceu_abismo",
+        "17,9": "ceu_abismo",
+        "17,10": "ceu_abismo",
+        "17,11": "ceu_abismo",
+        "17,12": "ceu_abismo",
+        "17,13": "terra",
+        "17,14": "terra",
+        "17,15": "terra",
+        "17,16": "terra",
+        "17,17": "terra",
+        "17,18": "terra",
+        "18,18": "terra",
+        "19,18": "terra",
+        "19,17": "terra",
+        "19,16": "terra",
+        "19,15": "terra",
+        "19,14": "ceu_abismo",
+        "19,13": "ceu_abismo",
+        "19,12": "ceu_abismo",
+        "19,11": "ceu_abismo",
+        "19,10": "ceu_abismo",
+        "19,9": "ceu_abismo",
+        "19,8": "ceu_abismo",
+        "19,7": "ceu_abismo",
+        "19,6": "ceu_abismo",
+        "19,5": "terra",
+        "19,4": "terra",
+        "19,3": "terra",
+        "19,2": "terra",
+        "19,1": "terra",
+        "19,0": "terra",
+        "20,0": "terra",
+        "21,0": "terra",
+        "21,1": "terra",
+        "21,2": "terra",
+        "21,3": "terra",
+        "21,4": "ceu_abismo",
+        "21,5": "ceu_abismo",
+        "21,6": "ceu_abismo",
+        "21,7": "ceu_abismo",
+        "21,8": "ceu_abismo",
+        "21,9": "ceu_abismo",
+        "21,10": "ceu_abismo",
+        "21,11": "ceu_abismo",
+        "21,12": "ceu_abismo",
+        "21,13": "ceu_abismo",
+        "21,14": "ceu_abismo",
+        "21,15": "ceu_abismo",
+        "21,16": "terra",
+        "21,17": "terra",
+        "21,18": "terra",
+        "22,18": "terra",
+        "23,18": "terra",
+        "23,17": "terra",
+        "23,16": "terra",
+        "23,15": "ceu_abismo",
+        "23,14": "ceu_abismo",
+        "23,13": "ceu_abismo",
+        "23,12": "ceu_abismo",
+        "23,11": "ceu_abismo",
+        "23,10": "ceu_abismo",
+        "23,9": "ceu_abismo",
+        "23,8": "ceu_abismo",
+        "23,7": "ceu_abismo",
+        "23,6": "ceu_abismo",
+        "23,5": "ceu_abismo",
+        "23,4": "ceu_abismo",
+        "23,3": "ceu_abismo",
+        "23,2": "terra",
+        "23,1": "terra",
+        "23,0": "terra",
+        "24,0": "terra",
+        "25,0": "terra",
+        "25,1": "terra",
+        "25,2": "terra",
+        "25,3": "ceu_abismo",
+        "25,4": "ceu_abismo",
+        "25,5": "ceu_abismo",
+        "25,6": "ceu_abismo",
+        "25,7": "ceu_abismo",
+        "25,8": "ceu_abismo",
+        "25,9": "ceu_abismo",
+        "25,10": "ceu_abismo",
+        "25,11": "ceu_abismo",
+        "25,12": "ceu_abismo",
+        "25,13": "ceu_abismo",
+        "25,14": "ceu_abismo",
+        "25,15": "ceu_abismo",
+        "25,16": "ceu_abismo",
+        "25,17": "terra",
+        "25,18": "terra",
+        "24,1": "terra",
+        "24,2": "terra",
+        "24,3": "ceu_abismo",
+        "24,4": "ceu_abismo",
+        "24,5": "ceu_abismo",
+        "24,6": "ceu_abismo",
+        "24,7": "ceu_abismo",
+        "24,8": "ceu_abismo",
+        "24,9": "ceu_abismo",
+        "24,10": "ceu_abismo",
+        "24,11": "ceu_abismo",
+        "24,12": "ceu_abismo",
+        "24,13": "ceu_abismo",
+        "24,14": "ceu_abismo",
+        "24,15": "ceu_abismo",
+        "24,16": "ceu_abismo",
+        "24,17": "terra",
+        "24,18": "terra",
+        "22,17": "terra",
+        "22,16": "terra",
+        "22,15": "ceu_abismo",
+        "22,14": "ceu_abismo",
+        "22,13": "ceu_abismo",
+        "22,12": "ceu_abismo",
+        "22,11": "ceu_abismo",
+        "22,10": "ceu_abismo",
+        "22,9": "ceu_abismo",
+        "22,8": "ceu_abismo",
+        "22,7": "ceu_abismo",
+        "22,6": "ceu_abismo",
+        "22,5": "ceu_abismo",
+        "22,4": "ceu_abismo",
+        "22,3": "ceu_abismo",
+        "22,2": "terra",
+        "22,1": "terra",
+        "22,0": "terra",
+        "20,1": "terra",
+        "20,2": "terra",
+        "20,3": "terra",
+        "20,4": "terra",
+        "20,5": "ceu_abismo",
+        "20,6": "ceu_abismo",
+        "20,7": "ceu_abismo",
+        "20,8": "ceu_abismo",
+        "20,9": "ceu_abismo",
+        "20,10": "ceu_abismo",
+        "20,11": "ceu_abismo",
+        "20,12": "ceu_abismo",
+        "20,13": "ceu_abismo",
+        "20,14": "ceu_abismo",
+        "20,15": "terra",
+        "20,16": "terra",
+        "20,17": "terra",
+        "20,18": "terra",
+        "18,17": "terra",
+        "18,16": "terra",
+        "18,15": "terra",
+        "18,14": "ceu_abismo",
+        "18,13": "ceu_abismo",
+        "18,12": "ceu_abismo",
+        "18,11": "ceu_abismo",
+        "18,10": "ceu_abismo",
+        "18,9": "ceu_abismo",
+        "18,8": "ceu_abismo",
+        "18,7": "ceu_abismo",
+        "18,6": "ceu_abismo",
+        "18,5": "terra",
+        "18,4": "terra",
+        "18,3": "terra",
+        "18,2": "terra",
+        "18,1": "terra",
+        "18,0": "terra",
+        "16,1": "terra",
+        "16,2": "terra",
+        "16,3": "terra",
+        "16,4": "terra",
+        "16,5": "terra",
+        "16,6": "terra",
+        "16,7": "ceu_abismo",
+        "16,8": "ceu_abismo",
+        "16,9": "ceu_abismo",
+        "16,10": "ceu_abismo",
+        "16,11": "ceu_abismo",
+        "16,12": "ceu_abismo",
+        "16,13": "terra",
+        "16,14": "terra",
+        "16,15": "terra",
+        "16,16": "terra",
+        "16,17": "terra",
+        "16,18": "terra",
+        "12,17": "terra",
+        "14,17": "terra",
+        "12,16": "terra",
+        "14,16": "terra",
+        "12,15": "terra",
+        "14,15": "terra",
+        "12,14": "terra",
+        "14,14": "terra",
+        "12,13": "terra",
+        "14,13": "terra",
+        "12,12": "ceu_abismo",
+        "14,12": "ceu_abismo",
+        "12,11": "ceu_abismo",
+        "14,11": "ceu_abismo",
+        "12,10": "ceu_abismo",
+        "14,10": "ceu_abismo",
+        "12,9": "ceu_abismo",
+        "14,9": "ceu_abismo",
+        "12,8": "ceu_abismo",
+        "14,8": "ceu_abismo",
+        "14,7": "ceu_abismo",
+        "14,6": "terra",
+        "14,5": "terra",
+        "14,3": "terra",
+        "14,2": "terra",
+        "14,1": "terra",
+        "14,0": "terra",
+        "12,1": "terra",
+        "12,2": "terra",
+        "12,3": "terra",
+        "12,4": "terra",
+        "12,5": "terra",
+        "12,6": "terra",
+        "12,7": "ceu_abismo",
+        "11,8": "ceu_abismo",
+        "10,9": "ceu_abismo",
+        "10,10": "ceu_abismo",
+        "10,11": "ceu_abismo",
+        "10,12": "ceu_abismo",
+        "10,13": "terra",
+        "10,14": "terra",
+        "10,15": "terra",
+        "10,16": "terra",
+        "10,17": "terra",
+        "10,18": "terra",
+        "6,17": "terra",
+        "8,17": "terra",
+        "6,16": "terra",
+        "8,16": "terra",
+        "6,15": "terra",
+        "8,15": "terra",
+        "6,14": "ceu_abismo",
+        "8,14": "terra",
+        "6,13": "ceu_abismo",
+        "8,13": "ceu_abismo",
+        "6,12": "ceu_abismo",
+        "8,12": "ceu_abismo",
+        "6,11": "ceu_abismo",
+        "8,11": "ceu_abismo",
+        "6,10": "ceu_abismo",
+        "8,10": "ceu_abismo",
+        "6,9": "ceu_abismo",
+        "8,9": "ceu_abismo",
+        "6,8": "ceu_abismo",
+        "8,8": "ceu_abismo",
+        "6,7": "ceu_abismo",
+        "8,7": "ceu_abismo",
+        "6,6": "ceu_abismo",
+        "6,5": "ceu_abismo",
+        "6,4": "terra",
+        "6,3": "terra",
+        "6,2": "terra",
+        "6,1": "terra",
+        "6,0": "terra",
+        "10,0": "terra",
+        "8,1": "terra",
+        "10,1": "terra",
+        "8,2": "terra",
+        "10,2": "terra",
+        "8,3": "terra",
+        "10,3": "terra",
+        "8,4": "terra",
+        "10,4": "terra",
+        "8,5": "terra",
+        "10,5": "terra",
+        "9,7": "ceu_abismo",
+        "8,6": "ceu_abismo",
+        "10,6": "terra",
+        "5,0": "terra"
+      },
+      "pontes": [
+        {
+          "id": "ponte_0",
+          "inicio": [
+            13,
+            6
+          ],
+          "fim": [
+            13,
+            13
+          ],
+          "largura": 2,
+          "altura": 10,
+          "material": "madeira"
+        }
+      ],
+      "elevacoes": {
+        "0,0": 10,
+        "1,0": 10,
+        "2,0": 10,
+        "3,0": 10,
+        "4,0": 10,
+        "6,0": 10,
+        "7,0": 10,
+        "9,0": 15,
+        "10,0": 15,
+        "11,0": 15,
+        "12,0": 27,
+        "13,0": 27,
+        "14,0": 27,
+        "15,0": 10,
+        "16,0": 10,
+        "17,0": 40,
+        "18,0": 40,
+        "19,0": 40,
+        "20,0": 40,
+        "21,0": 40,
+        "22,0": 40,
+        "23,0": 40,
+        "24,0": 40,
+        "25,0": 40,
+        "25,1": 40,
+        "24,1": 40,
+        "23,1": 40,
+        "22,1": 37,
+        "21,1": 37,
+        "20,1": 37,
+        "19,1": 10,
+        "18,1": 10,
+        "17,1": 10,
+        "16,1": 10,
+        "15,1": 10,
+        "14,1": 27,
+        "13,1": 27,
+        "12,1": 27,
+        "11,1": 15,
+        "10,1": 15,
+        "9,1": 15,
+        "8,1": 10,
+        "7,1": 10,
+        "6,1": 10,
+        "5,1": 10,
+        "4,1": 10,
+        "3,1": 10,
+        "2,1": 10,
+        "1,2": 10,
+        "0,2": 10,
+        "0,1": 10,
+        "1,1": 10,
+        "2,2": 10,
+        "3,2": 10,
+        "4,2": 10,
+        "5,2": 10,
+        "6,2": 10,
+        "7,2": 10,
+        "8,2": 10,
+        "9,2": 10,
+        "10,2": 10,
+        "11,2": 10,
+        "12,2": 10,
+        "13,2": 10,
+        "14,2": 10,
+        "15,2": 10,
+        "16,2": 10,
+        "17,2": 10,
+        "18,2": 10,
+        "19,2": 10,
+        "20,2": 10,
+        "21,2": 10,
+        "22,2": 10,
+        "23,2": 10,
+        "24,2": 10,
+        "25,2": 40,
+        "0,18": 10,
+        "1,18": 10,
+        "2,18": 10,
+        "3,18": 10,
+        "4,18": 10,
+        "5,18": 10,
+        "6,18": 10,
+        "7,18": 10,
+        "8,18": 10,
+        "9,18": 10,
+        "10,18": 10,
+        "11,18": 10,
+        "12,18": 10,
+        "13,18": 10,
+        "14,18": 10,
+        "15,18": 10,
+        "16,18": 10,
+        "17,18": 10,
+        "18,18": 10,
+        "19,18": 10,
+        "20,18": 10,
+        "21,18": 10,
+        "22,18": 10,
+        "23,18": 10,
+        "24,18": 10,
+        "25,18": 10,
+        "25,17": 10,
+        "24,17": 10,
+        "23,17": 10,
+        "22,17": 10,
+        "13,17": 10,
+        "12,17": 10,
+        "11,17": 10,
+        "10,17": 10,
+        "9,17": 10,
+        "8,17": 10,
+        "7,17": 10,
+        "6,17": 10,
+        "5,17": 10,
+        "4,17": 10,
+        "3,17": 10,
+        "2,17": 10,
+        "1,17": 10,
+        "0,17": 10,
+        "14,17": 10,
+        "15,17": 10,
+        "16,17": 10,
+        "17,17": 10,
+        "18,17": 10,
+        "19,17": 10,
+        "20,17": 10,
+        "21,17": 10,
+        "23,16": 10,
+        "21,16": 10,
+        "22,16": 10,
+        "20,16": 10,
+        "19,16": 10,
+        "18,16": 10,
+        "17,16": 10,
+        "16,16": 10,
+        "15,16": 10,
+        "14,16": 10,
+        "13,16": 10,
+        "12,16": 10,
+        "11,16": 10,
+        "10,16": 10,
+        "9,16": 10,
+        "8,16": 10,
+        "7,16": 10,
+        "6,16": 10,
+        "5,16": 10,
+        "4,16": 10,
+        "3,16": 10,
+        "2,16": 10,
+        "7,3": 10,
+        "8,3": 10,
+        "9,3": 10,
+        "10,3": 10,
+        "11,3": 10,
+        "12,3": 10,
+        "13,3": 10,
+        "14,3": 10,
+        "15,3": 10,
+        "16,3": 10,
+        "17,3": 10,
+        "18,3": 10,
+        "19,3": 10,
+        "19,4": 10,
+        "20,4": 10,
+        "20,3": 10,
+        "21,3": 10,
+        "18,4": 10,
+        "17,4": 10,
+        "16,4": 10,
+        "15,4": 10,
+        "14,4": 10,
+        "13,4": 10,
+        "12,4": 10,
+        "11,4": 10,
+        "10,4": 10,
+        "9,4": 10,
+        "8,4": 10,
+        "8,5": 10,
+        "7,4": 10,
+        "9,5": 10,
+        "10,5": 10,
+        "11,5": 10,
+        "12,5": 10,
+        "13,5": 10,
+        "14,5": 10,
+        "15,5": 10,
+        "16,5": 10,
+        "17,5": 10,
+        "18,5": 10,
+        "19,5": 10,
+        "9,6": 10,
+        "10,6": 10,
+        "11,6": 10,
+        "12,6": 10,
+        "13,6": 10,
+        "14,6": 10,
+        "15,6": 10,
+        "16,6": 10,
+        "17,6": 10,
+        "4,3": 10,
+        "5,3": 10,
+        "6,3": 10,
+        "6,4": 10,
+        "7,5": 10,
+        "5,15": 10,
+        "6,15": 10,
+        "7,15": 10,
+        "8,15": 10,
+        "9,14": 10,
+        "10,14": 10,
+        "11,14": 10,
+        "12,14": 10,
+        "12,15": 10,
+        "13,15": 10,
+        "14,15": 10,
+        "15,15": 10,
+        "16,15": 10,
+        "17,15": 10,
+        "18,15": 10,
+        "19,15": 10,
+        "20,15": 10,
+        "17,14": 10,
+        "16,14": 10,
+        "15,14": 10,
+        "14,14": 10,
+        "11,15": 10,
+        "10,15": 10,
+        "9,15": 10,
+        "13,14": 10,
+        "9,13": 10,
+        "10,13": 10,
+        "11,13": 10,
+        "12,13": 10,
+        "13,13": 10,
+        "14,13": 10,
+        "15,13": 10,
+        "16,13": 10,
+        "17,13": 10,
+        "8,14": 10,
+        "5,0": 10,
+        "8,0": 10
+      },
+      "alturas_parede": {},
+      "transicao_altura": "rampa",
       "objectives": {
         "primary": {
           "type": "reach_exit",
@@ -118419,569 +119595,6 @@ window.EDITOR_DUNGEONS = [
           "fato": "elara_montanha_desfiladeiro"
         },
         "secondary": []
-      },
-      "marcador_entrada": "poste",
-      "materiais": {
-        "0,0": "rocha_marrom",
-        "1,0": "rocha_marrom",
-        "2,0": "rocha_marrom",
-        "3,0": "rocha_marrom",
-        "4,0": "rocha_marrom",
-        "5,0": "rocha_marrom",
-        "6,0": "rocha_marrom",
-        "7,0": "rocha_marrom",
-        "8,0": "rocha_marrom",
-        "9,0": "rocha_marrom",
-        "10,0": "rocha_marrom",
-        "11,0": "rocha_marrom",
-        "12,0": "rocha_marrom",
-        "13,0": "rocha_marrom",
-        "14,0": "rocha_marrom",
-        "15,0": "rocha_marrom",
-        "16,0": "rocha_marrom",
-        "17,0": "rocha_marrom",
-        "18,0": "rocha_marrom",
-        "19,0": "rocha_marrom",
-        "20,0": "rocha_marrom",
-        "21,0": "rocha_marrom",
-        "22,0": "rocha_marrom",
-        "23,0": "rocha_marrom",
-        "24,0": "rocha_marrom",
-        "25,0": "rocha_marrom",
-        "26,0": "rocha_marrom",
-        "27,0": "rocha_marrom",
-        "28,0": "rocha_marrom",
-        "29,0": "rocha_marrom",
-        "30,0": "rocha_marrom",
-        "31,0": "rocha_marrom",
-        "32,0": "rocha_marrom",
-        "33,0": "rocha_marrom",
-        "34,0": "rocha_marrom",
-        "35,0": "rocha_marrom",
-        "36,0": "rocha_marrom",
-        "37,0": "rocha_marrom",
-        "38,0": "rocha_marrom",
-        "39,0": "rocha_marrom",
-        "0,1": "rocha_marrom",
-        "1,1": "rocha_marrom",
-        "2,1": "rocha_marrom",
-        "3,1": "rocha_marrom",
-        "4,1": "rocha_marrom",
-        "5,1": "rocha_marrom",
-        "6,1": "rocha_marrom",
-        "7,1": "rocha_marrom",
-        "8,1": "rocha_marrom",
-        "9,1": "rocha_marrom",
-        "10,1": "rocha_marrom",
-        "11,1": "rocha_marrom",
-        "12,1": "rocha_marrom",
-        "13,1": "rocha_marrom",
-        "14,1": "rocha_marrom",
-        "15,1": "rocha_marrom",
-        "16,1": "rocha_marrom",
-        "17,1": "rocha_marrom",
-        "18,1": "rocha_marrom",
-        "19,1": "rocha_marrom",
-        "20,1": "rocha_marrom",
-        "21,1": "rocha_marrom",
-        "22,1": "rocha_marrom",
-        "23,1": "rocha_marrom",
-        "24,1": "rocha_marrom",
-        "25,1": "rocha_marrom",
-        "26,1": "rocha_marrom",
-        "27,1": "rocha_marrom",
-        "28,1": "rocha_marrom",
-        "29,1": "rocha_marrom",
-        "30,1": "rocha_marrom",
-        "31,1": "rocha_marrom",
-        "32,1": "rocha_marrom",
-        "33,1": "rocha_marrom",
-        "34,1": "rocha_marrom",
-        "35,1": "rocha_marrom",
-        "36,1": "rocha_marrom",
-        "37,1": "rocha_marrom",
-        "38,1": "rocha_marrom",
-        "39,1": "rocha_marrom",
-        "0,2": "rocha_marrom",
-        "1,2": "pedra_cinza",
-        "2,2": "pedra_cinza",
-        "3,2": "pedra_cinza",
-        "4,2": "pedra_cinza",
-        "5,2": "pedra_cinza",
-        "6,2": "pedra_cinza",
-        "7,2": "pedra_cinza",
-        "8,2": "pedra_cinza",
-        "9,2": "pedra_cinza",
-        "10,2": "pedra_cinza",
-        "11,2": "pedra_cinza",
-        "12,2": "pedra_cinza",
-        "13,2": "rocha_marrom",
-        "14,2": "pedra_cinza",
-        "15,2": "pedra_cinza",
-        "16,2": "pedra_cinza",
-        "17,2": "pedra_cinza",
-        "18,2": "pedra_cinza",
-        "19,2": "pedra_cinza",
-        "20,2": "pedra_cinza",
-        "21,2": "pedra_cinza",
-        "22,2": "pedra_cinza",
-        "23,2": "pedra_cinza",
-        "24,2": "pedra_cinza",
-        "25,2": "pedra_cinza",
-        "26,2": "rocha_marrom",
-        "27,2": "pedra_cinza",
-        "28,2": "pedra_cinza",
-        "29,2": "pedra_cinza",
-        "30,2": "pedra_cinza",
-        "31,2": "pedra_cinza",
-        "32,2": "pedra_cinza",
-        "33,2": "pedra_cinza",
-        "34,2": "pedra_cinza",
-        "35,2": "pedra_cinza",
-        "36,2": "pedra_cinza",
-        "37,2": "pedra_cinza",
-        "38,2": "pedra_cinza",
-        "39,2": "rocha_marrom",
-        "0,3": "rocha_marrom",
-        "1,3": "pedra_cinza",
-        "2,3": "pedra_cinza",
-        "3,3": "pedra_cinza",
-        "4,3": "pedra_cinza",
-        "5,3": "pedra_cinza",
-        "6,3": "pedra_cinza",
-        "7,3": "pedra_cinza",
-        "8,3": "pedra_cinza",
-        "9,3": "pedra_cinza",
-        "10,3": "pedra_cinza",
-        "11,3": "pedra_cinza",
-        "12,3": "pedra_cinza",
-        "13,3": "rocha_marrom",
-        "14,3": "pedra_cinza",
-        "15,3": "pedra_cinza",
-        "16,3": "pedra_cinza",
-        "17,3": "pedra_cinza",
-        "18,3": "pedra_cinza",
-        "19,3": "pedra_cinza",
-        "20,3": "pedra_cinza",
-        "21,3": "pedra_cinza",
-        "22,3": "pedra_cinza",
-        "23,3": "pedra_cinza",
-        "24,3": "pedra_cinza",
-        "25,3": "pedra_cinza",
-        "26,3": "rocha_marrom",
-        "27,3": "pedra_cinza",
-        "28,3": "pedra_cinza",
-        "29,3": "pedra_cinza",
-        "30,3": "pedra_cinza",
-        "31,3": "pedra_cinza",
-        "32,3": "pedra_cinza",
-        "33,3": "pedra_cinza",
-        "34,3": "pedra_cinza",
-        "35,3": "pedra_cinza",
-        "36,3": "pedra_cinza",
-        "37,3": "pedra_cinza",
-        "38,3": "pedra_cinza",
-        "39,3": "rocha_marrom",
-        "0,4": "rocha_marrom",
-        "1,4": "pedra_cinza",
-        "2,4": "pedra_cinza",
-        "3,4": "pedra_cinza",
-        "4,4": "pedra_cinza",
-        "5,4": "pedra_cinza",
-        "6,4": "pedra_cinza",
-        "7,4": "pedra_cinza",
-        "8,4": "pedra_cinza",
-        "9,4": "pedra_cinza",
-        "10,4": "pedra_cinza",
-        "11,4": "pedra_cinza",
-        "12,4": "pedra_cinza",
-        "13,4": "rocha_marrom",
-        "14,4": "pedra_cinza",
-        "15,4": "pedra_cinza",
-        "16,4": "pedra_cinza",
-        "17,4": "pedra_cinza",
-        "18,4": "pedra_cinza",
-        "19,4": "pedra_cinza",
-        "20,4": "pedra_cinza",
-        "21,4": "pedra_cinza",
-        "22,4": "pedra_cinza",
-        "23,4": "pedra_cinza",
-        "24,4": "pedra_cinza",
-        "25,4": "pedra_cinza",
-        "26,4": "rocha_marrom",
-        "27,4": "pedra_cinza",
-        "28,4": "pedra_cinza",
-        "29,4": "pedra_cinza",
-        "30,4": "pedra_cinza",
-        "31,4": "pedra_cinza",
-        "32,4": "pedra_cinza",
-        "33,4": "pedra_cinza",
-        "34,4": "pedra_cinza",
-        "35,4": "pedra_cinza",
-        "36,4": "pedra_cinza",
-        "37,4": "pedra_cinza",
-        "38,4": "pedra_cinza",
-        "39,4": "rocha_marrom",
-        "0,5": "rocha_marrom",
-        "1,5": "pedra_cinza",
-        "2,5": "pedra_cinza",
-        "3,5": "pedra_cinza",
-        "4,5": "pedra_cinza",
-        "5,5": "pedra_cinza",
-        "6,5": "pedra_cinza",
-        "7,5": "pedra_cinza",
-        "8,5": "pedra_cinza",
-        "9,5": "pedra_cinza",
-        "10,5": "pedra_cinza",
-        "11,5": "pedra_cinza",
-        "12,5": "pedra_cinza",
-        "13,5": "rocha_marrom",
-        "14,5": "pedra_cinza",
-        "15,5": "pedra_cinza",
-        "16,5": "pedra_cinza",
-        "17,5": "pedra_cinza",
-        "18,5": "pedra_cinza",
-        "19,5": "pedra_cinza",
-        "20,5": "pedra_cinza",
-        "21,5": "pedra_cinza",
-        "22,5": "pedra_cinza",
-        "23,5": "pedra_cinza",
-        "24,5": "pedra_cinza",
-        "25,5": "pedra_cinza",
-        "26,5": "rocha_marrom",
-        "27,5": "pedra_cinza",
-        "28,5": "pedra_cinza",
-        "29,5": "pedra_cinza",
-        "30,5": "pedra_cinza",
-        "31,5": "pedra_cinza",
-        "32,5": "pedra_cinza",
-        "33,5": "pedra_cinza",
-        "34,5": "pedra_cinza",
-        "35,5": "pedra_cinza",
-        "36,5": "pedra_cinza",
-        "37,5": "pedra_cinza",
-        "38,5": "pedra_cinza",
-        "39,5": "rocha_marrom",
-        "0,6": "rocha_marrom",
-        "1,6": "pedra_cinza",
-        "2,6": "pedra_cinza",
-        "3,6": "pedra_cinza",
-        "4,6": "pedra_cinza",
-        "5,6": "pedra_cinza",
-        "6,6": "pedra_cinza",
-        "7,6": "pedra_cinza",
-        "8,6": "pedra_cinza",
-        "9,6": "pedra_cinza",
-        "10,6": "pedra_cinza",
-        "11,6": "pedra_cinza",
-        "12,6": "pedra_cinza",
-        "13,6": "rocha_marrom",
-        "14,6": "pedra_cinza",
-        "15,6": "pedra_cinza",
-        "16,6": "pedra_cinza",
-        "17,6": "pedra_cinza",
-        "18,6": "pedra_cinza",
-        "19,6": "pedra_cinza",
-        "20,6": "pedra_cinza",
-        "21,6": "pedra_cinza",
-        "22,6": "pedra_cinza",
-        "23,6": "pedra_cinza",
-        "24,6": "pedra_cinza",
-        "25,6": "pedra_cinza",
-        "26,6": "rocha_marrom",
-        "27,6": "pedra_cinza",
-        "28,6": "pedra_cinza",
-        "29,6": "pedra_cinza",
-        "30,6": "pedra_cinza",
-        "31,6": "pedra_cinza",
-        "32,6": "pedra_cinza",
-        "33,6": "pedra_cinza",
-        "34,6": "pedra_cinza",
-        "35,6": "pedra_cinza",
-        "36,6": "pedra_cinza",
-        "37,6": "pedra_cinza",
-        "38,6": "pedra_cinza",
-        "39,6": "rocha_marrom",
-        "0,7": "rocha_marrom",
-        "1,7": "pedra_cinza",
-        "2,7": "pedra_cinza",
-        "3,7": "pedra_cinza",
-        "4,7": "pedra_cinza",
-        "5,7": "pedra_cinza",
-        "6,7": "pedra_cinza",
-        "7,7": "pedra_cinza",
-        "8,7": "pedra_cinza",
-        "9,7": "pedra_cinza",
-        "10,7": "pedra_cinza",
-        "11,7": "pedra_cinza",
-        "12,7": "pedra_cinza",
-        "13,7": "pedra_cinza",
-        "14,7": "pedra_cinza",
-        "15,7": "pedra_cinza",
-        "16,7": "pedra_cinza",
-        "17,7": "pedra_cinza",
-        "18,7": "pedra_cinza",
-        "19,7": "pedra_cinza",
-        "20,7": "pedra_cinza",
-        "21,7": "pedra_cinza",
-        "22,7": "pedra_cinza",
-        "23,7": "pedra_cinza",
-        "24,7": "pedra_cinza",
-        "25,7": "pedra_cinza",
-        "26,7": "pedra_cinza",
-        "27,7": "pedra_cinza",
-        "28,7": "pedra_cinza",
-        "29,7": "pedra_cinza",
-        "30,7": "pedra_cinza",
-        "31,7": "pedra_cinza",
-        "32,7": "pedra_cinza",
-        "33,7": "pedra_cinza",
-        "34,7": "pedra_cinza",
-        "35,7": "pedra_cinza",
-        "36,7": "pedra_cinza",
-        "37,7": "pedra_cinza",
-        "38,7": "pedra_cinza",
-        "39,7": "rocha_marrom",
-        "0,8": "rocha_marrom",
-        "1,8": "pedra_cinza",
-        "2,8": "pedra_cinza",
-        "3,8": "pedra_cinza",
-        "4,8": "pedra_cinza",
-        "5,8": "pedra_cinza",
-        "6,8": "pedra_cinza",
-        "7,8": "pedra_cinza",
-        "8,8": "pedra_cinza",
-        "9,8": "pedra_cinza",
-        "10,8": "pedra_cinza",
-        "11,8": "pedra_cinza",
-        "12,8": "pedra_cinza",
-        "13,8": "rocha_marrom",
-        "14,8": "pedra_cinza",
-        "15,8": "pedra_cinza",
-        "16,8": "pedra_cinza",
-        "17,8": "pedra_cinza",
-        "18,8": "pedra_cinza",
-        "19,8": "pedra_cinza",
-        "20,8": "pedra_cinza",
-        "21,8": "pedra_cinza",
-        "22,8": "pedra_cinza",
-        "23,8": "pedra_cinza",
-        "24,8": "pedra_cinza",
-        "25,8": "pedra_cinza",
-        "26,8": "rocha_marrom",
-        "27,8": "pedra_cinza",
-        "28,8": "pedra_cinza",
-        "29,8": "pedra_cinza",
-        "30,8": "pedra_cinza",
-        "31,8": "pedra_cinza",
-        "32,8": "pedra_cinza",
-        "33,8": "pedra_cinza",
-        "34,8": "pedra_cinza",
-        "35,8": "pedra_cinza",
-        "36,8": "pedra_cinza",
-        "37,8": "pedra_cinza",
-        "38,8": "pedra_cinza",
-        "39,8": "rocha_marrom",
-        "0,9": "rocha_marrom",
-        "1,9": "pedra_cinza",
-        "2,9": "pedra_cinza",
-        "3,9": "pedra_cinza",
-        "4,9": "pedra_cinza",
-        "5,9": "pedra_cinza",
-        "6,9": "pedra_cinza",
-        "7,9": "pedra_cinza",
-        "8,9": "pedra_cinza",
-        "9,9": "pedra_cinza",
-        "10,9": "pedra_cinza",
-        "11,9": "pedra_cinza",
-        "12,9": "pedra_cinza",
-        "13,9": "rocha_marrom",
-        "14,9": "pedra_cinza",
-        "15,9": "pedra_cinza",
-        "16,9": "pedra_cinza",
-        "17,9": "pedra_cinza",
-        "18,9": "pedra_cinza",
-        "19,9": "pedra_cinza",
-        "20,9": "pedra_cinza",
-        "21,9": "pedra_cinza",
-        "22,9": "pedra_cinza",
-        "23,9": "pedra_cinza",
-        "24,9": "pedra_cinza",
-        "25,9": "pedra_cinza",
-        "26,9": "rocha_marrom",
-        "27,9": "pedra_cinza",
-        "28,9": "pedra_cinza",
-        "29,9": "pedra_cinza",
-        "30,9": "pedra_cinza",
-        "31,9": "pedra_cinza",
-        "32,9": "pedra_cinza",
-        "33,9": "pedra_cinza",
-        "34,9": "pedra_cinza",
-        "35,9": "pedra_cinza",
-        "36,9": "pedra_cinza",
-        "37,9": "pedra_cinza",
-        "38,9": "pedra_cinza",
-        "39,9": "rocha_marrom",
-        "0,10": "rocha_marrom",
-        "1,10": "pedra_cinza",
-        "2,10": "pedra_cinza",
-        "3,10": "pedra_cinza",
-        "4,10": "pedra_cinza",
-        "5,10": "pedra_cinza",
-        "6,10": "pedra_cinza",
-        "7,10": "pedra_cinza",
-        "8,10": "pedra_cinza",
-        "9,10": "pedra_cinza",
-        "10,10": "pedra_cinza",
-        "11,10": "pedra_cinza",
-        "12,10": "pedra_cinza",
-        "13,10": "rocha_marrom",
-        "14,10": "pedra_cinza",
-        "15,10": "pedra_cinza",
-        "16,10": "pedra_cinza",
-        "17,10": "pedra_cinza",
-        "18,10": "pedra_cinza",
-        "19,10": "pedra_cinza",
-        "20,10": "pedra_cinza",
-        "21,10": "pedra_cinza",
-        "22,10": "pedra_cinza",
-        "23,10": "pedra_cinza",
-        "24,10": "pedra_cinza",
-        "25,10": "pedra_cinza",
-        "26,10": "rocha_marrom",
-        "27,10": "pedra_cinza",
-        "28,10": "pedra_cinza",
-        "29,10": "pedra_cinza",
-        "30,10": "pedra_cinza",
-        "31,10": "pedra_cinza",
-        "32,10": "pedra_cinza",
-        "33,10": "pedra_cinza",
-        "34,10": "pedra_cinza",
-        "35,10": "pedra_cinza",
-        "36,10": "pedra_cinza",
-        "37,10": "pedra_cinza",
-        "38,10": "pedra_cinza",
-        "39,10": "rocha_marrom",
-        "0,11": "rocha_marrom",
-        "1,11": "pedra_cinza",
-        "2,11": "pedra_cinza",
-        "3,11": "pedra_cinza",
-        "4,11": "pedra_cinza",
-        "5,11": "pedra_cinza",
-        "6,11": "pedra_cinza",
-        "7,11": "pedra_cinza",
-        "8,11": "pedra_cinza",
-        "9,11": "pedra_cinza",
-        "10,11": "pedra_cinza",
-        "11,11": "pedra_cinza",
-        "12,11": "pedra_cinza",
-        "13,11": "rocha_marrom",
-        "14,11": "pedra_cinza",
-        "15,11": "pedra_cinza",
-        "16,11": "pedra_cinza",
-        "17,11": "pedra_cinza",
-        "18,11": "pedra_cinza",
-        "19,11": "pedra_cinza",
-        "20,11": "pedra_cinza",
-        "21,11": "pedra_cinza",
-        "22,11": "pedra_cinza",
-        "23,11": "pedra_cinza",
-        "24,11": "pedra_cinza",
-        "25,11": "pedra_cinza",
-        "26,11": "rocha_marrom",
-        "27,11": "pedra_cinza",
-        "28,11": "pedra_cinza",
-        "29,11": "pedra_cinza",
-        "30,11": "pedra_cinza",
-        "31,11": "pedra_cinza",
-        "32,11": "pedra_cinza",
-        "33,11": "pedra_cinza",
-        "34,11": "pedra_cinza",
-        "35,11": "pedra_cinza",
-        "36,11": "pedra_cinza",
-        "37,11": "pedra_cinza",
-        "38,11": "pedra_cinza",
-        "39,11": "rocha_marrom",
-        "0,12": "rocha_marrom",
-        "1,12": "rocha_marrom",
-        "2,12": "rocha_marrom",
-        "3,12": "rocha_marrom",
-        "4,12": "rocha_marrom",
-        "5,12": "rocha_marrom",
-        "6,12": "rocha_marrom",
-        "7,12": "rocha_marrom",
-        "8,12": "rocha_marrom",
-        "9,12": "rocha_marrom",
-        "10,12": "rocha_marrom",
-        "11,12": "rocha_marrom",
-        "12,12": "rocha_marrom",
-        "13,12": "rocha_marrom",
-        "14,12": "rocha_marrom",
-        "15,12": "rocha_marrom",
-        "16,12": "rocha_marrom",
-        "17,12": "rocha_marrom",
-        "18,12": "rocha_marrom",
-        "19,12": "rocha_marrom",
-        "20,12": "rocha_marrom",
-        "21,12": "rocha_marrom",
-        "22,12": "rocha_marrom",
-        "23,12": "rocha_marrom",
-        "24,12": "rocha_marrom",
-        "25,12": "rocha_marrom",
-        "26,12": "rocha_marrom",
-        "27,12": "rocha_marrom",
-        "28,12": "rocha_marrom",
-        "29,12": "rocha_marrom",
-        "30,12": "rocha_marrom",
-        "31,12": "rocha_marrom",
-        "32,12": "rocha_marrom",
-        "33,12": "rocha_marrom",
-        "34,12": "rocha_marrom",
-        "35,12": "rocha_marrom",
-        "36,12": "rocha_marrom",
-        "37,12": "rocha_marrom",
-        "38,12": "rocha_marrom",
-        "39,12": "rocha_marrom",
-        "0,13": "rocha_marrom",
-        "1,13": "rocha_marrom",
-        "2,13": "rocha_marrom",
-        "3,13": "rocha_marrom",
-        "4,13": "rocha_marrom",
-        "5,13": "rocha_marrom",
-        "6,13": "rocha_marrom",
-        "7,13": "rocha_marrom",
-        "8,13": "rocha_marrom",
-        "9,13": "rocha_marrom",
-        "10,13": "rocha_marrom",
-        "11,13": "rocha_marrom",
-        "12,13": "rocha_marrom",
-        "13,13": "rocha_marrom",
-        "14,13": "rocha_marrom",
-        "15,13": "rocha_marrom",
-        "16,13": "rocha_marrom",
-        "17,13": "rocha_marrom",
-        "18,13": "rocha_marrom",
-        "19,13": "rocha_marrom",
-        "20,13": "rocha_marrom",
-        "21,13": "rocha_marrom",
-        "22,13": "rocha_marrom",
-        "23,13": "rocha_marrom",
-        "24,13": "rocha_marrom",
-        "25,13": "rocha_marrom",
-        "26,13": "rocha_marrom",
-        "27,13": "rocha_marrom",
-        "28,13": "rocha_marrom",
-        "29,13": "rocha_marrom",
-        "30,13": "rocha_marrom",
-        "31,13": "rocha_marrom",
-        "32,13": "rocha_marrom",
-        "33,13": "rocha_marrom",
-        "34,13": "rocha_marrom",
-        "35,13": "rocha_marrom",
-        "36,13": "rocha_marrom",
-        "37,13": "rocha_marrom",
-        "38,13": "rocha_marrom",
-        "39,13": "rocha_marrom"
       }
     }
   },
@@ -159092,6 +159705,7 @@ window.EDITOR_DUNGEONS = [
       "name": "penhasco",
       "ambiente": "masmorra",
       "saida_permitida": true,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 26,
@@ -159650,6 +160264,8 @@ window.EDITOR_DUNGEONS = [
       },
       "hero_spawns": [],
       "exit": null,
+      "routes": [],
+      "route_exits": [],
       "monsters": [],
       "chests": [],
       "traps": [],
@@ -159832,7 +160448,11 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "image": "arvore_seca.png"
+          "image": "arvore_seca.png",
+          "vscale": [
+            2,
+            2
+          ]
         },
         {
           "id": "decor_12",
@@ -159908,6 +160528,505 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "image": "cerca_reta.png"
+        },
+        {
+          "id": "decor_17",
+          "type": "ninho_abutres",
+          "pos": [
+            12,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "ninho_abutres.png",
+          "size": [
+            2,
+            1
+          ]
+        },
+        {
+          "id": "decor_36",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            16
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_37",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            16
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_38",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            17
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_39",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            17
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_40",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            18
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_41",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            18
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_42",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            5
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_43",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            5
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_44",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            4
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_45",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_cruzamento.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_46",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            3
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_47",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            3
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_48",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            14,
+            3
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_49",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            14,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_51",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            4
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_53",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            4
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_54",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            2
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_55",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            3
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_56",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            2
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_57",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_cruzamento.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_58",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            0
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_59",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            15,
+            1
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_60",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            0
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_61",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            16,
+            1
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_62",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            6
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_64",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            6
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_66",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            14
+          ],
+          "facing": [
+            0,
+            -1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_67",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            13,
+            15
+          ],
+          "facing": [
+            -1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_68",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            14
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_curva.png",
+          "road_wide": true
+        },
+        {
+          "id": "decor_69",
+          "type": "caminho_pedras_terra",
+          "pos": [
+            12,
+            15
+          ],
+          "facing": [
+            1,
+            0
+          ],
+          "loot": null,
+          "key_objective": false,
+          "image": "caminho_pedras_terra_t.png",
+          "road_wide": true
         }
       ],
       "secret_passages": [],

@@ -246,13 +246,13 @@ as fichas `assassino_da_caravana` e `bardo_da_caravana` (`tools/elara_montanha_f
 viva ou do bardo que ajuda) + `tambem_fato elara_ramo_a` (o ramo B também ganha a dica da Praça viva, mas já tem o Olho) +
 `sem_fato elara_leonel_vencido` (a rota some quando o final é jogado). A conversa-dica `elara_graciero_serra` (Elfo Suspeito)
 mora em `gerar_elara_graciero.py`. **Duas vias no mesmo mapa:** as falas levam `requisito`: com `elara_bardo_ajudou` o bardo guia
-e, no desfiladeiro, é morto por uma flecha de ponta tingida com uma moeda de prata sem cunho (cena só de falas, sem teste nem
+e, na cabeceira da ponte do desfiladeiro, é morto por uma flecha de ponta tingida com uma moeda de prata sem cunho (cena só de falas, sem teste nem
 reação possível: "não houve tempo"); sem ele, o grupo segue riscos de faca do Gilo e acha o rastro de quem foi calado antes.
 **Olho:** é item de recompensa do objetivo principal da Caravana (`kill_target` do assassino, que tem `fuga_chefe` e foge ao
 ser vencido, sem cadáver nem loot); o objetivo grava `elara_rota_olho_vencida` e `elara_olho_recuperado` por `fatos`. Com o Olho
 na bolsa, o slide "O Olho volta ao Templo" do final de Graciero substitui "O Olho não está aqui". Testes:
 `python -X utf8 tools/test_elara_montanha_fichas.py`, `test_elara_montanha_mapas.py`, `test_elara_montanha_dados.py` e
-`test_elara_montanha_fluxo.py`. O Assassino da Serra usa `assets/models3d/monstros/assassino_da_serra.glb`, variante visual do Soldado com armadura negra e tecidos/couro marrons; regenerar com `python -X utf8 tools/recolor_assassino_serra.py` e prévia com `blender --background --python tools/render_assassino_serra_preview.py`. A ficha oficial e o gerador da rota gravam `model3d` próprio, mantendo a arte 2D do Soldado; a escala da miniatura é 0,8075 (mais 5% menor que a anterior de 0,85). **Fica para o autor:** arte das cenas, texto final e calibragem por jogo.
+`test_elara_montanha_fluxo.py`. O Assassino da Serra usa `assets/models3d/monstros/assassino_da_serra.glb`, variante visual do Soldado com armadura negra e tecidos/couro marrons; regenerar com `python -X utf8 tools/recolor_assassino_serra.py` e prévia com `blender --background --python tools/render_assassino_serra_preview.py`. A ficha oficial e o gerador da rota gravam `model3d` próprio, mantendo a arte 2D do Soldado; a escala da miniatura é 0,8075 (mais 5% menor que a anterior de 0,85). **Desfiladeiro (2026-11-04):** `masmorra_desfiladeiro()` lê o terreno de `dungeons/penhasco.json` (mapa do autor, sem monstros) e só acrescenta salas, 25 monstros (margem sul ND 8, margem norte ND 10,25), armadilhas, falas e o objetivo; a saída é a casa (16,0), no fim do caminho de pedras. Um baú na margem sul, em (16,17), guarda 4 Poções de Cura Aprimoradas, porque a etapa emenda sem descanso. Falas por posição: chegada, cabeceira da ponte (raio 1, só com a guarda fora do caminho) e outra margem. Mudou o terreno no `penhasco.json`, regere a etapa e confira as casas dos monstros. **Fica para o autor:** arte das cenas, texto final e calibragem por jogo.
 
 ### O Resgate de Elara — Graciero (2026-10-22)
 
