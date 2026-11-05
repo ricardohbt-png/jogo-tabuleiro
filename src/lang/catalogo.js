@@ -2,6 +2,7 @@
 // Preencha só a coluna "en"; rodar o gerador de novo preserva o que
 // você já traduziu e acrescenta o que for novo.
 window.LANG_CATALOGO = {
+  "cat.decor.mansao_medieval.nome": {"pt":"Mansão medieval", "en":"Medieval mansion"},
   "cat.armadilha.armadilha_dardos_envenenados.desc": {
     "en": "Takes 1d4 piercing damage and makes a Fortitude save against the chosen poison.",
     "pt": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido."

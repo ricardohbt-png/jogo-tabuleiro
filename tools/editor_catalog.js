@@ -15543,6 +15543,21 @@ window.EDITOR_CATALOG = {
       "image": "celeiro_medieval.png"
     },
     {
+      "type": "mansao_medieval",
+      "nome": "Mansão medieval",
+      "emoji": "🏰",
+      "size": [
+        4,
+        4
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "mansao_medieval.png"
+    },
+    {
       "type": "galinheiro",
       "nome": "Galinheiro com ninhos e ovos",
       "emoji": "🐔",

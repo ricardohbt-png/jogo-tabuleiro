@@ -1056,6 +1056,7 @@ PRIS_HP = 7         # vida do prisioneiro (Fase 3)
 PRIS_AC = 10        # classe de armadura do prisioneiro
 PRIS_MOVE = 6       # quadrados que o prisioneiro liberto anda por turno (segue o resgatador)
 PROTETOR_PRISIONEIRO_ID = "__prisioneiro__"
+ANIMAIS_FORA_DE_DERROTAR_TODOS = frozenset({"vaca", "cavalo_sela"})
 XP_POR_NIVEL = 1040  # custo para avançar do nível N ao N+1: N × este valor (13 inimigos de ND equivalente solo)
 XP_MONSTRO_POR_ND = 80  # XP total de um monstro por ponto de ND, antes do ajuste relativo
 OBJ_BONUS_XP = 50   # XP concedido por objetivo secundÃ¡rio cumprido (Fase 3)
@@ -10466,6 +10467,7 @@ DECOR_MODEL3D = {
     "porteira_aberta": "assets/objetos/porteira_aberta.glb",
     "porteira_fechada": "assets/objetos/porteira_fechada.glb",
     "celeiro_medieval": "assets/objetos/celeiro_medieval.glb",
+    "mansao_medieval": "assets/objetos/mansao_medieval.glb",
     "galinheiro": "assets/objetos/galinheiro.glb",
     "cabana_rustica": "assets/objetos/cabana_rustica.glb",
     "choupana_palha_escura": "assets/objetos/choupana_palha_escura.glb",
@@ -10599,6 +10601,8 @@ DECOR_TYPES = {
                                 loot_capaz=False, image="porteira_fechada.png"),
     "celeiro_medieval": _decor("Celeiro medieval", "🏚️", [4, 4], gira=True, alto=True,
                                 loot_capaz=False, image="celeiro_medieval.png"),
+    "mansao_medieval": _decor("Mansão medieval", "🏰", [4, 4], gira=True, alto=True,
+                                loot_capaz=False, image="mansao_medieval.png"),
     "galinheiro":     _decor("Galinheiro com ninhos e ovos", "🐔", [2, 2], gira=True, alto=True,
                                loot_capaz=False, image="galinheiro.png"),
     "cabana_rustica": _decor("Cabana rústica de fazenda", "🛖", [3, 3], gira=True, alto=True,
@@ -56537,7 +56541,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return bool(m.get("troll_regenerando") or m.get("lobisomem_alfa_regenerando"))
         vivos = [m for m in self.monsters.values() if m["hp"] > 0 or _caido_regenerando(m)]
         if t == "kill_all":
-            return len(vivos) == 0
+            # Vaca e cavalo não são inimigos: um animal preso no cercado não pode travar a missão.
+            return not any(m.get("type") not in ANIMAIS_FORA_DE_DERROTAR_TODOS for m in vivos)
         if t == "kill_target":
             alvos = [m for m in self.monsters.values() if m.get("authored_target")]
             return bool(alvos) and all(m["hp"] <= 0 and not _caido_regenerando(m) for m in alvos)
@@ -56789,7 +56794,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         efetivo = self._objetivo_principal_efetivo()
         if steps:
             self.objective_status["steps"] = step_status
-        if (self.phase == "playing" and not self._objetivo_concluido
+        # Com etapas, o principal (que é a última delas) só vale depois de todas as anteriores.
+        etapas_ok = not steps or self.mission_step_index >= len(steps)
+        if (self.phase == "playing" and not self._objetivo_concluido and etapas_ok
                 and efetivo and self._objetivo_cumprido(efetivo)):
             self._objetivo_concluido = True
             route_progress = self._route_progress_state()

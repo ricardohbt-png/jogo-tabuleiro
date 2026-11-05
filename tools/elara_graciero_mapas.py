@@ -148,42 +148,45 @@ def masmorra_praca_morta():
     return _praca("pracam", "elara_graciero_praca_morta", "A Praça dos Escorpiões", False)
 
 
-def _leonel_1(alerta):
-    c, xs, hs = montar_fila([10, 11, 10], 14, "casa", 4105, piso="madeira_escura", parede="madeira")
-    m = c.m
-    ent, sai = m.em(0, 1, hs // 2), m.em(2, 8, hs // 2)
-    c.proteger(ent, sai)
-    c.mon(SOLDADO, 0, 7, 2); c.mon(SOLDADO, 0, 7, 6)
-    c.mon_livre(ORC, 0, 2); c.mon_livre(ARQUEIRO, 0, 2)
-    c.espalha("barril", 0, 2); c.espalha("estante", 0, 1)
-    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 5, 1)})
-    c.mon(DUAL, 1, 8, 3); c.mon(DUAL, 1, 8, 6)
-    c.mon_livre(SOLDADO, 1, 2); c.mon_livre(ORC, 1, 1)
-    c.espalha("mesa_cadeiras", 1, 1); c.espalha("estante", 1, 1)
-    c.armadilhas.append({"tipo": "rede", "pos": m.em(1, 4, 5)})
-    c.mon(SOLDADO, 2, 6, 3); c.mon(ORC, 2, 6, 6)
-    c.mon_livre(DUAL, 2, 2); c.mon_livre(ARQUEIRO, 2, 2)
-    c.espalha("barril", 2, 2); c.espalha("estante_armas", 2, 1)
-    c.armadilhas.append({"tipo": "armadilha_dardos_envenenados", "pos": m.em(2, 4, 4),
-                         "veneno_id": "veneno_escorpiao_pedra"})
-    c.fala("casa_chegada", m.em(0, 1, 2), "Narrador", "🏛️",
-           "A casa de leilões brilha de dia. Por trás do ouro e das cortinas, homens armados vigiam cada porta.", 4)
-    if alerta:       # acrescentados por último: não deslocam nada do que foi sorteado antes
-        c.mon_livre(SOLDADO, 0, 1); c.mon_livre(DUAL, 1, 1)
-        c.armadilhas.append({"tipo": "rede", "pos": m.em(2, 3, 2)})
-        c.fala("casa_alerta", m.em(1, 1, 2), "Narrador", "⚠️",
-               "Os guardas estão postados em pares, olhando as portas. Alguém avisou que viriam.", 4)
-    did, nome = ("elara_leonel_1_alerta", "A Casa de Leilões (em alerta)") if alerta else ("elara_leonel_1", "A Casa de Leilões")
-    return c.finalizar(did, nome, "masmorra", 5, {
-        "primary": obj("reach_exit", 220, 80), "secondary": []}, ent, sai, expected_party=dict(EXP5))
-
-
 def masmorra_leonel_1():
-    return _leonel_1(False)
+    """Terreno da mansão, feito à mão pelo autor no `elara_leonel_1.json`; aqui só entram falas e objetivo.
+
+    O grupo derrota todos no terreno e depois acha a entrada dos porões, nos fundos da mansão."""
+    d = copy.deepcopy(S.carregar_dungeon("elara_leonel_1.json"))
+    outras = [f for f in d["falas"] if f["id"] not in ("casa_chegada", "casa_entrada")]
+    d["falas"] = [
+        {"id": "casa_chegada", "pos": [2, 28], "falante": {"nome": "Narrador", "emoji": "🏛️"},
+         "texto": "A casa de leilões do Leonel é uma mansão no meio de um terreno cercado. Homens armados vigiam os "
+                  "jardins, e a porta da frente não vai se abrir para vocês.",
+         "trigger": {"tipo": "proximidade", "raio": 4}},
+        {"id": "casa_entrada", "pos": [d["exit"]["x"], d["exit"]["y"]], "falante": {"nome": "Narrador", "emoji": "🚪"},
+         "texto": "Nos fundos da mansão, escondida da estrada, uma escada de pedra desce para os porões.",
+         "trigger": {"tipo": "proximidade", "raio": 2}},
+    ] + outras
+    d["objectives"] = {
+        "primary": obj("reach_exit", 220, 80), "secondary": [],
+        "steps": [
+            {"id": "casa_guardas", "condition": {"type": "kill_all"},
+             "text": {"pt": "Derrote todos os guardas do terreno", "en": "Defeat all the guards on the grounds"}},
+            {"id": "casa_entrada", "condition": {"type": "reach_exit"},
+             "text": {"pt": "Encontre a entrada dos porões", "en": "Find the way into the cellars"}},
+        ],
+    }
+    return d
 
 
 def masmorra_leonel_1_alerta():
-    return _leonel_1(True)
+    """A mesma mansão com o Leonel avisado: uma dupla guarda a entrada e há uma armadilha a mais."""
+    d = masmorra_leonel_1()
+    d.update({"id": "elara_leonel_1_alerta", "name": "A Casa de Leilões (em alerta)"})
+    d["monsters"] += [{"type": SOLDADO, "pos": [16, 7], "room_id": None, "boss": False, "target": False},
+                      {"type": DUAL, "pos": [18, 7], "room_id": None, "boss": False, "target": False}]
+    d["traps"] = d["traps"] + [{"tipo": "rede", "pos": [17, 9]}]
+    d["falas"] = d["falas"] + [
+        {"id": "casa_alerta", "pos": [8, 27], "falante": {"nome": "Narrador", "emoji": "⚠️"},
+         "texto": "Os guardas estão postados em pares, olhando as entradas. Alguém avisou que viriam.",
+         "trigger": {"tipo": "proximidade", "raio": 4}}]
+    return d
 
 
 def masmorra_leonel_2():

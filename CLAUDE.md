@@ -268,7 +268,7 @@ Cais (relógio `elara_graciero`, limite 30, fato `elara_graciero_lento`) → Pra
 fala com as últimas palavras do Gilo; grava `elara_gilo_morreu`, `elara_viu_gilo_morrer` e `elara_dica_montanha`) ou morta
 (só o corpo; grava `elara_gilo_morreu`) → Casa de Leilões/Porões do Leonel, normal ou **alerta** (`elara_leonel_cauteloso`,
 vinda do bardo morto ou da traição do bardo maltratado: mais guardas e uma armadilha, sem deslocar o resto). A morte do Gilo é
-**narrada** (o validador força movimento 6 em ficha personalizada, então um Gilo ferido não ficaria parado). No ramo B a Praça é `elara_graciero_praca_pedra`: a Praça viva do arquivo com 12 escorpiões, porque eles vêm atrás do Olho, e a pedra é recompensa do objetivo ali (grava `elara_olho_recuperado`), sem dica da montanha. A conversa `elara_gilo_pertences` (`tambem_fato elara_ramo_b`, `sem_fato elara_olho_recuperado`) fica para quem chegou tarde à Praça morta; o ramo A nunca recebe o Olho na cidade. A Elara é o baú-chave da cela
+**narrada** (o validador força movimento 6 em ficha personalizada, então um Gilo ferido não ficaria parado). No ramo B a Praça é `elara_graciero_praca_pedra`: a Praça viva do arquivo com 12 escorpiões, porque eles vêm atrás do Olho, e a pedra é recompensa do objetivo ali (grava `elara_olho_recuperado`), sem dica da montanha. A conversa `elara_gilo_pertences` (`tambem_fato elara_ramo_b`, `sem_fato elara_olho_recuperado`) fica para quem chegou tarde à Praça morta; o ramo A nunca recebe o Olho na cidade. **Mansão do Leonel (2026-11-05):** `elara_leonel_1.json` é o terreno externo feito pelo autor; `masmorra_leonel_1()` lê esse arquivo e só define falas e objetivo: etapa 1 derrotar todos, etapa 2 achar a entrada dos porões em (17,8), nos fundos. `masmorra_leonel_1_alerta()` copia esse mapa e soma uma dupla na entrada, uma rede e a fala `casa_alerta`: mudou o mapa do autor, regere o alerta. Com `objectives.steps`, o principal só conclui depois de todas as etapas. `kill_all` ignora `ANIMAIS_FORA_DE_DERROTAR_TODOS` (vaca e cavalo). Teste: `python -X utf8 tools/test_elara_leonel_mansao.py`. A Elara é o baú-chave da cela
 (`elara_elara_salva`, objetivo secundário): o final sempre a diz salva. O `outro_rota` dos dois destinos do Leonel é uma
 matriz de slides condicionais (ramo, moças, Olho, bardo, Pedro/Henrique) que sempre fecha com o mistério. **Plano 5 (rota do
 Olho):** abre com `elara_dica_montanha` + `elara_ramo_a`. Testes: `python -X utf8 tools/test_tambem_fato.py`,
@@ -1087,6 +1087,7 @@ resistência enquanto o herói permanecia na mesma sala.
 > `cerca_curva` bloqueiam; `cerca_quebrada` permite passagem. `porteira_fechada`
 > bloqueia e `porteira_aberta` permite passagem; ambas têm placa PASTO e dobradiças.
 > `celeiro_medieval` ocupa 4×4, é alto e bloqueia passagem; tem miniaturas PNG/GLB próprias.
+> `mansao_medieval` ocupa 4×4, gira, é alta e bloqueia passagem; sua imagem e seu modelo estão em `assets/objetos/mansao_medieval.png` e `.glb`. Fonte editável: `mansao_medieval.blend`, gerada por `tools/create_mansao_medieval.py`; exportação do GLB por `tools/export_mansao_medieval.py`.
 > `barril_cerveja` é uma decoração 1×1 baixa e sólida, sem interação; usa a arte
 > `assets/objetos/barril_cerveja.png` e o GLB colorido `assets/objetos/barril_cerveja.glb`,
 > derivado da referência `assets/itens/barril_de_cerveja.png` sem alterar o GLB original.
