@@ -480,6 +480,7 @@
     doorStyles: {},                 // {"x,y": "portao_levadico"}, keyed by group anchor
     portcullisGroups: {},           // {"anchorX,anchorY": [[x,y], ...]}
     matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
+    stoneRoadWidth: 1,
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
   };
@@ -1525,6 +1526,7 @@
     // Preview 2D: desenha o PNG da decoração cobrindo o footprint (se d.image disponível).
     // Chão (piso) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
     const _decorDrawOrder = [...S.decorations].sort((a, b) => (isFloorDecor(a) ? 0 : 1) - (isFloorDecor(b) ? 0 : 1));
+    const roadOccupied = new Set(S.decorations.filter(d => d.type === FLOOR_STONE_ROAD_TYPE).map(d => d.pos.join(',')));
     for (const d of _decorDrawOrder) {
       if (!d.image) continue;
       const im = isWallDecor(d) ? wallImg(d.image) : objImg(d.image);
@@ -1532,6 +1534,12 @@
       const tiles = decorTiles(d);
       const _dm = decorMeta(d.type);
       if (_dm && _dm.special === "floor") {
+        if (d.type === FLOOR_STONE_ROAD_TYPE && d.road_wide) {
+          const source = objImg('caminho_pedras_terra_cruzamento.png');
+          const tile = StoneRoad.wideTile(source, StoneRoad.neighborMask(roadOccupied, d.pos[0], d.pos[1]));
+          if (tile) ctx.drawImage(tile, d.pos[0]*CELL, d.pos[1]*CELL, CELL, CELL);
+          continue;
+        }
         // Chão: preenche cada casa borda-a-borda (sem manter proporção).
         const roadAngle = d.type === FLOOR_STONE_ROAD_TYPE
           ? facingAngle2D(d.facing, d.type, d.image) : 0;
@@ -1982,8 +1990,18 @@
       sel.innerHTML = opts.map(m =>
         `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${nomeMaterial(m)}${Number(m.custo_mov) > 1 ? t("ui.editor.masmorra.barra.movimento_penalidade", { n: Number(m.custo_mov) - 1 }) : ""}</option>`).join("")
         + (!isWall ? `<option value="${FLOOR_STONE_ROAD}"${cur === FLOOR_STONE_ROAD ? " selected" : ""}>🪨 ${nomeCat("decor", FLOOR_STONE_ROAD_TYPE, "Caminho de pedra na terra")}</option>` : "");
-      sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
+      sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; buildToolbar(); };
       tb.appendChild(sel);
+      if (!isWall && cur === FLOOR_STONE_ROAD) {
+        const label = document.createElement("label"); label.textContent = t("ui.editor.masmorra.barra.largura_caminho");
+        const width = document.createElement("select"); width.id = "stone-road-width";
+        for (let n = 1; n <= 5; n++) {
+          const option = document.createElement("option"); option.value = String(n);
+          option.textContent = String(n); option.selected = n === S.stoneRoadWidth; width.appendChild(option);
+        }
+        width.onchange = e => { S.stoneRoadWidth = Number(e.target.value); };
+        label.appendChild(width); tb.appendChild(label);
+      }
       const fill = document.createElement("button");
       fill.textContent = S.matFill ? t("ui.editor.masmorra.barra.balde_on") : t("ui.editor.masmorra.barra.balde_off");
       fill.title = t("ui.editor.masmorra.barra.balde_title");
@@ -2098,10 +2116,8 @@
       ? [x, stoneRoadStroke.anchor[1]] : [stoneRoadStroke.anchor[0], y];
   }
   function stoneRoadStrokeCells() {
-    const { anchor, end } = stoneRoadStroke;
-    const dx = end[0] - anchor[0], dy = end[1] - anchor[1];
-    return Array.from({ length: Math.abs(dx || dy) + 1 }, (_, i) =>
-      [anchor[0] + Math.sign(dx) * i, anchor[1] + Math.sign(dy) * i]);
+    const { anchor, end, axis, width } = stoneRoadStroke;
+    return StoneRoad.strokeCells(anchor, end, axis, width, S.grid.w, S.grid.h);
   }
   function _paintTile(x, y) {
     const floorRoadAt = S.decorations.some(d => d.type === FLOOR_STONE_ROAD_TYPE
@@ -4352,7 +4368,7 @@
     else if (["wall", "floor", "door"].includes(S.tool)) {
       const areaMat = S.tool === "floor" ? S.matFloor : S.matWall;
       if (S.tool === "floor" && areaMat === FLOOR_STONE_ROAD) {
-        stoneRoadStroke = { anchor: [x, y], end: [x, y], axis: "x" };
+        stoneRoadStroke = { anchor: [x, y], end: [x, y], axis: "x", width: S.stoneRoadWidth };
         render();
       } else if (S.tool === "floor"
           && (areaMat === "rodamoinho" || areaMat === "rodamoinho_profundo")) {
@@ -4722,10 +4738,13 @@
       if (ev.button !== 0) return;
       const c = cellFromEvent(ev);
       if (c) updateStoneRoadStroke(c[0], c[1]);
-      const cells = stoneRoadStrokeCells();
+      const cells = stoneRoadStrokeCells(), wide = stoneRoadStroke.width > 1;
       stoneRoadStroke = null;
       if (c && S.tool === "floor" && S.matFloor === FLOOR_STONE_ROAD)
-        for (const [x, y] of cells) paintTile(x, y);
+        for (const [x, y] of cells) {
+          paintTile(x, y);
+          if (wide) S.decorations[S.decorations.length - 1].road_wide = true;
+        }
       render(); updateStatus(); return;
     }
     if (gradeEsgotoDrag) {
@@ -4955,6 +4974,7 @@
           o.intervalo_rodadas = Math.max(1, Math.min(12,
             Number(d.intervalo_rodadas ?? m.intervalo_rodadas) | 0));
         if (d.image) o.image = d.image;
+        if (d.type === FLOOR_STONE_ROAD_TYPE && d.road_wide === true) o.road_wide = true;
         // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
         if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
         if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
@@ -5583,6 +5603,7 @@
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.
       ...((d.image || decorMeta(d.type)?.image) ? { image: d.image || decorMeta(d.type).image } : {}),
+      ...(d.type === FLOOR_STONE_ROAD_TYPE && d.road_wide === true ? { road_wide: true } : {}),
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
       ...(Array.isArray(d.voffset) && d.voffset.length === 2 ? { voffset: [Number(d.voffset[0]), Number(d.voffset[1])] } : {}),

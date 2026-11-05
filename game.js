@@ -12912,6 +12912,7 @@ function renderMap(state){
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     // Chão (special:floor) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
     const decorsDrawOrder = [...decors].sort((a, b) => ((a.special === 'floor') ? 0 : 1) - ((b.special === 'floor') ? 0 : 1));
+    const stoneRoadOccupied = new Set(decors.filter(d => d.type === 'caminho_pedras_terra').map(d => d.pos.join(',')));
     for (const d of decorsDrawOrder) {
       const tiles = GS.decorTilesOf(d);
       // Only draw if at least one tile in the footprint has been explored
@@ -12948,6 +12949,11 @@ function renderMap(state){
       const _sx = _vs[0] || 1, _sy = _vs[1] || 1;
       const _oImg = d.image ? (d.special === 'wall' ? _getWallObjeto2DImg(d.image) : _getObjeto2DImg(d.image)) : null;
       if (_oImg && d.special === 'floor') {
+        if (d.type === 'caminho_pedras_terra' && d.road_wide) {
+          const tile = StoneRoad.wideTile(_getObjeto2DImg('caminho_pedras_terra_cruzamento.png'), StoneRoad.neighborMask(stoneRoadOccupied, d.pos[0], d.pos[1]));
+          if (tile) ctx.drawImage(tile, d.pos[0]*CELL, d.pos[1]*CELL, CELL, CELL);
+          continue;
+        }
         // Chão: preenche cada casa do footprint borda-a-borda (sem manter proporção).
         const roadAngle = d.type === 'caminho_pedras_terra'
           ? _facingAngle2D(d.facing, d.type, d.image) : 0;
@@ -51926,6 +51932,7 @@ function renderMap3D(state){
   // ── Decoration 3D meshes — procedural boxes/cylinders, ou miniatura extrudada ─
   {
     const decors = GS.decorations;
+    const stoneRoadOccupied = new Set(decors.filter(d => d.type === 'caminho_pedras_terra').map(d => d.pos.join(',')));
     const vistosDec = new Set();
     for (const d of decors) {
       vistosDec.add(d.id);
@@ -51982,14 +51989,17 @@ function renderMap3D(state){
 
       if (d.special === 'floor' && d.image) {
         // ── Chão: decal deitado preenchendo TODO o footprint, borda-a-borda ──
-        if (!mesh || mesh.userData.imageName !== d.image || mesh.userData.floorW !== wCells || mesh.userData.floorH !== hCells) {
+        const roadMask = d.type === 'caminho_pedras_terra' && d.road_wide ? StoneRoad.neighborMask(stoneRoadOccupied, d.pos[0], d.pos[1]) : null;
+        const roadTile = roadMask !== null ? StoneRoad.wideTile(_getObjeto2DImg('caminho_pedras_terra_cruzamento.png'), roadMask) : null;
+        const roadSig = roadTile ? `wide:${roadMask}` : '';
+        if (!mesh || mesh.userData.imageName !== d.image || mesh.userData.floorW !== wCells || mesh.userData.floorH !== hCells || mesh.userData.roadSig !== roadSig) {
           if (mesh) { g3.scene.remove(mesh); _disposeDecorMesh(mesh); }
-          mesh = _chaoDecal3D(d, wCells, hCells);
+          mesh = _chaoDecal3D(d, wCells, hCells, roadTile, roadSig);
           g3.scene.add(mesh);
           g3.decorMeshes[d.id] = mesh;
         }
         mesh.position.set(worldX, 0.222 + dFloorY, worldZ);   // logo acima do piso, sob os realces
-        if (d.type === 'caminho_pedras_terra')
+        if (d.type === 'caminho_pedras_terra' && !roadTile)
           // O eixo Z do tabuleiro inverte o sentido visual do canvas 2D.
           mesh.rotation.y = -_facingAngle2D(d.facing, d.type, d.image);
         mesh.visible = visivel;
@@ -52614,7 +52624,7 @@ function _armadilhaDecal3D(arm, x, y){
 // Chão (decoração pisável): decal DEITADO no chão que preenche TODO o footprint
 // borda-a-borda (estica a textura, sem manter proporção — é um piso). Peões andam
 // por cima. `wCells`/`hCells` = footprint efetivo (já com facing aplicado).
-function _chaoDecal3D(d, wCells, hCells){
+function _chaoDecal3D(d, wCells, hCells, roadTile=null, roadSig=''){
   const T = g3.T;
   const grp = new T.Group();
   const mat = new T.MeshBasicMaterial({ transparent: true, depthWrite: false });
@@ -52625,17 +52635,17 @@ function _chaoDecal3D(d, wCells, hCells){
   mesh.renderOrder = -1;
   mesh.userData.isGroundDecal = true;   // fora do passe de outline
   grp.add(mesh);
-  const cacheKey = '__chao_' + d.image;
+  const cacheKey = roadTile ? '__chao_road_' + roadSig : '__chao_' + d.image;
   let tex = _pawnTexCache[cacheKey];
   if(tex){ mat.map = tex; }
   else {
-    tex = new T.TextureLoader().load(_assetURL(`assets/objetos/${d.image}`));
+    tex = roadTile ? new T.CanvasTexture(roadTile) : new T.TextureLoader().load(_assetURL(`assets/objetos/${d.image}`));
     tex._shared = true;   // cacheada/reusada — _disposeDecorMesh não deve descartá-la
     _pawnTexCache[cacheKey] = tex;
     mat.map = tex;
   }
   grp.userData = { isDecor: true, decorId: d.id, imageName: d.image,
-                   floorW: wCells, floorH: hCells };
+                   floorW: wCells, floorH: hCells, roadSig };
   return grp;
 }
 

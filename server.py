@@ -18761,6 +18761,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "disable_trap_ids": ([i for i in d["disable_trap_ids"] if isinstance(i, str)]
                                      if isinstance(d.get("disable_trap_ids"), list) else None),
                 "image": (d.get("image") if isinstance(d.get("image"), str) else meta.get("image")),
+                **({"road_wide": True} if d.get("type") == "caminho_pedras_terra" and d.get("road_wide") is True else {}),
                 "model3d": (d.get("model3d") if isinstance(d.get("model3d"), str)
                             else meta.get("model3d") or DECOR_MODEL3D.get(d["type"])),
             }
@@ -47658,6 +47659,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "vscale": d.get("vscale") or [1, 1],
                 "voffset": d.get("voffset") or [0, 0],
                 "image": d.get("image"),
+                **({"road_wide": True} if d.get("type") == "caminho_pedras_terra" and d.get("road_wide") is True else {}),
                 "model3d": d.get("model3d"),
                 **({"burn_stage": d.get("burn_stage"),
                     "fire_ignited_round": d.get("fire_ignited_round"),

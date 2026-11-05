@@ -15,6 +15,7 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.editor.masmorra.barra.largura_caminho": {"pt":"Largura do caminho: ","en":"Road width: "},
   "ui.reacao_fumaca.titulo": {"pt": "Reação: Itens Arremessáveis", "en": "Reaction: Throwable Items"},
   "ui.reacao_fumaca.ataque": {"pt": "{inimigo} vai atacar {alvo}. Escolha um item para reagir:", "en": "{inimigo} is about to attack {alvo}. Choose an item to react:"},
   "ui.reacao_fumaca.efeito_fumaca": {"pt": "A bomba de fumaça deixa o golpe anunciado com desvantagem e cria uma nuvem por 2 rodadas. Consome a bomba sem gastar ações.", "en": "The Smoke Bomb gives the announced attack disadvantage and creates a cloud for 2 rounds. It consumes the bomb without spending actions."},

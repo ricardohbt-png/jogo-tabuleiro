@@ -3253,6 +3253,11 @@ durante o arrasto. Soltar confirma todas as casas; Esc/botão direito cancela.
 Recuar o cursor encurta a prévia. Outro segmento em outra direção cria a curva
 pela conexão automática. Referência de interação: manual SimCity 2013, p. 10,
 https://eaassets-a.akamaihd.net/eahelp/manuals/simcity-manuals_PC.pdf.
+O seletor de largura da ferramenta Chão oferece 1 a 5 casas (1 por padrão).
+O traçado largo grava `road_wide: true` nas casas; `src/stoneRoad.js` calcula a
+faixa e compõe uma textura de pedras com bordas conforme os vizinhos, usada no
+editor e no cliente 2D/3D. Caminhos anteriores permanecem sem essa marca e usam
+as imagens originais. Servidor e editor preservam a marca no carregamento e envio.
 Texturas: `assets/objetos/caminho_pedras_terra*.png`.
 `server.py:DECOR_TYPES` é a fonte autoritativa e `tools/export_catalog.py` publica
 a peça no seletor de decorações.
