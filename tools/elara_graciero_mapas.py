@@ -14,7 +14,8 @@ for _p in (RAIZ, os.path.join(RAIZ, "tools")):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 import server as S  # noqa: E402
-from charcos_mapas import montar_fila, obj  # noqa: E402
+from charcos_mapas import Cena, montar_fila, obj  # noqa: E402
+from gerar_campanha_sombras import Mapa  # noqa: E402
 from elara_graciero_fichas import ID_OLHO, TIPO_ESCORPIAO, TIPO_LEONEL  # noqa: E402
 
 SOLDADO, ORC, DUAL, ARQUEIRO = "soldado", "orc", "goblin_dual", "goblin_arqueiro"
@@ -87,7 +88,7 @@ def masmorra_beco():
 
 def masmorra_cais():
     return _frente("cais", 4102, [11, 11, 10], "elara_graciero_cais", "O Cais dos Leilões", "ar_livre",
-                   "\"A casa do Leonel recebe as encomendas pelo cais. A cela é nos porões, por trás da casa de "
+                   "\"A casa do Leonel recebe as encomendas pelo cais. A cela fica na mansão, escondida atrás do salão de "
                    "leilões. A irmã do mago é a do meio.\"", F_CAIS,
                    "O cais cheira a maresia e a dinheiro sujo. Em Graciero, nome de nobre se diz baixinho.")
 
@@ -151,7 +152,7 @@ def masmorra_praca_morta():
 def masmorra_leonel_1():
     """Terreno da mansão, feito à mão pelo autor no `elara_leonel_1.json`; aqui só entram falas e objetivo.
 
-    O grupo derrota todos no terreno e depois acha a entrada dos porões, nos fundos da mansão."""
+    O grupo derrota todos no terreno e depois acha a entrada, nos fundos da mansão."""
     d = copy.deepcopy(S.carregar_dungeon("elara_leonel_1.json"))
     outras = [f for f in d["falas"] if f["id"] not in ("casa_chegada", "casa_entrada")]
     d["falas"] = [
@@ -160,7 +161,7 @@ def masmorra_leonel_1():
                   "jardins, e a porta da frente não vai se abrir para vocês.",
          "trigger": {"tipo": "proximidade", "raio": 4}},
         {"id": "casa_entrada", "pos": [d["exit"]["x"], d["exit"]["y"]], "falante": {"nome": "Narrador", "emoji": "🚪"},
-         "texto": "Nos fundos da mansão, escondida da estrada, uma escada de pedra desce para os porões.",
+         "texto": "Nos fundos da mansão, escondida da estrada, uma porta de serviço leva para dentro.",
          "trigger": {"tipo": "proximidade", "raio": 2}},
     ] + outras
     d["objectives"] = {
@@ -169,7 +170,7 @@ def masmorra_leonel_1():
             {"id": "casa_guardas", "condition": {"type": "kill_all"},
              "text": {"pt": "Derrote todos os guardas do terreno", "en": "Defeat all the guards on the grounds"}},
             {"id": "casa_entrada", "condition": {"type": "reach_exit"},
-             "text": {"pt": "Encontre a entrada dos porões", "en": "Find the way into the cellars"}},
+             "text": {"pt": "Encontre a entrada da mansão", "en": "Find the way into the mansion"}},
         ],
     }
     return d
@@ -190,32 +191,65 @@ def masmorra_leonel_1_alerta():
 
 
 def masmorra_leonel_2():
-    c, xs, hs = montar_fila([12, 13], 14, "porao", 4106, piso="pedra_cinza", parede="pedra_normal")
-    m = c.m
-    ent, sai = m.em(0, 1, hs // 2), m.em(1, 11, hs // 2)
+    """Dentro da mansão: vestíbulo, salão de leilões e a sala secreta atrás da estante do salão.
+
+    Leonel e a cela da Elara só existem depois de acionar a estante. Ela não leva `key_objective`:
+    acioná-la só abre a passagem; o objetivo secundário é abrir o baú da cela."""
+    m = Mapa(41, 14)
+    m.sala(0, 1, 2, 12, 10, role="entrance", locked=False)     # vestíbulo
+    m.sala(1, 14, 2, 13, 10)                                   # salão de leilões
+    m.sala(2, 28, 2, 12, 10, locked=False)                     # sala secreta: só se liga pela estante
+    m.porta(13, 7, 0, 1)
+    c = Cena("mansao", m, 4106, piso="madeira_escura", parede="madeira")
+    hs = 10
+    ent, sai = m.em(0, 1, hs // 2), m.em(2, 11, hs // 2)
     c.proteger(ent, sai)
+    c.proteger((13, 7), (12, 7), (14, 7), (26, 6), (26, 7), (28, 6), (28, 7))
+    c.pintar(2, "pedra_cinza")
+    # 0 · Vestíbulo: luxo e guardas
+    c.deco("lareira", 0, 5, 0); c.deco("sofa_luxo", 0, 2, 0); c.deco("poltrona_luxo", 0, 8, 0)
+    c.deco("estatua_divindade", 0, 0, 0); c.deco("estatua_divindade", 0, 11, 9)
+    c.deco("mesa_banquete_luxo", 0, 5, 7)
     c.mon(SOLDADO, 0, 8, 3); c.mon(SOLDADO, 0, 8, 7)
-    c.mon_livre(ORC, 0, 2); c.mon_livre(DUAL, 0, 1); c.mon_livre(ARQUEIRO, 0, 2)
-    c.espalha("grades_prisao", 0, 2); c.espalha("barril", 0, 2)
-    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 5, 1)})
-    chefe = c.mon(TIPO_LEONEL, 1, 8, 4, alvo=True)
-    c.mon(SOLDADO, 1, 5, 3); c.mon(SOLDADO, 1, 5, 7)
-    c.mon_livre(DUAL, 1, 2); c.mon_livre(ORC, 1, 1)
-    c.espalha("barril", 1, 2); c.espalha("estante", 1, 1)
-    c.armadilhas.append({"tipo": "rede", "pos": m.em(1, 3, 5)})
-    c.bau(m.em(1, 11, 2), 100, [{"id": "carta", "texto": (
+    c.mon_livre(ORC, 0, 1); c.mon_livre(DUAL, 0, 1); c.mon_livre(ARQUEIRO, 0, 1)
+    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(0, 6, 3)})
+    # 1 · Salão de leilões: mesas para os lances, o púlpito e a estante que esconde a passagem
+    for dx, dy in ((3, 2), (6, 2), (3, 6), (6, 6)):
+        c.deco("mesa_cadeiras", 1, dx, dy)
+    c.deco("trono", 1, 9, 4); c.deco("estante", 1, 2, 0); c.deco("estante", 1, 8, 0)
+    c.deco("estante_livros", 1, 12, 2, did="mansao_estante")
+    c.deco("estante_livros", 1, 12, 7)
+    c.mon(SOLDADO, 1, 10, 7); c.mon(ORC, 1, 10, 2); c.mon(DUAL, 1, 5, 4); c.mon(ARQUEIRO, 1, 11, 5)
+    c.armadilhas.append({"tipo": "rede", "pos": m.em(1, 8, 5)})
+    # 2 · Sala secreta: Leonel e a cela da Elara
+    chefe = c.mon(TIPO_LEONEL, 2, 7, 4, alvo=True)
+    c.mon(SOLDADO, 2, 5, 2); c.mon(ORC, 2, 5, 7); c.mon(DUAL, 2, 8, 7)
+    c.deco("estante_armas", 2, 2, 0); c.deco("mesa_tortura", 2, 2, 8); c.deco("barril", 2, 0, 9)
+    for dy in (0, 1, 2, 3):
+        c.deco("grades_prisao", 2, 9, dy)
+    c.armadilhas.append({"tipo": "rede", "pos": m.em(2, 3, 5)})
+    c.bau(m.em(2, 10, 2), 100, [{"id": "carta", "texto": (
         "\"Elara, a do Templo: vendida para o nobre das montanhas. Se o mago vier, entregue-lhe a chave e diga "
         "que a pedra não importa mais.\"")}])
     c.baus[-1]["key_objective"] = True
-    c.fala("porao_chegada", m.em(0, 1, 2), "Narrador", "⛓️",
-           "Os porões cheiram a mofo e a algemas. Choro baixo vem de trás de uma parede de grades.", 4)
-    c.fala("porao_elara", m.em(1, 10, 2), "Elara", "🙏",
+    c.fala("mansao_chegada", m.em(0, 1, 2), "Narrador", "🏛️",
+           "Por dentro, a casa de leilões brilha: ouro, cortinas e guardas em cada porta. Atrás de alguma parede, "
+           "alguém chora baixo.", 4)
+    c.fala("mansao_estante", m.em(1, 10, 5), "Narrador", "🕯️",
+           "O assoalho está gasto até a estante do fundo do salão, e as velas pendem para ela: "
+           "há ar passando por trás dos livros.", 3)
+    c.fala("mansao_passagem", m.em(2, 1, 5), "Narrador", "⛓️",
+           "Atrás da parede, a mansão perde o brilho. Pedra fria, grades, e o Leonel à espera, sem pressa nenhuma.", 2)
+    c.fala("mansao_elara", m.em(2, 10, 4), "Elara", "🙏",
            "Eu sabia que viriam! Não deixem que ele me leve de novo... o homem que paga disse que alguém "
            "ainda mais forte espera a pedra.", 3)
-    d = c.finalizar("elara_leonel_2", "Os Porões do Leonel", "masmorra", 5, {
+    d = c.finalizar("elara_leonel_2", "A Mansão do Leonel", "masmorra", 5, {
         "primary": obj("kill_target", 300, 150, fato=F_LEONEL),
         "secondary": [obj("open_key_chest", 100, 0, fato=F_ELARA)]}, ent, sai,
         expected_party=dict(EXP5), saida_permitida=False)
+    d["secret_passages"] = [{"id": f"mansao_passagem_{i}", "type": "mechanism", "pos": [27, y],
+                             "key_decor_ids": ["mansao_estante"], "keys_mode": "any"}
+                            for i, y in enumerate((6, 7))]
     return d
 
 

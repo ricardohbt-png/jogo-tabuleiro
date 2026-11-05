@@ -119,15 +119,15 @@ def conversas():
 
 
 SLIDES_FINAIS = [
-    ("A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai "
+    ("A casa de leilões fica em silêncio quando o Leonel cai. Na sala secreta, a grade se abre e a Elara sai "
      "vendo a luz, magra e furiosa, mas viva.", {}),
-    ("O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+    ("O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
      {"heroi_no_grupo": "mage"}),
     ("O bardo faz uma reverência elaborada diante da Elara e ouve dela, seca, que já ouviu a piada sobre ela "
      "e não achou graça.", {"heroi_no_grupo": "bard"}),
-    ("As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, "
+    ("As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, "
      "sem acreditar que a luz do dia é para elas.", {"fato": "elara_mocas_salvas"}),
-    ("Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
+    ("Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
      "agradecendo calada.", {"fato": F_RAMO_B}),
     ("O Olho de Arveluz volta ao Templo pesado e quente. O sacerdote o toma sem agradecer e o esconde "
      "debaixo do manto, olhando para longe.", {"item_id": F.ID_OLHO}),

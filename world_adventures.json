@@ -1290,10 +1290,10 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Na sala secreta, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
         },
         {
-          "text": "O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "text": "O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1317,7 +1317,7 @@
           }
         },
         {
-          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, sem acreditar que a luz do dia é para elas.",
+          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, sem acreditar que a luz do dia é para elas.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1328,7 +1328,7 @@
           }
         },
         {
-          "text": "Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
+          "text": "Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1430,10 +1430,10 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Na sala secreta, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
         },
         {
-          "text": "O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "text": "O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1457,7 +1457,7 @@
           }
         },
         {
-          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, sem acreditar que a luz do dia é para elas.",
+          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, sem acreditar que a luz do dia é para elas.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1468,7 +1468,7 @@
           }
         },
         {
-          "text": "Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
+          "text": "Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,

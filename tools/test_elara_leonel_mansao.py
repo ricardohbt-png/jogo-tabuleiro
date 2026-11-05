@@ -1,4 +1,4 @@
-"""A mansão do Leonel: derrotar todos no terreno e só então achar a entrada dos porões.
+"""A mansão do Leonel: derrotar todos no terreno, achar a entrada e, lá dentro, a passagem secreta.
 Roda da raiz: python -X utf8 tools/test_elara_leonel_mansao.py"""
 import os
 import sys
@@ -8,6 +8,8 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RAIZ); sys.path.insert(0, os.path.join(RAIZ, "tools"))
 import server as S
 import elara_graciero_mapas as M
+import gerar_elara_graciero as GG
+from gerar_campanha_sombras import salas_alcancaveis
 
 
 def sala(defn):
@@ -67,10 +69,56 @@ class MapasTests(unittest.TestCase):
         self.assertNotIn("cortinas", f["casa_chegada"]["texto"])
         self.assertIn("mansão", f["casa_chegada"]["texto"])
         self.assertEqual(f["casa_entrada"]["pos"], [d["exit"]["x"], d["exit"]["y"]])
-        self.assertIn("porões", f["casa_entrada"]["texto"])
+        self.assertIn("mansão", f["casa_entrada"]["texto"])
+
+
+class InteriorTests(unittest.TestCase):
+    def test_interior_com_a_sala_secreta_so_pela_estante(self):
+        d = M.masmorra_leonel_2()
+        self.assertEqual(d["name"], "A Mansão do Leonel")
+        self.assertEqual(set(salas_alcancaveis(d)), {0, 1}, "Leonel e Elara só depois da passagem secreta")
+        self.assertEqual(set(salas_alcancaveis(d, passagens_abertas=True)), {0, 1, 2})
+        self.assertEqual({sp["type"] for sp in d["secret_passages"]}, {"mechanism"})
+        self.assertEqual({k for sp in d["secret_passages"] for k in sp["key_decor_ids"]}, {"mansao_estante"})
+        est = next(o for o in d["decorations"] if o["id"] == "mansao_estante")
+        self.assertEqual(est["type"], "estante_livros")
+        self.assertFalse(est.get("key_objective"), "acionar a estante não cumpre o baú da Elara")
+
+    def test_leonel_e_elara_na_sala_secreta(self):
+        d = M.masmorra_leonel_2()
+        sec = next(r for r in d["rooms"] if r["id"] == 2)
+
+        def dentro(p):
+            return sec["x"] <= p[0] < sec["x"] + sec["w"] and sec["y"] <= p[1] < sec["y"] + sec["h"]
+
+        leo = next(m for m in d["monsters"] if m["type"] == M.TIPO_LEONEL)
+        self.assertTrue(dentro(leo["pos"]) and leo["target"])
+        bau = next(c for c in d["chests"] if c["key_objective"])
+        self.assertTrue(dentro(bau["pos"]))
+        self.assertTrue(dentro(next(f for f in d["falas"] if f["falante"]["nome"] == "Elara")["pos"]))
+
+    def test_ninguem_mais_fala_em_poroes(self):
+        textos = [f["texto"] for fn in (M.masmorra_leonel_1, M.masmorra_leonel_2) for f in fn()["falas"]]
+        textos += [s["text"]["pt"] for s in M.masmorra_leonel_1()["objectives"]["steps"]]
+        textos.append(M.masmorra_leonel_2()["name"])
+        for k in ("elara_leonel_casa", "elara_leonel_casa_alerta"):
+            textos += [s["text"] for s in GG.destinos()[k]["outro_rota"]["slides"]]
+        cais = S.carregar_dungeon("elara_graciero_cais.json")
+        textos += [str(i.get("texto")) for c in cais["chests"] for i in c["items"]]
+        for t in textos:
+            self.assertNotIn("porõ", t.lower(), t)
+            self.assertNotIn("porão", t.lower(), t)
 
 
 class ObjetivoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_estante_abre_a_passagem_de_verdade(self):
+        r = sala(M.masmorra_leonel_2())
+        self.assertTrue(r._blocks_tile(27, 6))
+        r.players["p0"]["pos"] = [26, 6]
+        await r.handle_activate_decor_mechanism("p0", "mansao_estante")
+        self.assertFalse(r._blocks_tile(27, 6))
+        self.assertFalse(r._blocks_tile(27, 7))
+
     async def test_chegar_a_entrada_com_inimigos_vivos_nao_conclui(self):
         r = sala(M.masmorra_leonel_1())
         r.players["p0"]["pos"] = list(r.exit_pos)

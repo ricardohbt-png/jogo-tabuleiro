@@ -3216,7 +3216,7 @@
         "nome": "Narrador",
         "emoji": "🚪"
       },
-      "texto": "Nos fundos da mansão, escondida da estrada, uma escada de pedra desce para os porões.",
+      "texto": "Nos fundos da mansão, escondida da estrada, uma porta de serviço leva para dentro.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 2
@@ -4685,8 +4685,8 @@
           "type": "reach_exit"
         },
         "text": {
-          "pt": "Encontre a entrada dos porões",
-          "en": "Find the way into the cellars"
+          "pt": "Encontre a entrada da mansão",
+          "en": "Find the way into the mansion"
         }
       }
     ]

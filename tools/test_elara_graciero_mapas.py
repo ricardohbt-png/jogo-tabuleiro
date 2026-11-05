@@ -32,7 +32,7 @@ class MapasTests(unittest.TestCase):
     def test_salas_alcancaveis_e_nd_contido(self):
         for arq, f in M.ARQUIVOS.items():
             d = f()
-            self.assertEqual(len(salas_alcancaveis(d)), len(d["rooms"]), arq)
+            self.assertEqual(len(salas_alcancaveis(d, passagens_abertas=True)), len(d["rooms"]), arq)
             poder = d["expected_party"]["heroes"] * d["expected_party"]["level"]
             teto = 1.2 if arq == "elara_graciero_praca_pedra.json" else 0.8   # luta pela pedra: Difícil de propósito
             for rid, nd in M.nd_por_sala(d).items():
