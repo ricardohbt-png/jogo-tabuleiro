@@ -58,8 +58,7 @@ class VariosRefensTests(unittest.TestCase):
     def test_validador(self):
         ok, _ = S.validar_dungeon(mapa(prisoners=[{"pos": [3, 3]}, {"pos": [4, 3]}]))
         self.assertTrue(ok)
-        treze = [{"pos": [x, 5]} for x in range(13)] if False else \
-            [{"pos": [x % 12, 2 + x // 12]} for x in range(13)]
+        treze = [{"pos": [x % 12, 2 + x // 12]} for x in range(13)]
         self.assertFalse(S.validar_dungeon(mapa(prisoners=treze))[0])
         self.assertFalse(S.validar_dungeon(mapa(prisoners=[{"pos": [3, 3]}, {"pos": [3, 3]}]))[0])
         self.assertFalse(S.validar_dungeon(

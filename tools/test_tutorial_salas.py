@@ -222,7 +222,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         packed=S.foto_empacotar(r._montar_foto(),onde='masmorra')
         body=S.foto_desempacotar(packed)
         self.assertTrue(body['sala']['training_mode'])
-        self.assertEqual(body['sala']['prisoner']['hp'],3)
+        self.assertEqual(body['sala']['prisoners'][0]['hp'],3)
         self.assertEqual(body['herois']['paladin']['licao_atual'],'treino_maos')
         fresh,q=room('paladin')
         restored=fresh._foto_aplicar_sala(body,{'paladin':'new_connection'},D)
