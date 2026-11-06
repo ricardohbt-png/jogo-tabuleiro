@@ -136849,7 +136849,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_0"
         },
         {
           "type": "soldado",
@@ -136859,7 +136860,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_1"
         },
         {
           "type": "orc",
@@ -136869,7 +136871,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_2"
         },
         {
           "type": "orc",
@@ -136879,7 +136882,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_3"
         },
         {
           "type": "orc",
@@ -136889,7 +136893,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_4"
         },
         {
           "type": "goblin_dual",
@@ -136899,7 +136904,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_5"
         },
         {
           "type": "goblin_dual",
@@ -136909,7 +136915,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_6"
         },
         {
           "type": "goblin_dual",
@@ -136919,7 +136926,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_7"
         },
         {
           "type": "goblin_arqueiro",
@@ -136929,7 +136937,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_8"
         },
         {
           "type": "goblin_arqueiro",
@@ -136939,7 +136948,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_9"
         },
         {
           "type": "goblin_arqueiro",
@@ -136949,47 +136959,52 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 0,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_10"
         },
         {
-          "type": "soldado",
+          "type": "capanga",
           "pos": [
             11,
             5
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_11"
         },
         {
-          "type": "soldado",
+          "type": "capanga",
           "pos": [
             14,
             5
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_12"
         },
         {
-          "type": "soldado",
+          "type": "capanga",
           "pos": [
             10,
             4
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_13"
         },
         {
-          "type": "soldado",
+          "type": "capanga",
           "pos": [
             15,
             4
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_14"
         },
         {
           "type": "goblin_dual",
@@ -136999,7 +137014,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_15"
         },
         {
           "type": "goblin_dual",
@@ -137009,7 +137025,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_16"
         },
         {
           "type": "goblin_dual",
@@ -137019,7 +137036,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_17"
         },
         {
           "type": "orc",
@@ -137029,7 +137047,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_18"
         },
         {
           "type": "orc",
@@ -137039,7 +137058,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_19"
         },
         {
           "type": "orc",
@@ -137049,7 +137069,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_20"
         },
         {
           "type": "goblin_arqueiro",
@@ -137059,7 +137080,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_21"
         },
         {
           "type": "goblin_arqueiro",
@@ -137069,7 +137091,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_22"
         },
         {
           "type": "goblin_arqueiro",
@@ -137079,7 +137102,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_23"
         },
         {
           "type": "goblin_arqueiro",
@@ -137089,7 +137113,8 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 1,
           "boss": false,
-          "target": false
+          "target": false,
+          "source_id": "mob_24"
         }
       ],
       "chests": [
@@ -137118,6 +137143,7 @@ window.EDITOR_DUNGEONS = [
       ],
       "traps": [
         {
+          "id": "trap_0",
           "tipo": "fosso_estacas",
           "pos": [
             8,
@@ -137125,6 +137151,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_1",
           "tipo": "rede",
           "pos": [
             15,
@@ -137132,6 +137159,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_2",
           "tipo": "armadilha_urso",
           "pos": [
             16,
@@ -137139,6 +137167,7 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "trap_3",
           "tipo": "armadilha_dardos_envenenados",
           "pos": [
             15,
@@ -199013,4 +199042,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

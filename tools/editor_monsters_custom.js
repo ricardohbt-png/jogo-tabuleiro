@@ -4209,6 +4209,10 @@ window.EDITOR_CUSTOM_MONSTERS = [
     ],
     "oriented": false,
     "porte": "medio",
+    "vscale": [
+      0.85,
+      0.85
+    ],
     "spawn_min": 0,
     "spawn_max": 0,
     "undead": false,
