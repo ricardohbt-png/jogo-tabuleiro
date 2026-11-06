@@ -143,7 +143,7 @@ async def main():
         ordenados = sorted(servos, key=lambda a: (-a["initiative"], -a["dex"], a["id"]))
         r.animados_order = [a["id"] for a in ordenados]
         r.animados_done = set()
-        r.prisioneiro_done = False
+        r.prisioneiros_done = set()
         return r, p
 
     # [8] O servo da vez é o de maior iniciativa
@@ -298,7 +298,7 @@ async def main():
     await r.handle_encerrar_animado("m", "s_a")
     check("ainda em servo", r._animados_atual("m") == "s_b")
     await r.handle_encerrar_animado("m", "s_b")
-    check("servos esgotados -> prisioneiro", r._animados_atual("m") == "prisoner")
+    check("servos esgotados -> prisioneiro", r._animados_atual("m") == "refem_0")
     check("janela ainda aberta", fechou_pr == [])
     await r.handle_encerrar_animado("m", "prisoner")
     check("prisioneiro encerrado fecha a janela", fechou_pr == ["m"])

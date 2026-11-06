@@ -2064,6 +2064,7 @@ window.LANG_ERROS = {
     "en": "You can't cast right now.",
     "pt": "Você não consegue conjurar agora."
   },
+  "erro.refem_de_treino_so_anda_guiado": {"en":"The training hostage can only be guided.","pt":"O refém do treinamento só anda guiado."},
   "erro.voce_nao_controla_este_prisioneiro": {
     "en": "You don't control this prisoner.",
     "pt": "Você não controla este prisioneiro."

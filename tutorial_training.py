@@ -225,7 +225,7 @@ class TutorialTraining:
         if not pr or not pr.get("training_refem"):
             return
         self.prisoner = None
-        self.prisioneiro_done = True
+        self.prisioneiros_done.add(pr.get("id"))
         for h in self.players.values():
             if h.get("protetor_alvo") in (pr.get("id"), "__prisioneiro__"):
                 h["protetor_ativo"] = False; h["protetor_alvo"] = None
@@ -578,7 +578,7 @@ class TutorialTraining:
         modelo = self.training_state.get("refem_modelo")
         if p["class_id"] == "paladin" and modelo and (self.prisoner is None or self.prisoner.get("training_refem")):
             self.prisoner = deepcopy(modelo)   # volta à casa de origem, inteiro
-            self.prisioneiro_done = False
+            self.prisioneiros_done.clear()
             p["protetor_ativo"] = False; p["protetor_alvo"] = None
             self.training_state.pop("paladin", None)
         await self._verificar_falas(p, room)

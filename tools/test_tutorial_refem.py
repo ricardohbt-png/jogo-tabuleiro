@@ -19,7 +19,7 @@ CAMINHO = [[0, -1], [-1, 0], [-1, 0], [-1, 0], [0, 1]]   # 35,25 -> 35,24 -> 34,
 def _abrir_janela(r, p):
     r.prisoner.update(freed=True, rescuer_pid=p['id'], moves_left=6)
     r.animados_phase_pid = p['id']
-    r.animados_order = []; r.animados_done = set(); r.prisioneiro_done = False
+    r.animados_order = []; r.animados_done = set(); r.prisioneiros_done = set()
 
 
 async def _ate_guiar(cls='paladin'):
@@ -236,7 +236,7 @@ class FluxoRealTests(unittest.IsolatedAsyncioTestCase):
         await r.handle_end_turn(pid)                              # passo 1 do guia: abre a vez do refém
         self.assertEqual(r.animados_phase_pid, pid)
         self.assertEqual(r.prisoner['moves_left'], 6)
-        self.assertEqual(r._animados_atual(pid), 'prisoner')      # já vem selecionado para o cliente
+        self.assertEqual(r._animados_atual(pid), 'refem_0')      # já vem selecionado para o cliente
         self.assertEqual(r._game_state_payload()['animados_atual'][pid], 'prisoner')
         await r.handle_mover_prisioneiro_caminho(pid, CAMINHO)     # o que o clique na casa envia
         self.assertEqual(_erros(r), [])

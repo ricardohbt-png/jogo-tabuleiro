@@ -1,5 +1,6 @@
 """Lista de reféns por mapa, com compatibilidade com o refém único."""
 import ast
+import asyncio
 import copy
 import os
 import sys
@@ -12,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
 from test_decor_roundtrip import _defn_base
 from test_elara_leonel_mansao import sala
+from test_handler_smoke import FakeWS
 
 
 def mapa(**extra):
@@ -101,14 +103,6 @@ PERMITIDOS = {
     ("server.py", "_refem_chave_cliente"),
     ("server.py", "_refem_chave_entidade"),
     ("server.py", "_game_state_payload"),
-    # Janela de movimento e libertar: saem na Task 3.
-    ("server.py", "_animados_atual"),
-    ("server.py", "_zerar_turno_da_peca"),
-    ("server.py", "handle_encerrar_animado"),
-    ("server.py", "handle_end_turn"),
-    ("server.py", "handle_libertar_prisioneiro"),
-    ("server.py", "handle_mover_prisioneiro_caminho"),
-    ("server.py", "handle_mover_prisioneiro"),
     # Objetivo de resgate: sai na Task 4.
     ("server.py", "_objetivo_cumprido"),
     # Tutorial do Paladino: um refém só, por construção.
@@ -319,6 +313,363 @@ class MigracaoDoServidorTests(unittest.IsolatedAsyncioTestCase):
         r._gerar_loja_pergaminhos = lambda: None
         await r._voltar_para_cidade()
         self.assertFalse(any(pr.get("rodamoinho_profundo_preso") for pr in r.prisoners))
+
+
+def dono_e_janela(prisoners, heroi=(5, 5), **extra):
+    """Sala com o herói em `heroi` e o fim do turno sem avançar a iniciativa."""
+    r = sala(mapa(prisoners=prisoners, **extra))
+    p = r.players["p0"]
+    p["pos"] = list(heroi)
+    r._is_turn = lambda pid: True
+
+    async def nada(*a, **k):
+        pass
+    r._advance_initiative = nada
+    return r, p
+
+
+def livres(r, *refens, modo="guiar", dono="p0"):
+    for pr in refens:
+        pr.update(freed=True, rescuer_pid=dono, rescuer_original=dono, modo=modo)
+
+
+def cheb(a, b):
+    return max(abs(a[0] - b[0]), abs(a[1] - b[1]))
+
+
+def com_faixas(r, destino="entrada"):
+    r.objectives = {"primary": {"type": "rescue_prisoner", "destino": destino,
+                                "faixas": [{"de": 0, "ate": 99}]}, "secondary": []}
+
+
+class LibertarJanelaSeguirTests(unittest.IsolatedAsyncioTestCase):
+    async def test_libertar_escolhe_e_gasta_acao(self):
+        r, p = dono_e_janela([{"pos": [4, 5]}, {"pos": [6, 5]}])
+        a, b = r.prisoners
+        await r.handle_libertar_prisioneiro("p0", "refem_1")
+        self.assertTrue(b["freed"])
+        self.assertFalse(a["freed"])
+        self.assertEqual(b["rescuer_pid"], "p0")
+        self.assertTrue(p["action_done"])
+        await r.handle_libertar_prisioneiro("p0", "refem_0")
+        self.assertFalse(a["freed"])
+
+    async def test_libertar_sem_id_pega_o_adjacente(self):
+        r, p = dono_e_janela([{"pos": [9, 9]}, {"pos": [6, 5]}])
+        a, b = r.prisoners
+        await r.handle_libertar_prisioneiro("p0")
+        self.assertTrue(b["freed"])
+        self.assertFalse(a["freed"])
+
+    async def test_libertar_longe_recusado(self):
+        r, p = dono_e_janela([{"pos": [9, 9]}])
+        await r.handle_libertar_prisioneiro("p0", "refem_0")
+        self.assertFalse(r.prisoners[0]["freed"])
+        self.assertFalse(p["action_done"])
+
+    async def test_janela_so_com_guiados_em_ordem(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}, {"pos": [2, 4]}, {"pos": [9, 9]}])
+        a, b, c = r.prisoners
+        livres(r, a, b)
+        livres(r, c, modo="seguir")
+        await r.handle_end_turn("p0")
+        self.assertEqual(r.animados_phase_pid, "p0")
+        self.assertEqual(r._animados_atual("p0"), "refem_0")
+        self.assertEqual((a["moves_left"], b["moves_left"]), (6, 6))
+        await r.handle_mover_prisioneiro("p0", 1, 0, refem_id="refem_1")
+        self.assertEqual(b["pos"], [2, 4])                     # fora da vez
+        await r.handle_mover_prisioneiro("p0", 1, 0)           # sem id: o da vez
+        self.assertEqual(a["pos"], [3, 2])
+        await r.handle_encerrar_animado("p0", "refem_0")
+        self.assertEqual(a["moves_left"], 0)
+        self.assertEqual(r._animados_atual("p0"), "refem_1")
+        await r.handle_mover_prisioneiro_caminho("p0", [[1, 0], [1, 0]], "refem_1")
+        self.assertEqual(b["pos"], [4, 4])
+        await r.handle_encerrar_animado("p0", "refem_1")
+        self.assertIsNone(r.animados_phase_pid)
+        self.assertEqual(r.prisioneiros_done, set())
+
+    async def test_cliente_antigo_ve_o_primeiro_como_prisoner(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}, {"pos": [2, 4]}])
+        a, b = r.prisoners
+        livres(r, a, b)
+        await r.handle_end_turn("p0")
+        est = r._game_state_payload()
+        self.assertEqual(est["animados_atual"]["p0"], "prisoner")
+        await r.handle_encerrar_animado("p0", "prisoner")      # alias aponta o da vez
+        est = r._game_state_payload()
+        self.assertEqual(est["animados_atual"]["p0"], "refem_1")
+        self.assertEqual(est["animados_done"], ["prisoner"])
+        await r.handle_encerrar_animado("p0", "prisoner")
+        self.assertIsNone(r.animados_phase_pid)
+
+    async def test_modo_so_do_dono(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}])
+        pr = r.prisoners[0]
+        livres(r, pr)
+        r.players["p1"] = S.make_player("p1", "H1", "mage", 1)
+        r._is_turn = lambda pid: False
+        await r.handle_set_modo_refem("p1", "refem_0", "seguir")
+        self.assertEqual(pr["modo"], "guiar")
+        await r.handle_set_modo_refem("p0", "refem_0", "inventado")
+        self.assertEqual(pr["modo"], "guiar")
+        await r.handle_set_modo_refem("p0", "refem_0", "seguir")
+        self.assertEqual(pr["modo"], "seguir")
+        self.assertFalse(p["action_done"])
+        self.assertFalse(p["bonus_action_used"])
+
+    async def test_modo_do_cativo_recusado(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}])
+        await r.handle_set_modo_refem("p0", "refem_0", "seguir")
+        self.assertEqual(r.prisoners[0]["modo"], "guiar")
+
+    async def test_seguir_na_janela_fecha_se_nao_sobra_ninguem(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}])
+        pr = r.prisoners[0]
+        livres(r, pr)
+        await r.handle_end_turn("p0")
+        self.assertEqual(r.animados_phase_pid, "p0")
+        await r.handle_set_modo_refem("p0", "refem_0", "seguir")
+        self.assertIsNone(r.animados_phase_pid)
+
+    async def test_voltar_a_guiar_na_janela_nao_da_outra_vez(self):
+        """Quem já seguiu neste turno não ganha a vez de andar à mão."""
+        r, p = dono_e_janela([{"pos": [2, 2]}, {"pos": [9, 9]}])
+        a, b = r.prisoners
+        livres(r, a)
+        livres(r, b, modo="seguir")
+        await r.handle_end_turn("p0")
+        await r.handle_set_modo_refem("p0", "refem_1", "guiar")
+        await r.handle_encerrar_animado("p0", "refem_0")
+        self.assertIsNone(r.animados_phase_pid)
+
+    async def test_seguir_anda_sem_abrir_janela(self):
+        r, p = dono_e_janela([{"pos": [1, 5]}], heroi=(5, 5))
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        passos = []
+
+        async def broadcast(msg, **k):
+            if msg.get("type") == "entity_step":
+                passos.append(msg)
+        r.broadcast = broadcast
+        await r.handle_end_turn("p0")
+        self.assertIsNone(r.animados_phase_pid)
+        self.assertEqual(cheb(pr["pos"], p["pos"]), 1)
+        self.assertEqual(len(passos), 3)
+        self.assertEqual({(m["kind"], m["id"]) for m in passos}, {("prisoner", "refem_0")})
+        self.assertEqual(passos[-1]["to"], pr["pos"])
+
+    async def test_seguir_limita_a_seis_casas(self):
+        r, p = dono_e_janela([{"pos": [0, 5]}], heroi=(10, 5))
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        await r.handle_end_turn("p0")
+        self.assertEqual(pr["pos"], [6, 5])
+        self.assertEqual(pr["moves_left"], 0)
+
+    async def test_seguir_nao_empilha(self):
+        r, p = dono_e_janela([{"pos": [1, 4]}, {"pos": [1, 5]}, {"pos": [1, 6]}], heroi=(4, 5))
+        livres(r, *r.prisoners, modo="seguir")
+        await r.handle_end_turn("p0")
+        casas = [tuple(pr["pos"]) for pr in r.prisoners]
+        self.assertEqual(len(set(casas)), 3)
+        self.assertNotIn(tuple(p["pos"]), casas)
+        for pr in r.prisoners:
+            self.assertEqual(cheb(pr["pos"], p["pos"]), 1)
+
+    async def test_seguir_sem_caminho_fica_parado(self):
+        d = mapa(prisoners=[{"pos": [1, 5]}])
+        for y in range(12):
+            d["tiles"][y][3] = S.WALL
+        r = sala(d)
+        p = r.players["p0"]
+        p["pos"] = [8, 5]
+        r._is_turn = lambda pid: True
+
+        async def nada(*a, **k):
+            pass
+        r._advance_initiative = nada
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        await r.handle_end_turn("p0")
+        self.assertEqual(pr["pos"], [1, 5])
+        self.assertIsNone(r.animados_phase_pid)
+
+    async def test_seguir_dispara_armadilha(self):
+        r, p = dono_e_janela([{"pos": [1, 5]}], heroi=(5, 5))
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        arm = S.make_authored_trap({"tipo": "buraco", "pos": [2, 5]})
+        r.armadilhas = [arm]
+        disparos = []
+
+        async def disparar(alvo, a):
+            disparos.append((alvo, a))
+        r._disparar_armadilha = disparar
+        await r.handle_end_turn("p0")
+        self.assertEqual(len(disparos), 1)
+        self.assertIs(disparos[0][0], pr)
+
+    async def test_seguidor_morto_na_armadilha_para(self):
+        r, p = dono_e_janela([{"pos": [1, 5]}], heroi=(5, 5))
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        r.armadilhas = [S.make_authored_trap({"tipo": "buraco", "pos": [2, 5]})]
+
+        async def disparar(alvo, a):
+            await r._prisioneiro_morre(alvo)
+        r._disparar_armadilha = disparar
+        await r.handle_end_turn("p0")
+        self.assertEqual(pr["pos"], [2, 5])
+
+    async def test_chegada_tira_do_mapa(self):
+        r, p = dono_e_janela([{"pos": [3, 1]}, {"pos": [9, 9]}], heroi=(8, 8))
+        a, b = r.prisoners
+        com_faixas(r)
+        livres(r, a, b)
+        await r.handle_end_turn("p0")
+        await r.handle_mover_prisioneiro("p0", -1, 0)          # a escada é (1,1)
+        self.assertTrue(a["salvo"])
+        self.assertEqual(a["pos"], [-1, -1])
+        self.assertEqual(r._refens_no_mapa(), [b])
+        self.assertEqual(r._animados_atual("p0"), "refem_1")
+        self.assertFalse(tem(r._alvos_na_area(2, 1, 3), a))
+        self.assertTrue(r._tile_livre_para_animado(2, 1, "qualquer"))
+        self.assertIsNone(r._refem_por_id("refem_0"))
+        self.assertIsNone(r._protetor_target("refem_0"))
+        hp = a["hp"]
+        r.armadilhas = [{"id": "t", "tipo": "armadilha_incendiaria", "pos": [9, 9],
+                         "efeitos_ativos": [{"alvo_id": "refem_0", "valor": "1", "elemento": "fogo",
+                                             "rodadas_restantes": 1}]}]
+        await r._processar_efeitos_armadilha_turno()
+        self.assertEqual(a["hp"], hp)
+
+    async def test_chegada_no_modo_seguir_e_na_saida(self):
+        r, p = dono_e_janela([{"pos": [6, 5]}], heroi=(10, 10), exit={"x": 9, "y": 9})
+        pr = r.prisoners[0]
+        com_faixas(r, "saida")
+        livres(r, pr, modo="seguir")
+        self.assertEqual(r._destino_resgate(), r.exit_pos)
+        await r.handle_end_turn("p0")
+        self.assertTrue(pr["salvo"])
+        self.assertEqual(pr["pos"], [-1, -1])
+
+    async def test_libertar_ao_lado_do_destino_ja_conta(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}], heroi=(3, 3))
+        com_faixas(r)
+        await r.handle_libertar_prisioneiro("p0", "refem_0")
+        self.assertTrue(r.prisoners[0]["salvo"])
+
+    async def test_ultima_chegada_fecha_a_janela(self):
+        r, p = dono_e_janela([{"pos": [4, 1]}], heroi=(8, 8))
+        pr = r.prisoners[0]
+        com_faixas(r)
+        livres(r, pr)
+        await r.handle_end_turn("p0")
+        await r.handle_mover_prisioneiro_caminho("p0", [[-1, 0], [-1, 0], [-1, 0]])
+        self.assertTrue(pr["salvo"])
+        self.assertIsNone(r.animados_phase_pid)
+
+    async def test_mapa_sem_faixas_nao_some(self):
+        r, p = dono_e_janela([{"pos": [3, 1]}], heroi=(8, 8))
+        pr = r.prisoners[0]
+        r.objectives = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+        livres(r, pr)
+        await r.handle_end_turn("p0")
+        await r.handle_mover_prisioneiro("p0", -1, 0)
+        self.assertEqual(pr["pos"], [2, 1])
+        self.assertFalse(pr["salvo"])
+
+    def test_destino_padrao_sem_campo(self):
+        r = sala(mapa(prisoners=[{"pos": [3, 3]}]))
+        r.objectives = {"primary": {"type": "rescue_prisoner"}, "secondary": []}
+        self.assertEqual(r._destino_resgate(), r.stairs_pos)
+        r.objectives = {"primary": {"type": "rescue_prisoner", "destino": "saida"}, "secondary": []}
+        self.assertIsNone(r._destino_resgate())
+
+    async def test_controle_passa_ao_mais_proximo(self):
+        r, p = dono_e_janela([{"pos": [1, 5]}], heroi=(10, 10))
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        p["alive"] = False
+        q = r.players["p1"] = S.make_player("p1", "H1", "mage", 1)
+        q.update(alive=True, pos=[5, 5])
+        await r.handle_end_turn("p1")
+        self.assertEqual(pr["rescuer_pid"], "p1")
+        self.assertEqual(cheb(pr["pos"], q["pos"]), 1)
+
+    async def test_solo_grupo_refem_do_extra(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}, {"pos": [9, 2]}])
+        a, b = r.prisoners
+        x = r.players["x1"] = S.make_player("x1", "Extra", "mage", 1)
+        x.update(alive=True, pos=[3, 2], controlador="p0")
+        await r.handle_libertar_prisioneiro("x1", "refem_0")
+        self.assertEqual(a["rescuer_pid"], "x1")
+        await r.handle_end_turn("p0")                          # não é dele: nada abre
+        self.assertIsNone(r.animados_phase_pid)
+        await r.handle_end_turn("x1")
+        self.assertEqual(r.animados_phase_pid, "x1")
+        self.assertEqual(r._animados_atual("x1"), "refem_0")
+        await r.handle_set_modo_refem("x1", "refem_0", "seguir")
+        self.assertIsNone(r.animados_phase_pid)
+        x["pos"] = [8, 8]
+        await r.handle_end_turn("x1")
+        self.assertEqual(a["moves_left"], 0)
+        self.assertEqual(cheb(a["pos"], x["pos"]), 1)
+
+    async def test_refem_de_treino_nao_troca_de_modo(self):
+        r, p = dono_e_janela([{"pos": [2, 2]}])
+        pr = r.prisoners[0]
+        livres(r, pr)
+        pr["training_refem"] = True
+        await r.handle_set_modo_refem("p0", "refem_0", "seguir")
+        self.assertEqual(pr["modo"], "guiar")
+
+    async def test_turno_nao_processa_refem_que_morreu_no_laco(self):
+        r = dois_libertos()
+        a, b = r.prisoners
+        vistos = []
+
+        async def turno(pr):
+            vistos.append(pr)
+            b["alive"] = False
+        r._processar_turno_do_refem = turno
+        await r._processar_prisioneiro_turno()
+        self.assertEqual(vistos, [a])
+
+    async def test_seguir_nao_atravessa_objeto_solido(self):
+        r, p = dono_e_janela([{"pos": [1, 5]}], heroi=(5, 5))
+        pr = r.prisoners[0]
+        livres(r, pr, modo="seguir")
+        r._decor_block_tiles = {(3, y) for y in range(12)}
+        await r.handle_end_turn("p0")
+        self.assertEqual(pr["pos"], [1, 5])
+
+    async def test_mensagens_passam_pelo_handler(self):
+        """`refem_id` e `set_modo_refem` chegam aos handlers pelo laço de conexão real."""
+        asyncio.get_running_loop().slow_callback_duration = 5   # o laço real é lento em modo debug
+        salas = {}
+
+        def preparar():
+            r = next(x for x in S.rooms.values() if "Refem" in [p["name"] for p in x.players.values()])
+            salas["r"] = r
+            p = next(iter(r.players.values()))
+            p.update(class_id="warrior", alive=True)
+            r.load_authored_dungeon(mapa(prisoners=[{"pos": [4, 5]}, {"pos": [6, 5]}]))
+            r.phase = "playing"
+            p["pos"] = [5, 5]
+            r._is_turn = lambda pid: True
+            return {"type": "libertar_prisioneiro", "refem_id": "refem_1"}
+
+        ws = FakeWS([{"type": "create_room", "name": "Refem"}, preparar,
+                     {"type": "set_modo_refem", "refem_id": "refem_1", "modo": "seguir"}])
+        await S.handler(ws)
+        a, b = salas["r"].prisoners
+        self.assertFalse(a["freed"])
+        self.assertTrue(b["freed"])
+        self.assertEqual(b["modo"], "seguir")
+        self.assertEqual(ws.erros(), [])
 
 
 if __name__ == "__main__":

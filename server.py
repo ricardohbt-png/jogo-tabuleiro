@@ -3832,7 +3832,7 @@ FOTO_SALA_CATEGORIAS = {
     "_smoke_reaction": "janela", "_smoke_hold": "janela", "_smoke_command_task": "janela",
     "_pending_metamorfose": "janela", "_pending_dungeon_entry": "janela",
     "animados_phase_pid": "janela", "animados_order": "janela",
-    "animados_done": "janela", "prisioneiro_done": "janela",
+    "animados_done": "janela", "prisioneiros_done": "janela",
     "_emendando": "janela",
     # efêmeros
     "gm_log": "efemero", "_combat_damage_events": "efemero",
@@ -13513,7 +13513,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.animados_phase_pid = None  # pid no "turno dos servos" (logo apÃ³s o mago)
         self.animados_order = []        # ids dos servos na ordem de iniciativa da janela atual
         self.animados_done = set()      # ids dos servos que jÃ¡ encerraram a vez nesta janela
-        self.prisioneiro_done = False   # o prisioneiro jÃ¡ encerrou a vez nesta janela
+        self.prisioneiros_done = set()   # reféns que já encerraram a vez nesta janela
         self.last_stand_pid = None      # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
         self.last_stand_event = None    # asyncio.Event sinalizado ao fechar a janela
         self.last_stand_timer_task = None
@@ -20050,7 +20050,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.animados_phase_pid = None   # ponteiro de turno transitÃ³rio (zera em qualquer entrada)
         self.animados_order = []         # idem â€” a fila nunca sobrevive a uma entrada
         self.animados_done = set()
-        self.prisioneiro_done = False
+        self.prisioneiros_done = set()
         self.last_stand_pid = None   # idem â€” nunca deve sobreviver a uma nova entrada
 
         # A masmorra sÃ³ Ã© GERADA na 1Âª entrada da expediÃ§Ã£o (ou apÃ³s concluÃ­da).
@@ -30158,11 +30158,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.prisoners = [valor]
 
     def _refem_por_id(self, rid):
-        """Refém pelo id `refem_N`; None, "prisoner" e "__prisioneiro__" dão `self.prisoner`."""
+        """Refém pelo id `refem_N`; None, "prisoner" e "__prisioneiro__" dão `self.prisoner`.
+        Quem já chegou a salvo saiu do mapa e não é mais achado."""
         if rid in (None, "prisoner", "__prisioneiro__"):
-            return self.prisoner
+            pr = self.prisoner
+            return None if pr and pr.get("salvo") else pr
         for pr in self.prisoners:
-            if pr.get("id") == rid:
+            if pr.get("id") == rid and not pr.get("salvo"):
                 return pr
         return None
 
@@ -30180,6 +30182,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _refem_chave_entidade(self, pr):
         """Chave de entidade do refém; o cliente só conhece `pr:singleton` até a Task 5."""
         return "pr:singleton" if pr is self.prisoner else f"pr:{pr.get('id')}"
+
+    def _peca_chave_cliente(self, peca_id):
+        """Peça da janela pós-turno para o cliente, que até a Task 5 só conhece "prisoner"."""
+        pr = self._refem_por_id(peca_id) if peca_id is not None else None
+        return "prisoner" if pr is not None and pr is self._refem_por_id(None) else peca_id
+
+    def _refens_do_dono(self, pid, modo):
+        """Reféns libertos no mapa que este herói controla, num modo."""
+        return [pr for pr in self._refens_no_mapa()
+                if pr.get("freed") and pr.get("rescuer_pid") == pid
+                and pr.get("modo", "guiar") == modo]
+
+    def _refem_da_mensagem(self, pid, rid=None):
+        """Refém de uma mensagem do cliente. Sem id (ou com o apelido antigo): o da vez
+        deste herói, senão o primeiro que ele controla, senão o primeiro do mapa."""
+        if rid not in (None, "prisoner", PROTETOR_PRISIONEIRO_ID):
+            return self._refem_por_id(rid)
+        meus = [pr for pr in self._refens_no_mapa()
+                if pr.get("freed") and pr.get("rescuer_pid") == pid]
+        atual = self._animados_atual(pid)
+        return (next((pr for pr in meus if pr.get("id") == atual), None)
+                or next(iter(meus), None) or self._refem_por_id(None))
 
     def _foto_aplicar_sala(self, corpo, destino, defn):
         """Renomeia os ids da foto (pid antigo → pid desta sessão pela classe
@@ -45081,8 +45105,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Quem este jogador controla AGORA na janela pós-turno.
 
         Derivado, nunca armazenado: o primeiro de animados_order que ainda não
-        encerrou e consegue agir; esgotados os servos, o prisioneiro liberto que
-        ele resgatou; esgotado tudo, None (a janela pode fechar).
+        encerrou e consegue agir; esgotados os servos, cada refém que ele guia,
+        na ordem do mapa; esgotado tudo, None (a janela pode fechar).
         """
         if self.animados_phase_pid != pid:
             return None
@@ -45096,11 +45120,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             a = por_id.get(aid)
             if a and not a.get("dominado_por_monstro") and self._animado_pode_agir(a):
                 return aid
-        pr = self.prisoner
-        if (not self.prisioneiro_done and pr and pr.get("freed") and pr.get("alive")
-                and pr.get("rescuer_pid") == pid
-                and not pr.get("_tempestade_turno_bloqueado")):
-            return "prisoner"
+        for pr in self._refens_do_dono(pid, "guiar"):
+            if (pr.get("id") not in self.prisioneiros_done
+                    and not pr.get("_tempestade_turno_bloqueado")):
+                return pr.get("id")
         return None
 
     async def _fora_da_vez_do_servo(self, pid, animado_id):
@@ -45146,9 +45169,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _zerar_turno_da_peca(self, pid, animado_id):
         """Esgota o orcamento da peca que acabou de encerrar a vez."""
-        if animado_id == "prisoner":
-            if self.prisoner:
-                self.prisoner["moves_left"] = 0
+        pr = self._refem_por_id(animado_id)
+        if pr:
+            pr["moves_left"] = 0
             return
         p = self.players.get(pid)
         for a in (p.get("animados", []) if p else []):
@@ -45176,15 +45199,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if self.animados_phase_pid != pid:
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.nao_ha_servo_seu_para_encerrar_agora")}); return
+        if animado_id == "prisoner":    # apelido do cliente antigo: o refém da vez
+            pr = self._refem_da_mensagem(pid)
+            animado_id = pr.get("id") if pr else None
         if await self._fora_da_vez_do_servo(pid, animado_id):
             return
-        if animado_id == "prisoner":
-            pr = self.prisoner
-            if (self.prisioneiro_done or not pr or not pr.get("freed")
+        pr = self._refem_por_id(animado_id)
+        if pr:
+            if (pr.get("id") in self.prisioneiros_done or not pr.get("freed")
                     or not pr.get("alive") or pr.get("rescuer_pid") != pid):
                 await self.send_to(pid, {"type": "error",
                     "msg": T("erro.esta_peca_nao_esta_na_sua_fila")}); return
-            self.prisioneiro_done = True
+            self.prisioneiros_done.add(pr.get("id"))
         else:
             if animado_id not in self.animados_order or animado_id in self.animados_done:
                 await self.send_to(pid, {"type": "error",
@@ -45331,29 +45357,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Fase 3: o herÃ³i que libertou o prisioneiro o controla na janela pÃ³s-turno
         # (como os servos). Se o resgatador morreu, o controle passa ao herÃ³i vivo
         # mais prÃ³ximo do prisioneiro.
-        pr = self.prisoner
-        controla_prisioneiro = False
-        if pr and pr.get("freed") and pr.get("alive"):
-            # O controle é só emprestado: quem libertou o retoma ao voltar. O refém do
-            # exercício do Paladino nunca passa a outra classe (ninguém mais o move na
-            # sala exclusiva, e a janela vazia prendia o outro herói a cada turno).
-            if pr.get("training_refem"):
-                dono = next((h for h in self.players.values()
-                             if h.get("class_id") == "paladin"), None)
-                dono_id = dono["id"] if dono else pr.get("rescuer_original")
-            else:
-                dono_id = pr.setdefault("rescuer_original", pr.get("rescuer_pid"))
-                dono = self.players.get(dono_id)
-            if pr.get("training_refem") or (dono and self._ativo(dono)):
-                pr["rescuer_pid"] = dono_id
-            resc = self.players.get(pr.get("rescuer_pid"))
-            if not pr.get("training_refem") and (not resc or not self._ativo(resc)):
-                vivos = [h for h in self.players.values() if self._ativo(h)]
-                if vivos:
-                    novo = min(vivos, key=lambda h: max(abs(h["pos"][0] - pr["pos"][0]),
-                                                        abs(h["pos"][1] - pr["pos"][1])))
-                    pr["rescuer_pid"] = novo["id"]
-            controla_prisioneiro = (pr.get("rescuer_pid") == pid)
+        refens_livres = [pr for pr in self._refens_no_mapa() if pr.get("freed")]
+        for pr in refens_livres:
+            self._atualizar_dono_refem(pr)
+        meus_refens = [pr for pr in refens_livres if pr.get("rescuer_pid") == pid]
         # A lava causa dano também no começo da janela do servo/prisioneiro,
         # que é o equivalente ao início da rodada dessas peças no modo manual.
         if self.animados_phase_pid != pid and not fosso_encerrando:
@@ -45363,17 +45370,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if a.get("vida_atual", 0) > 0:
                     await self._processar_tempestade_inicio_turno(a)
             animados_vivos = [a for a in animados_vivos if a.get("vida_atual", 0) > 0]
-            if controla_prisioneiro:
+            for pr in meus_refens:
                 await self._aplicar_lava_se_pisar(pr)
                 await self._processar_prisao_chamas_inicio_turno(pr)
                 if pr.get("alive"):
                     await self._processar_tempestade_inicio_turno(pr)
-                controla_prisioneiro = bool(pr.get("alive"))
-        if (animados_vivos or controla_prisioneiro) and self.animados_phase_pid != pid and not fosso_encerrando:
+            await self._mover_refens_seguindo(pid)
+        guiados = self._refens_do_dono(pid, "guiar")
+        if (animados_vivos or guiados) and self.animados_phase_pid != pid and not fosso_encerrando:
             self.animados_phase_pid = pid
             self.animados_order = [a["id"] for a in animados_vivos]
             self.animados_done = set()
-            self.prisioneiro_done = False
+            self.prisioneiros_done = set()
             partes = []
             if animados_vivos:
                 # Upkeep: cada cadÃ¡ver reanimado custa -1 fome e -1 sede por turno.
@@ -45406,30 +45414,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                 a.pop(flag, None); a.pop(rod, None)
                 partes.append(T("narracao.n_animados" if custo > 1
                                 else "narracao.n_animado", n=custo))
-            if controla_prisioneiro:
-                pr["moves_left"] = self._water_turn_moves(pr, PRIS_MOVE)
-                await self._testar_rodamoinho_profundo_inicio_turno(pr)
-                if pr.get("_rodamoinho_profundo_bloqueado_turno"):
-                    pr["moves_left"] = 0
-                await self._testar_rodamoinho_inicio_turno(pr)
-                if pr.get("_rodamoinho_bloqueado_turno"):
-                    pr["moves_left"] = 0
-                if pr.pop("turbilhao_perde_movimento", False):
-                    pr["moves_left"] = 0
-                if pr.pop("turbilhao_perde_acao", False):
-                    pr["_tempestade_turno_bloqueado"] = True
-                    self._limpar_tempestade_ciclones_presos(pr)
-                partes.append(T("narracao.o_prisioneiro"))
+            for pr in guiados:
+                await self._preparar_refem_turno(pr)
+            if guiados:
+                partes.append(T("narracao.o_prisioneiro") if len(guiados) == 1
+                              else T("narracao.n_refens", n=len(guiados)))
             for a in animados_vivos:
                 if a.get("portao_preso"):
                     await self._portcullis_escape_turn(a)
                     a["moves_left"] = 0
                     a["acted"] = True
                     self.animados_done.add(a["id"])
-            if controla_prisioneiro and pr.get("portao_preso"):
-                await self._portcullis_escape_turn(pr)
-                pr["moves_left"] = 0
-                self.prisioneiro_done = True
             # DEPOIS do upkeep, nao antes: o laco acima roda os testes de
             # rodamoinho desta rodada e ACORDA quem teve o sono expirado. Consumir
             # antes leria flags da rodada passada e faria o servo perder a vez.
@@ -45451,12 +45446,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return
         for a in animados_vivos:
             a.pop("_tempestade_turno_bloqueado", None)
-        if pr:
+        for pr in self.prisoners:
             pr.pop("_tempestade_turno_bloqueado", None)
         self.animados_phase_pid = None
         self.animados_order = []
         self.animados_done = set()
-        self.prisioneiro_done = False
+        self.prisioneiros_done = set()
 
         # O herói oculto no Fosso só reaparece depois de concluir a rodada
         # inteira que perdeu; o turno atual continua podendo ser encerrado.
@@ -57073,31 +57068,63 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         finally:
             self._emendando = False
 
-    async def handle_libertar_prisioneiro(self, pid):
+    async def handle_libertar_prisioneiro(self, pid, refem_id=None):
+        """Liberta um refém adjacente, gastando a ação. Sem `refem_id`, o primeiro ao lado."""
         if not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         p = self.players.get(pid)
         if not p or not p.get("alive") or self._acao_bloqueada(p):
             return
-        if not self.prisoner or not self.prisoner.get("alive") or self.prisoner.get("freed"):
+        cativos = [pr for pr in self._refens_no_mapa() if not pr.get("freed")]
+        if refem_id is not None:
+            cativos = [pr for pr in cativos if pr is self._refem_por_id(refem_id)]
+        if not cativos:
             await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_prisioneiro_para_libertar")}); return
-        px, py = p["pos"]; bx, by = self.prisoner["pos"]
-        if max(abs(px - bx), abs(py - by)) > 1:
+        px, py = p["pos"]
+        pr = next((c for c in cativos
+                   if max(abs(px - c["pos"][0]), abs(py - c["pos"][1])) <= 1), None)
+        if pr is None:
             await self.send_to(pid, {"type": "error", "msg": T("erro.aproxime_se_do_prisioneiro")}); return
-        self.prisoner["freed"] = True
-        self.prisoner["rescuer_pid"] = pid
-        self.prisoner["rescuer_original"] = pid
+        pr["freed"] = True
+        pr["rescuer_pid"] = pid
+        pr["rescuer_original"] = pid
         p["action_done"] = True
         await self.gm_say(T("narracao.libertou_o_prisioneiro", heroi=p['name']))
         await self._licao_evento(p, "libertar_refem", alvo="__prisioneiro__")
+        await self._refem_chegou(pr)    # solto ao lado do destino já está a salvo
         await self.push_state()
 
-    async def handle_mover_prisioneiro_caminho(self, pid, path):
-        """Caminho inteiro do prisioneiro liberto numa mensagem."""
-        pr = self.prisoner
+    async def handle_set_modo_refem(self, pid, refem_id, modo):
+        """Alterna Guiar/Seguir: ação livre, a qualquer momento, só de quem controla o refém."""
+        if modo not in ("guiar", "seguir") or self.phase != "playing":
+            return
+        pr = self._refem_da_mensagem(pid, refem_id)
+        if not pr or not pr.get("freed") or not pr.get("alive"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_prisioneiro_para_mover")}); return
+        if pr.get("rescuer_pid") != pid:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_controla_este_prisioneiro")}); return
+        if pr.get("training_refem"):    # a lição é guiá-lo: seguindo, sairia da sala do exercício
+            await self.send_to(pid, {"type": "error", "msg": T("erro.refem_de_treino_so_anda_guiado")}); return
+        if pr.get("modo", "guiar") == modo:
+            return
+        pr["modo"] = modo
+        if self.animados_phase_pid == pid:
+            if modo == "guiar":         # já seguiu neste turno: não ganha outra vez
+                self.prisioneiros_done.add(pr.get("id"))
+            await self._fechar_janela_sem_prisioneiro(pid)
+            return
+        await self.push_state()
+
+    def _refem_saiu_do_jogo(self, pr):
+        """Chegou a salvo ou foi dispensado pela lição: não há mais peça para controlar."""
+        return pr.get("salvo") or not self._eh_refem(pr)
+
+    async def handle_mover_prisioneiro_caminho(self, pid, path, refem_id=None):
+        """Caminho inteiro do refém liberto numa mensagem."""
+        pr = self._refem_da_mensagem(pid, refem_id)
         if not pr:
-            await self.handle_mover_prisioneiro(pid, 0, 1)   # mesmas recusas
+            await self.handle_mover_prisioneiro(pid, 0, 1, refem_id=refem_id)   # mesmas recusas
             return
         passos = self._passos_validos(path)
         atravessar = self._atravessar_aliados_ativo()
@@ -57107,17 +57134,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         andou = False
         for dx, dy in passos:
             antes = list(pr.get("pos") or [])
-            await self.handle_mover_prisioneiro(pid, dx, dy, _push=False, _atravessar=atravessar)
+            await self.handle_mover_prisioneiro(pid, dx, dy, _push=False, _atravessar=atravessar,
+                                                refem_id=pr.get("id"))
             if list(pr.get("pos") or []) == antes:
                 break
             andou = True
             if not self._sobre_aliado(pr):
                 ultima_livre = list(pr["pos"])
-            if not pr.get("alive") or self.prisoner is not pr:
+            if not pr.get("alive") or self._refem_saiu_do_jogo(pr):
                 break
             if pr.get("_piche_movimento_encerrado"):
                 break
-        if self.prisoner is not pr:
+        if self._refem_saiu_do_jogo(pr):
             await self._fechar_janela_sem_prisioneiro(pid)
             return
         if andou and pr.get("alive") and self._sobre_aliado(pr):
@@ -57125,15 +57153,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if andou:
             await self.push_state()
 
-    async def handle_mover_prisioneiro(self, pid, dx, dy, _push=True, _atravessar=False):
-        """Controle manual: o resgatador move o prisioneiro liberto 1 casa na
-        janela pós-turno (gasta 1 de movimento). Não ataca."""
+    async def handle_mover_prisioneiro(self, pid, dx, dy, _push=True, _atravessar=False, refem_id=None):
+        """Controle manual: o resgatador move o refém liberto 1 casa na janela
+        pós-turno (gasta 1 de movimento). Não ataca."""
         if not self._is_turn_servos(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         if self.animados_phase_pid != pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.encerre_seu_turno_primeiro_para_mover_o")}); return
-        pr = self.prisoner
+        pr = self._refem_da_mensagem(pid, refem_id)
         if not pr or not pr.get("freed") or not pr.get("alive"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.nao_ha_prisioneiro_para_mover")}); return
         if pr.get("portao_preso"):
@@ -57142,7 +57170,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         if pr.get("rescuer_pid") != pid:
             await self.send_to(pid, {"type": "error", "msg": T("erro.voce_nao_controla_este_prisioneiro")}); return
-        if await self._fora_da_vez_do_servo(pid, "prisoner"):
+        if await self._fora_da_vez_do_servo(pid, pr.get("id")):
             return
         if pr.get("moves_left", 0) <= 0:
             await self.send_to(pid, {"type": "error", "msg": T("erro.prisioneiro_sem_movimento_neste_turno")}); return
@@ -57154,18 +57182,30 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return  # O refém do exercício permanece na sala.
         if not await self._training_check_entry(pid, pr, nx, ny):
             return
-        if self._casa_abismo(nx, ny):
+        if not await self._passo_refem(pr, dx, dy, _atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")})
             return
-        if not self._tile_livre_para_animado(nx, ny, pr["id"], pr["pos"], atravessar=_atravessar):
-            await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
+        if pr.get("alive") and pr.get("training_refem"):
+            await self._training_refem_chegou(pid, pr)
+        if self._refem_saiu_do_jogo(pr):
+            # Sem peça para controlar, a vez passa à seguinte ou a janela fecha.
+            if _push:
+                await self._fechar_janela_sem_prisioneiro(pid)
+            return
+        if _push: await self.push_state()
+
+    async def _passo_refem(self, pr, dx, dy, atravessar=False):
+        """Uma casa do refém, guiado ou seguindo, com tudo o que pisar nela dispara.
+        False quando a casa não aceita o passo; quem chama decide se avisa alguém."""
+        nx, ny = pr["pos"][0] + dx, pr["pos"][1] + dy
+        if self._casa_abismo(nx, ny):
+            return False
+        if not self._tile_livre_para_animado(nx, ny, pr["id"], pr["pos"], atravessar=atravessar):
+            return False
         old_pos = list(pr["pos"])
         estava_no_piche = self._criatura_em_piche(pr, old_pos)
         pr["pos"] = [nx, ny]
         pr["facing"] = [int(dx), int(dy)]
-        if not pr.get("alive"):
-            if _push: await self.push_state()
-            return
         self._apply_water_entry_penalty(pr, nx, ny, old_pos)
         pr["moves_left"] = max(0, pr["moves_left"] - 1)
         if estava_no_piche or self._criatura_em_piche(pr, pr["pos"]):
@@ -57182,18 +57222,137 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._aplicar_piso_congelado_se_pisar(pr)
         if pr.get("alive"):
             await self._tempestade_verificar_entrada(pr, old_pos, pr["pos"])
-        # Pisou numa armadilha colocÃ¡vel? Dispara sobre o prisioneiro (igual ao herÃ³i).
+        # Pisou numa armadilha colocável? Dispara sobre o refém (igual ao herói).
         arm = self._armadilha_no_tile(nx, ny)
         if arm and pr.get("alive"):
             await self._disparar_armadilha(pr, arm)
-        if pr.get("alive") and pr.get("training_refem"):
-            await self._training_refem_chegou(pid, pr)
-        if self.prisoner is not pr:
-            # Dispensado ao cumprir a missão: sem peça para controlar, a janela fecha.
-            if _push:
-                await self._fechar_janela_sem_prisioneiro(pid)
+        await self._refem_chegou(pr)
+        return True
+
+    async def _preparar_refem_turno(self, pr):
+        """Orçamento e testes de início da vez do refém, guiado ou seguindo."""
+        pr["moves_left"] = self._water_turn_moves(pr, PRIS_MOVE)
+        await self._testar_rodamoinho_profundo_inicio_turno(pr)
+        if pr.get("_rodamoinho_profundo_bloqueado_turno"):
+            pr["moves_left"] = 0
+        await self._testar_rodamoinho_inicio_turno(pr)
+        if pr.get("_rodamoinho_bloqueado_turno"):
+            pr["moves_left"] = 0
+        if pr.pop("turbilhao_perde_movimento", False):
+            pr["moves_left"] = 0
+        if pr.pop("turbilhao_perde_acao", False):
+            pr["_tempestade_turno_bloqueado"] = True
+            self._limpar_tempestade_ciclones_presos(pr)
+        if pr.get("portao_preso"):
+            await self._portcullis_escape_turn(pr)
+            pr["moves_left"] = 0
+            self.prisioneiros_done.add(pr.get("id"))
+
+    def _atualizar_dono_refem(self, pr):
+        """Devolve o refém a quem o libertou, ou o passa ao herói ativo mais próximo."""
+        # O controle é só emprestado: quem libertou o retoma ao voltar. O refém do
+        # exercício do Paladino nunca passa a outra classe (ninguém mais o move na
+        # sala exclusiva, e a janela vazia prendia o outro herói a cada turno).
+        if pr.get("training_refem"):
+            dono = next((h for h in self.players.values()
+                         if h.get("class_id") == "paladin"), None)
+            dono_id = dono["id"] if dono else pr.get("rescuer_original")
+        else:
+            dono_id = pr.setdefault("rescuer_original", pr.get("rescuer_pid"))
+            dono = self.players.get(dono_id)
+        if pr.get("training_refem") or (dono and self._ativo(dono)):
+            pr["rescuer_pid"] = dono_id
+        resc = self.players.get(pr.get("rescuer_pid"))
+        if not pr.get("training_refem") and (not resc or not self._ativo(resc)):
+            vivos = [h for h in self.players.values() if self._ativo(h)]
+            if vivos:
+                novo = min(vivos, key=lambda h: max(abs(h["pos"][0] - pr["pos"][0]),
+                                                    abs(h["pos"][1] - pr["pos"][1])))
+                pr["rescuer_pid"] = novo["id"]
+
+    def _caminho_ate_o_heroi(self, pr, heroi):
+        """Passos do refém até uma casa vizinha do herói; vazio se já está nela ou não há caminho."""
+        hx, hy = heroi["pos"]
+
+        def ao_lado(x, y):
+            return max(abs(x - hx), abs(y - hy)) <= 1
+
+        inicio = tuple(pr["pos"])
+        if ao_lado(*inicio):
+            return []
+        veio_de = {inicio: None}
+        fila = [inicio]
+        for x, y in fila:
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+                casa = (x + dx, y + dy)
+                if (casa in veio_de or self._blocks_tile(*casa)
+                        or not self._tile_livre_para_animado(casa[0], casa[1], pr["id"], [x, y])):
+                    continue
+                veio_de[casa] = (x, y)
+                if ao_lado(*casa):
+                    passos = []
+                    while veio_de[casa] is not None:
+                        ox, oy = veio_de[casa]
+                        passos.append((casa[0] - ox, casa[1] - oy))
+                        casa = (ox, oy)
+                    return passos[::-1]
+                fila.append(casa)
+        return []
+
+    async def _mover_refens_seguindo(self, pid):
+        """Ao fim do turno do dono, quem está em Seguir anda sozinho até ele, sem abrir
+        vez nem pedir clique. Do mais perto ao mais longe, para um não barrar o outro.
+        Sem espera por passo: todos deslizam juntos no cliente, e o turno não se arrasta."""
+        heroi = self.players.get(pid)
+        if not heroi:
             return
-        if _push: await self.push_state()
+        hx, hy = heroi["pos"]
+        seguidores = sorted(self._refens_do_dono(pid, "seguir"),
+                            key=lambda pr: max(abs(pr["pos"][0] - hx), abs(pr["pos"][1] - hy)))
+        for pr in seguidores:
+            await self._preparar_refem_turno(pr)
+            for dx, dy in self._caminho_ate_o_heroi(pr, heroi):
+                if (pr.get("moves_left", 0) <= 0 or not pr.get("alive") or pr.get("salvo")
+                        or pr.get("portao_preso") or pr.get("_tempestade_turno_bloqueado")):
+                    break
+                de = list(pr["pos"])
+                if not await self._passo_refem(pr, dx, dy):
+                    break
+                await self.broadcast({"type": "entity_step", "id": pr["id"], "from": de,
+                                      "to": [de[0] + dx, de[1] + dy], "kind": "prisoner"})
+            pr["moves_left"] = 0
+
+    def _resgate_faixas(self):
+        """Faixas de resultado do objetivo principal; sem elas, o resgate é o de um refém só."""
+        return ((self.objectives or {}).get("primary") or {}).get("faixas")
+
+    def _destino_resgate(self):
+        """Casa aonde o refém precisa chegar: a do objetivo, ou a regra antiga sem o campo."""
+        destino = ((self.objectives or {}).get("primary") or {}).get("destino")
+        if destino == "saida":
+            return self.exit_pos
+        if destino == "entrada":
+            return self.stairs_pos
+        return self.exit_pos or self.stairs_pos
+
+    def _nome_do_refem(self, pr):
+        """Nome autoral do refém; o padrão, que não é do autor, sai no idioma de quem lê."""
+        nome = pr.get("nome")
+        return T("narracao.refem_nome_padrao") if nome in (None, "Prisioneiro") else nome
+
+    async def _refem_chegou(self, pr):
+        """Em resgate por faixas, quem alcança o destino sai do mapa e conta como salvo."""
+        if (not self._resgate_faixas() or pr.get("salvo")
+                or not pr.get("alive") or not pr.get("freed")):
+            return False
+        destino = self._destino_resgate()
+        if not destino or max(abs(pr["pos"][0] - destino[0]), abs(pr["pos"][1] - destino[1])) > 1:
+            return False
+        pr["salvo"] = True
+        pr["pos"] = [-1, -1]
+        await self.gm_say(T("narracao.refem_chegou_a_salvo", refem=self._nome_do_refem(pr)))
+        await self._check_objectives()
+        return True
 
     async def _fechar_janela_sem_prisioneiro(self, pid):
         if self.animados_phase_pid == pid and self._animados_atual(pid) is None:
@@ -57224,7 +57383,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _processar_prisioneiro_turno(self):
         for pr in self._refens_no_mapa():
-            if pr.get("freed"):
+            if pr.get("freed") and pr.get("alive"):
                 await self._processar_turno_do_refem(pr)
 
     async def _processar_turno_do_refem(self, pr):
@@ -57899,11 +58058,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # servo, "prisoner", ou None) — dict por pid porque este payload é
             # montado UMA vez para a sala inteira (sem pid em escopo aqui); o
             # cliente indexa pelo próprio GS.myPid.
-            "animados_atual": {pid_: self._animados_atual(pid_) for pid_ in self.players},
+            "animados_atual": {pid_: self._peca_chave_cliente(self._animados_atual(pid_))
+                               for pid_ in self.players},
             # Quem ja encerrou a vez nesta janela. O cliente precisa do conjunto
             # exato: deduzir pela ordem so identifica quem ficou ATRAS do atual,
             # e uma peca escolhida fora de ordem fica adiante dele.
-            "animados_done": sorted(self.animados_done, key=str),
+            "animados_done": sorted({self._peca_chave_cliente(d)
+                                     for d in self.animados_done | self.prisioneiros_done}, key=str),
             "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do inÃ­cio do turno (p/ contagem 30s)
             "turn_timer_limit": self.TURN_LIMIT_S,
@@ -58349,7 +58510,7 @@ class _WS:
 # enviou: o turno dos monstros roda DENTRO do end_turn (zonas, retaliação,
 # veneno), e o controle de servos já grava a posição do SERVO no alerta.
 _MENSAGENS_SEM_ALERTA_DE_DANO = frozenset(
-    {"end_turn", "comandar_animados", "mover_animado", "atacar_animado"})
+    {"end_turn", "comandar_animados", "mover_animado", "atacar_animado", "set_modo_refem"})
 
 
 # Mensagens que falam pela CONEXÃO, não por um herói: nunca são traduzidas
@@ -59094,7 +59255,10 @@ async def handler(ws):
                     if room: await room.handle_toggle_portcullis(pid, _num(msg.get("tx")), _num(msg.get("ty")))
 
                 elif t == "libertar_prisioneiro":
-                    if room: await room.handle_libertar_prisioneiro(pid)
+                    if room: await room.handle_libertar_prisioneiro(pid, msg.get("refem_id"))
+
+                elif t == "set_modo_refem":
+                    if room: await room.handle_set_modo_refem(pid, msg.get("refem_id"), msg.get("modo"))
 
                 elif t == "repetir_tutorial":
                     if room: await room.handle_repetir_tutorial(pid)
@@ -59259,7 +59423,7 @@ async def handler(ws):
                 elif t == "mover_prisioneiro":
                     dx, dy = _delta(msg.get("dx", 0)), _delta(msg.get("dy", 0))
                     if room and abs(dx) + abs(dy) == 1:
-                        await room.handle_mover_prisioneiro(pid, dx, dy)
+                        await room.handle_mover_prisioneiro(pid, dx, dy, refem_id=msg.get("refem_id"))
 
                 elif t in ("mover_animado_caminho", "mover_prisioneiro_caminho"):
                     raw_path = msg.get("path")
@@ -59269,7 +59433,7 @@ async def handler(ws):
                         if t == "mover_animado_caminho":
                             await room.handle_mover_animado_caminho(pid, msg.get("animado_id"), path)
                         else:
-                            await room.handle_mover_prisioneiro_caminho(pid, path)
+                            await room.handle_mover_prisioneiro_caminho(pid, path, msg.get("refem_id"))
 
                 elif t == "encerrar_animado":
                     if room: await room.handle_encerrar_animado(pid, msg.get("animado_id"))
