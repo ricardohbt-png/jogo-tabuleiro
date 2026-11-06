@@ -155,7 +155,7 @@ class FluxoTests(unittest.IsolatedAsyncioTestCase):
         r._advance_initiative = lambda: asyncio.sleep(0)
         await r.handle_mover_prisioneiro_caminho(p['id'], CAMINHO)
         body = S.foto_desempacotar(S.foto_empacotar(r._montar_foto(), onde='masmorra'))
-        self.assertIsNone(body['sala']['prisoner'])
+        self.assertEqual(body['sala']['prisoners'], [])
         fresh, q = room('paladin')
         restored = fresh._foto_aplicar_sala(body, {'paladin': 'nova'}, D)
         self.assertIsNone(fresh.prisoner)

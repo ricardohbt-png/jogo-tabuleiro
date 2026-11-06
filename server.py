@@ -3746,7 +3746,8 @@ FOTO_SALA_CATEGORIAS = {
     "explored": "foto", "magic_reveal": "foto", "salas_visitadas": "foto",
     # criaturas
     "monsters": "foto", "corpses": "foto", "hero_corpses": "foto",
-    "prisoner": "foto", "rescue_failed": "foto", "_consequencia_refem_aplicada": "foto",
+    "prisoners": "foto", "prisoner": "derivado",   # prisoner = propriedade de compatibilidade
+    "rescue_failed": "foto", "_consequencia_refem_aplicada": "foto",
     # mundo
     "chests": "foto", "ground_items": "foto", "traps": "foto", "armadilhas": "foto",
     "_armadilha_seq": "foto", "zonas_especiais": "foto", "_terrenos_inverno": "foto",
@@ -8868,12 +8869,25 @@ def validar_dungeon(defn):
         if tr.get("image") is not None and not isinstance(tr.get("image"), str):
             return False, "trap.image deve ser uma string (nome do arquivo em assets/objetos)."
 
-    pr = defn.get("prisoner")
-    if pr is not None:
+    if "prisoner" in defn and "prisoners" in defn:
+        return False, "use prisoner ou prisoners, não os dois."
+    if "prisoners" in defn:
+        lista_pr = defn.get("prisoners")
+        if not isinstance(lista_pr, list):
+            return False, "prisoners deve ser uma lista."
+        if len(lista_pr) > MAX_REFENS:
+            return False, f"prisoners aceita no máximo {MAX_REFENS} reféns."
+    else:
+        lista_pr = [defn["prisoner"]] if defn.get("prisoner") is not None else []
+    casas_refens = set()
+    for pr in lista_pr:
         if not isinstance(pr, dict):
             return False, "prisoner deve ser um objeto JSON."
         if not in_grid(pr.get("pos")) or tile_at(pr["pos"]) == WALL:
             return False, f"prisioneiro em casa inválida: {pr.get('pos')}."
+        if tuple(pr["pos"]) in casas_refens:
+            return False, f"dois prisioneiros na mesma casa: {pr.get('pos')}."
+        casas_refens.add(tuple(pr["pos"]))
         if pr.get("room_id") is not None and pr.get("room_id") not in room_ids:
             return False, f"prisioneiro com room_id inexistente: {pr.get('room_id')!r}."
         if pr.get("image") is not None and not isinstance(pr.get("image"), str):
@@ -13361,6 +13375,31 @@ def gerar_pergaminho(circulo_num=1, classe=None, nivel=None, int_bonus=0,
 
 # â”€â”€â”€ GAME ROOM â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+MAX_REFENS = 12   # reféns por mapa
+
+
+def _novo_refem(pr, i):
+    """Refém vivo a partir da definição autoral (`pr`), com id `refem_<i>`."""
+    return {"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
+            "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
+            "image": pr.get("image"), "model3d": pr.get("model3d"),
+            "rescuer_pid": None, "moves_left": 0,
+            "nome": pr.get("nome") or "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
+            "freed": False, "alive": True,
+            "id": f"refem_{i}", "modo": "guiar", "salvo": False}
+
+
+def _refens_da_definicao(defn):
+    """Lista de reféns de um mapa: aceita `prisoners` (lista) ou `prisoner` (um)."""
+    if defn.get("prisoners") is not None:
+        brutos = defn["prisoners"]
+    elif defn.get("prisoner"):
+        brutos = [defn["prisoner"]]
+    else:
+        brutos = []
+    return [_novo_refem(pr, i) for i, pr in enumerate(brutos)]
+
+
 class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _tutorial_api(self):
         return sys.modules[__name__]
@@ -13445,7 +13484,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.objectives = None
         self.objective_status = None
         self.mission_step_index = 0
-        self.prisoner = None
+        self.prisoners = []
         self.rescue_failed = False
         self._objetivo_concluido = False
         self.mission_complete_pending = False
@@ -18869,14 +18908,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._objetivo_concluido = False
         self.mission_complete_pending = False
         self.salas_visitadas = set()
-        pr = defn.get("prisoner")
-        self.prisoner = ({"pos": [pr["pos"][0], pr["pos"][1]], "room_id": pr.get("room_id"),
-                          "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
-                          "image": pr.get("image"), "model3d": pr.get("model3d"),
-                          "rescuer_pid": None, "moves_left": 0,
-                          "nome": pr.get("nome") or "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
-                          "freed": False, "alive": True}
-                         if pr else None)
+        self.prisoners = _refens_da_definicao(defn)
         self._training_init(defn)
         self._training_add_unlocked_lessons()
         # Marca o baÃº-chave por posiÃ§Ã£o (o dict de baÃº vivo nÃ£o carrega a flag).
@@ -30121,6 +30153,38 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False, None
         return True, defn
 
+    @property
+    def prisoner(self):
+        """Compatibilidade: o primeiro refém não salvo, senão o primeiro, senão None."""
+        for pr in self.prisoners:
+            if not pr.get("salvo"):
+                return pr
+        return self.prisoners[0] if self.prisoners else None
+
+    @prisoner.setter
+    def prisoner(self, valor):
+        if valor is None:
+            self.prisoners = []
+        else:
+            valor.setdefault("id", "refem_0")
+            self.prisoners = [valor]
+
+    def _refem_por_id(self, rid):
+        """Refém pelo id `refem_N`; None, "prisoner" e "__prisioneiro__" dão `self.prisoner`."""
+        if rid in (None, "prisoner", "__prisioneiro__"):
+            return self.prisoner
+        for pr in self.prisoners:
+            if pr.get("id") == rid:
+                return pr
+        return None
+
+    def _eh_refem(self, x):
+        return any(x is pr for pr in self.prisoners)
+
+    def _refens_no_mapa(self):
+        """Reféns vivos que ainda não chegaram à saída."""
+        return [pr for pr in self.prisoners if pr.get("alive") and not pr.get("salvo")]
+
     def _foto_aplicar_sala(self, corpo, destino, defn):
         """Renomeia os ids da foto (pid antigo → pid desta sessão pela classe
         em `destino`; o resto → id novo) e sobrepõe os campos de sala. Devolve
@@ -30130,6 +30194,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         corpo, _ = foto_renomear_ids(corpo, mapa_fixo, new_id)
         sala = corpo["sala"]
         charcos_remapear_sala(sala)     # foto gravada antes da cadeia dos Charcos
+        if "prisoner" in sala:          # foto antiga: um refém só
+            antigo = sala.pop("prisoner")
+            if "prisoners" not in sala:
+                sala["prisoners"] = [] if antigo is None else [antigo]
+        for i, pr in enumerate(sala.get("prisoners") or []):
+            pr.setdefault("id", f"refem_{i}")
+            pr.setdefault("modo", "guiar")
+            pr.setdefault("salvo", False)
+            pr.setdefault("nome", "Prisioneiro")
         for campo in foto_campos_sala("foto") + foto_campos_sala("foto_pid"):
             if campo in sala:
                 setattr(self, campo, sala[campo])
@@ -57832,7 +57905,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                       and self.pending_world_travel.get("phase") == "cleared"),
             "exit_pos": self.exit_pos,
             "route_exit_progress": self._route_exit_payload(),
-            "prisoner": self.prisoner,
+            "prisoners": self.prisoners,
+            "prisoner": self.prisoner,   # compatibilidade até o cliente migrar (Task 5)
             "current_turn": self.current_pid(),
             "current_actor": actor,
             "initiative_order": self.initiative_order,
