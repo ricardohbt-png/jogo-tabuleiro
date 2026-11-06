@@ -355,7 +355,7 @@ async def test_prisioneiro_armadilha_progressiva():
     hp_imediato = pr["hp"]
     check("dano imediato da incendiária", hp_imediato < 30)
     check("dano progressivo agendado p/ o prisioneiro",
-          any(e.get("alvo_id") == "__prisioneiro__"
+          any(e.get("alvo_id") == pr["id"]
               for a in r.armadilhas for e in a.get("efeitos_ativos", [])))
     await r._processar_efeitos_armadilha_turno()   # tica a(s) rodada(s) seguinte(s)
     check("dano progressivo atinge o prisioneiro", pr["hp"] < hp_imediato)

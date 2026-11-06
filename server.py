@@ -3746,7 +3746,7 @@ FOTO_SALA_CATEGORIAS = {
     "explored": "foto", "magic_reveal": "foto", "salas_visitadas": "foto",
     # criaturas
     "monsters": "foto", "corpses": "foto", "hero_corpses": "foto",
-    "prisoners": "foto", "prisoner": "derivado",   # prisoner = propriedade de compatibilidade
+    "prisoners": "foto",
     "rescue_failed": "foto", "_consequencia_refem_aplicada": "foto",
     # mundo
     "chests": "foto", "ground_items": "foto", "traps": "foto", "armadilhas": "foto",
@@ -12455,7 +12455,7 @@ def make_player(pid, name, cls_id, slot):
         "golpe_sagrado_nivel": 0,
         "golpe_sagrado_tipo_extra": None,
         "protetor_ativo":      False,  # divide o dano recebido por um aliado protegido
-        "protetor_alvo":       None,   # pid ou __prisioneiro__ sob Protetor
+        "protetor_alvo":       None,   # pid ou id do refém sob Protetor
         "vinculos_malditos_dor": [],   # vínculos ativos do conjurador
         "regeneracao_ativa":   False,  # +1 HP por turno (manutenÃ§Ã£o ðŸ–-1 ðŸ’§-1)
         "guerreiro_luz_ativo": False,  # buff de combate (visÃ£o/ataque/dano/CA)
@@ -16525,17 +16525,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return dano_alvo, dano - dano_alvo
 
     def _protetor_target_id(self, alvo):
-        """ID estável usado pelo vínculo, inclusive para o prisioneiro singleton."""
-        if self._eh_jogador(alvo):
+        """ID estável usado pelo vínculo, inclusive para cada refém."""
+        if self._eh_jogador(alvo) or self._eh_refem(alvo):
             return alvo.get("id")
-        if alvo is self.prisoner:
-            return PROTETOR_PRISIONEIRO_ID
         return None
 
     def _protetor_target(self, alvo_id):
-        if str(alvo_id) == PROTETOR_PRISIONEIRO_ID:
-            return self.prisoner
-        return self.players.get(alvo_id) or self.training_allies.get(alvo_id)
+        """Herói, aprendiz ou refém do vínculo; o alias antigo vale para foto antiga."""
+        if alvo_id is None:
+            return None
+        return (self.players.get(alvo_id) or self.training_allies.get(alvo_id)
+                or self._refem_por_id(alvo_id))
 
     def _reduzir_dano_protetor(self, alvo, dano):
         """Redução pessoal de Richard enquanto mantém o Protetor ativo."""
@@ -16567,8 +16567,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if recipiente["hp"] <= 0:
                 if self._eh_jogador(recipiente):
                     await self._player_dies(recipiente["id"])
-                elif recipiente is self.prisoner:
-                    await self._prisioneiro_morre()
+                elif self._eh_refem(recipiente):
+                    await self._prisioneiro_morre(recipiente)
 
     def _regen_raio(self, p):
         """Raio de cura de aliados da Regeneração Divina (0 base / 1 / 2)."""
@@ -20108,7 +20108,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.door_conditions = {}
             self.door_condition_activated = {}
             self.exit_pos = None; self.objectives = None; self.objective_status = None; self.mission_step_index = 0
-            self.prisoner = None; self.rescue_failed = False; self._consequencia_refem_aplicada = False; self._objetivo_concluido = False; self.mission_complete_pending = False
+            self.prisoners = []; self.rescue_failed = False; self._consequencia_refem_aplicada = False; self._objetivo_concluido = False; self.mission_complete_pending = False
             self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
@@ -22320,8 +22320,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if (a is not ator and a.get("pos") == [x, y]
                     and not self._pode_compartilhar_casa_voando(ator, a)):
                 return True
-        pr = self.prisoner
-        return bool(pr and pr is not ator and pr.get("alive") and pr.get("pos") == [x, y])
+        return any(pr is not ator and pr.get("pos") == [x, y] for pr in self._refens_no_mapa())
 
     def _sobre_aliado(self, ent):
         pos = ent.get("pos") or [-1, -1]
@@ -22447,9 +22446,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         # O prisioneiro também ocupa a casa (antes um herói podia parar em
         # cima dele). Só o liberto é aliado atravessável.
-        pr = self.prisoner
-        if (pr and pr.get("alive") and pr.get("pos") == [nx, ny]
-                and not (_atravessar and pr.get("freed"))):
+        if any(pr.get("pos") == [nx, ny] and not (_atravessar and pr.get("freed"))
+               for pr in self._refens_no_mapa()):
             await self.send_to(pid, {"type": "error", "msg": T("erro.o_prisioneiro_ocupa_este_espaco")})
             return
 
@@ -22848,9 +22846,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if any(a is not alvo and a.get("vida_atual", 0) > 0
                        and tuple(a.get("pos") or []) in dest_tiles for a in self._all_animados()):
                     continue
-                if (self.prisoner is not alvo and self.prisoner
-                        and self.prisoner.get("hp", 0) > 0
-                        and tuple(self.prisoner.get("pos") or []) in dest_tiles):
+                if any(pr is not alvo and pr.get("hp", 0) > 0
+                       and tuple(pr.get("pos") or []) in dest_tiles
+                       for pr in self._refens_no_mapa()):
                     continue
                 return dest
         return None
@@ -22875,8 +22873,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         for a in self._all_animados():
             if a.get("vida_atual", 0) > 0:
                 add_if_on_threshold(a, self._portcullis_actor_tiles(a))
-        if self.prisoner and self.prisoner.get("hp", 0) > 0:
-            add_if_on_threshold(self.prisoner, self._portcullis_actor_tiles(self.prisoner))
+        for pr in self._refens_no_mapa():
+            if pr.get("hp", 0) > 0:
+                add_if_on_threshold(pr, self._portcullis_actor_tiles(pr))
         for alvo in targets:
             passou, *_ = await self._save_mostrado(alvo, "reflexos", 13, mitigacao="metade")
             dano = self._rolar_dado("4d6")
@@ -25302,10 +25301,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvos.extend(a for a in self._all_animados()
                      if a.get("vida_atual", 0) > 0
                      and tuple(a.get("pos", [-1, -1])) in area)
-        prisioneiro = self.prisoner
-        if (prisioneiro and prisioneiro.get("alive") and prisioneiro.get("hp", 0) > 0
-                and tuple(prisioneiro.get("pos", [-1, -1])) in area):
-            alvos.append(prisioneiro)
+        alvos.extend(pr for pr in self._refens_no_mapa()
+                     if pr.get("hp", 0) > 0 and tuple(pr.get("pos", [-1, -1])) in area)
         atingidos = set()
         unicos = []
         for alvo in alvos:
@@ -26384,35 +26381,26 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _tile_livre_para_animado(self, nx, ny, self_id, origem=None, atravessar=False):
         if not (0 <= nx < self.map_w and 0 <= ny < self.map_h): return False
         if self.tiles[ny][nx] == WALL and not self._ponte_em(nx, ny): return False
-        actor = next((a for a in self._all_animados() if a.get("id") == self_id), None)
-        if actor is None and self.prisoner and self.prisoner.get("id") == self_id:
-            actor = self.prisoner
+        refem = self._refem_por_id(self_id) if self_id is not None else None
+        actor = next((a for a in self._all_animados() if a.get("id") == self_id), None) or refem
         if self._casa_abismo(nx, ny) and not self._voo_imune_terreno(actor): return False
         if actor and self._training_room(actor, nx, ny): return False
         if any(a.get("alive") and a["pos"] == [nx, ny] for a in self.training_allies.values()): return False
         if origem is not None:
-            criatura = next((a for a in self._all_animados() if a.get("id") == self_id), None)
-            if criatura is None and self.prisoner and self.prisoner.get("id") == self_id:
-                criatura = self.prisoner
-            if not self._passo_seguro(criatura, origem, [nx, ny]):
+            if not self._passo_seguro(actor, origem, [nx, ny]):
                 return False
         if any(a.get("id") == self_id and a.get("rodamoinho_preso")
                for a in self._all_animados()): return False
         if any(a.get("id") == self_id and a.get("rodamoinho_profundo_preso")
                for a in self._all_animados()): return False
-        if self.prisoner and self.prisoner.get("id") == self_id and self.prisoner.get("rodamoinho_preso"):
-            return False
-        if self.prisoner and self.prisoner.get("id") == self_id and self.prisoner.get("rodamoinho_profundo_preso"):
+        if refem and (refem.get("rodamoinho_preso") or refem.get("rodamoinho_profundo_preso")):
             return False
         if any(m["hp"] > 0 and [nx, ny] in self._monster_tiles(m) for m in self.monsters.values()): return False
         if not atravessar:
             if any(p["alive"] and p["pos"] == [nx, ny] for p in self.players.values()): return False
             if self._animado_em([nx, ny], exclude_id=self_id): return False
-        pr = self.prisoner
-        if (pr and pr.get("alive") and pr.get("pos") == [nx, ny]
-                and not (atravessar and pr.get("freed"))):
-            return False
-        return True
+        return not any(pr.get("pos") == [nx, ny] and not (atravessar and pr.get("freed"))
+                       for pr in self._refens_no_mapa())
 
     def _animado_attack_in_range(self, animado, target, atk_def=None):
         """Valida alcance/linha de tiro de um servo contra um monstro.
@@ -29246,7 +29234,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "msg": T("erro.voce_nao_pode_curar_a_si_mesmo_com_esta")}); return
         alvo = self._protetor_target(alvo_id)
         if (not alvo or not alvo.get("alive")
-                or (alvo is self.prisoner and not alvo.get("freed"))):
+                or (self._eh_refem(alvo) and not alvo.get("freed"))):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, 1):
             await self.send_to(pid, {"type": "error",
@@ -29345,7 +29333,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.richard_nao_pode_se_proteger_com_esta_ha")}); return
         alvo = self._protetor_target(alvo_id)
         if (not alvo or not alvo.get("alive")
-                or (alvo is self.prisoner and not alvo.get("freed"))):
+                or (self._eh_refem(alvo) and not alvo.get("freed"))):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_invalido")}); return
         if not self._no_raio(p, alvo, self._defensor_raio(p)):
             await self.send_to(pid, {"type": "error", "msg": T("erro.aliado_fora_do_raio_de_quadrados", raio=self._defensor_raio(p))}); return
@@ -29353,7 +29341,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["fome"] = max(0, p["fome"] - fome_cost)
         p["sede"] = max(0, p["sede"] - sede_cost)
         p["protetor_ativo"] = True
-        p["protetor_alvo"] = alvo_id
+        p["protetor_alvo"] = alvo.get("id", alvo_id)
         p["bonus_action_used"] = True
 
         await self.gm_say(
@@ -29562,7 +29550,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             (q for q in self.players.values()
              if q.get("class_id") == "paladin"
              and q.get("protetor_ativo")
-             and str(q.get("protetor_alvo")) == str(alvo_id)
+             and self._protetor_target(q.get("protetor_alvo")) is alvo
              and q.get("alive")),
             None)
         if not richard:
@@ -29582,7 +29570,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         T("narracao.tatica_defensiva_assume_do_dano_de_que_s", tatico=nome_criatura(tatico), dano_tatico=dano_tatico, alvo_nome=nome_criatura(alvo), dano_aliado=dano_alvo))
                     return dano_alvo, (tatico, dano_tatico)
             return dano_original, None
-        if not alvo.get("alive") or (alvo is self.prisoner and not alvo.get("freed")) \
+        if not alvo.get("alive") or (self._eh_refem(alvo) and not alvo.get("freed")) \
                 or not self._no_raio(richard, alvo, self._defensor_raio(richard)):
             richard["protetor_ativo"] = False
             richard["protetor_alvo"] = None
@@ -29801,9 +29789,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         for mm in self.monsters.values():
             for key in deep_whirlpool_state:
                 mm.pop(key, None)
-        if self.prisoner:
+        for pr in self.prisoners:
             for key in deep_whirlpool_state:
-                self.prisoner.pop(key, None)
+                pr.pop(key, None)
         self.phase = "city"
         self._story_encadeada = story   # limpa a emenda; instala o encerramento, se houver
         self._gerar_loja_pergaminhos()
@@ -30184,6 +30172,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _refens_no_mapa(self):
         """Reféns vivos que ainda não chegaram à saída."""
         return [pr for pr in self.prisoners if pr.get("alive") and not pr.get("salvo")]
+
+    def _refem_chave_cliente(self, pr):
+        """Id do refém para o cliente, que até a Task 5 casa o literal com `state.prisoner`."""
+        return PROTETOR_PRISIONEIRO_ID if pr is self.prisoner else pr.get("id")
+
+    def _refem_chave_entidade(self, pr):
+        """Chave de entidade do refém; o cliente só conhece `pr:singleton` até a Task 5."""
+        return "pr:singleton" if pr is self.prisoner else f"pr:{pr.get('id')}"
 
     def _foto_aplicar_sala(self, corpo, destino, defn):
         """Renomeia os ids da foto (pid antigo → pid desta sessão pela classe
@@ -32700,7 +32696,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         dano = dano_sangramento + (1 if alvo.get("ferida_aberta") else 0)
         if "vida_atual" in alvo:
             alvo["vida_atual"] = max(0, alvo.get("vida_atual", 0) - dano)
-        elif self._eh_jogador(alvo) or alvo is self.prisoner:
+        elif self._eh_jogador(alvo) or self._eh_refem(alvo):
             await self._aplicar_dano_alvo(alvo, dano, DMG_PHYSICAL,
                                           alvo.get("id"))
         else:
@@ -32714,7 +32710,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._vivo(alvo):
             if "vida_atual" in alvo:
                 await self._animado_morre(alvo, None)
-            elif self._eh_jogador(alvo) or alvo is self.prisoner:
+            elif self._eh_jogador(alvo) or self._eh_refem(alvo):
                 # _aplicar_dano_alvo já concluiu a morte desses alvos.
                 pass
             else:
@@ -35579,9 +35575,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         out += [p for p in self.players.values()
                 if p["alive"] and not p.get("engolido") and not self._fosso_protegido(p)
                 and self._na_area(p, tx, ty, raio)]
-        if (self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed")
-                and self._na_area(self.prisoner, tx, ty, raio)):
-            out.append(self.prisoner)
+        out += [pr for pr in self._refens_no_mapa()
+                if pr.get("freed") and self._na_area(pr, tx, ty, raio)]
         out += [a for a in self._all_animados() if self._na_area(a, tx, ty, raio)]
         return out
 
@@ -35617,9 +35612,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         out += [p for p in self.players.values()
                 if p["alive"] and not p.get("engolido") and not self._fosso_protegido(p)
                 and self._na_area_quadrada(p, tx, ty, lado)]
-        if (self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed")
-                and self._na_area_quadrada(self.prisoner, tx, ty, lado)):
-            out.append(self.prisoner)
+        out += [pr for pr in self._refens_no_mapa()
+                if pr.get("freed") and self._na_area_quadrada(pr, tx, ty, lado)]
         out += [a for a in self._all_animados()
                 if self._na_area_quadrada(a, tx, ty, lado)]
         return out
@@ -35769,8 +35763,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             kind, key = "animado", f"a:{alvo.get('id')}"
         elif self._eh_jogador(alvo):
             kind, key = "hero", f"p:{alvo.get('id')}"
-        elif alvo is self.prisoner:
-            kind, key = "prisoner", "pr:singleton"
+        elif self._eh_refem(alvo):
+            kind, key = "prisoner", self._refem_chave_entidade(alvo)
         else:
             kind, key = "monster", f"m:{alvo.get('id')}"
         if status is None:
@@ -35885,11 +35879,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._acordar_se_dormindo(alvo)      # dano acorda quem dorme
             if alvo["hp"] <= 0:
                 await self._player_dies(alvo["id"])
-        elif alvo is self.prisoner:
+        elif self._eh_refem(alvo):
             self._registrar_dano_combate(alvo, dano, [elemento])
             alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
             if alvo["hp"] <= 0:
-                await self._prisioneiro_morre()
+                await self._prisioneiro_morre(alvo)
         else:                                          # monstro
             # Fraquezas/imunidades elementais (ex.: fogo Ã—2 no Devorador, raio no Crocodilo).
             dano = self._apply_damage_types(dano, [_NORM_ELEMENTO.get(elemento, elemento)], alvo)
@@ -36723,8 +36717,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         água e o turno da vítima — inclusive no HUD e nas guardas de movimento.
         """
         alvos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
-        if self.prisoner:
-            alvos.append(self.prisoner)
+        alvos.extend(self._refens_no_mapa())
         for c in alvos:
             if c.get("rodamoinho_preso") and not self._rodamoinho_tiles_of(c):
                 c.pop("rodamoinho_preso", None)
@@ -36766,8 +36759,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Retorna vivos dentro da área, incluindo aliados, inimigos e servos."""
         area = {(int(x), int(y)) for x, y in tiles}
         candidatos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
-        if self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed"):
-            candidatos.append(self.prisoner)
+        candidatos.extend(pr for pr in self._refens_no_mapa() if pr.get("freed"))
         out = []
         for alvo in candidatos:
             if not self._vivo(alvo) or self._fosso_protegido(alvo):
@@ -36810,8 +36802,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             por_identidade[id(alvo)] = ("monster", alvo)
         for alvo in self._all_animados():
             por_identidade[id(alvo)] = ("animado", alvo)
-        if self.prisoner:
-            por_identidade[id(self.prisoner)] = ("prisoner", self.prisoner)
+        for pr in self.prisoners:
+            por_identidade[id(pr)] = ("prisoner", pr)
         identificados = {}
         for alvo in self._alvos_no_inverno(zona.get("tiles", [])):
             tipo, entidade = por_identidade.get(id(alvo), (None, None))
@@ -37332,8 +37324,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _tempestade_entidades(self):
         out = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
-        if self.prisoner and self.prisoner.get("freed") and self.prisoner.get("alive"):
-            out.append(self.prisoner)
+        out.extend(pr for pr in self._refens_no_mapa() if pr.get("freed"))
         return out
 
     def _tempestade_posicoes(self, alvo):
@@ -37423,7 +37414,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return "monster"
         if any(alvo is animado for animado in self._all_animados()):
             return "animado"
-        if self.prisoner is alvo:
+        if self._eh_refem(alvo):
             return "prisoner"
         return "entity"
 
@@ -37539,8 +37530,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         chave = str(zona_id)
         alvos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
-        if self.prisoner:
-            alvos.append(self.prisoner)
+        alvos.extend(self._refens_no_mapa())
         for alvo in alvos:
             presos = alvo.get("tempestade_ciclones_presos")
             if not isinstance(presos, dict) or chave not in presos:
@@ -37894,8 +37884,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _prisao_chamas_entidades(self):
         """Entidades que podem ser atingidas pela Prisão de Chamas."""
         out = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
-        if self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed"):
-            out.append(self.prisoner)
+        out.extend(pr for pr in self._refens_no_mapa() if pr.get("freed"))
         return out
 
     def _prisao_chamas_posicoes(self, alvo):
@@ -38436,9 +38425,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._aplicar_dano_alvo(pl, dano_final, DMG_FIRE, kp)
 
         # O prisioneiro liberto também ocupa a área e pode estar sob Protetor.
-        pr = self.prisoner
-        if (pr and pr.get("alive") and pr.get("freed")
-                and max(abs(pr["pos"][0] - cx), abs(pr["pos"][1] - cy)) <= raio):
+        for pr in self._refens_no_mapa():
+            if not pr.get("freed") or max(abs(pr["pos"][0] - cx), abs(pr["pos"][1] - cy)) > raio:
+                continue
             salvou, d20, bonus, total = await self._save_mostrado(pr, "reflexos", 12)
             dano_final = dano_total // 2 if salvou else dano_total
             dano_final = self._dano_fogo_na_agua(pr, dano_final, DMG_FIRE)
@@ -38502,9 +38491,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if animado is not a and animado.get("vida_atual", 0) > 0 \
                     and tuple(animado.get("pos", [])) in casas:
                 alvos.append(("animado", animado))
-        if self.prisoner and self.prisoner.get("alive") and self.prisoner.get("hp", 0) > 0 \
-                and tuple(self.prisoner.get("pos", [])) in casas:
-            alvos.append(("prisoner", self.prisoner))
+        alvos.extend(("prisoner", pr) for pr in self._refens_no_mapa()
+                     if pr.get("hp", 0) > 0 and tuple(pr.get("pos", [])) in casas)
         ordem = {tuple(pos): i for i, pos in enumerate(linha)}
         def distancia_na_linha(item):
             tipo, entidade = item
@@ -39089,7 +39077,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if normalizar_altura(ator.get("altura", ALTURA_MIN)) > ALTURA_MIN:
                 continue  # as chamas residuais ficam no piso
             d = dano
-            if self._eh_jogador(ator) or ator is self.prisoner:
+            if self._eh_jogador(ator) or self._eh_refem(ator):
                 hp_antes = ator.get("hp", 0)
                 d = self._dano_fogo_na_agua(ator, d, DMG_FIRE)
                 await self._aplicar_dano_alvo(ator, d, DMG_FIRE,
@@ -39102,7 +39090,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 else:
                     ator["hp"] = max(0, ator["hp"] - d)
             await self.gm_say(T("narracao.entrou_na_zona_de_fogo_e_sofre", ator=nome_criatura(ator), d=d))
-            if not (self._eh_jogador(ator) or ator is self.prisoner) and ator.get("hp", ator.get("vida_atual", 0)) <= 0:
+            if not (self._eh_jogador(ator) or self._eh_refem(ator)) and ator.get("hp", ator.get("vida_atual", 0)) <= 0:
                 if "vida_atual" in ator:
                     await self._animado_morre(ator, zona.get("caster", ""))
                 else:
@@ -39759,12 +39747,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.broadcast({"type": "dice_roll", "die": "d" + dano_str.split("d", 1)[-1].split("+", 1)[0],
                               "value": dano_bruto, "label": T("dado.veneno_do_lacralion"),
                               "damage_type": DMG_POISON})
-        if self._eh_jogador(alvo) or alvo is self.prisoner:
+        if self._eh_jogador(alvo) or self._eh_refem(alvo):
             await self._aplicar_dano_alvo(alvo, dano, DMG_POISON, m.get("id"))
         else:
             alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
         await self.gm_say(T("narracao.sofre_de_dano_adicional_do_veneno", alvo_nome=nome_criatura(alvo), dano=dano))
-        if alvo.get("hp", 0) <= 0 and not (self._eh_jogador(alvo) or alvo is self.prisoner):
+        if alvo.get("hp", 0) <= 0 and not (self._eh_jogador(alvo) or self._eh_refem(alvo)):
             await self._monster_dies(alvo, m.get("id"))
             return
         if self._aplicar_sangramento(alvo):
@@ -41139,7 +41127,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 # Afogamento é um dano especial: a única defesa contra ele é
                 # a Fortitude acima, portanto resistências físicas não reduzem
                 # este valor.
-                if self._eh_jogador(criatura) or criatura is self.prisoner:
+                if self._eh_jogador(criatura) or self._eh_refem(criatura):
                     await self._aplicar_dano_alvo(
                         criatura, bruto, DMG_WATER, None)
                 else:
@@ -42216,8 +42204,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ícones de habilidade."""
         if self._eh_jogador(alvo):
             pid = alvo["id"]
-        elif alvo is self.prisoner:
-            pid = self.prisoner.get("rescuer_pid")
+        elif self._eh_refem(alvo):
+            pid = alvo.get("rescuer_pid")
         else:
             return
         if not pid:
@@ -42525,7 +42513,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Retorna True se teleportou (logo a armadilha foi consumida)."""
         nome = tipo["nome"]
         origem = list(alvo.get("pos") or arm.get("pos") or [])
-        alvo_id = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
+        alvo_id = alvo.get("id")
         save_ok, d20, sb, stot = self._testar_save(alvo, "vontade", _trap_cd(arm, tipo))
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": T("dado.nome_save", nome=nome_criatura(alvo), save=T("dado.save.vontade"))})
@@ -42658,7 +42646,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             residual = dano // 2
             if residual > 0:
                 arm.setdefault("efeitos_ativos", []).append({
-                    "alvo_id": "__prisioneiro__" if alvo is self.prisoner else alvo.get("id"),
+                    "alvo_id": alvo.get("id"),
                     "valor": residual, "elemento": DMG_ACID, "rodadas_restantes": 1,
                 })
                 efeitos_extra.append(f"🧪 Sofrerá {residual} de dano de ácido na rodada seguinte")
@@ -42768,10 +42756,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvos += [m for m in self.monsters.values()
                   if m.get("hp", 0) > 0 and not self._voo_imune_terreno(m)
                   and self._alvo_na_sala(m, sala)]
-        if self.prisoner and self.prisoner.get("alive") \
-                and not self._voo_imune_terreno(self.prisoner) \
-                and self._alvo_na_sala(self.prisoner, sala):
-            alvos.append(self.prisoner)
+        alvos += [pr for pr in self._refens_no_mapa()
+                  if not self._voo_imune_terreno(pr) and self._alvo_na_sala(pr, sala)]
         return alvos
 
     async def _disparar_teto_esmagador(self, _acionador, arm, tipo):
@@ -42863,9 +42849,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                  if p.get("alive") and self._alvo_na_sala(p, sala)]
         alvos += [m for m in self.monsters.values()
                   if m.get("hp", 0) > 0 and self._alvo_na_sala(m, sala)]
-        if self.prisoner and self.prisoner.get("alive") and self.prisoner.get("freed") \
-                and self._alvo_na_sala(self.prisoner, sala):
-            alvos.append(self.prisoner)
+        alvos += [pr for pr in self._refens_no_mapa()
+                  if pr.get("freed") and self._alvo_na_sala(pr, sala)]
         return alvos
 
     async def _resolver_camara_gas_turno(self, alvo, zona):
@@ -42933,7 +42918,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         for a in alvos:
             if a is None:
                 continue
-            ids.append("__prisioneiro__" if a is self.prisoner else a.get("id"))
+            ids.append(a.get("id"))
         msg = {"type": "armadilha_disparo", "tipo_id": tipo_id,
                "pos": list(pos or []), "alvos": [i for i in ids if i is not None]}
         if area:
@@ -42948,10 +42933,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Publica o resultado visual do impacto sem alterar a resolução da armadilha."""
         if not alvo or not isinstance(alvo.get("pos"), (list, tuple)):
             return
-        alvo_id = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
+        alvo_id = alvo.get("id")
         alvo_tipo = ("heroi" if self._eh_jogador(alvo) else
                      "monstro" if any(alvo is m for m in self.monsters.values()) else
-                     "prisioneiro" if alvo is self.prisoner else "outro")
+                     "prisioneiro" if self._eh_refem(alvo) else "outro")
         msg = {
             "type": "armadilha_impacto", "tipo_id": tipo_id,
             "alvo_id": alvo_id, "alvo_tipo": alvo_tipo,
@@ -42975,11 +42960,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvos += [a for a in self._all_animados()
                   if not self._voo_imune_terreno(a)
                   and abs(a["pos"][0]-cx) <= r and abs(a["pos"][1]-cy) <= r]
-        pr = self.prisoner
-        if pr and pr.get("alive") and pr.get("freed") \
-                and not self._voo_imune_terreno(pr) \
-                and abs(pr["pos"][0]-cx) <= r and abs(pr["pos"][1]-cy) <= r:
-            alvos.append(pr)
+        alvos += [pr for pr in self._refens_no_mapa()
+                  if pr.get("freed") and not self._voo_imune_terreno(pr)
+                  and abs(pr["pos"][0]-cx) <= r and abs(pr["pos"][1]-cy) <= r]
         if arm.get("tipo") == "armadilha_sono":
             alvos = [a for a in alvos
                      if not self._tem_imunidade(a, "sono")
@@ -43024,7 +43007,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         descricao="A armadilha libera uma onda de sono que domina seus sentidos.",
                         tipo_id=arm["tipo"],
                     )
-                elif alvo is self.prisoner:
+                elif self._eh_refem(alvo):
                     await self._enviar_trap_result(
                         alvo, "Sono", "🌙", sucesso=False, dano=0, metade=False,
                         descricao=tipo["descricao"],
@@ -43057,8 +43040,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if tipo_ef == "dano":
             if ef.get("rodada", 1) > 1:
                 # Dano progressivo: agenda p/ rodadas seguintes (ver _processar_efeitos_armadilha_turno).
-                # O prisioneiro nÃ£o tem "id" â†’ sentinela dedicada para o lookup por turno.
-                aid = "__prisioneiro__" if alvo is self.prisoner else alvo.get("id")
+                aid = alvo.get("id")
                 arm.setdefault("efeitos_ativos", []).append({
                     "alvo_id": aid, "valor": ef["valor"],
                     "elemento": ef.get("elemento", "fisico"), "rodadas_restantes": ef["rodada"] - 1,
@@ -43218,8 +43200,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif self.monsters.get(alvo.get("id")) is alvo:
             alvo["hp"] = 0
             await self._monster_dies(alvo, killer_pid, force=True)
-        elif self.prisoner is alvo:
-            await self._prisioneiro_morre()
+        elif self._eh_refem(alvo):
+            await self._prisioneiro_morre(alvo)
         else:
             return False
         return True
@@ -43413,8 +43395,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if alvo["hp"] <= 0:
             if self._eh_jogador(alvo):
                 await self._player_dies(alvo["id"])
-            elif alvo is self.prisoner:
-                await self._prisioneiro_morre()
+            elif self._eh_refem(alvo):
+                await self._prisioneiro_morre(alvo)
             else:
                 await self._monster_dies(alvo, killer_pid)
 
@@ -44122,8 +44104,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for ef in arm.get("efeitos_ativos", []):
                 aid = ef["alvo_id"]
                 alvo = self.players.get(aid) or self.monsters.get(aid)
-                if alvo is None and aid == "__prisioneiro__":
-                    alvo = self.prisoner
+                if alvo is None and aid is not None:
+                    alvo = self._refem_por_id(aid)   # "__prisioneiro__" de foto antiga vale
                 if alvo and self._voo_imune_terreno(alvo):
                     # O efeito continua sua duração, mas não afeta quem está
                     # voando acima do chão nesta rodada.
@@ -44157,8 +44139,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         a duração e limpa em 0. Manda popup de tick (trap_result) ao jogador
         afetado (ou ao rescuer do prisioneiro); monstros não recebem cliente."""
         entes = list(self.players.values()) + list(self.monsters.values())
-        if self.prisoner is not None:
-            entes.append(self.prisoner)
+        entes.extend(self._refens_no_mapa())
         for alvo in entes:
             if alvo.get("em_chamas_rodadas", 0) <= 0:
                 continue
@@ -44203,8 +44184,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Aplica o dano residual do ácido (metade do inicial) UMA vez, na rodada
         seguinte ao acerto, e limpa. Varre jogadores + monstros + prisioneiro."""
         entes = list(self.players.values()) + list(self.monsters.values())
-        if self.prisoner is not None:
-            entes.append(self.prisoner)
+        entes.extend(self._refens_no_mapa())
         for alvo in entes:
             d = alvo.get("acido_residual", 0)
             if d <= 0:
@@ -46779,7 +46759,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return dano
         if _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento) != DMG_FIRE:
             return dano
-        if not (self._eh_jogador(alvo) or alvo is self.prisoner or incluir_monstro):
+        if not (self._eh_jogador(alvo) or self._eh_refem(alvo) or incluir_monstro):
             return dano
         return (dano + 1) // 2 if self._agua_reduz_fogo(alvo) else dano
 
@@ -47589,8 +47569,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for q in self.monsters.values():
                 if q.get("hp", 0) > 0 and tuple(q.get("pos") or ()) in por_casa:
                     ocupantes.append((q, tuple(q["pos"])))
-            if self.prisoner and self.prisoner.get("alive") and tuple(self.prisoner.get("pos") or ()) in por_casa:
-                ocupantes.append((self.prisoner, tuple(self.prisoner["pos"])))
+            ocupantes += [(pr, tuple(pr["pos"])) for pr in self._refens_no_mapa()
+                          if tuple(pr.get("pos") or ()) in por_casa]
             vistos = set()
             for ocupante, casa in ocupantes:
                 if id(ocupante) in vistos:
@@ -49653,7 +49633,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                       effective_ac=effective_ac, crit_str=crit_str, dmg=dmg,
                       target_hp=target["hp"], target_max_hp=target.get("max_hp", target.get("hp", 0))))
                 if target["hp"] <= 0:
-                    await self._prisioneiro_morre()
+                    await self._prisioneiro_morre(target)
             else:
                 dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")
                 self._registrar_dano_combate(
@@ -50022,7 +50002,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if save.get("cd"):
                 passou, *_ = self._testar_save(alvo, save.get("tipo", "reflexos"), save["cd"], fonte=m)
             dmg = self._apply_damage_types((raw + 1) // 2 if passou else raw, [damage_type], alvo)
-            if self._eh_jogador(alvo) or alvo is self.prisoner:
+            if self._eh_jogador(alvo) or self._eh_refem(alvo):
                 await self._aplicar_dano_alvo(alvo, dmg, damage_type,
                                               m.get("id"))
             elif "vida_atual" in alvo:
@@ -52024,7 +52004,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ab  = self._habilidade_monstro(m, ab_id) or {}
         dmg = roll_dice(ab.get("damage") or dado)
         dmg = self._apply_damage_types(dmg, ["physical"], preso)
-        if self._eh_jogador(preso) or preso is self.prisoner:
+        if self._eh_jogador(preso) or self._eh_refem(preso):
             await self._aplicar_dano_alvo(preso, dmg, DMG_PHYSICAL,
                                           m.get("id"))
         else:
@@ -52032,7 +52012,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.gm_say(T(narracao, m=nome_criatura(m), a=nome_criatura(preso), d=dmg))
         if preso["hp"] <= 0:
             await self._soltar_agarrado(preso)
-            if not (self._eh_jogador(preso) or preso is self.prisoner):
+            if not (self._eh_jogador(preso) or self._eh_refem(preso)):
                 await self._monster_dies(preso, m.get("id"))
 
     def _casa_livre_ao_lado(self, m, arrastado, preferida=None,
@@ -54475,7 +54455,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     dano = self._apply_damage_types(bruto // 2 if passou else bruto, [DMG_PHYSICAL], alvo)
                     if item.get("kind") == "animado":
                         alvo["vida_atual"] = max(0, alvo.get("vida_atual", 0) - dano)
-                    elif item.get("kind") == "player" or alvo is self.prisoner:
+                    elif item.get("kind") == "player" or self._eh_refem(alvo):
                         await self._aplicar_dano_alvo(alvo, dano, DMG_PHYSICAL,
                                                       m.get("id"))
                     else:
@@ -54944,14 +54924,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.gm_say(T("narracao.sofre_de_dano", alvo_nome=nome_criatura(alvo), dano=dano, elemento="acid"))
             if alvo["vida_atual"] <= 0:
                 await self._animado_morre(alvo, None)
-        elif self._eh_jogador(alvo) or alvo is self.prisoner:
+        elif self._eh_jogador(alvo) or self._eh_refem(alvo):
             await self._aplicar_dano_alvo(alvo, dano, DMG_ACID, None)
             await self.gm_say(T("narracao.sofre_de_dano_hp", alvo_nome=nome_criatura(alvo), dano=dano, elemento="acid", alvo_hp=alvo["hp"], alvo_get_max_hp=alvo.get("max_hp", "?")))
         else:
             alvo["hp"] = max(0, alvo.get("hp", 0) - dano)
             await self.gm_say(T("narracao.sofre_de_dano_hp", alvo_nome=nome_criatura(alvo), dano=dano, elemento="acid", alvo_hp=alvo["hp"], alvo_get_max_hp=alvo.get("max_hp", "?")))
             if alvo["hp"] <= 0:
-                if not (self._eh_jogador(alvo) or alvo is self.prisoner):
+                if not (self._eh_jogador(alvo) or self._eh_refem(alvo)):
                     await self._monster_dies(alvo, None)
         if self._eh_jogador(alvo) and alvo.get("id"):
             await self.send_to(alvo["id"], {
@@ -55002,7 +54982,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "residual": bool(not passou and dano > 0), "corrosion": False,
             })
             return
-        if self._eh_jogador(alvo) or alvo is self.prisoner:
+        if self._eh_jogador(alvo) or self._eh_refem(alvo):
             await self._aplicar_dano_alvo(alvo, dano, DMG_ACID, m.get("id"))
         else:
             self._registrar_dano_combate(alvo, dano, [DMG_ACID])
@@ -55024,7 +55004,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "animation_id": animation_id, "damage": dano, "save": bool(passou),
             "residual": bool(not passou and dano > 0), "corrosion": bool(corrosion),
         })
-        if alvo["hp"] <= 0 and not (self._eh_jogador(alvo) or alvo is self.prisoner):
+        if alvo["hp"] <= 0 and not (self._eh_jogador(alvo) or self._eh_refem(alvo)):
             await self._monster_dies(alvo, m.get("id"))
 
     async def _grotao_cuspir_acido(self, m, target_obj):
@@ -57177,7 +57157,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if self._casa_abismo(nx, ny):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")})
             return
-        if not self._tile_livre_para_animado(nx, ny, None, pr["pos"], atravessar=_atravessar):
+        if not self._tile_livre_para_animado(nx, ny, pr["id"], pr["pos"], atravessar=_atravessar):
             await self.send_to(pid, {"type": "error", "msg": T("erro.caminho_bloqueado_para_o_prisioneiro")}); return
         old_pos = list(pr["pos"])
         estava_no_piche = self._criatura_em_piche(pr, old_pos)
@@ -57221,12 +57201,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         else:
             await self.push_state()
 
-    async def _prisioneiro_morre(self):
-        """Morte do prisioneiro (por monstro, armadilha, etc.): falha o resgate
-        sem encerrar a partida. Caminho único de morte do prisioneiro."""
-        pr = self.prisoner
-        if not pr:
-            return
+    async def _prisioneiro_morre(self, pr):
+        """Morte de um refém (por monstro, armadilha, etc.): falha o resgate
+        sem encerrar a partida. Caminho único de morte de refém."""
         pr["alive"] = False
         self.rescue_failed = True
         await self.gm_say(T("narracao.o_prisioneiro_foi_morto_o_resgate_falhou"))
@@ -57246,11 +57223,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.refem_morto_consequencia"))
 
     async def _processar_prisioneiro_turno(self):
-        """Prisioneiro libertado: cada monstro adjacente o fere. O MOVIMENTO é
+        for pr in self._refens_no_mapa():
+            if pr.get("freed"):
+                await self._processar_turno_do_refem(pr)
+
+    async def _processar_turno_do_refem(self, pr):
+        """Refém libertado: cada monstro adjacente o fere. O MOVIMENTO é
         manual, pelo resgatador, em handle_mover_prisioneiro (janela pós-turno)."""
-        pr = self.prisoner
-        if not pr or not pr.get("freed") or not pr.get("alive"):
-            return
         if pr.get("training_refem"):
             return  # A demonstração é controlada pela lição de Protetor.
         await self._processar_aura_escaldante_inicio(pr)
@@ -57352,9 +57331,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         r = self.MINION_VISAO_RAIO
         fontes = [a["pos"] for a in self._all_animados() if a.get("vida_atual", 0) > 0]
         # O prisioneiro resgatado também é controlado pelo grupo: enxerga como um servo.
-        pr = self.prisoner
-        if pr and pr.get("freed") and pr.get("alive") and isinstance(pr.get("pos"), (list, tuple)):
-            fontes.append(pr["pos"])
+        fontes += [pr["pos"] for pr in self._refens_no_mapa()
+                   if pr.get("freed") and isinstance(pr.get("pos"), (list, tuple))]
         for pos in fontes:
             ax, ay = pos
             for dy in range(-r, r + 1):
@@ -57804,6 +57782,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                 - int(self.round_num or 1)))
             for _privado in ("_metamorfose_original", "_teste_furia_consumida_round"):
                 snapshot.pop(_privado, None)
+            protegido = self._protetor_target(p.get("protetor_alvo"))
+            if self._eh_refem(protegido):
+                snapshot["protetor_alvo"] = self._refem_chave_cliente(protegido)
             players_state.append(snapshot)
         players_state.extend(dict(a, initiative=0) for a in self.training_allies.values())
         _alvos_hostis = self._alvos_hostis_para_monstros()

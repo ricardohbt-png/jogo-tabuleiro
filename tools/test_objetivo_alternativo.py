@@ -43,7 +43,7 @@ def sala():
 
 
 def checar(r): asyncio.run(r._check_objectives())
-def morrer_refem(r): asyncio.run(r._prisioneiro_morre())
+def morrer_refem(r): asyncio.run(r._prisioneiro_morre(r.prisoner))
 def matar(r): r.alvo["hp"] = 0
 
 

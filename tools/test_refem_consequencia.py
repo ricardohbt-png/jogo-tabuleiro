@@ -35,7 +35,7 @@ def sala(defn=DEFN):
 
 
 def morrer(r):
-    asyncio.run(r._prisioneiro_morre())
+    asyncio.run(r._prisioneiro_morre(r.prisoner))
 
 
 class RefemConsequenciaTests(unittest.TestCase):

@@ -113,7 +113,7 @@ class CriancasTests(unittest.TestCase):
 
     def test_criancas_mortas_aplica_a_consequencia_e_a_missao_segue(self):
         r, p = sala(); r.renome = 12
-        run(r._prisioneiro_morre()); run(r._prisioneiro_morre())
+        run(r._prisioneiro_morre(r.prisoner)); run(r._prisioneiro_morre(r.prisoner))
         self.assertEqual(r.renome, 7)
         self.assertIn(G.FATO_MORTE, r.fatos)
         self.assertEqual(r.phase, "playing")
@@ -136,7 +136,7 @@ class CriancasTests(unittest.TestCase):
 
     def test_matar_com_criancas_mortas_so_xp_reduzido(self):
         r, p = sala(); r.renome = 10; xp0 = p["xp"]; ouro0 = p["gold"]
-        run(r._prisioneiro_morre())
+        run(r._prisioneiro_morre(r.prisoner))
         ferrao(r)["hp"] = 0
         run(r._check_objectives())
         self.assertTrue(r.mission_complete_pending)
@@ -148,7 +148,7 @@ class CriancasTests(unittest.TestCase):
 
     def test_fugir_pela_escada_com_criancas_mortas_nao_conclui(self):
         r, p = sala()
-        run(r._prisioneiro_morre())
+        run(r._prisioneiro_morre(r.prisoner))
         run(r._check_objectives())
         self.assertFalse(r._objetivo_concluido)
         self.assertEqual(r.world_adventure_progress.get(G.AVENTURA, 0), 0)
@@ -156,7 +156,7 @@ class CriancasTests(unittest.TestCase):
 
     def test_nova_tentativa_restaura_as_criancas_mas_nao_o_renome(self):
         r, p = sala(); r.renome = 10
-        run(r._prisioneiro_morre())
+        run(r._prisioneiro_morre(r.prisoner))
         r.load_authored_dungeon(deepcopy(ALDEIA))
         self.assertFalse(r.rescue_failed)
         self.assertTrue(r.prisoner["alive"] if "alive" in r.prisoner else True)
@@ -167,7 +167,7 @@ class CriancasTests(unittest.TestCase):
         r, p = sala()
         ferrao(r)["hp"] = 0
         run(r._check_objectives())
-        run(r._prisioneiro_morre())
+        run(r._prisioneiro_morre(r.prisoner))
         run(r._check_objectives())
         self.assertTrue(r.mission_complete_pending)
 

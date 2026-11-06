@@ -21,7 +21,7 @@ class TutorialTraining:
         owner = actor or {}
         if owner.get("owner"):
             owner = self.players.get(owner["owner"], {})
-        if owner is getattr(self, "prisoner", None):
+        if self._eh_refem(owner):
             owner = self.players.get(owner.get("rescuer_pid"), {})
         for room in self.rooms:
             cls = room.get("allowed_class")
@@ -68,7 +68,7 @@ class TutorialTraining:
 
     async def _training_prisoner_dialogue(self, p, text_key):
         """Envia uma fala privada do refém nas etapas do Paladino."""
-        pr = getattr(self, "prisoner", None)
+        pr = self.prisoner
         if (not getattr(self, "training_mode", False) or not p
                 or p.get("class_id") != "paladin"
                 or not pr or not pr.get("training_refem")):
@@ -227,7 +227,7 @@ class TutorialTraining:
         self.prisoner = None
         self.prisioneiro_done = True
         for h in self.players.values():
-            if h.get("protetor_alvo") == "__prisioneiro__":
+            if h.get("protetor_alvo") in (pr.get("id"), "__prisioneiro__"):
                 h["protetor_ativo"] = False; h["protetor_alvo"] = None
         await self.gm_say(self._tutorial_api().T("narracao.refem_agradece_e_se_retira"))
     def _training_spell_available(self, p, mid):
@@ -490,7 +490,7 @@ class TutorialTraining:
             return
         aid = tar.get("alvo")
         if kind == "curar" and aid == "imposicao_maos":
-            if target is not self.prisoner or amount <= 0 or not self.training_state.get("paladin", {}).get("protegido"):
+            if not self._eh_refem(target) or amount <= 0 or not self.training_state.get("paladin", {}).get("protegido"):
                 return
             await self._training_prisoner_dialogue(p, "narracao.refem_treino_agradece")
             await self._licao_evento(p, "usar_habilidade", alvo=aid, contexto={"alvo_id": "__prisioneiro__", "cura": amount})
@@ -522,7 +522,7 @@ class TutorialTraining:
         if tar.get("tipo") == "proteger" and self._licao_no_lugar(p, lesson["pos"]):
             pr = self.prisoner
             if (pr and pr.get("training_refem") and pr.get("alive") and pr.get("freed")
-                    and p.get("protetor_ativo") and p.get("protetor_alvo") == "__prisioneiro__"
+                    and p.get("protetor_ativo") and self._protetor_target(p.get("protetor_alvo")) is pr
                     and self._no_raio(p, pr, self._defensor_raio(p))):
                 pr["hp"] = max(pr["hp"], 7)
                 before = (pr["hp"], p["hp"])
