@@ -1938,6 +1938,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "pequeno",
       "image": "goblinArqueiro",
+      "base_attack_bonus": 2,
       "str_": 10,
       "dex": 14,
       "con_": 10,
@@ -1955,7 +1956,7 @@ window.EDITOR_CATALOG = {
           ],
           "num_attacks": 1,
           "on_hit": null,
-          "range": 8,
+          "range": 6,
           "categoria": "perfurante"
         }
       ],
@@ -1984,23 +1985,13 @@ window.EDITOR_CATALOG = {
         }
       ],
       "loot_table": {
-        "1-40": null,
-        "41-70": {
+        "1-100": {
           "tipo": "gold",
-          "valor": 2
-        },
-        "71-90": {
-          "tipo": "gold",
-          "valor": 2
-        },
-        "91-100": {
-          "tipo": "gold",
-          "valor": 3
+          "valor": "1d6+4"
         }
       },
-      "guaranteed_loot": [
-        "arco_curto"
-      ],
+      "guaranteed_loot": [],
+      "equipment_enabled": true,
       "ai_type": "goblin_arqueiro",
       "undead": false,
       "subtipo": "raca_padrao",

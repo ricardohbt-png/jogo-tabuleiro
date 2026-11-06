@@ -5898,10 +5898,11 @@ MONSTER_DEFS = [
         "hp": 9, "ac": 13, "size": [1, 1], "movement": 6,
         "str_": 10, "dex": 14, "con_": 10, "int_": 10,
         "fort": 2, "ref_": 4, "will": 1,
+        "equipment_enabled": True, "base_attack_bonus": 2, "subtipo": "raca_padrao",
         "attacks": [
             {"name": "Arco Curto", "atk_bonus": 4, "damage": "1d6",
              "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
-             "range": 8, "categoria": "perfurante"},
+             "range": 6, "categoria": "perfurante"},
         ],
         "special_abilities": [
             {"id": "vulnerabilidade", "name": "Vulnerabilidade", "action_type": "passiva",
@@ -5913,11 +5914,8 @@ MONSTER_DEFS = [
             {"type": "save_penalty", "saves": ["vontade"], "bonus_flat": -2,
              "vulnerabilidade": True, "descricao": "Vulnerabilidade: -2 em testes de Vontade"},
         ],
-        "loot_table": {
-            "1-40": None, "41-70": {"tipo": "gold", "valor": 2},
-            "71-90": {"tipo": "gold", "valor": 2}, "91-100": {"tipo": "gold", "valor": 3},
-        },
-        "guaranteed_loot": ["arco_curto"],
+        "loot_table": {"1-100": {"tipo": "gold", "valor": "1d6+4"}},
+        "guaranteed_loot": [],
         "spawn_min": 1, "spawn_max": 3,
         "ai_type": "goblin_arqueiro",
         "porte": "pequeno",
@@ -12656,6 +12654,16 @@ def _aplicar_equipamentos_monstro(m):
     atk_bonus = sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "atk")
     if atk_bonus:
         m["equipment_attack_bonus"] = atk_bonus
+    damage_bonus = sum(int(b.get("value", 0) or 0) for item in items
+                       for b in [item, *(item.get("bonuses") or [])]
+                       if b.get("effect") == "damage_bonus")
+    if damage_bonus:
+        m["equipment_damage_bonus"] = damage_bonus
+    vision_bonus = sum(int(b.get("value", 0) or 0) for item in items
+                       for b in [item, *(item.get("bonuses") or [])]
+                       if b.get("effect") == "vision")
+    if vision_bonus:
+        m["equipment_vision_bonus"] = vision_bonus
     hp_bonus = sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "maxhp")
     if hp_bonus:
         m["max_hp"] += hp_bonus
@@ -12942,6 +12950,22 @@ def make_monster(mdef, room):
     m["pos"] = [room["cx"], room["cy"]]
     m["room_id"] = room["id"]
     combatant_potion = False
+    if m.get("type") == "goblin_arqueiro":
+        weapon_id = "arco_curto" if random.random() < .85 else "longbow"
+        roll = random.random()
+        ammo_id = ("flechas_prata" if roll < .20 else "flechas_magicas" if roll < .22
+                   else "flecha_incendiaria" if roll < .23 else "flechas_explosivas" if roll < .235 else "flechas")
+        ammo = deepcopy(_DUNGEON_ITEM_CATALOG[ammo_id])
+        ammo["ammo_count"] = 20
+        m["municao_arqueiro"] = ammo
+        m["equipment_enabled"] = True
+        m["base_attack_bonus"] = 2
+        m["equipped_items"] = [weapon_id]
+        m["guaranteed_loot"] = []
+        if random.random() < .01:
+            rings = [item for item in SHOP_MERCHANT if item.get("item_slot") == "ring"]
+            if rings:
+                m["equipped_items"].append(random.choice(rings)["id"])
     if m.get("type") == "goblin_combatente":
         random_equipment = m.get("random_equipment") or {}
         weapon_options = random_equipment.get("weapons") or (
@@ -13066,7 +13090,7 @@ def make_monster(mdef, room):
         m["spell_slots_remaining"] = max(0, int(m["spell_slots_per_combat"]))
     # â”€â”€ Goblins: muniÃ§Ã£o do arqueiro e arremesso do Dual/Assassino â”€â”€
     if m.get("type") == "goblin_arqueiro":
-        m["flechas"] = 10
+        m["flechas"] = 20
         m["pode_arremessar"] = False
     if m.get("type") in {"goblin_dual", "goblin_assassino"}:
         m["pode_arremessar"] = True
@@ -21524,7 +21548,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         bonus_atributos = (mod(m.get("int_", 10) - self._reducao_atributo_veneno(m, "int_"))
                            + mod(m.get("dex", 10) - self._reducao_atributo_veneno(m, "dex"))) // 2
         bonus_duas_cabecas = 2 if self._tem_habilidade(m, "duas_cabecas") else 0
-        raio = max(1, base + bonus_atributos + bonus_visao + bonus_duas_cabecas)
+        raio = max(1, base + bonus_atributos + bonus_visao + bonus_duas_cabecas + int(m.get("equipment_vision_bonus", 0) or 0))
         for efeito in m.get("efeitos_veneno", []) or []:
             try:
                 raio += int(efeito.get("vision_radius_penalty", 0) or 0)
@@ -49203,6 +49227,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                  + self._privacao_monstro_penalidade(m, "ataque")
                  + (2 if m.get("furia_lobisomem") else 0)
                  + m.get("equipment_attack_bonus", 0)
+                 + int(atk_def.get("ammo_atk_bonus", 0) or 0)
                  + self._bonus_ferrao_lacralion(m, target, atk_def)
                  + self._sombras_atk_bonus(m, target)               # Ataque das Sombras (+2)
                  + self._luz_atk_pen(m)                             # Fraqueza de Luz (-2 sob luz direta)
@@ -49233,9 +49258,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         attack_name = atk_def.get("name") or "Ataque"
         attack_mode = "advantage" if vantagem and not desvantagem else "disadvantage" if desvantagem and not vantagem else "normal"
+        projectile = _projetil_de(atk_def, monstro=True)
+        if projectile and atk_def.get("special_effect") == "explosive_ammo":
+            projectile.update({"explosive_ammo": True, "explosion_pos": list(target["pos"])})
         attack_feedback_id = await self._emitir_feedback_ataque(
             "start", m, target, attack_name, attack_mode,
-            projectile=_projetil_de(atk_def, monstro=True),
+            projectile=projectile,
             impacto=_impacto_de(atk_def, monstro=True))
 
         if vantagem or desvantagem:
@@ -49390,6 +49418,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                       + gigante_heroic_damage_bonus
                       + self._monster_editor_passive_bonus(m)
                       + int(atk_def.get("damage_bonus", 0) or 0)
+                      + int(m.get("equipment_damage_bonus", 0) or 0)
                       - int(atk_def.get("rede_corrosiva_damage_pen", 0) or 0)
                       + sneak_damage
                       + m.get("editor_ability_damage", 0)
@@ -49400,6 +49429,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if self._tem_habilidade(m, "intensidade"):
                 damage_context = dict(atk_def, ignora_resistencia_leve_fogo=True)
             dmg = self._apply_damage_types(dmg, atk_def.get("damage_types", ["physical"]), target, damage_context)
+            if atk_def.get("special_effect") == "explosive_ammo":
+                explosion_raw = roll_dice("1d6")
+                explosion_damage = self._apply_damage_types(explosion_raw, [DMG_PHYSICAL], target)
+                dmg += explosion_damage
+                await self.broadcast({"type": "dice_roll", "die": "d6", "value": explosion_raw,
+                                      "label": T("dado.dano"), "damage_type": DMG_PHYSICAL,
+                                      "explosive_ammo": True})
             fire_component_resolved = None
             if atk_def.get("fire_damage"):
                 fire_expr = str(atk_def["fire_damage"])
@@ -53181,8 +53217,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     break
         if not pode_atirar():
             return
-        await self._execute_one_monster_attack(m, m["attacks"][0], target_obj)
+        ammo = m.get("municao_arqueiro")
+        attack = dict(m["attacks"][0])
+        if isinstance(ammo, dict):
+            attack["ammo_atk_bonus"] = int(ammo.get("atk_bonus", 0) or 0)
+            attack["damage_bonus"] = int(attack.get("damage_bonus", 0) or 0) + int(ammo.get("damage_bonus", 0) or 0)
+            for key in ("silver", "magical", "special_effect"):
+                if ammo.get(key): attack[key] = ammo[key]
+            if ammo.get("extra_damage") and DMG_FIRE in ammo.get("extra_damage_types", []):
+                attack["fire_damage"] = ammo["extra_damage"]
+        hit = await self._execute_one_monster_attack(m, attack, target_obj)
         m["flechas"] = max(0, m["flechas"] - 1)
+        if isinstance(ammo, dict):
+            ammo["ammo_count"] = m["flechas"]
+        if hit and attack.get("special_effect") == "explosive_ammo":
+            await self._explosao_municao_acertada(target, target["pos"], m.get("id"))
 
     # â”€â”€ XamÃ£ Goblin (conjurador) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _xama_silencio(self, m, centro):
@@ -56112,6 +56161,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             loot_items.append(sc)
             # Drops do editor: cada linha Ã© uma rolagem prÃ³pria, portanto um
             # monstro pode deixar mais de um item no mesmo baÃº.
+            if m.get("type") == "goblin_arqueiro":
+                gold = random.randint(5, 10)
             for drop in m.get("loot_drops", []):
                 if random.randint(1, 100) > int(drop.get("chance", 0)):
                     continue
@@ -56146,6 +56197,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             elif m.get("type") == "dark_mage" or _eh_bardo(m):
                 gold_range = m.get("gold_range") or (4, 12)
                 gold = random.randint(int(gold_range[0]), int(gold_range[1]))
+            if m.get("type") == "goblin_arqueiro":
+                remaining = max(0, int(m.get("flechas", 0) or 0))
+                ammo = m.get("municao_arqueiro") or _DUNGEON_ITEM_CATALOG.get("flechas")
+                while remaining > 0 and isinstance(ammo, dict):
+                    dropped = deepcopy(ammo)
+                    dropped["ammo_count"] = min(MAX_AMMO_STACK, remaining)
+                    remaining -= dropped["ammo_count"]
+                    loot_items.append(dropped)
             equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []
             equipment_by_id = {
                 item.get("id"): item for item in (m.get("equipment_items") or [])
