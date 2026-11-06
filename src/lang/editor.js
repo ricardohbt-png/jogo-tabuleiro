@@ -8,6 +8,11 @@
 // REGRAS: JSON estrito DENTRO do objeto (aspas duplas, sem vírgula sobrando,
 // sem comentário lá dentro). Parâmetros {nome}, iguais nos dois idiomas.
 window.LANG_EDITOR = {
+  "ui.editor.masmorra.ferramenta.portao": {"pt":"portão", "en":"portcullis"},
+  "ui.editor.masmorra.barra.portao_largura": {"pt":"Largura do portão em quadrados", "en":"Portcullis width in squares"},
+  "ui.editor.masmorra.barra.portao_horizontal": {"pt":"Horizontal", "en":"Horizontal"},
+  "ui.editor.masmorra.barra.portao_vertical": {"pt":"Vertical", "en":"Vertical"},
+  "ui.editor.masmorra.barra.portao_colocacao_invalida": {"pt":"Não foi possível colocar o portão: confira os limites do mapa, portões existentes e condições ou salas diferentes no trecho.", "en":"Cannot place the portcullis: check map boundaries, existing gates, and differing rooms or conditions along the span."},
   "ui.editor.cinto.bolso": {"pt": "Bolso {n}", "en": "Pocket {n}"},
   "ui.editor.cinto.item": {"pt": "Item do bolso {n}", "en": "Pocket {n} item"},
   "ui.editor.cinto.quantidade": {"pt": "Quantidade do bolso {n}", "en": "Pocket {n} quantity"},

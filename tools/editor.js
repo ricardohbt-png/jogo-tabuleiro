@@ -471,6 +471,8 @@
     ponteLargura: 1,
     ponteMaterial: "madeira",
     ponteDrag: null,
+    portaoLargura: 1,
+    portaoDirecao: "horizontal",
     materiais: {},                 // {"x,y": id}
     elevacoes: {},                 // {"x,y": nível visual (-1..40)}
     alturasParede: {},             // {"x,y": nível manual da parede (0..40); ausente = automático}
@@ -710,6 +712,42 @@
     for (const key of selected) delete S.doorStyles[key];
     S.doorStyles[anchor] = "portao_levadico";
     if (normalized.length > 1) S.portcullisGroups[anchor] = normalized;
+    return true;
+  }
+  function portcullisPlacementCells(x, y, width, direction) {
+    if (!Number.isInteger(width) || width < 1 || !["horizontal", "vertical"].includes(direction)) return null;
+    const cells = Array.from({length: width}, (_, i) => [x + (direction === "horizontal" ? i : 0), y + (direction === "vertical" ? i : 0)]);
+    if (cells.some(([cx, cy]) => cx < 0 || cy < 0 || cx >= S.grid.w || cy >= S.grid.h || portcullisGroupAt(cx, cy))) return null;
+    const owners = ([cx, cy]) => JSON.stringify(S.rooms.filter(r => roomBorderTouches(r, cx, cy)).map(r => String(r.id)).sort());
+    const condition = ([cx, cy]) => JSON.stringify(S.doorConditions[cx + "," + cy] || null);
+    if (cells.some(cell => owners(cell) !== owners(cells[0]) || condition(cell) !== condition(cells[0]))) return null;
+    return cells;
+  }
+  function placePortcullis(x, y, width, direction) {
+    const cells = portcullisPlacementCells(x, y, width, direction);
+    if (!cells) return false;
+    const previous = {
+      tiles: cells.map(([cx, cy]) => S.tiles[cy][cx]),
+      rotations: {...S.doorRotations}, styles: {...S.doorStyles}, groups: {...S.portcullisGroups},
+      rooms: S.rooms.map(r => r.doors.map(p => p.slice())),
+    };
+    for (const [cx, cy] of cells) { S.tiles[cy][cx] = DOOR; doorLink(cx, cy); }
+    const quarter = direction === "horizontal" ? 0 : 1;
+    for (const [cx, cy] of cells) {
+      const base = Math.round(doorBaseAngle(cx, cy) / (Math.PI / 2));
+      S.doorRotations[cx + "," + cy] = (quarter - base + 4) % 4;
+    }
+    if (!setPortcullisSpan(cells)) {
+      cells.forEach(([cx, cy], i) => { S.tiles[cy][cx] = previous.tiles[i]; });
+      S.doorRotations = previous.rotations; S.doorStyles = previous.styles; S.portcullisGroups = previous.groups;
+      S.rooms.forEach((r, i) => { r.doors = previous.rooms[i]; });
+      return false;
+    }
+    for (const [cx, cy] of cells) {
+      const key = cx + "," + cy;
+      if (S.alturasParede) delete S.alturasParede[key];
+      if (S.materiais && S.materiais[key] && !matCompat(S.materiais[key], cx, cy)) delete S.materiais[key];
+    }
     return true;
   }
   function doorRotationAt(x, y) {
@@ -1764,6 +1802,12 @@
         valid ? "#72e6a1" : "#ed7777", valid ? "rgba(67,180,111,.13)" : "rgba(210,75,75,.13)");
     }
     if (decorClipboard && lastPointerCell && !_drag && !regionClipboard) drawClipboardPreview();
+    if (S.tool === "portao" && lastPointerCell) {
+      const [x, y] = lastPointerCell, horizontal = S.portaoDirecao === "horizontal";
+      const w = horizontal ? S.portaoLargura : 1, h = horizontal ? 1 : S.portaoLargura;
+      const valid = !!portcullisPlacementCells(x, y, S.portaoLargura, S.portaoDirecao);
+      drawRegionOutline({x, y, w, h}, valid ? "#72e6a1" : "#ed7777", valid ? "rgba(67,180,111,.15)" : "rgba(210,75,75,.15)");
+    }
     if (decorAreaPaint) drawDecorAreaPreview(decorAreaPaint);
     if (elevationAreaPaint) drawElevationAreaPreview(elevationAreaPaint);
     if (gradeEsgotoDrag) drawGradeEsgotoPreview(gradeEsgotoDrag);
@@ -1843,6 +1887,7 @@
     { id: "wall", group: "tiles" },
     { id: "floor", group: "tiles" },
     { id: "door", group: "tiles" },
+    { id: "portao", group: "tiles" },
     { id: "altura", group: "tiles" },
     { id: "ponte", group: "tiles" },
     { id: "entrance", group: "entidades" },
@@ -2055,6 +2100,18 @@
       hint.textContent = t("ui.editor.masmorra.barra.ponte_hint");
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
+    }
+    if (S.tool === "portao") {
+      const width = document.createElement("input"); width.type = "number"; width.id = "portcullis-width";
+      width.min = "1"; width.max = String(Math.max(S.grid.w, S.grid.h)); width.value = String(S.portaoLargura);
+      width.title = t("ui.editor.masmorra.barra.portao_largura"); width.setAttribute("aria-label", width.title);
+      width.onchange = e => { S.portaoLargura = Math.max(1, Math.min(Math.max(S.grid.w,S.grid.h), Number(e.target.value) | 0)); e.target.value = S.portaoLargura; render(); };
+      const widthLabel = document.createElement("label"); widthLabel.textContent = t("ui.editor.masmorra.barra.portao_largura") + ": ";
+      widthLabel.appendChild(width); tb.appendChild(widthLabel);
+      const direction = document.createElement("select"); direction.id = "portcullis-direction";
+      direction.innerHTML = `<option value="horizontal">${t("ui.editor.masmorra.barra.portao_horizontal")}</option><option value="vertical">${t("ui.editor.masmorra.barra.portao_vertical")}</option>`;
+      direction.value = S.portaoDirecao; direction.onchange = e => { S.portaoDirecao = e.target.value; render(); };
+      tb.appendChild(direction);
     }
   }
 
@@ -4349,7 +4406,12 @@
       renderPanel(); render(); updateStatus();
       return;
     }
-    if (S.tool === "ponte") {
+    if (S.tool === "portao") {
+      if (!placePortcullis(x, y, S.portaoLargura, S.portaoDirecao)) alert(t("ui.editor.masmorra.barra.portao_colocacao_invalida"));
+      else S.sel = entityAt(x, y);
+      renderPanel(); render(); updateStatus();
+    }
+    else if (S.tool === "ponte") {
       S.ponteDrag = { start: c.slice(), end: c.slice(), width: S.ponteLargura, material: S.ponteMaterial };
       render(); updateStatus();
     }
@@ -4723,7 +4785,7 @@
       ctx.strokeRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
       return;
     }
-    if (decorClipboard || regionClipboard) render();
+    if (decorClipboard || regionClipboard || S.tool === "portao") render();
   });
   board.addEventListener("contextmenu", ev => {
     ev.preventDefault();
