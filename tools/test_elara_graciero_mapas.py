@@ -90,9 +90,10 @@ class MapasTests(unittest.TestCase):
         d = M.masmorra_leonel_2()
         leo = [m for m in d["monsters"] if m["type"] == F.TIPO_LEONEL]
         self.assertEqual(len(leo), 1); self.assertTrue(leo[0]["target"])
-        self.assertEqual(d["objectives"]["primary"]["type"], "kill_target")
-        sec = d["objectives"]["secondary"][0]
-        self.assertEqual((sec["type"], sec["fato"]), ("open_key_chest", M.F_ELARA))
+        o = d["objectives"]
+        self.assertEqual((o["primary"]["type"], o["primary"]["fatos"]), ("rescue_prisoner", [M.F_ELARA]))
+        self.assertEqual(o["alternativo"]["type"], "kill_target")
+        self.assertEqual(o["secondary"][0]["type"], "open_key_chest")
         self.assertFalse(d["saida_permitida"])
 
     def test_nada_da_rede_por_nome(self):

@@ -16009,6 +16009,21 @@ window.EDITOR_CATALOG = {
       "image": "poltrona_luxo.png"
     },
     {
+      "type": "escadaria_luxuosa",
+      "nome": "Escadaria luxuosa",
+      "emoji": "🏛️",
+      "size": [
+        4,
+        4
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "escadaria_luxuosa.png"
+    },
+    {
       "type": "mesa_banquete_luxo",
       "nome": "Mesa de banquete luxuosa",
       "emoji": "🍷",

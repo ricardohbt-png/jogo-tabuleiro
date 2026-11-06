@@ -5028,7 +5028,7 @@
       ...(S.relogio && S.relogio.id ? { relogio: { id: S.relogio.id, limite: S.relogio.limite, ...(S.relogio.fato_ao_passar ? { fato_ao_passar: S.relogio.fato_ao_passar } : {}),
         avisos: S.relogio.avisos.filter(a => a.texto && a.texto.trim()).map(a => ({ em: a.em, texto: a.texto.trim() })) } } : {}),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
-      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}) } : null,
+      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}), ...(S.prisoner.nome ? { nome: S.prisoner.nome } : {}) } : null,
       materiais: { ...S.materiais },
       pontes: [
         ...S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p), material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" })),

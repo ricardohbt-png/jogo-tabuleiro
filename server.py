@@ -8885,6 +8885,8 @@ def validar_dungeon(defn):
         if pr.get("model3d") and (os.path.basename(pr["model3d"]) != pr["model3d"]
                                    or os.path.splitext(pr["model3d"])[1].lower() != ".glb"):
             return False, "prisoner.model3d deve ser o nome de um arquivo .glb."
+        if pr.get("nome") is not None and not isinstance(pr.get("nome"), str):
+            return False, "prisoner.nome deve ser uma string."
 
     ex = defn.get("exit")
     if ex is not None and not in_grid([ex.get("x"), ex.get("y")]):
@@ -10529,6 +10531,7 @@ DECOR_MODEL3D = {
     "sino_ritualistico": "assets/objetos/sino_ritualistico.glb",
     "sino_anuncio": "assets/objetos/sino_anuncio.glb",
     "gargula_pedra": "assets/objetos/gargula_pedra.glb",
+    "escadaria_luxuosa": "assets/objetos/escadaria_luxuosa.glb",
     "estatua_divindade": "assets/objetos/estatua_divindade.glb",
     "monte_feno": "assets/objetos/monte_feno.glb",
     "espantalho": "assets/objetos/espantalho.glb",
@@ -10669,6 +10672,9 @@ DECOR_TYPES = {
     "poltrona_luxo": _decor("Poltrona estofada", "🪑", [1, 2], gira=True,
                               alto=True, loot_capaz=False,
                               image="poltrona_luxo.png"),
+    "escadaria_luxuosa": _decor("Escadaria luxuosa", "🏛️", [4, 4], gira=True,
+                                  alto=True, loot_capaz=False,
+                                  image="escadaria_luxuosa.png"),
     "mesa_banquete_luxo": _decor("Mesa de banquete luxuosa", "🍷", [2, 3],
                                     gira=True, alto=True, loot_capaz=False,
                                     image="mesa_banquete_luxo.png"),
@@ -18844,7 +18850,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                           "hp": PRIS_HP, "max_hp": PRIS_HP, "ac": PRIS_AC, "move": PRIS_MOVE,
                           "image": pr.get("image"), "model3d": pr.get("model3d"),
                           "rescuer_pid": None, "moves_left": 0,
-                          "nome": "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
+                          "nome": pr.get("nome") or "Prisioneiro", "fort": 0, "ref_": 0, "will": 0,
                           "freed": False, "alive": True}
                          if pr else None)
         self._training_init(defn)
@@ -56795,7 +56801,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if steps:
             self.objective_status["steps"] = step_status
         # Com etapas, o principal (que é a última delas) só vale depois de todas as anteriores.
-        etapas_ok = not steps or self.mission_step_index >= len(steps)
+        # O alternativo substitui o principal quando o resgate falha, e aí a etapa do resgate
+        # nunca mais se cumpre: ele não espera as etapas.
+        etapas_ok = not steps or self.mission_step_index >= len(steps) or efetivo is not prim
         if (self.phase == "playing" and not self._objetivo_concluido and etapas_ok
                 and efetivo and self._objetivo_cumprido(efetivo)):
             self._objetivo_concluido = True

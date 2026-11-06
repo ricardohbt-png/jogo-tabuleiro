@@ -3200,7 +3200,7 @@
         "nome": "Narrador",
         "emoji": "🏛️"
       },
-      "texto": "A casa de leilões do Leonel é uma mansão no meio de um terreno cercado. Homens armados vigiam os jardins, e a porta da frente não vai se abrir para vocês.",
+      "texto": "Homens armados vigiam os jardins da mansão, e a porta da frente não vai se abrir para vocês. Vai ser preciso limpar o terreno e achar outra entrada.",
       "trigger": {
         "tipo": "proximidade",
         "raio": 4

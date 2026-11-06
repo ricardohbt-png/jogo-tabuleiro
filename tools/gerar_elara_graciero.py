@@ -42,10 +42,13 @@ F_AJUDOU = "elara_bardo_ajudou"
 F_TRAIU = "elara_bardo_traiu"
 F_CAUTELOSO = "elara_leonel_cauteloso"
 F_LENTO = "elara_graciero_lento"
+F_VIU_MORRER = "elara_viu_gilo_morrer"
+F_BARDO_MORTO = "elara_bardo_morto"
 F_GILO_MORREU = "elara_gilo_morreu"
 F_DICA_MONTANHA = "elara_dica_montanha"
 F_OLHO = "elara_olho_recuperado"
 F_LEONEL_VENCIDO = "elara_leonel_vencido"
+F_ELARA_MORTA = "elara_morta"
 F_PEDRO = "elara_graciero_pedro_falou"
 F_HENRIQUE = "elara_graciero_henrique_falou"
 
@@ -119,12 +122,16 @@ def conversas():
 
 
 SLIDES_FINAIS = [
-    ("A casa de leilões fica em silêncio quando o Leonel cai. Na sala secreta, a grade se abre e a Elara sai "
-     "vendo a luz, magra e furiosa, mas viva.", {}),
+    ("A casa de leilões fica em silêncio quando o Leonel cai. Pelo salão secreto, a Elara sai vendo a luz, "
+     "magra e furiosa, mas viva.", {"sem_fato": F_ELARA_MORTA}),
     ("O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
-     {"heroi_no_grupo": "mage"}),
+     {"heroi_no_grupo": "mage", "sem_fato": F_ELARA_MORTA}),
     ("O bardo faz uma reverência elaborada diante da Elara e ouve dela, seca, que já ouviu a piada sobre ela "
-     "e não achou graça.", {"heroi_no_grupo": "bard"}),
+     "e não achou graça.", {"heroi_no_grupo": "bard", "sem_fato": F_ELARA_MORTA}),
+    ("A casa de leilões fica em silêncio quando o Leonel cai. A Elara não saiu daquele salão. Vocês a levam "
+     "nos braços, e ninguém encontra o que dizer.", {"fato": F_ELARA_MORTA}),
+    ("O mago carrega a irmã sozinho durante todo o caminho e não deixa ninguém ajudar.",
+     {"heroi_no_grupo": "mage", "fato": F_ELARA_MORTA}),
     ("As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, "
      "sem acreditar que a luz do dia é para elas.", {"fato": "elara_mocas_salvas"}),
     ("Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
@@ -177,6 +184,43 @@ def intro_gilo():
     ]}
 
 
+def _cena(*slides):
+    """Slides de texto; cada um é `texto` ou (`texto`, requisito)."""
+    saida = []
+    for s in slides:
+        texto, cond = (s, None) if isinstance(s, str) else s
+        saida.append({"text": texto, **({"requisito": _req(**cond)} if cond else {})})
+    return {"slides": saida}
+
+
+def intro_casa(alerta):
+    """Abertura da mansão: lembra como o grupo chegou ao nome do Leonel e se ele foi avisado."""
+    tochas = "Há tochas dobradas nos jardins, e os guardas já olham para a estrada."
+    fim = ([(f"A notícia do bardo executado em Riacho chegou antes de vocês. {tochas}", {"fato": F_BARDO_MORTO}),
+            (f"O assobio do bardo na taverna fez o trabalho dele. {tochas}", {"fato": F_TRAIU})] if alerta else
+           ["Ao entardecer, vocês entram no terreno pela sombra das árvores. Ninguém espera por vocês. Por enquanto."])
+    return _cena(
+        "Todas as pistas de Graciero terminam no mesmo lugar: a casa de leilões do Leonel, uma mansão cercada de "
+        "jardins que ninguém de fora atravessa.",
+        ("\"A culpa é do Leonel!\" O último grito do Gilo ainda acompanha vocês pela rua.", {"fato": F_VIU_MORRER}),
+        ("O bilhete achado entre os ossos da praça pesa no bolso: \"Pelas moças, o ouro combinado. Leonel.\"",
+         {"sem_fato": F_VIU_MORRER}),
+        ("O mago não fala desde o cais. A irmã dele está em algum lugar daquela casa, e ninguém precisa dizer isso "
+         "em voz alta.", {"heroi_no_grupo": "mage"}),
+        *fim)
+
+
+def intro_mansao(alerta):
+    """Transição do terreno para dentro da casa; o choro prepara a passagem secreta."""
+    return _cena(
+        "A porta de serviço cede sem barulho. O jardim e os guardas caídos ficam para trás.",
+        "Lá dentro o ar cheira a cera e dinheiro. Cortinas pesadas, ouro nas paredes, cadeiras arrumadas para o "
+        "próximo leilão. Nada ali parece esconder uma cela.",
+        "Mas, em algum ponto atrás das paredes, alguém chora baixo.",
+        ("O mago para no meio do corredor. Ele conhece esse choro.", {"heroi_no_grupo": "mage"}),
+        *(["Um sino toca duas vezes no andar de cima. A casa já sabe que vocês entraram."] if alerta else []))
+
+
 def outro_rota():
     slides = []
     for texto, cond in SLIDES_FINAIS:
@@ -197,10 +241,11 @@ def destinos():
     def perto(dx, dy):
         return round(min(100, max(0, base["x"] + dx)), 2), round(min(100, max(0, base["y"] + dy)), 2)
 
-    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False, intro_etapa=""):
+    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False, intro_etapa="", intros=None):
         x, y = perto(dx, dy)
         return {"id": did, "nome": nome, "x": x, "y": y, "fome": 1, "sede": 1,
-                "dungeons": [{"file": arq, "encadear": enc, "intro": intro_etapa, "outro": ""} for arq, enc in etapas],
+                "dungeons": [{"file": arq, "encadear": enc, "intro": intros[i] if intros else intro_etapa, "outro": ""}
+                             for i, (arq, enc) in enumerate(etapas)],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
                 "outro_rota": outro_rota() if final else "", "requisito": requisito, "renome_recompensa": renome}
@@ -223,10 +268,12 @@ def destinos():
                                               _req(aventura_id="elara_graciero_cais", fato=F_LENTO), 2),
         "elara_leonel_casa": destino("elara_leonel_casa", "A Casa de Leilões", 0.5, -2.5,
                                      [("elara_leonel_1.json", True), ("elara_leonel_2.json", False)],
-                                     _req(fato=F_GILO_MORREU, sem_fato=F_CAUTELOSO), 3, final=True),
+                                     _req(fato=F_GILO_MORREU, sem_fato=F_CAUTELOSO), 3, final=True,
+                                     intros=[intro_casa(False), intro_mansao(False)]),
         "elara_leonel_casa_alerta": destino("elara_leonel_casa_alerta", "A Casa de Leilões", 0.5, -2.5,
                                             [("elara_leonel_1_alerta.json", True), ("elara_leonel_2.json", False)],
-                                            _req(fato=F_GILO_MORREU, tambem_fato=F_CAUTELOSO), 3, final=True),
+                                            _req(fato=F_GILO_MORREU, tambem_fato=F_CAUTELOSO), 3, final=True,
+                                            intros=[intro_casa(True), intro_mansao(True)]),
     }
 
 

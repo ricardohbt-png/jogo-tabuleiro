@@ -149,9 +149,10 @@ class ObjetivosTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_porao_grava_leonel_e_a_cela_da_elara(self):
         r = masmorra("elara_leonel_2.json")
-        r.key_chest_opened = True
         for m in r.monsters.values():
             m["hp"] = 0
+        r.prisoner["freed"] = True
+        r.prisoner["pos"] = [40, 30]
         await r._check_objectives()
         self.assertTrue({M.F_LEONEL, M.F_ELARA} <= r.fatos)
 

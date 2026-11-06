@@ -782,6 +782,7 @@ const DECOR_GLB_TYPES = {
   mesa_banquete_luxo: 'assets/objetos/mesa_banquete_luxo.glb',
   sofa_luxo: 'assets/objetos/sofa_luxo.glb',
   poltrona_luxo: 'assets/objetos/poltrona_luxo.glb',
+  escadaria_luxuosa: 'assets/objetos/escadaria_luxuosa.glb',
   poste_iluminacao: 'assets/objetos/poste_iluminacao.glb',
   banca_flores: 'assets/objetos/banca_flores.glb',
   carrinho_entregas: 'assets/objetos/carrinho_entregas.glb',

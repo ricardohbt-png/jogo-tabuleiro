@@ -1269,13 +1269,80 @@
       {
         "file": "elara_leonel_1.json",
         "encadear": true,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "Todas as pistas de Graciero terminam no mesmo lugar: a casa de leilões do Leonel, uma mansão cercada de jardins que ninguém de fora atravessa."
+            },
+            {
+              "text": "\"A culpa é do Leonel!\" O último grito do Gilo ainda acompanha vocês pela rua.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_viu_gilo_morrer",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O bilhete achado entre os ossos da praça pesa no bolso: \"Pelas moças, o ouro combinado. Leonel.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_viu_gilo_morrer",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O mago não fala desde o cais. A irmã dele está em algum lugar daquela casa, e ninguém precisa dizer isso em voz alta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            },
+            {
+              "text": "Ao entardecer, vocês entram no terreno pela sombra das árvores. Ninguém espera por vocês. Por enquanto."
+            }
+          ]
+        },
         "outro": ""
       },
       {
         "file": "elara_leonel_2.json",
         "encadear": false,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "A porta de serviço cede sem barulho. O jardim e os guardas caídos ficam para trás."
+            },
+            {
+              "text": "Lá dentro o ar cheira a cera e dinheiro. Cortinas pesadas, ouro nas paredes, cadeiras arrumadas para o próximo leilão. Nada ali parece esconder uma cela."
+            },
+            {
+              "text": "Mas, em algum ponto atrás das paredes, alguém chora baixo."
+            },
+            {
+              "text": "O mago para no meio do corredor. Ele conhece esse choro.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            }
+          ]
+        },
         "outro": ""
       }
     ],
@@ -1290,7 +1357,15 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Na sala secreta, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Pelo salão secreto, a Elara sai vendo a luz, magra e furiosa, mas viva.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "elara_morta",
+            "aventura_id": ""
+          }
         },
         {
           "text": "O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
@@ -1299,7 +1374,7 @@
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "mage"
           }
@@ -1311,9 +1386,32 @@
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "bard"
+          }
+        },
+        {
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. A Elara não saiu daquele salão. Vocês a levam nos braços, e ninguém encontra o que dizer.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O mago carrega a irmã sozinho durante todo o caminho e não deixa ninguém ajudar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "mage"
           }
         },
         {
@@ -1409,13 +1507,102 @@
       {
         "file": "elara_leonel_1_alerta.json",
         "encadear": true,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "Todas as pistas de Graciero terminam no mesmo lugar: a casa de leilões do Leonel, uma mansão cercada de jardins que ninguém de fora atravessa."
+            },
+            {
+              "text": "\"A culpa é do Leonel!\" O último grito do Gilo ainda acompanha vocês pela rua.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_viu_gilo_morrer",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O bilhete achado entre os ossos da praça pesa no bolso: \"Pelas moças, o ouro combinado. Leonel.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_viu_gilo_morrer",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O mago não fala desde o cais. A irmã dele está em algum lugar daquela casa, e ninguém precisa dizer isso em voz alta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            },
+            {
+              "text": "A notícia do bardo executado em Riacho chegou antes de vocês. Há tochas dobradas nos jardins, e os guardas já olham para a estrada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_morto",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O assobio do bardo na taverna fez o trabalho dele. Há tochas dobradas nos jardins, e os guardas já olham para a estrada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_traiu",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            }
+          ]
+        },
         "outro": ""
       },
       {
         "file": "elara_leonel_2.json",
         "encadear": false,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "A porta de serviço cede sem barulho. O jardim e os guardas caídos ficam para trás."
+            },
+            {
+              "text": "Lá dentro o ar cheira a cera e dinheiro. Cortinas pesadas, ouro nas paredes, cadeiras arrumadas para o próximo leilão. Nada ali parece esconder uma cela."
+            },
+            {
+              "text": "Mas, em algum ponto atrás das paredes, alguém chora baixo."
+            },
+            {
+              "text": "O mago para no meio do corredor. Ele conhece esse choro.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            },
+            {
+              "text": "Um sino toca duas vezes no andar de cima. A casa já sabe que vocês entraram."
+            }
+          ]
+        },
         "outro": ""
       }
     ],
@@ -1430,7 +1617,15 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Na sala secreta, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Pelo salão secreto, a Elara sai vendo a luz, magra e furiosa, mas viva.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "elara_morta",
+            "aventura_id": ""
+          }
         },
         {
           "text": "O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
@@ -1439,7 +1634,7 @@
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "mage"
           }
@@ -1451,9 +1646,32 @@
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "bard"
+          }
+        },
+        {
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. A Elara não saiu daquele salão. Vocês a levam nos braços, e ninguém encontra o que dizer.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O mago carrega a irmã sozinho durante todo o caminho e não deixa ninguém ajudar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "mage"
           }
         },
         {
