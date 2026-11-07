@@ -4,6 +4,7 @@
   // Espelha ELEVACAO_TERRENO_MIN/MAX do server.py — validar_dungeon recusa fora
   // deste intervalo, então subir o teto aqui sem subir lá derruba o salvamento.
   const ELEVACAO_MIN = -1, ELEVACAO_MAX = 40;
+  const MAX_REFENS = 12;   // espelha o teto de validar_dungeon (server.py)
   const BASE_CAT = window.EDITOR_CATALOG || { monsters: [], items: [], traps: [], venoms: [], curses: [], decorations: [], materiais: [] };
   // Itens customizados (arma/armadura/escudo/…) marcados disponibilidade.baus=true
   // entram no seletor de baús/recompensas ao lado dos itens base. Forma mínima
@@ -452,7 +453,7 @@
     grid: { w: 16, h: 12 },
     tiles: [],
     rooms: [], nextRoomId: 0,
-    startMode: "entrance", entrance: null, heroSpawns: [], exit: null, prisoner: null,
+    startMode: "entrance", entrance: null, heroSpawns: [], exit: null, prisoners: [],
     heroSpawnClass: "warrior",
     monsters: [], routes: [], routeExits: [], nextRouteExitId: 0, nextRouteId: 0,
     chests: [], traps: [], decorations: [], secretPassages: [], doorConditions: {}, falas: [], nextDecorId: 0, nextTrapId: 0, nextPassageId: 0, nextFalaId: 0,
@@ -1172,7 +1173,7 @@
     const hs = S.heroSpawns.find(e => e.pos && e.pos[0] === x && e.pos[1] === y);
     if (hs) return heroSpawnMeta(hs.class_id).emoji;
     if (S.exit && S.exit.x === x && S.exit.y === y) return "🏁";
-    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return "🧍";
+    if (S.prisoners.some(r => r.pos[0] === x && r.pos[1] === y)) return "🧍";
     const mo = at(S.monsters);
     if (mo) {
       // Monstros são desenhados no passe próprio abaixo, onde o centro e o
@@ -1220,7 +1221,7 @@
     for (const c of S.chests) add(c.pos[0], c.pos[1], "$", "#bd9130");
     for (const trap of S.traps) add(trap.pos[0], trap.pos[1], "!", "#cf6c3b");
     for (const d of S.decorations) add(d.pos[0], d.pos[1], "D", "#348d72");
-    if (S.prisoner) add(S.prisoner.pos[0], S.prisoner.pos[1], "P", "#5c88c7");
+    for (const r of S.prisoners) add(r.pos[0], r.pos[1], "P", "#5c88c7");
     for (const f of S.falas) add(f.pos[0], f.pos[1], "…", "#8065ac");
     for (const p of S.secretPassages) add(p.pos[0], p.pos[1], "S", "#5b9fbe");
     for (const [key, markers] of byCell) {
@@ -2415,7 +2416,8 @@
     if (S.exit && S.exit.x === x && S.exit.y === y) return { kind: "exit", pos: [x, y] };
     const routeExit = S.routeExits.find(e => e.pos[0] === x && e.pos[1] === y);
     if (routeExit) return { kind: "route_exit", ref: routeExit, pos: routeExit.pos.slice() };
-    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) return { kind: "prisoner", ref: S.prisoner, pos: [x, y] };
+    const refem = S.prisoners.find(r => r.pos[0] === x && r.pos[1] === y);
+    if (refem) return { kind: "prisoner", ref: refem, pos: [x, y] };
     const secret = S.secretPassages.find(p => p.pos[0] === x && p.pos[1] === y);
     if (secret) return { kind: "secret_passage", ref: secret, pos: [x, y] };
     const find = (arr, kind) => { const r = arr.find(e => e.pos[0] === x && e.pos[1] === y); return r ? { kind, ref: r, pos: [x, y] } : null; };
@@ -2439,7 +2441,7 @@
     if (S.exit && S.exit.x === x && S.exit.y === y) found.push({ kind: "exit", pos: [x, y] });
     for (const routeExit of S.routeExits) if (routeExit.pos[0] === x && routeExit.pos[1] === y)
       found.push({ kind: "route_exit", ref: routeExit, pos: routeExit.pos.slice() });
-    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) found.push({ kind: "prisoner", ref: S.prisoner, pos: S.prisoner.pos.slice() });
+    for (const r of S.prisoners) if (r.pos[0] === x && r.pos[1] === y) found.push({ kind: "prisoner", ref: r, pos: r.pos.slice() });
     for (const p of S.secretPassages) if (p.pos[0] === x && p.pos[1] === y)
       found.push({ kind: "secret_passage", ref: p, pos: p.pos.slice() });
     const bridge = bridgeAt(x, y);
@@ -2494,7 +2496,12 @@
         if (!existing) S.routeExits.push(exit);
         break;
       }
-      case "prisoner": S.prisoner = { pos: [x, y], room_id: rid }; break;
+      case "prisoner": {
+        if (S.prisoners.some(r => r.pos[0] === x && r.pos[1] === y)) break;
+        if (S.prisoners.length >= MAX_REFENS) { alert(t("ui.editor.masmorra.valid.refens_limite", { max: MAX_REFENS })); break; }
+        S.prisoners.push({ pos: [x, y], room_id: rid });
+        break;
+      }
       case "monster": {
         const type = (CAT.monsters[0] || {}).type || "goblin";
         let sourceSeq = 0;
@@ -2531,7 +2538,7 @@
     S.heroSpawns = S.heroSpawns.filter(s => !(s.pos[0] === x && s.pos[1] === y));
     if (S.exit && S.exit.x === x && S.exit.y === y) S.exit = null;
     S.routeExits = S.routeExits.filter(e => !(e.pos[0] === x && e.pos[1] === y));
-    if (S.prisoner && S.prisoner.pos[0] === x && S.prisoner.pos[1] === y) S.prisoner = null;
+    S.prisoners = S.prisoners.filter(r => !(r.pos[0] === x && r.pos[1] === y));
     S.monsters = S.monsters.filter(e => !monsterTiles(e).some(c => c[0] === x && c[1] === y));
     S.chests = S.chests.filter(e => !(e.pos[0] === x && e.pos[1] === y));
     S.traps = S.traps.filter(e => !(e.pos[0] === x && e.pos[1] === y));
@@ -2595,7 +2602,7 @@
     }
     // Entidades que apontavam para esta sala ficam sem sala (não são apagadas).
     for (const m of S.monsters) if (m.room_id === room.id) m.room_id = null;
-    if (S.prisoner && S.prisoner.room_id === room.id) S.prisoner.room_id = null;
+    for (const r of S.prisoners) if (r.room_id === room.id) r.room_id = null;
     for (const s of S.heroSpawns) if (s.room_id === room.id) s.room_id = null;
     S.sel = null; renderPanel(); render();
   }
@@ -2894,6 +2901,30 @@
     if (category) category.onchange = e => { trap.curse_category = e.target.value; };
   }
 
+  // Espelha _validar_faixas_resgate (server.py): vários reféns exigem resgate por faixas.
+  function validarResgate(e, V) {
+    const total = S.prisoners.length, prim = S.objectives.primary || {};
+    if (total > MAX_REFENS) e.push(V("refens_limite", { max: MAX_REFENS }));
+    const resgate = prim.type === "rescue_prisoner";
+    const faixas = resgate && Array.isArray(prim.faixas) && prim.faixas.length ? prim.faixas : null;
+    if (total > 1 && !resgate) e.push(V("refens_objetivo"));
+    else if (total > 1 && !faixas) e.push(V("refens_sem_faixas", { total }));
+    if (resgate && prim.destino === "saida" && !S.exit) e.push(V("refens_destino_saida"));
+    if (!faixas || total < 1) return;
+    if (prim.meta != null && !(Number.isInteger(prim.meta) && prim.meta >= 1 && prim.meta <= total)) e.push(V("refens_meta", { total }));
+    const cobertas = [];
+    for (const fx of faixas) {
+      if (!(Number.isInteger(fx.de) && Number.isInteger(fx.ate) && fx.de >= 0 && fx.de <= fx.ate && fx.ate <= total)) {
+        e.push(V("refens_faixa_invalida", { faixa: fx.de + ".." + fx.ate, total })); continue;
+      }
+      for (let n = fx.de; n <= fx.ate; n++) cobertas.push(n);
+    }
+    if (cobertas.length !== new Set(cobertas).size) e.push(V("refens_faixa_sobrepoe"));
+    const faltam = [];
+    for (let n = 0; n <= total; n++) if (!cobertas.includes(n)) faltam.push(n);
+    if (faltam.length) e.push(V("refens_faixa_buraco", { total, faltam: faltam.join(", ") }));
+  }
+
   function objDefaults(isPrimary) {
     return { xp: isPrimary ? 0 : 50, reward: { gold: isPrimary ? 0 : 25, items: [] } };
   }
@@ -2917,7 +2948,27 @@
   function objSerializar(obj) {
     return { type: obj.type, xp: obj.xp | 0,
              reward: { gold: (obj.reward.gold | 0), items: obj.reward.items.map(i => ({ id: i.id })) },
-             ...objExtras(obj) };
+             ...objExtras(obj), ...resgateExtras(obj) };
+  }
+  function refemSerializar(r) {
+    return { pos: r.pos.slice(), room_id: r.room_id, ...(r.image ? { image: r.image } : {}), ...(r.model3d ? { model3d: r.model3d } : {}), ...(r.nome ? { nome: r.nome } : {}) };
+  }
+  // Resgate por faixas (objetivo principal rescue_prisoner): só entra no JSON o que foi definido.
+  function faixaSerializar(fx) {
+    const o = { de: fx.de | 0, ate: fx.ate | 0 };
+    if (Number.isInteger(fx.xp)) o.xp = fx.xp;
+    if (Number.isInteger(fx.gold)) o.gold = fx.gold;
+    if (Number.isInteger(fx.renome)) o.renome = fx.renome;
+    if (typeof fx.fato === "string" && fx.fato.trim()) o.fato = fx.fato.trim();
+    return o;
+  }
+  function resgateExtras(obj) {
+    const x = {};
+    if (obj.type !== "rescue_prisoner") return x;
+    if (obj.destino === "saida" || obj.destino === "entrada") x.destino = obj.destino;
+    if (Number.isInteger(obj.meta)) x.meta = obj.meta;
+    if (Array.isArray(obj.faixas) && obj.faixas.length) x.faixas = obj.faixas.map(faixaSerializar);
+    return x;
   }
   function seFalharSerializar(sf) {
     const x = sf ? objExtras(sf) : {};
@@ -2944,6 +2995,47 @@
     document.getElementById(`${pfx}-fatos`).onchange = e => { const v = e.target.value.split(",").map(x => x.trim()).filter(Boolean); if (v.length) obj.fatos = v; else delete obj.fatos; };
     document.getElementById(`${pfx}-additem`).onclick = () => { const id = document.getElementById(`${pfx}-add`).value; if (id) obj.reward.items.push({ id }); renderPanel(); };
     panel.querySelectorAll(`.${pfx}-rm`).forEach(b => b.onclick = () => { obj.reward.items.splice(Number(b.dataset.i), 1); renderPanel(); });
+  }
+
+  // Resgate por faixas (objetivo principal rescue_prisoner): destino, meta e tabela de faixas.
+  const K_RES = "ui.editor.masmorra.resgate.";
+  const FAIXA_CAMPOS = [["de", "de"], ["ate", "ate"], ["xp", "xp"], ["gold", "ouro"], ["renome", "renome"]];
+  function resgateFieldsHTML(obj) {
+    if (obj.type !== "rescue_prisoner") return "";
+    const faixas = Array.isArray(obj.faixas) ? obj.faixas : [];
+    const opt = (v, k) => `<option value="${v}"${(obj.destino || "") === v ? " selected" : ""}>${t(K_RES + k)}</option>`;
+    return `<div id="o-res-box" style="border-top:1px solid #3a3022;margin-top:6px;padding-top:6px">
+      <b>${t(K_RES + "titulo")}</b>
+      <label>${t(K_RES + "destino")} <select id="o-res-destino">${opt("", "destino_padrao")}${opt("saida", "destino_saida")}${opt("entrada", "destino_entrada")}</select></label>
+      <label>${t(K_RES + "meta")} <input id="o-res-meta" type="number" min="1" value="${Number.isInteger(obj.meta) ? obj.meta : ""}"></label>
+      <label>${t(K_RES + "faixas")}</label>
+      ${faixas.map((fx, i) => `<div class="o-res-faixa" style="display:flex;flex-wrap:wrap;gap:3px;align-items:center;margin-top:4px">
+        ${FAIXA_CAMPOS.map(([campo, chave]) => `<input class="o-res-f" data-i="${i}" data-c="${campo}" type="number" ${campo === "renome" ? "" : 'min="0" '}value="${Number.isInteger(fx[campo]) ? fx[campo] : ""}" title="${t(K_RES + chave)}" placeholder="${t(K_RES + chave)}" style="width:52px">`).join("")}
+        <input class="o-res-f" data-i="${i}" data-c="fato" value="${editorEscapeText(fx.fato || "")}" title="${t(K_RES + "fato")}" placeholder="${t(K_RES + "fato")}" style="width:90px">
+        <button type="button" class="o-res-rm" data-i="${i}">×</button></div>`).join("")}
+      <button type="button" id="o-res-add">+ ${t(K_RES + "faixa_add")}</button></div>`;
+  }
+  function wireResgateFields(obj) {
+    const box = document.getElementById("o-res-box");
+    if (!box) return;
+    document.getElementById("o-res-destino").onchange = e => { if (e.target.value) obj.destino = e.target.value; else delete obj.destino; updateStatus(); };
+    document.getElementById("o-res-meta").onchange = e => { const n = parseInt(e.target.value, 10); if (n >= 1) obj.meta = n; else delete obj.meta; updateStatus(); };
+    panel.querySelectorAll(".o-res-f").forEach(inp => inp.onchange = e => {
+      const fx = obj.faixas[Number(e.target.dataset.i)], c = e.target.dataset.c;
+      if (c === "fato") { const v = e.target.value.trim(); if (v) fx.fato = v; else delete fx.fato; }
+      else if (e.target.value === "" && c !== "de" && c !== "ate") delete fx[c];
+      else fx[c] = Math.trunc(Number(e.target.value)) || 0;
+      updateStatus();
+    });
+    panel.querySelectorAll(".o-res-rm").forEach(b => b.onclick = () => {
+      obj.faixas.splice(Number(b.dataset.i), 1); if (!obj.faixas.length) delete obj.faixas; renderPanel(); updateStatus();
+    });
+    document.getElementById("o-res-add").onclick = () => {
+      if (!Array.isArray(obj.faixas)) obj.faixas = [];
+      const prox = obj.faixas.reduce((m, fx) => Math.max(m, (fx.ate | 0) + 1), 0);
+      obj.faixas.push({ de: prox, ate: prox, xp: 0, gold: 0 });
+      renderPanel(); updateStatus();
+    };
   }
 
   var _ndPreviewHeroes = null;   // null = usa S.expectedParty.heroes; 2/4/6 = preview
@@ -3311,6 +3403,7 @@
         <label>${t("ui.editor.masmorra.painel.objetivo_principal")}</label>
         <select id="o-prim">${OBJ.map(objId => `<option value="${objId}"${o.primary.type === objId ? " selected" : ""}>${t("ui.editor.masmorra.objetivo." + objId)}</option>`).join("")}</select>
         ${rewardFieldsHTML(o.primary, "o-prim-rw")}
+        ${resgateFieldsHTML(o.primary)}
         <label title="${t("ui.editor.masmorra.recompensa.se_falhar_dica")}">${t("ui.editor.masmorra.recompensa.se_falhar")}</label>
         <label>${t("ui.editor.masmorra.recompensa.renome")} <input id="o-sf-renome" type="number" value="${(o.primary.se_falhar && o.primary.se_falhar.renome) | 0}"></label>
         <label>${t("ui.editor.masmorra.recompensa.fato")} <input id="o-sf-fato" value="${((o.primary.se_falhar && o.primary.se_falhar.fato) || "").replace(/"/g, "&quot;")}"></label>
@@ -3392,6 +3485,7 @@
         renderPanel();
       };
       wireRewardFields(o.primary, "o-prim-rw");
+      wireResgateFields(o.primary);
       const sfSet = (k, v) => {
         const sf = o.primary.se_falhar = o.primary.se_falhar || {};
         if (v) sf[k] = v; else delete sf[k];
@@ -4061,6 +4155,8 @@
         <input type="file" id="p-pris-img" accept="image/png,image/jpeg,image/webp,image/gif">
         <label>${t("ui.editor.masmorra.painel.miniatura_3d_glb")}</label>
         <input type="file" id="p-pris-glb" accept="model/gltf-binary,.glb">
+        <label>${t("ui.editor.masmorra.painel.prisioneiro_nome")}</label>
+        <input type="text" id="p-pris-nome" maxlength="60" value="${editorEscapeText(ref.nome || "")}">
         <div id="p-pris-status" style="color:#8a7a5a;font-size:11px;margin-top:4px"></div>`;
       const inp = document.getElementById("p-pris-img");
       const glbInp = document.getElementById("p-pris-glb");
@@ -4078,6 +4174,7 @@
           st.textContent = t("ui.editor.masmorra.painel.falha_dois_pontos") + err.message;
         }
       };
+      document.getElementById("p-pris-nome").onchange = e => { const v = e.target.value.trim(); if (v) ref.nome = v; else delete ref.nome; };
       inp.onchange = e => enviarMiniatura(e, "image");
       glbInp.onchange = e => enviarMiniatura(e, "model3d");
     } else if (k === "secret_passage") {
@@ -4497,10 +4594,10 @@
   function captureRegion(rect) {
     const b = _regionBounds(rect); if (!b) return null;
     const data = { tiles: [], rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
-      secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null,
+      secretPassages: [], falas: [], pontes: [], prisoners: [], entrance: null, exit: null,
       materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {}, doorStyles: {}, portcullisGroups: {} };
     const refs = { rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
-      secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null };
+      secretPassages: [], falas: [], pontes: [], prisoners: [], entrance: null, exit: null };
     for (let y = b.y; y <= b.y2; y++) data.tiles.push(S.tiles[y].slice(b.x, b.x2 + 1));
     for (const room of S.rooms) {
       const cells = [];
@@ -4527,7 +4624,8 @@
         || !addPoints(S.traps, data.traps, refs.traps)
         || !addPoints(S.decorations, data.decorations, refs.decorations)
         || !addPoints(S.secretPassages, data.secretPassages, refs.secretPassages)
-        || !addPoints(S.falas, data.falas, refs.falas)) return null;
+        || !addPoints(S.falas, data.falas, refs.falas)
+        || !addPoints(S.prisoners, data.prisoners, refs.prisoners)) return null;
     // Monstros, decorações e pontes têm footprints que precisam caber inteiros.
     for (const [source, key, cellsOf] of [
       [S.monsters, "monsters", m => monsterTiles(m)],
@@ -4540,7 +4638,7 @@
         if (relation && !refs[key].includes(item)) { data[key].push(_cloneRegionValue(item)); refs[key].push(item); }
       }
     }
-    for (const key of ["entrance", "exit", "prisoner"]) {
+    for (const key of ["entrance", "exit"]) {
       const item = S[key]; if (!item) continue;
       const pos = item.pos || [item.x, item.y];
       if (_insideRegion(pos, b)) { data[key] = _cloneRegionValue(item); refs[key] = item; }
@@ -4571,7 +4669,8 @@
     check(S.heroSpawns, o => [o.pos]); check(S.monsters, o => monsterTiles(o));
     check(S.chests, o => [o.pos]); check(S.traps, o => [o.pos]); check(S.decorations, o => decorTiles(o));
     check(S.secretPassages, o => [o.pos]); check(S.falas, o => [o.pos]); check(S.pontes, o => bridgeTilesOf(o));
-    for (const key of ["entrance", "exit", "prisoner"]) if (S[key] && !refs.includes(S[key])) {
+    check(S.prisoners, o => [o.pos]);
+    for (const key of ["entrance", "exit"]) if (S[key] && !refs.includes(S[key])) {
       const p = S[key].pos || [S[key].x, S[key].y];
       if (p[0] >= b.x && p[0] <= b.x2 && p[1] >= b.y && p[1] <= b.y2) found.push(S[key]);
     }
@@ -4587,7 +4686,6 @@
     const includes = key => !!clip.data[key];
     if (includes("entrance") && S.entrance && !allowed.includes(S.entrance)) return false;
     if (includes("exit") && S.exit && !allowed.includes(S.exit)) return false;
-    if (includes("prisoner") && S.prisoner && !allowed.includes(S.prisoner)) return false;
     return true;
   }
   function _shiftRegionPoint(pos, dx, dy, origin, clip) {
@@ -4613,7 +4711,7 @@
     }
     const shift = p => _shiftRegionPoint(p, dx, dy, [clip.x, clip.y], clip);
     d.rooms.forEach(r => { r.x += dx; r.y += dy; r.doors = (r.doors || []).map(p => { shift(p); return p; }); if (roomIds.has(r.id)) r.id = roomIds.get(r.id); });
-    for (const list of [d.heroSpawns, d.monsters, d.chests, d.traps, d.decorations, d.secretPassages, d.falas])
+    for (const list of [d.heroSpawns, d.monsters, d.chests, d.traps, d.decorations, d.secretPassages, d.falas, d.prisoners])
       list.forEach(o => shift(o.pos));
     d.traps.forEach(o => { if (trapIds.has(o.id)) o.id = trapIds.get(o.id); if (o.ponte_id && bridgeIds.has(o.ponte_id)) o.ponte_id = bridgeIds.get(o.ponte_id); shift(o.saida); });
     d.decorations.forEach(o => {
@@ -4626,7 +4724,7 @@
     d.pontes.forEach(o => { if (bridgeIds.has(o.id)) o.id = bridgeIds.get(o.id); shift(o.inicio); shift(o.fim); });
     d.monsters.forEach(o => { if (roomIds.has(o.room_id)) o.room_id = roomIds.get(o.room_id); });
     d.heroSpawns.forEach(o => { if (roomIds.has(o.room_id)) o.room_id = roomIds.get(o.room_id); });
-    if (d.prisoner) { shift(d.prisoner.pos); if (roomIds.has(d.prisoner.room_id)) d.prisoner.room_id = roomIds.get(d.prisoner.room_id); }
+    d.prisoners.forEach(o => { if (roomIds.has(o.room_id)) o.room_id = roomIds.get(o.room_id); });
     ["entrance", "exit"].forEach(k => { if (d[k]) { d[k].x += dx; d[k].y += dy; } });
     // As chaves vieram relativas ao canto da cópia (captureRegion); o destino é absoluto.
     const remapKeys = obj => Object.fromEntries(Object.entries(obj).map(([key, value]) => {
@@ -4659,7 +4757,7 @@
     Object.assign(S.portcullisGroups, d.portcullisGroups);
     if (d.entrance) S.entrance = d.entrance;
     if (d.exit) S.exit = d.exit;
-    if (d.prisoner) S.prisoner = d.prisoner;
+    S.prisoners.push(...d.prisoners);
     Object.assign(S.doorRotations, d.doorRotations); Object.assign(S.doorConditions, d.doorConditions);
     Object.assign(S.materiais, d.materials); Object.assign(S.elevacoes, d.elevations);
     Object.assign(S.alturasParede, d.wallHeights);
@@ -4678,12 +4776,12 @@
         : key === "doorStyles" ? S.doorStyles : key === "portcullisGroups" ? S.portcullisGroups : S.doorConditions;
       for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) delete target[doorKey(x, y)];
     }
-    for (const key of ["rooms", "heroSpawns", "monsters", "chests", "traps", "decorations", "secretPassages", "falas", "pontes"])
+    for (const key of ["rooms", "heroSpawns", "monsters", "chests", "traps", "decorations", "secretPassages", "falas", "pontes", "prisoners"])
       S[key] = S[key].filter(item => !clip.refs[key].includes(item));
     const removedRooms = new Set(clip.refs.rooms.map(r => r.id));
     for (const m of S.monsters) if (removedRooms.has(m.room_id)) m.room_id = null;
     for (const h of S.heroSpawns) if (removedRooms.has(h.room_id)) h.room_id = null;
-    for (const key of ["entrance", "exit", "prisoner"]) if (clip.refs[key] && S[key] === clip.refs[key]) S[key] = null;
+    for (const key of ["entrance", "exit"]) if (clip.refs[key] && S[key] === clip.refs[key]) S[key] = null;
     const removedDecors = new Set(clip.refs.decorations.map(d => d.id));
     const removedTraps = new Set(clip.refs.traps.map(tr => tr.id));
     for (const d of S.decorations) d.disable_trap_ids = (d.disable_trap_ids || []).filter(id => !removedTraps.has(id));
@@ -5090,7 +5188,8 @@
       ...(S.relogio && S.relogio.id ? { relogio: { id: S.relogio.id, limite: S.relogio.limite, ...(S.relogio.fato_ao_passar ? { fato_ao_passar: S.relogio.fato_ao_passar } : {}),
         avisos: S.relogio.avisos.filter(a => a.texto && a.texto.trim()).map(a => ({ em: a.em, texto: a.texto.trim() })) } } : {}),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
-      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}), ...(S.prisoner.nome ? { nome: S.prisoner.nome } : {}) } : null,
+      ...(S.prisoners.length > 1 ? { prisoners: S.prisoners.map(refemSerializar) }
+        : { prisoner: S.prisoners.length ? refemSerializar(S.prisoners[0]) : null }),
       materiais: { ...S.materiais },
       pontes: [
         ...S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p), material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" })),
@@ -5261,7 +5360,8 @@
         if (mode === "aleatoria" && !["leve", "media", "grave"].includes(trap.curse_category || "leve")) e.push(V("maldicao_gravidade", { pos: P(trap.pos) }));
       }
     }
-    if (S.prisoner && isWall(S.prisoner.pos)) e.push(V("prisioneiro_em_parede", { pos: P(S.prisoner.pos) }));
+    for (const r of S.prisoners) if (isWall(r.pos)) e.push(V("prisioneiro_em_parede", { pos: P(r.pos) }));
+    validarResgate(e, V);
     for (const r of S.rooms) for (const d of r.doors) if (S.tiles[d[1]]?.[d[0]] !== DOOR) e.push(V("porta_nao_door", { porta: P(d) }));
     if (S.startMode === "entrance") {
       if (reachableFloors(6) < 6) e.push(V("poucas_casas"));
@@ -5558,7 +5658,7 @@
     });
     S.nextRouteExitId = S.routeExits.reduce((n, e) => { const m = /^route_exit_(\d+)$/.exec(e.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, routeExitSeq);
     S.routeExitRouteId = S.routes[0]?.id || "";
-    S.prisoner = obj.prisoner || null;
+    S.prisoners = Array.isArray(obj.prisoners) ? obj.prisoners.filter(r => r && Array.isArray(r.pos)) : (obj.prisoner ? [obj.prisoner] : []);
     const loadedSourceIds = new Set(); let sourceSeq = 0;
     S.monsters = (obj.monsters || []).map(m => {
       let sourceId = typeof m.source_id === "string" && m.source_id && !loadedSourceIds.has(m.source_id) ? m.source_id : "mob_" + sourceSeq++;

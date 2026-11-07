@@ -1205,6 +1205,98 @@ window.LANG_EDITOR = {
     "en": "no 3D model — will use the 2D image on the 3D board",
     "pt": "sem modelo 3D — usará a imagem 2D no tabuleiro 3D"
   },
+  "ui.editor.masmorra.painel.prisioneiro_nome": {
+    "en": "Name (optional)",
+    "pt": "Nome (opcional)"
+  },
+  "ui.editor.masmorra.resgate.titulo": {
+    "en": "Rescue bands",
+    "pt": "Resgate por faixas"
+  },
+  "ui.editor.masmorra.resgate.destino": {
+    "en": "Where hostages are led",
+    "pt": "Destino dos reféns"
+  },
+  "ui.editor.masmorra.resgate.destino_padrao": {
+    "en": "map default",
+    "pt": "padrão do mapa"
+  },
+  "ui.editor.masmorra.resgate.destino_saida": {
+    "en": "exit",
+    "pt": "saída"
+  },
+  "ui.editor.masmorra.resgate.destino_entrada": {
+    "en": "entrance",
+    "pt": "entrada"
+  },
+  "ui.editor.masmorra.resgate.meta": {
+    "en": "Goal (hostages to save)",
+    "pt": "Meta (reféns a salvar para cumprir)"
+  },
+  "ui.editor.masmorra.resgate.faixas": {
+    "en": "Bands (how many saved → reward)",
+    "pt": "Faixas (quantos salvos → recompensa)"
+  },
+  "ui.editor.masmorra.resgate.faixa_add": {
+    "en": "Add band",
+    "pt": "Adicionar faixa"
+  },
+  "ui.editor.masmorra.resgate.de": {
+    "en": "from",
+    "pt": "de"
+  },
+  "ui.editor.masmorra.resgate.ate": {
+    "en": "to",
+    "pt": "até"
+  },
+  "ui.editor.masmorra.resgate.xp": {
+    "en": "XP",
+    "pt": "XP"
+  },
+  "ui.editor.masmorra.resgate.ouro": {
+    "en": "gold",
+    "pt": "ouro"
+  },
+  "ui.editor.masmorra.resgate.renome": {
+    "en": "renown",
+    "pt": "renome"
+  },
+  "ui.editor.masmorra.resgate.fato": {
+    "en": "fact",
+    "pt": "fato"
+  },
+  "ui.editor.masmorra.valid.refens_limite": {
+    "en": "at most {max} hostages per map",
+    "pt": "máximo de {max} reféns por mapa"
+  },
+  "ui.editor.masmorra.valid.refens_objetivo": {
+    "en": "more than one hostage requires the primary objective to be rescue the prisoner",
+    "pt": "mais de um refém exige o objetivo principal resgatar o prisioneiro"
+  },
+  "ui.editor.masmorra.valid.refens_sem_faixas": {
+    "en": "several hostages require rescue bands (0 to {total})",
+    "pt": "vários reféns exigem faixas de resgate (de 0 a {total})"
+  },
+  "ui.editor.masmorra.valid.refens_meta": {
+    "en": "rescue goal outside 1 to {total}",
+    "pt": "meta do resgate fora de 1 a {total}"
+  },
+  "ui.editor.masmorra.valid.refens_faixa_invalida": {
+    "en": "invalid rescue band: {faixa} (0 to {total})",
+    "pt": "faixa do resgate inválida: {faixa} (0 a {total})"
+  },
+  "ui.editor.masmorra.valid.refens_faixa_sobrepoe": {
+    "en": "rescue bands overlap",
+    "pt": "faixas do resgate se sobrepõem"
+  },
+  "ui.editor.masmorra.valid.refens_faixa_buraco": {
+    "en": "rescue bands have a gap: missing {faltam} (0 to {total})",
+    "pt": "faixas do resgate com buraco: faltam {faltam} (de 0 a {total})"
+  },
+  "ui.editor.masmorra.valid.refens_destino_saida": {
+    "en": "rescue to the exit requires an exit on the map",
+    "pt": "resgate com destino saída exige uma saída no mapa"
+  },
   "ui.editor.masmorra.painel.prisioneiro_titulo": {
     "en": "Prisoner",
     "pt": "Prisioneiro"
