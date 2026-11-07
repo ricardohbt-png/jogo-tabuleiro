@@ -3760,6 +3760,7 @@ FOTO_SALA_CATEGORIAS = {
     # objetivos
     "objectives": "foto", "objective_status": "foto", "mission_step_index": "foto",
     "_objetivo_concluido": "foto", "mission_complete_pending": "foto",
+    "_secundarios_pagos": "foto",
     # turno (a foto é tirada na virada da rodada; a iniciativa é remontada)
     "round_num": "foto", "initiative_order": "foto", "initiative_index": "foto",
     "turn_index": "foto",
@@ -8537,6 +8538,58 @@ def decor_visao(d, meta=None):
     return v if v in DECOR_VISAO_NIVEIS else decor_visao_padrao(meta)
 
 
+def _int_puro(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _validar_faixas_resgate(prim, total, tem_saida):
+    """Resgate por faixas: destino, meta e faixas que cobrem cada quantidade de 0 a `total`
+    exatamente uma vez. Mais de um refém só vale com faixas."""
+    prim = prim if isinstance(prim, dict) else {}
+    resgate = prim.get("type") == "rescue_prisoner"
+    faixas = prim.get("faixas") if resgate else None
+    if faixas is None:
+        if total > 1:
+            return False, "vários reféns exigem objetivo principal rescue_prisoner com faixas."
+    destino = prim.get("destino") if resgate else None
+    if destino not in (None, "saida", "entrada"):
+        return False, f"destino do resgate inválido: {destino!r} (saida|entrada)."
+    if destino == "saida" and not tem_saida:
+        return False, "resgate com destino saida exige uma saída (exit)."
+    if faixas is None:
+        return True, ""
+    if total < 1:
+        return False, "resgate por faixas sem reféns no mapa."
+    if not isinstance(faixas, list) or not faixas:
+        return False, "faixas do resgate deve ser uma lista não vazia."
+    meta = prim.get("meta")
+    if meta is not None and (not _int_puro(meta) or not 1 <= meta <= total):
+        return False, f"meta do resgate deve ser um inteiro de 1 a {total} (total de reféns)."
+    cobertas = []
+    for fx in faixas:
+        if not isinstance(fx, dict):
+            return False, "cada faixa do resgate deve ser um objeto."
+        de, ate = fx.get("de"), fx.get("ate")
+        if not (_int_puro(de) and _int_puro(ate) and 0 <= de <= ate <= total):
+            return False, f"faixa do resgate com de/ate inválidos: {de!r}..{ate!r} (0 a {total})."
+        for campo in ("xp", "gold"):
+            v = fx.get(campo)
+            if v is not None and (not _int_puro(v) or not 0 <= v <= 999999):
+                return False, f"{campo} da faixa deve ser um inteiro não negativo."
+        rn = fx.get("renome")
+        if rn is not None and (not _int_puro(rn) or abs(rn) > 9999):
+            return False, "renome da faixa deve ser um inteiro entre -9999 e 9999."
+        ft = fx.get("fato")
+        if ft is not None and (not isinstance(ft, str) or len(ft) > 100):
+            return False, "fato da faixa deve ser um texto de até 100 caracteres."
+        cobertas.extend(range(de, ate + 1))
+    if len(cobertas) != len(set(cobertas)):
+        return False, "faixas do resgate se sobrepõem."
+    if set(cobertas) != set(range(total + 1)):
+        return False, f"faixas do resgate precisam cobrir de 0 a {total} sem buraco."
+    return True, ""
+
+
 def validar_dungeon(defn):
     """Valida um dict de masmorra autorada. Retorna (ok: bool, msg: str)."""
     if not isinstance(defn, dict):
@@ -9186,6 +9239,9 @@ def validar_dungeon(defn):
             return False, "objetivo salas_obrigatorias sem salas marcadas como obrigatórias."
         if isinstance(_ob, dict) and _ob.get("type") == "all_heroes_at_exit" and ex is None:
             return False, "objetivo all_heroes_at_exit exige uma saída (exit)."
+    ok_faixas, motivo_faixas = _validar_faixas_resgate(_o.get("primary"), len(lista_pr), ex is not None)
+    if not ok_faixas:
+        return False, motivo_faixas
 
     for _f in (defn.get("falas") or []):
         if not isinstance(_f, dict):
@@ -13487,6 +13543,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.prisoners = []
         self.rescue_failed = False
         self._objetivo_concluido = False
+        self._secundarios_pagos = set()
         self.mission_complete_pending = False
         self.salas_visitadas = set()   # room_ids visitados (objetivo salas_obrigatorias)
         # Fase 4a â€” campanha.
@@ -18906,6 +18963,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.rescue_failed = False
         self._consequencia_refem_aplicada = False
         self._objetivo_concluido = False
+        self._secundarios_pagos = set()
         self.mission_complete_pending = False
         self.salas_visitadas = set()
         self.prisoners = _refens_da_definicao(defn)
@@ -20109,6 +20167,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.door_condition_activated = {}
             self.exit_pos = None; self.objectives = None; self.objective_status = None; self.mission_step_index = 0
             self.prisoners = []; self.rescue_failed = False; self._consequencia_refem_aplicada = False; self._objetivo_concluido = False; self.mission_complete_pending = False
+            self._secundarios_pagos = set()
             self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
@@ -56673,12 +56732,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if t == "open_key_chest":
             return bool(getattr(self, "key_chest_opened", False))
         if t == "rescue_prisoner":
-            if not self.prisoner or not self.prisoner.get("freed") or not self.prisoner.get("alive"):
+            if self._resgate_faixas():
+                c = self._resgate_contagem()
+                return c["salvos"] >= c["meta"] or not self._refens_no_mapa()
+            pr = self.prisoners[0] if self.prisoners else None
+            if not pr or not pr.get("freed") or not pr.get("alive"):
                 return False
             destino = self.exit_pos or self.stairs_pos
             if not destino:
                 return False
-            px, py = self.prisoner["pos"]
+            px, py = pr["pos"]
             return max(abs(px - destino[0]), abs(py - destino[1])) <= 1
         if t == "salas_obrigatorias":
             req = [rm for rm in self.rooms if rm.get("required")]
@@ -56911,7 +56974,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # O alternativo substitui o principal quando o resgate falha, e aí a etapa do resgate
         # nunca mais se cumpre: ele não espera as etapas.
         etapas_ok = not steps or self.mission_step_index >= len(steps) or efetivo is not prim
-        if (self.phase == "playing" and not self._objetivo_concluido and etapas_ok
+        if self._resgate_faixas():
+            await self._concluir_resgate_por_faixas(secs, etapas_ok)
+        elif (self.phase == "playing" and not self._objetivo_concluido and etapas_ok
                 and efetivo and self._objetivo_cumprido(efetivo)):
             self._objetivo_concluido = True
             route_progress = self._route_progress_state()
@@ -56941,6 +57006,31 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._route_completion_announced = True
             await self.gm_say(T("narracao.objetivo_principal_cumprido_recolham_a_r"))
 
+    async def _concluir_resgate_por_faixas(self, secs, etapas_ok):
+        """Resgate por faixas: cada secundário é pago quando se cumpre, uma vez (o baú nasce no
+        mapa ainda aberto); o principal só libera o encerramento, e a faixa é paga no Encerrar."""
+        if self.phase != "playing":
+            return
+        loot, pagou = [], False
+        for i, s in enumerate(secs):
+            if i not in self._secundarios_pagos and self._objetivo_cumprido(s):
+                self._secundarios_pagos.add(i)
+                await self._conceder_objetivo_reward(s, is_primary=False, loot_acc=loot)
+                pagou = True
+        if loot:
+            vivos = [p for p in self.players.values() if p.get("alive")]
+            base = list(vivos[0]["pos"]) if vivos else list(self.exit_pos or self.stairs_pos or [0, 0])
+            self._spawn_chest(self._free_tile_near(base), 0, loot)
+        prim = (self.objectives or {}).get("primary")
+        if not self._objetivo_concluido and etapas_ok and self._objetivo_cumprido(prim):
+            self._objetivo_concluido = True
+            route_progress = self._route_progress_state()
+            if route_progress is not None:
+                route_progress["objective_completed"] = True
+            pagou = True
+        if pagou:
+            self._checkpoint_savegame()
+
     async def handle_encerrar_missao(self, pid):
         """Encerramento manual da fase apos o objetivo principal cumprido.
         Faz a transicao que antes era automatica em _check_objectives."""
@@ -56957,6 +57047,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 or not self._objetivo_concluido or not self._route_exits_complete()):
             return
         self.mission_complete_pending = False
+        if self._resgate_faixas():
+            await self._pagar_faixa_resgate()
         # A aventura só conta depois da confirmação explícita de missão concluída.
         # Fugir pela escada, morrer ou voltar à cidade por outro caminho não passa aqui.
         if self.world_adventure_id and isinstance(self.world_adventure_index, int):
@@ -57345,6 +57437,35 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Faixas de resultado do objetivo principal; sem elas, o resgate é o de um refém só."""
         return ((self.objectives or {}).get("primary") or {}).get("faixas")
 
+    def _resgate_contagem(self):
+        """Salvos, mortos, total, meta e destino do resgate por faixas (o HUD e o fim da missão)."""
+        prim = (self.objectives or {}).get("primary") or {}
+        total = len(self.prisoners)
+        meta = prim.get("meta")
+        return {
+            "salvos": sum(1 for pr in self.prisoners if pr.get("salvo")),
+            "mortos": sum(1 for pr in self.prisoners if not pr.get("alive") and not pr.get("salvo")),
+            "total": total,
+            "meta": meta if isinstance(meta, int) and not isinstance(meta, bool) else total,
+            "destino": prim.get("destino"),
+        }
+
+    def _faixa_atual(self):
+        """A faixa que vale para a quantidade salva agora; {} se nenhuma a cobre."""
+        salvos = self._resgate_contagem()["salvos"]
+        for fx in self._resgate_faixas() or []:
+            if isinstance(fx, dict) and fx.get("de", 0) <= salvos <= fx.get("ate", -1):
+                return fx
+        return {}
+
+    async def _pagar_faixa_resgate(self):
+        """Paga a faixa da quantidade salva no encerramento: XP e ouro divididos, renome e fato."""
+        fx = self._faixa_atual()
+        obj = {"type": "rescue_prisoner", "xp": int(fx.get("xp") or 0),
+               "reward": {"gold": int(fx.get("gold") or 0), "items": []},
+               "renome": fx.get("renome"), "fato": fx.get("fato")}
+        await self._conceder_objetivo_reward(obj, is_primary=True, loot_acc=[])
+
     def _destino_resgate(self):
         """Casa aonde o refém precisa chegar: a do objetivo, ou a regra antiga sem o campo."""
         destino = ((self.objectives or {}).get("primary") or {}).get("destino")
@@ -57383,6 +57504,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Morte de um refém (por monstro, armadilha, etc.): falha o resgate
         sem encerrar a partida. Caminho único de morte de refém."""
         pr["alive"] = False
+        if self._resgate_faixas():
+            # Com faixas, a morte não falha o resgate: a consequência vem da faixa, no encerramento.
+            await self.gm_say(T("narracao.refem_morreu", refem=self._nome_do_refem(pr)))
+            await self._check_objectives()
+            return
         self.rescue_failed = True
         await self.gm_say(T("narracao.o_prisioneiro_foi_morto_o_resgate_falhou"))
         await self._aplicar_consequencia_refem()
@@ -58066,6 +58192,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "route_exit_progress": self._route_exit_payload(),
             "prisoners": self.prisoners,
             "prisoner": self.prisoner,   # compatibilidade até o cliente migrar (Task 5)
+            "resgate": self._resgate_contagem() if self._resgate_faixas() else None,
             "current_turn": self.current_pid(),
             "current_actor": actor,
             "initiative_order": self.initiative_order,

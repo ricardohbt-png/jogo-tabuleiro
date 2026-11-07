@@ -60,7 +60,10 @@ class VariosRefensTests(unittest.TestCase):
         self.assertEqual(r._refens_no_mapa(), [b])
 
     def test_validador(self):
-        ok, _ = S.validar_dungeon(mapa(prisoners=[{"pos": [3, 3]}, {"pos": [4, 3]}]))
+        faixas = {"primary": {"type": "rescue_prisoner", "meta": 1,
+                              "faixas": [{"de": 0, "ate": 2}]}, "secondary": []}
+        ok, _ = S.validar_dungeon(mapa(prisoners=[{"pos": [3, 3]}, {"pos": [4, 3]}],
+                                       objectives=faixas))
         self.assertTrue(ok)
         treze = [{"pos": [x % 12, 2 + x // 12]} for x in range(13)]
         self.assertFalse(S.validar_dungeon(mapa(prisoners=treze))[0])
@@ -103,8 +106,6 @@ PERMITIDOS = {
     ("server.py", "_refem_chave_cliente"),
     ("server.py", "_refem_chave_entidade"),
     ("server.py", "_game_state_payload"),
-    # Objetivo de resgate: sai na Task 4.
-    ("server.py", "_objetivo_cumprido"),
     # Tutorial do Paladino: um refém só, por construção.
     ("tutorial_training.py", "_training_prisoner_dialogue"),
     ("tutorial_training.py", "_training_init"),
@@ -694,6 +695,244 @@ class LibertarJanelaSeguirTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(b["freed"])
         self.assertEqual(b["modo"], "seguir")
         self.assertEqual(ws.erros(), [])
+
+
+# Tabela dos Charcos (spec): salvas → (renome, xp, ouro, fato).
+FAIXAS_CHARCOS = [
+    {"de": 6, "ate": 6, "renome": 8, "xp": 225, "gold": 90, "fato": "charcos_criancas_todas"},
+    {"de": 4, "ate": 5, "renome": 5, "xp": 150, "gold": 60, "fato": "charcos_criancas_salvas"},
+    {"de": 3, "ate": 3, "renome": 0, "xp": 90, "gold": 36, "fato": "charcos_criancas_perdidas"},
+    {"de": 2, "ate": 2, "renome": -2, "xp": 60, "gold": 24, "fato": "charcos_criancas_perdidas"},
+    {"de": 1, "ate": 1, "renome": -4, "xp": 30, "gold": 12, "fato": "charcos_criancas_perdidas"},
+    {"de": 0, "ate": 0, "renome": -8, "xp": 0, "gold": 0, "fato": "charcos_criancas_mortas"},
+]
+ESPERADO = {6: (8, 225, 90, "charcos_criancas_todas"), 5: (5, 150, 60, "charcos_criancas_salvas"),
+            4: (5, 150, 60, "charcos_criancas_salvas"), 3: (0, 90, 36, "charcos_criancas_perdidas"),
+            2: (-2, 60, 24, "charcos_criancas_perdidas"), 1: (-4, 30, 12, "charcos_criancas_perdidas"),
+            0: (-8, 0, 0, "charcos_criancas_mortas")}
+SEIS = [{"pos": [2 + i, 6]} for i in range(6)]
+
+
+def objetivo_charcos(**extra):
+    prim = {"type": "rescue_prisoner", "destino": "entrada", "meta": 4,
+            "faixas": copy.deepcopy(FAIXAS_CHARCOS)}
+    prim.update(extra)
+    return {"primary": prim, "secondary": []}
+
+
+def resgate(secundarios=()):
+    r = sala(mapa(prisoners=copy.deepcopy(SEIS), objectives=objetivo_charcos()))
+    r.objectives["secondary"] = list(secundarios)
+    r.renome = 10
+    r.fim = False
+
+    async def fim(*a, **k):
+        r.fim = True
+    r.end_game = fim
+    return r
+
+
+def salvar(r, n, mortos=0):
+    for pr in r.prisoners[:n]:
+        pr.update(freed=True, salvo=True, pos=[-1, -1])
+    for pr in r.prisoners[n:n + mortos]:
+        pr["alive"] = False
+
+
+def goblin_alvo(hp):
+    ficha = next(d for d in S.MONSTER_DEFS if d["type"] == "goblin")
+    m = S.make_monster(ficha, {"id": 1, "cx": 9, "cy": 9})
+    m.update(pos=[9, 9], hp=hp, authored_target=True)
+    return m
+
+
+class FaixasTests(unittest.IsolatedAsyncioTestCase):
+    async def test_faixas_pagam_o_valor_certo(self):
+        for n in range(7):
+            with self.subTest(salvos=n):
+                r = resgate()
+                p = r.players["p0"]
+                salvar(r, n, mortos=6 - n)
+                await r._check_objectives()
+                self.assertTrue(r.mission_complete_pending)
+                xp, ouro = p["xp"], p.get("gold", 0)
+                await r.handle_encerrar_missao("p0")
+                renome, dxp, dgold, fato = ESPERADO[n]
+                self.assertEqual(p["xp"] - xp, dxp)
+                self.assertEqual(p.get("gold", 0) - ouro, dgold)
+                self.assertEqual(r.renome, 10 + renome)
+                self.assertIn(fato, r.fatos)
+                self.assertTrue(r.fim)
+
+    async def test_botao_na_meta(self):
+        r = resgate()
+        p = r.players["p0"]
+        ouro, xp = p.get("gold", 0), p["xp"]
+        salvar(r, 3)
+        await r._check_objectives()
+        self.assertFalse(r.mission_complete_pending)
+        salvar(r, 4)
+        await r._check_objectives()
+        self.assertTrue(r.mission_complete_pending)
+        self.assertEqual((p.get("gold", 0), p["xp"]), (ouro, xp))
+        self.assertEqual(r.renome, 10)
+        self.assertEqual(r.fatos, set())
+
+    async def test_quinta_depois_da_meta_conta(self):
+        r = resgate()
+        p = r.players["p0"]
+        salvar(r, 4)
+        await r._check_objectives()
+        salvar(r, 6)
+        await r._check_objectives()
+        xp = p["xp"]
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(p["xp"] - xp, 225)
+        self.assertIn("charcos_criancas_todas", r.fatos)
+
+    async def test_sem_vivos_no_mapa_abre_encerrar(self):
+        r = resgate()
+        p = r.players["p0"]
+        salvar(r, 2, mortos=4)
+        await r._check_objectives()
+        self.assertTrue(r.mission_complete_pending)
+        xp = p["xp"]
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(p["xp"] - xp, 60)
+        self.assertEqual(r.renome, 8)
+
+    async def test_morte_nao_falha_o_resgate(self):
+        r = sala(mapa(prisoners=copy.deepcopy(SEIS),
+                      objectives=objetivo_charcos(se_falhar={"renome": -5, "fato": "falhou"})))
+        r.renome = 10
+        await r._prisioneiro_morre(r.prisoners[2])
+        self.assertFalse(r.prisoners[2]["alive"])
+        self.assertFalse(r.rescue_failed)
+        self.assertEqual(r.renome, 10)
+        self.assertNotIn("falhou", r.fatos)
+        self.assertEqual(r._objetivo_payload(r.objectives["primary"])["status"], "pending")
+
+    async def test_secundario_depois_da_meta(self):
+        ferrao = {"type": "kill_target", "xp": 0,
+                  "reward": {"gold": 25, "items": [{"id": "health_potion"}]}}
+        r = resgate([ferrao])
+        p = r.players["p0"]
+        m = goblin_alvo(10)
+        r.monsters = {m["id"]: m}
+        salvar(r, 4)
+        await r._check_objectives()
+        ouro, baus = p.get("gold", 0), len(r.chests)
+        m["hp"] = 0
+        await r._check_objectives()
+        self.assertEqual(p.get("gold", 0) - ouro, 25)
+        self.assertEqual(len(r.chests), baus + 1)
+        self.assertEqual(r._secundarios_pagos, {0})
+        await r._check_objectives()
+        self.assertEqual(p.get("gold", 0) - ouro, 25)
+        self.assertEqual(len(r.chests), baus + 1)
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(p.get("gold", 0) - ouro, 25 + 60)
+
+    async def test_secundario_antes_da_meta(self):
+        r = resgate([{"type": "kill_all", "reward": {"gold": 7}}])
+        p = r.players["p0"]
+        ouro = p.get("gold", 0)
+        await r._check_objectives()
+        self.assertEqual(p.get("gold", 0) - ouro, 7)
+        self.assertFalse(r.mission_complete_pending)
+
+    async def test_renome_negativo_tem_piso_zero(self):
+        r = resgate()
+        r.renome = 3
+        salvar(r, 0, mortos=6)
+        await r._check_objectives()
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(r.renome, 0)
+        self.assertIn("charcos_criancas_mortas", r.fatos)
+
+    async def test_encerrar_paga_uma_vez(self):
+        r = resgate()
+        p = r.players["p0"]
+        salvar(r, 4)
+        await r._check_objectives()
+        xp = p["xp"]
+        await r.handle_encerrar_missao("p0")
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(p["xp"] - xp, 150)
+
+    def test_contagem_no_game_state(self):
+        r = resgate()
+        salvar(r, 2, mortos=1)
+        esperado = {"salvos": 2, "mortos": 1, "total": 6, "meta": 4, "destino": "entrada"}
+        self.assertEqual(r._resgate_contagem(), esperado)
+        self.assertEqual(r._game_state_payload()["resgate"], esperado)
+        self.assertEqual(r._faixa_atual()["xp"], 60)
+        sem = sala(mapa(prisoners=[{"pos": [3, 3]}],
+                        objectives={"primary": {"type": "rescue_prisoner"}, "secondary": []}))
+        self.assertIsNone(sem._game_state_payload()["resgate"])
+
+    def test_validador_de_faixas(self):
+        tres = [{"pos": [3, 3]}, {"pos": [4, 3]}, {"pos": [5, 3]}]
+
+        def obj(faixas, **extra):
+            prim = {"type": "rescue_prisoner", "meta": 2, "faixas": faixas}
+            prim.update(extra)
+            return {"primary": prim, "secondary": []}
+        bom = [{"de": 0, "ate": 1, "xp": 0},
+               {"de": 2, "ate": 3, "xp": 10, "gold": 5, "renome": -1, "fato": "x"}]
+        ok, msg = S.validar_dungeon(mapa(prisoners=tres, objectives=obj(bom)))
+        self.assertTrue(ok, msg)
+        ok, msg = S.validar_dungeon(mapa(prisoners=tres, objectives=obj(bom, destino="entrada")))
+        self.assertTrue(ok, msg)
+        ok, msg = S.validar_dungeon(mapa(prisoners=tres, objectives=obj(bom, destino="saida"),
+                                         exit={"x": 9, "y": 9}))
+        self.assertTrue(ok, msg)
+        ruins = {
+            "buraco": obj([{"de": 0, "ate": 0}, {"de": 2, "ate": 3}]),
+            "sobreposição": obj([{"de": 0, "ate": 2}, {"de": 2, "ate": 3}]),
+            "falta o topo": obj([{"de": 0, "ate": 2}]),
+            "passa do total": obj([{"de": 0, "ate": 4}]),
+            "meta > total": obj(bom, meta=4),
+            "meta zero": obj(bom, meta=0),
+            "vazia": obj([]),
+            "faixa não é objeto": obj(["x"]),
+            "de > ate": obj([{"de": 3, "ate": 0}]),
+            "xp negativo": obj([{"de": 0, "ate": 3, "xp": -1}]),
+            "destino sem exit": obj(bom, destino="saida"),
+            "destino inventado": obj(bom, destino="lua"),
+            "2 reféns sem faixas": {"primary": {"type": "rescue_prisoner"}, "secondary": []},
+            "2 reféns e kill_all": {"primary": {"type": "kill_all"}, "secondary": []},
+        }
+        for nome, objetivos in ruins.items():
+            with self.subTest(nome):
+                ok, _ = S.validar_dungeon(mapa(prisoners=tres, objectives=objetivos))
+                self.assertFalse(ok)
+        um = mapa(prisoner={"pos": [3, 3]},
+                  objectives={"primary": {"type": "rescue_prisoner"}, "secondary": []})
+        self.assertTrue(S.validar_dungeon(um)[0])
+
+    async def test_foto_com_salvos(self):
+        ferrao = {"type": "kill_target", "reward": {"gold": 25}}
+        r = resgate([ferrao])
+        m = goblin_alvo(0)
+        r.monsters = {m["id"]: m}
+        salvar(r, 4, mortos=1)
+        await r._check_objectives()
+        self.assertEqual(r._secundarios_pagos, {0})
+        corpo = S.foto_desempacotar(S.foto_empacotar(r._montar_foto(), onde="masmorra"))
+        r2 = resgate([ferrao])
+        r2._foto_aplicar_sala(corpo, {"warrior": "p0"}, r2.dungeon_def)
+        self.assertEqual(r2._resgate_contagem(), r._resgate_contagem())
+        self.assertEqual(r2._secundarios_pagos, {0})
+        p2 = r2.players["p0"]
+        ouro = p2.get("gold", 0)
+        await r2._check_objectives()
+        self.assertEqual(p2.get("gold", 0), ouro)
+        self.assertTrue(r2.mission_complete_pending)
+        xp = p2["xp"]
+        await r2.handle_encerrar_missao("p0")
+        self.assertEqual(p2["xp"] - xp, 150)
+        self.assertEqual(p2.get("gold", 0) - ouro, 60)
 
 
 if __name__ == "__main__":

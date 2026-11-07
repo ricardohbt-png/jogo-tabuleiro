@@ -3431,6 +3431,7 @@ window.LANG_NARRACAO = {
   "narracao.n_refens": {"en":"{n} hostages","pt":"{n} reféns"},
   "narracao.refem_chegou_a_salvo": {"en":"🏁 {refem} reached safety.","pt":"🏁 {refem} chegou a salvo."},
   "narracao.refem_nome_padrao": {"en":"Prisoner","pt":"Prisioneiro"},
+  "narracao.refem_morreu": {"en":"💀 {refem} was killed.","pt":"💀 {refem} morreu."},
   "narracao.arma_retorna_a_mao": {"en":"{arma} returns to {heroi}'s hand.","pt":"{arma} retorna à mão de {heroi}."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);
