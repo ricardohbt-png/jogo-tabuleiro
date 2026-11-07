@@ -123,7 +123,7 @@ const j1b = E.buildJSON();
 check('prisoners de tamanho 1 grava prisoner', !!j1b.prisoner && !('prisoners' in j1b));
 
 console.log('\n[4] Validação');
-const tem = (txt, slug) => { const k = 'ui.editor.masmorra.valid.' + slug; return txt.includes(String(ctx.t(k)).split('{')[0].trim()); };
+const tem = (txt, slug) => { const k = 'ui.editor.masmorra.valid.' + slug; return txt.includes(String(ctx.t(k)).split(/\{[^}]*\}/).map(x => x.trim()).sort((a, b) => b.length - a.length)[0]); };
 function erros(mut) { const m = mapaBase(); mut(m); E.loadJSON(clone(m)); return E.validarEditor().erros.join(' | '); }
 const comRef = (m, n) => { delete m.prisoner; m.prisoners = Array.from({ length: n }, (_, i) => ({ pos: [2 + i, 2], room_id: 0 })); };
 let e = erros(m => { comRef(m, 2); });
@@ -140,6 +140,34 @@ e = erros(m => { comRef(m, 2); m.objectives.primary.faixas = [{ de: 0, ate: 2, x
 check('mapa de 2 reféns bem formado não acusa faixa/meta', !/refens_|faixas do resgate|reféns/i.test(e), e);
 e = erros(m => { comRef(m, 2); m.objectives.primary.type = 'kill_all'; });
 check('2 reféns com outro objetivo principal é acusado', tem(e, 'refens_objetivo'), e);
+
+e = erros(m => { m.prisoner = null; m.objectives.primary.faixas = [{ de: 0, ate: 0 }]; });
+check('faixas com zero reféns é acusado', tem(e, 'refens_sem_refens'), e);
+const comFaixa = (campo, valor) => erros(m => { comRef(m, 2); m.objectives.primary.faixas = [{ de: 0, ate: 1 }, { de: 2, ate: 2, [campo]: valor }]; });
+for (const [campo, ruim, bom] of [['xp', -5, 999999], ['xp', 1000000, 0], ['gold', -1, 999999], ['gold', 1000000, 0], ['renome', -10000, -9999], ['renome', 10000, 9999]]) {
+  check(campo + ' ' + ruim + ' é acusado', tem(comFaixa(campo, ruim), 'refens_faixa_campo'));
+  check(campo + ' ' + bom + ' (limite) é aceito', !tem(comFaixa(campo, bom), 'refens_faixa_campo'));
+}
+check('fato com 101 caracteres é acusado', tem(comFaixa('fato', 'x'.repeat(101)), 'refens_faixa_fato'));
+check('fato com 100 caracteres é aceito', !tem(comFaixa('fato', 'x'.repeat(100)), 'refens_faixa_fato'));
+
+console.log('\n[4b] O servidor concorda com o editor (validar_dungeon real)');
+const { spawnSync } = require('child_process');
+function servidor(mut) {
+  const m = mapaBase(); mut(m); E.loadJSON(clone(m));
+  const json = E.buildJSON();
+  const r = spawnSync('python', ['-X', 'utf8', '-c', 'import sys,json,server; ok,msg=server.validar_dungeon(json.load(sys.stdin)); print(json.dumps([ok,msg]))'],
+    { input: JSON.stringify(json), cwd: raiz, encoding: 'utf8' });
+  try { return JSON.parse(r.stdout.trim().split('\n').pop()); } catch (x) { return [null, r.stderr.slice(-300)]; }
+}
+const conj = (campo, valor) => servidor(m => { comRef(m, 2); m.objectives.primary.faixas = [{ de: 0, ate: 1 }, { de: 2, ate: 2, [campo]: valor }]; });
+const bomS = servidor(m => { comRef(m, 2); m.objectives.primary.faixas = [{ de: 0, ate: 2, xp: 5 }]; });
+check('servidor aceita o mapa bem formado do editor', bomS[0] === true, JSON.stringify(bomS));
+check('servidor rejeita faixas sem reféns (como o editor)', servidor(m => { m.objectives.primary.faixas = [{ de: 0, ate: 0 }]; })[0] === false);
+for (const [campo, ruim] of [['xp', -5], ['gold', 1000000], ['renome', -10000]]) {
+  check('servidor rejeita ' + campo + ' ' + ruim + ' (como o editor)', conj(campo, ruim)[0] === false);
+}
+check('servidor rejeita fato de 101 caracteres', conj('fato', 'x'.repeat(101))[0] === false);
 
 console.log('\n[5] Copiar e colar tratam a lista como monstros');
 E.loadJSON(clone(mapaBase()));

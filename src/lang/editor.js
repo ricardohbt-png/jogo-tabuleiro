@@ -1297,6 +1297,18 @@ window.LANG_EDITOR = {
     "en": "rescue to the exit requires an exit on the map",
     "pt": "resgate com destino saída exige uma saída no mapa"
   },
+  "ui.editor.masmorra.valid.refens_sem_refens": {
+    "en": "rescue bands with no hostage on the map",
+    "pt": "resgate por faixas sem nenhum refém no mapa"
+  },
+  "ui.editor.masmorra.valid.refens_faixa_campo": {
+    "en": "{campo} of band {faixa} outside the limit ({min} to {max})",
+    "pt": "{campo} da faixa {faixa} fora do limite ({min} a {max})"
+  },
+  "ui.editor.masmorra.valid.refens_faixa_fato": {
+    "en": "fact of band {faixa} exceeds {max} characters",
+    "pt": "fato da faixa {faixa} passa de {max} caracteres"
+  },
   "ui.editor.masmorra.painel.prisioneiro_titulo": {
     "en": "Prisoner",
     "pt": "Prisioneiro"

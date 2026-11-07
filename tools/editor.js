@@ -2910,7 +2910,8 @@
     if (total > 1 && !resgate) e.push(V("refens_objetivo"));
     else if (total > 1 && !faixas) e.push(V("refens_sem_faixas", { total }));
     if (resgate && prim.destino === "saida" && !S.exit) e.push(V("refens_destino_saida"));
-    if (!faixas || total < 1) return;
+    if (faixas && total < 1) { e.push(V("refens_sem_refens")); return; }
+    if (!faixas) return;
     if (prim.meta != null && !(Number.isInteger(prim.meta) && prim.meta >= 1 && prim.meta <= total)) e.push(V("refens_meta", { total }));
     const cobertas = [];
     for (const fx of faixas) {
@@ -2918,6 +2919,12 @@
         e.push(V("refens_faixa_invalida", { faixa: fx.de + ".." + fx.ate, total })); continue;
       }
       for (let n = fx.de; n <= fx.ate; n++) cobertas.push(n);
+      const nome = fx.de + ".." + fx.ate;
+      for (const [campo, min, max] of [["xp", 0, 999999], ["gold", 0, 999999], ["renome", -9999, 9999]]) {
+        const v = fx[campo];
+        if (v != null && !(Number.isInteger(v) && v >= min && v <= max)) e.push(V("refens_faixa_campo", { campo, faixa: nome, min, max }));
+      }
+      if (fx.fato != null && (typeof fx.fato !== "string" || fx.fato.length > 100)) e.push(V("refens_faixa_fato", { faixa: nome, max: 100 }));
     }
     if (cobertas.length !== new Set(cobertas).size) e.push(V("refens_faixa_sobrepoe"));
     const faltam = [];
