@@ -3315,6 +3315,33 @@ const GS = (() => {
   function refemPorId(id) {
     return getPrisoners().find(pr => String(pr.id) === String(id)) || null;
   }
+  // Nome que o servidor dá a refém sem nome: é marcador, não nome (o servidor o
+  // troca por T("narracao.refem_nome_padrao") na narração). Valor de dado, não
+  // texto de interface: a interface mostra o rótulo traduzido no lugar.
+  const REFEM_NOME_PADRAO = 'Prisioneiro';
+  function nomeProprioRefem(pr) {
+    const nome = pr && typeof pr.nome === 'string' ? pr.nome.trim() : '';
+    return nome && nome !== REFEM_NOME_PADRAO ? nome : null;
+  }
+  // Rótulo de cada refém da lista (Map id -> texto). Sem nome próprio vale
+  // `padrao` (já traduzido por quem chama); rótulos repetidos ganham número
+  // por `numerar(nome, n)` para o jogador saber qual escolhe.
+  function rotulosRefens(refens, padrao, numerar) {
+    const base = (refens || []).map(pr => nomeProprioRefem(pr) || padrao);
+    const total = new Map();
+    for (const b of base) total.set(b, (total.get(b) || 0) + 1);
+    const vistos = new Map();
+    const out = new Map();
+    (refens || []).forEach((pr, i) => {
+      const b = base[i];
+      if (total.get(b) > 1) {
+        const n = (vistos.get(b) || 0) + 1;
+        vistos.set(b, n);
+        out.set(String(pr.id), numerar(b, n));
+      } else out.set(String(pr.id), b);
+    });
+    return out;
+  }
   function _comRefem(msg, refemId) {
     if (refemId != null) msg.refem_id = refemId;
     return msg;
@@ -4244,6 +4271,8 @@ const GS = (() => {
     refensLibertaveis,
     ehRefemId,
     refemPorId,
+    nomeProprioRefem,
+    rotulosRefens,
     get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
     get missionCompletePending() { return missionCompletePending(); },
     // Fase 4a: campanha em curso (property getter — acessado sem parênteses).

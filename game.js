@@ -5941,13 +5941,22 @@ function _meuRefemLiberto(state, id){
     && pr.freed && pr.rescuer_pid === GS.myPid) || null;
 }
 
+// Rótulo de um refém: nome próprio, ou "Prisioneiro" traduzido. Os repetidos
+// ganham número pela ordem no mapa (o mesmo em toda tela), para o jogador saber
+// qual escolhe.
+function _rotuloRefem(pr, state = GS.gameState){
+  const rotulos = GS.rotulosRefens(GS.refensNoMapa(state), t('ui.hud.prisioneiro'),
+    (nome, n) => t('ui.hud.refem_numerado', {nome, n}));
+  return rotulos.get(String(pr.id)) || GS.nomeProprioRefem(pr) || t('ui.hud.prisioneiro');
+}
+
 // Botão "Libertar": um cativo ao lado é libertado direto; com mais de um, o
 // jogador escolhe quem pelo nome.
 function libertarRefem(){
   const cativos = GS.refensLibertaveis();
   if(!cativos.length) return;
   if(cativos.length === 1){ GS.libertarPrisioneiro(cativos[0].id); return; }
-  const alvos = cativos.map(pr => ({id:pr.id, name:pr.nome || t('ui.hud.prisioneiro'),
+  const alvos = cativos.map(pr => ({id:pr.id, name:_rotuloRefem(pr),
     emoji:'⛓️', hp:pr.hp, max_hp:pr.max_hp}));
   openTargetModal(t('ui.hud.libertar_qual'), alvos, 'ally', id => GS.libertarPrisioneiro(id));
 }
@@ -20441,10 +20450,9 @@ function _aliadosNoRaioPaladin(me, raio){
   const pp = me.pos || [0,0];
   const alvos = (st.players || []).filter(a => a && a.alive && a.id !== me.id && a.pos &&
     Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= _alcanceComAlturaCli(me, raio, a));
-  for(const pr of GS.refensNoMapa(st)){
-    if(pr.freed && Math.max(Math.abs(pp[0]-pr.pos[0]), Math.abs(pp[1]-pr.pos[1])) <= _alcanceComAlturaCli(me, raio, pr))
-      alvos.push({...pr, name:pr.nome || t('ui.hud.prisioneiro'), emoji:'🔗'});
-  }
+  const refens = GS.refensNoMapa(st).filter(pr => pr.freed
+    && Math.max(Math.abs(pp[0]-pr.pos[0]), Math.abs(pp[1]-pr.pos[1])) <= _alcanceComAlturaCli(me, raio, pr));
+  for(const pr of refens) alvos.push({...pr, name:_rotuloRefem(pr, st), emoji:'🔗'});
   return alvos;
 }
 
@@ -20611,7 +20619,7 @@ function _paladinSkillBtn(me, sk){
       const refemProtegido = GS.refensNoMapa(GS.gameState)
         .find(pr => String(pr.id) === String(me.protetor_alvo));
       const alvo = (GS.gameState?.players || []).find(p => String(p.id) === String(me.protetor_alvo))
-        || (refemProtegido ? {name:refemProtegido.nome || t('ui.paladino.prisioneiro')} : null);
+        || (refemProtegido ? {name:_rotuloRefem(refemProtegido)} : null);
       setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
              alvo ? `protegendo ${alvo.name} (${_splitDef})` : '—',
              `manut. 🍖1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,

@@ -143,5 +143,37 @@ const lang = fs.readFileSync(path.join(raiz, 'src', 'lang', 'interface.js'), 'ut
 const blocoQual = (lang.match(/"ui\.hud\.libertar_qual":\s*\{[^}]*\}/) || [''])[0];
 check('ui.hud.libertar_qual tem pt e en', /"pt":\s*"[^"]+"/.test(blocoQual) && /"en":\s*"[^"]+"/.test(blocoQual));
 
+console.log('\n[8] Rótulo do refém: nome próprio, "Prisioneiro" traduzido e numerado');
+const semNome = [
+  refem('refem_0', { pos: [3, 2], nome: 'Prisioneiro' }),
+  refem('refem_1', { pos: [1, 1], nome: null }),
+  refem('refem_2', { pos: [2, 1], nome: 'Elara' }),
+];
+check('nome padrão não é nome próprio', GS.nomeProprioRefem(semNome[0]) === null && GS.nomeProprioRefem(semNome[1]) === null);
+check('nome do autor é nome próprio', GS.nomeProprioRefem(semNome[2]) === 'Elara');
+const rot = GS.rotulosRefens(semNome, 'Prisoner', (nome, n) => `${nome} ${n}`);
+check('dois sem nome ganham rótulos distintos', rot.get('refem_0') === 'Prisoner 1' && rot.get('refem_1') === 'Prisoner 2',
+  JSON.stringify([...rot]));
+check('o nomeado mantém o nome', rot.get('refem_2') === 'Elara');
+check('um só sem nome não ganha número',
+  GS.rotulosRefens([semNome[0], semNome[2]], 'Prisoner', (nome, n) => `${nome} ${n}`).get('refem_0') === 'Prisoner');
+// O _rotuloRefem real do game.js, com o tradutor em inglês do dicionário.
+const ini = gj.indexOf('function _rotuloRefem(');
+const fim = gj.indexOf('\n}', ini) + 2;
+const ctxLang = { window: { LANG_STRINGS: {} } };
+vm.runInNewContext(lang, ctxLang);
+const dic = ctxLang.window.LANG_INTERFACE;
+const tEn = (k, p = {}) => String((dic[k] || {}).en || k).replace(/\{(\w+)\}/g, (_, x) => p[x]);
+const rotuloRefem = vm.runInNewContext(`(${gj.slice(ini, fim)})`, { GS, t: tEn });
+estado({ prisoners: semNome });
+const rotulosEn = semNome.map(pr => rotuloRefem(pr));
+check('em inglês, o padrão não sai "Prisioneiro" cru', rotulosEn.every(r => !r.includes('Prisioneiro')), JSON.stringify(rotulosEn));
+check('em inglês, dois sem nome são distintos', rotulosEn[0] !== rotulosEn[1] && rotulosEn[0].startsWith('Prisoner'));
+check('em inglês, o nomeado mantém o nome', rotulosEn[2] === 'Elara');
+check('modal, Protetor e lista do Paladino usam _rotuloRefem',
+  /function libertarRefem\(\)[\s\S]{0,400}_rotuloRefem\(pr\)/.test(gj)
+  && /_aliadosNoRaioPaladin[\s\S]{0,700}_rotuloRefem\(pr, st\)/.test(gj)
+  && /refemProtegido \? \{name:_rotuloRefem\(refemProtegido\)\}/.test(gj));
+
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);

@@ -4196,6 +4196,10 @@ window.LANG_INTERFACE = {
     "en": "🔓 Free the prisoner",
     "pt": "🔓 Libertar prisioneiro"
   },
+  "ui.hud.refem_numerado": {
+    "en": "{nome} {n}",
+    "pt": "{nome} {n}"
+  },
   "ui.hud.libertar_qual": {
     "en": "🔓 Which prisoner to free?",
     "pt": "🔓 Libertar qual prisioneiro?"
