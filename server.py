@@ -2516,6 +2516,31 @@ def charcos_remapear_sala(sala):
     return True
 
 
+CHARCOS_ALDEIA_ARQUIVO = "charcos_4b_aldeia.json"
+
+
+def charcos_aldeia_objetivo_antigo(sala):
+    """Foto da Aldeia gravada com o refém único (principal `rescue_prisoner` sem `faixas`): o
+    final feliz, o renome da rota e a gratidão da vila passaram a depender do fato
+    `charcos_criancas_todas`, dado pela faixa. Sem isto, vencer a foto antiga perderia os três.
+    Acrescenta renome 5 e o fato ao principal, sem sobrescrever; `se_falhar` fica. Idempotente."""
+    if not isinstance(sala, dict):
+        return False
+    if os.path.basename(str(sala.get("selected_dungeon") or "")) != CHARCOS_ALDEIA_ARQUIVO:
+        return False
+    prim = (sala.get("objectives") or {}).get("primary")
+    if not isinstance(prim, dict) or prim.get("type") != "rescue_prisoner" or "faixas" in prim:
+        return False
+    mudou = False
+    if "renome" not in prim:
+        prim["renome"] = 5
+        mudou = True
+    if "fato" not in prim:
+        prim["fato"] = "charcos_criancas_todas"
+        mudou = True
+    return mudou
+
+
 def _charcos_migrar_foto(registro):
     """Foto empacotada com aventura antiga → foto com os ids novos (resumo e hora preservados)."""
     corpo = foto_desempacotar(registro)
@@ -30263,6 +30288,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         corpo, _ = foto_renomear_ids(corpo, mapa_fixo, new_id)
         sala = corpo["sala"]
         charcos_remapear_sala(sala)     # foto gravada antes da cadeia dos Charcos
+        charcos_aldeia_objetivo_antigo(sala)   # foto da Aldeia com o refém único
         if "prisoner" in sala:          # foto antiga: um refém só
             antigo = sala.pop("prisoner")
             if "prisoners" not in sala:
@@ -57456,7 +57482,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         obj = {"type": "rescue_prisoner", "xp": int(fx.get("xp") or 0),
                "reward": {"gold": int(fx.get("gold") or 0), "items": []},
                "renome": fx.get("renome"), "fato": fx.get("fato")}
-        await self._conceder_objetivo_reward(obj, is_primary=True, loot_acc=[])
+        # Falha no pagamento não pode travar o encerramento: o botão não volta (`_faixa_paga`) e a
+        # Aldeia não tem saída pela escada. Relata e deixa a transição seguir; não paga de novo.
+        await self._isolar(self._conceder_objetivo_reward(obj, is_primary=True, loot_acc=[]),
+                           "pagar faixa do resgate")
 
     def _destino_resgate(self):
         """Casa aonde o refém precisa chegar: a do objetivo, ou a regra antiga sem o campo."""

@@ -966,6 +966,81 @@ class FaixasTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p2["xp"] - xp, 150)
         self.assertEqual(p2.get("gold", 0) - ouro, 60)
 
+    async def test_falha_ao_pagar_faixa_nao_trava_o_encerramento(self):
+        """Se o pagamento da faixa estoura, a missão encerra mesmo assim e não paga de novo."""
+        r = resgate()
+        salvar(r, 4)
+        await r._check_objectives()
+        chamadas = []
+
+        async def explode(*a, **k):
+            chamadas.append(1)
+            raise RuntimeError("falha simulada")
+        r._conceder_objetivo_reward = explode
+        await r.handle_encerrar_missao("p0")
+        self.assertTrue(r.fim)
+        self.assertTrue(r._faixa_paga)
+        r.fim = False
+        r.mission_complete_pending = True       # mesmo que algo religue o botão
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(len(chamadas), 1)
+
+
+# Objetivo principal da Aldeia gravado ANTES dos vários reféns (um refém só, sem faixas).
+OBJ_ALDEIA_ANTIGO = {"type": "rescue_prisoner", "xp": 150, "reward": {"gold": 60, "items": []},
+                     "se_falhar": {"renome": -5, "fato": "charcos_criancas_mortas"}}
+
+
+class FotoAntigaDaAldeiaTests(unittest.IsolatedAsyncioTestCase):
+    def foto_antiga(self, arquivo="charcos_4b_aldeia.json"):
+        r = sala(mapa(prisoner={"pos": [3, 3]},
+                      objectives={"primary": copy.deepcopy(OBJ_ALDEIA_ANTIGO), "secondary": []}))
+        r.selected_dungeon = arquivo
+        corpo = r._montar_foto()
+        corpo["sala"]["prisoner"] = corpo["sala"].pop("prisoners")[0]   # formato antigo
+        corpo["sala"]["objectives"] = {"primary": copy.deepcopy(OBJ_ALDEIA_ANTIGO), "secondary": []}
+        return S.foto_desempacotar(S.foto_empacotar(corpo, onde="masmorra"))
+
+    def retomar(self, corpo):
+        r2 = sala(mapa(prisoner={"pos": [3, 3]},
+                       objectives={"primary": copy.deepcopy(OBJ_ALDEIA_ANTIGO), "secondary": []}))
+        r2._foto_aplicar_sala(corpo, {"warrior": "p0"}, r2.dungeon_def)
+        return r2
+
+    def test_foto_antiga_da_aldeia_ganha_renome_e_fato(self):
+        r2 = self.retomar(self.foto_antiga())
+        prim = r2.objectives["primary"]
+        self.assertEqual(prim.get("renome"), 5)
+        self.assertEqual(prim.get("fato"), "charcos_criancas_todas")
+        self.assertEqual(prim["se_falhar"], OBJ_ALDEIA_ANTIGO["se_falhar"])
+
+    def test_idempotente_e_nao_sobrescreve(self):
+        sala_ = {"selected_dungeon": "charcos_4b_aldeia.json",
+                 "objectives": {"primary": dict(OBJ_ALDEIA_ANTIGO, renome=3)}}
+        S.charcos_aldeia_objetivo_antigo(sala_)
+        S.charcos_aldeia_objetivo_antigo(sala_)
+        prim = sala_["objectives"]["primary"]
+        self.assertEqual((prim["renome"], prim["fato"]), (3, "charcos_criancas_todas"))
+        com_faixas = {"selected_dungeon": "charcos_4b_aldeia.json",
+                      "objectives": {"primary": {"type": "rescue_prisoner", "faixas": []}}}
+        self.assertFalse(S.charcos_aldeia_objetivo_antigo(com_faixas))
+        self.assertNotIn("renome", com_faixas["objectives"]["primary"])
+
+    def test_outra_masmorra_fica_como_esta(self):
+        r2 = self.retomar(self.foto_antiga("charcos_4a_arredores.json"))
+        self.assertNotIn("renome", r2.objectives["primary"])
+        self.assertNotIn("fato", r2.objectives["primary"])
+
+    async def test_vencer_a_foto_antiga_da_o_final_feliz(self):
+        r2 = self.retomar(self.foto_antiga())
+        r2.renome = 10
+        pr = r2.prisoners[0]
+        destino = r2.exit_pos or r2.stairs_pos
+        pr.update(freed=True, alive=True, pos=list(destino))
+        await r2._check_objectives()
+        self.assertIn("charcos_criancas_todas", r2.fatos)
+        self.assertEqual(r2.renome, 15)
+
 
 if __name__ == "__main__":
     unittest.main()
