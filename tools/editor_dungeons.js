@@ -61201,13 +61201,67 @@ window.EDITOR_DUNGEONS = [
         "heroes": 4,
         "level": 4
       },
-      "prisoner": {
-        "pos": [
-          47,
-          18
-        ],
-        "room_id": 2
-      },
+      "prisoners": [
+        {
+          "pos": [
+            46,
+            18
+          ],
+          "room_id": 2,
+          "image": "garoto_loiro.png",
+          "model3d": "garoto_loiro.glb",
+          "nome": "Tico"
+        },
+        {
+          "pos": [
+            47,
+            18
+          ],
+          "room_id": 2,
+          "image": "garoto_medieval.png",
+          "model3d": "garoto_medieval.glb",
+          "nome": "Bento"
+        },
+        {
+          "pos": [
+            48,
+            18
+          ],
+          "room_id": 2,
+          "image": "garoto_pele_escura.png",
+          "model3d": "garoto_pele_escura.glb",
+          "nome": "Davi"
+        },
+        {
+          "pos": [
+            46,
+            19
+          ],
+          "room_id": 2,
+          "image": "menina_cabelos_castanhos.png",
+          "model3d": "menina_cabelos_castanhos.glb",
+          "nome": "Lina"
+        },
+        {
+          "pos": [
+            47,
+            19
+          ],
+          "room_id": 2,
+          "image": "menina_pele_escura.png",
+          "model3d": "menina_pele_escura.glb",
+          "nome": "Maia"
+        },
+        {
+          "pos": [
+            48,
+            19
+          ],
+          "room_id": 2,
+          "image": "menina_ruiva.png",
+          "nome": "Rosa"
+        }
+      ],
       "materiais": {
         "0,0": "pantano",
         "1,0": "pantano",
@@ -65208,15 +65262,63 @@ window.EDITOR_DUNGEONS = [
       "objectives": {
         "primary": {
           "type": "rescue_prisoner",
-          "xp": 150,
+          "xp": 0,
           "reward": {
-            "gold": 60,
+            "gold": 0,
             "items": []
           },
-          "se_falhar": {
-            "renome": -5,
-            "fato": "charcos_criancas_mortas"
-          }
+          "destino": "saida",
+          "meta": 4,
+          "faixas": [
+            {
+              "de": 6,
+              "ate": 6,
+              "renome": 8,
+              "xp": 225,
+              "gold": 90,
+              "fato": "charcos_criancas_todas"
+            },
+            {
+              "de": 4,
+              "ate": 5,
+              "renome": 5,
+              "xp": 150,
+              "gold": 60,
+              "fato": "charcos_criancas_salvas"
+            },
+            {
+              "de": 3,
+              "ate": 3,
+              "renome": 0,
+              "xp": 90,
+              "gold": 36,
+              "fato": "charcos_criancas_perdidas"
+            },
+            {
+              "de": 2,
+              "ate": 2,
+              "renome": -2,
+              "xp": 60,
+              "gold": 24,
+              "fato": "charcos_criancas_perdidas"
+            },
+            {
+              "de": 1,
+              "ate": 1,
+              "renome": -4,
+              "xp": 30,
+              "gold": 12,
+              "fato": "charcos_criancas_perdidas"
+            },
+            {
+              "de": 0,
+              "ate": 0,
+              "renome": -8,
+              "xp": 0,
+              "gold": 0,
+              "fato": "charcos_criancas_mortas"
+            }
+          ]
         },
         "secondary": [
           {
@@ -65233,16 +65335,7 @@ window.EDITOR_DUNGEONS = [
             "renome": 3,
             "fato": "charcos_ferrao_morto"
           }
-        ],
-        "alternativo": {
-          "type": "kill_target",
-          "xp": 150,
-          "reward": {
-            "gold": 0,
-            "items": []
-          },
-          "fato": "charcos_ferrao_morto"
-        }
+        ]
       }
     }
   },
