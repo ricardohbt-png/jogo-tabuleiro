@@ -478,6 +478,30 @@ class LibertarJanelaSeguirTests(unittest.IsolatedAsyncioTestCase):
         for pr in r.prisoners:
             self.assertEqual(cheb(pr["pos"], p["pos"]), 1)
 
+    async def test_seguir_em_corredor(self):
+        """Corredor de uma casa: os seguidores fazem fila atrás do herói."""
+        d = mapa(prisoners=[{"pos": [1, 5]}, {"pos": [2, 5]}, {"pos": [3, 5]}])
+        for y in range(12):
+            if y != 5:
+                d["tiles"][y] = [S.WALL] * 12
+        r = sala(d)
+        p = r.players["p0"]
+        p["pos"] = [10, 5]
+        r._is_turn = lambda pid: True
+
+        async def nada(*a, **k):
+            pass
+        r._advance_initiative = nada
+        antes = [list(pr["pos"]) for pr in r.prisoners]
+        livres(r, *r.prisoners, modo="seguir")
+        await r.handle_end_turn("p0")
+        depois = [pr["pos"] for pr in r.prisoners]
+        for a, b in zip(antes, depois):
+            self.assertGreater(b[0], a[0])
+        self.assertEqual(len({tuple(c) for c in depois}), 3)
+        self.assertNotIn(p["pos"], depois)
+        self.assertEqual(cheb(r.prisoners[2]["pos"], p["pos"]), 1)
+
     async def test_seguir_sem_caminho_fica_parado(self):
         d = mapa(prisoners=[{"pos": [1, 5]}])
         for y in range(12):

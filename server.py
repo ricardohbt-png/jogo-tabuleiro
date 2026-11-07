@@ -57270,12 +57270,24 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                                     abs(h["pos"][1] - pr["pos"][1])))
                 pr["rescuer_pid"] = novo["id"]
 
+    _OITO_DIRECOES = ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1))
+
     def _caminho_ate_o_heroi(self, pr, heroi):
-        """Passos do refém até uma casa vizinha do herói; vazio se já está nela ou não há caminho."""
+        """Passos do refém até uma casa vizinha do herói. Se outro refém já ocupa as
+        vizinhas alcançáveis (corredor estreito), vai à casa alcançável mais perto do
+        herói pelo terreno, e eles fazem fila. Vazio se já está ao lado ou não chega mais perto."""
         hx, hy = heroi["pos"]
 
         def ao_lado(x, y):
             return max(abs(x - hx), abs(y - hy)) <= 1
+
+        def passos_ate(casa):
+            passos = []
+            while veio_de[casa] is not None:
+                ox, oy = veio_de[casa]
+                passos.append((casa[0] - ox, casa[1] - oy))
+                casa = (ox, oy)
+            return passos[::-1]
 
         inicio = tuple(pr["pos"])
         if ao_lado(*inicio):
@@ -57283,21 +57295,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         veio_de = {inicio: None}
         fila = [inicio]
         for x, y in fila:
-            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)):
+            for dx, dy in self._OITO_DIRECOES:
                 casa = (x + dx, y + dy)
                 if (casa in veio_de or self._blocks_tile(*casa)
                         or not self._tile_livre_para_animado(casa[0], casa[1], pr["id"], [x, y])):
                     continue
                 veio_de[casa] = (x, y)
                 if ao_lado(*casa):
-                    passos = []
-                    while veio_de[casa] is not None:
-                        ox, oy = veio_de[casa]
-                        passos.append((casa[0] - ox, casa[1] - oy))
-                        casa = (ox, oy)
-                    return passos[::-1]
+                    return passos_ate(casa)
                 fila.append(casa)
-        return []
+        # Sem vizinha livre: distância do herói pelo terreno, ignorando quem ocupa as casas.
+        dist = {(hx, hy): 0}
+        onda = [(hx, hy)]
+        for x, y in onda:
+            for dx, dy in self._OITO_DIRECOES:
+                casa = (x + dx, y + dy)
+                if casa not in dist and not self._blocks_tile(*casa):
+                    dist[casa] = dist[(x, y)] + 1
+                    onda.append(casa)
+        melhor = min(fila, key=lambda c: dist.get(c, float("inf")))   # empate: o mais perto do refém
+        if dist.get(melhor, float("inf")) >= dist.get(inicio, float("inf")):
+            return []
+        return passos_ate(melhor)
 
     async def _mover_refens_seguindo(self, pid):
         """Ao fim do turno do dono, quem está em Seguir anda sozinho até ele, sem abrir
