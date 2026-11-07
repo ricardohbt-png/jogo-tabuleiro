@@ -3760,7 +3760,7 @@ FOTO_SALA_CATEGORIAS = {
     # objetivos
     "objectives": "foto", "objective_status": "foto", "mission_step_index": "foto",
     "_objetivo_concluido": "foto", "mission_complete_pending": "foto",
-    "_secundarios_pagos": "foto",
+    "_secundarios_pagos": "foto", "_faixa_paga": "foto",
     # turno (a foto é tirada na virada da rodada; a iniciativa é remontada)
     "round_num": "foto", "initiative_order": "foto", "initiative_index": "foto",
     "turn_index": "foto",
@@ -13544,6 +13544,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.rescue_failed = False
         self._objetivo_concluido = False
         self._secundarios_pagos = set()
+        self._faixa_paga = False
         self.mission_complete_pending = False
         self.salas_visitadas = set()   # room_ids visitados (objetivo salas_obrigatorias)
         # Fase 4a â€” campanha.
@@ -18964,6 +18965,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._consequencia_refem_aplicada = False
         self._objetivo_concluido = False
         self._secundarios_pagos = set()
+        self._faixa_paga = False
         self.mission_complete_pending = False
         self.salas_visitadas = set()
         self.prisoners = _refens_da_definicao(defn)
@@ -20168,6 +20170,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.exit_pos = None; self.objectives = None; self.objective_status = None; self.mission_step_index = 0
             self.prisoners = []; self.rescue_failed = False; self._consequencia_refem_aplicada = False; self._objetivo_concluido = False; self.mission_complete_pending = False
             self._secundarios_pagos = set()
+            self._faixa_paga = False
             self.key_chest_opened = False
             if autorada:
                 self.load_authored_dungeon(self.dungeon_def)
@@ -57001,7 +57004,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # quando ambas estiverem prontas; descobrir a última saída depois do
         # objetivo também libera o encerramento nesta atualização.
         self.mission_complete_pending = bool(
-            self.phase == "playing" and self._objetivo_concluido and self._route_exits_complete())
+            self.phase == "playing" and self._objetivo_concluido and self._route_exits_complete()
+            and not self._faixa_paga)
         if self.mission_complete_pending and not getattr(self, "_route_completion_announced", False):
             self._route_completion_announced = True
             await self.gm_say(T("narracao.objetivo_principal_cumprido_recolham_a_r"))
@@ -57460,6 +57464,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _pagar_faixa_resgate(self):
         """Paga a faixa da quantidade salva no encerramento: XP e ouro divididos, renome e fato."""
+        if self._faixa_paga:
+            return
+        self._faixa_paga = True    # antes de qualquer await: outro Encerrar não paga de novo
         fx = self._faixa_atual()
         obj = {"type": "rescue_prisoner", "xp": int(fx.get("xp") or 0),
                "reward": {"gold": int(fx.get("gold") or 0), "items": []},

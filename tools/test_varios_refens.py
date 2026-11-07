@@ -860,6 +860,47 @@ class FaixasTests(unittest.IsolatedAsyncioTestCase):
         await r.handle_encerrar_missao("p0")
         self.assertEqual(p["xp"] - xp, 150)
 
+    async def test_faixa_nao_paga_duas_vezes(self):
+        """Outra mensagem roda _check_objectives no meio do pagamento: o 2º Encerrar não paga."""
+        r = resgate()
+        p = r.players["p0"]
+        salvar(r, 4)
+        await r._check_objectives()
+        xp, ouro = p["xp"], p.get("gold", 0)
+        reentrou = []
+
+        async def gm_say(*a, **k):
+            if not reentrou:
+                reentrou.append(True)
+                await r._check_objectives()
+        r.gm_say = gm_say
+        await r.handle_encerrar_missao("p0")
+        self.assertTrue(reentrou)
+        self.assertFalse(r.mission_complete_pending)
+        r.mission_complete_pending = True       # mesmo que algo religue o botão
+        await r.handle_encerrar_missao("p0")
+        self.assertEqual(p["xp"] - xp, 150)
+        self.assertEqual(p.get("gold", 0) - ouro, 60)
+        self.assertEqual(r.renome, 15)
+
+    async def test_faixa_paga_na_foto(self):
+        r = resgate()
+        salvar(r, 4)
+        await r._check_objectives()
+        await r._pagar_faixa_resgate()
+        self.assertTrue(r._faixa_paga)
+        corpo = S.foto_desempacotar(S.foto_empacotar(r._montar_foto(), onde="masmorra"))
+        r2 = resgate()
+        self.assertFalse(r2._faixa_paga)
+        r2._foto_aplicar_sala(corpo, {"warrior": "p0"}, r2.dungeon_def)
+        self.assertTrue(r2._faixa_paga)
+        p2 = r2.players["p0"]
+        xp = p2["xp"]
+        await r2._pagar_faixa_resgate()
+        self.assertEqual(p2["xp"], xp)
+        r2.load_authored_dungeon(r2.dungeon_def)
+        self.assertFalse(r2._faixa_paga)
+
     def test_contagem_no_game_state(self):
         r = resgate()
         salvar(r, 2, mortos=1)
