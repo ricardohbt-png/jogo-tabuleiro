@@ -61,7 +61,7 @@ function montarModuloTempestade(extraCtx = {}){
   const code = [...names.map(n => declSource(GAME, n)), ...fns.map(n => fnSource(GAME, n))].join('\n');
   const g3 = { scene: new Obj(), entityGroup: new Obj() };
   const ctx = {
-    window: { THREE }, g3, mode3D: true, GS: { gameState: null, isMaster: () => true, monsterTiles: () => [] },
+    window: { THREE }, g3, mode3D: true, GS: { gameState: null, isMaster: () => true, monsterTiles: () => [], refensNoMapa: () => [] },
     _scheduleVisualFrame: () => 1, _cancelVisualFrame: () => {}, _liberarDadosMagia: () => {}, renderMap: () => {},
     _encerrarSelecaoPosicoesTempestade: () => false, _encerrarMovimentoTempestade: () => false,
     toast: () => {}, t: k => k, ...extraCtx,
