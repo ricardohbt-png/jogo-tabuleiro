@@ -5965,6 +5965,10 @@ function _refensMeusHTML(state){
   const linhas = meus.map(pr => {
     const guiando = pr.modo !== 'seguir';
     const novo = guiando ? 'seguir' : 'guiar';
+    // O refém do treino só anda guiado (a lição é guiá-lo): sem botão de modo.
+    if(pr.training_refem)
+      return `<div class="refem-row"><span class="refem-nome">${_esc(_rotuloRefem(pr, state))}</span>`
+        + ` <span class="refem-pv">❤️ ${pr.hp}/${pr.max_hp}</span></div>`;
     return `<div class="refem-row"><span class="refem-nome">${_esc(_rotuloRefem(pr, state))}</span>`
       + ` <span class="refem-pv">❤️ ${pr.hp}/${pr.max_hp}</span>`
       + ` <span class="refem-modo">${_esc(t(guiando ? 'ui.refem.modo_guiar' : 'ui.refem.modo_seguir'))}</span>`

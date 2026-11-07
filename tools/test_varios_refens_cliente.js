@@ -211,6 +211,11 @@ if (iniT >= 0 && iniP >= 0) {
   check('painel tem um botão por refém meu e mostra PV', (h.match(/data-refem-modo/g) || []).length === 1
     && h.includes('data-refem-id="refem_0"') && h.includes('5/7'), h);
   check('refém em "guiar" oferece Seguir', h.includes('data-modo-novo="seguir"'));
+  estado({ prisoners: [meus[0], refem('refem_9', { pos: [4, 4], freed: true, rescuer_pid: 'm', training_refem: true })] });
+  const hT = html(GS.gameState);
+  check('refém de treino meu aparece sem botão, o normal mantém o seu',
+    !hT.includes('data-refem-id="refem_9"') && (hT.match(/data-refem-modo/g) || []).length === 1
+    && (hT.match(/refem-row/g) || []).length === 2, hT);
   estado({ prisoners: [meus[1], meus[2]] });
   check('sem refém meu, painel vazio', html(GS.gameState) === '');
 }
