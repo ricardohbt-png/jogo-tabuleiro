@@ -175,5 +175,45 @@ check('modal, Protetor e lista do Paladino usam _rotuloRefem',
   && /_aliadosNoRaioPaladin[\s\S]{0,700}_rotuloRefem\(pr, st\)/.test(gj)
   && /refemProtegido \? \{name:_rotuloRefem\(refemProtegido\)\}/.test(gj));
 
+console.log('\n[9] Modo do refém (Guiar/Seguir) e contador de resgate');
+const meus = [
+  refem('refem_0', { pos: [3, 2], freed: true, rescuer_pid: 'm', modo: 'guiar', hp: 5 }),
+  refem('refem_1', { pos: [1, 1], freed: true, rescuer_pid: 'outro', modo: 'seguir' }),
+  refem('refem_2', { pos: [2, 1] }),
+  refem('refem_3', { pos: [-1, -1], freed: true, rescuer_pid: 'm', salvo: true }),
+];
+estado({ prisoners: meus, extra: { resgate: { salvos: 3, mortos: 1, total: 6, meta: 4, destino: 'saida' } } });
+const idsMeus = GS.refensMeus().map(pr => pr.id);
+check('refensMeus lista só os libertados do herói em foco, no mapa', JSON.stringify(idsMeus) === '["refem_0"]', JSON.stringify(idsMeus));
+check('GS.resgate expõe o objeto do estado', GS.resgate && GS.resgate.meta === 4 && GS.resgate.total === 6);
+estado({ prisoners: meus });
+check('sem resgate no estado, GS.resgate é null', GS.resgate === null);
+enviados.length = 0;
+GS.setModoRefem('refem_0', 'seguir');
+check('setModoRefem envia set_modo_refem', enviados[0] && enviados[0].type === 'set_modo_refem'
+  && enviados[0].refem_id === 'refem_0' && enviados[0].modo === 'seguir', JSON.stringify(enviados[0]));
+const iniT = gj.indexOf('function _textoResgate(');
+const fimT = iniT < 0 ? -1 : gj.indexOf('\n}', iniT) + 2;
+check('game.js tem _textoResgate', iniT >= 0);
+const iniP = gj.indexOf('function _refensMeusHTML(');
+const fimP = iniP < 0 ? -1 : gj.indexOf('\n}', iniP) + 2;
+check('game.js tem _refensMeusHTML', iniP >= 0);
+if (iniT >= 0 && iniP >= 0) {
+  const ctxF = { GS, t: tEn, _esc: s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'),
+    _rotuloRefem: (pr, st) => (GS.nomeProprioRefem(pr) || 'Prisoner') };
+  const textoResgate = vm.runInNewContext(`(${gj.slice(iniT, fimT)})`, ctxF);
+  const comMortos = textoResgate({ salvos: 3, total: 6, meta: 4, mortos: 1 });
+  check('contador: "3/6 saved, goal 4" e cita 1 perdida', comMortos.startsWith('3/6 saved, goal 4') && /1/.test(comMortos.split('goal 4')[1]), comMortos);
+  check('contador sem mortos não cita perdas', textoResgate({ salvos: 0, total: 6, meta: 4, mortos: 0 }) === '0/6 saved, goal 4');
+  const html = vm.runInNewContext(`(${gj.slice(iniP, fimP)})`, ctxF);
+  estado({ prisoners: meus });
+  const h = html(GS.gameState);
+  check('painel tem um botão por refém meu e mostra PV', (h.match(/data-refem-modo/g) || []).length === 1
+    && h.includes('data-refem-id="refem_0"') && h.includes('5/7'), h);
+  check('refém em "guiar" oferece Seguir', h.includes('data-modo-novo="seguir"'));
+  estado({ prisoners: [meus[1], meus[2]] });
+  check('sem refém meu, painel vazio', html(GS.gameState) === '');
+}
+
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);

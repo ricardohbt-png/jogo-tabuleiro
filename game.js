@@ -5950,6 +5950,30 @@ function _rotuloRefem(pr, state = GS.gameState){
   return rotulos.get(String(pr.id)) || GS.nomeProprioRefem(pr) || t('ui.hud.prisioneiro');
 }
 
+// Linha de contagem do resgate no HUD de objetivos: "3/6 salvas, meta 4, 1 perdida".
+function _textoResgate(r){
+  let txt = t('ui.refem.contador', {salvos:r.salvos, total:r.total, meta:r.meta});
+  if(r.mortos > 0) txt += t('ui.refem.contador_mortos', {mortos:r.mortos});
+  return txt;
+}
+
+// Seção "Prisioneiros resgatados" do painel do herói: um cartão por refém que o
+// herói em foco libertou, com PV e o botão que troca Guiar/Seguir. Vazio sem refém.
+function _refensMeusHTML(state){
+  const meus = GS.refensMeus();
+  if(!meus.length) return '';
+  const linhas = meus.map(pr => {
+    const guiando = pr.modo !== 'seguir';
+    const novo = guiando ? 'seguir' : 'guiar';
+    return `<div class="refem-row"><span class="refem-nome">${_esc(_rotuloRefem(pr, state))}</span>`
+      + ` <span class="refem-pv">❤️ ${pr.hp}/${pr.max_hp}</span>`
+      + ` <span class="refem-modo">${_esc(t(guiando ? 'ui.refem.modo_guiar' : 'ui.refem.modo_seguir'))}</span>`
+      + ` <button type="button" class="skill-btn refem-btn" data-refem-modo data-refem-id="${_esc(pr.id)}"`
+      + ` data-modo-novo="${novo}">${_esc(t(guiando ? 'ui.refem.btn_seguir' : 'ui.refem.btn_guiar'))}</button></div>`;
+  }).join('');
+  return `<div class="refens-meus"><div class="obj-sec-label">${_esc(t('ui.refem.titulo'))}</div>${linhas}</div>`;
+}
+
 // Botão "Libertar": um cativo ao lado é libertado direto; com mais de um, o
 // jogador escolhe quem pelo nome.
 function libertarRefem(){
@@ -6582,6 +6606,8 @@ function renderObjectivesHUD(msg){
       html += `<div class="obj-row"><span class="obj-ic">${icon}</span><span class="obj-lbl" style="${style}">${_esc(copy)}</span></div>`;
     }
   }
+  const resgate = GS.resgate;
+  if(resgate) html += `<div class="obj-row obj-resgate"><span class="obj-ic">⛓️</span><span class="obj-lbl">${_esc(_textoResgate(resgate))}</span></div>`;
   const secs = obj.secondary || [];
   if(secs.length){
     html += `<div class="obj-sec-label">${t('ui.objetivo.secundarios')}</div>`;
@@ -27849,6 +27875,15 @@ function renderMyPanel(state){
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
+  const _refensHtml = _refensMeusHTML(state);
+  if(_refensHtml){
+    const rf = document.createElement('div');
+    rf.innerHTML = _refensHtml;
+    rf.querySelectorAll('[data-refem-modo]').forEach(b => {
+      b.onclick = () => GS.setModoRefem(b.dataset.refemId, b.dataset.modoNovo);
+    });
+    sl.appendChild(rf);
+  }
   const _montaria = (state.monsters || []).find(m => String(m.id) === String(me.cavalo_montado_id)
     && m.type === 'cavalo_sela' && m.hp > 0);
   if(_montaria){

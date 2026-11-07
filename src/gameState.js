@@ -3356,6 +3356,17 @@ const GS = (() => {
       && Math.max(Math.abs(me.pos[0] - pr.pos[0]), Math.abs(me.pos[1] - pr.pos[1])) <= 1);
   }
   function prisioneiroLibertavel() { return refensLibertaveis().length > 0; }
+  // Reféns que o herói em foco libertou e ainda estão no mapa (os que ele guia ou
+  // faz seguir). Com Solo com grupo, `myPid` é o herói em foco.
+  function refensMeus() {
+    return getPrisoners().filter(pr => pr.freed && pr.rescuer_pid === myPid);
+  }
+  // Sender: troca o modo do refém ("guiar" | "seguir"). Só quem o libertou pode.
+  function setModoRefem(refemId, modo) {
+    send({ type: 'set_modo_refem', refem_id: refemId, modo });
+  }
+  // Contagem de resgate da missão ({salvos, mortos, total, meta, destino}) ou null.
+  function getResgate() { return (gameState && gameState.resgate) || null; }
   // Sender: herói adjacente liberta um refém (ação principal no servidor).
   // Sem id, o servidor escolhe o primeiro adjacente.
   function libertarPrisioneiro(refemId) {
@@ -4269,6 +4280,8 @@ const GS = (() => {
     get prisoners()             { return getPrisoners(); },
     refensNoMapa,
     refensLibertaveis,
+    refensMeus,
+    get resgate()               { return getResgate(); },
     ehRefemId,
     refemPorId,
     nomeProprioRefem,
@@ -4542,6 +4555,7 @@ const GS = (() => {
     pendingStory,          // Fase 4b: beat de história pendente (ou null)
     marcarStoryVista,      // Fase 4b: marca um beat como já exibido (de-dup por key)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
+    setModoRefem,          // sender: Guiar/Seguir de um refém (chamado com parênteses)
     encerrarMissao,        // encerramento manual da missão (chamado com parênteses)
 
     // ── Saída individual pela escada ──
