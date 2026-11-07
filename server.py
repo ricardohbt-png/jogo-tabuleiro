@@ -30237,19 +30237,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Reféns vivos que ainda não chegaram à saída."""
         return [pr for pr in self.prisoners if pr.get("alive") and not pr.get("salvo")]
 
-    def _refem_chave_cliente(self, pr):
-        """Id do refém para o cliente, que até a Task 5 casa o literal com `state.prisoner`."""
-        return PROTETOR_PRISIONEIRO_ID if pr is self.prisoner else pr.get("id")
-
-    def _refem_chave_entidade(self, pr):
-        """Chave de entidade do refém; o cliente só conhece `pr:singleton` até a Task 5."""
-        return "pr:singleton" if pr is self.prisoner else f"pr:{pr.get('id')}"
-
-    def _peca_chave_cliente(self, peca_id):
-        """Peça da janela pós-turno para o cliente, que até a Task 5 só conhece "prisoner"."""
-        pr = self._refem_por_id(peca_id) if peca_id is not None else None
-        return "prisoner" if pr is not None and pr is self._refem_por_id(None) else peca_id
-
     def _refens_do_dono(self, pid, modo):
         """Reféns libertos no mapa que este herói controla, num modo."""
         return [pr for pr in self._refens_no_mapa()
@@ -35850,7 +35837,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif self._eh_jogador(alvo):
             kind, key = "hero", f"p:{alvo.get('id')}"
         elif self._eh_refem(alvo):
-            kind, key = "prisoner", self._refem_chave_entidade(alvo)
+            kind, key = "prisoner", f"pr:{alvo.get('id')}"
         else:
             kind, key = "monster", f"m:{alvo.get('id')}"
         if status is None:
@@ -36896,8 +36883,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not tipo or entidade is not alvo:
                 continue
             alvo_id = alvo.get("id")
-            if alvo_id is None and tipo == "prisoner":
-                alvo_id = "__prisoner__"
             if alvo_id is not None:
                 identificados[(tipo, str(alvo_id))] = alvo
         return identificados
@@ -58094,8 +58079,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for _privado in ("_metamorfose_original", "_teste_furia_consumida_round"):
                 snapshot.pop(_privado, None)
             protegido = self._protetor_target(p.get("protetor_alvo"))
-            if self._eh_refem(protegido):
-                snapshot["protetor_alvo"] = self._refem_chave_cliente(protegido)
+            if self._eh_refem(protegido):   # foto antiga guardava o apelido: manda o id
+                snapshot["protetor_alvo"] = protegido.get("id")
             players_state.append(snapshot)
         players_state.extend(dict(a, initiative=0) for a in self.training_allies.values())
         _alvos_hostis = self._alvos_hostis_para_monstros()
@@ -58198,7 +58183,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "exit_pos": self.exit_pos,
             "route_exit_progress": self._route_exit_payload(),
             "prisoners": self.prisoners,
-            "prisoner": self.prisoner,   # compatibilidade até o cliente migrar (Task 5)
             "resgate": self._resgate_contagem() if self._resgate_faixas() else None,
             "current_turn": self.current_pid(),
             "current_actor": actor,
@@ -58208,16 +58192,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
             "animados_order": self.animados_order,
             # Quem cada jogador controla agora na janela pós-turno (id do
-            # servo, "prisoner", ou None) — dict por pid porque este payload é
+            # servo, id do refém, ou None) — dict por pid porque este payload é
             # montado UMA vez para a sala inteira (sem pid em escopo aqui); o
             # cliente indexa pelo próprio GS.myPid.
-            "animados_atual": {pid_: self._peca_chave_cliente(self._animados_atual(pid_))
-                               for pid_ in self.players},
+            "animados_atual": {pid_: self._animados_atual(pid_) for pid_ in self.players},
             # Quem ja encerrou a vez nesta janela. O cliente precisa do conjunto
             # exato: deduzir pela ordem so identifica quem ficou ATRAS do atual,
             # e uma peca escolhida fora de ordem fica adiante dele.
-            "animados_done": sorted({self._peca_chave_cliente(d)
-                                     for d in self.animados_done | self.prisioneiros_done}, key=str),
+            "animados_done": sorted(self.animados_done | self.prisioneiros_done, key=str),
             "last_stand_pid": self.last_stand_pid,   # pid na sub-fase do Ãšltimo EsforÃ§o (ou None)
             "turn_timer_started": self.turn_timer_started_ms,  # epoch ms do inÃ­cio do turno (p/ contagem 30s)
             "turn_timer_limit": self.TURN_LIMIT_S,

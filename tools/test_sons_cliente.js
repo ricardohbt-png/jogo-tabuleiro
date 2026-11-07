@@ -134,7 +134,7 @@ console.log('\n[4] _somGolpe / _somDor');
   tocados.length = 0;
   check('dano de fogo não usa dor (fica a síntese)', f._somDor({ hit: true, targetKey: 'm:9' }, { damageType: ['fire'] }) === false && tocados.length === 0);
   tocados.length = 0;
-  check('dor física em prisioneiro → dor_heroi', f._somDor({ hit: true, targetKey: 'pr:singleton', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
+  check('dor física em prisioneiro → dor_heroi', f._somDor({ hit: true, targetKey: 'pr:refem_0', targetPos: [1, 1] }, { damageType: ['physical'] }) && tocados[0][0] === 'dor_heroi');
   tocados.length = 0;
   check('golpe fatal (c.death) suprime a dor e o cue de dano', f._somDor({ hit: true, death: true, targetKey: 'm:9', targetPos: [1, 1] }, { damageType: ['physical'] }) === true && tocados.length === 0);
 }

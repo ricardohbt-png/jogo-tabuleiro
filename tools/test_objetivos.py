@@ -202,7 +202,8 @@ async def test_serializacao():
     await entrar_na_masmorra(r, "p1")
     await GameRoom.push_state(r)   # usa o push_state real (não o stub do setup)
     check("game_state traz exit_pos", capturado.get("exit_pos") == [14, 4])
-    check("game_state traz prisoner", capturado.get("prisoner") is not None)
+    check("game_state traz a lista de reféns", len(capturado.get("prisoners") or []) == 1)
+    check("game_state não traz mais o refém único", "prisoner" not in capturado)
     check("game_state traz objectives", capturado.get("objectives") is not None)
 
 async def test_etapas_missao():

@@ -27,7 +27,7 @@ function carregar(classe) {
   const st = { type: "game_state", tiles, explored: [...explorados], monsters: [], decorations: [],
     materiais: {}, rooms: [{ id: 1, x: 2, y: 0, w: 6, h: 3, allowed_class: "paladin", doors: [] }],
     players: [{ id: "h", class_id: classe, pos: [3, 1], alive: true, moves_left: 6 }],
-    prisoner: { pos: [6, 1], alive: true, freed: true, rescuer_pid: "h", moves_left: 6, training_refem: true } };
+    prisoners: [{ id: "refem_0", pos: [6, 1], alive: true, freed: true, rescuer_pid: "h", moves_left: 6, training_refem: true }] };
   sock.onmessage({ data: JSON.stringify(st) });
 }
 

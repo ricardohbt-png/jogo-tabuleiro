@@ -97,7 +97,8 @@ class FluxoTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(r.animados_phase_pid)   # a janela do refém fechou
         self.assertEqual(avancos, [1])
         pay = r._game_state_payload()
-        self.assertIsNone(pay['prisoner'])
+        self.assertEqual(pay['prisoners'], [])
+        self.assertNotIn('prisoner', pay)
 
     async def test_passo_a_passo_tambem_dispensa(self):
         r, p = await _ate_guiar()
@@ -209,12 +210,12 @@ async def _etapa1(r, p):
     pid = p['id']
     await r.handle_libertar_prisioneiro(pid)
     assert p['licao_atual'] == 'treino_protetor'
-    await r.handle_protetor(pid, {'target_id': '__prisioneiro__'})
+    await r.handle_protetor(pid, {'target_id': 'refem_0'})
     await r.handle_end_turn(pid)                    # a demonstração fere o refém; abre a vez dele
     assert p['licao_atual'] == 'treino_maos'
     await r.handle_end_turn(pid)                    # passa a vez do refém
     await _esperar_vez(r, pid)
-    await r.handle_imposicao_maos(pid, {'target_id': '__prisioneiro__'})
+    await r.handle_imposicao_maos(pid, {'target_id': 'refem_0'})
     assert p['licao_atual'] == 'treino_guiar_refem', p['licao_atual']
 
 
@@ -225,7 +226,7 @@ class FluxoRealTests(unittest.IsolatedAsyncioTestCase):
         await r.handle_libertar_prisioneiro(pid)
         r.prisoner['hp'] = 3
         p['action_done'] = False
-        await r.handle_imposicao_maos(pid, {'target_id': '__prisioneiro__'})
+        await r.handle_imposicao_maos(pid, {'target_id': 'refem_0'})
         self.assertEqual(p['licao_atual'], 'treino_protetor')   # curar antes do Protetor não cumpre nada
         self.assertNotIn('treino_maos', p['licoes_feitas'])
 
@@ -237,7 +238,7 @@ class FluxoRealTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(r.animados_phase_pid, pid)
         self.assertEqual(r.prisoner['moves_left'], 6)
         self.assertEqual(r._animados_atual(pid), 'refem_0')      # já vem selecionado para o cliente
-        self.assertEqual(r._game_state_payload()['animados_atual'][pid], 'prisoner')
+        self.assertEqual(r._game_state_payload()['animados_atual'][pid], 'refem_0')
         await r.handle_mover_prisioneiro_caminho(pid, CAMINHO)     # o que o clique na casa envia
         self.assertEqual(_erros(r), [])
         self.assertIsNone(r.prisoner)

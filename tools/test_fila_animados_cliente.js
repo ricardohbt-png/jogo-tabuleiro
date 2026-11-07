@@ -34,7 +34,7 @@ function estado({ atual, ordem = [], animados = [], prisioneiro = null, janela =
     master_pid: 'm',
     tiles: [[1]], explored: [], monsters: [], chests: [],
     players: [{ id: 'm', name: 'Pedro', alive: true, pos: [0, 0], animados }],
-    prisoner: prisioneiro,
+    prisoners: prisioneiro ? [prisioneiro] : [],
     animados_turn: janela,
     animados_order: ordem,
     animados_atual: { m: atual },
@@ -69,16 +69,18 @@ check('"c" ainda nao foi -> devolve "b" (ordem estrita)', GS.animadoPendentePara
 
 console.log('\n[5] Vez do prisioneiro: todo servo ja passou');
 estado({
-  atual: 'prisoner', ordem: ['a', 'b'], animados: [A, B], done: ['a', 'b'],
-  prisioneiro: { alive: true, freed: true, rescuer_pid: 'm', pos: [2, 2] },
+  atual: 'refem_0', ordem: ['a', 'b'], animados: [A, B], done: ['a', 'b'],
+  prisioneiro: { id: 'refem_0', alive: true, freed: true, rescuer_pid: 'm', pos: [2, 2] },
 });
-check('clicar num servo devolve o prisioneiro', GS.animadoPendenteParaEncerrar('a') === 'prisoner');
-check('selecao do prisioneiro se mantem', GS.animadoPendenteParaEncerrar('prisoner') === 'prisoner');
+check('clicar num servo devolve o prisioneiro', GS.animadoPendenteParaEncerrar('a') === 'refem_0');
+check('selecao do prisioneiro se mantem', GS.animadoPendenteParaEncerrar('refem_0') === 'refem_0');
+check('selecao do prisioneiro e valida na vez dele', GS.animadoSelecaoValida('refem_0') === true);
 estado({
   atual: 'a', ordem: ['a'], animados: [A],
-  prisioneiro: { alive: true, freed: true, rescuer_pid: 'm', pos: [2, 2] },
+  prisioneiro: { id: 'refem_0', alive: true, freed: true, rescuer_pid: 'm', pos: [2, 2] },
 });
-check('prisioneiro antes da vez dele devolve o servo', GS.animadoPendenteParaEncerrar('prisoner') === 'a');
+check('prisioneiro antes da vez dele devolve o servo', GS.animadoPendenteParaEncerrar('refem_0') === 'a');
+check('prisioneiro antes da vez dele nao e selecao valida', GS.animadoSelecaoValida('refem_0') === false);
 
 console.log('\n[6] Servo morto ou dominado nao pode ser encerrado');
 const morto = servo('d', { vida_atual: 0 });
@@ -187,7 +189,7 @@ function estadoDone({ atual, ordem, animados, done = [] }) {
     type: 'game_state', master_pid: 'm',
     tiles: [[1]], explored: [], monsters: [], chests: [],
     players: [{ id:'m', name:'Pedro', alive:true, pos:[0,0], animados }],
-    prisoner: null, animados_turn: 'm',
+    prisoners: [], animados_turn: 'm',
     animados_order: ordem, animados_atual: { m: atual }, animados_done: done,
   });
 }

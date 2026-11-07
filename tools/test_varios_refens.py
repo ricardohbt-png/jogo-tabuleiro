@@ -88,24 +88,19 @@ class VariosRefensTests(unittest.TestCase):
         self.assertEqual([(p["id"], p["modo"], p["salvo"]) for p in r.prisoners],
                          [("refem_0", "guiar", True), ("refem_1", "ficar", False)])
 
-    def test_game_state_manda_as_duas_chaves(self):
+    def test_game_state_manda_so_a_lista(self):
         r = sala(mapa(prisoners=[{"pos": [3, 3]}]))
         est = r._game_state_payload()
         self.assertEqual(len(est["prisoners"]), 1)
-        self.assertIs(est["prisoner"], est["prisoners"][0])
+        self.assertNotIn("prisoner", est)
 
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quem ainda pode ler `self.prisoner` diretamente: (arquivo, função).
 PERMITIDOS = {
-    # A própria propriedade e o ajudante que a tem como definição.
-    ("server.py", "prisoner"),
+    # O ajudante que resolve o apelido antigo ("prisoner"/"__prisioneiro__").
     ("server.py", "_refem_por_id"),
-    # Compatibilidade com o cliente, que só migra na Task 5.
-    ("server.py", "_refem_chave_cliente"),
-    ("server.py", "_refem_chave_entidade"),
-    ("server.py", "_game_state_payload"),
     # Tutorial do Paladino: um refém só, por construção.
     ("tutorial_training.py", "_training_prisoner_dialogue"),
     ("tutorial_training.py", "_training_init"),
@@ -226,21 +221,17 @@ class MigracaoDoServidorTests(unittest.IsolatedAsyncioTestCase):
         self.assertLess(dano_alvo, 10)
         self.assertIs(transferencia[0], p)
 
-    def test_cliente_antigo_reconhece_o_primeiro_refem(self):
-        """Até a Task 5 o cliente casa o literal com `state.prisoner`."""
+    def test_cliente_recebe_o_id_de_cada_refem(self):
+        """O cliente conhece cada refém pelo id; o apelido de foto antiga vira o id."""
         r = dois_libertos()
-        a, b = r.prisoners
         p = r.players["p0"]
-        self.assertEqual(r._refem_chave_cliente(a), "__prisioneiro__")
-        self.assertEqual(r._refem_chave_cliente(b), "refem_1")
-        self.assertEqual(r._refem_chave_entidade(a), "pr:singleton")
-        self.assertEqual(r._refem_chave_entidade(b), "pr:refem_1")
         p.update(protetor_ativo=True, protetor_alvo="refem_0")
-        est = r._game_state_payload()
-        self.assertEqual(est["players"][0]["protetor_alvo"], "__prisioneiro__")
-        self.assertEqual(p["protetor_alvo"], "refem_0")
+        self.assertEqual(r._game_state_payload()["players"][0]["protetor_alvo"], "refem_0")
         p["protetor_alvo"] = "refem_1"
         self.assertEqual(r._game_state_payload()["players"][0]["protetor_alvo"], "refem_1")
+        p["protetor_alvo"] = "__prisioneiro__"
+        self.assertEqual(r._game_state_payload()["players"][0]["protetor_alvo"], "refem_0")
+        self.assertEqual(p["protetor_alvo"], "__prisioneiro__")
 
     async def test_evento_de_dano_usa_a_chave_de_cada_refem(self):
         r = dois_libertos()
@@ -249,7 +240,7 @@ class MigracaoDoServidorTests(unittest.IsolatedAsyncioTestCase):
         r._registrar_dano_combate(a, 1, [S.DMG_PHYSICAL])
         r._registrar_dano_combate(b, 1, [S.DMG_PHYSICAL])
         self.assertEqual([e["entity_key"] for e in r._combat_damage_events],
-                         ["pr:singleton", "pr:refem_1"])
+                         ["pr:refem_0", "pr:refem_1"])
 
     async def test_armadilha_marca_o_refem_certo(self):
         r = dois_libertos()
@@ -390,17 +381,17 @@ class LibertarJanelaSeguirTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(r.animados_phase_pid)
         self.assertEqual(r.prisioneiros_done, set())
 
-    async def test_cliente_antigo_ve_o_primeiro_como_prisoner(self):
+    async def test_janela_manda_o_id_e_aceita_o_apelido_antigo(self):
         r, p = dono_e_janela([{"pos": [2, 2]}, {"pos": [2, 4]}])
         a, b = r.prisoners
         livres(r, a, b)
         await r.handle_end_turn("p0")
         est = r._game_state_payload()
-        self.assertEqual(est["animados_atual"]["p0"], "prisoner")
+        self.assertEqual(est["animados_atual"]["p0"], "refem_0")
         await r.handle_encerrar_animado("p0", "prisoner")      # alias aponta o da vez
         est = r._game_state_payload()
         self.assertEqual(est["animados_atual"]["p0"], "refem_1")
-        self.assertEqual(est["animados_done"], ["prisoner"])
+        self.assertEqual(est["animados_done"], ["refem_0"])
         await r.handle_encerrar_animado("p0", "prisoner")
         self.assertIsNone(r.animados_phase_pid)
 

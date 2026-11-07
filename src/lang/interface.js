@@ -4196,6 +4196,10 @@ window.LANG_INTERFACE = {
     "en": "🔓 Free the prisoner",
     "pt": "🔓 Libertar prisioneiro"
   },
+  "ui.hud.libertar_qual": {
+    "en": "🔓 Which prisoner to free?",
+    "pt": "🔓 Libertar qual prisioneiro?"
+  },
   "ui.hud.limite_habilidades": {
     "en": "You can only ready {n} abilities per turn.",
     "pt": "Você só pode armar {n} habilidades por turno."
