@@ -5306,6 +5306,11 @@ function fecharLoja(){
 // aplicarTooltipAoItem(elemento, itemId). (DOM → vive em game.js.)
 // ═══════════════════════════════════════════════════════════════════════════
 let _itemTooltipReady = false;
+// Ampliação do quadro de item inteiro (texto, ícones e espaços). O quadro tem
+// dezenas de tamanhos de letra embutidos nos modelos; escalar o quadro todo
+// mantém as proporções. transform não mexe no left/top e o getBoundingClientRect
+// já devolve o tamanho ampliado, então o posicionamento continua certo.
+const ESCALA_TOOLTIP_ITEM = 1.5;
 // Elemento que abriu o quadro. Remover (ou ocultar) um elemento que está sob o
 // cursor NÃO dispara mouseleave — é o caso de pegar um item do baú, que
 // re-renderiza a lista e destrói a linha em hover. Sem esse registro o quadro
@@ -5352,9 +5357,9 @@ function _ligarTooltipItem(elemento, nome, renderDetalhes){
     tip.style.color = '#e8cf7e';
     tip.style.fontSize = '12px';
     tip.style.borderColor = '#c8a951';
-    tip.style.maxWidth = 'calc(100vw - 16px)';
+    tip.style.maxWidth = `calc((100vw - 16px) / ${ESCALA_TOOLTIP_ITEM})`;
     tip.style.boxSizing = 'border-box';
-    tip.style.maxHeight = 'calc(100vh - 16px)';
+    tip.style.maxHeight = `calc((100vh - 16px) / ${ESCALA_TOOLTIP_ITEM})`;
     tip.style.overflowY = 'auto';
     tip.style.overscrollBehavior = 'contain';
     tip.style.scrollbarWidth = 'thin';
@@ -5406,6 +5411,7 @@ function _initItemTooltip(){
       pointer-events: none; opacity: 0;
       transition: opacity 0.15s ease;
       box-shadow: 0 4px 24px rgba(0,0,0,0.8);
+      transform: scale(${ESCALA_TOOLTIP_ITEM}); transform-origin: 0 0;
     `;
     document.body.appendChild(tooltip);
   }
