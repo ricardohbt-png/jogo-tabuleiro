@@ -17429,8 +17429,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         item = guild_item(tecnica_id)
         if not item:
             return
+        # Só quando a técnica vem SÓ da arma: quem já a tem equipada pela
+        # Guilda mantém a recarga comprada, a arma não a piora.
         arma_concede_giro = (tecnica_id == "tecnica_ataque_giratorio"
-                             and f"guild_{tecnica_id}" in _habilidades_concedidas(p))
+                             and f"guild_{tecnica_id}" in _habilidades_concedidas(p)
+                             and tecnica_id not in (list(eq.get("tecnicas") or [])
+                                                    + [eq.get("tecnica"), eq.get("tecnica_exclusiva")]))
         if arma_concede_giro:
             # A Lâmina de Kriswoo concede a técnica com recarga própria de 10
             # rodadas; custo e execução continuam sendo os da técnica da Guilda.
@@ -25355,7 +25359,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         pronta_em = int(gear_item.get("lightning_line_pronta_em", 0) or 0)
         if pronta_em > int(self.round_num or 0):
-            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica="Descarga em Linha", rodadas=pronta_em-int(self.round_num or 0))})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica=T("ui.item.relampago_de_mao_habilidade"), rodadas=pronta_em-int(self.round_num or 0))})
             return
         target = next((m for m in self.monsters.values()
                        if str(m.get("id")) == str(target_id) and m.get("hp", 0) > 0), None)
@@ -25480,7 +25484,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         round_num = int(self.round_num or 1)
         pronta_em = int(gear_item.get("thunder_pulse_ready_round", 0) or 0)
         if pronta_em > round_num:
-            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica="Pulso do Trovão", rodadas=pronta_em-round_num)})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica=T("ui.item.choque_trovao_pulso"), rodadas=pronta_em-round_num)})
             return
 
         ox, oy = p.get("pos", [0, 0])
@@ -43918,7 +43922,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p = self.players.get(pid)
         if not p or p.get("is_master"):
             return False
-        m = self.monsters.get(msg.get("target_id"))
+        target_id = msg.get("target_id")
+        if not isinstance(target_id, str):   # lista/objeto vindo do cliente
+            return False
+        m = self.monsters.get(target_id)
         if (not m or not m.get("invisivel_sombras")
                 or self._lampada_vigilia_arcana_revela_monstro(m)):
             return False
@@ -54450,19 +54457,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                    key=lambda p: max(abs(p["pos"][0]-m["pos"][0]), abs(p["pos"][1]-m["pos"][1])), default=None)
         if not alvo:
             return
+        def _dist(q):
+            return max(abs(q[0] - alvo["pos"][0]), abs(q[1] - alvo["pos"][1]))
         while m.get("_water_moves_left", 0) > 0:
-            dx = -1 if m["pos"][0] < alvo["pos"][0] else 1 if m["pos"][0] > alvo["pos"][0] else 0
-            dy = -1 if m["pos"][1] < alvo["pos"][1] else 1 if m["pos"][1] > alvo["pos"][1] else 0
             antes = list(m["pos"])
-            # Preferimos o eixo que abre mais distância; o helper continua
-            # responsável por ocupação, portas, perigos e animação.
-            candidatos = []
-            if dx: candidatos.append([m["pos"][0] - dx * 8, m["pos"][1]])
-            if dy: candidatos.append([m["pos"][0], m["pos"][1] - dy * 8])
-            if not candidatos: break
-            destino = max(candidatos, key=lambda q: max(abs(q[0]-alvo["pos"][0]), abs(q[1]-alvo["pos"][1])))
-            await self._monster_move_step(m, destino)
-            if m["pos"] == antes:
+            # Um passo por vez para a casa vizinha que mais abre distância.
+            # O destino antigo ficava 8 casas além, fora do mapa perto da
+            # parede, e o caminho até ele voltava para cima do herói. O helper
+            # continua responsável por ocupação, portas, perigos e animação.
+            atual = _dist(antes)
+            vizinhos = [[antes[0] + ox, antes[1] + oy]
+                        for ox in (-1, 0, 1) for oy in (-1, 0, 1)
+                        if (ox or oy)
+                        and 0 <= antes[0] + ox < self.map_w and 0 <= antes[1] + oy < self.map_h]
+            vizinhos = sorted((q for q in vizinhos if _dist(q) > atual),
+                              key=lambda q: (-_dist(q), abs(q[0] - antes[0]) + abs(q[1] - antes[1])))
+            andou = False
+            for destino in vizinhos:
+                await self._monster_move_step(m, destino)
+                if m["pos"] != antes:
+                    andou = True
+                    break
+            if not andou:
                 break
 
     async def _ai_monstro_desnutrido(self, m, targets):
@@ -56043,8 +56059,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 # A criatura já alertada não esquece imediatamente uma presa
                 # que acabou de sair da visão. Ela procura a última posição
                 # conhecida por até três rodadas; depois permanece guardando
-                # sua sala/objetivo, sem vagar pelo mapa inteiro.
-                await self._monster_search_last_seen(m)
+                # sua sala/objetivo, sem vagar pelo mapa inteiro. Quem foge
+                # (formas animais ND 0) não volta atrás de quem fugiu.
+                if not m.get("foge_se_nd_zero"):
+                    await self._monster_search_last_seen(m)
                 m.pop("turbilhao_perde_movimento", None)
                 continue
             self._monster_remember_visible_targets(m, targets)
@@ -56063,8 +56081,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 m.pop("turbilhao_perde_movimento", None)
                 continue
 
-            # Monstros com ai_type usam o sistema de IA modular
-            if m.get("ai_type"):
+            # Monstros com ai_type usam o sistema de IA modular. Ficha nova
+            # (ataques em `attacks`, sem `atk_bonus` no topo) também: o laço
+            # legado abaixo lê m["atk_bonus"] e estourava KeyError, engolindo
+            # o turno do Mago das Trevas e das formas animais ND 0.
+            if m.get("ai_type") or m.get("foge_se_nd_zero") or "atk_bonus" not in m:
                 await self._run_monster_ai(m, targets)
                 await self._encerrar_ultimo_esforco_monstro_turno(m)
                 # ProvocaÃ§Ã£o tick (igual para todos)
@@ -56202,6 +56223,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         # deve testar concentraÃ§Ã£o.)
                         if target.get("requiem_alvo") and target.get("hp", 0) > 0:
                             await self._concentracao_requiem(target, dmg_alvo)
+                        # Manto de Raios do escudo trovejante (espelha o
+                        # caminho modular, `_execute_one_monster_attack`).
+                        await self._retaliacao_escudo_trovejante(target, m)
                     else:
                         dmg_ef = self._ajustar_dano_elemental(target, dmg, "fisico")   # Pedra/Gelo
                         target["vida_atual"] = max(0, target["vida_atual"] - dmg_ef)
@@ -58130,7 +58154,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ready = int(item.get("thunder_reaction_ready_round", 0) or 0)
         if ready > round_num:
             await self.send_to(pid, {"type": "error", "msg": T(
-                "erro.tecnica_em_recarga", tecnica="Manto de Raios", rodadas=ready - round_num)})
+                "erro.tecnica_em_recarga", tecnica=T("cat.item.manto_raios.nome"), rodadas=ready - round_num)})
             return
         duration = int(item.get("thunder_reaction_duration", 5) or 5)
         cooldown = int(item.get("thunder_reaction_cooldown", 20) or 20)
