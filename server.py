@@ -3556,6 +3556,12 @@ _DURABLE_FIELDS = (
     "fort", "ref_", "will", "spd", "fome", "sede", "fome_max", "sede_max",
     "fome_max_base", "sede_max_base", "fome_max_modificadores", "sede_max_modificadores",
     "bag", "bag_size", "gear", "auto_equip_arrows_enabled", "auto_equip_arrows_order",
+    # Estado das bebidas que mexem DIRETO em atk_bonus/ref_ (acima): sem ele,
+    # a ficha salva com o efeito ativo voltava com a perda para sempre, porque
+    # nada mais sabia que havia uma penalidade a devolver.
+    "absinto_penalty_rodadas", "rum_penalty_rodadas", "hidromel_penalty_rodadas",
+    "vinho_ativo", "vinho_rodadas", "cerveja_ativo", "cerveja_rodadas",
+    "cerveja_ana_ca_ativo", "cerveja_ana_ca_rodadas",
     "guild_owned", "guild_equip", "magias_conhecidas",
     "maldicoes",
     "renome_individual", "metamorfose_formas_desbloqueadas", "tutorial_history",
@@ -31949,6 +31955,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         displaced_belt = p.get("gear", {}).get(_destino) if _destino else None
         if _destino and self._slot_travado_por_maldicao(p, _destino):
             await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return False
+        # O item novo sai da bolsa e o deslocado entra: a contagem empata, mas
+        # se o deslocado dava espaços (mochila) a bolsa encolhe.
+        if (displaced_belt and item.get("effect") != "ammo"
+                and not self._bolsa_cabe_sem(p, displaced_belt, entrando=item)):
+            await self.send_to(pid, {"type": "error",
+                "msg": T("erro.inventario_cheio_nao_ha_espaco_para_dese")}); return False
         # Substituir a Bota Alada por outro item de botas também remove a
         # sustentação do voo. Resolva a queda enquanto ela ainda está equipada;
         # depois o novo item pode ser colocado no slot normalmente.
@@ -32073,7 +32085,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         if self._item_maldicao_vinculante(p, item):
             await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
-        if len(p["bag"]) >= p.get("bag_size", 6):
+        if not self._bolsa_cabe_sem(p, item, entra_na_bolsa=1):
             await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_nao_ha_espaco_para_dese")}); return
         # Resolva a queda antes de retirar a bota: o recálculo do equipamento
         # zera a altura quando o voo deixa de estar ativo.
@@ -32450,6 +32462,24 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             item=nome_item(item), alvo=alvo["name"]))
         await self.push_state_or_city()
 
+    @staticmethod
+    def _bolsa_cabe_sem(p, saindo, entra_na_bolsa=0, entrando=None):
+        """A bolsa comporta seus itens depois que `saindo` deixa o corpo?
+
+        Mochila, alforje e Maravilha (`effect: bagslots`) somam `value` espaços;
+        tirá-los encolhe a bolsa. Vale para desequipar (o item ainda entra na
+        bolsa: `entra_na_bolsa=1`), largar direto do equipamento no chão e
+        trocar por outro item no mesmo espaço (`entrando`, que pode ele mesmo
+        dar espaços). Sem esta conta, desequipar a Mochila de Carga com 11
+        itens deixava 12 itens numa bolsa de 6.
+        """
+        def extra(it):
+            if isinstance(it, dict) and it.get("effect") == "bagslots":
+                return int(it.get("value", 0) or 0)
+            return 0
+        tamanho = int(p.get("bag_size", 6) or 6) - extra(saindo) + extra(entrando)
+        return len(p.get("bag") or []) + entra_na_bolsa <= max(1, tamanho)
+
     async def handle_drop_item(self, pid, source, index=None, slot_key=None):
         """Larga um item no chão (1ª casa adjacente livre). Ação LIVRE, a qualquer
         momento (sem _is_turn). Origem: bolsa (index) ou slot equipado (slot_key —
@@ -32467,6 +32497,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.send_to(pid, {"type": "error", "msg": T("erro.nada_equipado_nesse_slot")}); return
             if self._slot_travado_por_maldicao(p, slot_key):
                 await self.send_to(pid, {"type": "error", "msg": self.MSG_ITEM_PRESO}); return
+            if not self._bolsa_cabe_sem(p, p["gear"][slot_key]):
+                await self.send_to(pid, {"type": "error",
+                    "msg": T("erro.inventario_cheio_nao_ha_espaco_para_dese")}); return
             item = p["gear"][slot_key]
         else:
             return
@@ -43868,6 +43901,30 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return True
         return False
 
+    async def _recusar_alvo_oculto(self, pid, msg):
+        """Recusa ação de herói que mira pelo id um monstro escondido nas sombras.
+
+        O monstro escondido viaja no `game_state` (quem o esconde é o cliente,
+        ao desenhar), então só o ataque básico o recusava: magia, arremesso,
+        técnica, instrumento, Provocação e o escudo espinhoso aceitavam o
+        `target_id` dele. Chamado pelo despachante para toda mensagem de herói.
+        Área (casa, sem `target_id`) continua atingindo quem estiver nela.
+        """
+        if self.phase != "playing" or not isinstance(msg, dict):
+            return False
+        tipo = str(msg.get("type") or "")
+        if tipo.startswith(("mestre_", "teste_")) or pid == self.master_pid:
+            return False
+        p = self.players.get(pid)
+        if not p or p.get("is_master"):
+            return False
+        m = self.monsters.get(msg.get("target_id"))
+        if (not m or not m.get("invisivel_sombras")
+                or self._lampada_vigilia_arcana_revela_monstro(m)):
+            return False
+        await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_oculto_nas_sombras")})
+        return True
+
     def _lampada_vigilia_arcana_revela_monstro(self, monstro):
         """A lâmpada revela temporariamente monstros ocultos no raio do grupo."""
         if not monstro or not monstro.get("invisivel_sombras"):
@@ -44529,8 +44586,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         cura = self._curar_hp(p, item.get("value", 0), "Poção de cura")
         doses_msg = ""
         if max_uses > 1:
-            doses_msg = (" A garrafa se esvazia." if remove_item
-                         else f" **{uses_left}/{max_uses}** doses restantes.")
+            doses_msg = (T("narracao.doses.garrafa_vazia") if remove_item
+                         else T("narracao.doses.restantes_destaque", n=uses_left, max=max_uses))
         await self.gm_say(T("narracao.usa_e_recupera_hp_3", item_emoji=usado.get("emoji", ""),
                             heroi=p["name"], item=nome_item(usado), val=cura, doses_msg=doses_msg))
         await self.push_state_or_city()
@@ -44821,8 +44878,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     uses_left -= 1
                     item["uses_left"] = uses_left
                     remove_item = uses_left <= 0
-                doses_msg = (" A garrafa se esvazia." if remove_item
-                             else f" **{uses_left}/{max_uses}** doses restantes.")
+                doses_msg = (T("narracao.doses.garrafa_vazia") if remove_item
+                             else T("narracao.doses.restantes_destaque", n=uses_left, max=max_uses))
             else:
                 doses_msg = ""
             if fome_item or sede_item:
@@ -59083,6 +59140,10 @@ async def handler(ws):
                 _hp_watch = room._hp_monstros()
 
             try:
+                # Monstro escondido nas sombras não é alvo direto de nenhuma
+                # ação de herói (só o ataque básico checava; ver o método).
+                if room and await room._recusar_alvo_oculto(pid, msg):
+                    continue
                 # Idioma desta conexão. Vem antes de qualquer sala: vale já na
                 # tela de login e nas mensagens de erro do lobby.
                 if t == "set_lang":
