@@ -42,8 +42,8 @@ class AljavaSlots(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.player['bag'][0]['ammo_count'], 5)
         data['direction'] = 'to_bag'
         self.assertTrue(await self.room.handle_move_quiver_ammo('p', data))
-        self.assertEqual(self.player['bag'][0]['ammo_count'], 10)
-        self.assertEqual(q['quiver_slots'][0]['ammo_count'], 35)
+        self.assertEqual(self.player['bag'][0]['ammo_count'], 20)
+        self.assertEqual(q['quiver_slots'][0]['ammo_count'], 25)
 
     async def test_reject_non_ammo_and_incompatible_stacks(self):
         q = self.item('mini_aljava')

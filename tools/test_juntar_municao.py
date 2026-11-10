@@ -2,7 +2,7 @@
 
 Duas pilhas são iguais quando têm o mesmo tipo, os mesmos bônus/efeitos de disparo
 e a mesma combinação de venenos (`_ammo_stack_key`). Se a soma passa do limite da
-pilha (10, ou o da aljava), o destino fica cheio e a origem guarda o que sobrou.
+pilha (20 na bolsa, 10 na mão secundária), o destino fica cheio e a origem guarda o que sobrou.
 Pilhas diferentes não se juntam: soltar uma sobre a outra só reordena, como antes.
 Roda da raiz: python -X utf8 tools/test_juntar_municao.py"""
 import asyncio, os, sys
@@ -52,18 +52,18 @@ async def main():
     check("sobrou uma pilha só, com 7", contagens(p) == [7], contagens(p))
 
     print("\n[2] passou do limite: completa o destino e a origem fica com o resto")
-    r, p = sala([municao("virotes", 8), municao("virotes", 7)])
+    r, p = sala([municao("virotes", 18), municao("virotes", 7)])
     await r.handle_juntar_municao("p", {"bolsa": 0}, {"bolsa": 1})
-    check("destino 10, origem 5", contagens(p) == [5, 10], contagens(p))
-    r, p = sala([municao("virotes", 5), municao("virotes", 10)])
+    check("destino 20, origem 5", contagens(p) == [5, 20], contagens(p))
+    r, p = sala([municao("virotes", 5), municao("virotes", 20)])
     await r.handle_juntar_municao("p", {"bolsa": 0}, {"bolsa": 1})
-    check("destino já cheio: nada muda", contagens(p) == [5, 10], contagens(p))
+    check("destino já cheio: nada muda", contagens(p) == [5, 20], contagens(p))
 
-    print("\n[3] com aljava o limite da bolsa continua 10")
+    print("\n[3] com aljava o limite da bolsa continua 20")
     aljava = deepcopy(next(i for i in S.SHOP_AMMO if i["id"] == "aljava_pequena"))
-    r, p = sala([municao("virotes", 15), municao("virotes", 18)], off_hand=aljava)
+    r, p = sala([municao("virotes", 25), municao("virotes", 28)], off_hand=aljava)
     await r.handle_juntar_municao("p", {"bolsa": 0}, {"bolsa": 1})
-    check("pilhas antigas acima de 10 permanecem intactas", contagens(p) == [15, 18], contagens(p))
+    check("pilhas antigas acima de 20 permanecem intactas", contagens(p) == [25, 28], contagens(p))
 
     print("\n[4] envenenadas juntam só com o mesmo veneno")
     veneno = next(iter(S.VENENOS))

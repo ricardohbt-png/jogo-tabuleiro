@@ -208,6 +208,10 @@ window.LANG_INTERFACE = {
     "en": "Sneak Attack",
     "pt": "Ataque Furtivo"
   },
+  "dado.manto_de_raios": {
+    "en": "Lightning Mantle",
+    "pt": "Manto de Raios"
+  },
   "dado.ataque_furtivo_reacao": {
     "en": "Sneak Attack (reaction)",
     "pt": "Ataque Furtivo (reação)"
@@ -10692,6 +10696,22 @@ window.LANG_INTERFACE = {
   "ui.tecnica.escolha_o_par": {
     "en": "{icone} {nome} — choose the partner",
     "pt": "{icone} {nome} — escolha o par"
+  },
+  "cat.item.manto_raios.desc": {
+    "en": "For 5 rounds, each creature that hits you with an attack takes 1d6 lightning damage. Cooldown: 20 rounds.",
+    "pt": "Por 5 rodadas, cada criatura que acertar você com um ataque sofre 1d6 de dano elétrico. Recarga: 20 rodadas."
+  },
+  "cat.item.manto_raios.nome": {
+    "en": "Lightning Mantle",
+    "pt": "Manto de Raios"
+  },
+  "cat.item.vinculo_espinhoso_habilidade.desc": {
+    "en": "Choose one living enemy in line of sight. Will negates. The bond lasts exactly 5 rounds, transfers 25% of the damage you take, and gives the enemy -1 on its next attack. Up to 4 bonds may coexist. Shield cooldown: 25 rounds. Costs 1 hunger and 1 thirst; uses no spell slot.",
+    "pt": "Escolha um inimigo vivo em linha de visão. Vontade nega. O vínculo dura exatamente 5 rodadas, transfere 25% do dano que você sofre e impõe -1 no próximo ataque do inimigo. Até 4 vínculos podem coexistir. Recarga do escudo: 25 rodadas. Custa 1 fome e 1 sede; não gasta slot de magia."
+  },
+  "ui.tecnica.ativa_por": {
+    "en": "{n}r active",
+    "pt": "{n}r ativa"
   },
   "ui.tecnica.inimigo_adjacente": {
     "en": "{icone} {nome} — adjacent enemy",

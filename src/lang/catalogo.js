@@ -2,7 +2,6 @@
 // Preencha só a coluna "en"; rodar o gerador de novo preserva o que
 // você já traduziu e acrescenta o que for novo.
 window.LANG_CATALOGO = {
-  "cat.decor.mansao_medieval.nome": {"pt":"Mansão medieval", "en":"Medieval mansion"},
   "cat.armadilha.armadilha_dardos_envenenados.desc": {
     "en": "Takes 1d4 piercing damage and makes a Fortitude save against the chosen poison.",
     "pt": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido."
@@ -419,6 +418,10 @@ window.LANG_CATALOGO = {
     "en": "Crypt",
     "pt": "Cripta"
   },
+  "cat.decor.escadaria_luxuosa.nome": {
+    "en": "Luxurious staircase",
+    "pt": "Escadaria luxuosa"
+  },
   "cat.decor.espantalho.nome": {
     "en": "Scarecrow",
     "pt": "Espantalho"
@@ -530,6 +533,10 @@ window.LANG_CATALOGO = {
   "cat.decor.lareira.nome": {
     "en": "Fireplace",
     "pt": "Lareira"
+  },
+  "cat.decor.mansao_medieval.nome": {
+    "en": "Medieval mansion",
+    "pt": "Mansão medieval"
   },
   "cat.decor.mesa_banquete_luxo.nome": {
     "en": "Luxurious Banquet Table",
@@ -2363,6 +2370,14 @@ window.LANG_CATALOGO = {
     "en": "Violin",
     "pt": "Violino"
   },
+  "cat.item.absinto.desc": {
+    "en": "Bottle with 5 doses. Each use restores 15 hunger and thirst and applies −1 attack and −1 AC for 10 rounds. With 3–4 active doses, movement is reduced by 1; with 5 or more, by 2. Penalties stack; each dose expires 10 rounds after its own use.",
+    "pt": "Garrafa com 5 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e −1 na CA por 10 rodadas. Com 3–4 doses ativas, reduz o movimento em 1; com 5 ou mais, em 2. As penalidades acumulam; cada dose expira 10 rodadas após seu próprio uso."
+  },
+  "cat.item.absinto.nome": {
+    "en": "Absinthe",
+    "pt": "Absinto"
+  },
   "cat.item.agua_benta.nome": {
     "en": "Holy Water",
     "pt": "Água Benta"
@@ -2390,6 +2405,30 @@ window.LANG_CATALOGO = {
   "cat.item.alabarda_prata.nome": {
     "en": "Silver Halberd",
     "pt": "Alabarda de Prata"
+  },
+  "cat.item.alforge_explorador.desc": {
+    "en": "While equipped, increases backpack capacity by 2 slots and provides 1 pocket for eligible throwables, potions, and poisons, holding up to 4 identical units. Its contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 2 espaços a capacidade da mochila e oferece 1 bolso para arremessáveis, frascos de efeito, poções e venenos, com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+  },
+  "cat.item.alforge_explorador.nome": {
+    "en": "Explorer's Pack",
+    "pt": "Alforje de Explorador"
+  },
+  "cat.item.alforge_explorador_aprimorado.desc": {
+    "en": "While equipped, increases backpack capacity by 4 slots and provides 2 pockets for eligible throwables, potions, and poisons, each holding up to 4 identical units. Its contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 4 espaços a capacidade da mochila e oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+  },
+  "cat.item.alforge_explorador_aprimorado.nome": {
+    "en": "Improved Explorer's Pack",
+    "pt": "Alforje de Explorador Aprimorado"
+  },
+  "cat.item.alforge_explorador_superior.desc": {
+    "en": "While equipped, increases backpack capacity by 6 slots and provides 3 pockets for eligible throwables, potions, and poisons, each holding up to 4 identical units. Its contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 6 espaços a capacidade da mochila e oferece 3 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+  },
+  "cat.item.alforge_explorador_superior.nome": {
+    "en": "Superior Explorer's Pack",
+    "pt": "Alforje de Explorador Superior"
   },
   "cat.item.aljava_grande.desc": {
     "en": "Equipped in the off hand, provides 3 slots for up to 40 arrows or bolts each. Contents remain inside when unequipped.",
@@ -2475,6 +2514,22 @@ window.LANG_CATALOGO = {
     "en": "Giant's Heavy Armor",
     "pt": "Armadura Pesada de Gigante"
   },
+  "cat.item.armadura_placas_grotao.desc": {
+    "en": "Light monster leather and thick plate armor. Grants +3 AC, reduces each instance of physical damage by 2 and acid damage by 5. Immune to acid corrosion, but remains vulnerable to the Organic and Metal Devourers. Corrosion levels 1–2 have no penalty; levels 3–5 impose −2 AC; level 6 destroys it.",
+    "pt": "Armadura leve de couro de monstro e placas espessas. Concede +3 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
+  },
+  "cat.item.armadura_placas_grotao.nome": {
+    "en": "Grotão Plate Armor",
+    "pt": "Armadura de Placas de Grotão"
+  },
+  "cat.item.armadura_placas_grotao_superior.desc": {
+    "en": "Heavy armor crafted from thick Grotão carapace plates. Grants +7 AC, reduces each instance of physical damage by 2 and acid damage by 5. Immune to acid corrosion, but remains vulnerable to the Organic and Metal Devourers. Corrosion levels 1–2 have no penalty; levels 3–5 impose −2 AC; level 6 destroys it.",
+    "pt": "Armadura pesada construída com placas grossas da carapaça do Grotão. Concede +7 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
+  },
+  "cat.item.armadura_placas_grotao_superior.nome": {
+    "en": "Superior Grotão Plate Armor",
+    "pt": "Armadura de Placas de Grotão Superior"
+  },
   "cat.item.armadura_runica.desc": {
     "en": "Heavy plate armor with +7 AC. Warriors and Paladins can cast Arcane Barrier or Protection from Energy for exactly 5 rounds without spending a spell slot. Shared cooldown: 30 rounds.",
     "pt": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
@@ -2546,6 +2601,14 @@ window.LANG_CATALOGO = {
   "cat.item.boina_batedor.nome": {
     "en": "Scout's Beret",
     "pt": "Boina do Batedor"
+  },
+  "cat.item.boina_gatuno.desc": {
+    "en": "+2 to the Rogue's Hide in the Shadows checks while equipped. Stacks with the specialization and Cloak of Shadows.",
+    "pt": "+2 nos testes de Esconder nas Sombras do Ladino enquanto equipada. Acumula com a especialização e com o Manto das Sombras."
+  },
+  "cat.item.boina_gatuno.nome": {
+    "en": "Rogue's Beret",
+    "pt": "Boina do Gatuno"
   },
   "cat.item.bola_cristal_clarividencia.desc": {
     "en": "Main action. Casts Clairvoyance without spending a spell slot. Cooldown: 10 rounds. Mage and Cleric use the normal level scaling; other classes reveal a fixed 4×4 area.",
@@ -2627,6 +2690,14 @@ window.LANG_CATALOGO = {
     "en": "Wooden Staff",
     "pt": "Cajado de Madeira"
   },
+  "cat.item.caldo_revigorante.desc": {
+    "en": "Portable nourishing broth. Restores 5 HP, 10 hunger, and 10 thirst.",
+    "pt": "Caldo portátil: restaura 5 PV, 10 de fome e 10 de sede."
+  },
+  "cat.item.caldo_revigorante.nome": {
+    "en": "Restorative Broth",
+    "pt": "Caldo Revigorante"
+  },
   "cat.item.calice_eter.desc": {
     "en": "Bonus action. Restores one spent 1st-circle spell slot without exceeding the hero's maximum slots.",
     "pt": "Ação bônus. Recupera um espaço gasto de magia de 1º círculo; não ultrapassa o máximo de espaços do herói."
@@ -2703,6 +2774,14 @@ window.LANG_CATALOGO = {
     "en": "Warlock's Hat",
     "pt": "Chapéu do Bruxo"
   },
+  "cat.item.chapeu_cacador.desc": {
+    "en": "+2 damage per successful melee or ranged weapon hit while equipped.",
+    "pt": "+2 de dano por acerto com armas corpo a corpo ou à distância."
+  },
+  "cat.item.chapeu_cacador.nome": {
+    "en": "Hunter's Hat",
+    "pt": "Chapéu do Caçador"
+  },
   "cat.item.chapeu_conjurador.desc": {
     "en": "+2 to the saving throw DC of your spells while equipped. Usable by Mage and Cleric.",
     "pt": "+2 na CD dos testes de resistência das magias enquanto equipado. Usável por Mago e Clérigo."
@@ -2710,6 +2789,14 @@ window.LANG_CATALOGO = {
   "cat.item.chapeu_conjurador.nome": {
     "en": "Spellcaster's Hat",
     "pt": "Chapéu do Conjurador"
+  },
+  "cat.item.chapeu_explorador.desc": {
+    "en": "+2 vision and +1 to attacks while equipped.",
+    "pt": "+2 de visão e +1 nos ataques enquanto equipado."
+  },
+  "cat.item.chapeu_explorador.nome": {
+    "en": "Explorer's Hat",
+    "pt": "Chapéu do Explorador"
   },
   "cat.item.chicote.desc": {
     "en": "Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield.",
@@ -2743,6 +2830,14 @@ window.LANG_CATALOGO = {
     "en": "Thunder Shock",
     "pt": "Choque do Trovão"
   },
+  "cat.item.cinto_arsenal_encantado.desc": {
+    "en": "While equipped, provides 4 pockets for throwables, bottled effects, potions and poisons, each holding up to 8 identical units, plus 1 quiver slot for up to 40 arrows or bolts. Contents remain stored when unequipped.",
+    "pt": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com até 8 unidades iguais, e 1 espaço de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
+  },
+  "cat.item.cinto_arsenal_encantado.nome": {
+    "en": "Enchanted Arsenal Belt",
+    "pt": "Cinto-Arsenal Encantado"
+  },
   "cat.item.cinto_com_bolsos.desc": {
     "en": "While equipped, provides 2 pockets for throwables, bottled effects, potions and poisons. Each pocket holds up to 4 identical units. Items remain in the belt when it is unequipped and are inaccessible until it is equipped again.",
     "pt": "Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
@@ -2758,6 +2853,14 @@ window.LANG_CATALOGO = {
   "cat.item.cinto_utilidades.nome": {
     "en": "Utility Belt",
     "pt": "Cinto de Utilidades"
+  },
+  "cat.item.cinto_utilidades_aprimorado.desc": {
+    "en": "While equipped, provides 4 pockets for throwables, bottled effects, potions and poisons. Each pocket holds up to 8 identical units. Items remain in the belt when it is unequipped and are inaccessible until it is equipped again.",
+    "pt": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 8 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+  },
+  "cat.item.cinto_utilidades_aprimorado.nome": {
+    "en": "Improved Utility Belt",
+    "pt": "Cinto de Utilidades Aprimorado"
   },
   "cat.item.circlet.desc": {
     "en": "+1 Armor Class and +2 maximum Hit Points while equipped.",
@@ -2843,6 +2946,22 @@ window.LANG_CATALOGO = {
     "en": "Large Shield",
     "pt": "Escudo Grande"
   },
+  "cat.item.escudo_g_retalhacao_trovejante.desc": {
+    "en": "Magical large metal shield: +3 AC and damage reduction 2. Manto de Raios (main action): for 5 rounds, every creature that hits you with an attack takes 1d6 lightning damage. 20-round cooldown; activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo Grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+  },
+  "cat.item.escudo_g_retalhacao_trovejante.nome": {
+    "en": "Large Shield of Thundering Retribution",
+    "pt": "Escudo Grande da Retaliação Trovejante"
+  },
+  "cat.item.escudo_grande_vinculo_espinhoso.desc": {
+    "en": "Magical large metal shield: +3 AC and damage reduction 2. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+  },
+  "cat.item.escudo_grande_vinculo_espinhoso.nome": {
+    "en": "Large Shield of the Thorned Bond",
+    "pt": "Escudo Grande do Vínculo Espinhoso"
+  },
   "cat.item.escudo_madeira_grande.desc": {
     "en": "Reinforced large wooden shield. Grants +2 AC and reduces each instance of incoming damage by 1. Usable by Cleric, Warrior and Paladin; can be corroded by the Organic Devourer.",
     "pt": "Escudo grande de madeira reforçado. Concede +2 CA e reduz em 1 cada instância de dano recebido. Pode ser usado por Clérigo, Guerreiro e Paladino; pode ser corroído pelo Devorador Orgânico."
@@ -2850,6 +2969,22 @@ window.LANG_CATALOGO = {
   "cat.item.escudo_madeira_grande.nome": {
     "en": "Reinforced Large Wooden Shield",
     "pt": "Escudo Grande de Madeira Reforçado"
+  },
+  "cat.item.escudo_madeira_retalhacao_trovejante.desc": {
+    "en": "Magical large wooden shield: +3 AC and damage reduction 1. Manto de Raios (main action): for 5 rounds, every creature that hits you with an attack takes 1d6 lightning damage. 20-round cooldown; activation costs 1 hunger and 1 thirst. Can be corroded by the Organic Devourer.",
+    "pt": "Escudo Grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar. Pode ser corroído pelo Devorador Orgânico."
+  },
+  "cat.item.escudo_madeira_retalhacao_trovejante.nome": {
+    "en": "Large Wooden Shield of Thundering Retribution",
+    "pt": "Escudo Grande de Madeira da Retaliação Trovejante"
+  },
+  "cat.item.escudo_madeira_vinculo_espinhoso.desc": {
+    "en": "Magical large wooden shield: +3 AC and damage reduction 1. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst. Can be corroded by the Organic Devourer.",
+    "pt": "Escudo grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador Orgânico."
+  },
+  "cat.item.escudo_madeira_vinculo_espinhoso.nome": {
+    "en": "Large Wooden Shield of the Thorned Bond",
+    "pt": "Escudo de Madeira do Vínculo Espinhoso"
   },
   "cat.item.escudo_p.desc": {
     "en": "AC bonus +1. Reduces the damage of every attack or damage effect you take by 1, with no cap per round. It also reduces spell and trap damage; when a successful Reflex save halves the damage, apply the halving first and this reduction after.",
@@ -2859,6 +2994,22 @@ window.LANG_CATALOGO = {
     "en": "Small Shield",
     "pt": "Escudo Pequeno"
   },
+  "cat.item.escudo_p_retalhacao_trovejante.desc": {
+    "en": "Magical small shield: +2 AC and damage reduction 1. Manto de Raios (main action): for 5 rounds, every creature that hits you with an attack takes 1d6 lightning damage. 20-round cooldown; activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo Pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+  },
+  "cat.item.escudo_p_retalhacao_trovejante.nome": {
+    "en": "Small Shield of Thundering Retribution",
+    "pt": "Escudo Pequeno da Retaliação Trovejante"
+  },
+  "cat.item.escudo_pequeno_vinculo_espinhoso.desc": {
+    "en": "Magical small shield: +2 AC and damage reduction 1. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+  },
+  "cat.item.escudo_pequeno_vinculo_espinhoso.nome": {
+    "en": "Small Shield of the Thorned Bond",
+    "pt": "Escudo Pequeno do Vínculo Espinhoso"
+  },
   "cat.item.escudo_torre.desc": {
     "en": "Paladin-only metal tower shield. Grants +3 AC and reduces each instance of incoming damage by 2. Can be corroded by the Metal Devourer.",
     "pt": "Escudo torre metálico, exclusivo do Paladino. Concede +3 CA e reduz em 2 cada instância de dano recebido. Pode ser corroído pelo Devorador de Metal."
@@ -2866,6 +3017,14 @@ window.LANG_CATALOGO = {
   "cat.item.escudo_torre.nome": {
     "en": "Roman Tower Shield",
     "pt": "Escudo Torre Romano"
+  },
+  "cat.item.escudo_torre_vinculo_espinhoso.desc": {
+    "en": "Magical metal tower shield, Paladin only: +4 AC and damage reduction 2. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst. Can be corroded by the Metal Devourer.",
+    "pt": "Escudo torre metálico mágico, exclusivo do Paladino: concede +4 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador de Metal."
+  },
+  "cat.item.escudo_torre_vinculo_espinhoso.nome": {
+    "en": "Tower Shield of the Thorned Bond",
+    "pt": "Escudo Torre do Vínculo Espinhoso"
   },
   "cat.item.espada2m.desc": {
     "en": "Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20.",
@@ -2947,6 +3106,14 @@ window.LANG_CATALOGO = {
     "en": "Fata Morgana",
     "pt": "Fata Morgana"
   },
+  "cat.item.fermentado_raizes.desc": {
+    "en": "Fermented root drink. Restores 3 HP and 17 thirst.",
+    "pt": "Bebida fermentada de raízes: restaura 3 PV e 17 de sede."
+  },
+  "cat.item.fermentado_raizes.nome": {
+    "en": "Fermented Root Drink",
+    "pt": "Fermentado de Raízes"
+  },
   "cat.item.ferrao_do_brejo.nome": {
     "en": "Marsh Stinger",
     "pt": "Ferrão do Brejo"
@@ -3010,6 +3177,14 @@ window.LANG_CATALOGO = {
   "cat.item.frasco_piche.nome": {
     "en": "Pitch Flask",
     "pt": "Frasco de Piche"
+  },
+  "cat.item.fruto_de_lumen.desc": {
+    "en": "Mystical fruit. Restores 2 HP and 18 hunger.",
+    "pt": "Fruta mística: restaura 2 PV e 18 de fome."
+  },
+  "cat.item.fruto_de_lumen.nome": {
+    "en": "Lumen Fruit",
+    "pt": "Fruto de Lúmen"
   },
   "cat.item.full_heal.nome": {
     "en": "Party Full Heal",
@@ -3166,6 +3341,14 @@ window.LANG_CATALOGO = {
   "cat.item.helm_iron.nome": {
     "en": "Iron Helm",
     "pt": "Elmo de Ferro"
+  },
+  "cat.item.hidromel.desc": {
+    "en": "Bottle with 2 doses. Each use restores 18 hunger and thirst and applies −1 Reflex and −1 AC for 10 rounds. Penalties stack; each dose expires 10 rounds after its own use.",
+    "pt": "Garrafa com 2 doses. Cada uso restaura 18 de fome e 18 de sede e aplica −1 em Reflexos e −1 na CA por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+  },
+  "cat.item.hidromel.nome": {
+    "en": "Mead",
+    "pt": "Hidromel"
   },
   "cat.item.ignus_fatus.desc": {
     "en": "Bonus action. Creates a ghostly, stationary image of the hero on a free, visible square within 6 squares. Automatic monsters that perceive it pursue it. Lasts 2 rounds; its first attack dissipates it without harming the hero. You can have only one active illusion at a time.",
@@ -3347,6 +3530,14 @@ window.LANG_CATALOGO = {
     "en": "Tear of the Last Light",
     "pt": "Lágrima da Última Luz"
   },
+  "cat.item.lamina_de_kriswoo.desc": {
+    "en": "Rarity: Legendary. Magical two-handed war axe: 1d12 slashing + Strength, +2 to hit and damage. Natural 19–20 is a critical hit with a ×3 damage multiplier. Grants Whirlwind Attack: a main action that attacks enemies in the four orthogonally adjacent squares, costs 4 Hunger and 4 Thirst, and recharges every 10 rounds. Warriors only.",
+    "pt": "Raridade: Lendária. Machado de guerra mágico de duas mãos: 1d12 cortante + Força, +2 no acerto e no dano. Crítico natural com 19–20, multiplicador ×3. Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede, uma varredura contra inimigos nos quatro quadrados ortogonais adjacentes; recarga de 10 rodadas. Uso exclusivo de Guerreiro."
+  },
+  "cat.item.lamina_de_kriswoo.nome": {
+    "en": "Kriswoo's Blade",
+    "pt": "Lâmina de Kriswoo"
+  },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
     "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
@@ -3487,6 +3678,22 @@ window.LANG_CATALOGO = {
     "en": "Dwarven Throwing Hatchet",
     "pt": "Machadinha de Arremesso Anã"
   },
+  "cat.item.machadinha_runica_vai_e_volta.desc": {
+    "en": "Rare magical Dwarven Throwing Hatchet: 1d6 slashing + Strength, +1 to hit and damage. Keeps the extra off-hand attack using Strength. Brute Throw range 5; automatically returns to the thrower's hand after the throw, even on a miss.",
+    "pt": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+  },
+  "cat.item.machadinha_runica_vai_e_volta.nome": {
+    "en": "Runic Boomerang Hatchet",
+    "pt": "Machadinha Rúnica Vai-e-Volta"
+  },
+  "cat.item.machadinha_runica_vai_e_volta_maior.desc": {
+    "en": "Very rare magical Dwarven Throwing Hatchet: 1d6 slashing + Strength, +2 to hit and damage. Keeps the extra off-hand attack using Strength. Brute Throw range 5; automatically returns to the thrower's hand after the throw, even on a miss.",
+    "pt": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+  },
+  "cat.item.machadinha_runica_vai_e_volta_maior.nome": {
+    "en": "Greater Runic Boomerang Hatchet",
+    "pt": "Machadinha Rúnica Vai-e-Volta Maior"
+  },
   "cat.item.machado_basico.desc": {
     "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",
     "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
@@ -3575,6 +3782,22 @@ window.LANG_CATALOGO = {
     "en": "Cloak of Shadows",
     "pt": "Manto das Sombras"
   },
+  "cat.item.maravilha_aventureiro_maior.desc": {
+    "en": "While equipped, increases backpack capacity by 12 slots, provides 4 utility pockets holding up to 8 identical units each, and 2 quiver slots for up to 40 arrows or bolts each. Contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 12 espaços a capacidade da mochila, oferece 4 bolsos para até 8 unidades iguais cada e 2 slots de aljava para até 40 flechas ou virotes cada. Os conteúdos permanecem guardados ao desequipá-lo."
+  },
+  "cat.item.maravilha_aventureiro_maior.nome": {
+    "en": "Greater Adventurer's Wonder",
+    "pt": "Maravilha do Aventureiro Maior"
+  },
+  "cat.item.maravilha_aventureiro_menor.desc": {
+    "en": "While equipped, increases backpack capacity by 9 slots, provides 4 utility pockets holding up to 4 identical units each, and 1 quiver slot for up to 40 arrows or bolts. Contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 9 espaços a capacidade da mochila, oferece 4 bolsos para até 4 unidades iguais cada e 1 slot de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
+  },
+  "cat.item.maravilha_aventureiro_menor.nome": {
+    "en": "Lesser Adventurer's Wonder (Simple)",
+    "pt": "Maravilha do Aventureiro Menor Simples"
+  },
   "cat.item.marreta.desc": {
     "en": "Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit.",
     "pt": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
@@ -3615,6 +3838,14 @@ window.LANG_CATALOGO = {
     "en": "Hawk's Aim Elixir",
     "pt": "Elixir da Mira do Falcão"
   },
+  "cat.item.mochila_aljava_dimensional.desc": {
+    "en": "While equipped, increases backpack capacity by 9 slots and provides 1 quiver slot for up to 40 arrows or bolts. The quiver contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 9 espaços a capacidade da mochila e oferece 1 espaço de aljava para até 40 flechas ou virotes. O conteúdo da aljava permanece guardado ao desequipá-la."
+  },
+  "cat.item.mochila_aljava_dimensional.nome": {
+    "en": "Dimensional Quiver Backpack",
+    "pt": "Mochila-Aljava Dimensional"
+  },
   "cat.item.mochila_carga.desc": {
     "en": "While equipped, increases backpack capacity by 6 slots.",
     "pt": "Equipado, aumenta em 6 espaços a capacidade da mochila."
@@ -3622,6 +3853,14 @@ window.LANG_CATALOGO = {
   "cat.item.mochila_carga.nome": {
     "en": "Cargo Backpack",
     "pt": "Mochila de Carga"
+  },
+  "cat.item.mochila_dimensional.desc": {
+    "en": "While equipped, increases backpack capacity by 9 slots.",
+    "pt": "Equipado, aumenta em 9 espaços a capacidade da mochila."
+  },
+  "cat.item.mochila_dimensional.nome": {
+    "en": "Dimensional Backpack",
+    "pt": "Mochila Dimensional"
   },
   "cat.item.moeda_da_sorte.desc": {
     "en": "Bonus action. Consumes the coin when activated. The hero rerolls their first failed attack or saving throw; the second result stands. Stays active until triggered.",
@@ -3646,6 +3885,14 @@ window.LANG_CATALOGO = {
   "cat.item.pao.nome": {
     "en": "Bread",
     "pt": "Pão"
+  },
+  "cat.item.pernil.desc": {
+    "en": "+35 hunger.",
+    "pt": "+35 de fome."
+  },
+  "cat.item.pernil.nome": {
+    "en": "Roast Pork Shank",
+    "pt": "Pernil"
   },
   "cat.item.placas_da_besta.desc": {
     "en": "Reinforced leather and plate armor with glossy onyx plates. Grants +3 AC, reduces each instance of physical damage received by 1 while equipped, and ignores the first 4 corrosion levels. The next 2 levels penalize it normally; the following level destroys it.",
@@ -3747,6 +3994,22 @@ window.LANG_CATALOGO = {
     "en": "Flight Potion",
     "pt": "Poção de Voo"
   },
+  "cat.item.punhal_assassino.desc": {
+    "en": "Rarity: Rare. Magic dagger, +1 to hit and damage; deals 1d4 piercing using Strength or Dexterity, can be wielded in the off hand and thrown up to 3 squares. When a Rogue lands a Sneak Attack with it, adds +1d4 to the sneak damage.",
+    "pt": "Raridade: Rara. Adaga mágica +1 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +1d4 ao dano furtivo."
+  },
+  "cat.item.punhal_assassino.nome": {
+    "en": "Assassin's Dagger",
+    "pt": "Punhal do Assassino"
+  },
+  "cat.item.punhal_assassino_maior.desc": {
+    "en": "Rarity: Very rare. Magic dagger, +2 to hit and damage; deals 1d4 piercing using Strength or Dexterity, can be wielded in the off hand and thrown up to 3 squares. When a Rogue lands a Sneak Attack with it, adds +2d4 to the sneak damage.",
+    "pt": "Raridade: Muito rara. Adaga mágica +2 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +2d4 ao dano furtivo."
+  },
+  "cat.item.punhal_assassino_maior.nome": {
+    "en": "Greater Assassin's Dagger",
+    "pt": "Punhal do Assassino Maior"
+  },
   "cat.item.racao_completa.nome": {
     "en": "Complete Rations",
     "pt": "Ração Completa"
@@ -3794,6 +4057,14 @@ window.LANG_CATALOGO = {
   "cat.item.ring_vita.nome": {
     "en": "Ring of Vitality",
     "pt": "Anel da Vitalidade"
+  },
+  "cat.item.rum.desc": {
+    "en": "Bottle with 3 doses. Each use restores 15 hunger and thirst and adds −1 attack and Reflex for 10 rounds. Penalties stack; each dose expires 10 rounds after use.",
+    "pt": "Garrafa com 3 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e em Reflexos por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+  },
+  "cat.item.rum.nome": {
+    "en": "Rum",
+    "pt": "Rum"
   },
   "cat.item.runa_ancestral.desc": {
     "en": "Ancestral rune of magical power; special item for future use.",

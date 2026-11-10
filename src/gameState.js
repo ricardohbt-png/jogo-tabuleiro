@@ -537,6 +537,42 @@ const GS = (() => {
       allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
       descricao:'Exclusiva do Guerreiro Anão. 1d6 cortante + Força. Arremesso Bruto até 3 casas usa Força no acerto e no dano. Na mão do escudo, faz um ataque automático contra o mesmo alvo vivo e adjacente após o ataque principal, usando Força e a ação bônus (1 fome e 1 sede), uma vez por turno. Não combina com arma de duas mãos. Arremessar usa a ação principal ou, depois dela, a ação bônus disponível e retira a arma da mão. Possui 3 de vitalidade; cada nível de dano reduz acerto e dano em 1. Um 1 natural no arremesso causa 2 níveis: cai recuperável se sobreviver, é destruída no 3º nível. O desgaste permanece até o reparo no ferreiro. Crítico normal no 20; sem dano mágico ou retorno automático.',
     },
+    machadinha_runica_vai_e_volta: {
+      id:'machadinha_runica_vai_e_volta', nome:'Machadinha Rúnica Vai-e-Volta',
+      emoji:'🪓', icon:'assets/itens magicos/vai_e_volta.png',
+      tipo:'arma', item_slot:'weapon', loja:'ferreiro', preco:1500,
+      dano:'1d6', atributo:'forca', bonusAtaque:'forca', bonusDano:'forca',
+      categoria:'cortante', escudo:true, duasMaos:false,
+      off_hand_weapon:true, off_hand_forca:true, off_hand_stat:'str_',
+      arremesso:true, alcanceArremesso:5, throw_range:5,
+      granted_ability:'arremesso_bruto', throw_nat1_damage_levels:2, corrosion_max:3,
+      return_on_throw:true, magical:true, atk_bonus:1, damage_bonus:1,
+      allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
+      descricao:'Machadinha mágica Rara de 1d6 cortante + Força, com +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto até 5 casas e retorno automático à mão de quem arremessou, mesmo se errar.',
+    },
+    machadinha_runica_vai_e_volta_maior: {
+      id:'machadinha_runica_vai_e_volta_maior', nome:'Machadinha Rúnica Vai-e-Volta Maior',
+      emoji:'🪓', icon:'assets/itens magicos/vai_e_volta.png',
+      tipo:'arma', item_slot:'weapon', loja:'ferreiro', preco:3000,
+      dano:'1d6', atributo:'forca', bonusAtaque:'forca', bonusDano:'forca',
+      categoria:'cortante', escudo:true, duasMaos:false,
+      off_hand_weapon:true, off_hand_forca:true, off_hand_stat:'str_',
+      arremesso:true, alcanceArremesso:5, throw_range:5,
+      granted_ability:'arremesso_bruto', throw_nat1_damage_levels:2, corrosion_max:3,
+      return_on_throw:true, magical:true, atk_bonus:2, damage_bonus:2,
+      allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
+      descricao:'Machadinha mágica Muito Rara de 1d6 cortante + Força, com +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto até 5 casas e retorno automático à mão de quem arremessou, mesmo se errar.',
+    },
+    lamina_de_kriswoo: {
+      id:'lamina_de_kriswoo', nome:'Lâmina de Kriswoo', emoji:'🪓',
+      icon:'assets/itens magicos/lamina_de_kriswoo.png', tipo:'arma', item_slot:'weapon',
+      loja:'ferreiro', preco:5000, dano:'1d12', atributo:'forca', categoria:'cortante',
+      duasMaos:true, magical:true, atk_bonus:2, damage_bonus:2,
+      crit_nat20_multiplier:3, crit_min_nat_roll:19,
+      granted_ability:'guild_tecnica_ataque_giratorio', allowed_classes:['warrior'],
+      permitidoPara:['todos'],
+      descricao:'Machado de guerra mágico de duas mãos: 1d12 cortante + Força, +2 no acerto e no dano. Crítico natural com 19–20, multiplicador ×3. Concede Ataque Giratório com recarga de 10 rodadas. Uso exclusivo de Guerreiro.',
+    },
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     lanca:           { id:'lanca',           nome:'Lança',                tipo:'arma', loja:'ferreiro', preco:14, dano:'1d8', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
@@ -604,6 +640,14 @@ const GS = (() => {
     mochila_viajante:  { id:'mochila_viajante',  nome:'Mochila do Viajante',        tipo:'itemMagico', loja:'mercado', preco:80,  slotsExtras:4, descricao:'+4 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     bolsa_dimensao:    { id:'bolsa_dimensao',    nome:'Bolsa de Dimensão',          tipo:'itemMagico', loja:'mercado', preco:150, slotsExtras:6, descricao:'+6 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     cinto_utilidades:  { id:'cinto_utilidades', nome:'Cinto de Utilidades', tipo:'itemMagico', loja:'mercado', preco:250, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
+    cinto_utilidades_aprimorado: { id:'cinto_utilidades_aprimorado', nome:'Cinto de Utilidades Aprimorado', tipo:'itemMagico', loja:'mercado', preco:750, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 8 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
+    cinto_arsenal_encantado: { id:'cinto_arsenal_encantado', nome:'Cinto-Arsenal Encantado', tipo:'itemMagico', loja:'mercado', preco:2000, item_slot:'item', slot:'magico', icon:'assets/itens magicos/cinto_arsenal_encantado.png', effect:'utility_belt', quiver_slots_capacity:1, descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com até 8 unidades iguais, e 1 espaço de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo.', permitidoPara:['todos'] },
+    mochila_aljava_dimensional: { id:'mochila_aljava_dimensional', nome:'Mochila-Aljava Dimensional', tipo:'itemMagico', loja:'mercado', preco:1200, item_slot:'item', slot:'magico', icon:'assets/itens magicos/mochila_aljava_dimensional.png', effect:'bagslots', value:9, quiver_slots_capacity:1, descricao:'Equipado, aumenta em 9 espaços a capacidade da mochila e oferece 1 espaço de aljava para até 40 flechas ou virotes. O conteúdo da aljava permanece guardado ao desequipá-la.', permitidoPara:['todos'] },
+    alforge_explorador: { id:'alforge_explorador', nome:'Alforje de Explorador', tipo:'itemMagico', loja:'mercado', preco:220, item_slot:'item', slot:'magico', icon:'assets/itens/alforge2.png', effect:'bagslots', value:2, descricao:'Equipado, aumenta em 2 espaços a capacidade da mochila e oferece 1 bolso para arremessáveis, frascos de efeito, poções e venenos, com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo.', permitidoPara:['todos'] },
+    alforge_explorador_aprimorado: { id:'alforge_explorador_aprimorado', nome:'Alforje de Explorador Aprimorado', tipo:'itemMagico', loja:'mercado', preco:500, item_slot:'item', slot:'magico', icon:'assets/itens/alforje1.png', effect:'bagslots', value:4, descricao:'Equipado, aumenta em 4 espaços a capacidade da mochila e oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo.', permitidoPara:['todos'] },
+    alforge_explorador_superior: { id:'alforge_explorador_superior', nome:'Alforje de Explorador Superior', tipo:'itemMagico', loja:'mercado', preco:800, item_slot:'item', slot:'magico', icon:'assets/itens/alforje1.png', effect:'bagslots', value:6, descricao:'Equipado, aumenta em 6 espaços a capacidade da mochila e oferece 3 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo.', permitidoPara:['todos'] },
+    maravilha_aventureiro_menor: { id:'maravilha_aventureiro_menor', nome:'Maravilha do Aventureiro Menor Simples', tipo:'itemMagico', loja:'mercado', preco:2500, item_slot:'item', slot:'magico', icon:'assets/itens/maravilha_do_aventureiro.png', effect:'bagslots', value:9, quiver_slots_capacity:1, descricao:'Equipado, aumenta em 9 espaços a capacidade da mochila, oferece 4 bolsos para até 4 unidades iguais cada e 1 slot de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo.', permitidoPara:['todos'] },
+    maravilha_aventureiro_maior: { id:'maravilha_aventureiro_maior', nome:'Maravilha do Aventureiro Maior', tipo:'itemMagico', loja:'mercado', preco:6000, item_slot:'item', slot:'magico', icon:'assets/itens/maravilha_do_aventureiro.png', effect:'bagslots', value:12, quiver_slots_capacity:2, descricao:'Equipado, aumenta em 12 espaços a capacidade da mochila, oferece 4 bolsos para até 8 unidades iguais cada e 2 slots de aljava para até 40 flechas ou virotes cada. Os conteúdos permanecem guardados ao desequipá-lo.', permitidoPara:['todos'] },
     cinto_com_bolsos:  { id:'cinto_com_bolsos', nome:'Cinto com Bolsos', tipo:'itemMagico', loja:'mercado', preco:120, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
     bota_alada:        { id:'bota_alada',        nome:'Bota Alada',                 tipo:'itemMagico', loja:'mercado', preco:0, item_slot:'boots', kind:'boots', effect:'voo', descricao:'Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10.', permitidoPara:['todos'] },
 
@@ -3853,7 +3897,13 @@ const GS = (() => {
   }
   function ladinoEsconderBonus() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
-    return (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
+    const bonusEspecializacao = (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
+    const hero = (gameState?.players || []).find(p => p?.id === myPid);
+    const bonusBoina = hero?.gear?.head?.id === 'boina_gatuno'
+      ? Number(hero.gear.head.hide_bonus) || 0 : 0;
+    const armor = hero?.gear?.armor;
+    const bonusManto = armor?.id === 'manto_das_sombras' ? Number(armor.hide_bonus) || 0 : 0;
+    return bonusEspecializacao + bonusBoina + bonusManto;
   }
   function ladinoEsconderLivre() {
     return false;

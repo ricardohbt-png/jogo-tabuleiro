@@ -11696,6 +11696,7 @@ window.EDITOR_CATALOG = {
       "id": "veneno_escorpiao_aprimorado",
       "name": "Veneno Aprimorado do Escorpião Gigante",
       "emoji": "🦂",
+      "icon": "assets/itens/veneno_escorpiao_pedra.png",
       "item_slot": "bag",
       "effect": "coat_poison",
       "value": 0,
@@ -11728,6 +11729,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "corrosao_resistente": 1,
       "categoria": "cortante",
       "item_slot": "weapon"
     },
@@ -11986,6 +11988,7 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "warrior"
       ],
+      "off_hand_forca": true,
       "off_hand_stat": "str_",
       "throw_nat1_damage_levels": 2,
       "corrosion_max": 3,
@@ -12135,6 +12138,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d12",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12149,6 +12153,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12163,6 +12168,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12177,6 +12183,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "2d8",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12314,6 +12321,7 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "warrior"
       ],
+      "off_hand_forca": true,
       "off_hand_stat": "str_",
       "throw_nat1_damage_levels": 2,
       "corrosion_max": 5,
@@ -12422,6 +12430,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d12",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12437,6 +12446,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12452,6 +12462,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12467,6 +12478,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "2d8",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -12474,6 +12486,108 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 5,
       "categoria": "contundente",
       "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "machadinha_runica_vai_e_volta",
+      "name": "Machadinha Rúnica Vai-e-Volta",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/vai_e_volta.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "off_hand_forca": true,
+      "off_hand_stat": "str_",
+      "throw_nat1_damage_levels": 2,
+      "corrosion_max": 3,
+      "throw_range": 5,
+      "return_on_throw": true,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+    },
+    {
+      "id": "machadinha_runica_vai_e_volta_maior",
+      "name": "Machadinha Rúnica Vai-e-Volta Maior",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/vai_e_volta.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "off_hand_forca": true,
+      "off_hand_stat": "str_",
+      "throw_nat1_damage_levels": 2,
+      "corrosion_max": 3,
+      "throw_range": 5,
+      "return_on_throw": true,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+    },
+    {
+      "id": "lamina_de_kriswoo",
+      "name": "Lâmina de Kriswoo",
+      "emoji": "🪓",
+      "die": "1d12",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/lamina_de_kriswoo.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 3,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "granted_ability": "guild_tecnica_ataque_giratorio",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Lendária. Machado de guerra mágico de duas mãos: 1d12 cortante + Força, +2 no acerto e no dano. Crítico natural com 19–20, multiplicador ×3. Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede, uma varredura contra inimigos nos quatro quadrados ortogonais adjacentes; recarga de 10 rodadas. Uso exclusivo de Guerreiro."
+    },
+    {
+      "id": "punhal_assassino",
+      "name": "Punhal do Assassino",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/punhal_do_assassino.png",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "sneak_attack_extra_d4": 1,
+      "descricao": "Raridade: Rara. Adaga mágica +1 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +1d4 ao dano furtivo."
+    },
+    {
+      "id": "punhal_assassino_maior",
+      "name": "Punhal do Assassino Maior",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/punhal_do_assassino.png",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "sneak_attack_extra_d4": 2,
+      "descricao": "Raridade: Muito rara. Adaga mágica +2 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +2d4 ao dano furtivo."
     },
     {
       "id": "espada_sangramento_longa",
@@ -12595,6 +12709,7 @@ window.EDITOR_CATALOG = {
         "warrior"
       ],
       "throw_range": 4,
+      "return_on_throw": true,
       "categoria": "perfurante",
       "atk_bonus": 1,
       "damage_bonus": 1,
@@ -12751,6 +12866,147 @@ window.EDITOR_CATALOG = {
       "descricao": "Escudo grande de madeira reforçado. Concede +2 CA e reduz em 1 cada instância de dano recebido. Pode ser usado por Clérigo, Guerreiro e Paladino; pode ser corroído pelo Devorador Orgânico."
     },
     {
+      "id": "escudo_p_retalhacao_trovejante",
+      "name": "Escudo Pequeno da Retaliação Trovejante",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_pequeno_retalhacao_trovejante.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 2,
+      "magical": true,
+      "thunder_reaction": true,
+      "thunder_reaction_damage": "1d6",
+      "thunder_reaction_duration": 5,
+      "thunder_reaction_cooldown": 20,
+      "damage_reduction": 1,
+      "descricao": "Escudo Pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+    },
+    {
+      "id": "escudo_g_retalhacao_trovejante",
+      "name": "Escudo Grande da Retaliação Trovejante",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_grande_retalhacao_trovejante.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thunder_reaction": true,
+      "thunder_reaction_damage": "1d6",
+      "thunder_reaction_duration": 5,
+      "thunder_reaction_cooldown": 20,
+      "damage_reduction": 2,
+      "descricao": "Escudo Grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+    },
+    {
+      "id": "escudo_madeira_retalhacao_trovejante",
+      "name": "Escudo Grande de Madeira da Retaliação Trovejante",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_retalhacao_trovejante.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thunder_reaction": true,
+      "thunder_reaction_damage": "1d6",
+      "thunder_reaction_duration": 5,
+      "thunder_reaction_cooldown": 20,
+      "damage_reduction": 1,
+      "descricao": "Escudo Grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar. Pode ser corroído pelo Devorador Orgânico."
+    },
+    {
+      "id": "escudo_pequeno_vinculo_espinhoso",
+      "name": "Escudo Pequeno do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_pequeno_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 2,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 1,
+      "descricao": "Escudo pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+    },
+    {
+      "id": "escudo_grande_vinculo_espinhoso",
+      "name": "Escudo Grande do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_grande_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 2,
+      "descricao": "Escudo grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+    },
+    {
+      "id": "escudo_torre_vinculo_espinhoso",
+      "name": "Escudo Torre do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "shield",
+      "ac_bonus": 4,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 2,
+      "descricao": "Escudo torre metálico mágico, exclusivo do Paladino: concede +4 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador de Metal."
+    },
+    {
+      "id": "escudo_madeira_vinculo_espinhoso",
+      "name": "Escudo de Madeira do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 1,
+      "descricao": "Escudo grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador Orgânico."
+    },
+    {
       "id": "cloak",
       "name": "Manto",
       "emoji": "🧣",
@@ -12846,6 +13102,8 @@ window.EDITOR_CATALOG = {
         "organic",
         "metal"
       ],
+      "corrosao_resistente": 4,
+      "corrosao_niveis_penalidade": 2,
       "kind": "armor",
       "ac_bonus": 3,
       "bonuses": [
@@ -12856,6 +13114,80 @@ window.EDITOR_CATALOG = {
         }
       ],
       "descricao": "Armadura de couro e placas reforçada com ônix. Concede +3 CA, reduz em 1 cada instância de dano físico recebido enquanto equipada e suporta 4 níveis de corrosão sem penalidade. Depois sofre as penalidades normais por 2 níveis; no nível seguinte é destruída."
+    },
+    {
+      "id": "armadura_placas_grotao",
+      "name": "Armadura de Placas de Grotão",
+      "emoji": "🛡️",
+      "icon": "assets/itens/leather_plate_onix.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_max": 6,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosion_immunities": [
+        "acid"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "corrosao_penalidade_max": 2,
+      "kind": "armor",
+      "ac_bonus": 3,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 2
+        },
+        {
+          "effect": "resist",
+          "type": "acid",
+          "value": 5
+        }
+      ],
+      "descricao": "Armadura leve de couro de monstro e placas espessas. Concede +3 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
+    },
+    {
+      "id": "armadura_placas_grotao_superior",
+      "name": "Armadura de Placas de Grotão Superior",
+      "emoji": "🛡️",
+      "icon": "assets/itens/armadura_placas_grotao.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_max": 6,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosion_immunities": [
+        "acid"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "corrosao_penalidade_max": 2,
+      "kind": "armor",
+      "ac_bonus": 7,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 2
+        },
+        {
+          "effect": "resist",
+          "type": "acid",
+          "value": 5
+        }
+      ],
+      "descricao": "Armadura pesada construída com placas grossas da carapaça do Grotão. Concede +7 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
     },
     {
       "id": "chainmail",
@@ -12997,6 +13329,7 @@ window.EDITOR_CATALOG = {
       "id": "kit_reparo_campo",
       "name": "Kit de Reparo",
       "emoji": "🧰",
+      "icon": "assets/itens/kit_reparo.png",
       "item_slot": "bag",
       "effect": "repair_corrosion",
       "value": 1,
@@ -13434,6 +13767,14 @@ window.EDITOR_CATALOG = {
       "descricao": "+1 de visão e +1 em todos os testes de resistência enquanto equipada."
     },
     {
+      "id": "boina_gatuno",
+      "name": "Boina do Gatuno",
+      "emoji": "🧢",
+      "icon": "assets/itens/chapeu1.png",
+      "item_slot": "head",
+      "descricao": "+2 nos testes de Esconder nas Sombras do Ladino enquanto equipada. Acumula com a especialização e com o Manto das Sombras."
+    },
+    {
       "id": "chapeu_aventureiro",
       "name": "Chapéu do Aventureiro",
       "emoji": "🤠",
@@ -13448,6 +13789,32 @@ window.EDITOR_CATALOG = {
         }
       ],
       "descricao": "+1 de visão e +1 de iniciativa enquanto equipado."
+    },
+    {
+      "id": "chapeu_explorador",
+      "name": "Chapéu do Explorador",
+      "emoji": "🤠",
+      "icon": "assets/itens/chapeu_aventureiro.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 2,
+      "bonuses": [
+        {
+          "effect": "atk",
+          "value": 1
+        }
+      ],
+      "descricao": "+2 de visão e +1 nos ataques enquanto equipado."
+    },
+    {
+      "id": "chapeu_cacador",
+      "name": "Chapéu do Caçador",
+      "emoji": "🤠",
+      "icon": "assets/itens/chapeu_aventureiro.png",
+      "item_slot": "head",
+      "effect": "damage_bonus",
+      "value": 2,
+      "descricao": "+2 de dano por acerto com armas corpo a corpo ou à distância."
     },
     {
       "id": "chapeu_bruxo",
@@ -13640,6 +14007,79 @@ window.EDITOR_CATALOG = {
       "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila."
     },
     {
+      "id": "mochila_dimensional",
+      "name": "Mochila Dimensional",
+      "emoji": "🎒",
+      "icon": "assets/itens/backpack.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 9,
+      "descricao": "Equipado, aumenta em 9 espaços a capacidade da mochila."
+    },
+    {
+      "id": "mochila_aljava_dimensional",
+      "name": "Mochila-Aljava Dimensional",
+      "emoji": "🎒",
+      "icon": "assets/itens magicos/mochila_aljava_dimensional.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 9,
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipado, aumenta em 9 espaços a capacidade da mochila e oferece 1 espaço de aljava para até 40 flechas ou virotes. O conteúdo da aljava permanece guardado ao desequipá-la."
+    },
+    {
+      "id": "alforge_explorador",
+      "name": "Alforje de Explorador",
+      "emoji": "🎒",
+      "icon": "assets/itens/alforge2.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 2,
+      "descricao": "Equipado, aumenta em 2 espaços a capacidade da mochila e oferece 1 bolso para arremessáveis, frascos de efeito, poções e venenos, com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+    },
+    {
+      "id": "alforge_explorador_aprimorado",
+      "name": "Alforje de Explorador Aprimorado",
+      "emoji": "🎒",
+      "icon": "assets/itens/alforje1.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 4,
+      "descricao": "Equipado, aumenta em 4 espaços a capacidade da mochila e oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+    },
+    {
+      "id": "alforge_explorador_superior",
+      "name": "Alforje de Explorador Superior",
+      "emoji": "🎒",
+      "icon": "assets/itens/alforje1.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 6,
+      "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila e oferece 3 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+    },
+    {
+      "id": "maravilha_aventureiro_menor",
+      "name": "Maravilha do Aventureiro Menor Simples",
+      "emoji": "🎒",
+      "icon": "assets/itens/maravilha_do_aventureiro.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 9,
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipado, aumenta em 9 espaços a capacidade da mochila, oferece 4 bolsos para até 4 unidades iguais cada e 1 slot de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
+    },
+    {
+      "id": "maravilha_aventureiro_maior",
+      "name": "Maravilha do Aventureiro Maior",
+      "emoji": "🎒",
+      "icon": "assets/itens/maravilha_do_aventureiro.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 12,
+      "quiver_slots_capacity": 2,
+      "descricao": "Equipado, aumenta em 12 espaços a capacidade da mochila, oferece 4 bolsos para até 8 unidades iguais cada e 2 slots de aljava para até 40 flechas ou virotes cada. Os conteúdos permanecem guardados ao desequipá-lo."
+    },
+    {
       "id": "cinto_utilidades",
       "name": "Cinto de Utilidades",
       "emoji": "🎒",
@@ -13648,6 +14088,27 @@ window.EDITOR_CATALOG = {
       "effect": "utility_belt",
       "value": 0,
       "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+    },
+    {
+      "id": "cinto_utilidades_aprimorado",
+      "name": "Cinto de Utilidades Aprimorado",
+      "emoji": "🎒",
+      "icon": "assets/itens/cinto_e_bolsos.png",
+      "item_slot": "item",
+      "effect": "utility_belt",
+      "value": 0,
+      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 8 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+    },
+    {
+      "id": "cinto_arsenal_encantado",
+      "name": "Cinto-Arsenal Encantado",
+      "emoji": "🎒",
+      "icon": "assets/itens magicos/cinto_arsenal_encantado.png",
+      "item_slot": "item",
+      "effect": "utility_belt",
+      "value": 0,
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com até 8 unidades iguais, e 1 espaço de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
     },
     {
       "id": "cinto_com_bolsos",
@@ -14331,6 +14792,72 @@ window.EDITOR_CATALOG = {
       "value": 15
     },
     {
+      "id": "rum",
+      "name": "Rum",
+      "emoji": "🍾",
+      "icon": "assets/itens/rum.png",
+      "item_slot": "bag",
+      "effect": "rum",
+      "value": 15,
+      "max_uses": 3,
+      "uses_left": 3,
+      "descricao": "Garrafa com 3 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e em Reflexos por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+    },
+    {
+      "id": "hidromel",
+      "name": "Hidromel",
+      "emoji": "🍯",
+      "icon": "assets/itens/hidromel.png",
+      "item_slot": "bag",
+      "effect": "hidromel",
+      "value": 18,
+      "max_uses": 2,
+      "uses_left": 2,
+      "descricao": "Garrafa com 2 doses. Cada uso restaura 18 de fome e 18 de sede e aplica −1 em Reflexos e −1 na CA por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+    },
+    {
+      "id": "caldo_revigorante",
+      "name": "Caldo Revigorante",
+      "emoji": "🥣",
+      "icon": "assets/itens/caldo_revigorante.png",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 5,
+      "descricao": "Caldo portátil: restaura 5 PV, 10 de fome e 10 de sede."
+    },
+    {
+      "id": "fermentado_raizes",
+      "name": "Fermentado de Raízes",
+      "emoji": "🍶",
+      "icon": "assets/itens/bebida_raizes_fermentadas.png",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 3,
+      "descricao": "Bebida fermentada de raízes: restaura 3 PV e 17 de sede."
+    },
+    {
+      "id": "fruto_de_lumen",
+      "name": "Fruto de Lúmen",
+      "emoji": "🫐",
+      "icon": "assets/itens/fruto_de_lumen.png",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 2,
+      "descricao": "Fruta mística: restaura 2 PV e 18 de fome."
+    },
+    {
+      "id": "absinto",
+      "name": "Absinto",
+      "emoji": "🍸",
+      "icon": "assets/itens/absinto.png",
+      "item_slot": "bag",
+      "effect": "absinto",
+      "value": 15,
+      "max_uses": 5,
+      "uses_left": 5,
+      "descricao": "Garrafa com 5 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e −1 na CA por 10 rodadas. Com 3–4 doses ativas, reduz o movimento em 1; com 5 ou mais, em 2. As penalidades acumulam; cada dose expira 10 rodadas após seu próprio uso."
+    },
+    {
       "id": "racao_viagem",
       "name": "Ração de Viagem",
       "emoji": "🥩",
@@ -14360,6 +14887,15 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "food",
       "descricao": "+25 de fome."
+    },
+    {
+      "id": "pernil",
+      "name": "Pernil",
+      "emoji": "🍖",
+      "icon": "assets/itens/pernil.png",
+      "item_slot": "bag",
+      "effect": "food",
+      "descricao": "+35 de fome."
     },
     {
       "id": "leite",
@@ -14408,7 +14944,9 @@ window.EDITOR_CATALOG = {
       "emoji": "🧪",
       "item_slot": "bag",
       "effect": "heal",
-      "value": 10
+      "value": 10,
+      "max_uses": 3,
+      "uses_left": 3
     },
     {
       "id": "health_potion_improved",
@@ -14697,10 +15235,13 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "finesse": false,
+      "two_handed": false,
       "allowed_classes": [
         "paladin",
         "warrior"
       ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 2,
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
@@ -14719,6 +15260,9 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "dex",
       "finesse": true,
+      "two_handed": false,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 2,
       "categoria": "perfurante",
       "granted_ability": null,
       "atk_bonus": 1,

@@ -2797,6 +2797,66 @@ window.LANG_NARRACAO = {
     "en": "🍷 **{heroi}** recovers from the drunkenness (the wine penalty wore off).",
     "pt": "🍷 **{heroi}** se recupera da embriaguez (penalidade do vinho acabou)."
   },
+  "narracao.usa_rum": {
+    "en": "🍾 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining another drunkenness stack: **−1 attack / −1 Reflex** for 10 rounds. {doses_msg}",
+    "pt": "🍾 **{heroi}** bebe o **{item}** (+{val} fome/sede) e fica mais embriagado: **−1 ataque / −1 Reflexos** por 10 rodadas. {doses_msg}"
+  },
+  "narracao.doses.garrafa_vazia": {
+    "en": " The bottle is empty.",
+    "pt": " A garrafa se esvazia."
+  },
+  "narracao.doses.restantes": {
+    "en": " {n}/{max} doses left.",
+    "pt": " {n}/{max} doses restantes."
+  },
+  "narracao.doses.restantes_destaque": {
+    "en": " **{n}/{max}** doses left.",
+    "pt": " **{n}/{max}** doses restantes."
+  },
+  "narracao.manto_raios_ativa": {
+    "en": "⚡ **{heroi}** activates the **Lightning Mantle** for {n} rounds!",
+    "pt": "⚡ **{heroi}** ativa o **Manto de Raios** por {n} rodadas!"
+  },
+  "narracao.rum_penalidade_expirou": {
+    "en": "🍾 **{heroi}** sobers up from {cargas} Rum penalty stack(s).",
+    "pt": "🍾 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Rum."
+  },
+  "narracao.usa_hidromel": {
+    "en": "🍯 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining −1 Reflex and −1 AC for 10 rounds. {doses_msg}",
+    "pt": "🍯 **{heroi}** bebe o **{item}** (+{val} fome/sede) e recebe −1 em Reflexos e −1 na CA por 10 rodadas. {doses_msg}"
+  },
+  "narracao.hidromel_penalidade_expirou": {
+    "en": "🍯 **{heroi}** recovers from {cargas} Hydromel penalty stack(s).",
+    "pt": "🍯 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Hidromel."
+  },
+  "narracao.usa_absinto": {
+    "en": "🍸 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining −1 attack and −1 AC for 10 rounds. {cargas} dose(s) active. {movimento_msg} {doses_msg}",
+    "pt": "🍸 **{heroi}** bebe o **{item}** (+{val} fome/sede) e recebe −1 no ataque e −1 na CA por 10 rodadas. {cargas} dose(s) ativa(s). {movimento_msg} {doses_msg}"
+  },
+  "narracao.usa_caldo_revigorante": {
+    "en": "🥣 **{heroi}** eats the **{item}** and restores **{val} HP**, **{fome} hunger**, and **{sede} thirst**!",
+    "pt": "🥣 **{heroi}** toma o **{item}** e recupera **{val} PV**, **{fome} de fome** e **{sede} de sede**!"
+  },
+  "narracao.usa_fermentado_raizes": {
+    "en": "🍶 **{heroi}** drinks the **{item}** and restores **{val} HP** and **{sede} thirst**!",
+    "pt": "🍶 **{heroi}** bebe o **{item}** e recupera **{val} PV** e **{sede} de sede**!"
+  },
+  "narracao.usa_fruto_de_lumen": {
+    "en": "🫐 **{heroi}** eats the **{item}** and restores **{val} HP** and **{fome} hunger**!",
+    "pt": "🫐 **{heroi}** come o **{item}** e recupera **{val} PV** e **{fome} de fome**!"
+  },
+  "narracao.absinto_movimento_atual": {
+    "en": "Movement is reduced by {movimento}.",
+    "pt": "O movimento está reduzido em {movimento}."
+  },
+  "narracao.absinto_movimento_sem_penalidade": {
+    "en": "Movement is not reduced.",
+    "pt": "O movimento ainda não foi reduzido."
+  },
+  "narracao.absinto_penalidade_expirou": {
+    "en": "🍸 **{heroi}** recovers from {cargas} Absinthe penalty stack(s).",
+    "pt": "🍸 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Absinto."
+  },
   "narracao.se_solta_da_rede": {
     "en": "🕸️ **{monstro}** breaks free of the net!",
     "pt": "🕸️ **{monstro}** se solta da rede!"

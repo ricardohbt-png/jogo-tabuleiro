@@ -3245,8 +3245,11 @@ function itemIconHTML(item, fallbackEmoji){
   // vale para todas as qualidades E para o instrumento equipado (id genérico
   // "instrumento"). Sem isso, o jogo procuraria pelo id do SKU
   // (instrumento_harpa_velho.png) e o Alaúde inicial nunca acharia foto.
+  const itemId = String(item.id);
+  const baseItemId = itemId.split('__upgrade__', 1)[0];
   const fileId = item.effect === 'scroll' ? 'pergaminho'
     : (item.tipo_item === 'instrumento' && item.base) ? item.base
+    : (item.effect === 'coat_poison' || itemId.startsWith('veneno_')) ? baseItemId
     : item.id;
   const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon || ITEM_ICON_OVERRIDES[item.id];
   const src = _assetURL(icon || `assets/itens/${fileId}.png`);
@@ -27975,6 +27978,8 @@ function renderMyPanel(state){
     else if(sk.granted_origem === 'crystal_ball') sl.appendChild(_crystalBallSkillBtn(me, sk));
     else if(sk.granted_origem === 'shadow_cloak') sl.appendChild(_shadowCloakSkillBtn(me, sk));
     else if(sk.granted_origem === 'runic_armor') sl.appendChild(_runicArmorSkillBtn(me, sk));
+    else if(sk.granted_origem === 'thundering_shield') sl.appendChild(_thunderingShieldSkillBtn(me, sk));
+    else if(sk.granted_origem === 'thorn_bond_shield') sl.appendChild(_thornBondShieldSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
@@ -31344,6 +31349,41 @@ function ativarHabilidadeDoMenu(skillId){
     send({type:'use_shadow_cloak'});
     return;
   }
+  if(skillId === 'usar_manto_raios'){
+    const item = me.gear?.off_hand;
+    if(!item?.thunder_reaction){ toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return; }
+    const prontaEm = Number(item.thunder_reaction_ready_round || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.item.manto_raios.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    send({type:'use_thundering_shield'});
+    return;
+  }
+  if(skillId === 'usar_vinculo_escudo_espinhoso'){
+    const item = me.gear?.off_hand;
+    if(!item?.thorn_bond_shield){ toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return; }
+    const prontaEm = Number(item.thorn_bond_ready_round || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.magia.vinculo_maldito_da_dor.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    const pos = me.pos || [0,0];
+    // Escondido nas sombras não entra na lista: além de o servidor recusar,
+    // a lista revelaria onde ele está.
+    const alvos = (state.monsters || []).filter(m => m && m.hp > 0 && m.pos
+      && !_monstroOcultadoParaJogador(m)
+      && GS.hasLineOfSight(state, pos[0], pos[1], m.pos[0], m.pos[1]));
+    if(!alvos.length){ toast(t('erro.escolha_inimigo_vivo_como_alvo'), 'var(--orange)'); return; }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    const usar = targetId => send({type:'use_thorn_bond_shield', target_id:targetId});
+    if(alvos.length === 1) usar(alvos[0].id);
+    else openTargetModal(t('cat.magia.vinculo_maldito_da_dor.nome'), alvos, 'monster', usar);
+    return;
+  }
   if(skillId === 'usar_armadura_runica_barreira_arcana'
       || skillId === 'usar_armadura_runica_protecao_energia'){
     const item = me.gear?.armor;
@@ -31602,6 +31642,11 @@ function abrirMenuHabilidades(pid){
   const owned = GS.guildOwnedOf(pid);
   const equip = GS.guildEquipOf(pid);
   const catalog = GS.guildCatalogFor(player.class_id) || [];
+  const armaEquipada = player.gear?.weapon;
+  const habilidadeConcedidaPelaArma = armaEquipada?.granted_ability
+    || GS.CATALOGO_ITENS[armaEquipada?.id]?.granted_ability;
+  const armaConcedeAtaqueGiratorio = habilidadeConcedidaPelaArma
+    === 'guild_tecnica_ataque_giratorio';
   const base = [...(player.skills || [])];
   // Arremessos são habilidades temporárias fornecidas pelas armas equipadas.
   // A lista normalmente vem do servidor em `granted_hero_skills`; o helper
@@ -31644,6 +31689,15 @@ function abrirMenuHabilidades(pid){
   }
   const especializacoes = catalog.filter(i => (owned.especializacoes || []).includes(i.id));
   const tecnicas = catalog.filter(i => (owned.tecnicas || []).includes(i.id));
+  if(armaConcedeAtaqueGiratorio){
+    const giro = catalog.find(i => i.id === 'tecnica_ataque_giratorio');
+    if(giro){
+      const concedida = {...giro, recarga_rodadas:10};
+      const index = tecnicas.findIndex(i => i.id === giro.id);
+      if(index >= 0) tecnicas[index] = concedida;
+      else tecnicas.push(concedida);
+    }
+  }
   // Progressões II/III substituem a habilidade-base exibida, mas preservam o
   // id original para que o clique continue acionando a regra autoritativa.
   const basePorLinha = {
@@ -31687,7 +31741,8 @@ function abrirMenuHabilidades(pid){
   const card = (h, guilda=false) => {
     const nome = h.name || h.nome || h.id;
     const desc = h.description || h.desc || '';
-    const equipada = guilda && (equip.tecnicas || []).includes(h.id);
+    const equipada = guilda && ((equip.tecnicas || []).includes(h.id)
+      || (h.id === 'tecnica_ataque_giratorio' && armaConcedeAtaqueGiratorio));
     const restante = h.categoria === 'tecnica' ? (GS.tecnicaRestante(player, h.id) || 0) : 0;
     const pendente = h.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, h.id);
     const tecnicaAtivavel = guilda && h.categoria === 'tecnica' && equipada && !h.automatica && restante === 0 && !pendente;
@@ -32098,6 +32153,55 @@ function _runicArmorSkillBtn(me, skill){
     </div>
     <div class="skill-cost">${restante > 0 ? `${restante}r` : '🛡️'}</div>`;
   btn.onclick = () => ativarHabilidadeDoMenu(skill.id);
+  return btn;
+}
+
+function _thunderingShieldSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.off_hand;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.thunder_reaction_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const ativoAte = Number(item?.thunder_reaction_active_until || 0) || 0;
+  const ativoRestante = Math.max(0, ativoAte - round);
+  const podeUsar = !!(item?.thunder_reaction && GS.isMyTurn && me.alive
+    && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const estado = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>`
+    : ativoRestante > 0 ? ` <small style="color:#62c9ff;font-size:.65rem;">⚡ ${t('ui.tecnica.ativa_por', {n:ativoRestante})}</small>` : '';
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '⚡')} ${t('cat.item.manto_raios.nome')}${estado}</div>
+      <div class="skill-desc">${skill?.description || t('cat.item.manto_raios.desc')}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : ativoRestante > 0 ? `${ativoRestante}r` : '⚡'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu('usar_manto_raios');
+  return btn;
+}
+
+function _thornBondShieldSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.off_hand;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.thorn_bond_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.thorn_bond_shield && GS.isMyTurn && me.alive
+    && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '⛓️')} ${t('cat.magia.vinculo_maldito_da_dor.nome')}${recarga}</div>
+      <div class="skill-desc">${t('cat.item.vinculo_espinhoso_habilidade.desc')}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '⛓️'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu('usar_vinculo_escudo_espinhoso');
   return btn;
 }
 

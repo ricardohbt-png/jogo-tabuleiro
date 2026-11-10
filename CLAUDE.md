@@ -2,7 +2,7 @@
 
 ### Juntar pilhas de munição (2026-11-01)
 
-No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até `_max_ammo_stack_for` (10) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
+No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até seu limite (20 na bolsa; 10 na mão secundária) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
 
 ### Mini Aljava (2026-11-01)
 
@@ -48,7 +48,7 @@ O efeito `reduzir` dos venenos (`_aplicar_veneno`) agora atinge o monstro pela m
 
 `vaca` é um monstro nativo de ND 1/4, com 16 PV, CA 11 e Cabeçada +3 (`1d6+1`). Ela não inicia ataques; uma ação ofensiva válida de herói contra ela a provoca mesmo se errar. Em cada turno, tem 50% de chance de tentar fugir uma casa; se não fugir, só ataca quando provocada, priorizando seu último agressor vivo. Não entra em encontros aleatórios e pode ser colocada manualmente no editor. Ao morrer, deixa 1–3 `carne_bovina` e 1–4 `leite`, ambos garantidos com quantidades uniformes inclusivas.
 
-`carne_bovina` custa 3 moedas e restaura 25 de fome; `leite` custa 1 moeda e restaura 5 de fome e 5 de sede. Os dois são consumíveis de bolsa vendidos nas tavernas e usam `effect: food`. Arte 2D: `assets/pawns/monstros/vaca/vaca.png`; miniatura 3D: `assets/models3d/monstros/vaca.glb`; fonte Blender: `assets/models3d/monstros/vaca.blend`; ícones: `assets/itens/carne_bovina.png` e `assets/itens/leite.png`. O catálogo do editor é gerado por `tools/export_catalog.py`.
+`carne_bovina` custa 3 moedas e restaura 25 de fome; `pernil` custa 4 e restaura 35 de fome; `leite` custa 1 moeda e restaura 5 de fome e 5 de sede. São consumíveis de bolsa vendidos nas tavernas e usam `effect: food`. `pernil` também entra automaticamente no sorteio adicional de comida que certos monstros deixam, com raridade ponderada pelo preço do alimento. Arte 2D: `assets/pawns/monstros/vaca/vaca.png`; miniatura 3D: `assets/models3d/monstros/vaca.glb`; fonte Blender: `assets/models3d/monstros/vaca.blend`; ícones: `assets/itens/carne_bovina.png`, `assets/itens/pernil.png` e `assets/itens/leite.png`. O catálogo do editor é gerado por `tools/export_catalog.py`.
 
 ### Cavalo de Sela (ND 1/4, 2026-10-29)
 
@@ -60,7 +60,7 @@ Em jogo salvo Solo com mais de um herói, a cidade permite ligar/desligar `ouro_
 
 ### Kit de Reparo de Campo (2026-10-25)
 
-`kit_reparo_campo` custa 60 moedas e é vendido em `ferreiro_ammo` nas cinco cidades. É consumível de ação principal: o inventário abre a seleção entre armas, armaduras e escudos com corrosão; o servidor valida o alvo, remove exatamente 1 nível e consome um kit. Peças destruídas continuam irrecuperáveis. O reparo de cidade segue distinto e remove todos os níveis por seu preço calculado.
+`kit_reparo_campo` custa 60 moedas, usa `assets/itens/kit_reparo.png` e é vendido em `ferreiro_ammo` nas cinco cidades. É consumível de ação principal: o inventário abre a seleção entre armas, armaduras e escudos com corrosão; o servidor valida o alvo, remove exatamente 1 nível e consome um kit. Peças destruídas continuam irrecuperáveis. O reparo de cidade segue distinto e remove todos os níveis por seu preço calculado.
 
 ### Moeda da Sorte (2026-10-25)
 
@@ -93,6 +93,8 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `manto_das_sombras` custa 1.500 moedas e é exclusivo do Ladino. Ocupa `armor`, concede +2 CA total e +2 a Esconder nas Sombras, cumulativo com a especialização do Ladino. Usa `assets/itens/manto_das_sombras.png` e está à venda nos cinco ferreiros. Como ação principal, concede a magia Manto da Escuridão sem gastar slot, com recarga de 20 rodadas guardada na instância do item; o uso paga 1 fome e 1 sede.
 
+`boina_gatuno` custa 250 moedas, ocupa `head`, usa `assets/itens/chapeu1.png` e concede +2 nos testes de Esconder nas Sombras do Ladino. O bônus soma com a especialização de guilda e com o Manto das Sombras.
+
 ### Espadas do Sangramento (2026-10-30)
 
 `espada_sangramento_longa` (Rara) custa 1.500 moedas e causa 1d8 cortante; `espada_sangramento_bastarda` (Muito rara) custa 2.000 e causa 1d10 cortante. Ambas concedem +1 no acerto e dano, são mágicas, têm crítico natural com 19–20 e só podem ser usadas por Guerreiro e Paladino. Cada acerto bem-sucedido aplica o Sangramento existente, sem limite por rodada: níveis sobem até 3, aplicações seguintes abrem Ferida Aberta e cada aplicação após a primeira soma 2 rodadas; crítico que aplica Sangramento também ativa Hemorragia pela regra corrente. Não mudam dano, duração, resistência ou imunidades globais do Sangramento. Ambas usam `assets/itens magicos/espada_vorpal.png` e estão em `ferreiro_weapon` nas cinco cidades. O servidor preserva `magical` e `causa_sangramento` ao converter a compra em arma de inventário; `tools/export_catalog.py` gera a entrada do catálogo do editor.
@@ -107,9 +109,21 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `relampago_de_mao` é uma lança curta mágica Muito Rara, custa 2.000 moedas, causa 1d6 perfurante + Força, dá +1 no acerto e no dano e pode ser arremessada a 4 casas; o arremesso comum a devolve imediatamente à mão. Uma habilidade concedida pela arma, `Descarga em Linha`, usa ação principal e tem recarga de 10 rodadas guardada na instância equipada. O jogador seleciona um inimigo em linha reta ortogonal ou diagonal até 4 casas; criaturas em cada casa atravessada, inclusive aliados, fazem Reflexos CD 13 para metade de 3d6 elétrico. O inimigo escolhido também recebe um ataque normal da lança se acertar. Paredes bloqueiam a trajetória; o evento visual reaproveita raio e som de `spell_animation` `relampago`. Classes: Bardo, Ladino, Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `return_on_throw`, `lightning_line` e `lightning_line_cooldown` são preservados ao comprar e reequipar.
 
+### Machadinhas Rúnicas Vai-e-Volta (2026-11-07)
+
+`machadinha_runica_vai_e_volta` custa 1.500 moedas (Rara), dá +1 no acerto/dano e `machadinha_runica_vai_e_volta_maior` custa 3.000 (Muito Rara), dá +2/+2. Ambas usam `assets/itens magicos/vai_e_volta.png`, mantêm o perfil da Machadinha de Arremesso Anã (1d6 cortante + Força, ataque extra da mão secundária com Força, Arremesso Bruto e desgaste por falha crítica), ampliam o alcance de arremesso para 5 casas e retornam automaticamente à mão/slot de quem as arremessou, acertem ou errem. São exclusivas do Guerreiro e aparecem nos cinco ferreiros e no catálogo do editor. `return_on_throw`, `throw_range`, `off_hand_forca` e os bônus mágicos são preservados ao comprar e reequipar.
+
 ### Espada Mágica (2026-10-31)
 
 `espada_magica`, `espada_magica_mais_2` e `espada_magica_mais_3` usam `assets/itens magicos/espada_magica.png`, causam 1d6 cortante com Força, mantêm crítico natural 19–20 e podem ser usadas por Bardo, Ladino, Paladino e Guerreiro. Concedem, respectivamente, +1/+1 por 500 moedas (Incomum), +2/+2 por 1.500 (Rara) e +3/+3 por 3.500 (Muito rara), sem efeito adicional. Estão à venda nos cinco ferreiros e no catálogo do editor; o fluxo de compra/equipamento preserva `magical`, `atk_bonus` e `damage_bonus`.
+
+### Punhais do Assassino (2026-11-07)
+
+`punhal_assassino` custa 1.500 moedas (Rara), concede +1 no acerto e no dano e adiciona +1d4 ao Ataque Furtivo do Ladino. `punhal_assassino_maior` custa 3.500 moedas (Muito rara), concede +2 no acerto e no dano e adiciona +2d4 ao Ataque Furtivo do Ladino. Ambos mantêm as propriedades da Adaga (1d4 perfurante, finesse, mão secundária e arremesso a 3 casas), usam `assets/itens magicos/punhal_do_assassino.png` e são vendidos nos cinco ferreiros. Os dados especiais só são somados quando o Ataque Furtivo é aplicado; entram no cálculo furtivo existente antes de resistências e reduções. `sneak_attack_extra_d4` é preservado ao comprar e equipar.
+
+### Lâmina de Kriswoo (2026-11-07)
+
+`lamina_de_kriswoo` custa 5.000 moedas, usa `assets/itens magicos/lamina_de_kriswoo.png`, é vendida nos cinco ferreiros e é exclusiva da classe Guerreiro. Mantém o perfil do Machado de Guerra Órquico (1d12 cortante + Força, duas mãos, crítico ×3), amplia os críticos naturais para 19–20 e concede +2 no acerto e no dano. Enquanto equipada, concede Ataque Giratório sem exigir compra/equipamento da técnica da Guilda; usa a ação principal e custo padrão de 4 fome/4 sede, mas sua recarga é 10 rodadas. A técnica aparece no menu de habilidades enquanto a arma estiver equipada. O multiplicador ×3 também se aplica ao 19 natural crítico. Está no catálogo do editor.
 
 ### Besta para Bardo (2026-10-31)
 
@@ -123,6 +137,10 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 
 `escudo_p` (Escudo Pequeno) custa 20 moedas e concede +1 CA/redução 1; `escudo_g` (Escudo Grande) custa 50 e concede +2 CA/redução 2. `escudo_torre` custa 70 moedas, ocupa a mão secundária, concede +3 CA e reduz em 2 cada instância de dano. É exclusivo do Paladino e tem `corrosion_materials: ["metal"]`, portanto o Devorador de Metal pode corroê-lo. `escudo_madeira_grande` custa 35 moedas, concede +2 CA e reduz em 1 cada instância de dano; pode ser usado por Clérigo, Guerreiro e Paladino e tem `corrosion_materials: ["organic"]`, portanto o Devorador Orgânico pode corroê-lo. Todos aproveitam a Guarda Máxima do Paladino, que dobra os bônus do escudo, e estão em `ferreiro_armor` nas cinco cidades. Ícones: `assets/itens/escudo_torre.png` e `assets/itens/escudo_madeira_grande.png`; nomes, regras e ícones são exportados para o catálogo do editor.
 
+`escudo_p_retalhacao_trovejante` custa 1.400 moedas e concede +2 CA/redução 1; `escudo_g_retalhacao_trovejante` custa 1.800 e concede +3 CA/redução 2; `escudo_madeira_retalhacao_trovejante` custa 1.650 e concede +3 CA/redução 1. Mantêm as classes permitidas dos escudos-base; o modelo de madeira também mantém a corrosão orgânica. Cada um concede a ação principal Manto de Raios: paga 1 fome e 1 sede, dura 5 rodadas e causa 1d6 elétrico ao atacante a cada ataque que acertar o portador; recarga de 20 rodadas desde a ativação. O efeito e a recarga pertencem à instância equipada em `off_hand`. Imagens: `assets/itens/escudo_pequeno_retalhacao_trovejante.png`, `assets/itens/escudo_grande_retalhacao_trovejante.png` e `assets/itens/escudo_madeira_retalhacao_trovejante.png`; os três estão nos cinco ferreiros.
+
+`escudo_pequeno_vinculo_espinhoso` custa 2.400 moedas (+2 CA/redução 1); `escudo_grande_vinculo_espinhoso` custa 2.800 (+3/redução 2); `escudo_torre_vinculo_espinhoso` custa 3.300 (+4/redução 2); `escudo_madeira_vinculo_espinhoso` custa 2.650 (+3/redução 1). Todos recebem +1 CA sobre o modelo-base, preservam classes e corrosão (torre: metal; madeira: orgânica) e estão nos cinco ferreiros. Cada um concede a ação principal Vínculo Maldito da Dor sem gastar slot, pagando 1 fome/1 sede, com teste de Vontade, limite normal de quatro vínculos e penalidade de −1 no próximo ataque do alvo; o vínculo criado pelo escudo dura exatamente 5 rodadas e a habilidade recarrega em 25 rodadas desde a ativação. Recarga fica na instância equipada em `off_hand`. Ícones transparentes: `assets/itens/escudo_pequeno_vinculo_espinhoso.png`, `assets/itens/escudo_grande_vinculo_espinhoso.png`, `assets/itens/escudo_torre_vinculo_espinhoso.png` e `assets/itens/escudo_madeira_vinculo_espinhoso.png`.
+
 ### Veste da Égide Arcana (2026-10-26)
 
 `veste_egide_arcana` custa 1.000 moedas, ocupa `armor`, concede +2 CA e +1 nos testes de resistência feitos contra magias. É exclusiva de Mago e Clérigo, usa `assets/itens/veste_egide_arcana.png` e está à venda nos cinco ferreiros. `magic_save_bonus` é aplicado e removido no fluxo de equipamento; o modificador só entra enquanto um grimório ou conjurador de monstro está resolvendo uma magia.
@@ -134,6 +152,10 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 ### Placas da Besta (2026-10-26)
 
 `placas_da_besta` custa 250 moedas, ocupa `armor`, concede +3 CA e reduz em 1 cada instância de dano `physical` recebido enquanto equipada. Herda das `leather_plate` as classes permitidas (Guerreiro, Ladino, Bardo e Paladino) e os materiais de corrosão. `corrosao_resistente: 4` concede 4 níveis sem penalidade; depois há os 2 níveis normais com penalidade e o nível seguinte destrói a peça. Usa `assets/itens/placas_da_besta.png` (variante negra brilhante de `assets/itens/leather_plate.png`) e está nos cinco ferreiros. O bônus `resist` já é aplicado/removido em `_apply_gear_effect` e processado por `_apply_damage_types`.
+
+`armadura_placas_grotao` custa 800 moedas, usa `assets/itens/leather_plate_onix.png` e está nos cinco ferreiros. Herda as propriedades de armadura leve de couro e placas (+3 CA, classes Guerreiro, Ladino, Bardo e Paladino), concede redução física 2 e redução de ácido 5. `corrosion_immunities: ["acid"]` a protege da corrosão de jatos de ácido, mas ela mantém os materiais `organic` e `metal`, então Devoradores Orgânicos e Metálicos ainda a corroem. Os níveis 1–2 não penalizam; 3–5 impõem −2 CA; 6 destrói. `corrosao_penalidade_max` limita a penalidade aplicada sem reduzir sua vitalidade total de seis níveis.
+
+`armadura_placas_grotao_superior` custa 2.000 moedas, compartilha a imagem e as propriedades especiais da versão leve, mas é baseada na Armadura de Couro de Monstro e Placas: +7 CA, categoria pesada e uso exclusivo de Guerreiro e Paladino. Mantém redução física 2, redução de ácido 5, imunidade à corrosão ácida e vulnerabilidade aos Devoradores Orgânico/Metálico; os níveis 1–2 não penalizam, 3–5 impõem −2 CA e o 6 destrói.
 
 ### Chapéus do Bruxo e do Conjurador (2026-10-26)
 
@@ -151,11 +173,29 @@ Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` conc
 
 ### Aljavas (2026-10-25)
 
-`mini_aljava`, `aljava_pequena` e `aljava_grande` oferecem respectivamente 1, 2 e 3 slots `quiver_slots` no próprio item equipado. Cada slot comporta até 40 projéteis de uma mesma pilha de flechas ou virotes, incluindo variantes especiais; o conteúdo permanece na aljava ao desequipá-la. A mini ocupa `item1`/`item2`; as demais ocupam `off_hand`. `move_quiver_ammo` transfere munição entre bolsa e aljava; ataques e prévias consideram as aljavas equipadas. O limite da bolsa é 10, sem truncar pilhas antigas maiores. Arcos com aljava e bestas também podem consumir munição da bolsa, conforme as preferências existentes. A aljava não concede munição nem altera dano.
+`mini_aljava`, `aljava_pequena` e `aljava_grande` oferecem respectivamente 1, 2 e 3 slots `quiver_slots` no próprio item equipado. Cada slot comporta até 40 projéteis de uma mesma pilha de flechas ou virotes, incluindo variantes especiais; o conteúdo permanece na aljava ao desequipá-la. A mini ocupa `item1`/`item2`; as demais ocupam `off_hand`. `move_quiver_ammo` transfere munição entre bolsa e aljava; ataques e prévias consideram as aljavas equipadas. Cada pilha na bolsa comporta até 20 unidades, sem truncar pilhas antigas maiores. Arcos com aljava e bestas também podem consumir munição da bolsa, conforme as preferências existentes. A aljava não concede munição nem altera dano.
+
+`cinto_arsenal_encantado` custa 2.000 moedas e ocupa um único espaço `item1`/`item2`. Combina 4 bolsos de consumíveis (até 8 unidades iguais por bolso) com 1 slot de aljava (até 40 flechas ou virotes). Os dois conteúdos e tokens são independentes, persistem ao desequipar, e o item pode ser equipado junto com outros cintos e aljavas nos espaços restantes. Usa `assets/itens magicos/cinto_arsenal_encantado.png`.
 
 ### Mochila de Carga (2026-10-25)
 
 mochila_carga custa 250 moedas, usa assets/itens/backpack.png e concede +6 espaços enquanto equipada. É vendida nos mesmos quatro mercadores que a Mochila de Couro. Como ambos ocupam item1/item2 e o efeito bagslots é aditivo, podem ser equipadas juntas; a capacidade cresce em +9.
+
+`mochila_dimensional` custa 500 moedas, usa o ícone `assets/itens/backpack.png` e concede +9 espaços enquanto equipada. É vendida nos mesmos quatro mercadores que as outras mochilas e ocupa `item1`/`item2`; o efeito `bagslots` é aditivo, podendo ser combinada com as mochilas existentes.
+
+`mochila_aljava_dimensional` custa 1.200 moedas, concede os mesmos +9 espaços e combina 1 slot de aljava para até 40 flechas ou virotes. Ocupa um único espaço `item1`/`item2`; o conteúdo da aljava permanece guardado ao desequipar, e a mochila pode ser combinada com outros cintos/aljavas pelos slots restantes. Usa `assets/itens magicos/mochila_aljava_dimensional.png`.
+
+`alforge_explorador` custa 220 moedas, ocupa um único espaço `item1`/`item2`, concede +2 espaços de mochila e oferece um bolso de utilidades com capacidade para 4 unidades iguais de arremessáveis, poções ou venenos. O conteúdo permanece guardado ao desequipar; o servidor recusa o desequipamento se a mochila não puder comportar todos os itens após perder os dois espaços extras. Usa `assets/itens/alforge2.png`.
+
+`alforge_explorador_aprimorado` custa 500 moedas, ocupa um único espaço `item1`/`item2`, concede +4 espaços de mochila e oferece dois bolsos de utilidades com capacidade para 4 unidades iguais cada. O conteúdo permanece guardado ao desequipar; o servidor recusa o desequipamento se a mochila não puder comportar todos os itens após perder os quatro espaços extras. Usa `assets/itens/alforje1.png`.
+
+`alforge_explorador_superior` custa 800 moedas, ocupa um único espaço `item1`/`item2`, concede +6 espaços de mochila e oferece três bolsos de utilidades com capacidade para 4 unidades iguais cada. O conteúdo permanece guardado ao desequipar; o servidor recusa o desequipamento se a mochila não puder comportar todos os itens após perder os seis espaços extras. Usa `assets/itens/alforje1.png`.
+
+`maravilha_aventureiro_menor` custa 2.500 moedas, concede +9 espaços de mochila, quatro bolsos com até 4 unidades iguais cada e 1 slot de aljava com até 40 flechas ou virotes. `maravilha_aventureiro_maior` custa 6.000 moedas, concede +12 espaços, quatro bolsos com até 8 unidades iguais cada e 2 slots de aljava com até 40 projéteis cada. Ambos ocupam um único espaço `item1`/`item2`, mantêm os conteúdos ao desequipar e usam `assets/itens/maravilha_do_aventureiro.png`.
+
+`chapeu_explorador` custa 300 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 de visão e +1 nos ataques enquanto equipado.
+
+`chapeu_cacador` custa 200 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 ao dano por acerto com armas corpo a corpo ou à distância enquanto equipado, pelo efeito existente `damage_bonus`.
 
 ### Vela da Escuridão — duração (2026-10-25)
 
@@ -164,6 +204,26 @@ A Vela da Escuridão concede ocultação pelo turno de uso e por mais 1 rodada: 
 ### Cerveja Anã (2026-10-25)
 
 Cerveja Anã custa 8 moedas, usa assets/itens/barril_de_cerveja.png e é vendida nas cinco tavernas. Ao consumir, restaura 18 de fome e sede e reduz a CA efetiva em 1 por 10 rodadas; consumir outra renova o tempo sem acumular penalidade. O efeito é limpo ao entrar em nova masmorra.
+
+### Rum (2026-11-07)
+
+`rum` custa 30 moedas e usa `assets/itens/rum.png`. A garrafa tem 3 doses; cada uso recupera 15 de fome e 15 de sede, soma −1 no ataque e em Reflexos por 10 rodadas e consome uma dose. Cada dose tem cronômetro independente; ao expirar, apenas a penalidade daquela dose é removida. O item é vendido nas cinco tavernas e pode sair no sorteio adicional de comida de monstros, com peso inversamente proporcional ao preço.
+
+### Hidromel (2026-11-07)
+
+`hidromel` custa 18 moedas e usa `assets/itens/hidromel.png`. A garrafa tem 2 doses; cada uso recupera 18 de fome e sede e aplica −1 em Reflexos e −1 na CA efetiva por 10 rodadas. As penalidades acumulam por dose, com cronômetro independente; cada expiração restaura apenas 1 Reflexo e 1 CA. É vendido nas cinco tavernas e pode sair no sorteio adicional de comida de monstros, com peso inversamente proporcional ao preço. Penalidades são limpas ao entrar em uma masmorra nova.
+
+### Absinto (2026-11-07)
+
+`absinto` custa 45 moedas, usa `assets/itens/absinto.png` e tem 5 doses; cada uso restaura 15 de fome e 15 de sede, aplica −1 no ataque e −1 na CA por 10 rodadas. Os cronômetros são independentes. Com 3–4 doses ativas, o movimento total sofre −1; com 5 ou mais, sofre −2. A penalidade de movimento é derivada das doses ativas, e não altera `spd`; ao expirar uma dose, ataque, CA e movimento são recalculados. É vendido nas cinco tavernas e pode sair no sorteio adicional de comida de monstros. Não recupera PV.
+
+### Caldo Revigorante (2026-11-07)
+
+`caldo_revigorante` custa 10 moedas, usa `assets/itens/caldo_revigorante.png` e é vendido nas cinco tavernas. Consumível portátil de ação bônus: restaura 5 PV, 10 de fome e 10 de sede. Pode aparecer no sorteio adicional de comida deixada por monstros.
+
+`fermentado_raizes` custa 8 moedas, usa `assets/itens/bebida_raizes_fermentadas.png` e é vendido nas cinco tavernas. Consumível portátil de ação bônus: restaura 3 PV e 17 de sede. Pode aparecer no sorteio adicional de comida deixada por monstros.
+
+`fruto_de_lumen` custa 7 moedas, usa `assets/itens/fruto_de_lumen.png` e é vendido nas cinco tavernas. Consumível portátil de ação bônus: restaura 2 PV e 18 de fome. Pode aparecer no sorteio adicional de comida deixada por monstros.
 
 ### Botas do Passo Felino (2026-10-25)
 
@@ -998,7 +1058,7 @@ resistência enquanto o herói permanecia na mesma sala.
 
 ### Server → Client
 
-**Cintos de consumíveis:** `gear.item1`/`item2` guardam `utility_belt_slots` (4 posições para `cinto_utilidades`, 2 para `cinto_com_bolsos`). Cada pilha é `{item, quantity}` e pode carregar `remaining_items`: lista dos dicionários completos dos demais frascos, de comprimento `quantity - 1`. Sem a lista, os frascos após o atual são completos (compatibilidade com pilhas antigas). Movimentar ou consumir retira só o frasco atual e promove o próximo com suas doses preservadas. `utility_belt_token` identifica a ativação do equipamento; é renovado ao equipar e publicado nos estados da cidade/masmorra. Ações de cinto sem token ou com token antigo são recusadas sem consumir. `move_utility_belt_item {direction, gear_slot, pocket_index, bag_index}` move uma unidade entre bolsa e cinto; `direction` vale `to_belt` ou `to_bag`. Desequipar ou substituir cinto carregado preserva seu conteúdo e emite o aviso localizado de acesso indisponível. Testes: `tools/test_cinto_utilidades*.py`, `tools/test_cinto_utilidades*.js`, `tools/test_cinto_revisao_final.py`.
+**Cintos de consumíveis:** `gear.item1`/`item2` guardam `utility_belt_slots` (4 posições para `cinto_utilidades`, `cinto_utilidades_aprimorado` e `cinto_arsenal_encantado`; 2 para `cinto_com_bolsos`). Pilhas comportam até 4 unidades nos cintos atuais e até 8 nos modelos aprimorados/encantado. Cada pilha é `{item, quantity}` e pode carregar `remaining_items`: lista dos dicionários completos dos demais frascos, de comprimento `quantity - 1`. Sem a lista, os frascos após o atual são completos (compatibilidade com pilhas antigas). Movimentar ou consumir retira só o frasco atual e promove o próximo com suas doses preservadas. `utility_belt_token` identifica a ativação do equipamento; é renovado ao equipar e publicado nos estados da cidade/masmorra. Ações de cinto sem token ou com token antigo são recusadas sem consumir. `move_utility_belt_item {direction, gear_slot, pocket_index, bag_index}` move uma unidade entre bolsa e cinto; `direction` vale `to_belt` ou `to_bag`. Desequipar ou substituir cinto carregado preserva seu conteúdo e emite o aviso localizado de acesso indisponível. Testes: `tools/test_cinto_utilidades*.py`, `tools/test_cinto_utilidades*.js`, `tools/test_cinto_revisao_final.py`.
 
 `lobby_state`, `game_start`, `city_state`, `shop_result`, `enter_dungeon`,
 `game_state`, `gm_narration`, `game_over`, `dice_roll`, `animar_result`, `error`,

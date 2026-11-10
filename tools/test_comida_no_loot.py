@@ -17,7 +17,9 @@ DO_GRUPO = ["orc", "orc_guerreiro", "dark_mage", "bardo", "bardo_da_caravana", "
 FORA = ["urso_negro", "lobo_cinzento", "minotauro", "grotao", "esqueleto_humano", "zumbi_infectado",
         "bugbear_sombras", "gigante_guerra", "elemental_fogo", "rato"]
 COMIDAS = {"pao", "garrafa_agua", "suco_fruta", "racao_viagem", "racao_completa", "cantil_agua",
-           "banquete_viagem", "carne_bovina", "leite"}   # carne e leite: comidas da vaca vendidas na taverna
+           "banquete_viagem", "carne_bovina", "leite",   # carne e leite: comidas da vaca vendidas na taverna
+           "pernil", "rum", "hidromel", "absinto", "caldo_revigorante", "fermentado_raizes",
+           "fruto_de_lumen"}   # bebidas e comidas portáteis das tavernas (2026-11-07)
 
 
 def sala():

@@ -2708,7 +2708,10 @@
   }
   function utilityBeltCapacity(item) {
     if (!item || typeof item.id !== "string") return 0;
-    return item.id === "cinto_utilidades" ? 4 : item.id === "cinto_com_bolsos" ? 2 : 0;
+    return item.id === "cinto_utilidades" || item.id === "cinto_utilidades_aprimorado" || item.id === "cinto_arsenal_encantado" || item.id === "maravilha_aventureiro_menor" || item.id === "maravilha_aventureiro_maior" ? 4 : item.id === "cinto_com_bolsos" || item.id === "alforge_explorador_aprimorado" ? 2 : item.id === "alforge_explorador_superior" ? 3 : item.id === "alforge_explorador" ? 1 : 0;
+  }
+  function utilityBeltStackCapacity(item) {
+    return item && (item.id === "cinto_utilidades_aprimorado" || item.id === "cinto_arsenal_encantado" || item.id === "maravilha_aventureiro_maior") ? 8 : 4;
   }
   function utilityBeltConsumables() {
     // Keep full custom definitions: the regular loot selector has reduced metadata.
@@ -2733,7 +2736,8 @@
     return Array.from({length: utilityBeltCapacity(item)}, (_, index) => {
       const entry = raw[index], id = entry && entry.item && entry.item.id;
       if (!entry || typeof id !== "string" || !eligible.has(id) || seen.has(id)
-        || !Number.isInteger(entry.quantity) || entry.quantity < 1 || entry.quantity > 4) return null;
+        || !Number.isInteger(entry.quantity) || entry.quantity < 1
+        || entry.quantity > utilityBeltStackCapacity(item)) return null;
       seen.add(id);
       return {item: {id}, quantity: entry.quantity};
     });
@@ -2746,7 +2750,7 @@
         <select data-belt-item data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.item', {n:pocket + 1})}">
           <option value="">${t('ui.editor.cinto.vazio')}</option>${choices.map(choice => `<option value="${editorEscapeText(choice.id)}"${entry && entry.item.id === choice.id ? " selected" : ""}>${editorEscapeText(nomeCat("item", choice.id, choice.name || choice.id))}</option>`).join("")}
         </select>
-        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.quantidade', {n:pocket + 1})}" type="number" min="1" max="4" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
+        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.quantidade', {n:pocket + 1})}" type="number" min="1" max="${utilityBeltStackCapacity(item)}" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
       </label>`).join("")}</div>`;
   }
   function wireUtilityBeltFields(root, items, rerender) {
