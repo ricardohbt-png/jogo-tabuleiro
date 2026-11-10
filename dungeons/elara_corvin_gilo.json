@@ -454,30 +454,35 @@
     "x": 2,
     "y": 7
   },
+  "hero_spawns": [],
   "exit": {
     "x": 24,
     "y": 7
   },
+  "routes": [],
+  "route_exits": [],
   "monsters": [
     {
       "type": "soldado",
       "pos": [
         9,
-        5
+        4
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_0"
     },
     {
       "type": "soldado",
       "pos": [
-        9,
-        9
+        4,
+        10
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_1"
     },
     {
       "type": "goblin_dual",
@@ -487,57 +492,63 @@
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_2"
     },
     {
       "type": "goblin_dual",
       "pos": [
-        5,
-        4
+        7,
+        6
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_3"
     },
     {
       "type": "orc",
       "pos": [
-        4,
-        4
+        7,
+        5
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_4"
     },
     {
       "type": "orc",
       "pos": [
-        8,
-        3
+        7,
+        9
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_5"
     },
     {
       "type": "goblin_arqueiro",
       "pos": [
-        2,
-        3
-      ],
-      "room_id": 0,
-      "boss": false,
-      "target": false
-    },
-    {
-      "type": "goblin_arqueiro",
-      "pos": [
-        8,
+        11,
         7
       ],
       "room_id": 0,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_6"
+    },
+    {
+      "type": "goblin_arqueiro",
+      "pos": [
+        8,
+        11
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_7"
     },
     {
       "type": "gilo_dedos_sujos",
@@ -548,6 +559,7 @@
       "room_id": 1,
       "boss": true,
       "target": true,
+      "source_id": "mob_8",
       "fuga_chefe": {
         "fato": "elara_gilo_fugiu",
         "texto": "Derrotado, o Gilo ri entre os dentes. Uma melodia estridente vem de uma janela, o ar se enche de fumaça e, quando ela baixa, ele sumiu — e um bardo, no telhado, já fugia."
@@ -561,7 +573,8 @@
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_9"
     },
     {
       "type": "soldado",
@@ -571,7 +584,8 @@
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_10"
     },
     {
       "type": "goblin_dual",
@@ -581,7 +595,8 @@
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_11"
     },
     {
       "type": "goblin_dual",
@@ -591,13 +606,25 @@
       ],
       "room_id": 1,
       "boss": false,
-      "target": false
+      "target": false,
+      "source_id": "mob_12"
+    },
+    {
+      "type": "bardo",
+      "pos": [
+        23,
+        8
+      ],
+      "room_id": 1,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_13"
     }
   ],
   "chests": [
     {
       "pos": [
-        24,
+        25,
         4
       ],
       "gold": 80,
@@ -612,13 +639,15 @@
   ],
   "traps": [
     {
+      "id": "trap_0",
       "tipo": "armadilha_urso",
       "pos": [
         6,
-        3
+        8
       ]
     },
     {
+      "id": "trap_1",
       "tipo": "rede",
       "pos": [
         17,
@@ -631,66 +660,57 @@
       "id": "gilo_barril_1",
       "type": "barril",
       "pos": [
-        11,
+        25,
         2
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "gilo_barril_2",
       "type": "barril",
       "pos": [
         1,
-        4
+        2
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "gilo_barril_3",
       "type": "barril",
       "pos": [
-        7,
-        2
+        25,
+        11
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
-    },
-    {
-      "id": "gilo_mesa_cadeiras_4",
-      "type": "mesa_cadeiras",
-      "pos": [
-        5,
-        10
-      ],
-      "facing": [
-        0,
-        1
-      ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "gilo_barril_5",
       "type": "barril",
       "pos": [
-        20,
-        2
+        15,
+        11
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "gilo_barril_6",
@@ -703,10 +723,176 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
       "id": "gilo_barril_7",
+      "type": "barril",
+      "pos": [
+        24,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_1",
+      "type": "estante_livros",
+      "pos": [
+        11,
+        2
+      ],
+      "facing": [
+        0,
+        -1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "grimorio_medo"
+          }
+        ]
+      },
+      "key_objective": false,
+      "size": [
+        2,
+        1
+      ]
+    },
+    {
+      "id": "decor_2",
+      "type": "estante_livros",
+      "pos": [
+        11,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "size": [
+        2,
+        1
+      ]
+    },
+    {
+      "id": "decor_3",
+      "type": "mesa_cadeiras",
+      "pos": [
+        7,
+        7
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "caneca_cerveja"
+          },
+          {
+            "id": "carne_bovina"
+          }
+        ]
+      },
+      "key_objective": false,
+      "size": [
+        2,
+        2
+      ]
+    },
+    {
+      "id": "decor_4",
+      "type": "poltrona_luxo",
+      "pos": [
+        24,
+        5
+      ],
+      "facing": [
+        -1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "poltrona_luxo.png"
+    },
+    {
+      "id": "decor_5",
+      "type": "gaiola",
+      "pos": [
+        22,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_6",
+      "type": "mesa_quimica",
+      "pos": [
+        16,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "size": [
+        2,
+        1
+      ]
+    },
+    {
+      "id": "decor_7",
+      "type": "mesa_tortura",
+      "pos": [
+        25,
+        9
+      ],
+      "facing": [
+        1,
+        0
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "mesa_tortura.png",
+      "size": [
+        2,
+        1
+      ]
+    },
+    {
+      "id": "decor_8",
+      "type": "barril",
+      "pos": [
+        14,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_9",
       "type": "barril",
       "pos": [
         23,
@@ -716,24 +902,157 @@
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
     },
     {
-      "id": "gilo_estante_8",
-      "type": "estante",
+      "id": "decor_10",
+      "type": "barril",
       "pos": [
-        18,
+        24,
         2
       ],
       "facing": [
         0,
         1
       ],
-      "loot": null
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_11",
+      "type": "barril",
+      "pos": [
+        2,
+        2
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_12",
+      "type": "barril",
+      "pos": [
+        1,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_13",
+      "type": "barril",
+      "pos": [
+        2,
+        11
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_14",
+      "type": "barril",
+      "pos": [
+        1,
+        10
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false
+    },
+    {
+      "id": "decor_18",
+      "type": "chao",
+      "pos": [
+        2,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "chaotapete2.png",
+      "size": [
+        4,
+        4
+      ]
+    },
+    {
+      "id": "decor_20",
+      "type": "chao",
+      "pos": [
+        9,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "chaotapete2.png",
+      "size": [
+        4,
+        4
+      ]
+    },
+    {
+      "id": "decor_21",
+      "type": "chao",
+      "pos": [
+        14,
+        4
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "chaotapete2.png",
+      "size": [
+        5,
+        6
+      ]
+    },
+    {
+      "id": "decor_22",
+      "type": "chao",
+      "pos": [
+        20,
+        5
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": null,
+      "key_objective": false,
+      "image": "chaotapete2.png",
+      "size": [
+        4,
+        4
+      ]
     }
   ],
   "secret_passages": [],
-  "master_reinforcements": [],
   "falas": [
     {
       "id": "gilo_chegada",
@@ -752,22 +1071,12 @@
       }
     }
   ],
+  "master_reinforcements": [],
   "expected_party": {
     "heroes": 4,
     "level": 3
   },
-  "objectives": {
-    "primary": {
-      "type": "kill_target",
-      "xp": 200,
-      "reward": {
-        "gold": 80,
-        "items": []
-      },
-      "fato": "elara_pista_graciero"
-    },
-    "secondary": []
-  },
+  "prisoner": null,
   "materiais": {
     "0,0": "madeira",
     "1,0": "madeira",
@@ -1147,5 +1456,21 @@
     "24,13": "madeira",
     "25,13": "madeira",
     "26,13": "madeira"
+  },
+  "pontes": [],
+  "elevacoes": {},
+  "alturas_parede": {},
+  "transicao_altura": "rampa",
+  "objectives": {
+    "primary": {
+      "type": "kill_target",
+      "xp": 200,
+      "reward": {
+        "gold": 80,
+        "items": []
+      },
+      "fato": "elara_pista_graciero"
+    },
+    "secondary": []
   }
 }
