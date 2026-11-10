@@ -14531,6 +14531,69 @@ function topoSuperficie3D(state, x, y, TH = 0.22){
   return topoTerreno3D(state, x, y, TH);
 }
 
+// Quanto a superfície da casa mais próxima de (x, z) está acima do chão de
+// nível 0 (platô e ponte), em unidades 3D. Zero em mapa plano.
+function elevacaoChao3D(state, x, z){
+  if(!state) return 0;
+  return topoSuperficie3D(state, Math.round(x), Math.round(z), 0);
+}
+
+// Efeitos de magia, armadilha e fumaça são montados como se o chão estivesse
+// sempre no nível 0: as animações (dezenas delas) escrevem y fixo a cada
+// quadro. Em vez de corrigir uma a uma, este passo roda por último no quadro
+// e soma a elevação da casa a cada peça posicionada em coordenada de mundo.
+// Grupos que já calculam a altura sozinhos (seguem o peão pela posição de
+// mundo, ou chamam topoSuperficie3D) ficam de fora, senão subiriam duas vezes.
+const _EFEITO_CHAO_RE = /(-animation|-fx|-swarm|-dome|-pulse|-faiscas|-impact)$|^(fumaca-|sombra-|trap-fx-|positive-|ladino-sombras|turbilhao-elemental)/;
+const _EFEITO_CHAO_FORA = new Set([
+  'protetor-animation', 'dueto-fantasma-reflexo', 'cancao-heroica-aura',
+  'ecos-dolorosos-aura', 'sneak-attack-impact', 'attack-feedback',
+]);
+function _efeitoChaoElegivel(nome){
+  return !!nome && !_EFEITO_CHAO_FORA.has(nome) && _EFEITO_CHAO_RE.test(nome);
+}
+// A animação reescreve `position.y` a cada quadro, ou só uma vez ao montar.
+// Guardamos o y que deixamos: se ele continua lá, a animação não mexeu e só
+// trocamos o deslocamento antigo pelo novo; se mudou, ela reescreveu e
+// somamos por cima. Assim nada acumula nem fica para trás.
+function _elevarNo3D(obj, state){
+  const ud = obj.userData;
+  const off = elevacaoChao3D(state, obj.position.x, obj.position.z);
+  const base = (ud._elevPos !== undefined && obj.position.y === ud._elevPos)
+    ? obj.position.y - (ud._elevOff || 0) : obj.position.y;
+  obj.position.y = base + off;
+  ud._elevOff = off;
+  ud._elevPos = obj.position.y;
+}
+function _naOrigem3D(obj){
+  return Math.abs(obj.position.x) < 1e-6 && Math.abs(obj.position.z) < 1e-6
+    && !obj.rotation.x && !obj.rotation.y && !obj.rotation.z;
+}
+function _elevarFilhos3D(grupo, state, prof = 0){
+  for(const c of grupo.children){
+    // Subgrupo na origem só organiza: as peças dentro dele é que estão no mundo.
+    if(c.isGroup && prof < 3 && _naOrigem3D(c) && c.children.length) _elevarFilhos3D(c, state, prof + 1);
+    else _elevarNo3D(c, state);
+  }
+}
+let _elevChaoCache = { state: null, tem: false };
+function _mapaTemElevacao(state){
+  if(_elevChaoCache.state === state) return _elevChaoCache.tem;
+  const tem = Object.values(state?.elevacoes || {}).some(v => Number(v))
+    || (state?.pontes || []).length > 0;
+  _elevChaoCache = { state, tem };
+  return tem;
+}
+function _elevarEfeitosChao3D(){
+  const state = GS.gameState;
+  if(!g3?.scene || !state || !_mapaTemElevacao(state)) return;
+  for(const g of g3.scene.children){
+    if(!g.isGroup || !_efeitoChaoElegivel(g.name)) continue;
+    if(_naOrigem3D(g)) _elevarFilhos3D(g, state);
+    else _elevarNo3D(g, state);
+  }
+}
+
 // Elevação da base visual de um peão (a raiz do grupo fica TH abaixo do topo
 // da superfície). A ponte é uma camada própria: quando o peão entra nela, a
 // altura visual precisa acompanhar o deck, mesmo que o piso abaixo seja lava,
@@ -15638,7 +15701,7 @@ function _spinAttackFxDispose3D(anim){
 
 function _spinAttackFxBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group();
+  const T = window.THREE, group = new T.Group(); group.name = 'spin-attack-fx';
   group.name = anim.abilityId === 'tecnica_redemoinho_morte'
     ? 'redemoinho-da-morte-fx' : 'ataque-giratorio-fx';
   const color = new T.Color(anim.color);
@@ -37451,7 +37514,7 @@ function _senhorAguasSetLine(line, points, T){
 
 function _senhorAguasBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group();
+  const T = window.THREE, group = new T.Group(); group.name = 'senhor-aguas-animation';
   group.name = anim.whirlpools ? 'senhor-das-aguas-redemoinhos'
     : (anim.cold ? 'chamado-do-inverno-animation' : 'senhor-das-aguas-animation');
   const deep = anim.material === 'agua_profunda' || anim.material === 'rodamoinho_profundo';
@@ -37917,7 +37980,7 @@ function _iraRochaVisible(anim, state){
 
 function _iraRochaBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group();
+  const T = window.THREE, group = new T.Group(); group.name = 'ira-rocha-animation';
   group.name = anim.isFlames ? 'ira-rocha-chamas-vivas' : 'ira-rocha-ardente';
   const { hot, orange, bright } = IRA_ROCHA_CORES;
   const glowMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0,
@@ -47191,7 +47254,7 @@ function init3D(state){
   const spellFireFx = _mkOverlayPool((key) => {
     const [fx, fy] = _xyDaChave(key);
     if(!_ehChao(fx, fy)) return null;
-    const fireGroup = new T.Group(); fireGroup.position.set(fx, 0, fy);
+    const fireGroup = new T.Group(); fireGroup.position.set(fx, elevacaoChao3D(state, fx, fy), fy);
     const fireGlowMat = new T.MeshBasicMaterial({ color:0xff4a00, transparent:true, opacity:0.52, depthWrite:false, side:T.DoubleSide, blending:T.AdditiveBlending });
     // Plano quase do tamanho total da casa: a brasa persistente ocupa o tile
     // inteiro, e não apenas um círculo no centro.
@@ -47236,7 +47299,7 @@ function init3D(state){
     if(!_ehChao(fx, fy)) return null;
     const fireGroup = new T.Group();
     fireGroup.name = 'prisao-chamas-viva';
-    fireGroup.position.set(fx, 0, fy);
+    fireGroup.position.set(fx, elevacaoChao3D(state, fx, fy), fy);
     fireGroup.visible = false;
     scene.add(fireGroup);
     const embers = [];
@@ -49305,6 +49368,10 @@ function startLoop3D(){
     }
 
     // Portrait is HTML-only (class selection screen). Never meshes on the board.
+
+    // Por último: os efeitos montados na altura zero sobem até o topo do
+    // terreno da casa (platôs e pontes), depois que todos já se atualizaram.
+    _elevarEfeitosChao3D();
 
     g3.renderer.render(g3.scene, g3.camera);
   }
@@ -52533,12 +52600,12 @@ function renderMap3D(state){
       const dec = obterFig(`arm:${arm.id}`,
         JSON.stringify([arm.image, arm.ativada]),
         () => _armadilhaDecal3D(arm, ax, ay));
-      dec.position.set(ax, 0.232, ay);   // logo acima do piso (TH=0.22)
+      dec.position.set(ax, topoSuperficie3D(state, ax, ay, 0.232), ay);   // logo acima do piso (TH=0.22)
     } else {
       const sp = obterFig(`arm:${arm.id}`,
         JSON.stringify([arm.icone, arm.ativada, arm.so_luccas]),
         () => _armadilhaSprite3D(arm, ax, ay));
-      sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
+      sp.position.set(ax, topoSuperficie3D(state, ax, ay, 0.34), ay);   // sprite não tem hover-lift
     }
   }
   // Descarta as figuras que saíram de cena (morte, fora da visão, consumidas).

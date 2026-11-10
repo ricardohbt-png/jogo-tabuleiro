@@ -249,6 +249,9 @@ ALTURA_MIN = 0
 ALTURA_MAX = 10
 ALTURA_INICIAL_VOO = 2
 ALTURA_POR_QUADRADO_ALCANCE = 2
+# Altura do olho/corpo de uma criatura acima do piso, em níveis de terreno.
+# Usada só na linha de visão por cima do relevo.
+ALTURA_OLHO_NIVEIS = 1
 ALTURA_MAX_BOTA_ALADA = 3
 # Passar (e parar) por cima de algo exige voar a esta distância acima dele, em
 # pontos de altura (2 pontos = 1 quadrado). Depende do PORTE de quem está
@@ -23695,8 +23698,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvo_entidade = next((entidade for entidade in
                               list(self.players.values()) + list(self.monsters.values())
                               if entidade.get("pos") == [x1, y1]), None)
-        z0 = self._elevacao_terreno(x0, y0) + (normalizar_altura(observador.get("altura", 0)) if observador else 0)
-        z1 = self._elevacao_terreno(x1, y1) + (normalizar_altura(alvo_entidade.get("altura", 0)) if alvo_entidade else 0)
+        # Em níveis de terreno. O raio sai da altura do OLHO de quem olha e vai
+        # até o CORPO do alvo (1 nível acima do piso de cada um), não rente ao
+        # chão: rente ao chão, a borda de um platô de 1 nível escondia tudo o
+        # que estava em cima dele, e o ataque à distância era recusado. Voo
+        # conta 2 pontos por nível (ALTURA_POR_QUADRADO_ALCANCE).
+        z0 = (self._elevacao_terreno(x0, y0) + ALTURA_OLHO_NIVEIS
+              + (normalizar_altura(observador.get("altura", 0)) / ALTURA_POR_QUADRADO_ALCANCE
+                 if observador else 0))
+        z1 = (self._elevacao_terreno(x1, y1) + ALTURA_OLHO_NIVEIS
+              + (normalizar_altura(alvo_entidade.get("altura", 0)) / ALTURA_POR_QUADRADO_ALCANCE
+                 if alvo_entidade else 0))
         dz2 = dx * dx + dy * dy
 
         def bloqueia_por_elevacao(cx, cy):
@@ -24171,8 +24183,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 p, t, wr, target.get("altura", ALTURA_MIN)) for t in body)
         # Um desnível de até 1 nível ainda permite combate adjacente; diferenças
         # maiores bloqueiam o golpe corpo a corpo.
-        if abs(self._altura_efetiva(p) - self._altura_efetiva(target)) > 1:
-            return False
+        degraus = self._degraus_corpo_a_corpo(self._altura_efetiva(p), self._altura_efetiva(target))
+        if degraus:
+            return self._haste_vence_desnivel(p, target, degraus)
         if w.get("reach") == "lanca":
             return self._lanca_no_alcance_jogador(p["pos"], target)
         if w.get("reach") == "cajado":
@@ -24629,11 +24642,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.parede_bloqueia_linha_de_tiro", alvo=target["name"])})
                     return
-            elif abs(self._altura_efetiva(p) - self._altura_efetiva(target)) > 1:
-                await self.send_to(pid, {
-                    "type": "error",
-                    "msg": T("erro.alvo_fora_de_alcance_aproxime_ortogonal", alvo=target["name"])
-                }); return
+            elif self._degraus_corpo_a_corpo(self._altura_efetiva(p), self._altura_efetiva(target)):
+                degraus = self._degraus_corpo_a_corpo(self._altura_efetiva(p), self._altura_efetiva(target))
+                if not self._haste_vence_desnivel(p, target, degraus):
+                    await self.send_to(pid, {
+                        "type": "error",
+                        "msg": T("erro.desnivel_corpo_a_corpo", alvo=target["name"], n=int(math.ceil(degraus)))
+                    }); return
             elif (weapon_here or {}).get("reach") == "lanca":
                 # LanÃ§a: alcance estendido (2 retos ortogonais / 1 diagonal).
                 if not self._lanca_no_alcance_jogador(p["pos"], target):
@@ -40166,6 +40181,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return any(max(abs(tx - px), abs(ty - py)) == 1
                    for tx, ty in self._monster_tiles(m))
 
+    def _haste_vence_desnivel(self, p, target, degraus):
+        """Golpe corpo a corpo contra alvo em outra altura.
+
+        Cada quadrado de subida soma à distância. Só a lança (alcance 2) tem
+        sobra para 1 nível, e apenas contra quem está adjacente.
+        """
+        w = p.get("weapon") or {}
+        return (degraus <= 1 and w.get("reach") == "lanca"
+                and self._lanca_curta_no_alcance_jogador(p["pos"], target))
+
     def _lanca_curta_no_alcance_jogador(self, pos, m):
         """A Lança Curta atinge qualquer uma das 8 casas adjacentes."""
         px, py = pos
@@ -40174,8 +40199,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _em_alcance_ogro(self, m, alvo_pos):
         """True se o alvo está ao alcance de ataque do ogro (lança = alcance estendido)."""
-        if abs(self._altura_efetiva(m) - self._altura_entidade_em(alvo_pos)) > 1:
-            return False
+        degraus = self._degraus_corpo_a_corpo(self._altura_efetiva(m), self._altura_entidade_em(alvo_pos))
+        if degraus:
+            # Com a lança (alcance 2) o ogro ainda alcança quem está 1 nível
+            # acima, adjacente; sem ela, a subida já o tira de alcance.
+            return (bool(m.get("reach_lanca")) and degraus <= 1
+                    and self._is_adjacent_to_monster(alvo_pos, m))
         if m.get("reach_lanca"):
             return self._lanca_no_alcance(m, alvo_pos)
         return self._is_adjacent_to_monster(alvo_pos, m)
@@ -48664,16 +48693,32 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         entidade = self._entidade_em_pos(pos)
         if entidade:
             return self._altura_efetiva(entidade)
-        return self._elevacao_terreno(*pos) if len(pos) >= 2 else ALTURA_MIN
+        return (self._elevacao_terreno(*pos) * ALTURA_POR_QUADRADO_ALCANCE
+                if len(pos) >= 2 else ALTURA_MIN)
 
     def _altura_efetiva(self, entidade=None, pos=None, altura=None):
-        """Altura usada no combate: elevação do piso + altura de voo."""
+        """Altura usada no combate, em pontos de altura (2 pontos = 1 quadrado).
+
+        Cada nível de terreno vale um quadrado inteiro, como o voo a 2 pontos:
+        um alvo 1 nível acima, adjacente, está a 2 quadrados (1 + 1 de subida).
+        """
         if pos is None and isinstance(entidade, dict):
             pos = entidade.get("pos")
         if altura is None and isinstance(entidade, dict):
             altura = entidade.get("altura", ALTURA_MIN)
         piso = self._elevacao_terreno(*(pos or [0, 0])) if pos and len(pos) >= 2 else 0
-        return piso + normalizar_altura(altura, ALTURA_MIN)
+        return piso * ALTURA_POR_QUADRADO_ALCANCE + normalizar_altura(altura, ALTURA_MIN)
+
+    def _degraus_corpo_a_corpo(self, altura_a, altura_b):
+        """Quadrados de subida que um golpe corpo a corpo precisa vencer.
+
+        Meio quadrado (1 ponto, uma criatura pairando baixo) segue tolerado,
+        como antes. Acima disso a subida conta inteira, em meio-quadrados
+        exatos: 1 nível de terreno = 1 quadrado (só armas de alcance 2 atingem
+        quem está adjacente e 1 nível acima/abaixo); voo a 3 pontos = 1,5.
+        """
+        d = abs(int(altura_a) - int(altura_b))
+        return 0 if d <= 1 else d / ALTURA_POR_QUADRADO_ALCANCE
 
     def _custo_vertical_terreno(self, origem, destino_pos, destino=None,
                                 altura_destino=None):
@@ -48713,10 +48758,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return min(max(abs(target_pos[0] - tx), abs(target_pos[1] - ty))
                        for tx, ty in self._monster_tiles(m)) <= limite
         alvo_altura = (self._altura_entidade_em(target_pos) if target_altitude is None
-                       else self._elevacao_terreno(*target_pos) + normalizar_altura(target_altitude))
-        if abs(self._altura_efetiva(m) - alvo_altura) > 1:
-            return False
+                       else self._elevacao_terreno(*target_pos) * ALTURA_POR_QUADRADO_ALCANCE
+                       + normalizar_altura(target_altitude))
         alcance = atk_def.get("reach", 1) or 1
+        degraus = self._degraus_corpo_a_corpo(self._altura_efetiva(m), alvo_altura)
+        if degraus:
+            # A subida come o alcance: sobra só o golpe adjacente, e só para
+            # quem tem alcance de sobra (lança, haste).
+            try:
+                if int(alcance) - degraus < 1:
+                    return False
+            except (TypeError, ValueError):
+                return False
+            return any(max(abs(target_pos[0] - tx), abs(target_pos[1] - ty)) == 1
+                       for tx, ty in self._monster_tiles(m))
         if self._monster_is_2x2(m) and not m.get("oriented"):
             return list(target_pos) in self._monster_orthogonal_attack_tiles(m, alcance)
         if self._monster_has_front_row(m):
@@ -48740,7 +48795,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             except (TypeError, ValueError):
                 return False
             return attack_range - int(math.ceil(abs(attacker_height - target_height) / ALTURA_POR_QUADRADO_ALCANCE)) >= 1
-        return abs(attacker_height - target_height) <= 1
+        degraus = self._degraus_corpo_a_corpo(attacker_height, target_height)
+        if not degraus:
+            return True
+        try:
+            return int(atk_def.get("reach", 1) or 1) - degraus >= 1
+        except (TypeError, ValueError):
+            return False
 
     def _monster_rear_attack_tiles(self, m, reach=1):
         """Casas imediatamente atrás de um footprint largo, pela sua facing.

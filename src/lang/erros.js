@@ -281,6 +281,10 @@ window.LANG_ERROS = {
     "en": "⚠ {alvo} is out of range! Get closer (1 orthogonal square).",
     "pt": "⚠ {alvo} está fora de alcance! Aproxime-se (1 quadrado ortogonal)."
   },
+  "erro.desnivel_corpo_a_corpo": {
+    "en": "⚠ {alvo} is on different ground: the height adds {n} square(s) to the distance. Use a ranged weapon, a thrown weapon or a spear.",
+    "pt": "⚠ {alvo} está em outra altura: o desnível soma {n} quadrado(s) à distância. Use arma à distância, arremesso ou lança."
+  },
   "erro.alvo_fora_de_alcance_de_arremesso": {
     "en": "⚠ {alvo} out of throwing range (max {alcance} squares).",
     "pt": "⚠ {alvo} fora de alcance de arremesso (máx {alcance} quadrados)."

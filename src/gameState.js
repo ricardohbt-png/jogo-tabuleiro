@@ -1100,6 +1100,7 @@ const GS = (() => {
   }
 
   const ALTURA_POR_QUADRADO_ALCANCE = 2;
+  const ALTURA_OLHO_NIVEIS = 1;   // espelho do server.py
   // Espelha ALTURA_SOBREPOR_POR_PORTE do servidor: altura (em pontos) acima de
   // quem está embaixo para voar por cima dele. Herói/porte ausente = médio.
   const ALTURA_SOBREPOR_POR_PORTE = {
@@ -1185,8 +1186,12 @@ const GS = (() => {
     const alvo = [...(state.players || []), ...(state.monsters || [])]
       .find(entidade => entidade && entidade.pos?.[0] === (bx | 0) && entidade.pos?.[1] === (by | 0));
     const vooLivre = !!(origem?.voo && origem.ignora_obstaculos_voo && alturaDe(origem) > 0);
-    const z0 = _elevacaoTerreno(ax | 0, ay | 0, state) + (origem ? alturaDe(origem) : 0);
-    const z1 = _elevacaoTerreno(bx | 0, by | 0, state) + (alvo ? alturaDe(alvo) : 0);
+    // Espelho de `_tem_linha_de_visao`: em níveis, do olho de quem olha ao
+    // corpo do alvo (1 nível acima de cada piso); voo vale 2 pontos por nível.
+    const z0 = _elevacaoTerreno(ax | 0, ay | 0, state) + ALTURA_OLHO_NIVEIS
+      + (origem ? alturaDe(origem) / ALTURA_POR_QUADRADO_ALCANCE : 0);
+    const z1 = _elevacaoTerreno(bx | 0, by | 0, state) + ALTURA_OLHO_NIVEIS
+      + (alvo ? alturaDe(alvo) / ALTURA_POR_QUADRADO_ALCANCE : 0);
     const dxAbs = Math.abs((bx | 0) - (ax | 0));
     const dyAbs = Math.abs((by | 0) - (ay | 0));
     const dz2 = dxAbs * dxAbs + dyAbs * dyAbs;
@@ -3448,17 +3453,27 @@ const GS = (() => {
     const st = state || gameState;
     const pisoA = _elevacaoTerreno(posA?.[0] || 0, posA?.[1] || 0, st);
     const pisoB = _elevacaoTerreno(posB?.[0] || 0, posB?.[1] || 0, st);
-    const zA = pisoA + alturaDe({ altura: alturaA });
-    const zB = pisoB + alturaDe({ altura: alturaB });
-    return Math.ceil(Math.abs(zA - zB) / 2);
+    // Em pontos de altura: cada nível de terreno vale 1 quadrado (2 pontos),
+    // como no servidor (`_altura_efetiva`).
+    const zA = pisoA * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaA });
+    const zB = pisoB * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaB });
+    return Math.ceil(Math.abs(zA - zB) / ALTURA_POR_QUADRADO_ALCANCE);
   }
 
   function diferencaVerticalTerreno(posA, alturaA, posB, alturaB, state=null) {
     const st = state || gameState;
     const pisoA = _elevacaoTerreno(posA?.[0] || 0, posA?.[1] || 0, st);
     const pisoB = _elevacaoTerreno(posB?.[0] || 0, posB?.[1] || 0, st);
-    return Math.abs((pisoA + alturaDe({ altura: alturaA })) -
-      (pisoB + alturaDe({ altura: alturaB })));
+    return Math.abs((pisoA * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaA })) -
+      (pisoB * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaB })));
+  }
+
+  // Quadrados de subida que um golpe corpo a corpo precisa vencer (espelho de
+  // `_degraus_corpo_a_corpo`): 1 ponto de voo ainda é tolerado; acima disso
+  // conta em meio-quadrados (1 nível de terreno = 1 quadrado).
+  function degrausCorpoACorpo(posA, alturaA, posB, alturaB, state=null) {
+    const d = diferencaVerticalTerreno(posA, alturaA, posB, alturaB, state);
+    return d <= 1 ? 0 : d / ALTURA_POR_QUADRADO_ALCANCE;
   }
 
   function faixaAlturaQueda(altura) {
@@ -3505,7 +3520,10 @@ const GS = (() => {
       }
       return distancia <= alcanceTotal;
     }
-    if (diferencaVerticalTerreno(myP.pos, alturaDe(myP), [tx, ty], targetAltitude) > 1) return false;
+    const degraus = degrausCorpoACorpo(myP.pos, alturaDe(myP), [tx, ty], targetAltitude);
+    // A subida soma à distância: só a lança (alcance 2) ainda alcança quem
+    // está adjacente e 1 nível acima/abaixo (espelho de `_haste_vence_desnivel`).
+    if (degraus) return degraus <= 1 && weapon.reach === 'lanca' && Math.max(dx, dy) === 1;
     if (weapon.reach === 'lanca')
       return Math.max(dx, dy) === 1 || (dx === 0 && dy === 2) || (dx === 2 && dy === 0);
     if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
@@ -4227,6 +4245,7 @@ const GS = (() => {
     coberturaBaixa,
     custoVerticalTerreno,
     diferencaVerticalTerreno,
+    degrausCorpoACorpo,
 
     // ── Footprint de um monstro (1×1, bloco size, ou 2 casas orientadas) ──
     monsterTiles,
