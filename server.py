@@ -42002,6 +42002,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if criatura.get("cola_sem_movimento"):
             return 0
         base = max(0, int(base_moves or 0))
+        # Monstro imóvel por ficha (movimento 0, ex.: bonecos de treino) nunca
+        # ganha o passo mínimo, senão a busca pela última posição o faz andar.
+        if (not self._eh_jogador(criatura) and "base_movement" in criatura
+                and int(criatura.get("base_movement") or 0) == 0):
+            return 0
         # A Canção Heroica do Xamã entra no orçamento antes dos descontos de
         # terreno. Heróis continuam usando o cálculo próprio do bardo.
         if not self._eh_jogador(criatura):
@@ -42308,11 +42313,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             pen_str=pen_str,
             resistiu_if_save_ok_else='resistiu' if save_ok else 'falhou')
         await self.gm_say(resistencia_texto)
-        # Monstro imóvel por ficha (movimento 0, ex.: bonecos de treino) nunca
-        # ganha o passo mínimo, senão a busca pela última posição o faz andar.
-        if (not self._eh_jogador(criatura) and "base_movement" in criatura
-                and int(criatura.get("base_movement") or 0) == 0):
-            return 0
         # O feedback breve sobre o peão não basta para identificar a rolagem
         # da armadilha; mostre o dado e mantenha o resultado no banner privado.
         if fonte == "armadilha de dardos" and self._eh_jogador(alvo):
