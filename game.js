@@ -5314,6 +5314,8 @@ let _itemTooltipReady = false;
 // mantém as proporções. transform não mexe no left/top e o getBoundingClientRect
 // já devolve o tamanho ampliado, então o posicionamento continua certo.
 const ESCALA_TOOLTIP_ITEM = 1.5;
+// Tempo com o mouse parado sobre o item até a descrição completa aparecer.
+const ATRASO_DESCRICAO_ITEM_MS = 1000;
 // Elemento que abriu o quadro. Remover (ou ocultar) um elemento que está sob o
 // cursor NÃO dispara mouseleave — é o caso de pegar um item do baú, que
 // re-renderiza a lista e destrói a linha em hover. Sem esse registro o quadro
@@ -5386,7 +5388,7 @@ function _ligarTooltipItem(elemento, nome, renderDetalhes){
       tip.style.pointerEvents = 'auto';
       tip.scrollTop = 0;
       _posicionarTooltipItem(tip, elemento);
-    }, 2000);
+    }, ATRASO_DESCRICAO_ITEM_MS);
   };
   elemento.addEventListener('mouseenter', abrir);
   elemento.addEventListener('mouseleave', () => {
