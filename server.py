@@ -1660,6 +1660,7 @@ WEAPONS = {
     "relampago_de_mao": {"id": "relampago_de_mao", "name": "Relâmpago de Mão", "die": "1d6", "stat": "str_", "throw_range": 4, "categoria": "perfurante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "return_on_throw": True, "lightning_line": True, "lightning_line_cooldown": 10, "icon": "assets/itens magicos/relampago_de_mao.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "choque_do_trovao": {"id": "choque_do_trovao", "name": "Choque do Trovão", "die": "1d8", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "lightning"}], "thunder_push_on_crit": True, "thunder_pulse": True, "thunder_pulse_cooldown": 10, "icon": "assets/itens magicos/choque_do_trovao.png", "allowed_classes": ["cleric", "paladin", "warrior"]},
     "mangual_sol_cativo": {"id": "mangual_sol_cativo", "name": "Mangual do Sol Cativo", "die": "1d8", "stat": "str_", "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "holy"}], "solar_flare": True, "solar_flare_cooldown": 10, "icon": "assets/itens magicos/mangual_sol_cativo.png", "allowed_classes": ["cleric", "paladin", "warrior"]},
+    "mangual_elo_astral": {"id": "mangual_elo_astral", "name": "Mangual do Elo Astral", "die": "1d8", "stat": "str_", "reach": "mangual", "astral_chain_reach": 4, "crit_nat20_multiplier": 2.5, "categoria": "contundente", "magical": True, "atk_bonus": 2, "damage_bonus": 2, "icon": "assets/itens magicos/mangual_elo_astral.png", "allowed_classes": ["cleric", "paladin", "warrior"]},
     "bordao_horizonte_partido": {"id": "bordao_horizonte_partido", "name": "Bordão do Horizonte Partido", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "horizon_shock": True, "horizon_shock_cooldown": 10, "icon": "assets/itens magicos/bordao_horizonte_partido.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
     "bordao_horizonte_despedacado": {"id": "bordao_horizonte_despedacado", "name": "Bordão do Horizonte Despedaçado", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente", "magical": True, "atk_bonus": 4, "damage_bonus": 4, "horizon_shock": True, "horizon_shock_cooldown": 10, "horizon_shock_power": 4, "icon": "assets/itens magicos/bordao_horizonte_despedacado.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
     "bordao_serpente_bronze": {"id": "bordao_serpente_bronze", "name": "Bordão da Serpente de Bronze", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "bronze_serpent_bind": True, "bronze_serpent_cooldown": 10, "icon": "assets/itens magicos/bordao_serpente_bronze.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
@@ -1668,7 +1669,7 @@ WEAPONS = {
     "lamina_trovejante": {"id": "lamina_trovejante", "name": "Lâmina Trovejante", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "lightning"}], "extra_damage_once_per_turn": True, "icon": "assets/itens magicos/lamina_trovejante.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "cinzas_ardentes": {"id": "cinzas_ardentes", "name": "Cinzas Ardentes", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "fire"}], "fire_on_hit": True, "fire_crit_damage": "1d6", "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "cinzas_ardentes_mais_3": {"id": "cinzas_ardentes_mais_3", "name": "Cinzas Ardentes +3", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 3, "damage_bonus": 3, "extra_damages": [{"die": "1d4", "type": "fire"}], "fire_on_hit": True, "fire_crit_damage": "2d6", "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
-    "espada_bastarda_ruptura": {"id": "espada_bastarda_ruptura", "name": "Espada Bastarda da Ruptura", "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 4, "damage_bonus": 4, "ignora_reducao_dano": 2, "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["paladin", "warrior"]},
+    "espada_bastarda_ruptura": {"id": "espada_bastarda_ruptura", "name": "Espada Bastarda da Ruptura", "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 4, "damage_bonus": 4, "ignora_reducao_dano": 2, "icon": "assets/itens magicos/espada_ruptura.png", "allowed_classes": ["paladin", "warrior"]},
     "alabarda_vendaval": {"id": "alabarda_vendaval", "name": "Alabarda do Vendaval", "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True, "magical": True, "atk_bonus": 1, "damage_bonus": 1, "wind_line": True, "wind_line_cooldown": 10, "icon": "assets/itens magicos/alabarda_do_vendaval.png", "allowed_classes": ["paladin", "warrior"]},
     "alabarda_do_eclipse": {"id": "alabarda_do_eclipse", "name": "Alabarda do Eclipse", "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True, "magical": True, "atk_bonus": 2, "damage_bonus": 2, "crit_min_nat_roll": 19, "icon": "assets/itens magicos/alabarda_do_eclipse.png", "allowed_classes": ["paladin", "warrior"]},
     "marreta_quebra_couracas": {"id": "marreta_quebra_couracas", "name": "Marreta Quebra-Couraças", "die": "2d8", "stat": "str_", "categoria": "contundente", "two_handed": True, "ignora_reducao_dano": 2, "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/marreta_quebra_couracas.png", "allowed_classes": ["paladin", "warrior"]},
@@ -1697,24 +1698,39 @@ WEAPONS = {
     "espada2m":      {"id": "espada2m",      "name": "Espada de 2 Mãos",    "die": "2d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "two_handed": True},
     # â”€â”€ Ã€ DistÃ¢ncia â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     "arco_curto":    {"id": "arco_curto",    "name": "Arco Curto",           "die": "1d6",  "stat": "dex",  "range": 6,  "categoria": "perfurante"},
+    "arco_composto_curto": {"id": "arco_composto_curto", "name": "Arco Composto Curto", "die": "1d8", "stat": "dex", "range": 6, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/arco_composto_curto.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "hand_crossbow": {"id": "hand_crossbow", "name": "Besta de Mão",         "die": "1d4",  "stat": "dex",  "range": 4,  "categoria": "perfurante"},
+    "besta_duelista": {"id": "besta_duelista", "name": "Besta do Duelista", "die": "1d6", "stat": "dex", "range": 4, "categoria": "perfurante", "icon": "assets/itens/besta_do_duelista.png"},
     "longbow":       {"id": "longbow",       "name": "Arco Longo",           "die": "1d8",  "stat": "dex",  "range": 10, "categoria": "perfurante"},
+    "arco_composto_longo": {"id": "arco_composto_longo", "name": "Arco Composto Longo", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/arco_composto_longo.png", "allowed_classes": ["paladin", "warrior"]},
+    "arco_bruto_combatente": {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": True, "categoria": "perfurante", "icon": "assets/itens/arco_bruto_do_combatente.png", "allowed_classes": ["paladin", "warrior"]},
     "besta":         {"id": "besta",         "name": "Besta",                "die": "1d8",  "stat": "dex",  "range": 8,  "categoria": "perfurante"},
+    "besta_pesada":  {"id": "besta_pesada",  "name": "Besta Pesada",         "die": "1d10", "stat": "dex",  "range": 12, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_pesada.png", "allowed_classes": ["warrior", "paladin", "cleric", "rogue"]},
+    "besta_repetidora_patrulha": {"id": "besta_repetidora_patrulha", "name": "Besta Repetidora de Patrulha", "die": "1d6", "stat": "dex", "range": 6, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_repetidora_media.png", "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "allowed_classes": ["warrior", "paladin", "bard", "rogue"]},
+    "besta_repetidora_guerra": {"id": "besta_repetidora_guerra", "name": "Besta Repetidora de Guerra", "die": "1d8", "stat": "dex", "range": 8, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_repetidora_poderosa.png", "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "allowed_classes": ["warrior", "paladin", "bard", "rogue"]},
 }
 
 # Armas de projÃ©til â†’ tipos de muniÃ§Ã£o aceitos (bÃ¡sica e especial)
 RANGED_AMMO = {
     "arco_curto":    ["flechas", "flechas_incendiarias", "flechas_prata", "flechas_explosivas", "flechas_magicas", "flechas_magicas_mais_2"],
+    "arco_composto_curto": ["flechas", "flechas_incendiarias", "flechas_prata", "flechas_explosivas", "flechas_magicas", "flechas_magicas_mais_2"],
     "longbow":       ["flechas", "flechas_incendiarias", "flechas_prata", "flechas_explosivas", "flechas_magicas", "flechas_magicas_mais_2"],
+    "arco_composto_longo": ["flechas", "flechas_incendiarias", "flechas_prata", "flechas_explosivas", "flechas_magicas", "flechas_magicas_mais_2"],
+    "arco_bruto_combatente": ["flechas", "flechas_incendiarias", "flechas_prata", "flechas_explosivas", "flechas_magicas", "flechas_magicas_mais_2"],
     "besta":         ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
+    "besta_pesada":  ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
+    "besta_repetidora_patrulha": ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
+    "besta_repetidora_guerra": ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
     "hand_crossbow": ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
+    "besta_duelista": ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
 }
+HAND_CROSSBOW_IDS = frozenset(("hand_crossbow", "besta_duelista"))
 
 # ── Projétil visual de um ataque (frente B — só afeta a animação do cliente) ──
 # Devolve {"kind": ...} ou None. Herói: pela arma (id nativo ou `ammo` do
 # editor); arma de haste com `range` (chicote, alabarda) NÃO tem projétil.
 # Monstro/servo: `projectile` explícito no ataque, senão range≥2 + perfurante.
-_PROJETIL_POR_ARMA    = {"arco_curto": "arrow", "longbow": "arrow", "besta": "bolt", "hand_crossbow": "bolt"}
+_PROJETIL_POR_ARMA    = {"arco_curto": "arrow", "arco_composto_curto": "arrow", "longbow": "arrow", "arco_composto_longo": "arrow", "arco_bruto_combatente": "arrow", "besta": "bolt", "besta_pesada": "bolt", "besta_repetidora_patrulha": "bolt", "besta_repetidora_guerra": "bolt", "hand_crossbow": "bolt", "besta_duelista": "bolt"}
 _PROJETIL_POR_MUNICAO = {"flechas": "arrow", "flechas_explosivas": "arrow",
                          "virotes": "bolt", "virotes_explosivos": "bolt"}
 _PROJETIL_KINDS       = ("arrow", "bolt", "spear")
@@ -5189,7 +5205,7 @@ _NORM_ELEMENTO = {
 # usam tambÃ©m os metadados `corrosion_materials` no catÃ¡logo abaixo.
 CORROSAO_ARMADURA_ORGANICA = {"leather", "cloak", "leather_plate", "leather_mail", "monster_leather_plate"}
 CORROSAO_ARMA_MADEIRA = {"cajado_madeira", "bordao", "staff", "instrumento",
-                         "arco_curto", "longbow", "besta", "hand_crossbow"}
+                         "arco_curto", "longbow", "besta", "hand_crossbow", "besta_duelista"}
 # Devorador de Metal: corrÃ³i metal (madeira/couro/ossos sÃ£o imunes).
 CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate",
                            "escudo_p", "escudo_g"}
@@ -7649,6 +7665,7 @@ SHOP_WEAPONS = [
     {"id": "chicote",       "name": "Chicote",            "emoji": "🪢",  "die": "1d4",  "stat": "dex",  "price": 8,  "range": 2, "off_hand_weapon": True, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "hand_crossbow", "name": "Besta de Mão",       "emoji": "🏹",  "die": "1d4",  "stat": "dex",  "price": 10, "range": 4, "categoria": "perfurante"},
+    {"id": "besta_duelista", "name": "Besta do Duelista", "emoji": "🏹", "icon": "assets/itens/besta_do_duelista.png", "die": "1d6", "stat": "dex", "price": 30, "range": 4, "categoria": "perfurante", "descricao": "Besta do Duelista: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista."},
     # â”€â”€â”€ MÃ©dias (1d6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca_curta",   "name": "Lança Curta",        "emoji": "🔱",  "die": "1d6",  "stat": "str_", "price": 7,  "throw_range": 4, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
@@ -7669,6 +7686,7 @@ SHOP_WEAPONS = [
      "allowed_classes": ["warrior"]},
     {"id": "arco_curto",    "name": "Arco Curto",         "emoji": "🏹",  "die": "1d6",  "stat": "dex",  "price": 12, "range": 6, "categoria": "perfurante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    {"id": "arco_composto_curto", "name": "Arco Composto Curto", "emoji": "🏹", "icon": "assets/itens/arco_composto_curto.png", "die": "1d8", "stat": "dex", "price": 35, "range": 6, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "allowed_classes": ["bard", "rogue", "paladin", "warrior"], "descricao": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."},
     # â”€â”€â”€ Pesadas (1d8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca",         "name": "Lança",              "emoji": "🔱",  "die": "1d8",  "stat": "str_", "price": 14, "reach": "lanca", "throw_range": 4, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
@@ -7676,10 +7694,15 @@ SHOP_WEAPONS = [
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
+    {"id": "arco_composto_longo", "name": "Arco Composto Longo", "emoji": "🏹", "icon": "assets/itens/arco_composto_longo.png", "die": "1d10", "stat": "dex", "price": 60, "range": 10, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."},
+    {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "emoji": "🏹", "icon": "assets/itens/arco_bruto_do_combatente.png", "die": "1d10", "stat": "dex", "price": 120, "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": True, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."},
     {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "crit_nat20_multiplier": 3, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
     {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 8, "categoria": "perfurante",
      "allowed_classes": ["cleric", "rogue", "bard", "paladin", "warrior"]},
+    {"id": "besta_pesada", "name": "Besta Pesada", "emoji": "🏹", "icon": "assets/itens/besta_pesada.png", "die": "1d10", "stat": "dex", "price": 100, "range": 12, "two_handed": True, "categoria": "perfurante", "allowed_classes": ["warrior", "paladin", "cleric", "rogue"], "descricao": "Besta Pesada mundana: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino."},
+    {"id": "besta_repetidora_patrulha", "name": "Besta Repetidora de Patrulha", "emoji": "🏹", "icon": "assets/itens/besta_repetidora_media.png", "die": "1d6", "stat": "dex", "price": 70, "range": 6, "two_handed": True, "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "categoria": "perfurante", "allowed_classes": ["warrior", "paladin", "bard", "rogue"], "descricao": "Besta Repetidora de Patrulha mundana: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."},
+    {"id": "besta_repetidora_guerra", "name": "Besta Repetidora de Guerra", "emoji": "🏹", "icon": "assets/itens/besta_repetidora_poderosa.png", "die": "1d8", "stat": "dex", "price": 120, "range": 8, "two_handed": True, "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "categoria": "perfurante", "allowed_classes": ["warrior", "paladin", "bard", "rogue"], "descricao": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."},
     {"id": "mangual",       "name": "Mangual",            "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 20, "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
     {"id": "machado_duplo", "name": "Machado Duplo",      "emoji": "🪓",  "die": "1d10", "stat": "str_", "price": 22, "extra_attack_on_crit_min_nat": 19, "categoria": "cortante",
@@ -7716,7 +7739,9 @@ def _descricao_arma_catalogo(arma):
         partes.append("Alcance: qualquer casa adjacente.")
     elif arma.get("range") is not None:
         alcance_txt = f"Alcance: {arma['range']} casas em linha reta"
-        if arma.get("id") in {"arco_curto", "longbow"}:
+        if arma.get("range_all_directions"):
+            alcance_txt = f"Alcance: {arma['range']} casas em todas as direções, inclusive diagonais"
+        elif arma.get("id") in {"arco_curto", "longbow"}:
             alcance_txt += f" ou {max(1, (int(arma['range']) + 1) // 2)} na diagonal"
         partes.append(alcance_txt + ".")
     if arma.get("throw_range") is not None:
@@ -7755,8 +7780,8 @@ for _weapon in WEAPONS.values():
 # Variantes de prata: preÃ§o Ã—10, 5 nÃ­veis atÃ© quebrar e os 2 primeiros sem penalidade.
 # Armas de projÃ©til e cajados de madeira nÃ£o recebem revestimento de prata.
 SILVER_WEAPON_EXCLUSIONS = {
-    "hand_crossbow", "besta",      # bestas
-    "arco_curto", "longbow",       # arcos
+    "hand_crossbow", "besta_duelista", "besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra",  # bestas
+    "arco_curto", "longbow", "arco_composto_curto", "arco_composto_longo", "arco_bruto_combatente",  # arcos
     "staff", "cajado_madeira",    # cajados de madeira
 }
 for _weapon in list(SHOP_WEAPONS):
@@ -7926,6 +7951,14 @@ SHOP_WEAPONS.extend([
      "solar_flare": True, "solar_flare_cooldown": 10,
      "allowed_classes": ["cleric", "paladin", "warrior"],
      "descricao": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."},
+    {"id": "mangual_elo_astral", "name": "Mangual do Elo Astral",
+     "emoji": "🌌", "icon": "assets/itens magicos/mangual_elo_astral.png",
+     "die": "1d8", "stat": "str_", "price": 5000, "reach": "mangual",
+     "astral_chain_reach": 4, "crit_nat20_multiplier": 2.5,
+     "categoria": "contundente", "magical": True,
+     "atk_bonus": 2, "damage_bonus": 2,
+     "allowed_classes": ["cleric", "paladin", "warrior"],
+     "descricao": "Raridade: Muito rara. Mangual mágico +2 no acerto e no dano; causa 1d8 contundente + Força e tem crítico natural ×2,5. Como poder passivo, a corrente astral alcança até 4 casas em linha reta ortogonal ou diagonal, desde que haja linha de visão; o ataque atinge apenas o alvo escolhido e a corrente retorna imediatamente. Sem recarga. Uso de Clérigo, Paladino e Guerreiro."},
     {"id": "marreta_quebra_couracas", "name": "Marreta Quebra-Couraças",
      "emoji": "🔨", "icon": "assets/itens magicos/marreta_quebra_couracas.png",
      "die": "2d8", "stat": "str_", "price": 1500,
@@ -7935,7 +7968,7 @@ SHOP_WEAPONS.extend([
      "allowed_classes": ["paladin", "warrior"],
      "descricao": "Raridade: Rara. Marreta mágica de duas mãos que causa 2d8 de dano contundente usando Força, concede +1 no acerto e no dano e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."},
     {"id": "espada_bastarda_ruptura", "name": "Espada Bastarda da Ruptura",
-     "emoji": "⚔️", "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+     "emoji": "⚔️", "icon": "assets/itens magicos/espada_ruptura.png",
      "die": "1d10", "stat": "str_", "price": 7000,
      "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True,
      "atk_bonus": 4, "damage_bonus": 4, "ignora_reducao_dano": 2,
@@ -16895,8 +16928,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Modificador de atributo somado ao dado da arma (acuidade usa o melhor
         de FOR/DES). Compartilhado pelo dano real e pela prévia do tooltip."""
         if _weapon_uses_finesse(weapon):
-            return max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
-        return mod(p.get(weapon["stat"], 12))
+            bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
+        else:
+            bonus = mod(p.get(weapon["stat"], 12))
+        if weapon.get("add_strength_to_damage"):
+            bonus += mod(p.get("str_", 12))
+        return bonus
 
     def _bonus_fixo_dano_arma(self, p, weapon, surv_mod, cancao_dano, gl_dano, bonus_extra):
         """Parcela FIXA do dano armado (tudo além do dado e do atributo), antes do
@@ -17004,7 +17041,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if ammo_types:
             off = (p.get("gear") or {}).get("off_hand") or {}
             off_type = off.get("ammo_type")
-            is_crossbow = (weapon or {}).get("id") in ("besta", "hand_crossbow")
+            is_crossbow = (weapon or {}).get("id") in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")
             has_quiver = bool(_quivers_equipped(p))
             if is_crossbow and off_type in ammo_types and int(off.get("ammo_count", 0) or 0) > 0:
                 ammo_preview = off
@@ -18736,14 +18773,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "item_slot": "weapon", "effect": "atk", "value": 0,
                 "buy_price": preco_base,
                 "descricao": item.get("descricao"),
-                **{k: w[k] for k in ("die", "stat", "range", "reach",
+                **{k: w[k] for k in ("die", "stat", "range", "range_all_directions", "add_strength_to_damage", "repeating_crossbow", "repeating_crossbow_cooldown", "reach", "astral_chain_reach",
                                      "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
                                      "two_handed", "dmg_bonus", "corrosao_resistente", "off_hand_stat",
                                      "ignora_reducao_dano",
                                      "throw_nat1_damage_levels",
                                      "corrosao_niveis_penalidade",
                                      "silver", "corrosion_max", "corrosion_free_levels",
-                                     "allowed_classes", "icon",
+                                     "allowed_classes", "icon", "material",
                                      "atk_bonus", "damage_bonus", "extra_damages",
                                      "extra_damage_once_per_turn",
                                      "granted_ability", "maldicao_id", "maldicao_prende",
@@ -24260,7 +24297,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Bestas de mão e bestas aceitam dois venenos de três disparos com
         Veneno Rápido III; os demais ataques à distância mantêm três cargas."""
         if weapon_id in RANGED_AMMO:
-            if weapon_id in ("besta", "hand_crossbow") and tem_espec(p, "ladino_veneno_3"):
+            if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista") and tem_espec(p, "ladino_veneno_3"):
                 return VENENO_CARGAS * 2
             return VENENO_CARGAS
         return self._capacidade_poison_melee(p)
@@ -24275,7 +24312,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         weapon_id = item.get("id", "")
         allows_two = (tem_espec(p, "ladino_veneno_3")
                       and (weapon_id not in RANGED_AMMO
-                           or weapon_id in ("besta", "hand_crossbow")))
+                           or weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")))
         distinct_limit = 2 if allows_two else 1
         active = self._poison_slots_do_item(p, slot)
         # Reaplicar o veneno presente renova apenas essa dose. Um novo veneno
@@ -24302,7 +24339,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         is_ranged = weapon_id in RANGED_AMMO
         if is_ranged:
             cargas = VENENO_CARGAS
-            if weapon_id in ("besta", "hand_crossbow") and tem_espec(p, "ladino_veneno_3"):
+            if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista") and tem_espec(p, "ladino_veneno_3"):
                 # Reaplicar o mesmo veneno recarrega suas três cargas e o move
                 # para o fim; um segundo veneno mantém as cargas restantes do
                 # primeiro e é consumido depois, um disparo por vez.
@@ -24433,7 +24470,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Contra-Ataque só com arma corpo a corpo / alcance (lança, chicote, alabarda)
         ou a Besta de Mão. Exclui arcos e a besta pesada (as demais em RANGED_AMMO)."""
         wid = (p.get("weapon") or {}).get("id")
-        if wid == "hand_crossbow":
+        if wid in HAND_CROSSBOW_IDS:
             return True
         return wid not in RANGED_AMMO
 
@@ -24457,6 +24494,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if w.get("reach") == "cajado":
             return self._cajado_no_alcance_jogador(p["pos"], target)
         if w.get("reach") == "mangual":
+            if w.get("astral_chain_reach"):
+                return self._mangual_astral_no_alcance_jogador(
+                    p["pos"], target, w.get("astral_chain_reach"))
             return self._mangual_no_alcance_jogador(p["pos"], target)
         if w.get("id") == "lanca_curta":
             return self._lanca_curta_no_alcance_jogador(p["pos"], target)
@@ -24492,9 +24532,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         dy = abs(p["pos"][1] - tile[1])
         weapon_id = (p.get("weapon") or {}).get("id")
         distancia = max(dx, dy)
-        if weapon_id in ("besta", "hand_crossbow"):
+        if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista"):
             return (dx == 0 or dy == 0) and distancia <= alcance_restante
-        if weapon_id in ("arco_curto", "longbow"):
+        if weapon_id in ("arco_curto", "longbow", "arco_composto_curto", "arco_composto_longo", "arco_bruto_combatente") and not (p.get("weapon") or {}).get("range_all_directions"):
             limite = (alcance_restante if (dx == 0 or dy == 0)
                       else (alcance_restante + 1) // 2)
             return distancia <= limite
@@ -24543,8 +24583,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     async def _disparo_duplo_validar_alvo(self, p, target, preferred_tile=None):
         """Retorna uma casa válida para o tiro secundário ou None sem cobrar ação."""
         off = (p.get("gear") or {}).get("off_hand") or {}
-        if ((p.get("weapon") or {}).get("id") != "hand_crossbow"
-                or off.get("id") != "hand_crossbow"
+        if ((p.get("weapon") or {}).get("id") not in HAND_CROSSBOW_IDS
+                or off.get("id") not in HAND_CROSSBOW_IDS
                 or not tem_espec(p, "disparo_duplo")
                 or target.get("hp", 0) <= 0):
             return None
@@ -24570,7 +24610,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         tile = await self._disparo_duplo_validar_alvo(p, target, target_tile)
         if tile is None or p.get("bonus_action_used"):
             return False
-        ammo_types = RANGED_AMMO.get("hand_crossbow", [])
+        ammo_types = RANGED_AMMO.get(off.get("id"), [])
         ammo = sorted((item for item in p.get("bag", [])
                        if item.get("effect") == "ammo"
                        and item.get("ammo_type") in ammo_types
@@ -24729,6 +24769,259 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._monster_dies(target, pid)
         return True
 
+    def _besta_repetidora_municao_disponivel(self, p, ammo_types):
+        off = (p.get("gear") or {}).get("off_hand") or {}
+        total = int(off.get("ammo_count", 0) or 0) if off.get("ammo_type") in ammo_types else 0
+        total += sum(int(item.get("ammo_count", 0) or 0) for item in p.get("bag", [])
+                     if item.get("effect") == "ammo" and item.get("ammo_type") in ammo_types)
+        total += sum(int(source[2].get("ammo_count", 0) or 0)
+                     for source in self._quiver_ammo_sources(p, ammo_types))
+        return total
+
+    async def _executar_tiro_besta_repetidora(self, p, target, tile, pid, weapon):
+        """Resolve um projétil da Besta Repetidora com os efeitos normais do virote."""
+        weapon_id = weapon.get("id")
+        ammo_types = RANGED_AMMO.get(weapon_id, [])
+        if not ammo_types or target.get("hp", 0) <= 0:
+            return False
+
+        off = (p.get("gear") or {}).get("off_hand") or {}
+        ammo_source = None
+        if off.get("ammo_type") in ammo_types and int(off.get("ammo_count", 0) or 0) > 0:
+            ammo_source = ("off_hand", off)
+        else:
+            bag = sorted((item for item in p.get("bag", [])
+                          if item.get("effect") == "ammo" and item.get("ammo_type") in ammo_types
+                          and int(item.get("ammo_count", 0) or 0) > 0),
+                         key=lambda item: ammo_types.index(item["ammo_type"]))
+            quivers = self._quiver_ammo_sources(p, ammo_types)
+            candidates = [(None, item) for item in bag] + [(source, source[2]) for source in quivers]
+            candidates.sort(key=lambda entry: ammo_types.index(entry[1]["ammo_type"]))
+            if candidates:
+                ammo_source = candidates[0]
+        if not ammo_source:
+            return False
+
+        source, projectile = ammo_source
+        ammo_atk_bonus = int(projectile.get("atk_bonus", 0) or 0)
+        ammo_bonus = int(projectile.get("damage_bonus", 0) or 0)
+        ammo_silver = bool(projectile.get("silver"))
+        ammo_magical = bool(projectile.get("magical"))
+        ammo_extra = projectile.get("extra_damage")
+        ammo_extra_types = projectile.get("extra_damage_types", [])
+        ammo_explosive = projectile.get("special_effect") == "explosive_ammo"
+        ammo_poison_ids = list(_ammo_stack_poison_ids(projectile) or ())
+        if isinstance(source, tuple):
+            self._consume_quiver_ammo(source)
+        else:
+            projectile["ammo_count"] = int(projectile.get("ammo_count", 1) or 1) - 1
+            if projectile["ammo_count"] <= 0:
+                if source == "off_hand":
+                    p["gear"]["off_hand"] = None
+                elif projectile in p.get("bag", []):
+                    p["bag"].remove(projectile)
+        if projectile.get("ammo_count", 0) <= 0:
+            await self.gm_say(T("narracao.usou_o_ultimo_projetil", heroi=p["name"]))
+
+        weapon_view = dict(p, weapon=weapon)
+        mods = self._modificadores_ataque_heroi(
+            weapon_view, target, tile, weapon.get("range"), attacker_id=pid, previa=True)
+        vantagem, desvantagem = mods["vantagem"], mods["desvantagem"]
+        eff_target_ac = mods["eff_target_ac"]
+        flash = await self._gilo_flash_reaction(target, p)
+        if isinstance(flash, dict) and flash.get("disadvantage"):
+            if vantagem:
+                vantagem = desvantagem = False
+            else:
+                desvantagem = True
+
+        wear = self._penalidade_desgaste_arma(weapon)
+        atk_bonus = int(weapon.get("atk_bonus", 0) or 0)
+        situational = mods["eff_atk"] - mods["main_attack_base"] - atk_bonus
+        attack_bonus = (mod(p.get("dex", 12)) + p.get("level_bonus", 1)
+                        + situational + atk_bonus + ammo_atk_bonus - wear)
+        if isinstance(flash, dict):
+            attack_bonus -= int(flash.get("attack_penalty", 0) or 0)
+        if _weapon_nat1_wear(weapon):
+            attack_bonus -= self._corrosao_arma_pen(p)
+
+        projectile_visual = _projetil_de(weapon) or {"kind": "bolt"}
+        if ammo_explosive:
+            projectile_visual.update({"explosive_ammo": True, "explosion_pos": list(tile)})
+        weapon_name = weapon.get("name") or "Besta Repetidora"
+        feedback_id = await self._emitir_feedback_ataque(
+            "start", p, target, weapon_name,
+            "advantage" if vantagem and not desvantagem else
+            "disadvantage" if desvantagem and not vantagem else "normal",
+            projectile=projectile_visual, impact_weapon_id=weapon_id,
+            impacto=_impacto_de(weapon))
+        hit, roll, total, crit, _desc = self._rolar_ataque(
+            attack_bonus, eff_target_ac, vantagem, desvantagem, atacante=p)
+        if p.pop("_moeda_sorte_rolada", False):
+            await self.gm_say(T("narracao.moeda_sorte_rolou_ataque", heroi=p["name"]))
+        if not hit and target.get("type") == "ciclope" and roll >= 19:
+            crit = True
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                              "label": T("dado.ataque"), "hit": hit, "crit": crit,
+                              "modifier": attack_bonus, "total": total,
+                              "repeating_crossbow": True})
+        attack_mode = ("advantage" if vantagem and not desvantagem else
+                       "disadvantage" if desvantagem and not vantagem else "normal")
+        await self._emitir_feedback_ataque(
+            "result", p, target, weapon_name, attack_mode, attack_id=feedback_id,
+            roll=roll, total=total, hit=bool(hit), crit=bool(crit), natural=int(roll),
+            natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1))
+        if not hit:
+            await self.gm_say(T("narracao.ataca_d20_vs_ca_errou", heroi=p["name"],
+                                target=nome_criatura(target), roll=roll,
+                                eff_atk=attack_bonus, total=total, target_ac=target["ac"]))
+            return True
+
+        poison_slots = self._poison_slots_do_item(p, "weapon")
+        poison_id = poison_slots.pop(0) if poison_slots else None
+        if poison_id:
+            self._set_poison_slots_do_item(p, "weapon", poison_slots)
+        damage_weapon = dict(weapon)
+        if ammo_silver:
+            damage_weapon["silver"] = True
+        if ammo_magical:
+            damage_weapon["magical"] = True
+        dmg, weapon_name, detail, raw, die = self._resolver_dano_ataque_basico(
+            p, target, crit, roll,
+            forca_critico=(bool(p.get("tecnica_golpe_decisivo_armado"))
+                           or bool(p.get("ultimo_esforco_ativo"))),
+            surv_mod=mods["surv_mod"], cancao_dano=mods["cancao_dano"],
+            gl_dano=mods["gl_dano"],
+            bonus_extra=ammo_bonus + int(weapon.get("damage_bonus", 0) or 0),
+            target_pos=tile, weapon_override=damage_weapon, attacker_id=pid)
+        if die:
+            await self.broadcast({"type": "dice_roll", "die": _tipo_dado(die),
+                                  "value": raw, "label": T("dado.dano"),
+                                  "modifier": dmg - raw, "total": dmg,
+                                  "expression": die, "damage_type": DMG_PHYSICAL,
+                                  "repeating_crossbow": True})
+        self._registrar_dano_combate(target, dmg, [DMG_PHYSICAL], critical=crit, impact_pos=tile)
+        target["hp"] = max(0, target.get("hp", 0) - dmg)
+        await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
+        await self._harpia_reagir_dano(target, dmg, pid)
+        if ammo_explosive:
+            raw_explosion = roll_dice("1d6")
+            explosion = self._apply_damage_types(raw_explosion, [DMG_PHYSICAL], target)
+            self._registrar_dano_combate(target, explosion, [DMG_PHYSICAL], impact_pos=tile)
+            target["hp"] = max(0, target.get("hp", 0) - explosion)
+            await self._registrar_dano_desbloqueio_metamorfose(p, target, explosion)
+            await self._harpia_reagir_dano(target, explosion, pid)
+            dmg += explosion
+            await self.broadcast({"type": "dice_roll", "die": "d6", "value": raw_explosion,
+                                  "label": T("dado.dano"), "modifier": explosion - raw_explosion,
+                                  "total": explosion, "damage_type": DMG_PHYSICAL,
+                                  "explosive_ammo": True})
+            await self._explosao_municao_acertada(target, tile, pid)
+        await self.gm_say(T("narracao.ataca_com_d20_vs_ca_dano", heroi=p["name"],
+                            target=nome_criatura(target), weapon_name=weapon_name,
+                            roll=roll, eff_atk=attack_bonus, total=total,
+                            target_ac=target["ac"], crit_str=" **CRÍTICO!**" if crit else "",
+                            dmg_detail=detail, holy_detail="", furtivo_detail="", dmg=dmg))
+        await self._dano_retaliacao(target, p, False, dmg)
+        if ammo_extra and target.get("hp", 1) > 0:
+            extra = roll_dice(ammo_extra)
+            extra = self._apply_damage_types(extra, ammo_extra_types, target)
+            self._registrar_dano_combate(target, extra, ammo_extra_types)
+            target["hp"] = max(0, target.get("hp", 0) - extra)
+            await self._registrar_dano_desbloqueio_metamorfose(p, target, extra)
+            await self._harpia_reagir_dano(target, extra, pid)
+            await self.broadcast({"type": "dice_roll", "die": "d" + str(ammo_extra).split("d")[-1],
+                                  "value": extra, "label": T("dado.dano"),
+                                  "damage_type": ammo_extra_types[0] if ammo_extra_types else DMG_FIRE})
+            for extra_type in ammo_extra_types or []:
+                await self._rx_registrar(
+                    _NORM_ELEMENTO.get(str(extra_type).lower(), extra_type),
+                    self._rx_tiles_da(target), dano=extra, atingidos={target.get("id")})
+        if target.get("hp", 0) > 0 and poison_id:
+            await self._aplicar_veneno(target, poison_id, fonte="ataque")
+        if target.get("hp", 0) > 0 and ammo_poison_ids:
+            for venom_id in ammo_poison_ids:
+                await self._aplicar_veneno(target, venom_id, fonte="ataque")
+        if target.get("hp", 0) <= 0:
+            await self._monster_dies(target, pid)
+        return True
+
+    async def handle_repeating_crossbow_weapon(self, pid, target_id, target_pos=None):
+        """Disparo Duplo ativo: dois ataques independentes e dois virotes."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
+            return
+        for estado, chave in (("petrificado", "erro.voce_esta_petrificado_e_nao_pode_agir"),
+                              ("paralisado", "erro.voce_esta_paralisado_e_nao_pode_agir"),
+                              ("dormindo", "erro.voce_esta_dormindo_e_nao_pode_agir")):
+            if p.get(estado):
+                await self.send_to(pid, {"type": "error", "msg": T(chave)})
+                return
+        if p.get("cego") and p.get("bloqueia_distancia"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.cego_nao_pode_usar_ataques_a_distancia")})
+            return
+        if p.get("action_done"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+        gear_item = (p.get("gear") or {}).get("weapon")
+        if not isinstance(gear_item, dict):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        weapon = {**(p.get("weapon") or {}), **gear_item}
+        if not weapon.get("repeating_crossbow") or weapon.get("id") not in {
+                "besta_repetidora_patrulha", "besta_repetidora_guerra"}:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        allowed = _weapon_allowed_classes(weapon)
+        if allowed and p.get("class_id") not in allowed:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_item(weapon))})
+            return
+        target = next((m for m in self.monsters.values()
+                       if str(m.get("id")) == str(target_id) and m.get("hp", 0) > 0), None)
+        if not target:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        try:
+            tx, ty = (int(target_pos[0]), int(target_pos[1])) if isinstance(target_pos, (list, tuple)) else tuple(target["pos"])
+        except (TypeError, ValueError, IndexError):
+            tx, ty = target["pos"]
+        tile = [tx, ty]
+        if tile not in self._monster_tiles(target):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        round_num = int(self.round_num or 1)
+        pronta_em = int(gear_item.get("repeating_crossbow_ready_round", 0) or 0)
+        if pronta_em > round_num:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica=T("ui.item.besta_repetidora_disparo_duplo"), rodadas=pronta_em-round_num)})
+            return
+        alcance = int(weapon.get("range", 0) or 0) + self._bonus_alcance_arma_distancia(p)
+        alcance = self._alcance_escuridao(p, target, alcance)
+        if (not self._tile_no_alcance_arma_distancia(p, tile, alcance)
+                or not self._tem_linha_de_visao(p["pos"], tile)):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_fora_de_alcance_maximo_quadrados", alvo=target["name"], alcance=alcance, regra=T("erro._regra_em_linha_reta"), extra="")})
+            return
+        ammo_types = RANGED_AMMO.get(weapon["id"], [])
+        if self._besta_repetidora_municao_disponivel(p, ammo_types) < 2:
+            await self.send_to(pid, {"type": "error", "msg": T("ui.item.besta_repetidora_dois_virotes")})
+            return
+
+        async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
+            await self._executar_tiro_besta_repetidora(p, target, tile, pid, weapon)
+            if target.get("hp", 0) > 0:
+                await self._executar_tiro_besta_repetidora(p, target, tile, pid, weapon)
+        recarga = int(weapon.get("repeating_crossbow_cooldown", 10) or 10)
+        pronta_em = round_num + recarga
+        gear_item["repeating_crossbow_ready_round"] = pronta_em
+        if isinstance(p.get("weapon"), dict):
+            p["weapon"]["repeating_crossbow_ready_round"] = pronta_em
+        p["action_done"] = True
+        p["fome"] = max(0, p.get("fome", 0) - 1)
+        self._consumir_recursos(p, "apenas_acao")
+        await self.push_state()
+
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None,
                             furia_attacks=None):
         async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
@@ -24825,7 +25118,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if _valid_ammo:
                 _off = p.get("gear", {}).get("off_hand")
                 _off_type = (_off or {}).get("ammo_type")
-                _is_crossbow = (weapon_here or {}).get("id") in ("besta", "hand_crossbow")
+                _is_crossbow = (weapon_here or {}).get("id") in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")
                 _quiver_equipped = bool(_quivers_equipped(p))
                 if _is_crossbow:
                     # Bestas recarregam diretamente dos virotes da bolsa e deixam
@@ -24895,7 +25188,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if not in_range:
                     extra = T("erro._extra_escuridao_limita_alcance") if eff_range < w_range else ""
                     weapon_id = (weapon_here or {}).get("id")
-                    regra = (T("erro._regra_em_linha_reta") if weapon_id in ("besta", "hand_crossbow")
+                    regra = (T("erro._regra_em_linha_reta") if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")
                               else T("erro._regra_diagonal_ate", diagonal=(eff_range + 1) // 2) if weapon_id in ("arco_curto", "longbow")
                               else "")
                     await self.send_to(pid, {
@@ -24932,8 +25225,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     })
                     return
             elif (weapon_here or {}).get("reach") == "mangual":
-                # Mangual: alcance circular de todas as 8 casas adjacentes.
-                if not self._mangual_no_alcance_jogador(p["pos"], target):
+                # O Elo Astral estende a corrente em uma linha reta com visão.
+                # Mangual comum mantém o alcance das 8 casas adjacentes.
+                astral_reach = (weapon_here or {}).get("astral_chain_reach")
+                alcanca_valida = (
+                    self._mangual_astral_no_alcance_jogador(p["pos"], target, astral_reach)
+                    if astral_reach else
+                    self._mangual_no_alcance_jogador(p["pos"], target)
+                )
+                if not alcanca_valida:
                     await self.send_to(pid, {
                         "type": "error",
                         "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
@@ -25461,12 +25761,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # os mesmos modificadores situacionais do ataque principal (eff_atk menos o
         # bÃ´nus de ataque base da classe).
         off = p["gear"].get("off_hand")
-        if (off and off.get("id") == "hand_crossbow"
+        if (off and off.get("id") in HAND_CROSSBOW_IDS
                 and target_id in self.monsters and self.monsters[target_id].get("hp", 0) > 0
                 and not p.get("bonus_action_used")):
             await self._executar_disparo_duplo(p, self.monsters[target_id], target_tile, pid)
         if off and off.get("die") and not p.get("bonus_action_used") \
-           and off.get("id") != "hand_crossbow" \
+           and off.get("id") not in HAND_CROSSBOW_IDS \
            and (not _weapon_allowed_classes(off) or p.get("class_id") in _weapon_allowed_classes(off)) \
            and target_id in self.monsters and self.monsters[target_id]["hp"] > 0:
             tgt = self.monsters[target_id]
@@ -32168,7 +32468,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         vale para a bolsa e para o baú do Refúgio. O catálogo `WEAPONS` fecha essa
         lacuna pelo id; arma com campos próprios (loja/loot/editor) segue por eles."""
         desgaste_por_peca = _weapon_nat1_wear(item) or _weapon_nat1_wear(p.get("weapon"))
-        combat_fields = ("id", "name", "die", "stat", "range", "reach",
+        combat_fields = ("id", "name", "die", "stat", "range", "range_all_directions", "add_strength_to_damage", "repeating_crossbow", "repeating_crossbow_cooldown", "reach", "astral_chain_reach",
                          "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
                          "ignora_reducao_dano",
                          "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade",
@@ -32454,8 +32754,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.arma_de_2_maos_desequipe_antes_de_usar_item", item=nome_de("item", item["id"]))})
             return False
-        if (cat == "weapon" and (p.get("gear", {}).get("off_hand") or {}).get("id") == "hand_crossbow"
-                and item.get("id") != "hand_crossbow"):
+        if (cat == "weapon" and (p.get("gear", {}).get("off_hand") or {}).get("id") in HAND_CROSSBOW_IDS
+                and item.get("id") not in HAND_CROSSBOW_IDS):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.desequipe_besta_secundaria_antes_de_trocar_arma")})
             return False
@@ -32535,8 +32835,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if cat == "weapon" and item.get("two_handed") and self._off_hand_ocupa_mao(p):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.item_e_arma_de_2_maos_desequipe_escudo", item=nome_de("item", item["id"]))}); return False
-        if (cat == "weapon" and (p.get("gear", {}).get("off_hand") or {}).get("id") == "hand_crossbow"
-                and item.get("id") != "hand_crossbow"):
+        if (cat == "weapon" and (p.get("gear", {}).get("off_hand") or {}).get("id") in HAND_CROSSBOW_IDS
+                and item.get("id") not in HAND_CROSSBOW_IDS):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.desequipe_besta_secundaria_antes_de_trocar_arma")})
             return False
@@ -32611,10 +32911,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not item:
             return False
         iid = (item.get("id") or "").lower()
-        if iid == "hand_crossbow":
+        if iid in HAND_CROSSBOW_IDS:
             return bool(player and tem_espec(player, "disparo_duplo")
-                        and (player.get("weapon") or {}).get("id") == "hand_crossbow"
-                        and (player.get("gear", {}).get("weapon") or {}).get("id") == "hand_crossbow")
+                        and (player.get("weapon") or {}).get("id") in HAND_CROSSBOW_IDS
+                        and (player.get("gear", {}).get("weapon") or {}).get("id") in HAND_CROSSBOW_IDS)
         nm  = (item.get("name") or "").lower()
         native = WEAPONS.get(iid, {})
         return bool(item.get("off_hand_weapon") or native.get("off_hand_weapon")
@@ -32672,7 +32972,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not p or slot_key not in GEAR_SLOTS:
             return
         if (slot_key == "weapon"
-                and (p.get("gear", {}).get("off_hand") or {}).get("id") == "hand_crossbow"):
+                and (p.get("gear", {}).get("off_hand") or {}).get("id") in HAND_CROSSBOW_IDS):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.desequipe_besta_secundaria_antes_de_trocar_arma")})
             return
@@ -40813,6 +41113,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         px, py = pos
         return any(max(abs(tx - px), abs(ty - py)) == 1
                    for tx, ty in self._monster_tiles(m))
+
+    def _mangual_astral_no_alcance_jogador(self, pos, m, alcance=4):
+        """Corrente astral atinge até N casas em uma das 8 linhas retas, com visão."""
+        px, py = int(pos[0]), int(pos[1])
+        try:
+            alcance = max(1, int(alcance))
+        except (TypeError, ValueError):
+            alcance = 4
+        for tx, ty in self._monster_tiles(m):
+            dx, dy = abs(int(tx) - px), abs(int(ty) - py)
+            if max(dx, dy) > alcance or not (dx == 0 or dy == 0 or dx == dy):
+                continue
+            if self._tem_linha_de_visao([px, py], [int(tx), int(ty)]):
+                return True
+        return False
 
     def _haste_vence_desnivel(self, p, target, degraus):
         """Golpe corpo a corpo contra alvo em outra altura.
@@ -58569,6 +58884,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             else:
                 atributo = T("ui.arremesso.destreza")
             nome = nome_item(item)
+            if item.get("repeating_crossbow") and slot == "weapon":
+                pronta_em = int((gear_item or {}).get("repeating_crossbow_ready_round", 0) or 0)
+                restante = max(0, pronta_em - int(self.round_num or 0))
+                recarga = int(item.get("repeating_crossbow_cooldown", 10) or 10)
+                out.append({
+                    "id": "besta_repetidora_disparo_duplo",
+                    "source": "arma",
+                    "name": T("ui.item.besta_repetidora_disparo_duplo"),
+                    "icon": "🏹",
+                    "image": item.get("icon"),
+                    "tipo": "acao_principal",
+                    "target": "enemy",
+                    "description": T("ui.item.besta_repetidora_disparo_duplo_desc", dano=item.get("die", "1d6"), alcance=alcance or item.get("range", 0), recarga=recarga),
+                    "throw_slot": "weapon",
+                    "weapon_id": item.get("id"),
+                    "recarga_rodadas": recarga,
+                    "cooldown_remaining": restante,
+                    "granted_origem": "weapon",
+                })
             if alcance:
                 out.append({
                     "id": f"arremesso_arma_{slot}",
@@ -60514,6 +60848,10 @@ async def handler(ws):
 
                 elif t == "solar_flare_weapon":
                     if room: await room.handle_solar_flare_weapon(pid)
+
+                elif t == "repeating_crossbow_weapon":
+                    if room: await room.handle_repeating_crossbow_weapon(
+                        pid, msg.get("target_id"), msg.get("target_pos"))
 
                 elif t == "throw_item":
                     if room: await room.handle_throw_item(pid, msg)

@@ -3586,15 +3586,17 @@ function _itemDesc(item){
   if(item.die){
     const range=item.reach==='lanca' ? ' • '+t('ui.item.desc.alcance_lanca')
               : item.reach==='cajado' ? ' • '+t('ui.item.desc.alcance_adjacentes')
+              : item.astral_chain_reach ? ' • '+t('ui.item.desc.alcance_mangual_astral', {n:item.astral_chain_reach})
               : item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_mangual')
-              : ['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : ['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : item.range_all_directions ? ' • '+t('ui.item.desc.alcance_todas_direcoes', {n: item.range})
               : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto_diag', {n: item.range, d: Math.ceil(item.range / 2)})
               : item.range ? ' • '+t('ui.item.desc.alcance', {n: item.range}) : '';
     const sub=item.categoria?' • '+_rotulo(item.categoria, 'ui.item.subtipo', item.categoria):'';
     const duas=item.two_handed?' • '+t('ui.item.desc.duas_maos'):'';
     const arr=item.throw_range?' • '+t('ui.item.desc.arremesso', {n: item.throw_range}):'';
-    const municao=['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.virotes')
-      : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.flechas') : '';
+    const municao=['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista'].includes(item.id) ? ' • '+t('ui.item.desc.virotes')
+      : ['arco_curto','longbow','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'].includes(item.id) ? ' • '+t('ui.item.desc.flechas') : '';
     const ehAdaga=item.id==='dagger'||/adaga/i.test(item.name||'');
     const ehChicote=item.id==='chicote'||/chicote/i.test(item.name||'');
     const ehMarteloGuerra=item.id==='warhammer'||item.id==='martelo'||/martelo de guerra/i.test(item.name||'');
@@ -9270,7 +9272,7 @@ function _computeWeaponRangeTiles(state, me) {
 function _armaDistanciaAtaqueGiratorio(me){
   const weapon = me?.weapon || {};
   const weaponId = String(weapon.id || '').toLowerCase();
-  const rangedIds = new Set(['arco_curto', 'longbow', 'besta', 'hand_crossbow', 'besta_mao', 'besta_leve', 'arco_longo']);
+  const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo']);
   return Boolean(rangedIds.has(weaponId) || weapon.projectile || weapon.ammo || weapon.ammo_type
     || weapon.tipo === 'armaDistancia' || weapon.tipo === 'ranged');
 }
@@ -30735,7 +30737,7 @@ function _menuStatusMarkup(p, opts = {}){
   // Mão secundária: espelha o golpe extra do servidor (atributo da 2ª arma, bônus de nível
   // e modificadores situacionais; dano = dado + atributo + sobrevivência).
   const off = p.gear?.off_hand;
-  const offEhArma = !!(off && off.die && off.id !== 'hand_crossbow' && off.effect !== 'shield'
+  const offEhArma = !!(off && off.die && !['hand_crossbow','besta_duelista'].includes(off.id) && off.effect !== 'shield'
     && off.tipo_item !== 'instrumento' && off.effect !== 'quiver');
   let linhasOff = '';
   if(offEhArma){
@@ -31484,6 +31486,12 @@ function ativarHabilidadeDoMenu(skillId){
     beginHorizonShockWeapon(horizonShockSlot);
     return;
   }
+  if(skillId === 'besta_repetidora_disparo_duplo'){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginRepeatingCrossbowWeapon();
+    return;
+  }
   if(lightningSlot){
     fecharMenuHabilidades();
     fecharMenuMagias();
@@ -32002,7 +32010,7 @@ function _weaponThrowSkillEntries(player){
     ['off_hand', player.gear?.off_hand],
   ];
   for(const [slot, item] of slots){
-    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse && !item.solar_flare && !item.wind_line && !item.horizon_shock)) continue;
+    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse && !item.solar_flare && !item.wind_line && !item.horizon_shock && !item.repeating_crossbow)) continue;
     const nome = item.name || item.id || 'arma';
     const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
       ? t('ui.arremesso.forca')
@@ -32070,6 +32078,17 @@ function _weaponThrowSkillEntries(player){
         granted_origem:'weapon',
       });
     }
+    if(item.repeating_crossbow && slot === 'weapon'){
+      add({
+        id:'besta_repetidora_disparo_duplo', source:'arma',
+        name:t('ui.item.besta_repetidora_disparo_duplo'), icon:'🏹',
+        tipo:'acao_principal', target:'enemy', weapon_id:item.id,
+        description:t('ui.item.besta_repetidora_disparo_duplo_desc', {
+          dano:item.die || '1d6', alcance:item.range || 6,
+          recarga:item.repeating_crossbow_cooldown || 10,
+        }), granted_origem:'weapon',
+      });
+    }
   }
   return result;
 }
@@ -32082,6 +32101,8 @@ function _weaponThrowStatLabel(item){
 }
 
 function _weaponThrowSkillBtn(me, skill){
+  if(skill?.id === 'besta_repetidora_disparo_duplo')
+    return _repeatingCrossbowWeaponSkillBtn(me, skill);
   if(String(skill?.id || '').startsWith('alabarda_vendaval_'))
     return _windLineWeaponSkillBtn(me, skill);
   if(String(skill?.id || '').startsWith('bordao_horizonte_'))
@@ -32300,6 +32321,61 @@ function _clickTileHorizonShockWeapon(tx, ty){
   }
   GS.useHorizonShockWeapon(monster.id, [tx,ty]);
   _aimEnd({silent:true, reason:'resolved'});
+}
+
+function _repeatingCrossbowWeaponSkillBtn(me, skill){
+  const item = me.gear?.weapon || me.weapon || {};
+  const state = GS.gameState;
+  const round = Number(state?.round ?? state?.round_num ?? 1) || 1;
+  const readyRound = Number(item.repeating_crossbow_ready_round || 0) || 0;
+  const remaining = Math.max(0, readyRound - round);
+  const range = Number(item.range || (item.id === 'besta_repetidora_guerra' ? 8 : 6));
+  const hasTargets = (state?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx=x-me.pos[0], dy=y-me.pos[1];
+      return ((dx === 0) !== (dy === 0)) && Math.abs(dx+dy) <= range
+        && GS.hasLineOfSight(state, me.pos[0], me.pos[1], x, y);
+    }));
+  const enabled = !!(item.repeating_crossbow && GS.isMyTurn && me.alive
+    && state?.phase === 'playing' && !me.action_done && remaining === 0 && hasTargets);
+  const btn=document.createElement('button');
+  btn.className='skill-btn'+(remaining>0?' skill-cooldown':'');
+  btn.disabled=!enabled;
+  const cooldown=remaining>0?` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em',{n:remaining})}</small>`:'';
+  btn.innerHTML=`<div class="skill-info"><div class="skill-name">🏹 ${skill.name}${cooldown}</div><div class="skill-desc">${skill.description||''}</div></div><div class="skill-cost">${remaining>0?`${remaining}r`:'🏹'}</div>`;
+  btn.onclick=beginRepeatingCrossbowWeapon;
+  return btn;
+}
+
+function beginRepeatingCrossbowWeapon(){
+  getAudioContext();
+  const state=GS.gameState, me=GS.me, item=me?.gear?.weapon||me?.weapon;
+  if(!state||!me||!item?.repeating_crossbow) return;
+  const range=Number(item.range||6), origin=me.pos||[0,0], tiles=new Set(), targets=new Set();
+  for(let y=0;y<state.map_h;y++) for(let x=0;x<state.map_w;x++){
+    const dx=x-origin[0], dy=y-origin[1];
+    if((dx===0)===(dy===0) || Math.abs(dx+dy)>range) continue;
+    if(!GS.hasLineOfSight(state,origin[0],origin[1],x,y)) continue;
+    tiles.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0&&GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y))) targets.add(`${x},${y}`);
+  }
+  if(!targets.size){toast(t('ui.arremesso.sem_inimigo_a_vista',{n:range}));return;}
+  window._modoBestaRepetidora={range,tiles,targets};
+  _aimStart({kind:'besta_repetidora',title:`🏹 ${t('ui.item.besta_repetidora_disparo_duplo')}`,
+    instruction:t('ui.item.besta_repetidora_mira',{alcance:range}),color:'#d6bd91',
+    targetLabel:t('ui.instrumento.inimigo'),range:tiles,area:targets,
+    cancelText:t('ui.item.besta_repetidora_cancelada'),cleanup:()=>{window._modoBestaRepetidora=null;}});
+}
+
+function _clickTileRepeatingCrossbow(tx,ty){
+  const mode=window._modoBestaRepetidora,state=GS.gameState;
+  if(!mode||!state)return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0&&GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster||!mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus(t('ui.item.besta_repetidora_mira',{alcance:mode.range}),'#ffb168');return;
+  }
+  GS.useRepeatingCrossbow(monster.id,[tx,ty]);
+  _aimEnd({silent:true,reason:'resolved'});
 }
 
 function beginWindLineWeapon(slot='weapon'){
@@ -50295,6 +50371,7 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   espada_longa_colossal: {path: 'assets/itens/espada.glb', layFlat: true, footprint: 0.78},
   besta_mao: {path: 'assets/itens/besta.glb', footprint: 0.78},
   hand_crossbow: {path: 'assets/itens/besta.glb', footprint: 0.78},
+  besta_duelista: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta_leve: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta_pesada: {path: 'assets/itens/besta.glb', footprint: 0.78},
@@ -57880,6 +57957,7 @@ function handleTileClick(tx, ty, opts){
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
   if(window._modoAlabardaVendaval){ _clickTileWindLineWeapon(tx, ty); return; }
   if(window._modoBordaoHorizonte){ _clickTileHorizonShockWeapon(tx, ty); return; }
+  if(window._modoBestaRepetidora){ _clickTileRepeatingCrossbow(tx, ty); return; }
   if(window._modoRelampagoDeMao){ _clickTileLightningLineWeapon(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }

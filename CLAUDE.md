@@ -1,5 +1,16 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Besta do Duelista (2026-11-12)
+
+`besta_duelista` custa 30 moedas e causa 1d6 perfurante usando Destreza, com alcance de 4 quadrados em linha reta ortogonal. É de uma mão, aceita todos os tipos de virote e qualquer classe pode usá-la. Usa `assets/itens/besta_do_duelista.png`. A especialização existente Disparo Duplo permite pareá-la na mão secundária com uma Besta de Mão ou outra Besta do Duelista; não há poder ou recarga adicional. Está à venda nas cinco ferrarias.
+
+### Bestas Repetidoras (2026-11-12)
+
+`besta_repetidora_patrulha` custa 70 moedas, causa 1d6 e alcança 6 quadrados em linha reta ortogonal; `besta_repetidora_guerra` custa 120 moedas, causa 1d8 e alcança 8. Ambas são armas mundanas de duas mãos, usam Destreza no ataque e dano, aceitam todos os virotes e podem ser usadas por Guerreiro, Paladino, Bardo e Ladino. A habilidade ativa **Disparo Duplo** usa a ação principal, exige dois virotes disponíveis e faz dois ataques separados contra o mesmo alvo; se o primeiro ataque o derrotar, o segundo não dispara. Recarga: 10 rodadas. As armas estão à venda nas cinco ferrarias e usam `assets/itens/besta_repetidora_media.png` e `assets/itens/besta_repetidora_poderosa.png`. Mensagem cliente-servidor: `repeating_crossbow_weapon`; resolução autoritativa em `handle_repeating_crossbow_weapon`.
+
+### Variantes mundanas de materiais (2026-11-12)
+
+
 ### Braceletes da Guarda Reflexa (2026-11-09)
 
 `bracelete_guarda_reflexa` (1.400 moedas, reduz `1d8`) e `bracelete_guarda_reflexa_maior` (3.000 moedas, reduz `2d8`) são itens mágicos vendidos no Mercador e equipados nos slots `ring1`/`ring2`. Após um ataque direto acertar um herói equipado, o servidor pergunta se ele quer ativar; aceitar rola a redução (dano mínimo 0) e inicia recarga de 8 rodadas no bracelete usado. Recusar ou não responder em 12 segundos não consome a reação nem inicia recarga. Magias, armadilhas e outras fontes que não sejam ataques (`is_attack`) não oferecem a reação. Ambos usam `assets/itens magicos/bracelete_guarda_reflexa.png` e o protocolo visual de confirmação `sorte_reacao`; os campos de regra também são exportados para `tools/editor_catalog.js`.
@@ -11,6 +22,10 @@ No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo
 ### Mini Aljava (2026-11-01)
 
 `mini_aljava` custa 30 moedas, usa `assets/itens/aljava.png`, é vendida nos cinco ferreiros e ocupa `item1`/`item2`. Veja as regras atuais de slots em Aljavas abaixo. O catálogo autoritativo é `SHOP_AMMO`; mudanças devem ser exportadas por `tools/export_catalog.py` para `tools/editor_catalog.js`.
+
+### Mangual do Elo Astral (2026-11-12)
+
+`mangual_elo_astral` custa 5.000 moedas, é mágico +2 no acerto e dano e mantém o perfil do Mangual (1d8 contundente + Força, crítico natural ×2,5). Clérigo, Paladino e Guerreiro podem usá-lo. Sua corrente astral é passiva e alcança até 4 casas em linha reta ortogonal ou diagonal, exige linha de visão, atinge apenas o alvo selecionado e retorna imediatamente, sem recarga. `astral_chain_reach: 4` distingue esse alcance do Mangual comum e deve acompanhar compra/equipamento e exportação para `tools/editor_catalog.js`. Usa `assets/itens magicos/mangual_elo_astral.png` e está à venda nos cinco ferreiros.
 
 ### Tutorial com vários heróis: uma lição por herói (2026-11-01)
 
@@ -35,6 +50,14 @@ Servos do jogador (mortos-vivos reanimados e elementais, `players[].animados`) d
 ### Munição Mágica (2026-10-31)
 
 `flechas_magicas` e `virotes_magicos` custam 50 moedas por pacote de 10 e concedem +1 no acerto e no dano por disparo; `flechas_magicas_mais_2` e `virotes_magicos_mais_2` custam 120 moedas por pacote de 10 e concedem +2/+2. Flechas só são aceitas por arcos e usam `assets/itens magicos/flechas_magicas.png`; virotes só são aceitos por bestas e usam `assets/itens magicos/virotes_magicos.png`. Cada ataque consome um projétil mesmo se errar. O bônus é aplicado no ataque normal, na prévia de chance/dano e no Disparo Duplo; dano mágico e bônus só acompanham o disparo, sem alterar permanentemente a arma. As pilhas respeitam aljavas e flechas mágicas entram na ordem configurável de autoequipar. Os quatro itens aparecem nos cinco estoques `ferreiro_ammo`, nos nomes/descrições localizados e no catálogo do editor; não alteram efeitos de munição existente.
+
+### Arcos Compostos (2026-11-12)
+
+`arco_composto_curto` custa 35 moedas e causa 1d8 perfurante usando Destreza; `arco_composto_longo` custa 60 e causa 1d10. Ambos são armas mundanas de duas mãos, usam as listas de classes do Arco Curto e do Arco Longo respectivamente e alcançam seu alcance integral também na diagonal: 6 casas para o curto e 10 para o longo. Usam flechas normais e especiais, consumindo uma por disparo mesmo se errar. `range_all_directions` diferencia esses arcos da regra dos arcos básicos (metade do alcance na diagonal). Imagens: `assets/itens/arco_composto_curto.png` e `assets/itens/arco_composto_longo.png`; ambos estão nos cinco ferreiros.
+
+### Arco Bruto do Combatente (2026-11-12)
+
+`arco_bruto_combatente` custa 120 moedas e é uma versão robusta do Arco Composto Longo: causa 1d10 perfurante, usa apenas Destreza no ataque e soma Destreza e Força ao dano. Tem alcance de 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flechas. É mundano e exclusivo de Paladino e Guerreiro. `add_strength_to_damage` só altera o modificador de dano, sem afetar o ataque. Usa `assets/itens/arco_bruto_do_combatente.png` e está nos cinco ferreiros.
 
 ### Rede Corrosiva (2026-10-30)
 
@@ -141,6 +164,10 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A lista `allowed_classes` do item em `SHOP_WEAPONS` governa compra/equipamento; o catálogo do editor é regenerado por `tools/export_catalog.py`.
 
+### Besta Pesada (2026-11-12)
+
+`besta_pesada` custa 100 moedas, é mundana, causa 1d10 perfurante usando Destreza no ataque e dano, exige duas mãos e tem alcance de 12 casas em linha ortogonal reta, sem diagonais. Aceita todos os tipos de virote e pode ser usada por Guerreiro, Paladino, Clérigo e Ladino. Usa `assets/itens/besta_pesada.png`, projétil `bolt` e está nos cinco ferreiros. O servidor a trata como besta para alcance, munição e Veneno Rápido III; não é elegível para Disparo Duplo, que continua exclusivo da Besta de Mão.
+
 ### Choque do Trovão (2026-10-31)
 
 `choque_do_trovao` é um martelo de guerra mágico Muito Raro, custa 2.500 moedas e usa `assets/itens magicos/choque_do_trovao.png`. Causa 1d8 contundente + Força, tem crítico natural 20 que triplica o dano, concede +1 no acerto e no dano e acrescenta 1d4 elétrico a cada acerto. Em um crítico natural 20, um alvo sobrevivente testa Força CD 13; na falha, é empurrado uma casa para longe do portador; obstáculos e criaturas bloqueiam o deslocamento sem dano de colisão. Como ação principal, `Pulso do Trovão` causa 2d6 elétrico a todas as criaturas vivas nas oito casas adjacentes, incluindo aliados e excluindo o portador; Reflexos CD 13 reduz o dano à metade. A habilidade tem recarga de 10 rodadas persistida na instância equipada. Uso de Clérigo, Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `extra_damages`, `thunder_push_on_crit`, `thunder_pulse` e `thunder_pulse_cooldown` são preservados ao comprar e reequipar.
@@ -167,7 +194,7 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 
 ### Espada Bastarda da Ruptura (2026-11-12)
 
-`espada_bastarda_ruptura` custa 7.000 moedas (Lendária), usa `assets/itens magicos/espada_maligna_das_chamas.png` e mantém o perfil da Espada Bastarda: 1d10 cortante + Força e crítico natural com 19–20. É mágica, concede +4 no acerto e no dano, ignora 2 pontos de redução de dano físico por golpe e é exclusiva de Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `atk_bonus`, `damage_bonus`, `magical` e `ignora_reducao_dano` são preservados na compra e ao equipar.
+`espada_bastarda_ruptura` custa 7.000 moedas (Lendária), usa `assets/itens magicos/espada_ruptura.png` e mantém o perfil da Espada Bastarda: 1d10 cortante + Força e crítico natural com 19–20. É mágica, concede +4 no acerto e no dano, ignora 2 pontos de redução de dano físico por golpe e é exclusiva de Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `atk_bonus`, `damage_bonus`, `magical` e `ignora_reducao_dano` são preservados na compra e ao equipar.
 
 ### Alabarda do Vendaval (2026-11-10)
 

@@ -1296,6 +1296,26 @@ window.LANG_INTERFACE = {
     "en": "Main action: release a sacred flash that deals 2d6 holy damage to all creatures in the eight adjacent squares, including allies but not you (Reflex DC 13 halves). Recharge: 10 rounds.",
     "pt": "Ação principal: libere um clarão sagrado que causa 2d6 de dano sagrado a todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
   },
+  "ui.item.besta_repetidora_disparo_duplo": {
+    "en": "Double Shot",
+    "pt": "Disparo Duplo"
+  },
+  "ui.item.besta_repetidora_disparo_duplo_desc": {
+    "en": "Main action: make two separate attacks against the same target, each dealing {dano} and consuming one bolt. Requires two bolts. Recharge: {recarga} rounds.",
+    "pt": "Ação principal: faça dois ataques separados contra o mesmo alvo, cada um causando {dano} e consumindo um virote. Requer dois virotes. Recarga: {recarga} rodadas."
+  },
+  "ui.item.besta_repetidora_dois_virotes": {
+    "en": "Double Shot requires two bolts available.",
+    "pt": "O Disparo Duplo requer dois virotes disponíveis."
+  },
+  "ui.item.besta_repetidora_mira": {
+    "en": "Choose an enemy in a straight line, up to {alcance} squares away.",
+    "pt": "Escolha um inimigo em linha reta, a até {alcance} quadrados."
+  },
+  "ui.item.besta_repetidora_cancelada": {
+    "en": "Double Shot cancelled.",
+    "pt": "Disparo Duplo cancelado."
+  },
   "ui.arremesso.destreza": {
     "en": "Dexterity",
     "pt": "Destreza"
@@ -5299,6 +5319,14 @@ window.LANG_INTERFACE = {
   "ui.item.desc.alcance_mangual": {
     "en": "Range: 1 square — any of the 8 adjacent squares, including diagonals",
     "pt": "Alcance: 1 quadrado — qualquer uma das 8 casas adjacentes, incluindo diagonais"
+  },
+  "ui.item.desc.alcance_mangual_astral": {
+    "en": "Astral chain: up to {n} squares in a straight orthogonal or diagonal line, with line of sight",
+    "pt": "Corrente astral: até {n} casas em linha reta ortogonal ou diagonal, com linha de visão"
+  },
+  "ui.item.desc.alcance_todas_direcoes": {
+    "en": "Range: {n} squares in any direction, including diagonals",
+    "pt": "Alcance: {n} casas em qualquer direção, inclusive diagonais"
   },
   "ui.item.desc.alcance_quad": {
     "en": "Range: {n} sq.",

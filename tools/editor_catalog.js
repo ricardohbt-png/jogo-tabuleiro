@@ -11865,6 +11865,17 @@ window.EDITOR_CATALOG = {
       "descricao": "Besta de Mão: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta."
     },
     {
+      "id": "besta_duelista",
+      "name": "Besta do Duelista",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/besta_do_duelista.png",
+      "range": 4,
+      "categoria": "perfurante",
+      "descricao": "Besta do Duelista: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista."
+    },
+    {
       "id": "lanca_curta",
       "name": "Lança Curta",
       "emoji": "🔱",
@@ -12014,6 +12025,25 @@ window.EDITOR_CATALOG = {
       "descricao": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
     },
     {
+      "id": "arco_composto_curto",
+      "name": "Arco Composto Curto",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_curto.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 6,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "descricao": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
       "id": "lanca",
       "name": "Lança",
       "emoji": "🔱",
@@ -12057,6 +12087,41 @@ window.EDITOR_CATALOG = {
       "descricao": "Arco Longo: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal."
     },
     {
+      "id": "arco_composto_longo",
+      "name": "Arco Composto Longo",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_longo.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "range": 10,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "arco_bruto_combatente",
+      "name": "Arco Bruto do Combatente",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_bruto_do_combatente.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "range": 10,
+      "range_all_directions": true,
+      "add_strength_to_damage": true,
+      "categoria": "perfurante",
+      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+    },
+    {
       "id": "warhammer",
       "name": "Martelo de Guerra",
       "emoji": "🔨",
@@ -12087,6 +12152,64 @@ window.EDITOR_CATALOG = {
       "range": 8,
       "categoria": "perfurante",
       "descricao": "Besta: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta."
+    },
+    {
+      "id": "besta_pesada",
+      "name": "Besta Pesada",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_pesada.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "cleric",
+        "rogue"
+      ],
+      "range": 12,
+      "categoria": "perfurante",
+      "descricao": "Besta Pesada mundana: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino."
+    },
+    {
+      "id": "besta_repetidora_patrulha",
+      "name": "Besta Repetidora de Patrulha",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_media.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "range": 6,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "descricao": "Besta Repetidora de Patrulha mundana: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
+    },
+    {
+      "id": "besta_repetidora_guerra",
+      "name": "Besta Repetidora de Guerra",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_poderosa.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "range": 8,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "descricao": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
     },
     {
       "id": "mangual",
@@ -12918,6 +13041,27 @@ window.EDITOR_CATALOG = {
       "descricao": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."
     },
     {
+      "id": "mangual_elo_astral",
+      "name": "Mangual do Elo Astral",
+      "emoji": "🌌",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/mangual_elo_astral.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "astral_chain_reach": 4,
+      "categoria": "contundente",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Mangual mágico +2 no acerto e no dano; causa 1d8 contundente + Força e tem crítico natural ×2,5. Como poder passivo, a corrente astral alcança até 4 casas em linha reta ortogonal ou diagonal, desde que haja linha de visão; o ataque atinge apenas o alvo escolhido e a corrente retorna imediatamente. Sem recarga. Uso de Clérigo, Paladino e Guerreiro."
+    },
+    {
       "id": "marreta_quebra_couracas",
       "name": "Marreta Quebra-Couraças",
       "emoji": "🔨",
@@ -12942,7 +13086,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d10",
       "stat": "str_",
-      "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+      "icon": "assets/itens magicos/espada_ruptura.png",
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -15573,6 +15717,7 @@ window.EDITOR_CATALOG = {
       ],
       "corrosao_resistente": 2,
       "corrosao_niveis_penalidade": 2,
+      "material": "metal",
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
@@ -15594,6 +15739,7 @@ window.EDITOR_CATALOG = {
       "two_handed": false,
       "corrosao_resistente": 0,
       "corrosao_niveis_penalidade": 2,
+      "material": "metal",
       "categoria": "perfurante",
       "granted_ability": null,
       "atk_bonus": 1,

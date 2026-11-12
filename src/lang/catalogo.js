@@ -2514,6 +2514,30 @@ window.LANG_CATALOGO = {
     "en": "Antidote",
     "pt": "Antídoto"
   },
+  "cat.item.arco_bruto_combatente.desc": {
+    "en": "Combatant’s Brutish Bow: a sturdy, nonmagical long composite bow with thick black wood and war carvings. Deals 1d10 piercing damage; uses Dexterity for attack rolls and adds both Dexterity and Strength modifiers to damage. Range: 10 squares in any direction, including diagonals. Requires two hands, accepts all arrow types, and is exclusive to Paladins and Warriors.",
+    "pt": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+  },
+  "cat.item.arco_bruto_combatente.nome": {
+    "en": "Combatant’s Brutish Bow",
+    "pt": "Arco Bruto do Combatente"
+  },
+  "cat.item.arco_composto_curto.desc": {
+    "en": "Nonmagical short composite bow: 1d8 piercing damage, using Dexterity. Range: 6 squares in any direction, including diagonals. Requires two hands and accepts all arrow types.",
+    "pt": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.arco_composto_curto.nome": {
+    "en": "Short Composite Bow",
+    "pt": "Arco Composto Curto"
+  },
+  "cat.item.arco_composto_longo.desc": {
+    "en": "Nonmagical long composite bow: 1d10 piercing damage, using Dexterity. Range: 10 squares in any direction, including diagonals. Requires two hands and accepts all arrow types.",
+    "pt": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.arco_composto_longo.nome": {
+    "en": "Long Composite Bow",
+    "pt": "Arco Composto Longo"
+  },
   "cat.item.arco_curto.desc": {
     "en": "Short Bow: 1d6 piercing damage, using Dexterity. Range: 6 squares in a straight line or 3 diagonally.",
     "pt": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
@@ -2598,6 +2622,38 @@ window.LANG_CATALOGO = {
     "en": "Crossbow",
     "pt": "Besta"
   },
+  "cat.item.besta_duelista.desc": {
+    "en": "Duelist's Crossbow: a one-handed weapon dealing 1d6 piercing damage using Dexterity, with a range of 4 squares in a straight orthogonal line. Accepts all bolt types and can be used by characters of any class. It works with the existing Double Shot specialization when paired with another Hand Crossbow or Duelist's Crossbow.",
+    "pt": "Besta do Duelista: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista."
+  },
+  "cat.item.besta_duelista.nome": {
+    "en": "Duelist's Crossbow",
+    "pt": "Besta do Duelista"
+  },
+  "cat.item.besta_pesada.desc": {
+    "en": "Heavy Crossbow: a nonmagical weapon dealing 1d10 piercing damage using Dexterity, with a range of 12 squares in a straight orthogonal line. Requires two hands, accepts all bolt types, and is exclusive to Warriors, Paladins, Clerics, and Rogues.",
+    "pt": "Besta Pesada mundana: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino."
+  },
+  "cat.item.besta_pesada.nome": {
+    "en": "Heavy Crossbow",
+    "pt": "Besta Pesada"
+  },
+  "cat.item.besta_repetidora_guerra.desc": {
+    "en": "Mundane Repeating War Crossbow: deals 1d8 piercing damage using Dexterity, has a 8-square orthogonal straight-line range, requires two hands, and accepts all bolt types. Once every 10 rounds, as a main action, it can fire two separate attacks at the same target; requires two bolts available. Usable by Warrior, Paladin, Bard, and Rogue.",
+    "pt": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
+  },
+  "cat.item.besta_repetidora_guerra.nome": {
+    "en": "Repeating War Crossbow",
+    "pt": "Besta Repetidora de Guerra"
+  },
+  "cat.item.besta_repetidora_patrulha.desc": {
+    "en": "Mundane Repeating Patrol Crossbow: deals 1d6 piercing damage using Dexterity, has a 6-square orthogonal straight-line range, requires two hands, and accepts all bolt types. Once every 10 rounds, as a main action, it can fire two separate attacks at the same target; requires two bolts available. Usable by Warrior, Paladin, Bard, and Rogue.",
+    "pt": "Besta Repetidora de Patrulha mundana: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
+  },
+  "cat.item.besta_repetidora_patrulha.nome": {
+    "en": "Repeating Patrol Crossbow",
+    "pt": "Besta Repetidora de Patrulha"
+  },
   "cat.item.bless.nome": {
     "en": "Divine Blessing",
     "pt": "Bênção Divina"
@@ -2666,30 +2722,6 @@ window.LANG_CATALOGO = {
     "en": "Shattered Horizon Staff",
     "pt": "Bordão do Horizonte Despedaçado"
   },
-  "cat.item.bordao_serpente_bronze.desc": {
-    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the staff's natural-20 stun. Once every 10 rounds, on a hit, the bronze serpent head coils around the target: Fortitude DC 13 or the target loses its next turn, immobilized until that turn ends. Cleric, Bard, Rogue, Paladin, and Warrior.",
-    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento do bordão em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
-  },
-  "cat.item.bordao_serpente_bronze.nome": {
-    "en": "Bronze Serpent Staff",
-    "pt": "Bordão da Serpente de Bronze"
-  },
-  "cat.item.bordao_punho_sismico.desc": {
-    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and a natural critical range of 19–20. On either critical result, the seismic fist forces Fortitude DC 13; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
-    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
-  },
-  "cat.item.bordao_punho_sismico.nome": {
-    "en": "Seismic Fist Staff",
-    "pt": "Bordão do Punho Sísmico"
-  },
-  "cat.item.bordao_punho_ferro.desc": {
-    "en": "Very rare magical quarterstaff: +1 to hit and damage and 1d6 bludgeoning using Strength or Dexterity. On a natural 20, the iron fist forces Fortitude DC 15; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
-    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
-  },
-  "cat.item.bordao_punho_ferro.nome": {
-    "en": "Iron Fist Staff",
-    "pt": "Bordão do Punho de Ferro"
-  },
   "cat.item.bordao_horizonte_partido.desc": {
     "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the standard staff's natural-20 stun. Once every 10 rounds, as a main action, releases a straight rupture wave up to 3 squares; creatures in its path take 2d6 magical damage (Reflex DC 13 halves it) and those who fail are pushed back 2 squares. Cleric, Bard, Rogue, Paladin, and Warrior.",
     "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma onda de ruptura em linha reta de até 3 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Quem falhar no teste é empurrado 2 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
@@ -2705,6 +2737,30 @@ window.LANG_CATALOGO = {
   "cat.item.bordao_prata.nome": {
     "en": "Silver Quarterstaff",
     "pt": "Bordão de Prata"
+  },
+  "cat.item.bordao_punho_ferro.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage and 1d6 bludgeoning using Strength or Dexterity. On a natural 20, the iron fist forces Fortitude DC 15; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_punho_ferro.nome": {
+    "en": "Iron Fist Staff",
+    "pt": "Bordão do Punho de Ferro"
+  },
+  "cat.item.bordao_punho_sismico.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and a natural critical range of 19–20. On either critical result, the seismic fist forces Fortitude DC 13; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_punho_sismico.nome": {
+    "en": "Seismic Fist Staff",
+    "pt": "Bordão do Punho Sísmico"
+  },
+  "cat.item.bordao_serpente_bronze.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the staff's natural-20 stun. Once every 10 rounds, on a hit, the bronze serpent head coils around the target: Fortitude DC 13 or the target loses its next turn, immobilized until that turn ends. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_serpente_bronze.nome": {
+    "en": "Bronze Serpent Staff",
+    "pt": "Bordão da Serpente de Bronze"
   },
   "cat.item.bota_alada.desc": {
     "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
@@ -3869,6 +3925,14 @@ window.LANG_CATALOGO = {
   "cat.item.mangual.nome": {
     "en": "Flail",
     "pt": "Mangual"
+  },
+  "cat.item.mangual_elo_astral.desc": {
+    "en": "Very rare magic flail, +2 to hit and damage; deals 1d8 bludgeoning + Strength, with a natural-20 critical multiplier of ×2.5. Its passive astral chain reaches up to 4 squares in a straight orthogonal or diagonal line with line of sight, striking only the chosen target before returning immediately. No cooldown. Usable by Cleric, Paladin and Warrior.",
+    "pt": "Raridade: Muito rara. Mangual mágico +2 no acerto e no dano; causa 1d8 contundente + Força e tem crítico natural ×2,5. Como poder passivo, a corrente astral alcança até 4 casas em linha reta ortogonal ou diagonal, desde que haja linha de visão; o ataque atinge apenas o alvo escolhido e a corrente retorna imediatamente. Sem recarga. Uso de Clérigo, Paladino e Guerreiro."
+  },
+  "cat.item.mangual_elo_astral.nome": {
+    "en": "Flail of the Astral Link",
+    "pt": "Mangual do Elo Astral"
   },
   "cat.item.mangual_prata.desc": {
     "en": "Silver Flail: 1d8 bludgeoning damage, using Strength. Range: any of the 8 adjacent squares, including diagonals. Natural 20: damage multiplied by 2.5. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",

@@ -576,12 +576,19 @@ const GS = (() => {
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     lanca:           { id:'lanca',           nome:'Lança',                tipo:'arma', loja:'ferreiro', preco:14, dano:'1d8', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
+    besta_duelista:  { id:'besta_duelista',  nome:'Besta do Duelista',    emoji:'🏹', icon:'assets/itens/besta_do_duelista.png', tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:4, range:4, linhaVisao:true, slotSecundario:'livre', duasMaos:false, two_handed:false, permitidoPara:['todos'] },
     espada_longa:    { id:'espada_longa',    nome:'Espada Longa',         tipo:'arma', loja:'ferreiro', preco:25, dano:'1d8', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_composto_curto: { id:'arco_composto_curto', nome:'Arco Composto Curto', emoji:'🏹', icon:'assets/itens/arco_composto_curto.png', tipo:'armaDistancia', loja:'ferreiro', preco:35, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:6, range:6, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     machado:         { id:'machado',         nome:'Machado',              tipo:'arma', loja:'ferreiro', preco:35, dano:'1d10', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_leve:      { id:'besta_leve',      nome:'Besta Leve',           tipo:'armaDistancia', loja:'ferreiro', preco:40, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:8, linhaVisao:true, slotSecundario:'livre',   duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas','henrique'] },
+    besta_pesada:    { id:'besta_pesada',    nome:'Besta Pesada',         emoji:'🏹', icon:'assets/itens/besta_pesada.png', tipo:'armaDistancia', loja:'ferreiro', preco:100, dano:'1d10', atributo:'destreza', bonusDano:'destreza', alcance:12, range:12, linhaVisao:true, slotSecundario:'livre', duasMaos:true, two_handed:true, allowed_classes:['warrior','paladin','cleric','rogue'], permitidoPara:['todos'] },
+    besta_repetidora_patrulha: { id:'besta_repetidora_patrulha', nome:'Besta Repetidora de Patrulha', emoji:'🏹', icon:'assets/itens/besta_repetidora_media.png', tipo:'armaDistancia', loja:'ferreiro', preco:70, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, range:6, linhaVisao:true, slotSecundario:'livre', duasMaos:true, two_handed:true, allowed_classes:['warrior','paladin','bard','rogue'], repeating_crossbow:true, repeating_crossbow_cooldown:10, permitidoPara:['todos'] },
+    besta_repetidora_guerra: { id:'besta_repetidora_guerra', nome:'Besta Repetidora de Guerra', emoji:'🏹', icon:'assets/itens/besta_repetidora_poderosa.png', tipo:'armaDistancia', loja:'ferreiro', preco:120, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:8, range:8, linhaVisao:true, slotSecundario:'livre', duasMaos:true, two_handed:true, allowed_classes:['warrior','paladin','bard','rogue'], repeating_crossbow:true, repeating_crossbow_cooldown:10, permitidoPara:['todos'] },
     lanca_longa:     { id:'lanca_longa',     nome:'Lança Longa',          tipo:'arma', loja:'ferreiro', preco:40, dano:'1d8', atributo:'forca', escudo:false, arremesso:false, duasMaos:true,  alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_longo:      { id:'arco_longo',      nome:'Arco Longo',           tipo:'armaDistancia', loja:'ferreiro', preco:50, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:10, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_composto_longo: { id:'arco_composto_longo', nome:'Arco Composto Longo', emoji:'🏹', icon:'assets/itens/arco_composto_longo.png', tipo:'armaDistancia', loja:'ferreiro', preco:60, dano:'1d10', atributo:'destreza', bonusDano:'destreza', alcance:10, range:10, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_bruto_combatente: { id:'arco_bruto_combatente', nome:'Arco Bruto do Combatente', emoji:'🏹', icon:'assets/itens/arco_bruto_do_combatente.png', tipo:'armaDistancia', loja:'ferreiro', preco:120, dano:'1d10', atributo:'destreza', bonusDano:'destreza', bonusDanoForca:true, alcance:10, range:10, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     espada_bastarda: { id:'espada_bastarda', nome:'Espada Bastarda',      tipo:'arma', loja:'ferreiro', preco:50, danoUmaMao:'1d10', danoDuasMaos:'3d4', atributo:'forca', escudo:true, arremesso:false, duasMaos:false, modosDuasMaos:true, permitidoPara:['richardCavaleiro'] },
     instrumento:     { id:'instrumento',     nome:'Instrumento Musical',  tipo:'arma', loja:'ferreiro', preco:60, dano:'—', atributo:'carisma', escudo:false, arremesso:false, duasMaos:false, permitidoPara:['henrique'] },
     alabarda:        { id:'alabarda',        nome:'Alabarda',             tipo:'arma', loja:'ferreiro', preco:80, dano:'1d10', atributo:'forca', escudo:false, arremesso:false, duasMaos:true,  alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
@@ -604,18 +611,18 @@ const GS = (() => {
     solucao_mecanismo:{ id:'solucao_mecanismo', nome:'Solução do Mecanismo', tipo:'consumivel', loja:'mercado', preco:250, icon:'assets/itens/solucao_mecanismo.png', item_slot:'bag', effect:'disarm_traps_area', value:3, descricao:'Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro.', permitidoPara:['todos'] },
 
     // ── FERREIRO — Munição ──
-    flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes:               { id:'virotes',               nome:'Virotes (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_prata:         { id:'flechas_prata',         nome:'Flechas de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_prata:         { id:'virotes_prata',         nome:'Virotes de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_incendiarias:  { id:'flechas_incendiarias',  nome:'Flechas Incendiárias (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_explosivas:    { id:'flechas_explosivas',    nome:'Flechas Explosivas (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_explosivos:    { id:'virotes_explosivos',    nome:'Virotes Explosivos (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_magicas:       { id:'flechas_magicas',       nome:'Flechas Mágicas (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    flechas_magicas_mais_2:{ id:'flechas_magicas_mais_2',nome:'Flechas Mágicas +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_magicos:       { id:'virotes_magicos',       nome:'Virotes Mágicos (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    virotes_magicos_mais_2:{ id:'virotes_magicos_mais_2',nome:'Virotes Mágicos +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
+    flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes:               { id:'virotes',               nome:'Virotes (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_prata:         { id:'flechas_prata',         nome:'Flechas de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_prata:         { id:'virotes_prata',         nome:'Virotes de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_incendiarias:  { id:'flechas_incendiarias',  nome:'Flechas Incendiárias (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_explosivas:    { id:'flechas_explosivas',    nome:'Flechas Explosivas (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_explosivos:    { id:'virotes_explosivos',    nome:'Virotes Explosivos (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_magicas:       { id:'flechas_magicas',       nome:'Flechas Mágicas (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    flechas_magicas_mais_2:{ id:'flechas_magicas_mais_2',nome:'Flechas Mágicas +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_magicos:       { id:'virotes_magicos',       nome:'Virotes Mágicos (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    virotes_magicos_mais_2:{ id:'virotes_magicos_mais_2',nome:'Virotes Mágicos +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
 
     // ── TAVERNA — Itens de sobrevivência ──
     carta:             { id:'carta',             nome:'Carta',               tipo:'carta',      loja:'masmorra', preco:0, item_slot:'bag', effect:'letter', value:0, texto:'Esta carta não contém nenhuma mensagem.', descricao:'Ao ler, abre a mensagem escrita sem consumir a carta.', permitidoPara:['todos'] },
@@ -2723,6 +2730,7 @@ const GS = (() => {
   }
   function useThunderPulseWeapon() { send({ type: 'thunder_pulse_weapon' }); }
   function useSolarFlareWeapon() { send({ type: 'solar_flare_weapon' }); }
+  function useRepeatingCrossbow(targetId, targetPos) { send({ type: 'repeating_crossbow_weapon', target_id: targetId, target_pos: targetPos }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function estancarSangramento()   { send({ type: 'estancar_sangramento' }); }
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
@@ -3241,7 +3249,11 @@ const GS = (() => {
     const nm = (item.name || '').toLowerCase();
     if(iid === 'hand_crossbow'){
       const gear = gearSnapshot || GS.me?.gear || {};
-      return hasDisparoDuplo() && gear.weapon?.id === 'hand_crossbow';
+      return hasDisparoDuplo() && ['hand_crossbow','besta_duelista'].includes(gear.weapon?.id);
+    }
+    if(iid === 'besta_duelista'){
+      const gear = gearSnapshot || GS.me?.gear || {};
+      return hasDisparoDuplo() && ['hand_crossbow','besta_duelista'].includes(gear.weapon?.id);
     }
     return !!item.off_hand_weapon || isDagger(item) || iid === 'chicote' || nm.includes('chicote');
   }
@@ -3265,7 +3277,8 @@ const GS = (() => {
     const gear = gearSnapshot || {};
     if(slotKey === 'weapon'){
       if(cat !== 'weapon') return false;
-      if(gear.off_hand?.id === 'hand_crossbow' && item.id !== 'hand_crossbow') return false;
+      if(['hand_crossbow','besta_duelista'].includes(gear.off_hand?.id)
+          && !['hand_crossbow','besta_duelista'].includes(item.id)) return false;
       if(item.two_handed){
         const off = gear.off_hand;
         const offOcupaMao = !!off && (off.kind === 'shield' || off.item_slot === 'shield' || !!off.die);
@@ -3519,9 +3532,9 @@ const GS = (() => {
       const alcanceTotal = alcance + vento;
       if (alcanceTotal < 1) return false;
       const distancia = Math.max(dx, dy);
-      if (weapon.id === 'besta' || weapon.id === 'hand_crossbow')
+      if (weapon.id === 'besta' || weapon.id === 'besta_pesada' || weapon.id === 'besta_repetidora_patrulha' || weapon.id === 'besta_repetidora_guerra' || weapon.id === 'hand_crossbow' || weapon.id === 'besta_duelista')
         return (dx === 0 || dy === 0) && distancia <= alcanceTotal;
-      if (weapon.id === 'arco_curto' || weapon.id === 'longbow') {
+      if ((weapon.id === 'arco_curto' || weapon.id === 'longbow' || weapon.id === 'arco_composto_curto' || weapon.id === 'arco_composto_longo' || weapon.id === 'arco_bruto_combatente') && !weapon.range_all_directions) {
         const limite = (dx === 0 || dy === 0) ? alcanceTotal : Math.ceil(alcanceTotal / 2);
         return distancia <= limite;
       }
@@ -3559,7 +3572,7 @@ const GS = (() => {
   }
 
   function weaponRangePotionBonus(myP, weapon = myP?.weapon || {}) {
-    const hasProjectile = ['arco_curto', 'longbow', 'besta', 'hand_crossbow'].includes(weapon?.id)
+    const hasProjectile = ['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista'].includes(weapon?.id)
       || ['arrow', 'bolt'].includes(weapon?.projectile)
       || ['flechas', 'virotes'].includes(weapon?.ammo);
     return hasProjectile && Number(myP?.essencia_vento_rodadas || 0) > 0 ? 2 : 0;
@@ -3854,9 +3867,14 @@ const GS = (() => {
     const limiteDistintos = opts.doisVenenos ? 2 : 1;
     const MUNICAO = {
       arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      arco_composto_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
       longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      arco_composto_longo: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      arco_bruto_combatente: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
       besta: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_pesada: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
       hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_duelista: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
     };
     const gear = (me && me.gear) || {};
     // O item inicial da mão principal pode vir reduzido em gear.weapon (sem dado de dano): completa
@@ -3880,7 +3898,7 @@ const GS = (() => {
       const ranged = Object.prototype.hasOwnProperty.call(MUNICAO, item.id);
       // Arco e besta recebem veneno pela munição; só a besta de mão na mão secundária
       // aceita o veneno direto, e apenas pelo Veneno Rápido (o frasco exige munição).
-      if (ranged && !(slot === 'off_hand' && item.id === 'hand_crossbow' && metodo === 'veneno_rapido')) continue;
+      if (ranged && !(slot === 'off_hand' && ['hand_crossbow','besta_duelista'].includes(item.id) && metodo === 'veneno_rapido')) continue;
       const ativos = Array.isArray(item.poison_slots) ? item.poison_slots : [];
       const cabe = !opts.venenoId || ativos.includes(opts.venenoId) || new Set(ativos).size < limiteDistintos;
       armas.push({ tipo: 'arma', slot, item, ativos, cabe, limite: limiteDistintos, ranged });
@@ -4408,6 +4426,7 @@ const GS = (() => {
     useHorizonShockWeapon,
     useThunderPulseWeapon,
     useSolarFlareWeapon,
+    useRepeatingCrossbow,
     apagarChamas,
     estancarSangramento,
     escaparEstomago,
