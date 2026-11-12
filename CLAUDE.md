@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Braceletes da Guarda Reflexa (2026-11-09)
+
+`bracelete_guarda_reflexa` (1.400 moedas, reduz `1d8`) e `bracelete_guarda_reflexa_maior` (3.000 moedas, reduz `2d8`) são itens mágicos vendidos no Mercador e equipados nos slots `ring1`/`ring2`. Após um ataque direto acertar um herói equipado, o servidor pergunta se ele quer ativar; aceitar rola a redução (dano mínimo 0) e inicia recarga de 8 rodadas no bracelete usado. Recusar ou não responder em 12 segundos não consome a reação nem inicia recarga. Magias, armadilhas e outras fontes que não sejam ataques (`is_attack`) não oferecem a reação. Ambos usam `assets/itens magicos/bracelete_guarda_reflexa.png` e o protocolo visual de confirmação `sorte_reacao`; os campos de regra também são exportados para `tools/editor_catalog.js`.
+
 ### Juntar pilhas de munição (2026-11-01)
 
 No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até seu limite (20 na bolsa; 10 na mão secundária) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
@@ -117,6 +121,14 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `espada_magica`, `espada_magica_mais_2` e `espada_magica_mais_3` usam `assets/itens magicos/espada_magica.png`, causam 1d6 cortante com Força, mantêm crítico natural 19–20 e podem ser usadas por Bardo, Ladino, Paladino e Guerreiro. Concedem, respectivamente, +1/+1 por 500 moedas (Incomum), +2/+2 por 1.500 (Rara) e +3/+3 por 3.500 (Muito rara), sem efeito adicional. Estão à venda nos cinco ferreiros e no catálogo do editor; o fluxo de compra/equipamento preserva `magical`, `atk_bonus` e `damage_bonus`.
 
+### Lâmina Trovejante (2026-11-11)
+
+`lamina_trovejante` custa 1.200 moedas (Rara), usa `assets/itens magicos/lamina_trovejante.png`, causa 1d8 cortante + Força, concede +1 no acerto e no dano e mantém crítico natural com 19–20. O primeiro acerto com ela em cada turno acrescenta 1d4 elétrico; o limite é compartilhado entre ataques normais e técnicas com múltiplos golpes. É utilizável por Bardo, Ladino, Paladino e Guerreiro, vendida nos cinco ferreiros e registrada no catálogo do editor. `extra_damage_once_per_turn` é preservado ao comprar e reequipar.
+
+### Cinzas Ardentes (2026-11-12)
+
+`cinzas_ardentes` custa 2.500 moedas (Muito rara) e `cinzas_ardentes_mais_3` custa 5.000 (Lendária); ambas usam `assets/itens magicos/espada_maligna_das_chamas.png`, causam 1d8 cortante + Força, mantêm crítico natural 19–20, acrescentam 1d4 de fogo a cada acerto e deixam o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada sem acumular duração. A versão +1 concede +1/+1 e causa +1d6 de fogo em críticos; a +3 concede +3/+3 e causa +2d6 de fogo em críticos. Uso de Bardo, Ladino, Paladino e Guerreiro. As duas estão nos cinco ferreiros e no catálogo do editor; `extra_damages`, `fire_on_hit`, `fire_crit_damage` e os bônus mágicos são preservados na compra e ao equipar.
+
 ### Punhais do Assassino (2026-11-07)
 
 `punhal_assassino` custa 1.500 moedas (Rara), concede +1 no acerto e no dano e adiciona +1d4 ao Ataque Furtivo do Ladino. `punhal_assassino_maior` custa 3.500 moedas (Muito rara), concede +2 no acerto e no dano e adiciona +2d4 ao Ataque Furtivo do Ladino. Ambos mantêm as propriedades da Adaga (1d4 perfurante, finesse, mão secundária e arremesso a 3 casas), usam `assets/itens magicos/punhal_do_assassino.png` e são vendidos nos cinco ferreiros. Os dados especiais só são somados quando o Ataque Furtivo é aplicado; entram no cálculo furtivo existente antes de resistências e reduções. `sneak_attack_extra_d4` é preservado ao comprar e equipar.
@@ -132,6 +144,36 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 ### Choque do Trovão (2026-10-31)
 
 `choque_do_trovao` é um martelo de guerra mágico Muito Raro, custa 2.500 moedas e usa `assets/itens magicos/choque_do_trovao.png`. Causa 1d8 contundente + Força, tem crítico natural 20 que triplica o dano, concede +1 no acerto e no dano e acrescenta 1d4 elétrico a cada acerto. Em um crítico natural 20, um alvo sobrevivente testa Força CD 13; na falha, é empurrado uma casa para longe do portador; obstáculos e criaturas bloqueiam o deslocamento sem dano de colisão. Como ação principal, `Pulso do Trovão` causa 2d6 elétrico a todas as criaturas vivas nas oito casas adjacentes, incluindo aliados e excluindo o portador; Reflexos CD 13 reduz o dano à metade. A habilidade tem recarga de 10 rodadas persistida na instância equipada. Uso de Clérigo, Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `extra_damages`, `thunder_push_on_crit`, `thunder_pulse` e `thunder_pulse_cooldown` são preservados ao comprar e reequipar.
+
+### Mangual do Sol Cativo (2026-11-12)
+
+`mangual_sol_cativo` custa 3.000 moedas (Muito rara), usa `assets/itens magicos/mangual_sol_cativo.png` e mantém o perfil do Mangual: 1d8 contundente + Força, alcance 2 e crítico natural ×2,5. É mágico, concede +1 no acerto e no dano e acrescenta 1d4 sagrado a cada acerto. Como ação principal, `Clarão Solar` causa 2d6 sagrado às criaturas nas oito casas adjacentes, incluindo aliados e excluindo o portador; Reflexos CD 13 reduz à metade. Recarga de 10 rodadas persistida na instância equipada. Uso de Clérigo, Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `extra_damages`, `solar_flare` e `solar_flare_cooldown` são preservados ao comprar e reequipar. A animação `solar_flare` exibe a esfera aquecendo, um clarão dourado radial e anéis solares em 2D/3D.
+
+### Bordões do Horizonte (2026-11-12)
+
+`bordao_horizonte_partido` custa 2.800 moedas (Muito raro), usa `assets/itens magicos/bordao_horizonte_partido.png` e conserva o perfil do Bordão: 1d6 contundente, finesse FOR/DES e atordoamento em 20 natural. Concede +1 no acerto e dano. Como ação principal, uma vez a cada 10 rodadas, `Ruptura do Horizonte` atinge em linha reta até 3 casas: criaturas na linha, inclusive aliados, sofrem 2d6 mágico (Reflexos CD 13 reduz à metade); falhas são empurradas 2 casas. `bordao_horizonte_despedacado` é a versão Lendária +4, custa 10.000 moedas, usa `assets/itens magicos/bordao_horizonte_despedacado.png` e amplia a ruptura para 4 casas, 4d6 mágico, CD 16 e empurrão de 3 casas; mantém a recarga de 10 rodadas. Ambos são usados por Clérigo, Bardo, Ladino, Paladino e Guerreiro e vendidos nos cinco ferreiros. `horizon_shock`, `horizon_shock_cooldown` e `horizon_shock_power` acompanham a arma ao comprar/equipar; a onda reaproveita a animação em linha `jato_ar`.
+
+### Bordão da Serpente de Bronze (2026-11-12)
+
+`bordao_serpente_bronze` custa 2.200 moedas (Muito raro), usa `assets/itens magicos/bordao_serpente_bronze.png` e conserva o perfil do Bordão: 1d6 contundente, finesse FOR/DES e atordoamento em 20 natural. Concede +1 no acerto e dano. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; falha o deixa imobilizado e sem agir até o fim do próximo turno. Inabalável ignora o efeito. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro; vendido nos cinco ferreiros. `bronze_serpent_bind` e `bronze_serpent_cooldown` acompanham a arma ao comprar/equipar, e `bronze_serpent_ready_round` mantém a recarga por instância equipada.
+
+### Bordões do Punho Sísmico e do Punho de Ferro (2026-11-12)
+
+`bordao_punho_sismico` custa 3.000 moedas e usa `assets/itens magicos/bordao_punho_sismico.png`: Bordão mágico +1, 1d6 contundente, finesse FOR/DES, classes do Bordão, crítico natural 19–20 e Fortitude CD 13 ou o alvo perde o próximo turno. `bordao_punho_ferro` custa 2.200 moedas e usa `assets/itens magicos/bordao_punho_ferro.png`: mesmo perfil +1, mas o atordoamento ocorre apenas no 20 natural e usa Fortitude CD 15. `stun_crit_min_nat` e `stun_fort_dc` especializam o atordoamento do Bordão; ausentes, a regra padrão (20 natural, CD 10 + 1d6) permanece. Ambos estão nos cinco ferreiros e no catálogo do editor.
+
+### Marreta Quebra-Couraças (2026-11-10)
+
+`marreta_quebra_couracas` custa 1.500 moedas (Rara), usa `assets/itens magicos/marreta_quebra_couracas.png` e mantém o perfil da Marreta: 2d8 contundente + Força, duas mãos e ignora 2 pontos de redução física por golpe (um ponto acima da Marreta comum). É mágica, concede +1 no acerto e no dano e é exclusiva de Paladino e Guerreiro. Está nos cinco `ferreiro_weapon` e no catálogo do editor, gerado por `tools/export_catalog.py`; `magical`, `atk_bonus`, `damage_bonus` e `ignora_reducao_dano` são preservados na compra e ao equipar.
+
+### Espada Bastarda da Ruptura (2026-11-12)
+
+`espada_bastarda_ruptura` custa 7.000 moedas (Lendária), usa `assets/itens magicos/espada_maligna_das_chamas.png` e mantém o perfil da Espada Bastarda: 1d10 cortante + Força e crítico natural com 19–20. É mágica, concede +4 no acerto e no dano, ignora 2 pontos de redução de dano físico por golpe e é exclusiva de Paladino e Guerreiro. Está nos cinco ferreiros e no catálogo do editor; `atk_bonus`, `damage_bonus`, `magical` e `ignora_reducao_dano` são preservados na compra e ao equipar.
+
+### Alabarda do Vendaval (2026-11-10)
+
+`alabarda_vendaval` custa 2.500 moedas (Muito rara), usa `assets/itens magicos/alabarda_do_vendaval.png` e mantém o perfil da Alabarda: 1d10 perfurante + Força, alcance 2 e duas mãos. É mágica, concede +1 no acerto e no dano e é exclusiva de Paladino e Guerreiro. A ação principal `Rajada do Vendaval` mira um inimigo alinhado a até 4 casas; criaturas na linha, inclusive aliados, sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Se o alvo escolhido falhar e sobreviver, é empurrado 1 casa para trás, sem dano de colisão. Recarga de 10 rodadas. A animação reutiliza `spell_animation` `jato_ar` com largura de uma casa. Está nos cinco `ferreiro_weapon`; `wind_line`, `wind_line_cooldown` e `wind_line_ready_round` acompanham o item ao comprar/equipar; o catálogo do editor é gerado por `tools/export_catalog.py`.
+
+`alabarda_do_eclipse` custa 3.500 moedas (Muito rara), usa `assets/itens magicos/alabarda_do_eclipse.png` e mantém o perfil da Alabarda: 1d10 perfurante + Força, alcance 2 e duas mãos. É mágica, concede +2 no acerto e no dano, amplia o crítico natural para 19–20 e é exclusiva de Paladino e Guerreiro. Está nos cinco `ferreiro_weapon` e no catálogo do editor, gerado por `tools/export_catalog.py`.
 
 ### Escudos Torre e Grande de Madeira (2026-10-30)
 

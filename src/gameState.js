@@ -2715,7 +2715,14 @@ const GS = (() => {
   function useLightningLineWeapon(slot, targetId, targetPos) {
     send({ type: 'lightning_line_weapon', slot, target_id: targetId, target_pos: targetPos });
   }
+  function useWindLineWeapon(slot, targetId, targetPos) {
+    send({ type: 'wind_line_weapon', slot, target_id: targetId, target_pos: targetPos });
+  }
+  function useHorizonShockWeapon(targetId, targetPos) {
+    send({ type: 'horizon_shock_weapon', target_id: targetId, target_pos: targetPos });
+  }
   function useThunderPulseWeapon() { send({ type: 'thunder_pulse_weapon' }); }
+  function useSolarFlareWeapon() { send({ type: 'solar_flare_weapon' }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function estancarSangramento()   { send({ type: 'estancar_sangramento' }); }
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
@@ -4397,7 +4404,10 @@ const GS = (() => {
     throwItemArea,
     throwWeapon,
     useLightningLineWeapon,
+    useWindLineWeapon,
+    useHorizonShockWeapon,
     useThunderPulseWeapon,
+    useSolarFlareWeapon,
     apagarChamas,
     estancarSangramento,
     escaparEstomago,

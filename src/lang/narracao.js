@@ -1316,6 +1316,26 @@ window.LANG_NARRACAO = {
     "en": "⚡ **{heroi}** releases a Thunder Pulse from the warhammer! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 lightning damage; success halves it.",
     "pt": "⚡ **{heroi}** libera um Pulso do Trovão pelo martelo! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de eletricidade; sucesso reduz à metade."
   },
+  "narracao.mangual_sol_cativo_clarao": {
+    "en": "☀️ **{heroi}** swings the sun chained to the flail and releases a Solar Flash! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 holy damage; success halves it.",
+    "pt": "☀️ **{heroi}** gira o sol preso à corrente e libera um Clarão Solar! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de dano sagrado; sucesso reduz à metade."
+  },
+  "narracao.horizonte_ruptura_empurrao": {
+    "en": "🌅 **{alvo}** is hurled {casas} squares by the shattered horizon!",
+    "pt": "🌅 **{alvo}** é arremessado {casas} casas pela ruptura do horizonte!"
+  },
+  "narracao.horizonte_ruptura_inicio": {
+    "en": "🌅 **{heroi}** strikes the ground and tears open a horizon-wide rupture reaching {alcance} squares!",
+    "pt": "🌅 **{heroi}** golpeia o chão e rasga o horizonte numa onda de ruptura que alcança {alcance} casas!"
+  },
+  "narracao.bordao_serpente_resiste": {
+    "en": "🐍 **{alvo}** resists the bronze serpent's binding (Fortitude {total} vs. DC {dc})!",
+    "pt": "🐍 **{alvo}** resiste ao laço da serpente de bronze (Fortitude {total} vs. CD {dc})!"
+  },
+  "narracao.bordao_serpente_prende": {
+    "en": "🐍 **{heroi}**'s Bronze Serpent Staff coils around **{alvo}** (Fortitude {total} vs. DC {dc})! The target is immobilized through the end of its next turn.",
+    "pt": "🐍 A serpente do bordão de **{heroi}** se enrola em **{alvo}** (Fortitude {total} vs. CD {dc})! O alvo fica imobilizado até o fim do próximo turno."
+  },
   "narracao.escapa_do_rodamoinho_profundo_e_pode_agi": {
     "en": "🌊 **{nome_criatura_criatura}** escapes the deep whirlpool and can act normally.",
     "pt": "🌊 **{nome_criatura_criatura}** escapa do rodamoinho profundo e pode agir normalmente."

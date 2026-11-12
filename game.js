@@ -12615,6 +12615,8 @@ function renderMap(state){
     _maldicaoDraw2D(ctx, state, _animMaldicao, performance.now());
   for(const _animRaioDivino of _raioDivinoAnims)
     _raioDivinoDraw2D(ctx, state, _animRaioDivino, performance.now());
+  for(const _animClarãoSolar of _solarFlareAnims)
+    _solarFlareDraw2D(ctx, state, _animClarãoSolar, performance.now());
   for(const _animProtecao of _protecaoEnergiaAnims)
     _protecaoEnergiaDraw2D(ctx, state, _animProtecao, performance.now());
 
@@ -31468,6 +31470,20 @@ function ativarHabilidadeDoMenu(skillId){
   }
   const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
   const lightningSlot = /^relampago_de_mao_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  const windLineSlot = /^alabarda_vendaval_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  if(windLineSlot){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginWindLineWeapon(windLineSlot);
+    return;
+  }
+  const horizonShockSlot = /^bordao_horizonte_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  if(horizonShockSlot){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginHorizonShockWeapon(horizonShockSlot);
+    return;
+  }
   if(lightningSlot){
     fecharMenuHabilidades();
     fecharMenuMagias();
@@ -31986,7 +32002,7 @@ function _weaponThrowSkillEntries(player){
     ['off_hand', player.gear?.off_hand],
   ];
   for(const [slot, item] of slots){
-    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse)) continue;
+    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse && !item.solar_flare && !item.wind_line && !item.horizon_shock)) continue;
     const nome = item.name || item.id || 'arma';
     const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
       ? t('ui.arremesso.forca')
@@ -32022,6 +32038,38 @@ function _weaponThrowSkillEntries(player){
         granted_origem:'weapon',
       });
     }
+    if(item.solar_flare){
+      add({
+        id:'mangual_sol_cativo_clarao', source:'arma',
+        name:t('ui.item.mangual_sol_cativo_clarao'), icon:'☀️',
+        tipo:'acao_principal', target:'self', weapon_id:item.id,
+        description:t('ui.item.mangual_sol_cativo_clarao_desc'),
+        granted_origem:'weapon',
+      });
+    }
+    if(item.wind_line){
+      add({
+        id:`alabarda_vendaval_${slot}`, source:'arma', name:t('ui.item.alabarda_vendaval_habilidade'),
+        icon:'🌬️', tipo:'acao_principal', target:'enemy', throw_slot:slot,
+        weapon_id:item.id,
+        description:t('ui.item.alabarda_vendaval_desc'),
+        granted_origem:'weapon',
+      });
+    }
+    if(item.horizon_shock && slot === 'weapon'){
+      add({
+        id:`bordao_horizonte_${slot}`, source:'arma', name:t('ui.item.horizonte_ruptura_habilidade'),
+        icon:'🌅', tipo:'acao_principal', target:'enemy', throw_slot:slot,
+        weapon_id:item.id,
+        description:t('ui.item.horizonte_ruptura_desc', {
+          alcance:Number(item.horizon_shock_power || 2) >= 4 ? 4 : 3,
+          dano:Number(item.horizon_shock_power || 2) >= 4 ? '4d6' : '2d6',
+          cd:Number(item.horizon_shock_power || 2) >= 4 ? 16 : 13,
+          empurrao:Number(item.horizon_shock_power || 2) >= 4 ? 3 : 2,
+        }),
+        granted_origem:'weapon',
+      });
+    }
   }
   return result;
 }
@@ -32034,10 +32082,16 @@ function _weaponThrowStatLabel(item){
 }
 
 function _weaponThrowSkillBtn(me, skill){
+  if(String(skill?.id || '').startsWith('alabarda_vendaval_'))
+    return _windLineWeaponSkillBtn(me, skill);
+  if(String(skill?.id || '').startsWith('bordao_horizonte_'))
+    return _horizonShockWeaponSkillBtn(me, skill);
   if(String(skill?.id || '').startsWith('relampago_de_mao_'))
     return _lightningLineWeaponSkillBtn(me, skill);
   if(skill?.id === 'choque_do_trovao_pulso')
     return _thunderPulseWeaponSkillBtn(me, skill);
+  if(skill?.id === 'mangual_sol_cativo_clarao')
+    return _solarFlareWeaponSkillBtn(me, skill);
   const state = GS.gameState;
   const slot = skill.throw_slot || _weaponThrowSlotFromSkillId(skill.id);
   const item = slot === 'off_hand' ? me.gear?.off_hand : me.weapon;
@@ -32083,6 +32137,29 @@ function _thunderPulseWeaponSkillBtn(me, skill){
     fecharMenuHabilidades();
     fecharMenuMagias();
     GS.useThunderPulseWeapon();
+  };
+  return btn;
+}
+
+function _solarFlareWeaponSkillBtn(me, skill){
+  const item = me?.gear?.weapon || me?.weapon;
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.solar_flare_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.id === 'mangual_sol_cativo' && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '☀️')} ${skill.name}${recarga}</div>
+    <div class="skill-desc">${skill.description || t('ui.item.mangual_sol_cativo_clarao_desc')}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '☀️'}</div>`;
+  btn.onclick = () => {
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    GS.useSolarFlareWeapon();
   };
   return btn;
 }
@@ -32134,6 +32211,128 @@ function beginLightningLineWeapon(slot='weapon'){
     instruction:t('ui.item.relampago_de_mao_mira'),
     color:'#7edfff', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
     cancelText:t('ui.relampago_mao.cancelada'), cleanup:()=>{window._modoRelampagoDeMao=null;}});
+}
+
+function _windLineWeaponSkillBtn(me, skill){
+  const slot = skill.throw_slot || String(skill.id).replace('alabarda_vendaval_', '');
+  const item = slot === 'off_hand' ? me.gear?.off_hand : (me.gear?.weapon || me.weapon);
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.wind_line_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const targets = (GS.gameState?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx = x - me.pos[0], dy = y - me.pos[1];
+      const d = Math.max(Math.abs(dx), Math.abs(dy));
+      return d >= 1 && d <= 4 && (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))
+        && GS.hasLineOfSight(GS.gameState, me.pos[0], me.pos[1], x, y);
+    }));
+  const podeUsar = !!(item?.id === 'alabarda_vendaval' && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0 && targets);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '🌬️')} ${t('ui.item.alabarda_vendaval_habilidade')}${recarga}</div>
+    <div class="skill-desc">${skill.description || ''}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🌬️'}</div>`;
+  btn.onclick = () => beginWindLineWeapon(slot);
+  return btn;
+}
+
+function _horizonShockWeaponSkillBtn(me, skill){
+  const slot = skill.throw_slot || String(skill.id).replace('bordao_horizonte_', '');
+  const item = slot === 'off_hand' ? me.gear?.off_hand : (me.gear?.weapon || me.weapon);
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.horizon_shock_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const alcance = Number(item?.horizon_shock_power || 2) >= 4 ? 4 : 3;
+  const targets = (GS.gameState?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx = x - me.pos[0], dy = y - me.pos[1];
+      const d = Math.max(Math.abs(dx), Math.abs(dy));
+      return d >= 1 && d <= alcance && (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))
+        && GS.hasLineOfSight(GS.gameState, me.pos[0], me.pos[1], x, y);
+    }));
+  const podeUsar = !!(item?.horizon_shock && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0 && targets);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '🌅')} ${skill.name}${recarga}</div>
+    <div class="skill-desc">${skill.description || ''}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🌅'}</div>`;
+  btn.onclick = () => beginHorizonShockWeapon(slot);
+  return btn;
+}
+
+function beginHorizonShockWeapon(slot='weapon'){
+  getAudioContext();
+  const state = GS.gameState, me = GS.me;
+  const item = slot === 'off_hand' ? me?.gear?.off_hand : (me?.gear?.weapon || me?.weapon);
+  if(!state || !me || !item?.horizon_shock) return;
+  const alcance = Number(item.horizon_shock_power || 2) >= 4 ? 4 : 3;
+  const range = new Set(), targets = new Set(), origin = me.pos || [0,0];
+  for(let y=0; y<state.map_h; y++) for(let x=0; x<state.map_w; x++){
+    const dx=x-origin[0], dy=y-origin[1], d=Math.max(Math.abs(dx),Math.abs(dy));
+    if(d<1 || d>alcance || (dx!==0 && dy!==0 && Math.abs(dx)!==Math.abs(dy))) continue;
+    if(!GS.hasLineOfSight(state, origin[0], origin[1], x, y)) continue;
+    range.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0 && GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y)))
+      targets.add(`${x},${y}`);
+  }
+  if(!targets.size){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:alcance})); return; }
+  window._modoBordaoHorizonte = {range, targets, alcance};
+  _aimStart({kind:'bordao_horizonte', title:`🌅 ${t('ui.item.horizonte_ruptura_habilidade')}`,
+    instruction:t('ui.item.horizonte_ruptura_mira', {alcance}),
+    color:'#ffd36b', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
+    cancelText:t('ui.item.horizonte_ruptura_cancelada'), cleanup:()=>{window._modoBordaoHorizonte=null;}});
+}
+
+function _clickTileHorizonShockWeapon(tx, ty){
+  const mode=window._modoBordaoHorizonte, state=GS.gameState;
+  if(!mode || !state) return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0 && GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster || !mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus(t('ui.item.horizonte_ruptura_mira', {alcance:mode.alcance}), '#ffb168'); return;
+  }
+  GS.useHorizonShockWeapon(monster.id, [tx,ty]);
+  _aimEnd({silent:true, reason:'resolved'});
+}
+
+function beginWindLineWeapon(slot='weapon'){
+  getAudioContext();
+  const state = GS.gameState, me = GS.me;
+  const item = slot === 'off_hand' ? me?.gear?.off_hand : (me?.gear?.weapon || me?.weapon);
+  if(!state || !me || item?.id !== 'alabarda_vendaval') return;
+  const range = new Set(), targets = new Set(), origin = me.pos || [0,0];
+  for(let y=0; y<state.map_h; y++) for(let x=0; x<state.map_w; x++){
+    const dx=x-origin[0], dy=y-origin[1], d=Math.max(Math.abs(dx),Math.abs(dy));
+    if(d<1 || d>4 || (dx!==0 && dy!==0 && Math.abs(dx)!==Math.abs(dy))) continue;
+    if(!GS.hasLineOfSight(state, origin[0], origin[1], x, y)) continue;
+    range.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0 && GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y)))
+      targets.add(`${x},${y}`);
+  }
+  if(!targets.size){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:4})); return; }
+  window._modoAlabardaVendaval = {slot, range, targets};
+  _aimStart({kind:'alabarda_vendaval', title:`🌬️ ${t('ui.item.alabarda_vendaval_habilidade')}`,
+    instruction:t('ui.item.alabarda_vendaval_mira'),
+    color:'#9edcff', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
+    cancelText:t('ui.item.alabarda_vendaval_cancelada'), cleanup:()=>{window._modoAlabardaVendaval=null;}});
+}
+
+function _clickTileWindLineWeapon(tx, ty){
+  const mode=window._modoAlabardaVendaval, state=GS.gameState;
+  if(!mode || !state) return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0 && GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster || !mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus(t('ui.item.alabarda_vendaval_mira'), '#ffb168'); return;
+  }
+  GS.useWindLineWeapon(mode.slot, monster.id, [tx,ty]);
+  _aimEnd({silent:true, reason:'resolved'});
 }
 
 function _clickTileLightningLineWeapon(tx, ty){
@@ -42473,6 +42672,106 @@ function _raioDivinoDraw2D(ctx,state,anim,now){
 function _raioDivinoDrawForeground2D(ctx,state,anim,now){const p=_raioDivinoTarget(anim,state),pos=p?.pos||anim.target;if(!pos)return;const q=_raioDivinoProgress(anim,now);if(!q.impacting)return;const[tx,ty]=pos,cx=tx*CELL+CELL/2,cy=ty*CELL+CELL/2,e=Math.sin(Math.PI*Math.min(1,q.impact));ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';if(anim.holyTarget){ctx.fillStyle=`rgba(28,14,42,${(.55*e).toFixed(3)})`;ctx.beginPath();ctx.arc(cx,cy-CELL*.30,CELL*.20,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(255,242,158,${(.90*e).toFixed(3)})`;ctx.font=`bold ${Math.round(CELL*.20)}px serif`;ctx.fillText('✦',cx+CELL*.30,cy-CELL*.32);}ctx.restore();}
 function _tickRaioDivino(now){let active=false;for(let i=_raioDivinoAnims.length-1;i>=0;i--){const anim=_raioDivinoAnims[i],p=_raioDivinoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomRaioDivinoImpacto(anim.holyTarget);if(!anim.visualOnly)_liberarDadosMagia();}if(p.finished&&now-anim.start>anim.travelMs+anim.impactMs+520){_pararSomRaioDivino(anim);_raioDivinoDispose3D(anim);_raioDivinoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_raioDivinoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_raioDivinoRaf=active?_scheduleVisualFrame(_tickRaioDivino):null;}
 function _receberAnimacaoRaioDivino(msg){if(!msg||msg.spell_id!=='raio_divino')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='resolve'){const anim=_raioDivinoAnims.find(a=>a.animationId===id);if(anim){anim.holyTarget=!!msg.holy_target;anim.saveOk=!!msg.save_ok;anim.damage=Number(msg.damage)||0;anim.targetDead=!!msg.target_dead;}return;}const anim=_raioDivinoAnimFromMessage(msg);_raioDivinoAnims.push(anim);_tocarSomRaioDivino(anim);if(!_raioDivinoRaf)_raioDivinoRaf=_scheduleVisualFrame(_tickRaioDivino);}
+
+// ☀️ CLARÃO SOLAR — o Mangual do Sol Cativo carrega a esfera e expande uma
+// onda dourada radial; a mesma sequência é desenhada no mapa 2D e no tabuleiro 3D.
+const _solarFlareAnims = [];
+let _solarFlareRaf = null;
+function _solarFlareAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0,0];
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    origin, tiles: Array.isArray(msg.tiles) ? msg.tiles : [],
+    start: performance.now(), chargeMs: Math.max(120, Number(msg.charge_ms) || 300),
+    impactMs: Math.max(450, Number(msg.impact_ms) || 900),
+    targetIds: [], impactPlayed: false, group: null, orb: null, core: null,
+    rings: [], rays: [], motes: [], seed: (origin[0]*73856093) ^ (origin[1]*19349663) ^ Date.now(),
+  };
+}
+function _solarFlareProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const burst = Math.max(0, Math.min(1, (elapsed - anim.chargeMs) / anim.impactMs));
+  return {charge: Math.min(1, elapsed / anim.chargeMs), burst,
+    bursting: elapsed >= anim.chargeMs, finished: elapsed >= anim.chargeMs + anim.impactMs};
+}
+function _solarFlareBuild3D(anim){
+  if(!g3?.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'solar-flare-weapon-animation';
+  const mat = (color, opacity=0) => new T.MeshBasicMaterial({color, transparent:true, opacity,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide});
+  const orb = new T.Mesh(new T.SphereGeometry(.30,14,10), mat(0xffc83d)); orb.renderOrder=96; group.add(orb); anim.orb=orb;
+  const core = new T.Mesh(new T.SphereGeometry(.17,12,8), mat(0xffffff)); core.renderOrder=97; group.add(core); anim.core=core;
+  for(let i=0;i<3;i++){
+    const ring = new T.Mesh(new T.TorusGeometry(.56+i*.18,.022-i*.003,7,44),mat(i===1?0xffffff:0xffd54f));
+    ring.rotation.x=Math.PI/2; ring.position.y=.10+i*.012; ring.renderOrder=95+i; group.add(ring); anim.rings.push(ring);
+  }
+  for(let i=0;i<8;i++){
+    const ray = new T.Mesh(new T.CylinderGeometry(.035,.13,1.08,7,1,true),mat(i%2?0xffdc62:0xffffff));
+    const a=i*Math.PI/4; ray.rotation.set(0,-a,Math.PI/2); ray.position.set(Math.cos(a)*.47,.58,Math.sin(a)*.47);
+    ray.renderOrder=94; group.add(ray); anim.rays.push(ray);
+  }
+  for(let i=0;i<18;i++){
+    const mote=new T.Mesh(new T.SphereGeometry(.018+(i%3)*.006,6,4),mat(i%3?0xffe58a:0xffffff));
+    mote.userData={a:i*Math.PI*2/18,r:.28+((i*37)%11)/20,p:i*.73}; group.add(mote); anim.motes.push(mote);
+  }
+  g3.scene.add(group); anim.group=group; return true;
+}
+function _solarFlareDispose3D(anim){
+  if(!anim.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});
+  anim.group=null;
+}
+function _solarFlareUpdate3D(anim,now){
+  if(!g3||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_solarFlareDispose3D(anim);if(!_solarFlareBuild3D(anim))return;}
+  const p=_solarFlareProgress(anim,now),pulse=.5+.5*Math.sin(now/95+anim.seed),fade=1-p.burst*.82;
+  anim.group.position.set(anim.origin[0],0,anim.origin[1]);
+  anim.orb.scale.setScalar(.25+.55*p.charge+.16*pulse*p.charge); anim.orb.material.opacity=.18+.48*p.charge;
+  anim.core.scale.setScalar(.18+.30*p.charge); anim.core.material.opacity=.25+.72*p.charge;
+  for(let i=0;i<anim.rings.length;i++){const ring=anim.rings[i],q=Math.max(0,p.burst-i*.09);ring.scale.setScalar(.12+q*(1.75+i*.28));ring.material.opacity=p.bursting?(.72-i*.12)*Math.max(0,1-q*.74):0;}
+  for(let i=0;i<anim.rays.length;i++){const ray=anim.rays[i];ray.scale.y=.08+p.burst*1.38;ray.material.opacity=p.bursting?(.68+.2*pulse)*fade:0;}
+  for(const mote of anim.motes){const u=mote.userData,a=u.a+now/680,r=u.r*(.25+p.burst*2.1);mote.position.set(Math.cos(a)*r,.22+.95*((u.p%1)),Math.sin(a)*r);mote.material.opacity=p.bursting?(.45+.4*pulse)*fade:0;}
+}
+function _solarFlareDraw2D(ctx,state,anim,now){
+  const [tx,ty]=anim.origin,key=`${tx},${ty}`;
+  const explored=new Set([...(state.explored||[]),...(state.revealed||[])].map(([x,y])=>`${x},${y}`));
+  if(!explored.has(key)&&!GS.isMaster()&&!state.test_mode)return;
+  const p=_solarFlareProgress(anim,now),cx=tx*CELL+CELL/2,cy=ty*CELL+CELL/2,pulse=.5+.5*Math.sin(now/90+anim.seed);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  if(!p.bursting){
+    const r=CELL*(.20+.22*p.charge),g=ctx.createRadialGradient(cx,cy,0,cx,cy,r*2.1);
+    g.addColorStop(0,`rgba(255,255,235,${(.82*p.charge).toFixed(3)})`);g.addColorStop(.35,`rgba(255,220,91,${(.38*p.charge).toFixed(3)})`);g.addColorStop(1,'rgba(255,190,35,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,r*2.1,0,Math.PI*2);ctx.fill();
+  }else{
+    const e=Math.sin(Math.PI*p.burst),radius=CELL*(.25+1.65*p.burst);
+    const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);
+    glow.addColorStop(0,`rgba(255,255,246,${(.62*e).toFixed(3)})`);glow.addColorStop(.28,`rgba(255,233,142,${(.30*e).toFixed(3)})`);glow.addColorStop(1,'rgba(255,190,45,0)');
+    ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<12;i++){const a=i*Math.PI/6+anim.seed%100/100,inner=CELL*(.22+.10*pulse),outer=radius*(.78+.15*((i%3)/3));ctx.strokeStyle=`rgba(255,246,186,${(.72*e).toFixed(3)})`;ctx.lineWidth=Math.max(1.5,CELL*.035);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);ctx.lineTo(cx+Math.cos(a)*outer,cy+Math.sin(a)*outer);ctx.stroke();}
+    for(let i=0;i<3;i++){const q=Math.max(0,p.burst-i*.10),rr=CELL*(.35+1.35*q);ctx.strokeStyle=`rgba(${i===1?'255,255,238':'255,214,75'},${(.68*(1-q*.72)).toFixed(3)})`;ctx.lineWidth=Math.max(1,CELL*(.022-i*.004));ctx.beginPath();ctx.arc(cx,cy,rr,0,Math.PI*2);ctx.stroke();}
+  }
+  ctx.restore();
+}
+function _tickSolarFlare(now){
+  let active=false;
+  for(let i=_solarFlareAnims.length-1;i>=0;i--){const anim=_solarFlareAnims[i],p=_solarFlareProgress(anim,now);
+    if(p.bursting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomRaioDivinoImpacto(true);}
+    if(p.finished&&now-anim.start>anim.chargeMs+anim.impactMs+320){_solarFlareDispose3D(anim);_solarFlareAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_solarFlareUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _solarFlareRaf=active?_scheduleVisualFrame(_tickSolarFlare):null;
+}
+function _receberAnimacaoSolarFlare(msg){
+  if(!msg||msg.spell_id!=='solar_flare')return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(msg.phase==='resolve'){const anim=_solarFlareAnims.find(a=>a.animationId===id);if(anim){anim.targetIds=(msg.target_ids||[]).map(String);anim.resolved=true;}return;}
+  if(msg.phase!=='start'||_solarFlareAnims.some(a=>a.animationId===id))return;
+  const anim=_solarFlareAnimFromMessage(msg);_solarFlareAnims.push(anim);
+  if(!_solarFlareRaf)_solarFlareRaf=_scheduleVisualFrame(_tickSolarFlare);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // NOTA CORTANTE — lâmina de vento e clave dissonante no impacto
@@ -57579,6 +57878,8 @@ function handleTileClick(tx, ty, opts){
   if(window._modoAtaqueMira){ _clickTileAtaque(tx, ty); return; }
   if(window._modoInstrumentoAlvo){ _clickTileInstrumentoAlvo(tx, ty); return; }
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
+  if(window._modoAlabardaVendaval){ _clickTileWindLineWeapon(tx, ty); return; }
+  if(window._modoBordaoHorizonte){ _clickTileHorizonShockWeapon(tx, ty); return; }
   if(window._modoRelampagoDeMao){ _clickTileLightningLineWeapon(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
@@ -61486,6 +61787,7 @@ const _spellAnimationReceivers = [
   _receberAnimacaoBolaFogo,
   _receberAnimacaoRaioGelo,
   _receberAnimacaoRaioDivino,
+  _receberAnimacaoSolarFlare,
   _receberAnimacaoJatoAr,
   _receberAnimacaoNotaCortante,
   _receberAnimacaoEcosDolorosos,

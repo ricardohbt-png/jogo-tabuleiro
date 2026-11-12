@@ -2398,6 +2398,14 @@ window.LANG_CATALOGO = {
     "en": "Colossal Halberd",
     "pt": "Alabarda Colossal"
   },
+  "cat.item.alabarda_do_eclipse.desc": {
+    "en": "Very rare two-handed magical halberd: +2 to hit and damage, 1d10 piercing damage + Strength, range 2, and a natural critical range of 19–20. Paladin and Warrior only.",
+    "pt": "Raridade: Muito rara. Alabarda mágica de duas mãos +2 no acerto e no dano; causa 1d10 perfurante + Força, tem alcance 2 e crítico natural com 19–20. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.alabarda_do_eclipse.nome": {
+    "en": "Eclipse Halberd",
+    "pt": "Alabarda do Eclipse"
+  },
   "cat.item.alabarda_prata.desc": {
     "en": "Silver Halberd: 1d10 piercing damage, using Strength. Range: 2 squares in a straight line. Requires both hands. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -2405,6 +2413,14 @@ window.LANG_CATALOGO = {
   "cat.item.alabarda_prata.nome": {
     "en": "Silver Halberd",
     "pt": "Alabarda de Prata"
+  },
+  "cat.item.alabarda_vendaval.desc": {
+    "en": "Very rare two-handed magical halberd: 1d10 piercing damage + Strength, range 2, +1 to hit and damage. As a main action, sends a straight gust up to 4 squares; creatures in the line take 2d6 magical damage (Reflex DC 13 halves it). If the chosen target fails, it is pushed back 1 square. Recharge: 10 rounds. Paladin and Warrior only.",
+    "pt": "Raridade: Muito rara. Alabarda mágica de duas mãos +1 no acerto e no dano; causa 1d10 perfurante + Força e tem alcance 2. Como ação principal, libera uma rajada em linha reta de até 4 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Se o alvo escolhido falhar, é empurrado 1 casa para trás. Recarga: 10 rodadas. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.alabarda_vendaval.nome": {
+    "en": "Gale Halberd",
+    "pt": "Alabarda do Vendaval"
   },
   "cat.item.alforge_explorador.desc": {
     "en": "While equipped, increases backpack capacity by 2 slots and provides 1 pocket for eligible throwables, potions, and poisons, holding up to 4 identical units. Its contents remain stored when unequipped.",
@@ -2642,6 +2658,46 @@ window.LANG_CATALOGO = {
     "en": "Quarterstaff",
     "pt": "Bordão"
   },
+  "cat.item.bordao_horizonte_despedacado.desc": {
+    "en": "Legendary magical quarterstaff: +4 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the standard staff's natural-20 stun. Once every 10 rounds, as a main action, releases a straight rupture wave up to 4 squares; creatures in its path take 4d6 magical damage (Reflex DC 16 halves it) and those who fail are pushed back 3 squares. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_horizonte_despedacado.nome": {
+    "en": "Shattered Horizon Staff",
+    "pt": "Bordão do Horizonte Despedaçado"
+  },
+  "cat.item.bordao_serpente_bronze.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the staff's natural-20 stun. Once every 10 rounds, on a hit, the bronze serpent head coils around the target: Fortitude DC 13 or the target loses its next turn, immobilized until that turn ends. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento do bordão em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_serpente_bronze.nome": {
+    "en": "Bronze Serpent Staff",
+    "pt": "Bordão da Serpente de Bronze"
+  },
+  "cat.item.bordao_punho_sismico.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and a natural critical range of 19–20. On either critical result, the seismic fist forces Fortitude DC 13; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_punho_sismico.nome": {
+    "en": "Seismic Fist Staff",
+    "pt": "Bordão do Punho Sísmico"
+  },
+  "cat.item.bordao_punho_ferro.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage and 1d6 bludgeoning using Strength or Dexterity. On a natural 20, the iron fist forces Fortitude DC 15; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_punho_ferro.nome": {
+    "en": "Iron Fist Staff",
+    "pt": "Bordão do Punho de Ferro"
+  },
+  "cat.item.bordao_horizonte_partido.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the standard staff's natural-20 stun. Once every 10 rounds, as a main action, releases a straight rupture wave up to 3 squares; creatures in its path take 2d6 magical damage (Reflex DC 13 halves it) and those who fail are pushed back 2 squares. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma onda de ruptura em linha reta de até 3 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Quem falhar no teste é empurrado 2 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_horizonte_partido.nome": {
+    "en": "Fractured Horizon Staff",
+    "pt": "Bordão do Horizonte Partido"
+  },
   "cat.item.bordao_prata.desc": {
     "en": "Silver Quarterstaff: 1d6 bludgeoning damage, using Strength or Dexterity. On a natural 20, the target makes a Fortitude save or is stunned. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
     "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
@@ -2677,6 +2733,22 @@ window.LANG_CATALOGO = {
   "cat.item.bote_da_serpente.nome": {
     "en": "Serpent's Lunge",
     "pt": "Bote da Serpente"
+  },
+  "cat.item.bracelete_guarda_reflexa.desc": {
+    "en": "While equipped in a ring slot, when an attack hits you, you may choose to reduce the damage by 1d8 (minimum 0). The choice is optional and the 8-round cooldown only starts if you activate it.",
+    "pt": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 1d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+  },
+  "cat.item.bracelete_guarda_reflexa.nome": {
+    "en": "Reflex Guard Bracer",
+    "pt": "Bracelete da Guarda Reflexa"
+  },
+  "cat.item.bracelete_guarda_reflexa_maior.desc": {
+    "en": "While equipped in a ring slot, when an attack hits you, you may choose to reduce the damage by 2d8 (minimum 0). The choice is optional and the 8-round cooldown only starts if you activate it.",
+    "pt": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 2d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+  },
+  "cat.item.bracelete_guarda_reflexa_maior.nome": {
+    "en": "Greater Reflex Guard Bracer",
+    "pt": "Bracelete Maior da Guarda Reflexa"
   },
   "cat.item.bronze_armor.nome": {
     "en": "Bronze Armor",
@@ -2862,6 +2934,22 @@ window.LANG_CATALOGO = {
     "en": "Improved Utility Belt",
     "pt": "Cinto de Utilidades Aprimorado"
   },
+  "cat.item.cinzas_ardentes.desc": {
+    "en": "Rarity: Very rare. Magic longsword, +1 to hit and damage; each hit deals +1d4 fire and sets the target ablaze for 1d4 rounds, taking 1 fire damage per round. The duration does not stack: new hits keep the highest value. On a critical hit, deals an extra 1d6 fire. Keeps a natural 19–20 critical range. Usable by Bard, Rogue, Paladin and Warrior.",
+    "pt": "Raridade: Muito rara. Espada longa mágica +1 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 1d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.cinzas_ardentes.nome": {
+    "en": "Burning Ashes",
+    "pt": "Cinzas Ardentes"
+  },
+  "cat.item.cinzas_ardentes_mais_3.desc": {
+    "en": "Rarity: Legendary. Magic longsword, +3 to hit and damage; each hit deals +1d4 fire and sets the target ablaze for 1d4 rounds, taking 1 fire damage per round. The duration does not stack: new hits keep the highest value. On a critical hit, deals an extra 2d6 fire. Keeps a natural 19–20 critical range. Usable by Bard, Rogue, Paladin and Warrior.",
+    "pt": "Raridade: Lendária. Espada longa mágica +3 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 2d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.cinzas_ardentes_mais_3.nome": {
+    "en": "Burning Ashes +3",
+    "pt": "Cinzas Ardentes +3"
+  },
   "cat.item.circlet.desc": {
     "en": "+1 Armor Class and +2 maximum Hit Points while equipped.",
     "pt": "+1 de Classe de Armadura e +2 de vida máxima enquanto equipada."
@@ -3041,6 +3129,14 @@ window.LANG_CATALOGO = {
   "cat.item.espada2m_prata.nome": {
     "en": "Silver Two-Handed Sword",
     "pt": "Espada de 2 Mãos de Prata"
+  },
+  "cat.item.espada_bastarda_ruptura.desc": {
+    "en": "Rarity: Legendary. Magic bastard sword, +4 to hit and damage; deals 1d10 slashing + Strength, keeps a natural 19–20 critical range and ignores 2 points of physical damage reduction per hit. Usable by Paladin and Warrior.",
+    "pt": "Raridade: Lendária. Espada bastarda mágica +4 no acerto e no dano; causa 1d10 cortante + Força, mantém crítico natural com 19–20 e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.espada_bastarda_ruptura.nome": {
+    "en": "Bastard Sword of Rupture",
+    "pt": "Espada Bastarda da Ruptura"
   },
   "cat.item.espada_longa_colossal.desc": {
     "en": "A weapon of gigantic proportions: 2d8+6, 2-square reach.",
@@ -3546,6 +3642,14 @@ window.LANG_CATALOGO = {
     "en": "Wind Blade",
     "pt": "Lamina do Vento"
   },
+  "cat.item.lamina_trovejante.desc": {
+    "en": "Rarity: Rare. Magic longsword, +1 to hit and damage; deals 1d8 slashing + Strength and adds 1d4 lightning to the first hit made with it each turn. Keeps a natural 19–20 critical range. Usable by Bard, Rogue, Paladin and Warrior.",
+    "pt": "Raridade: Rara. Espada longa mágica +1 no acerto e no dano; causa 1d8 cortante + Força e acrescenta 1d4 elétrico ao primeiro acerto com ela a cada turno. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.lamina_trovejante.nome": {
+    "en": "Thunder Blade",
+    "pt": "Lâmina Trovejante"
+  },
   "cat.item.lampada_vigilia_arcana.desc": {
     "en": "Bonus action. For 10 rounds, reveals shadow-hidden creatures to the party within a moving radius of 3 squares around any active hero. The reveal does not end concealment; creatures are hidden again when they leave the radius or the duration ends.",
     "pt": "Ação bônus. Por 10 rodadas, revela para o grupo criaturas ocultas nas sombras em um raio móvel de 3 casas ao redor de qualquer herói ativo. A revelação não encerra a ocultação; a criatura deixa de ser vista ao sair do raio ou ao fim da duração."
@@ -3774,6 +3878,14 @@ window.LANG_CATALOGO = {
     "en": "Silver Flail",
     "pt": "Mangual de Prata"
   },
+  "cat.item.mangual_sol_cativo.desc": {
+    "en": "Rarity: Very rare. Magic flail, +1 to hit and damage; deals 1d8 bludgeoning + Strength, has reach 2 and a natural critical multiplier of ×2.5. Each hit adds 1d4 radiant damage. As a main action, once every 10 rounds, it unleashes the Solar Flare: creatures in the eight adjacent squares, allies included but excluding the wielder, take 2d6 radiant damage (Reflex DC 13 halves it). Usable by Cleric, Paladin and Warrior.",
+    "pt": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."
+  },
+  "cat.item.mangual_sol_cativo.nome": {
+    "en": "Flail of the Captive Sun",
+    "pt": "Mangual do Sol Cativo"
+  },
   "cat.item.manto_das_sombras.desc": {
     "en": "Rogue only. Grants +2 total AC and +2 to Hide in Shadows. As a main action, casts Cloak of Darkness without spending a spell slot. Recharge: 20 rounds.",
     "pt": "Exclusivo do Ladino. Concede +2 de CA total e +2 em Esconder nas Sombras. Como ação principal, conjura Manto da Escuridão sem gastar espaço de magia. Recarga: 20 rodadas."
@@ -3813,6 +3925,14 @@ window.LANG_CATALOGO = {
   "cat.item.marreta_prata.nome": {
     "en": "Silver Sledgehammer",
     "pt": "Marreta de Prata"
+  },
+  "cat.item.marreta_quebra_couracas.desc": {
+    "en": "Rarity: Rare. Magic two-handed maul that deals 2d8 bludgeoning damage using Strength, grants +1 to hit and damage and ignores 2 points of physical damage reduction per hit. Usable by Paladin and Warrior.",
+    "pt": "Raridade: Rara. Marreta mágica de duas mãos que causa 2d8 de dano contundente usando Força, concede +1 no acerto e no dano e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.marreta_quebra_couracas.nome": {
+    "en": "Armor-Breaker Maul",
+    "pt": "Marreta Quebra-Couraças"
   },
   "cat.item.martelo_runico_colossal.desc": {
     "en": "Colossal hammer engraved with runes: 2d8+5 damage and 2-square reach.",

@@ -12189,6 +12189,7 @@ window.EDITOR_CATALOG = {
         "warrior"
       ],
       "categoria": "contundente",
+      "ignora_reducao_dano": 1,
       "descricao": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
     },
     {
@@ -12485,6 +12486,7 @@ window.EDITOR_CATALOG = {
       ],
       "corrosion_max": 5,
       "categoria": "contundente",
+      "ignora_reducao_dano": 1,
       "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12777,6 +12779,89 @@ window.EDITOR_CATALOG = {
       "descricao": "Raridade: Muito rara. Espada curta mágica +3 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
     },
     {
+      "id": "lamina_trovejante",
+      "name": "Lâmina Trovejante",
+      "emoji": "⚡",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/lamina_trovejante.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "lightning"
+        }
+      ],
+      "extra_damage_once_per_turn": true,
+      "descricao": "Raridade: Rara. Espada longa mágica +1 no acerto e no dano; causa 1d8 cortante + Força e acrescenta 1d4 elétrico ao primeiro acerto com ela a cada turno. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "cinzas_ardentes",
+      "name": "Cinzas Ardentes",
+      "emoji": "🔥",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "fire"
+        }
+      ],
+      "fire_on_hit": true,
+      "fire_crit_damage": "1d6",
+      "descricao": "Raridade: Muito rara. Espada longa mágica +1 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 1d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "cinzas_ardentes_mais_3",
+      "name": "Cinzas Ardentes +3",
+      "emoji": "🔥",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 3,
+      "damage_bonus": 3,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "fire"
+        }
+      ],
+      "fire_on_hit": true,
+      "fire_crit_damage": "2d6",
+      "descricao": "Raridade: Lendária. Espada longa mágica +3 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 2d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
       "id": "choque_do_trovao",
       "name": "Choque do Trovão",
       "emoji": "⚡",
@@ -12803,6 +12888,230 @@ window.EDITOR_CATALOG = {
       "thunder_pulse": true,
       "thunder_pulse_cooldown": 10,
       "descricao": "Raridade: Muito rara. Martelo de guerra mágico +1 no acerto e no dano; causa 1d8 contundente + Força e +1d4 elétrico por acerto. No crítico, se sobreviver, o alvo testa Força CD 13; falha é empurrada 1 casa. Como ação principal, o portador libera um pulso nas oito casas adjacentes: todas as criaturas, inclusive aliados, exceto o portador, sofrem 2d6 elétrico (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Clérigo, Paladino e Guerreiro."
+    },
+    {
+      "id": "mangual_sol_cativo",
+      "name": "Mangual do Sol Cativo",
+      "emoji": "☀️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/mangual_sol_cativo.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "holy"
+        }
+      ],
+      "solar_flare": true,
+      "solar_flare_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."
+    },
+    {
+      "id": "marreta_quebra_couracas",
+      "name": "Marreta Quebra-Couraças",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/marreta_quebra_couracas.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "ignora_reducao_dano": 2,
+      "descricao": "Raridade: Rara. Marreta mágica de duas mãos que causa 2d8 de dano contundente usando Força, concede +1 no acerto e no dano e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "espada_bastarda_ruptura",
+      "name": "Espada Bastarda da Ruptura",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 4,
+      "damage_bonus": 4,
+      "magical": true,
+      "ignora_reducao_dano": 2,
+      "descricao": "Raridade: Lendária. Espada bastarda mágica +4 no acerto e no dano; causa 1d10 cortante + Força, mantém crítico natural com 19–20 e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_serpente_bronze",
+      "name": "Bordão da Serpente de Bronze",
+      "emoji": "🐍",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_serpente_bronze.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "bronze_serpent_bind": true,
+      "bronze_serpent_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_punho_sismico",
+      "name": "Bordão do Punho Sísmico",
+      "emoji": "✊",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_punho_sismico.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "stun_crit_min_nat": 19,
+      "stun_fort_dc": 13,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_punho_ferro",
+      "name": "Bordão do Punho de Ferro",
+      "emoji": "✊",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_punho_ferro.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "stun_crit_min_nat": 20,
+      "stun_fort_dc": 15,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "alabarda_vendaval",
+      "name": "Alabarda do Vendaval",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/alabarda_do_vendaval.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "range": 2,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "wind_line": true,
+      "wind_line_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Alabarda mágica de duas mãos +1 no acerto e no dano; causa 1d10 perfurante + Força e tem alcance 2. Como ação principal, libera uma rajada em linha reta de até 4 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Se o alvo escolhido falhar, é empurrado 1 casa para trás. Recarga: 10 rodadas. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "alabarda_do_eclipse",
+      "name": "Alabarda do Eclipse",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/alabarda_do_eclipse.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "range": 2,
+      "categoria": "perfurante",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Alabarda mágica de duas mãos +2 no acerto e no dano; causa 1d10 perfurante + Força, tem alcance 2 e crítico natural com 19–20. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_horizonte_partido",
+      "name": "Bordão do Horizonte Partido",
+      "emoji": "🌅",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_horizonte_partido.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "horizon_shock": true,
+      "horizon_shock_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma onda de ruptura em linha reta de até 3 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Quem falhar no teste é empurrado 2 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_horizonte_despedacado",
+      "name": "Bordão do Horizonte Despedaçado",
+      "emoji": "🌄",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_horizonte_despedacado.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 4,
+      "damage_bonus": 4,
+      "magical": true,
+      "horizon_shock": true,
+      "horizon_shock_cooldown": 10,
+      "horizon_shock_power": 4,
+      "descricao": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
     },
     {
       "id": "escudo_p",
@@ -13673,6 +13982,28 @@ window.EDITOR_CATALOG = {
       "effect": "vision",
       "value": 2,
       "descricao": "+2 de visão enquanto estiver equipado."
+    },
+    {
+      "id": "bracelete_guarda_reflexa",
+      "name": "Bracelete da Guarda Reflexa",
+      "emoji": "🛡️",
+      "icon": "assets/itens magicos/bracelete_guarda_reflexa.png",
+      "magical": true,
+      "bracelet_reaction_die": "1d8",
+      "bracelet_reaction_cooldown": 8,
+      "item_slot": "ring",
+      "descricao": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 1d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+    },
+    {
+      "id": "bracelete_guarda_reflexa_maior",
+      "name": "Bracelete Maior da Guarda Reflexa",
+      "emoji": "🛡️",
+      "icon": "assets/itens magicos/bracelete_guarda_reflexa.png",
+      "magical": true,
+      "bracelet_reaction_die": "2d8",
+      "bracelet_reaction_cooldown": 8,
+      "item_slot": "ring",
+      "descricao": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 2d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
     },
     {
       "id": "helm_iron",

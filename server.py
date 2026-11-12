@@ -1659,6 +1659,19 @@ WEAPONS = {
     "lanca_curta":   {"id": "lanca_curta",   "name": "Lança Curta",          "die": "1d6",  "stat": "str_", "throw_range": 4, "categoria": "perfurante"},
     "relampago_de_mao": {"id": "relampago_de_mao", "name": "Relâmpago de Mão", "die": "1d6", "stat": "str_", "throw_range": 4, "categoria": "perfurante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "return_on_throw": True, "lightning_line": True, "lightning_line_cooldown": 10, "icon": "assets/itens magicos/relampago_de_mao.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "choque_do_trovao": {"id": "choque_do_trovao", "name": "Choque do Trovão", "die": "1d8", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "lightning"}], "thunder_push_on_crit": True, "thunder_pulse": True, "thunder_pulse_cooldown": 10, "icon": "assets/itens magicos/choque_do_trovao.png", "allowed_classes": ["cleric", "paladin", "warrior"]},
+    "mangual_sol_cativo": {"id": "mangual_sol_cativo", "name": "Mangual do Sol Cativo", "die": "1d8", "stat": "str_", "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "holy"}], "solar_flare": True, "solar_flare_cooldown": 10, "icon": "assets/itens magicos/mangual_sol_cativo.png", "allowed_classes": ["cleric", "paladin", "warrior"]},
+    "bordao_horizonte_partido": {"id": "bordao_horizonte_partido", "name": "Bordão do Horizonte Partido", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "horizon_shock": True, "horizon_shock_cooldown": 10, "icon": "assets/itens magicos/bordao_horizonte_partido.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    "bordao_horizonte_despedacado": {"id": "bordao_horizonte_despedacado", "name": "Bordão do Horizonte Despedaçado", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente", "magical": True, "atk_bonus": 4, "damage_bonus": 4, "horizon_shock": True, "horizon_shock_cooldown": 10, "horizon_shock_power": 4, "icon": "assets/itens magicos/bordao_horizonte_despedacado.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    "bordao_serpente_bronze": {"id": "bordao_serpente_bronze", "name": "Bordão da Serpente de Bronze", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "bronze_serpent_bind": True, "bronze_serpent_cooldown": 10, "icon": "assets/itens magicos/bordao_serpente_bronze.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    "bordao_punho_sismico": {"id": "bordao_punho_sismico", "name": "Bordão do Punho Sísmico", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "crit_min_nat_roll": 19, "stun_crit_min_nat": 19, "stun_fort_dc": 13, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/bordao_punho_sismico.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    "bordao_punho_ferro": {"id": "bordao_punho_ferro", "name": "Bordão do Punho de Ferro", "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True, "stun_crit_min_nat": 20, "stun_fort_dc": 15, "categoria": "contundente", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/bordao_punho_ferro.png", "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"]},
+    "lamina_trovejante": {"id": "lamina_trovejante", "name": "Lâmina Trovejante", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "lightning"}], "extra_damage_once_per_turn": True, "icon": "assets/itens magicos/lamina_trovejante.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    "cinzas_ardentes": {"id": "cinzas_ardentes", "name": "Cinzas Ardentes", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "fire"}], "fire_on_hit": True, "fire_crit_damage": "1d6", "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    "cinzas_ardentes_mais_3": {"id": "cinzas_ardentes_mais_3", "name": "Cinzas Ardentes +3", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 3, "damage_bonus": 3, "extra_damages": [{"die": "1d4", "type": "fire"}], "fire_on_hit": True, "fire_crit_damage": "2d6", "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    "espada_bastarda_ruptura": {"id": "espada_bastarda_ruptura", "name": "Espada Bastarda da Ruptura", "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 4, "damage_bonus": 4, "ignora_reducao_dano": 2, "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["paladin", "warrior"]},
+    "alabarda_vendaval": {"id": "alabarda_vendaval", "name": "Alabarda do Vendaval", "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True, "magical": True, "atk_bonus": 1, "damage_bonus": 1, "wind_line": True, "wind_line_cooldown": 10, "icon": "assets/itens magicos/alabarda_do_vendaval.png", "allowed_classes": ["paladin", "warrior"]},
+    "alabarda_do_eclipse": {"id": "alabarda_do_eclipse", "name": "Alabarda do Eclipse", "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True, "magical": True, "atk_bonus": 2, "damage_bonus": 2, "crit_min_nat_roll": 19, "icon": "assets/itens magicos/alabarda_do_eclipse.png", "allowed_classes": ["paladin", "warrior"]},
+    "marreta_quebra_couracas": {"id": "marreta_quebra_couracas", "name": "Marreta Quebra-Couraças", "die": "2d8", "stat": "str_", "categoria": "contundente", "two_handed": True, "ignora_reducao_dano": 2, "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/marreta_quebra_couracas.png", "allowed_classes": ["paladin", "warrior"]},
     # LanÃ§a: arma de ALCANCE corpo-a-corpo (reach="lanca" â†’ 2 retos / 1 diagonal,
     # ver _lanca_no_alcance). NÃƒO Ã© arma de duas mÃ£os â€” pode usar escudo.
     "lanca":         {"id": "lanca",         "name": "Lança",                "die": "1d8",  "stat": "str_", "reach": "lanca", "throw_range": 4, "categoria": "perfurante"},
@@ -7867,6 +7880,33 @@ SHOP_WEAPONS.extend([
      "atk_bonus": 3, "damage_bonus": 3,
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"],
      "descricao": "Raridade: Muito rara. Espada curta mágica +3 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."},
+    {"id": "lamina_trovejante", "name": "Lâmina Trovejante",
+     "emoji": "⚡", "icon": "assets/itens magicos/lamina_trovejante.png",
+     "die": "1d8", "stat": "str_", "price": 1200,
+     "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "extra_damages": [{"die": "1d4", "type": DMG_LIGHTNING}],
+     "extra_damage_once_per_turn": True,
+     "allowed_classes": ["bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Rara. Espada longa mágica +1 no acerto e no dano; causa 1d8 cortante + Força e acrescenta 1d4 elétrico ao primeiro acerto com ela a cada turno. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."},
+    {"id": "cinzas_ardentes", "name": "Cinzas Ardentes",
+     "emoji": "🔥", "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+     "die": "1d8", "stat": "str_", "price": 2500,
+     "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "extra_damages": [{"die": "1d4", "type": DMG_FIRE}],
+     "fire_on_hit": True, "fire_crit_damage": "1d6",
+     "allowed_classes": ["bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Muito rara. Espada longa mágica +1 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 1d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."},
+    {"id": "cinzas_ardentes_mais_3", "name": "Cinzas Ardentes +3",
+     "emoji": "🔥", "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+     "die": "1d8", "stat": "str_", "price": 5000,
+     "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True,
+     "atk_bonus": 3, "damage_bonus": 3,
+     "extra_damages": [{"die": "1d4", "type": DMG_FIRE}],
+     "fire_on_hit": True, "fire_crit_damage": "2d6",
+     "allowed_classes": ["bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Lendária. Espada longa mágica +3 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 2d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."},
     {"id": "choque_do_trovao", "name": "Choque do Trovão",
      "emoji": "⚡", "icon": "assets/itens magicos/choque_do_trovao.png",
      "die": "1d8", "stat": "str_", "price": 2500,
@@ -7877,6 +7917,102 @@ SHOP_WEAPONS.extend([
      "thunder_pulse_cooldown": 10,
      "allowed_classes": ["cleric", "paladin", "warrior"],
      "descricao": "Raridade: Muito rara. Martelo de guerra mágico +1 no acerto e no dano; causa 1d8 contundente + Força e +1d4 elétrico por acerto. No crítico, se sobreviver, o alvo testa Força CD 13; falha é empurrada 1 casa. Como ação principal, o portador libera um pulso nas oito casas adjacentes: todas as criaturas, inclusive aliados, exceto o portador, sofrem 2d6 elétrico (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Clérigo, Paladino e Guerreiro."},
+    {"id": "mangual_sol_cativo", "name": "Mangual do Sol Cativo",
+     "emoji": "☀️", "icon": "assets/itens magicos/mangual_sol_cativo.png",
+     "die": "1d8", "stat": "str_", "price": 3000, "reach": "mangual",
+     "crit_nat20_multiplier": 2.5, "categoria": "contundente", "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "extra_damages": [{"die": "1d4", "type": DMG_HOLY}],
+     "solar_flare": True, "solar_flare_cooldown": 10,
+     "allowed_classes": ["cleric", "paladin", "warrior"],
+     "descricao": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."},
+    {"id": "marreta_quebra_couracas", "name": "Marreta Quebra-Couraças",
+     "emoji": "🔨", "icon": "assets/itens magicos/marreta_quebra_couracas.png",
+     "die": "2d8", "stat": "str_", "price": 1500,
+     "categoria": "contundente", "two_handed": True,
+     "ignora_reducao_dano": 2, "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "allowed_classes": ["paladin", "warrior"],
+     "descricao": "Raridade: Rara. Marreta mágica de duas mãos que causa 2d8 de dano contundente usando Força, concede +1 no acerto e no dano e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."},
+    {"id": "espada_bastarda_ruptura", "name": "Espada Bastarda da Ruptura",
+     "emoji": "⚔️", "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+     "die": "1d10", "stat": "str_", "price": 7000,
+     "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True,
+     "atk_bonus": 4, "damage_bonus": 4, "ignora_reducao_dano": 2,
+     "allowed_classes": ["paladin", "warrior"],
+     "descricao": "Raridade: Lendária. Espada bastarda mágica +4 no acerto e no dano; causa 1d10 cortante + Força, mantém crítico natural com 19–20 e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."},
+])
+
+SHOP_WEAPONS.append({
+    "id": "bordao_serpente_bronze", "name": "Bordão da Serpente de Bronze",
+    "emoji": "🐍", "icon": "assets/itens magicos/bordao_serpente_bronze.png",
+    "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True,
+    "categoria": "contundente", "price": 2200, "magical": True,
+    "atk_bonus": 1, "damage_bonus": 1, "bronze_serpent_bind": True,
+    "bronze_serpent_cooldown": 10,
+    "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"],
+    "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+})
+
+SHOP_WEAPONS.extend([
+    {"id": "bordao_punho_sismico", "name": "Bordão do Punho Sísmico",
+     "emoji": "✊", "icon": "assets/itens magicos/bordao_punho_sismico.png",
+     "die": "1d6", "stat": "str_", "finesse": True,
+     "crit_nat20_stuns": True, "crit_min_nat_roll": 19,
+     "stun_crit_min_nat": 19, "stun_fort_dc": 13,
+     "categoria": "contundente", "price": 3000, "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."},
+    {"id": "bordao_punho_ferro", "name": "Bordão do Punho de Ferro",
+     "emoji": "✊", "icon": "assets/itens magicos/bordao_punho_ferro.png",
+     "die": "1d6", "stat": "str_", "finesse": True,
+     "crit_nat20_stuns": True, "stun_crit_min_nat": 20, "stun_fort_dc": 15,
+     "categoria": "contundente", "price": 2200, "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."},
+])
+
+# A alabarda mágica aproveita o Jato de Ar existente e concede uma rajada em linha.
+SHOP_WEAPONS.append({
+    "id": "alabarda_vendaval", "name": "Alabarda do Vendaval",
+    "emoji": "🪓", "icon": "assets/itens magicos/alabarda_do_vendaval.png",
+    "die": "1d10", "stat": "str_", "price": 2500, "range": 2,
+    "categoria": "perfurante", "two_handed": True, "magical": True,
+    "atk_bonus": 1, "damage_bonus": 1, "wind_line": True,
+    "wind_line_cooldown": 10,
+    "allowed_classes": ["paladin", "warrior"],
+    "descricao": "Raridade: Muito rara. Alabarda mágica de duas mãos +1 no acerto e no dano; causa 1d10 perfurante + Força e tem alcance 2. Como ação principal, libera uma rajada em linha reta de até 4 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Se o alvo escolhido falhar, é empurrado 1 casa para trás. Recarga: 10 rodadas. Uso de Paladino e Guerreiro."
+})
+
+SHOP_WEAPONS.append({
+    "id": "alabarda_do_eclipse", "name": "Alabarda do Eclipse",
+    "emoji": "🪓", "icon": "assets/itens magicos/alabarda_do_eclipse.png",
+    "die": "1d10", "stat": "str_", "price": 3500, "range": 2,
+    "categoria": "perfurante", "two_handed": True, "magical": True,
+    "atk_bonus": 2, "damage_bonus": 2, "crit_min_nat_roll": 19,
+    "allowed_classes": ["paladin", "warrior"],
+    "descricao": "Raridade: Muito rara. Alabarda mágica de duas mãos +2 no acerto e no dano; causa 1d10 perfurante + Força, tem alcance 2 e crítico natural com 19–20. Uso de Paladino e Guerreiro."
+})
+
+SHOP_WEAPONS.extend([
+    {"id": "bordao_horizonte_partido", "name": "Bordão do Horizonte Partido",
+     "emoji": "🌅", "icon": "assets/itens magicos/bordao_horizonte_partido.png",
+     "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True,
+     "categoria": "contundente", "price": 2800, "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1, "horizon_shock": True,
+     "horizon_shock_cooldown": 10,
+     "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma onda de ruptura em linha reta de até 3 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Quem falhar no teste é empurrado 2 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."},
+    {"id": "bordao_horizonte_despedacado", "name": "Bordão do Horizonte Despedaçado",
+     "emoji": "🌄", "icon": "assets/itens magicos/bordao_horizonte_despedacado.png",
+     "die": "1d6", "stat": "str_", "finesse": True, "crit_nat20_stuns": True,
+     "categoria": "contundente", "price": 10000, "magical": True,
+     "atk_bonus": 4, "damage_bonus": 4, "horizon_shock": True,
+     "horizon_shock_cooldown": 10, "horizon_shock_power": 4,
+     "allowed_classes": ["cleric", "bard", "rogue", "paladin", "warrior"],
+     "descricao": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."},
 ])
 
 # A arma da loja e a cópia de combate (WEAPONS) são o mesmo item: as armas mágicas
@@ -8079,6 +8215,16 @@ SHOP_MERCHANT = [
      "descricao": "+1 de Classe de Armadura enquanto estiver equipado."},
     {"id": "anel_vigia",    "name": "Anel do Vigia",    "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "vision", "value": 2,
      "descricao": "+2 de visão enquanto estiver equipado."},
+    {"id": "bracelete_guarda_reflexa", "name": "Bracelete da Guarda Reflexa", "emoji": "🛡️",
+     "icon": "assets/itens magicos/bracelete_guarda_reflexa.png", "price": 1400,
+     "item_slot": "ring", "magical": True, "bracelet_reaction_die": "1d8",
+     "bracelet_reaction_cooldown": 8,
+     "descricao": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 1d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."},
+    {"id": "bracelete_guarda_reflexa_maior", "name": "Bracelete Maior da Guarda Reflexa", "emoji": "🛡️",
+     "icon": "assets/itens magicos/bracelete_guarda_reflexa.png", "price": 3000,
+     "item_slot": "ring", "magical": True, "bracelet_reaction_die": "2d8",
+     "bracelet_reaction_cooldown": 8,
+     "descricao": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 2d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."},
     # â”€â”€ CabeÃ§a (slot head) â”€â”€
     {"id": "helm_iron",     "name": "Elmo de Ferro",     "emoji": "⛑️", "price": 40, "item_slot": "head",  "effect": "def_",      "value": 1,
      "allowed_classes": ["warrior", "cleric", "ranger", "paladin"]},
@@ -16271,9 +16417,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for extra in weapon.get("extra_damages", []) or []:
                 if not isinstance(extra, dict) or alvo.get("hp", 0) <= 0:
                     continue
+                if (weapon.get("extra_damage_once_per_turn")
+                        and p.get("_extra_damage_once_per_turn_round") == self.round_num):
+                    continue
                 extra_roll = roll_dice(extra.get("die", "0"))
                 if extra_roll <= 0:
                     continue
+                if weapon.get("extra_damage_once_per_turn"):
+                    p["_extra_damage_once_per_turn_round"] = self.round_num
                 extra_roll = self._apply_damage_types(extra_roll, [extra.get("type")], alvo)
                 self._registrar_dano_combate(alvo, extra_roll, [extra.get("type")])
                 alvo["hp"] = max(0, alvo.get("hp", 0) - extra_roll)
@@ -17021,10 +17172,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return dmg, weapon_name, dmg_detail, raw_dmg, die_str
 
     async def _resolver_critico_bordao(self, atacante, alvo, roll, weapon):
-        """Bordão: no 20 natural que acerta, Fortitude CD 10 + 1d6 ou o
-        alvo fica tonto e perde a próxima ação. Construtos e mortos-vivos
-        não possuem fisiologia para sofrer este impacto especial."""
-        if roll != 20 or not weapon or not weapon.get("crit_nat20_stuns"):
+        """No crítico natural configurado, testa Fortitude ou deixa o alvo
+        atordoado e sem agir no próximo turno. Construtos e mortos-vivos não
+        possuem fisiologia para sofrer este impacto especial."""
+        min_nat = int((weapon or {}).get("stun_crit_min_nat", 20) or 20)
+        if roll < min_nat or not weapon or not weapon.get("crit_nat20_stuns"):
             return
         subtipo = str(alvo.get("subtipo") or _subtipo_padrao_monstro(alvo)).strip().lower()
         if alvo.get("undead") or subtipo in {"construto", "morto_vivo"}:
@@ -17032,13 +17184,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                 alvo=nome_criatura(alvo)))
             return
 
-        d6 = roll_dice("1d6")
-        dc = 10 + d6
-        await self.broadcast({
-            "type": "dice_roll", "die": "d6", "value": d6,
-            "label": T("dado.bordao_cd"), "modifier": 10,
-            "total": dc, "expression": "10 + 1d6",
-        })
+        dc_fixa = int(weapon.get("stun_fort_dc", 0) or 0)
+        if dc_fixa > 0:
+            dc = dc_fixa
+        else:
+            d6 = roll_dice("1d6")
+            dc = 10 + d6
+            await self.broadcast({
+                "type": "dice_roll", "die": "d6", "value": d6,
+                "label": T("dado.bordao_cd"), "modifier": 10,
+                "total": dc, "expression": "10 + 1d6",
+            })
         passou, _d20, _bonus, total = await self._save_mostrado(alvo, "fortitude", dc)
         if not passou:
             alvo["perde_turno"] = True
@@ -17056,6 +17212,41 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.gm_say(T("narracao.bordao_critico_fortitude",
                             heroi=nome_criatura(atacante), alvo=nome_criatura(alvo),
                             total=total, dc=dc, resultado=resultado))
+
+    async def _resolver_bordao_serpente_no_acerto(self, atacante, alvo, weapon):
+        """A cabeça serpentina prende o alvo após um acerto, uma vez por recarga."""
+        if (not weapon or not weapon.get("bronze_serpent_bind")
+                or not alvo or alvo.get("hp", 0) <= 0 or alvo.get("perde_turno")):
+            return False
+        gear_weapon = (atacante.get("gear") or {}).get("weapon") or {}
+        round_num = int(self.round_num or 1)
+        pronta_em = int(gear_weapon.get("bronze_serpent_ready_round",
+                                       weapon.get("bronze_serpent_ready_round", 0)) or 0)
+        if pronta_em > round_num:
+            return False
+        pronta_em = round_num + int(weapon.get("bronze_serpent_cooldown", 10) or 10)
+        if isinstance(gear_weapon, dict):
+            gear_weapon["bronze_serpent_ready_round"] = pronta_em
+        weapon["bronze_serpent_ready_round"] = pronta_em
+        if self._tem_habilidade(alvo, "inabalavel"):
+            await self.gm_say(T("narracao.e_inabalavel_e_ignora_a_imobilizacao",
+                                nome=nome_criatura(alvo)))
+            return False
+        passou, _d20, _bonus, total = await self._save_mostrado(alvo, "fortitude", 13)
+        if passou:
+            await self.gm_say(T("narracao.bordao_serpente_resiste",
+                                heroi=nome_criatura(atacante), alvo=nome_criatura(alvo),
+                                total=total, dc=13))
+            return False
+        alvo["perde_turno"] = True
+        await self.gm_say(T("narracao.bordao_serpente_prende",
+                            heroi=nome_criatura(atacante), alvo=nome_criatura(alvo),
+                            total=total, dc=13))
+        if self._eh_jogador(alvo):
+            await self._enviar_resultado_atordoamento(
+                alvo, "A Serpente de Bronze imobilizou você.", "até o fim do próximo turno",
+                ["Você não pode se mover, atacar nem usar habilidades durante esse turno"])
+        return True
 
     async def _resolver_critico_choque_trovao(self, atacante, alvo, roll, weapon,
                                                target_tile=None):
@@ -17399,6 +17590,57 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["fome"] -= fome; p["sede"] -= sede
         p["technique_cooldowns"]["tecnica_sorte"] = self.round_num + 10
         return True
+
+    async def _oferecer_guarda_reflexa(self, alvo, dano, atacante_id):
+        """Oferece a reação opcional do bracelete após um ataque acertar."""
+        if (not self._eh_jogador(alvo) or not alvo.get("connected", False)
+                or self.sorte_reacao or dano <= 0):
+            return dano
+        equipamento = alvo.get("equipment") or {}
+        bracelete = next((equipamento.get(slot) for slot in ("ring1", "ring2")
+                          if isinstance(equipamento.get(slot), dict)
+                          and equipamento[slot].get("bracelet_reaction_die")), None)
+        if not bracelete:
+            return dano
+        rodada = int(self.round_num or 0)
+        if int(bracelete.get("bracelet_reaction_ready_round", 0) or 0) > rodada:
+            return dano
+        atacante = (self.players.get(atacante_id) or self.monsters.get(atacante_id)
+                    or {"name": "um inimigo"})
+        event = asyncio.Event()
+        pendente = {"pid": alvo["id"], "event": event, "usar": False,
+                    "tipo": "bracelete", "item_id": bracelete.get("id")}
+        self.sorte_reacao = pendente
+        await self.send_to(alvo["id"], {
+            "type": "sorte_reacao",
+            "texto": (f"{nome_criatura(atacante)} acertou você e causaria {dano} de dano. "
+                      f"Ativar {bracelete.get('name', 'o Bracelete da Guarda Reflexa')} "
+                      f"para reduzir o dano em {bracelete['bracelet_reaction_die']}?")
+        })
+        try:
+            await asyncio.wait_for(event.wait(), timeout=12)
+        except asyncio.TimeoutError:
+            pass
+        if self.sorte_reacao is pendente:
+            self.sorte_reacao = None
+        if not pendente.get("usar"):
+            return dano
+        equipamento = alvo.get("equipment") or {}
+        bracelete = next((equipamento.get(slot) for slot in ("ring1", "ring2")
+                          if isinstance(equipamento.get(slot), dict)
+                          and equipamento[slot].get("id") == pendente["item_id"]
+                          and equipamento[slot].get("bracelet_reaction_die")), None)
+        if not bracelete:
+            return dano
+        rodada = int(self.round_num or 0)
+        if int(bracelete.get("bracelet_reaction_ready_round", 0) or 0) > rodada:
+            return dano
+        reducao = roll_dice(bracelete["bracelet_reaction_die"])
+        bracelete["bracelet_reaction_ready_round"] = (
+            rodada + int(bracelete.get("bracelet_reaction_cooldown", 8) or 8))
+        await self.broadcast({"type": "dice_roll", "die": bracelete["bracelet_reaction_die"],
+                              "value": reducao, "label": bracelete.get("name", "Guarda Reflexa")})
+        return max(0, dano - reducao)
 
     async def handle_sorte_reacao(self, pid, usar):
         reaction = self.sorte_reacao
@@ -18497,16 +18739,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 **{k: w[k] for k in ("die", "stat", "range", "reach",
                                      "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
                                      "two_handed", "dmg_bonus", "corrosao_resistente", "off_hand_stat",
+                                     "ignora_reducao_dano",
                                      "throw_nat1_damage_levels",
                                      "corrosao_niveis_penalidade",
                                      "silver", "corrosion_max", "corrosion_free_levels",
                                      "allowed_classes", "icon",
                                      "atk_bonus", "damage_bonus", "extra_damages",
+                                     "extra_damage_once_per_turn",
                                      "granted_ability", "maldicao_id", "maldicao_prende",
                                      "magical", "causa_sangramento", "fire_on_hit", "fire_crit_damage",
                                      "freeze_on_crit", "return_on_throw", "lightning_line",
                                      "lightning_line_cooldown", "thunder_push_on_crit", "thunder_pulse",
-                                     "thunder_pulse_cooldown", "sneak_attack_extra_d4") if k in w},
+                                     "thunder_pulse_cooldown", "solar_flare", "solar_flare_cooldown",
+                                     "wind_line", "wind_line_cooldown",
+                                     "horizon_shock", "horizon_shock_cooldown", "horizon_shock_power",
+                                     "bronze_serpent_bind", "bronze_serpent_cooldown",
+                                     "stun_crit_min_nat", "stun_fort_dc",
+                                     "sneak_attack_extra_d4") if k in w},
             }
             res = self._route_acquired_item(p, weapon_item)
             if res == "full":
@@ -25108,12 +25357,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     for _xt in (_ammo_extra_types or []):
                         await self._rx_registrar(_NORM_ELEMENTO.get(str(_xt).lower(), _xt), self._rx_tiles_da(target), dano=xdmg, atingidos={target.get("id")})
                 # ── Dano elemental adicional da arma (Editor de Itens) ──
-                for _xd in (p.get("weapon") or {}).get("extra_damages", []) or []:
+                _weapon_extra = p.get("weapon") or {}
+                for _xd in _weapon_extra.get("extra_damages", []) or []:
                     if not isinstance(_xd, dict) or target.get("hp", 1) <= 0:
+                        continue
+                    if (_weapon_extra.get("extra_damage_once_per_turn")
+                            and p.get("_extra_damage_once_per_turn_round") == self.round_num):
                         continue
                     _xr = roll_dice(_xd.get("die", "0"))
                     if _xr <= 0:
                         continue
+                    if _weapon_extra.get("extra_damage_once_per_turn"):
+                        p["_extra_damage_once_per_turn_round"] = self.round_num
                     _xr = self._apply_damage_types(_xr, [_xd.get("type")], target)
                     self._registrar_dano_combate(target, _xr, [_xd.get("type")])
                     target["hp"] = max(0, target["hp"] - _xr)
@@ -25171,6 +25426,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     if target.get("hp", 0) > 0:
                         await self._aplicar_zero_absoluto_no_critico(
                             target, weapon_here, crit, p.get("id"))
+                    if target.get("hp", 0) > 0:
+                        await self._resolver_bordao_serpente_no_acerto(p, target, weapon_here)
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
                 if _melee_poison_vid and not self._weapon_poison_slots(p):
                     await self.gm_say(T("narracao.o_veneno_da_arma_de_acabou", heroi=p['name']))
@@ -25457,6 +25714,231 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._consumir_recursos(p, "apenas_acao")
             await self.push_state()
 
+    async def handle_wind_line_weapon(self, pid, target_id, target_pos=None, slot="weapon"):
+        """Rajada em linha concedida pela Alabarda do Vendaval."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
+            return
+        if p.get("petrificado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")})
+            return
+        if p.get("paralisado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_paralisado_e_nao_pode_agir")})
+            return
+        if p.get("dormindo"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_agir")})
+            return
+        if p.get("action_done"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+        if slot != "weapon":
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        gear_item = (p.get("gear") or {}).get(slot)
+        if not isinstance(gear_item, dict):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        weapon = ({**(p.get("weapon") or {}), **(gear_item or {})}
+                  if isinstance(gear_item, dict) else None)
+        if not isinstance(weapon, dict) or weapon.get("id") != "alabarda_vendaval" \
+                or not weapon.get("wind_line"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        allowed = _weapon_allowed_classes(weapon)
+        if allowed and p.get("class_id") not in allowed:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_item(weapon))})
+            return
+        round_num = int(self.round_num or 1)
+        pronta_em = int(gear_item.get("wind_line_ready_round", 0) or 0)
+        if pronta_em > round_num:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica=T("ui.item.alabarda_vendaval_habilidade"), rodadas=pronta_em-round_num)})
+            return
+        target = next((m for m in self.monsters.values()
+                       if str(m.get("id")) == str(target_id) and m.get("hp", 0) > 0), None)
+        if not target:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        try:
+            tx, ty = (int(target_pos[0]), int(target_pos[1])) if isinstance(target_pos, (list, tuple)) else tuple(target["pos"])
+        except (TypeError, ValueError, IndexError):
+            tx, ty = target["pos"]
+        if [tx, ty] not in self._monster_tiles(target):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        ox, oy = p["pos"]
+        dx, dy = tx - ox, ty - oy
+        distance = max(abs(dx), abs(dy))
+        sx = 0 if dx == 0 else (1 if dx > 0 else -1)
+        sy = 0 if dy == 0 else (1 if dy > 0 else -1)
+        if distance < 1 or distance > 4 or (dx != 0 and dy != 0 and abs(dx) != abs(dy)):
+            await self.send_to(pid, {"type": "error", "msg": T("ui.item.alabarda_vendaval_fora_alcance")})
+            return
+        path = [[ox + sx * step, oy + sy * step] for step in range(1, distance + 1)]
+        if any(x < 0 or y < 0 or x >= self.map_w or y >= self.map_h
+               or self.tiles[y][x] not in (FLOOR, DOOR)
+               or not self._tem_linha_de_visao([ox, oy], [x, y]) for x, y in path):
+            await self.send_to(pid, {"type": "error", "msg": T("ui.item.alabarda_vendaval_parede")})
+            return
+
+        animation_id = f"alabarda_vendaval_{pid}_{round_num}_{ox}_{oy}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "jato_ar", "phase": "start",
+            "animation_id": animation_id, "caster_id": pid, "origin": [ox, oy],
+            "dir": [sx, sy], "length": distance, "base_width": 1,
+            "tiles": path, "travel_ms": 650, "impact_ms": 560,
+        })
+        atingidos = []
+        vistos = set()
+        for x, y in path:
+            ocupantes = [m for m in self.monsters.values()
+                         if m.get("hp", 0) > 0 and [x, y] in self._monster_tiles(m)]
+            ocupantes += [hero for hero in self.players.values()
+                          if hero.get("alive") and hero.get("pos") == [x, y]]
+            ocupantes += [a for a in self._all_animados()
+                          if a.get("vida_atual", 0) > 0 and a.get("pos") == [x, y]]
+            for alvo in ocupantes:
+                if alvo is p or id(alvo) in vistos:
+                    continue
+                vistos.add(id(alvo))
+                atingidos.append(alvo)
+
+        async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
+            self._rx_origem_atual(cd=13)
+            for alvo in atingidos:
+                dano = await self._rolar_dano_mostrado(2, 6, "🌬️ Dano mágico", DMG_MAGIC)
+                passou, *_ = await self._save_mostrado(alvo, "reflexos", 13, mitigacao="half_damage")
+                if passou:
+                    dano //= 2
+                await self._aplicar_dano_alvo(alvo, dano, DMG_MAGIC, pid, is_attack=True)
+                if alvo is target and not passou and self._vivo(alvo):
+                    await self._empurrar(alvo, sx, sy, 1)
+                    await self.gm_say(T("narracao.sofre_empurrado_q", nome=nome_criatura(alvo), dano=dano, push=1))
+            await self._rx_registrar(DMG_MAGIC, path)
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "jato_ar", "phase": "resolve",
+            "animation_id": animation_id, "collisions": [],
+        })
+        gear_item["wind_line_ready_round"] = round_num + int(weapon.get("wind_line_cooldown", 10) or 10)
+        p["action_done"] = True
+        self._consumir_recursos(p, "apenas_acao")
+        await self.push_state()
+
+    async def handle_horizon_shock_weapon(self, pid, target_id, target_pos=None):
+        """Onda de ruptura em linha concedida pelos Bordões do Horizonte."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
+            return
+        if p.get("petrificado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")})
+            return
+        if p.get("paralisado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_paralisado_e_nao_pode_agir")})
+            return
+        if p.get("dormindo"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_agir")})
+            return
+        if p.get("action_done"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+        gear_item = (p.get("gear") or {}).get("weapon")
+        if not isinstance(gear_item, dict):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        weapon = {**(p.get("weapon") or {}), **gear_item}
+        if weapon.get("id") not in ("bordao_horizonte_partido", "bordao_horizonte_despedacado") \
+                or not weapon.get("horizon_shock"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        allowed = _weapon_allowed_classes(weapon)
+        if allowed and p.get("class_id") not in allowed:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_item(weapon))})
+            return
+        round_num = int(self.round_num or 1)
+        pronta_em = int(gear_item.get("horizon_shock_ready_round", 0) or 0)
+        if pronta_em > round_num:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.tecnica_em_recarga", tecnica=T("ui.item.horizonte_ruptura_habilidade"), rodadas=pronta_em-round_num)})
+            return
+        target = next((m for m in self.monsters.values()
+                       if str(m.get("id")) == str(target_id) and m.get("hp", 0) > 0), None)
+        if not target:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        try:
+            tx, ty = (int(target_pos[0]), int(target_pos[1])) if isinstance(target_pos, (list, tuple)) else tuple(target["pos"])
+        except (TypeError, ValueError, IndexError):
+            tx, ty = target["pos"]
+        if [tx, ty] not in self._monster_tiles(target):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        ox, oy = p["pos"]
+        dx, dy = tx - ox, ty - oy
+        distance = max(abs(dx), abs(dy))
+        sx = 0 if dx == 0 else (1 if dx > 0 else -1)
+        sy = 0 if dy == 0 else (1 if dy > 0 else -1)
+        power = 4 if int(weapon.get("horizon_shock_power", 2) or 2) >= 4 else 2
+        reach = 4 if power == 4 else 3
+        dc = 16 if power == 4 else 13
+        push = 3 if power == 4 else 2
+        if distance < 1 or distance > reach or (dx != 0 and dy != 0 and abs(dx) != abs(dy)):
+            await self.send_to(pid, {"type": "error", "msg": T("ui.item.horizonte_ruptura_fora_alcance", alcance=reach)})
+            return
+        path = [[ox + sx * step, oy + sy * step] for step in range(1, distance + 1)]
+        if any(x < 0 or y < 0 or x >= self.map_w or y >= self.map_h
+               or self.tiles[y][x] not in (FLOOR, DOOR)
+               or not self._tem_linha_de_visao([ox, oy], [x, y]) for x, y in path):
+            await self.send_to(pid, {"type": "error", "msg": T("ui.item.horizonte_ruptura_parede")})
+            return
+
+        animation_id = f"horizonte_ruptura_{pid}_{round_num}_{ox}_{oy}"
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "jato_ar", "phase": "start",
+            "animation_id": animation_id, "caster_id": pid, "origin": [ox, oy],
+            "dir": [sx, sy], "length": distance, "base_width": 1,
+            "tiles": path, "travel_ms": 700, "impact_ms": 620,
+        })
+        await self.gm_say(T("narracao.horizonte_ruptura_inicio", heroi=p.get("name", ""), alcance=reach))
+        atingidos = []
+        vistos = set()
+        for x, y in path:
+            ocupantes = [m for m in self.monsters.values()
+                         if m.get("hp", 0) > 0 and [x, y] in self._monster_tiles(m)]
+            ocupantes += [hero for hero in self.players.values()
+                          if hero.get("alive") and hero.get("pos") == [x, y]]
+            ocupantes += [a for a in self._all_animados()
+                          if a.get("vida_atual", 0) > 0 and a.get("pos") == [x, y]]
+            for alvo in ocupantes:
+                if alvo is p or id(alvo) in vistos:
+                    continue
+                vistos.add(id(alvo))
+                atingidos.append(alvo)
+
+        async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
+            self._rx_origem_atual(cd=dc)
+            for alvo in atingidos:
+                dano = await self._rolar_dano_mostrado(power, 6, "🌅 Dano de ruptura", DMG_MAGIC)
+                passou, *_ = await self._save_mostrado(alvo, "reflexos", dc, mitigacao="half_damage")
+                if passou:
+                    dano //= 2
+                await self._aplicar_dano_alvo(alvo, dano, DMG_MAGIC, pid, is_attack=True)
+                if not passou and self._vivo(alvo):
+                    await self._empurrar(alvo, sx, sy, push)
+                    await self.gm_say(T("narracao.horizonte_ruptura_empurrao", alvo=nome_criatura(alvo), casas=push))
+            await self._rx_registrar(DMG_MAGIC, path)
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "jato_ar", "phase": "resolve",
+            "animation_id": animation_id, "collisions": [],
+        })
+        gear_item["horizon_shock_ready_round"] = round_num + int(weapon.get("horizon_shock_cooldown", 10) or 10)
+        p["action_done"] = True
+        self._consumir_recursos(p, "apenas_acao")
+        await self.push_state()
+
     async def handle_thunder_pulse_weapon(self, pid):
         """Pulso elétrico em área concedido pelo martelo Choque do Trovão."""
         if not self._is_turn(pid):
@@ -25534,6 +26016,103 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._rx_registrar(DMG_LIGHTNING,
                                      [[x, y] for x, y in sorted(area, key=lambda t: (t[1], t[0]))])
         gear_item["thunder_pulse_ready_round"] = round_num + int(weapon.get("thunder_pulse_cooldown", 10) or 10)
+        p["action_done"] = True
+        self._consumir_recursos(p, "apenas_acao")
+        await self.push_state()
+
+    async def handle_solar_flare_weapon(self, pid):
+        """Clarão sagrado em área concedido pelo Mangual do Sol Cativo."""
+        if not self._is_turn(pid):
+            await self._avisar_controle_de_monstro(pid)
+            return
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or self._acao_bloqueada(p):
+            return
+        if p.get("petrificado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")})
+            return
+        if p.get("paralisado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_paralisado_e_nao_pode_agir")})
+            return
+        if p.get("dormindo"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_dormindo_e_nao_pode_agir")})
+            return
+        if p.get("action_done"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.acao_principal_ja_usada_neste_turno")})
+            return
+        gear_item = (p.get("gear") or {}).get("weapon")
+        weapon = ({**(p.get("weapon") or {}), **(gear_item or {})}
+                  if isinstance(gear_item, dict) else None)
+        if not isinstance(weapon, dict) or weapon.get("id") != "mangual_sol_cativo" \
+                or not weapon.get("solar_flare"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        allowed = _weapon_allowed_classes(weapon)
+        if allowed and p.get("class_id") not in allowed:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.sua_classe_nao_pode_usar_item", item=nome_item(weapon))})
+            return
+        round_num = int(self.round_num or 1)
+        pronta_em = int(gear_item.get("solar_flare_ready_round", 0) or 0)
+        if pronta_em > round_num:
+            await self.send_to(pid, {"type": "error", "msg": T(
+                "erro.tecnica_em_recarga",
+                tecnica=T("ui.item.mangual_sol_cativo_clarao"),
+                rodadas=pronta_em-round_num)})
+            return
+
+        ox, oy = p.get("pos", [0, 0])
+        area = {(ox + dx, oy + dy) for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                if (dx or dy) and 0 <= ox + dx < self.map_w and 0 <= oy + dy < self.map_h}
+        alvos = []
+        alvos.extend(m for m in self.monsters.values()
+                     if m.get("hp", 0) > 0
+                     and any(tuple(tile) in area for tile in self._monster_tiles(m)))
+        alvos.extend(hero for hero in self.players.values()
+                     if hero.get("alive") and hero.get("id") != pid
+                     and tuple(hero.get("pos", [-1, -1])) in area
+                     and not self._fosso_protegido(hero))
+        alvos.extend(a for a in self._all_animados()
+                     if a.get("vida_atual", 0) > 0
+                     and tuple(a.get("pos", [-1, -1])) in area)
+        prisioneiro = self.prisoner
+        if (prisioneiro and prisioneiro.get("alive") and prisioneiro.get("hp", 0) > 0
+                and tuple(prisioneiro.get("pos", [-1, -1])) in area):
+            alvos.append(prisioneiro)
+        unicos, vistos = [], set()
+        for alvo in alvos:
+            aid = id(alvo)
+            if aid not in vistos and alvo is not p:
+                vistos.add(aid)
+                unicos.append(alvo)
+
+        animation_id = f"solar_flare_{pid}_{round_num}_{int(asyncio.get_running_loop().time() * 1000)}"
+        tiles_visuais = [[x, y] for x, y in sorted(area, key=lambda t: (t[1], t[0]))]
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "solar_flare", "phase": "start",
+            "animation_id": animation_id, "caster_id": pid, "origin": [ox, oy],
+            "tiles": tiles_visuais, "charge_ms": 300, "impact_ms": 900,
+        })
+        atingidos_ids = []
+        async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
+            await self.gm_say(T("narracao.mangual_sol_cativo_clarao", heroi=p.get("name", "")))
+            self._rx_origem_atual(cd=13)
+            for alvo in unicos:
+                dano = await self._rolar_dano_mostrado(2, 6, T("dado.golpe_sagrado"), DMG_HOLY)
+                passou, *_ = await self._save_mostrado(alvo, "reflexos", 13,
+                                                        mitigacao="half_damage")
+                if passou:
+                    dano = max(1, dano // 2)
+                await self._aplicar_dano_alvo(alvo, dano, DMG_HOLY, pid, is_attack=True)
+                alvo_id = alvo.get("id")
+                if alvo_id is not None:
+                    atingidos_ids.append(str(alvo_id))
+            await self._rx_registrar(DMG_HOLY, tiles_visuais)
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "solar_flare", "phase": "resolve",
+            "animation_id": animation_id, "caster_id": pid, "origin": [ox, oy],
+            "tiles": tiles_visuais, "target_ids": atingidos_ids,
+        })
+        gear_item["solar_flare_ready_round"] = round_num + int(weapon.get("solar_flare_cooldown", 10) or 10)
         p["action_done"] = True
         self._consumir_recursos(p, "apenas_acao")
         await self.push_state()
@@ -31596,9 +32175,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          "silver", "corrosion_max", "corrosion_free_levels",
                          "staff_spell_damage_bonus", "staff_area_dimension_bonus",
                          "staff_extra_spell_circle", "staff_extra_spell_cooldown",
+                         "wind_line", "wind_line_cooldown",
+                         "horizon_shock", "horizon_shock_cooldown", "horizon_shock_power",
+                         "bronze_serpent_bind", "bronze_serpent_cooldown", "bronze_serpent_ready_round",
+                         "stun_crit_min_nat", "stun_fort_dc",
                          "atk_bonus", "damage_bonus", "extra_damages", "granted_ability",
+                         "extra_damage_once_per_turn",
                          "magical", "fire_on_hit", "fire_crit_damage", "freeze_on_crit",
                          "thunder_push_on_crit", "thunder_pulse", "thunder_pulse_cooldown",
+                         "solar_flare", "solar_flare_cooldown",
                          "sneak_attack_extra_d4")
         base = item if (item.get("die") and item.get("stat")) else WEAPONS.get(item.get("id"))
         if not base: return
@@ -36072,6 +36657,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not _protetor_bypass:   # a chamada original registra; as recursivas do Protetor não repetem
             await self._rx_registrar_alvo(
                 alvo, _NORM_ELEMENTO.get(str(elemento or "").strip().lower(), elemento), dano, killer_pid)
+        if is_attack and not _protetor_bypass:
+            dano = await self._oferecer_guarda_reflexa(alvo, dano, killer_pid)
+            if dano <= 0:
+                return
         if not _protetor_bypass:
             dano_alvo, transferencia = await self._processar_dano_protetor(
                 alvo, dano, is_attack=is_attack)
@@ -58007,6 +58596,42 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     "cooldown_remaining": restante,
                     "granted_origem": "weapon",
                 })
+            if item.get("wind_line"):
+                pronta_em = int(item.get("wind_line_ready_round", 0) or 0)
+                restante = max(0, pronta_em - int(self.round_num or 0))
+                out.append({
+                    "id": f"alabarda_vendaval_{slot}",
+                    "source": "arma",
+                    "name": T("ui.item.alabarda_vendaval_habilidade"),
+                    "icon": "🌬️",
+                    "image": item.get("icon", "assets/itens magicos/alabarda_do_vendaval.png"),
+                    "tipo": "acao_principal",
+                    "target": "enemy",
+                    "description": T("ui.item.alabarda_vendaval_desc"),
+                    "throw_slot": slot,
+                    "weapon_id": item.get("id"),
+                    "recarga_rodadas": int(item.get("wind_line_cooldown", 10) or 10),
+                    "cooldown_remaining": restante,
+                    "granted_origem": "weapon",
+                })
+            if item.get("horizon_shock") and slot == "weapon":
+                pronta_em = int(item.get("horizon_shock_ready_round", 0) or 0)
+                restante = max(0, pronta_em - int(self.round_num or 0))
+                out.append({
+                    "id": f"bordao_horizonte_{slot}",
+                    "source": "arma",
+                    "name": T("ui.item.horizonte_ruptura_habilidade"),
+                    "icon": "🌅",
+                    "image": item.get("icon", "assets/itens magicos/bordao_horizonte_partido.png"),
+                    "tipo": "acao_principal",
+                    "target": "enemy",
+                    "description": T("ui.item.horizonte_ruptura_desc", alcance=4 if int(item.get("horizon_shock_power", 2) or 2) >= 4 else 3, dano="4d6" if int(item.get("horizon_shock_power", 2) or 2) >= 4 else "2d6", cd=16 if int(item.get("horizon_shock_power", 2) or 2) >= 4 else 13, empurrao=3 if int(item.get("horizon_shock_power", 2) or 2) >= 4 else 2),
+                    "throw_slot": slot,
+                    "weapon_id": item.get("id"),
+                    "recarga_rodadas": int(item.get("horizon_shock_cooldown", 10) or 10),
+                    "cooldown_remaining": restante,
+                    "granted_origem": "weapon",
+                })
             if item.get("thunder_pulse"):
                 pronta_em = int(item.get("thunder_pulse_ready_round", 0) or 0)
                 restante = max(0, pronta_em - int(self.round_num or 0))
@@ -58021,6 +58646,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     "description": T("ui.item.choque_trovao_pulso_desc"),
                     "weapon_id": item.get("id"),
                     "recarga_rodadas": int(item.get("thunder_pulse_cooldown", 10) or 10),
+                    "cooldown_remaining": restante,
+                    "granted_origem": "weapon",
+                })
+            if item.get("solar_flare"):
+                pronta_em = int(item.get("solar_flare_ready_round", 0) or 0)
+                restante = max(0, pronta_em - int(self.round_num or 0))
+                out.append({
+                    "id": "mangual_sol_cativo_clarao",
+                    "source": "arma",
+                    "name": T("ui.item.mangual_sol_cativo_clarao"),
+                    "icon": "☀️",
+                    "image": item.get("icon", "assets/itens magicos/mangual_sol_cativo.png"),
+                    "tipo": "acao_principal",
+                    "target": "self",
+                    "description": T("ui.item.mangual_sol_cativo_clarao_desc"),
+                    "weapon_id": item.get("id"),
+                    "recarga_rodadas": int(item.get("solar_flare_cooldown", 10) or 10),
                     "cooldown_remaining": restante,
                     "granted_origem": "weapon",
                 })
@@ -59854,8 +60496,19 @@ async def handler(ws):
                     if room: await room.handle_lightning_line_weapon(
                         pid, msg.get("target_id"), msg.get("target_pos"), msg.get("slot", "weapon"))
 
+                elif t == "wind_line_weapon":
+                    if room: await room.handle_wind_line_weapon(
+                        pid, msg.get("target_id"), msg.get("target_pos"), msg.get("slot", "weapon"))
+
+                elif t == "horizon_shock_weapon":
+                    if room: await room.handle_horizon_shock_weapon(
+                        pid, msg.get("target_id"), msg.get("target_pos"))
+
                 elif t == "thunder_pulse_weapon":
                     if room: await room.handle_thunder_pulse_weapon(pid)
+
+                elif t == "solar_flare_weapon":
+                    if room: await room.handle_solar_flare_weapon(pid)
 
                 elif t == "throw_item":
                     if room: await room.handle_throw_item(pid, msg)

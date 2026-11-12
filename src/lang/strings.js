@@ -170,6 +170,18 @@ window.LANG_STRINGS = {
                                  "en": "This game will have a human Game Master" },
   "ui.savegames.btn_criar": { "pt": "➕ Criar jogo", "en": "➕ Create game" },
   "ui.savegames.btn_voltar": { "pt": "← Voltar", "en": "← Back" },
+  "ui.item.alabarda_vendaval_habilidade": { "pt": "Rajada do Vendaval", "en": "Gale Burst" },
+  "ui.item.alabarda_vendaval_desc": { "pt": "Linha de até 4 casas: 2d6 de dano mágico; Reflexos CD 13 reduz à metade. Se o alvo escolhido falhar, é empurrado 1 casa. Recarga: 10 rodadas.", "en": "Straight line up to 4 squares: 2d6 magical damage; Reflex halves it. If the chosen target fails, it is pushed back 1 square. Recharge: 10 rounds." },
+  "ui.item.alabarda_vendaval_mira": { "pt": "Escolha um inimigo alinhado a até 4 casas.", "en": "Choose an aligned enemy within 4 squares." },
+  "ui.item.alabarda_vendaval_cancelada": { "pt": "Rajada cancelada", "en": "Gale burst cancelled" },
+  "ui.item.alabarda_vendaval_fora_alcance": { "pt": "O alvo precisa estar alinhado a até 4 casas.", "en": "The target must be aligned within 4 squares." },
+  "ui.item.alabarda_vendaval_parede": { "pt": "Uma parede bloqueia a rajada.", "en": "A wall blocks the gust." },
+  "ui.item.horizonte_ruptura_habilidade": { "pt": "Ruptura do Horizonte", "en": "Horizon Break" },
+  "ui.item.horizonte_ruptura_desc": { "pt": "Linha de até {alcance} casas: {dano} de dano mágico a todas as criaturas no caminho, inclusive aliados (Reflexos CD {cd} reduz à metade). Quem falhar é empurrado {empurrao} casas. Recarga: 10 rodadas.", "en": "Line up to {alcance} squares: {dano} magical damage to all creatures in its path, including allies (Reflex halves it, DC {cd}). Those who fail are pushed back {empurrao} squares. Recharge: 10 rounds." },
+  "ui.item.horizonte_ruptura_mira": { "pt": "Escolha um inimigo alinhado a até {alcance} casas.", "en": "Choose an aligned enemy within {alcance} squares." },
+  "ui.item.horizonte_ruptura_cancelada": { "pt": "Ruptura cancelada", "en": "Horizon break cancelled" },
+  "ui.item.horizonte_ruptura_fora_alcance": { "pt": "O alvo precisa estar alinhado a até {alcance} casas.", "en": "The target must be aligned within {alcance} squares." },
+  "ui.item.horizonte_ruptura_parede": { "pt": "Uma parede bloqueia a onda de ruptura.", "en": "A wall blocks the rupture wave." },
   "lista.separador": { "pt": ", ",  "en": ", " },
   "lista.ultimo":    { "pt": " e ", "en": " and " }
 };

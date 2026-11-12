@@ -1288,6 +1288,14 @@ window.LANG_INTERFACE = {
     "en": "Main action: all creatures in the eight adjacent squares, including allies but not you, take 2d6 lightning damage (Reflex DC 13 halves). Recharge: 10 rounds.",
     "pt": "Ação principal: todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você, sofrem 2d6 de eletricidade (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
   },
+  "ui.item.mangual_sol_cativo_clarao": {
+    "en": "Solar Flash",
+    "pt": "Clarão Solar"
+  },
+  "ui.item.mangual_sol_cativo_clarao_desc": {
+    "en": "Main action: release a sacred flash that deals 2d6 holy damage to all creatures in the eight adjacent squares, including allies but not you (Reflex DC 13 halves). Recharge: 10 rounds.",
+    "pt": "Ação principal: libere um clarão sagrado que causa 2d6 de dano sagrado a todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
+  },
   "ui.arremesso.destreza": {
     "en": "Dexterity",
     "pt": "Destreza"
