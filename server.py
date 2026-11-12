@@ -1114,6 +1114,13 @@ def _restaurar_sobrevivencia(player, fome=0, sede=0):
     player["fome"] = min(player["fome_max"], player.get("fome", 0) + fome)
     player["sede"] = min(player["sede_max"], player.get("sede", 0) + sede)
 
+def _tipo_dado(expr, padrao="d6"):
+    """Dado mostrado na animação ("d8") a partir de uma expressão ("1d8+2").
+    Dano fixo ("1") ou vazio não tem dado: usa `padrao`. Antes cada chamador
+    fazia `expr.split("d")[1]`, que estourava IndexError com dano fixo."""
+    achado = re.search(r"d(\d+)", str(expr or ""))
+    return "d" + achado.group(1) if achado else padrao
+
 def roll_dice(die_str):
     """Rola uma expressão de dados com múltiplos termos somados/subtraídos —
     cada termo é 'NdM' (rolagem) ou 'K' (constante).
@@ -16233,7 +16240,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 bonus_extra=bonus_extra + int(weapon.get("damage_bonus", 0) or 0),
                 target_pos=tile, weapon_override=damage_weapon, attacker_id=pid)
             if die_str:
-                await self.broadcast({"type": "dice_roll", "die": "d" + die_str.split("d")[1],
+                await self.broadcast({"type": "dice_roll", "die": _tipo_dado(die_str),
                                       "value": raw_dmg, "label": T("dado.dano"),
                                       "modifier": dmg - raw_dmg, "total": dmg,
                                       "expression": die_str, "damage_type": DMG_PHYSICAL})
@@ -24167,7 +24174,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "result", atacante, alvo, feedback_attack, attack_id=feedback_id,
                 roll=roll, total=total, hit=True, crit=bool(crit), natural=int(roll),
                 natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1))
-        await self.broadcast({"type": "dice_roll", "die": "d" + (die.split("d")[1] if die else "6"),
+        await self.broadcast({"type": "dice_roll", "die": _tipo_dado(die),
                                "value": base, "label": T("dado.dano_reacao"), "damage_type": DMG_PHYSICAL})
         await self.gm_say(T("narracao.reage_e_atinge_de_dano_hp", atacante=nome_criatura(atacante), alvo=nome_criatura(alvo), dmg=dmg, extra=extra, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp']))
         if alvo["hp"] <= 0:
@@ -24420,7 +24427,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             bonus_extra=ammo_bonus + int(off.get("damage_bonus", 0) or 0), target_pos=tile,
             weapon_override=damage_weapon, attacker_id=pid)
         if die:
-            await self.broadcast({"type": "dice_roll", "die": "d" + die.split("d")[1],
+            await self.broadcast({"type": "dice_roll", "die": _tipo_dado(die),
                                   "value": raw, "label": T("dado.dano_2a_mao"),
                                   "modifier": dmg - raw, "total": dmg,
                                   "expression": die, "damage_type": DMG_PHYSICAL,
@@ -25040,7 +25047,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     weapon_override=damage_weapon,
                     attacker_id=pid)
                 if die_str:
-                    die_type = "d" + die_str.split("d")[1]
+                    die_type = _tipo_dado(die_str)
                     await self.broadcast({"type": "dice_roll", "die": die_type,
                                            "value": raw_dmg, "label": T("dado.dano"),
                                            "modifier": dmg - raw_dmg, "total": dmg,
@@ -25266,7 +25273,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                + surv_mod + int(off.get("damage_bonus", 0) or 0))
                     if _weapon_nat1_wear(off) or off.get("magical") or off.get("silver"):
                         odmg = self._apply_damage_types(odmg, [DMG_PHYSICAL], tgt, off, attacker_pos=p["pos"])
-                    odie_type = "d" + off["die"].split("d")[1]
+                    odie_type = _tipo_dado(off["die"])
                     await self.broadcast({"type": "dice_roll", "die": odie_type,
                                            "value": oraw, "label": T("dado.dano_2a_mao"),
                                            "damage_type": DMG_PHYSICAL})
@@ -25647,7 +25654,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                       + int(p.get("gear_damage_bonus", 0) or 0))
             if _weapon_nat1_wear(dagger):
                 dmg = self._apply_damage_types(dmg, [DMG_PHYSICAL], target, dagger, attacker_pos=p["pos"])
-            die_type = "d" + die_str.split("d")[1]
+            die_type = _tipo_dado(die_str)
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                    "value": raw, "label": T("dado.dano_arremesso"),
                                    "damage_type": DMG_PHYSICAL})
@@ -25851,7 +25858,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 dmg = max(1, (raw + dex_mod) * (2 if crit else 1))
                 if defn.get("holy_water") and target.get("subtipo") not in {"morto_vivo", "abissal"}:
                     dmg = 0
-                die_type = "d" + defn["dano"].split("d")[1]
+                die_type = _tipo_dado(defn["dano"])
                 await self.broadcast({"type": "dice_roll", "die": die_type,
                                       "value": raw, "label": T("dado.dano_arremesso"),
                                       "damage_type": _NORM_ELEMENTO.get(str(defn.get("elemento") or "").lower(), DMG_PHYSICAL)})
@@ -25948,7 +25955,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if defn.get("dano"):
             raw = roll_dice(defn["dano"])
             _rx_dano = raw
-            die_type = "d" + defn["dano"].split("d")[1]
+            die_type = _tipo_dado(defn["dano"])
             await self.broadcast({"type": "dice_roll", "die": die_type,
                                   "value": raw, "label": T("dado.dano_de_item", item=defn['name']),
                                   "damage_type": _NORM_ELEMENTO.get(str(defn.get("elemento") or "").lower(), DMG_PHYSICAL)})
@@ -50010,7 +50017,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if self._tem_habilidade(m, "sobrecarga"):
                 m["sobrecarga_target_id"] = target.get("id")
                 m["sobrecarga_round"] = self.round_num
-            die_type = "d" + atk_def["damage"].split("d")[1].split("+")[0]
+            die_type = _tipo_dado(atk_def["damage"])
             await self.broadcast({"type": "dice_roll", "die": die_type, "value": raw_dmg,
                                   "label": T("dado.dano"), "modifier": dmg - raw_dmg,
                                   "total": dmg, "expression": atk_def["damage"],
@@ -50462,7 +50469,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                       "label": T("dado.nome_descartado", nome=nome_criatura(m)), "discarded": True})
             atk = int(m.get("base_attack_bonus", 0)) + mod(m.get("dex", 10)) + m.get("equipment_attack_bonus", 0)
             atk -= flash_attack_penalty
-            ac = self._player_effective_ac(target) if is_player else target.get("ca", 10)
+            # Servo animado guarda a CA em `ca`; monstro (hostilidade entre
+            # monstros) em `ac`, como no ataque comum.
+            ac = (self._player_effective_ac(target) if is_player
+                  else target.get("ac", target.get("ca", 10)))
             hit = roll != 1 and (roll == 20 or roll + atk >= ac)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                   "label": T("dado.nome_item", nome=nome_criatura(m), item=defn['name']), "hit": hit, "crit": roll == 20,
@@ -50475,17 +50485,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return
             raw = roll_dice(defn.get("dano", "0")) if defn.get("dano") else 0
             dmg = self._apply_damage_types((raw + mod(m.get("dex", 10))) * (2 if roll == 20 else 1), [damage_type], target)
-            if is_player:
+            if "vida_atual" in target and not is_player:   # servo animado
+                target["vida_atual"] = max(0, target["vida_atual"] - dmg)
+            else:
+                # Herói ou outro monstro: o funil comum trata PV, morte e
+                # reações (antes o monstro caía no ramo do servo: KeyError).
                 await self._aplicar_dano_alvo(
                     target, dmg, damage_type, m.get("id"), is_attack=True)
-            else:
-                target["vida_atual"] = max(0, target["vida_atual"] - dmg)
             await self.gm_say(T("narracao.sofre_de_dano_2", defn_get_emoji=defn.get('emoji', '🧪'), target_get_name_target_g=nome_criatura(target), dmg=dmg))
             if defn.get("em_chamas") and dmg >= 0:
                 self._aplicar_em_chamas(target, self._rolar_dado(defn.get("chamas_dur", "1d4")), defn.get("chamas_agua_apaga", True))
             if defn.get("controle"):
                 await self._aplicar_controle_arremesso(target, defn["controle"])
-            if not is_player and target["vida_atual"] <= 0:
+            if not is_player and "vida_atual" in target and target["vida_atual"] <= 0:
                 await self._animado_morre(target, m.get("id"))
             return
         # Explosivos de Ã¡rea: centro no alvo e reflexos para todos no raio.
@@ -56188,7 +56200,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     dmg = max(1, dmg + self._privacao_monstro_penalidade(m, "dano")
                               - (int(m.get("desnutricao_dano_penalidade", 0) or 0)
                                  if m.get("_desnutricao_restrito_turno") else 0))
-                    die_type = "d" + m["damage"].split("d")[1]
+                    die_type = _tipo_dado(m["damage"])
                     await self.broadcast({"type": "dice_roll", "die": die_type,
                                            "value": raw_dmg, "label": T("dado.dano"),
                                            "damage_type": (m.get("damage_types") or [DMG_PHYSICAL])[0]})
