@@ -18969,6 +18969,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p = self.players.get(pid)
         if not p:
             return
+        if not isinstance(item_slot, str):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")})
+            return
         # Um guarda só cobre os três ramos de equipamento; "bag_N" não é slot de
         # gear e passa direto. 'acc1'/'acc2' são os nomes antigos de item1/item2.
         _slot_venda = {"acc1": "item1", "acc2": "item2"}.get(item_slot, item_slot)
