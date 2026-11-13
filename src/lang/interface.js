@@ -169,6 +169,7 @@ window.LANG_INTERFACE = {
     "en": "Poisoned Magic Bolts +2",
     "pt": "Virotes Mágicos +2 Envenenados"
   },
+  "dado.ataque": {"en":"Attack","pt":"Ataque"},
   "dado.ataque_da_lanca": {"en":"Spear attack","pt":"Ataque da lança"},
   "dado.dano_perfurante": {"en":"Piercing damage","pt":"Dano perfurante"},
   "dado.dano_eletrico": {"en":"Lightning damage","pt":"Dano elétrico"},
