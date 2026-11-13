@@ -126,11 +126,29 @@ def main():
         pg.fill("#sg-name", "Jogo E2E")
         pg.click("text=Criar jogo")
         etapa("criar jogo leva a escolha de heroi", esperar_tela("screen-class-select"), tela())
+        pg.wait_for_selector(".cs-hero-tile")
+        pg.wait_for_timeout(1200)                          # o painel da direita aparece em fade
+        cobertos = pg.evaluate("""() => [...document.querySelectorAll('.cs-hero-tile')].filter(t => {
+            const r = t.getBoundingClientRect(); const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return !(t === el || t.contains(el)); }).map(t => t.getAttribute('aria-label'))""")
+        etapa("nenhum heroi fica coberto pelo painel de informacoes", not cobertos, str(cobertos))
         pg.select_option("select:has(option[value='campo_de_treinamento.json'])", "campo_de_treinamento.json")
         pg.click("[aria-label='Selecionar Guerreiro Anão']")
         pg.click("text=Adicionar ao grupo")
         pg.click("#cs-btn-start")
         etapa("iniciar o jogo leva a cidade", esperar_tela("screen-city"), tela())
+
+        print("[2b] Esc fecha as janelas da cidade")
+        for ponto, janela in (("Templo", "#shop-modal.open"), ("Ferraria", "#shop-modal.open"),
+                              ("Taverna", "#shop-modal.open"), ("Mercado", "#shop-modal.open"),
+                              ("Guilda dos Heróis", ".guild-modal.open")):
+            pg.click(f"button:has-text('{ponto}')")
+            pg.wait_for_selector(janela, timeout=5000)
+            pg.keyboard.press("Escape")
+            pg.wait_for_timeout(300)
+            etapa(f"Esc fecha a janela de {ponto}", pg.query_selector(janela) is None)
+            if pg.query_selector(janela):                  # nao deixa a janela aberta travar o resto
+                pg.evaluate("typeof closeShop==='function' && closeShop(); typeof closeGuild==='function' && closeGuild()")
 
         print("[3] masmorra")
         pg.click("button:has-text('Campo de Treinamento')")
