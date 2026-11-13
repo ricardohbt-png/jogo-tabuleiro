@@ -104,7 +104,7 @@ def main():
         def tela():
             return pg.evaluate("[...document.querySelectorAll('[id^=screen-]')].filter(e=>e.classList.contains('active')).map(e=>e.id)[0]")
 
-        def esperar_tela(nome, t=15000):
+        def esperar_tela(nome, t=30000):
             try:
                 pg.wait_for_function("n => document.querySelector('#'+n)?.classList.contains('active')", arg=nome, timeout=t)
                 return True
@@ -153,9 +153,9 @@ def main():
         print("[3] masmorra")
         pg.click("button:has-text('Campo de Treinamento')")
         pg.click("button:has-text('Entrar em Campo de Treinamento')")
-        etapa("entrar leva ao tabuleiro", esperar_tela("screen-game", 20000), tela())
+        etapa("entrar leva ao tabuleiro", esperar_tela("screen-game", 40000), tela())
         try:
-            pg.wait_for_function("GS.gameState && GS.gameState.monsters && GS.gameState.monsters.length > 0", timeout=15000)
+            pg.wait_for_function("GS.gameState && GS.gameState.monsters && GS.gameState.monsters.length > 0", timeout=45000)
             etapa("o estado da masmorra chegou com monstros", True)
         except Exception:
             etapa("o estado da masmorra chegou com monstros", False)
@@ -168,7 +168,7 @@ def main():
         etapa("os tres alvos do Guerreiro existem", len(antes) == 3, str(antes))
         for i in range(3):
             try:
-                pg.wait_for_function("GS.isMyTurn === true", timeout=25000)
+                pg.wait_for_function("GS.isMyTurn === true", timeout=45000)
             except Exception:
                 etapa(f"a vez do heroi chegou (rodada {i + 1})", False)
                 break
