@@ -3771,6 +3771,14 @@ function _gamepadBackFromShop(){
   return true;
 }
 
+// Esc fecha a loja/cena da cidade, passo a passo como o Cancelar do controle
+// (conversa → cena → cidade). Só age se nenhuma outra camada já tratou a tecla.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape' || e.defaultPrevented) return;
+  if(_gamepadBackFromShop()) { e.preventDefault(); return; }
+  if($('guild-modal')?.classList.contains('open')) { e.preventDefault(); closeGuild(); }
+});
+
 // ═══════════════════════════════════════════════════════════════════════════
 // ■  GUILDA DOS HERÓIS (Fase 0) — compra de especializações e técnicas
 //    Overlay próprio (#guild-modal) criado sob demanda. A compra vai pelo
