@@ -136,13 +136,13 @@ def test_sites():
 def test_throw():
     print("\n[3] Arremesso mirado emite attack_feedback")
     r, p = sala(); r._msgs.clear()
-    defn = S.ARREMESSAVEIS["frasco_oleo"]
-    p["bag"] = [{"id": "frasco_oleo", "name": defn["name"], "emoji": defn["emoji"], "item_slot": "bag"}]
+    defn = S.ARREMESSAVEIS["frasco_acido"]
+    p["bag"] = [{"id": "frasco_acido", "name": defn["name"], "emoji": defn["emoji"], "item_slot": "bag"}]
     random.seed(4321)
-    asyncio.run(r.handle_throw_item("p1", {"item_id": "frasco_oleo", "target_id": "m1"}))
+    asyncio.run(r.handle_throw_item("p1", {"item_id": "frasco_acido", "target_id": "m1"}))
     st = feedbacks(r); rs = feedbacks(r, "result")
     check("start emitido", len(st) == 1)
-    check("start: kind item + item_id + emoji + elemento", st and st[0].get("projectile") == {"kind": "item", "item_id": "frasco_oleo", "item_emoji": defn["emoji"], "item_elemento": "fogo"})
+    check("start: kind item + item_id + emoji + elemento", st and st[0].get("projectile") == {"kind": "item", "item_id": "frasco_acido", "item_emoji": defn["emoji"], "item_elemento": defn.get("elemento")})
     check("start: alvo e posições", st and st[0]["target_id"] == "m1" and st[0]["attacker_pos"] == [1, 1] and st[0]["target_pos"] == [4, 1])
     check("result emitido com o mesmo attack_id", rs and rs[0]["attack_id"] == st[0]["attack_id"])
     check("result carrega hit/crit/natural", rs and all(k in rs[0] for k in ("hit", "crit", "natural", "natural_critical", "natural_fumble")))

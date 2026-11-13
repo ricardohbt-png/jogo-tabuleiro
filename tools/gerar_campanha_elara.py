@@ -12,8 +12,8 @@ Só toca no que é dele: a cena `templo_alva` e o `scene` do ponto `templo` de A
 `relogio` e `fato` do objetivo principal (aditivo e idempotente; recusa reescrever um arquivo cuja
 formatação não é a do editor). Nunca regrava o desenho dos mapas.
 
-ARTE PROVISÓRIA: fundo e retrato do Exequiel são reaproveitados de assets/ até o autor subir a arte
-dele pelo editor (aba Cenas e NPCs).
+ARTE: fundo panorâmico do pátio do Templo e personagem Exequiel de corpo inteiro, ambos em
+`assets/cenas/`.
 """
 import argparse
 import json
@@ -31,18 +31,28 @@ CENA_ID = "templo_alva"
 PONTO_ID = "templo"
 NPC_ID = "npc_exequiel"
 AVENTURA = "elara_parte1"
+PONTO_FAZENDA_ANTIGO = "elara_fazenda"   # ponto/destino de combate da fazenda, removidos: a fazenda é a 2ª etapa da casa
 RELOGIO_ID = "elara_p1"
-FUNDO_PROVISORIO = "assets/cenas/fundos/alva_e_luz_fundo.png"
-RETRATO_PROVISORIO = "assets/tavern/nobre2.png"
+FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
+IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
+IMAGEM_EXEQUIEL_HISTORIA = "assets/story/exequiel_templo.png"   # cópia: a mídia de história só vem de assets/story/
 
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
 F_CASA = "elara_casa_vencida"
+F_CARTA = "elara_carta_fazenda"            # a carta do baú da casa (gravada pelo objetivo da casa)
 F_FAZENDA = "elara_fazenda_vencida"
 F_LENTO = "elara_lento"                    # o relógio passou do limite (ausente = rápido)
 F_PRESSIONOU = "elara_templo_pressionou"   # o grupo ouviu o Exequiel depois da fazenda
 F_RAMO_A = "elara_ramo_a"                  # seguir as moças
 F_RAMO_B = "elara_ramo_b"                  # seguir o Gilo
+
+CENA_MESTRE = "mestre_armas_alva"
+NPC_MESTRE = "npc_mestre_armas"
+PONTO_MESTRE = "mestre_armas_alva"
+F_PRESENTE = "elara_refugio_presenteado"   # o Mestre de Armas deu a fazenda de presente
+FUNDO_MESTRE = "assets/cenas/fundos/templo_alva_patio.png"   # arte provisória: pátio de Alva e Luz
+IMAGEM_MESTRE = "assets/portraits/mestre_de_armas.png"
 
 MAPAS = {"casa_secreta.json": F_CASA, "fazenda.json": F_FAZENDA}
 
@@ -78,16 +88,15 @@ def conversas_templo():
         _conversa(
             "elara_pos_fazenda_rapido",
             "Vocês voltaram depressa, e isso pode fazer toda a diferença. A fazenda era uma "
-            "distração: as moças seguem pela estrada e, ao mesmo tempo, alguém esteve aqui no "
-            "Templo esta noite e levou uma relíquia. Não posso dizer o que ela é. Com rapidez ainda "
-            "podem tentar as duas coisas.",
+            "distração: as moças seguem pela estrada e, ao mesmo tempo, o Olho foi levado "
+            "enquanto todos olhávamos para o lado errado. Com rapidez ainda podem tentar as "
+            "duas coisas.",
             _req(fato=F_FAZENDA, sem_fato=F_LENTO), fato=F_PRESSIONOU),
         _conversa(
             "elara_pos_fazenda_lento",
             "Demoraram, e isso custou caro. A fazenda era uma distração: as moças seguem pela "
-            "estrada e a relíquia que guardávamos foi roubada esta noite. Não posso dizer o que ela "
-            "é, só que não pode ficar em mãos erradas. Já não há tempo para as duas coisas: escolham.",
-            # aventura_id = a rota (casa + fazenda) concluída: o relógio pode passar do limite
+            "estrada e o Olho já vai longe. Já não há tempo para as duas coisas: escolham.",
+            # aventura_id = a fazenda concluída: o relógio pode passar do limite
             # durante a fazenda, e o Templo só fala depois dela.
             _req(fato=F_LENTO, aventura_id=AVENTURA), fato=F_PRESSIONOU),
         _conversa(
@@ -104,9 +113,60 @@ def conversas_templo():
 def cena_templo():
     return {"nome": "Templo de Alva e Luz", "background": FUNDO_PROVISORIO, "art_ratio": 1.5,
             "mode": "individual", "mask": "",
-            "slots": [{"id": NPC_ID, "name": "Exequiel", "image": RETRATO_PROVISORIO,
+            "slots": [{"id": NPC_ID, "name": "Exequiel", "image": IMAGEM_EXEQUIEL,
                        "x": 35.0, "y": 30.3, "w": 30.0, "h": 69.7, "z": 1.0, "dialog": "",
                        "conversations": conversas_templo()}]}
+
+
+def _conversa_mestre():
+    return _conversa(
+        "elara_fazenda_presente",
+        "Então foram vocês que limparam a Fazenda do Leste! O Templo já falou com o regente: a "
+        "fazenda é de vocês, de presente pelos serviços prestados. É o Refúgio dos Heróis, que "
+        "agora aparece no mapa da cidade. Lá o grupo guarda itens e dinheiro e expõe os troféus das "
+        "suas aventuras. O que deixarem por lá fica seguro de uma missão para outra.",
+        _req(fato=F_FAZENDA), fato=F_PRESENTE, uma_vez=False)
+
+
+def cena_mestre():
+    """O Mestre de Armas do tutorial aparece em Alva e Luz depois da fazenda e dá o lugar de presente."""
+    return {"nome": "Mestre de Armas", "background": FUNDO_MESTRE, "art_ratio": 1.5,
+            "mode": "individual", "mask": "",
+            "slots": [{"id": NPC_MESTRE, "name": "Mestre de Armas", "image": IMAGEM_MESTRE,
+                       "x": 26.3, "y": 35.0, "w": 47.4, "h": 65.0, "z": 1.0, "dialog": "",
+                       "conversations": [_conversa_mestre()]}]}
+
+
+def ponto_mestre():
+    """Marcador do Mestre de Armas no mapa da cidade: só aparece depois da fazenda vencida."""
+    return {"x": 44.0, "y": 27.0, "type": "cena", "name": "Mestre de Armas", "emoji": "🎓",
+            "scene": CENA_MESTRE, "requisito": _req(fato=F_FAZENDA), "oculto_ate_liberar": True}
+
+
+PONTO_CASA = "elara_casa"
+PONTO_REFUGIO = "ponto_1"   # a Fazenda do Leste (Refúgio dos Heróis): só aparece depois da missão da fazenda
+
+
+def ponto_casa():
+    """Entrada da casa no mapa de Alva e Luz: a casa fica na cidade, sem estrada nem emboscada."""
+    return {"x": 62.3, "y": 65.72, "type": "dungeon", "name": "A Casa da Viela", "emoji": "🏚️",
+            "aventura": AVENTURA, "oculto_ate_liberar": False, "ocultar_apos_concluir": True}
+
+
+def slides_fim_da_fazenda():
+    """Cena final da fazenda: o Templo, o Exequiel e o roubo do Olho."""
+    return {"slides": [
+        {"text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
+                 "moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis "
+                 "prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.", "fit": "cover"},
+        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
+         "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. "
+                 "Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais "
+                 "do que isso, só que ele não pode ficar em mãos erradas.”"},
+        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
+         "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em "
+                 "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. Procurem o "
+                 "Mestre de Armas, ele explica como usá-la.”"}]}
 
 
 def destinos():
@@ -118,13 +178,16 @@ def destinos():
             {"file": "casa_secreta.json", "encadear": True,
              "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira "
                       "a poeira e a algo pior.",
-             "outro": ""},
+             "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as "
+                      "muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de "
+                      "feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem "
+                      "luz: a Fazenda do Leste."},
             {"file": "fazenda.json", "encadear": False, "intro": "",
-             "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que "
-                      "estivesse ali já cumpriu a sua parte. Voltem ao Templo."},
+             "outro": slides_fim_da_fazenda()},
         ],
         "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
         "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
+        "so_na_cidade": True,
         "outro_rota": "", "requisito": _req(fato=F_PEDIU), "renome_recompensa": 1}}
 
 
@@ -198,9 +261,25 @@ def aplicar(simular=False, caminhos=None):
     if ponto is None:
         raise ValueError(f"ponto {PONTO_ID!r} de {CIDADE} não existe em city_map_points.json")
     ponto["scene"] = CENA_ID
+    pontos[CIDADE].setdefault(PONTO_CASA, ponto_casa())
+    refugio = pontos[CIDADE].get(PONTO_REFUGIO)
+    if refugio is not None:
+        pontos[CIDADE].pop(PONTO_FAZENDA_ANTIGO, None)      # a fazenda deixou de ser um ponto de combate
+        refugio["requisito"] = _req(fato=F_FAZENDA)     # o Refúgio é a recompensa da missão da fazenda
+        refugio["oculto_ate_liberar"] = True
+
+    pontos[CIDADE].setdefault(PONTO_MESTRE, ponto_mestre())
 
     cenas = _ler(c["cenas"], {})
     da_cidade = cenas.setdefault(CIDADE, {})
+    existente = da_cidade.get(CENA_MESTRE)
+    if existente is None:
+        da_cidade[CENA_MESTRE] = cena_mestre()
+    else:
+        slot_m = next((x for x in existente.get("slots", []) if x.get("id") == NPC_MESTRE), None)
+        if slot_m is not None:
+            slot_m["conversations"] = [_conversa_mestre()] + [
+                cv for cv in slot_m.get("conversations", []) if cv.get("id") != "elara_fazenda_presente"]
     cena = da_cidade.get(CENA_ID)
     if not cena:
         da_cidade[CENA_ID] = cena_templo()
@@ -213,11 +292,14 @@ def aplicar(simular=False, caminhos=None):
             slot["conversations"] = conversas_templo() + manter
 
     aventuras = _ler(c["adventures"], {})
+    aventuras.pop(PONTO_FAZENDA_ANTIGO, None)
     anterior = aventuras.get(AVENTURA) or {}
+    for aid, novo in destinos().items():
+        antigo = aventuras.get(aid) or {}
+        if "x" in antigo and "y" in antigo:        # a posição no mapa-múndi é do autor
+            novo["x"], novo["y"] = antigo["x"], antigo["y"]
+        aventuras[aid] = novo
     novo = destinos()[AVENTURA]
-    if "x" in anterior and "y" in anterior:        # a posição no mapa-múndi é do autor
-        novo["x"], novo["y"] = anterior["x"], anterior["y"]
-    aventuras[AVENTURA] = novo
 
     resultado = {}
     for arquivo, fato in MAPAS.items():

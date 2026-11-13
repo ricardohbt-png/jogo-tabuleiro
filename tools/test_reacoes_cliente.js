@@ -23,7 +23,7 @@ function fnSource(name){
 
 // Corredor de uma linha (y=5), x 0..13; material 'mat' de x=2 em diante.
 function alcance(mat, mov){
-  const code = ['terrainMoveCost', '_custoVentoTempestade', 'bfsReachable', 'findPath', '_entraNaNeve', '_neveJaCobrada', '_ignoraPenalidadePantano']
+  const code = ['terrainMoveCost', '_custoVentoTempestade', 'bfsReachable', 'findPath', '_entraNaNeve', '_neveJaCobrada', '_ignoraPenalidadePantano', '_picheLimitaPasso']
     .map(n => { try { return fnSource(n); } catch(e){ return ''; } }).join('\n');
   const materiais = {}; for(let x = 2; x < 14; x++) materiais[`${x},5`] = mat;
   const ctx = {
@@ -42,8 +42,8 @@ function alcance(mat, mov){
 console.log('\n[1] Piche custa 2 por casa (4 de movimento = 2 casas)');
 {
   const out = alcance('piche', 4);
-  check('(3,5) alcançável — 2ª casa de piche', out.has('3,5'));
-  check('(4,5) NÃO alcançável — 3ª casa', !out.has('4,5'));
+  check('(2,5) alcançável — 1ª casa de piche', out.has('2,5'));
+  check('(3,5) NÃO alcançável — passo seguinte no piche', !out.has('3,5'));
 }
 console.log('\n[2] Chão normal e lava solidificada custam 1 (4 casas)');
 {
@@ -108,7 +108,7 @@ check("game.js não duplica GS.on('gameState')", (jogo2.match(/^GS\.on\('gameSta
 check("index.html carrega o módulo", fs.readFileSync(path.join(raiz, "index.html"), "utf8").includes("src/reacoesElementais.js"));
 const jogoSrc = jogo2.split("\r\n").join("\n");
 check("renderMap chama _reacoesDesenhar2D(ctx, state, visionSet)", /_reacoesDesenhar2D\(ctx, state, visionSet\);/.test(jogoSrc));
-check("loop 3D chama _reacoes3DAtualizar ao lado de _intencoesAtualizar3D", /_intencoesAtualizar3D\(\);\s*_reacoes3DAtualizar\(\);/.test(jogoSrc));
+check("loop 3D chama _reacoes3DAtualizar ao lado de _intencoesAtualizar3D", /_intencoesAtualizar3D\(\);\s*_anelInimigo3D\(\);\s*_reacoes3DAtualizar\(\);/.test(jogoSrc));
 check("dispose3D chama _reacoes3DDispose", /function dispose3D[^]*?_reacoes3DDispose\(\);/.test(jogoSrc));
 check("tooltip da reação só descreve casa visível", /function _reacaoCasaTooltipHTML[^]*?_reacoesVisivel\(_guiaVisao3D\(st\), \[tx, ty\]\)[^]*?descreverCasa/.test(jogoSrc));
 const corpo3D = jogoSrc.split("function _reacoes3DAtualizar")[1].split("function _reacaoCasaTooltipHTML")[0];

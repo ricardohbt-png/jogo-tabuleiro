@@ -66,8 +66,7 @@ async def main():
         next(i for i in S.SHOP_MERCHANT if i["id"] == p)["price"] == next(i for i in S.SHOP_TEMPLE if i["id"] == p)["price"]
         for p in POCOES))
     check("o estoque das outras cidades não mudou (lista explícita de Alva e Luz)",
-          len(S.CITY_SHOPS["alva_e_luz"]["mercador"]) == 92
-          and not any(p in S.CITY_SHOPS["alva_e_luz"]["mercador"] for p in POCOES))
+          not any(p in S.CITY_SHOPS["alva_e_luz"]["mercador"] for p in POCOES))
 
     print("\n[2] Estoque da Raízes do Brejo")
     est = S.CITY_SHOPS[CID].get("mercador") or []

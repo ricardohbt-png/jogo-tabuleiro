@@ -1102,7 +1102,7 @@
       "type": "vela_de_fogo",
       "pos": [
         6,
-        14
+        15
       ],
       "room_id": null,
       "boss": false,
@@ -1596,7 +1596,7 @@
     {
       "type": "garaloux_jovem",
       "pos": [
-        0,
+        1,
         11
       ],
       "room_id": null,
@@ -1607,7 +1607,7 @@
     {
       "type": "garaloux_adulto",
       "pos": [
-        2,
+        4,
         11
       ],
       "room_id": null,
@@ -1618,7 +1618,7 @@
     {
       "type": "garaloux_alfa",
       "pos": [
-        4,
+        7,
         11
       ],
       "room_id": null,
@@ -1629,8 +1629,8 @@
     {
       "type": "molochus_jovem",
       "pos": [
-        6,
-        11
+        11,
+        12
       ],
       "room_id": null,
       "boss": false,
@@ -1640,8 +1640,8 @@
     {
       "type": "molochus_adulto",
       "pos": [
-        8,
-        11
+        14,
+        12
       ],
       "room_id": null,
       "boss": false,
@@ -1651,8 +1651,8 @@
     {
       "type": "molochus_anciao",
       "pos": [
-        10,
-        11
+        17,
+        12
       ],
       "room_id": null,
       "boss": false,
@@ -1695,7 +1695,7 @@
     {
       "type": "soldado",
       "pos": [
-        14,
+        9,
         2
       ],
       "room_id": null,
@@ -1728,8 +1728,8 @@
     {
       "type": "escorpiao_de_pedra_customizado",
       "pos": [
-        6,
-        7
+        5,
+        8
       ],
       "room_id": null,
       "boss": false,
@@ -1773,7 +1773,7 @@
       "type": "grotao",
       "pos": [
         1,
-        13
+        14
       ],
       "room_id": null,
       "boss": false,
@@ -1784,7 +1784,7 @@
       "type": "crocodilo_jovem",
       "pos": [
         13,
-        11
+        14
       ],
       "room_id": null,
       "boss": false,
@@ -1838,8 +1838,8 @@
     {
       "type": "lagarto_carniceiro",
       "pos": [
-        15,
-        11
+        16,
+        14
       ],
       "room_id": null,
       "boss": false,
@@ -1850,7 +1850,7 @@
       "type": "grotao_customizado",
       "pos": [
         4,
-        14
+        15
       ],
       "room_id": null,
       "boss": false,
@@ -1968,10 +1968,10 @@
       "source_id": "mob_85"
     },
     {
-      "type": "pombo",
+      "type": "urso_pardo",
       "pos": [
-        5,
-        17
+        20,
+        6
       ],
       "room_id": null,
       "boss": false,
@@ -1979,7 +1979,7 @@
       "source_id": "mob_86"
     },
     {
-      "type": "pombo",
+      "type": "bardo_da_caravana",
       "pos": [
         7,
         17
@@ -1999,6 +1999,83 @@
       "boss": false,
       "target": false,
       "source_id": "mob_88"
+    },
+    {
+      "type": "bandido",
+      "pos": [
+        5,
+        2
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_89"
+    },
+    {
+      "type": "bardo",
+      "pos": [
+        7,
+        2
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_90"
+    },
+    {
+      "type": "jacare",
+      "pos": [
+        10,
+        14
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_91"
+    },
+    {
+      "type": "goblin_assassino",
+      "pos": [
+        14,
+        2
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_92"
+    },
+    {
+      "type": "gilo_dedos_sujos",
+      "pos": [
+        9,
+        17
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_93"
+    },
+    {
+      "type": "escorpiao_gigante",
+      "pos": [
+        6,
+        8
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_94"
+    },
+    {
+      "type": "assassino_da_caravana",
+      "pos": [
+        13,
+        17
+      ],
+      "room_id": null,
+      "boss": false,
+      "target": false,
+      "source_id": "mob_95"
     }
   ],
   "chests": [],

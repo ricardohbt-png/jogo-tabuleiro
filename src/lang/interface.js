@@ -15,6 +15,7 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.editor.masmorra.barra.largura_caminho": {"pt":"Largura do caminho: ","en":"Road width: "},
   "ui.reacao_fumaca.titulo": {"pt": "Reação: Itens Arremessáveis", "en": "Reaction: Throwable Items"},
   "ui.reacao_fumaca.ataque": {"pt": "{inimigo} vai atacar {alvo}. Escolha um item para reagir:", "en": "{inimigo} is about to attack {alvo}. Choose an item to react:"},
   "ui.reacao_fumaca.efeito_fumaca": {"pt": "A bomba de fumaça deixa o golpe anunciado com desvantagem e cria uma nuvem por 2 rodadas. Consome a bomba sem gastar ações.", "en": "The Smoke Bomb gives the announced attack disadvantage and creates a cloud for 2 rounds. It consumes the bomb without spending actions."},
@@ -111,6 +112,67 @@ window.LANG_INTERFACE = {
   "ui.diario.tentar_novamente": {"en": "Try again", "pt": "Tentar novamente"},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
+  "ui.inv.aljava_slot_vazio": {"pt": "Munição {n} (até 40)", "en": "Ammunition {n} (up to 40)"},
+  "dado.bomba_de_flash_de_gilo": {
+    "en": "Gilo's Flash Bomb",
+    "pt": "Bomba de Flash de Gilo"
+  },
+  "cat.item.flecha_envenenada.nome": {
+    "en": "Poisoned Arrow",
+    "pt": "Flecha Envenenada"
+  },
+  "cat.item.flechas_incendiarias_envenenadas.nome": {
+    "en": "Poisoned Incendiary Arrows",
+    "pt": "Flechas Incendiárias Envenenadas"
+  },
+  "cat.item.flechas_prata_envenenadas.nome": {
+    "en": "Poisoned Silver Arrows",
+    "pt": "Flechas de Prata Envenenadas"
+  },
+  "cat.item.flechas_explosivas_envenenadas.nome": {
+    "en": "Poisoned Explosive Arrows",
+    "pt": "Flechas Explosivas Envenenadas"
+  },
+  "cat.item.flechas_magicas_envenenadas.nome": {
+    "en": "Poisoned Magic Arrows",
+    "pt": "Flechas Mágicas Envenenadas"
+  },
+  "cat.item.flechas_magicas_mais_2_envenenadas.nome": {
+    "en": "Poisoned Magic Arrows +2",
+    "pt": "Flechas Mágicas +2 Envenenadas"
+  },
+  "cat.item.municao_envenenada": {
+    "en": "{nome}",
+    "pt": "{nome}"
+  },
+  "cat.item.virote_envenenado.nome": {
+    "en": "Poisoned Bolt",
+    "pt": "Virote Envenenado"
+  },
+  "cat.item.virotes_incendiarios_envenenados.nome": {
+    "en": "Poisoned Incendiary Bolts",
+    "pt": "Virotes Incendiários Envenenados"
+  },
+  "cat.item.virotes_prata_envenenados.nome": {
+    "en": "Poisoned Silver Bolts",
+    "pt": "Virotes de Prata Envenenados"
+  },
+  "cat.item.virotes_explosivos_envenenados.nome": {
+    "en": "Poisoned Explosive Bolts",
+    "pt": "Virotes Explosivos Envenenados"
+  },
+  "cat.item.virotes_magicos_envenenados.nome": {
+    "en": "Poisoned Magic Bolts",
+    "pt": "Virotes Mágicos Envenenados"
+  },
+  "cat.item.virotes_magicos_mais_2_envenenados.nome": {
+    "en": "Poisoned Magic Bolts +2",
+    "pt": "Virotes Mágicos +2 Envenenados"
+  },
+  "dado.ataque": {"en":"Attack","pt":"Ataque"},
+  "dado.ataque_da_lanca": {"en":"Spear attack","pt":"Ataque da lança"},
+  "dado.dano_perfurante": {"en":"Piercing damage","pt":"Dano perfurante"},
+  "dado.dano_eletrico": {"en":"Lightning damage","pt":"Dano elétrico"},
   "dado.acerto": {
     "en": "To-hit",
     "pt": "Acerto"
@@ -146,6 +208,10 @@ window.LANG_INTERFACE = {
   "dado.ataque_furtivo": {
     "en": "Sneak Attack",
     "pt": "Ataque Furtivo"
+  },
+  "dado.manto_de_raios": {
+    "en": "Lightning Mantle",
+    "pt": "Manto de Raios"
   },
   "dado.ataque_furtivo_reacao": {
     "en": "Sneak Attack (reaction)",
@@ -835,6 +901,10 @@ window.LANG_INTERFACE = {
     "en": "At 0 HP it turns to dust permanently",
     "pt": "A 0 de vida vira pó permanentemente"
   },
+  "ui.animar.nao_e_a_vez": {
+    "en": "Not this minion's turn yet. Minions act in initiative order.",
+    "pt": "Ainda não é a vez deste servo. Os servos agem na ordem de iniciativa."
+  },
   "ui.animar.servo_selecionado": {
     "en": "— {nome} is selected.",
     "pt": "— {nome} está selecionado."
@@ -1198,6 +1268,54 @@ window.LANG_INTERFACE = {
   "ui.arremesso.descricao_arma": {
     "en": "Throws {nome} up to {alcance} squares. Uses {atributo} for the attack roll and damage; the weapon leaves your hand.",
     "pt": "Arremessa {nome} até {alcance} casas. Usa {atributo} para acerto e dano; a arma deixa a mão."
+  },
+  "ui.item.relampago_de_mao_habilidade": {
+    "en": "Line Discharge",
+    "pt": "Descarga em Linha"
+  },
+  "ui.item.relampago_de_mao_descarga": {
+    "en": "A straight line up to 4 squares deals 3d6 lightning damage (Reflex DC 13 halves) to every creature, including allies. The final target also takes a normal spear attack. Recharge: 10 rounds.",
+    "pt": "Linha reta de até 4 casas causa 3d6 de eletricidade (Reflexos CD 13 reduz à metade) em todas as criaturas, inclusive aliados. O alvo final também recebe um ataque normal da lança. Recarga: 10 rodadas."
+  },
+  "ui.item.relampago_de_mao_mira": {
+    "en": "Choose an enemy in a straight line up to 4 squares. Allies along the path are hit too.",
+    "pt": "Escolha um inimigo em linha reta até 4 casas. Aliados na trajetória também serão atingidos."
+  },
+  "ui.item.choque_trovao_pulso": {
+    "en": "Thunder Pulse",
+    "pt": "Pulso do Trovão"
+  },
+  "ui.item.choque_trovao_pulso_desc": {
+    "en": "Main action: all creatures in the eight adjacent squares, including allies but not you, take 2d6 lightning damage (Reflex DC 13 halves). Recharge: 10 rounds.",
+    "pt": "Ação principal: todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você, sofrem 2d6 de eletricidade (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
+  },
+  "ui.item.mangual_sol_cativo_clarao": {
+    "en": "Solar Flash",
+    "pt": "Clarão Solar"
+  },
+  "ui.item.mangual_sol_cativo_clarao_desc": {
+    "en": "Main action: release a sacred flash that deals 2d6 holy damage to all creatures in the eight adjacent squares, including allies but not you (Reflex DC 13 halves). Recharge: 10 rounds.",
+    "pt": "Ação principal: libere um clarão sagrado que causa 2d6 de dano sagrado a todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
+  },
+  "ui.item.besta_repetidora_disparo_duplo": {
+    "en": "Double Shot",
+    "pt": "Disparo Duplo"
+  },
+  "ui.item.besta_repetidora_disparo_duplo_desc": {
+    "en": "Main action: make two separate attacks against the same target, each dealing {dano} and consuming one bolt. Requires two bolts. Recharge: {recarga} rounds.",
+    "pt": "Ação principal: faça dois ataques separados contra o mesmo alvo, cada um causando {dano} e consumindo um virote. Requer dois virotes. Recarga: {recarga} rodadas."
+  },
+  "ui.item.besta_repetidora_dois_virotes": {
+    "en": "Double Shot requires two bolts available.",
+    "pt": "O Disparo Duplo requer dois virotes disponíveis."
+  },
+  "ui.item.besta_repetidora_mira": {
+    "en": "Choose an enemy in a straight line, up to {alcance} squares away.",
+    "pt": "Escolha um inimigo em linha reta, a até {alcance} quadrados."
+  },
+  "ui.item.besta_repetidora_cancelada": {
+    "en": "Double Shot cancelled.",
+    "pt": "Disparo Duplo cancelado."
   },
   "ui.arremesso.destreza": {
     "en": "Dexterity",
@@ -1767,6 +1885,10 @@ window.LANG_INTERFACE = {
     "en": "Activate mechanism",
     "pt": "Ativar mecanismo"
   },
+  "ui.bau.abrir_o_bau": {
+    "en": "Open the chest",
+    "pt": "Abrir o baú"
+  },
   "ui.bau.escolha_uma_acao": {
     "en": "Choose an action",
     "pt": "Escolha uma ação"
@@ -2058,6 +2180,26 @@ window.LANG_INTERFACE = {
   "ui.cidade.badge_ouro": {
     "en": "💰 {n} Gold",
     "pt": "💰 {n} Ouro"
+  },
+  "ui.cidade.ouro_total_grupo": {
+    "en": "💰 Group total: {n}",
+    "pt": "💰 Total do grupo: {n}"
+  },
+  "ui.cidade.ouro_individual": {
+    "en": "Gold",
+    "pt": "Ouro"
+  },
+  "ui.cidade.ouro_compartilhado_ligado": {
+    "en": "Shared gold: ON",
+    "pt": "Ouro compartilhado: ligado"
+  },
+  "ui.cidade.ouro_compartilhado_desligado": {
+    "en": "Shared gold: OFF",
+    "pt": "Ouro compartilhado: desligado"
+  },
+  "ui.cidade.ouro_compartilhado_ajuda": {
+    "en": "Click to toggle group gold for purchases and services in town.",
+    "pt": "Clique para alternar o uso do ouro do grupo nas compras e serviços da cidade."
   },
   "ui.cidade.cancelar_ajuste": {
     "en": "✕ Cancel adjustment",
@@ -2895,13 +3037,17 @@ window.LANG_INTERFACE = {
     "en": "🏙️ You left the dungeon — {estado}",
     "pt": "🏙️ Você deixou a masmorra — {estado}"
   },
-  "ui.fora.pronto": {
-    "en": "<b>ready to return</b>",
-    "pt": "<b>pronto para voltar</b>"
+  "ui.fora.comprando": {
+    "en": "shop as long as you like; the wait starts when you head back",
+    "pt": "compre à vontade; a espera começa quando você voltar"
   },
-  "ui.fora.volta_em": {
-    "en": "back in <b>{n}</b> round(s)",
-    "pt": "volta em <b>{n}</b> rodada(s)"
+  "ui.fora.chega_em": {
+    "en": "heading back, arriving in <b>{n}</b> round(s)",
+    "pt": "a caminho, chega em <b>{n}</b> rodada(s)"
+  },
+  "ui.fora.confirmar_volta": {
+    "en": "Head back to the dungeon now?\nThe return wait starts and you can no longer shop on this trip.",
+    "pt": "Voltar à masmorra agora?\nA espera da volta começa e você não poderá mais comprar nesta visita."
   },
   "ui.fora.voltar_masmorra": {
     "en": "⛓️ Back to the dungeon",
@@ -3184,8 +3330,8 @@ window.LANG_INTERFACE = {
     "pt": "1 de {n} habilidades selecionada."
   },
   "ui.habilidade.veneno": {
-    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Effect:</strong> {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong> Fortitude DC {p2} {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Application:</strong>\n        Using it coats the equipped weapon (bonus action). The next hit transfers the\n        poison to the target.\n      </div>",
-    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Efeito:</strong>\n        {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong>\n        Fortitude dificuldade {p2}\n        {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Aplicação:</strong>\n        Usar unta a arma equipada (ação bônus). O próximo golpe certeiro\n        transfere o veneno ao alvo.\n      </div>\n    "
+    "en": "<div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Effect:</strong> {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong> Fortitude DC {p2} {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Application:</strong>\n        On ranged weapons, apply it to up to 10 arrows or bolts (20 with Veneno Rápido II; bonus action); each hit applies the poison on the projectile.\n      </div>",
+    "pt": "\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        ☠️ <strong style=\"color:#9900cc\">Efeito:</strong>\n        {p1}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6; margin-bottom:6px;\">\n        🎲 <strong style=\"color:#9900cc\">Save:</strong>\n        Fortitude dificuldade {p2}\n        {p3}\n      </div>\n      <div style=\"color:#c8b89a; font-size:10px; line-height:1.6;\">\n        🗡️ <strong style=\"color:#9900cc\">Aplicação:</strong>\n        Com armas à distância, aplique a até 10 flechas ou virotes (20 com Veneno Rápido II; ação bônus); cada acerto aplica os venenos do projétil.\n      </div>\n    "
   },
   "ui.habilidade.versatil": {
     "en": "⚔️ <strong style=\"color:#c8a951\">Versatile:</strong> One hand: 1d10 damage with a shield. Two hands: 3d4 damage without a shield. Switch modes with a bonus action (-1 hunger -1 thirst).",
@@ -4183,9 +4329,13 @@ window.LANG_INTERFACE = {
     "en": "{n} targets hit",
     "pt": "{n} alvos atingidos"
   },
-  "ui.hud.na_cidade_volta_em": {
-    "en": "🏙️ in town — back in {n} round(s)",
-    "pt": "🏙️ na cidade — volta em {n} rodada(s)"
+  "ui.hud.na_cidade_comprando": {
+    "en": "🏙️ in town, shopping",
+    "pt": "🏙️ na cidade, fazendo compras"
+  },
+  "ui.hud.voltando_chega_em": {
+    "en": "⛓️ heading back, arrives in {n} round(s)",
+    "pt": "⛓️ a caminho, chega em {n} rodada(s)"
   },
   "ui.hud.nenhum_aliado_no_alcance": {
     "en": "No ally within range.",
@@ -4314,6 +4464,14 @@ window.LANG_INTERFACE = {
   "ui.hud.passou": {
     "en": "PASSED",
     "pt": "PASSOU"
+  },
+  "ui.hud.moeda_da_sorte_rolou_novamente": {
+    "en": "LUCKY COIN REROLL",
+    "pt": "MOEDA DA SORTE: NOVA ROLAGEM"
+  },
+  "ui.hud.moeda_da_sorte_ativa": {
+    "en": "Lucky Coin ready",
+    "pt": "Moeda da Sorte ativa"
   },
   "ui.hud.passou_metade_do_dano": {
     "en": "PASSED — HALF DAMAGE",
@@ -4943,6 +5101,18 @@ window.LANG_INTERFACE = {
     "en": "Silver arrows",
     "pt": "Flechas de prata"
   },
+  "ui.inv.auto_arrow.explosive": {
+    "en": "Explosive arrows",
+    "pt": "Flechas explosivas"
+  },
+  "ui.inv.auto_arrow.magic": {
+    "en": "Magic arrows +1",
+    "pt": "Flechas mágicas +1"
+  },
+  "ui.inv.auto_arrow.magic_2": {
+    "en": "Magic arrows +2",
+    "pt": "Flechas mágicas +2"
+  },
   "ui.inv.auto_arrow.up": {
     "en": "Move up",
     "pt": "Mover para cima"
@@ -5010,6 +5180,14 @@ window.LANG_INTERFACE = {
   "ui.item.armadura_couro.nome": {
     "en": "Leather Armour",
     "pt": "Armadura de Couro"
+  },
+  "ui.item.armadura_runica.barreira_arcana.desc": {
+    "en": "Reduces all damage taken by 5 for 5 rounds.",
+    "pt": "Reduz em 5 todo dano recebido por 5 rodadas."
+  },
+  "ui.item.armadura_runica.protecao_energia.desc": {
+    "en": "Absorbs up to 10 damage per round from fire, cold, electricity, acid, water, or holy damage for 5 rounds.",
+    "pt": "Absorve até 10 de dano por rodada de fogo, gelo, eletricidade, ácido, água ou dano sagrado por 5 rodadas."
   },
   "ui.item.banquete_frasco.nome": {
     "en": "Feast in a Flask",
@@ -5143,6 +5321,14 @@ window.LANG_INTERFACE = {
     "en": "Range: 1 square — any of the 8 adjacent squares, including diagonals",
     "pt": "Alcance: 1 quadrado — qualquer uma das 8 casas adjacentes, incluindo diagonais"
   },
+  "ui.item.desc.alcance_mangual_astral": {
+    "en": "Astral chain: up to {n} squares in a straight orthogonal or diagonal line, with line of sight",
+    "pt": "Corrente astral: até {n} casas em linha reta ortogonal ou diagonal, com linha de visão"
+  },
+  "ui.item.desc.alcance_todas_direcoes": {
+    "en": "Range: {n} squares in any direction, including diagonals",
+    "pt": "Alcance: {n} casas em qualquer direção, inclusive diagonais"
+  },
   "ui.item.desc.alcance_quad": {
     "en": "Range: {n} sq.",
     "pt": "Alcance: {n} quad."
@@ -5207,9 +5393,37 @@ window.LANG_INTERFACE = {
     "en": "Heals +{n} HP per use",
     "pt": "Cura +{n} HP por uso"
   },
+  "ui.templo.cura_grupo_status": {
+    "en": "{pv} HP missing in the party: {custo} coin(s).",
+    "pt": "Faltam {pv} PV no grupo: {custo} moeda(s)."
+  },
+  "ui.templo.cura_grupo_ninguem": {
+    "en": "Nobody in the party is hurt.",
+    "pt": "Ninguém do grupo está ferido."
+  },
+  "ui.templo.cura_grupo_titulo": {
+    "en": "Partial party heal",
+    "pt": "Cura parcial do grupo"
+  },
+  "ui.templo.cura_grupo_aviso": {
+    "en": "Your gold does not cover everything ({custo} coins). With {moedas} coin(s) the Temple heals {pv} HP, starting with whoever needs it most:",
+    "pt": "O ouro não cobre tudo ({custo} moedas). Com {moedas} moeda(s) o Templo cura {pv} PV, começando por quem mais precisa:"
+  },
+  "ui.templo.cura_grupo_linha": {
+    "en": "{nome}: {antes} → {depois} / {max} HP",
+    "pt": "{nome}: {antes} → {depois} / {max} PV"
+  },
+  "ui.templo.cura_grupo_sem_cura": {
+    "en": "{nome}: {antes} / {max} HP (not healed)",
+    "pt": "{nome}: {antes} / {max} PV (sem cura)"
+  },
+  "ui.templo.cura_grupo_confirmar": {
+    "en": "Pay {moedas} coin(s) and heal",
+    "pt": "Pagar {moedas} moeda(s) e curar"
+  },
   "ui.item.desc.cura_total": {
-    "en": "Restores all HP",
-    "pt": "Restaura todos os HP"
+    "en": "Heals the whole party: 1 coin for every 3 HP missing (rounded down, at least 1). Without enough gold it heals partially, starting with whoever is hurt most.",
+    "pt": "Cura todo o grupo: 1 moeda a cada 3 PV que faltam (arredonda para baixo, mínimo 1). Sem ouro suficiente cura parcialmente, começando por quem mais precisa."
   },
   "ui.item.desc.dano": {
     "en": "Damage: {dano}",
@@ -5374,6 +5588,10 @@ window.LANG_INTERFACE = {
   "ui.item.escolha_o_alvo_consumivel": {
     "en": "{icone} {nome} — Choose the target",
     "pt": "{icone} {nome} — Escolha o alvo"
+  },
+  "ui.item.escolha_peca_reparar": {
+    "en": "🧰 Repair kit — Choose a damaged weapon, armor or shield",
+    "pt": "🧰 Kit de Reparo — Escolha uma arma, armadura ou escudo danificado"
   },
   "ui.item.escudo_leve.nome": {
     "en": "Light Shield",
@@ -5592,8 +5810,8 @@ window.LANG_INTERFACE = {
     "pt": "Vender"
   },
   "ui.item.veneno_agonia_sufocante.desc": {
-    "en": "LEGENDARY. Coated on the weapon: 1d4 damage per round for up to 1d4 rounds. Each round, Fortitude DC 14 neutralises the poison.",
-    "pt": "LENDÁRIO. Untado na arma: 1d4 de dano por rodada por até 1d4 rodadas. A cada rodada, Fortitude CD 14 neutraliza o veneno."
+    "en": "LEGENDARY. On a failed Fortitude DC 14 save, deals 1d4 damage per round for up to 1d4 rounds. Each round, another Fortitude save can neutralise it.",
+    "pt": "LENDÁRIO. Ao falhar em Fortitude CD 14, causa 1d4 de dano por rodada por até 1d4 rodadas. A cada rodada, outro teste de Fortitude pode neutralizá-lo."
   },
   "ui.item.veneno_aranha_sombria.desc": {
     "en": "Reduces Strength by 1d4 for 1d6 rounds. Fortitude DC 10 negates.",
@@ -5696,6 +5914,10 @@ window.LANG_INTERFACE = {
   "ui.joystick.contexto_abrir_porta": {
     "en": "Open door",
     "pt": "Abrir porta"
+  },
+  "ui.joystick.contexto_operar_portao": {
+    "en": "Raise/lower portcullis",
+    "pt": "Levantar/abaixar portão"
   },
   "ui.joystick.contexto_aguarde": {
     "en": "Wait for your turn",
@@ -5809,29 +6031,13 @@ window.LANG_INTERFACE = {
     "en": "🪤 SET TRAP",
     "pt": "🪤 CRIAR ARMADILHA"
   },
-  "ui.ladino.dois_venenos": {
-    "en": "up to 2 simultaneous poisons",
-    "pt": "até 2 venenos simultâneos"
-  },
-  "ui.ladino.dura_golpes_certeiros": {
-    "en": "lasts {n} successful hit(s){extra}",
-    "pt": "dura {n} golpe(s) certeiro(s){extra}"
-  },
   "ui.ladino.esconder_desc": {
     "en": "Stealth check{b} — bonus action",
     "pt": "Teste de furtividade{b} — ação bônus"
   },
-  "ui.ladino.golpes_restantes_trocar": {
-    "en": "{hits}/{max} hit(s) left{extra} — click to swap",
-    "pt": "{hits}/{max} golpe(s) restante(s){extra} — clique p/ trocar"
-  },
   "ui.ladino.habilidade_cancelada": {
     "en": "Ability cancelled.",
     "pt": "Habilidade cancelada."
-  },
-  "ui.ladino.pode_aplicar_segundo_veneno": {
-    "en": " · can apply a 2nd poison",
-    "pt": " · pode aplicar um 2º veneno"
   },
   "ui.ladino.requer_veneno_falta": {
     "en": "⚠️ No poison in the inventory",
@@ -5844,10 +6050,6 @@ window.LANG_INTERFACE = {
   "ui.ladino.sede_insuficiente": {
     "en": "❌ Not enough thirst 💧-1",
     "pt": "❌ Sede insuficiente 💧-1"
-  },
-  "ui.ladino.segundo_veneno_golpes": {
-    "en": " + 2nd poison ({n} hit(s))",
-    "pt": " + 2º veneno ({n} golpe(s))"
   },
   "ui.ladino.selecione_uma_casa_adjacente_para_desarmar": {
     "en": "Select an adjacent square to disarm.",
@@ -5869,6 +6071,32 @@ window.LANG_INTERFACE = {
     "en": "☠️ QUICK POISON",
     "pt": "☠️ VENENO RÁPIDO"
   },
+  "ui.ladino.veneno_municao_titulo": {"en": "☠️ POISON AMMUNITION", "pt": "☠️ ENVENENAR MUNIÇÃO"},
+  "ui.ladino.custo_veneno_rapido_municao": {
+    "en": "Free action · 1 thirst per vial; each vial coats up to {n} projectiles",
+    "pt": "Ação livre · 1 sede por frasco; cada frasco cobre até {n} projéteis"
+  },
+  "ui.ladino.custo_frasco_municao": {
+    "en": "Bonus action · consumes each selected vial and its unused dose",
+    "pt": "Ação bônus · consome cada frasco escolhido e a dose não utilizada"
+  },
+  "ui.ladino.custo_por_frasco": {"en": "💧1 per vial", "pt": "💧1 por frasco"},
+  "ui.ladino.escolha_municao": {"en": "Choose ammunition", "pt": "Escolha a munição"},
+  "ui.ladino.quantidade_municao": {"en": "Projectile count (up to {n})", "pt": "Quantidade de projéteis (até {n})"},
+  "ui.ladino.mao_esquerda": {"en": "Off hand", "pt": "Mão esquerda"},
+  "ui.ladino.bolsa": {"en": "Bag", "pt": "Bolsa"},
+  "ui.ladino.veneno": {"en": "Poison vial", "pt": "Frasco de veneno"},
+  "ui.ladino.segundo_veneno_opcional": {"en": "Second poison (Veneno Rápido III)", "pt": "Segundo veneno (Veneno Rápido III)"},
+  "ui.ladino.nenhum": {"en": "None", "pt": "Nenhum"},
+  "ui.ladino.aplicar_veneno": {"en": "Prepare poisoned ammunition", "pt": "Preparar munição envenenada"},
+  "ui.ladino.sem_municao_compativel": {"en": "No compatible ammunition available", "pt": "Não há munição compatível disponível"},
+  "ui.ladino.selecao_municao_invalida": {"en": "Invalid ammunition selection", "pt": "Seleção de munição inválida"},
+  "ui.ladino.venenos_precisam_ser_diferentes": {"en": "Choose two different poisons", "pt": "Escolha dois venenos diferentes"},
+  "ui.ladino.fraco_selecionado_deve_ser_usado": {"en": "The selected vial must be included", "pt": "O frasco selecionado precisa estar incluído"},
+  "ui.ladino.confirmar_municao_envenenada": {
+    "en": "Coat {n} projectile(s) with {frascos} vial(s)? Each is consumed in full; {perdida} projectile(s) of dose per vial will be lost.",
+    "pt": "Envenenar {n} projétil(is) usando {frascos} frasco(s)? Cada um será consumido inteiro; serão perdidos {perdida} projétil(is) de dose por frasco."
+  },
   "ui.loja.aba.alimentos": {
     "en": "🍺 Food",
     "pt": "🍺 Alimentos"
@@ -5888,6 +6116,14 @@ window.LANG_INTERFACE = {
   "ui.loja.aba.comprar": {
     "en": "🛒 Buy",
     "pt": "🛒 Comprar"
+  },
+  "ui.loja.aba.equipamentos": {
+    "en": "⚔️ Equipment",
+    "pt": "⚔️ Equipamentos"
+  },
+  "ui.loja.aba.consumiveis": {
+    "en": "🧪 Consumables",
+    "pt": "🧪 Consumíveis"
   },
   "ui.loja.aba.conversas": {
     "en": "Conversations",
@@ -6917,6 +7153,22 @@ window.LANG_INTERFACE = {
     "en": "Arcane Staff temporary slot — back in {n} round(s)",
     "pt": "Slot temporário do Cajado Arcano — volta em {n} rodada(s)"
   },
+  "ui.magia.slot_chapeu_arquimago_pronto": {
+    "en": "Archmage's Hat extra slot — ready",
+    "pt": "Slot extra do Chapéu do Arquimago — pronto"
+  },
+  "ui.magia.slot_chapeu_arquimago_volta_em": {
+    "en": "Archmage's Hat extra slot — back in {n} round(s)",
+    "pt": "Slot extra do Chapéu do Arquimago — volta em {n} rodada(s)"
+  },
+  "ui.magia.slot_chapeu_arquimago_superior_pronto": {
+    "en": "Superior Archmage's Hat 2nd-circle slot — ready",
+    "pt": "Slot de 2º círculo do Chapéu do Arquimago Superior — pronto"
+  },
+  "ui.magia.slot_chapeu_arquimago_superior_volta_em": {
+    "en": "Superior Archmage's Hat 2nd-circle slot — back in {n} round(s)",
+    "pt": "Slot de 2º círculo do Chapéu do Arquimago Superior — volta em {n} rodada(s)"
+  },
   "ui.magia.slot_disponivel": {
     "en": "Slot available",
     "pt": "Slot disponível"
@@ -6968,6 +7220,30 @@ window.LANG_INTERFACE = {
   "ui.magia.subiu_de_nivel_heroi": {
     "en": "{nome} — LEVEL UP",
     "pt": "{nome} — SUBIU DE NÍVEL"
+  },
+  "ui.magia.minimizar": {
+    "en": "— Minimize",
+    "pt": "— Minimizar"
+  },
+  "ui.magia.jogo_espera_escolha": {
+    "en": "The game waits for your choice. Click a spell to see it before confirming.",
+    "pt": "O jogo espera a sua escolha. Clique numa magia para vê-la antes de confirmar."
+  },
+  "ui.magia.confirmar_aprender": {
+    "en": "Learn {nome}?",
+    "pt": "Aprender {nome}?"
+  },
+  "ui.magia.escolha_definitiva": {
+    "en": "This choice is permanent.",
+    "pt": "Esta escolha é definitiva."
+  },
+  "ui.magia.confirmar": {
+    "en": "Confirm",
+    "pt": "Confirmar"
+  },
+  "ui.magia.reabrir_escolha": {
+    "en": "✨ Choose new spell",
+    "pt": "✨ Escolher nova magia"
   },
   "ui.magia.tecla_m": {
     "en": "M key",
@@ -8224,6 +8500,10 @@ window.LANG_INTERFACE = {
   "ui.missao.encerrar_aviso": {
     "en": "Take the reward items before ending. The mission will be completed and the campaign moves on to the next adventure.",
     "pt": "Pegue os itens de recompensa antes de encerrar. A missão será concluída e a campanha seguirá para a próxima aventura."
+  },
+  "ui.missao.encerrar_aviso_emboscada": {
+    "en": "Pick up everything you want before leaving: the road map closes and the host chooses how the journey continues.",
+    "pt": "Pegue tudo o que quiser antes de sair: o mapa da estrada será fechado e o anfitrião escolherá como a viagem continua."
   },
   "ui.missao.encerrar_botao": {
     "en": "🏁 End mission",
@@ -9542,8 +9822,8 @@ window.LANG_INTERFACE = {
     "pt": "Ação principal. Traz um aliado morto adjacente de volta com 1 HP."
   },
   "ui.selecao.skill.desc.veneno_rapido": {
-    "en": "Free action. Coats a poison from the bag onto the weapon — the next hits poison the target.",
-    "pt": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam."
+    "en": "Free action. Coats up to 10 arrows or bolts per vial (20 with Veneno Rápido II); costs 1 thirst per vial. Veneno Rápido III can combine two different poisons on the same projectiles.",
+    "pt": "Ação livre. Envenena até 10 flechas ou virotes por frasco (20 com Veneno Rápido II); custa 1 de sede por frasco. Veneno Rápido III pode combinar dois venenos diferentes nos mesmos projéteis."
   },
   "ui.selecao.skill.detectar_armadilhas": {
     "en": "Detect Traps",
@@ -9753,6 +10033,11 @@ window.LANG_INTERFACE = {
     "en": "Character status",
     "pt": "Status do personagem"
   },
+  "ui.inv.passar_item_para": {"en":"Pass the selected item to {nome}","pt":"Passar o item selecionado para {nome}"},
+  "ui.status.acerto_mao_sec": {"en":"Attack (off hand)","pt":"Acerto (mão sec.)"},
+  "ui.status.dano_mao_sec": {"en":"Damage (off hand)","pt":"Dano (mão sec.)"},
+  "ui.status.detalhe_acerto_mao_sec": {"en":"{attr} {mod} · level {nivel} · temporary {temp}","pt":"{attr} {mod} · nível {nivel} · temporários {temp}"},
+  "ui.status.detalhe_dano_mao_sec": {"en":"{attr} {mod} · other bonuses {temp}","pt":"{attr} {mod} · outros bônus {temp}"},
   "ui.status.arma_equipada": {
     "en": "Equipped weapon",
     "pt": "Arma equipada"
@@ -10285,10 +10570,6 @@ window.LANG_INTERFACE = {
     "en": "fully petrified",
     "pt": "totalmente petrificado"
   },
-  "ui.status.veneno_aplicado": {
-    "en": "🗡️ Poison applied",
-    "pt": "🗡️ Veneno aplicado"
-  },
   "ui.status.visao_limitada_e_ataques_a_distancia_preju": {
     "en": "limited vision and ranged attacks impaired",
     "pt": "visão limitada e ataques à distância prejudicados"
@@ -10354,8 +10635,8 @@ window.LANG_INTERFACE = {
     "pt": "Clique para retornar à cidade"
   },
   "ui.tabuleiro.confirmar_saida": {
-    "en": "Leaving by the stairs costs 🍖{f} and 💧{s} (round trip).\nYou return in {n} round(s) and the dungeon carries on without you.\n\nLeave?",
-    "pt": "Sair pela escada custa 🍖{f} e 💧{s} (ida e volta).\nVocê volta em {n} rodada(s) e a masmorra continua sem você.\n\nSair?"
+    "en": "Leaving by the stairs costs 🍖{f} and 💧{s} (round trip).\nIn town you can shop. When you click Back to the dungeon, you arrive in {n} round(s).\n\nLeave?",
+    "pt": "Sair pela escada custa 🍖{f} e 💧{s} (ida e volta).\nNa cidade você pode fazer compras. Ao clicar em Voltar à masmorra, você chega em {n} rodada(s).\n\nSair?"
   },
   "ui.tabuleiro.elemental_linha": {
     "en": "⚡ The lightning elemental attacks in a straight line (max 3 squares).",
@@ -10452,6 +10733,22 @@ window.LANG_INTERFACE = {
   "ui.tecnica.escolha_o_par": {
     "en": "{icone} {nome} — choose the partner",
     "pt": "{icone} {nome} — escolha o par"
+  },
+  "cat.item.manto_raios.desc": {
+    "en": "For 5 rounds, each creature that hits you with an attack takes 1d6 lightning damage. Cooldown: 20 rounds.",
+    "pt": "Por 5 rodadas, cada criatura que acertar você com um ataque sofre 1d6 de dano elétrico. Recarga: 20 rodadas."
+  },
+  "cat.item.manto_raios.nome": {
+    "en": "Lightning Mantle",
+    "pt": "Manto de Raios"
+  },
+  "cat.item.vinculo_espinhoso_habilidade.desc": {
+    "en": "Choose one living enemy in line of sight. Will negates. The bond lasts exactly 5 rounds, transfers 25% of the damage you take, and gives the enemy -1 on its next attack. Up to 4 bonds may coexist. Shield cooldown: 25 rounds. Costs 1 hunger and 1 thirst; uses no spell slot.",
+    "pt": "Escolha um inimigo vivo em linha de visão. Vontade nega. O vínculo dura exatamente 5 rodadas, transfere 25% do dano que você sofre e impõe -1 no próximo ataque do inimigo. Até 4 vínculos podem coexistir. Recarga do escudo: 25 rodadas. Custa 1 fome e 1 sede; não gasta slot de magia."
+  },
+  "ui.tecnica.ativa_por": {
+    "en": "{n}r active",
+    "pt": "{n}r ativa"
   },
   "ui.tecnica.inimigo_adjacente": {
     "en": "{icone} {nome} — adjacent enemy",
@@ -11296,6 +11593,83 @@ window.LANG_INTERFACE = {
   "ui.save.ponto.manual": {
     "en": "Save · {local}",
     "pt": "Salvamento · {local}"
-  }
+  },
+  "ui.cinematica.gilo.1": {
+    "en": "Easy now, little ones... I just wanted to leave.",
+    "pt": "Calma, bichinhos... eu só queria ir embora."
+  },
+  "ui.cinematica.gilo.2": {
+    "en": "Ah, damn it! My coin!",
+    "pt": "Ah, desgraça! A minha moeda!"
+  },
+  "ui.cinematica.gilo.3": {
+    "en": "The caravan... already took the Eye...",
+    "pt": "A caravana... já levou o Olho..."
+  },
+  "ui.cinematica.gilo.4": {
+    "en": "...up the mountain.",
+    "pt": "...serra acima."
+  },
+  "ui.cinematica.tec": {
+    "en": "TWANG!",
+    "pt": "TEC!"
+  },
+  "ui.cinematica.rever": {
+    "en": "Watch again",
+    "pt": "Rever"
+  },
+  "ui.ladino.escolha_arma_veneno": {"en":"Choose the weapon to poison","pt":"Escolha a arma para envenenar"},
+  "ui.ladino.arma_principal": {"en":"Main hand","pt":"Mão principal"},
+  "ui.ladino.mao_secundaria": {"en":"Off hand","pt":"Mão secundária"},
+  "ui.ladino.envenenar_municao_arma_principal": {"en":"Poison main-hand ammunition","pt":"Envenenar munição da arma principal"},
+  "ui.mestre.escolha_ataque_envenenar": {"en":"Choose the monster attack to poison","pt":"Escolha o ataque do monstro para envenenar"},
+  "ui.mestre.aplicar_veneno_ataque": {"en":"Apply poison to this attack","pt":"Aplicar veneno neste ataque"},
+  "ui.mestre.sem_ataque_elegivel_veneno": {"en":"No eligible attack is available for poison.","pt":"Não há ataque elegível disponível para receber veneno."},
+  "ui.veneno.titulo": {"en":"☠️ POISON","pt":"☠️ ENVENENAR"},
+  "ui.veneno.passo_veneno": {"en":"1. Poison","pt":"1. Veneno"},
+  "ui.veneno.passo_alvo": {"en":"2. What to poison? One click applies it.","pt":"2. O que envenenar? Um clique aplica."},
+  "ui.veneno.dica_dois": {"en":"You can combine up to 2 poisons on arrows and bolts.","pt":"Você pode combinar até 2 venenos em flechas e virotes."},
+  "ui.veneno.custo_frasco": {"en":"Cost: bonus action (the vial is used up)","pt":"Custo: ação bônus (o frasco é consumido)"},
+  "ui.veneno.custo_rapido": {"en":"Quick Poison: free action, 💧1 thirst per vial","pt":"Veneno Rápido: ação livre, 💧1 de sede por frasco"},
+  "ui.veneno.bonus_usado": {"en":"Bonus action already used this turn.","pt":"Ação bônus já usada neste turno."},
+  "ui.veneno.arma_limpa": {"en":"no poison","pt":"sem veneno"},
+  "ui.veneno.arma_com": {"en":"☠ {nomes} — {n} left","pt":"☠ {nomes} — {n} restantes"},
+  "ui.veneno.rende_golpes": {"en":"→ applies {veneno}: {n} successful hits","pt":"→ aplica {veneno}: {n} golpes certeiros"},
+  "ui.veneno.rende_disparos": {"en":"→ applies {veneno}: {n} shots","pt":"→ aplica {veneno}: {n} disparos"},
+  "ui.veneno.nao_cabe": {"en":"Already carries a different poison (limit {n}).","pt":"Já tem outro veneno (limite {n})."},
+  "ui.veneno.municao_rende": {"en":"→ poisons {n} of {total}","pt":"→ envenena {n} de {total}"},
+  "ui.veneno.municao_parcial": {"en":"one vial covers {max} at most","pt":"um frasco cobre no máximo {max}"},
+  "ui.veneno.legado": {"en":"Finish the old poison charges on this weapon first.","pt":"Termine antes as cargas de veneno antigas desta arma."},
+  "ui.veneno.sem_alvo": {"en":"No compatible weapon or ammunition equipped.","pt":"Nenhuma arma ou munição compatível equipada."},
+  "ui.veneno.hud_desc_livre": {"en":"Free action. Coats a weapon ({golpes} hits) or prepares up to {max} arrows/bolts.","pt":"Ação livre. Unta uma arma ({golpes} golpes) ou prepara até {max} flechas/virotes."},
+  "ui.veneno.hud_clique": {"en":"Click to reinforce or swap the poison.","pt":"Clique para reforçar ou trocar o veneno."},
+  "ui.veneno.hud_estado": {"en":"{rotulo}: {nomes} ×{n}","pt":"{rotulo}: {nomes} ×{n}"},
+  "ui.veneno.hud_municao": {"en":"Poisoned ammo: {n}","pt":"Munição envenenada: {n}"},
+  "ui.veneno.hud_sem_alvo": {"en":"Equip a weapon or carry compatible ammunition.","pt":"Equipe uma arma ou leve munição compatível."},
+  "ui.veneno.arma_envenenada_f": {"en":"Poisoned {nome}","pt":"{nome} envenenada"},
+  "ui.veneno.arma_envenenada_m": {"en":"Poisoned {nome}","pt":"{nome} envenenado"},
+  "ui.veneno.municao_equipada": {"en":"equipped","pt":"equipada"},
+  "ui.veneno.municao_bolsa": {"en":"bag #{n}","pt":"bolsa #{n}"},
+  "ui.veneno.municao_completa": {"en":"→ poisons {n} (tops up with identical stacks)","pt":"→ envenena {n} (completa com pilhas iguais)"},
+  "ui.ladino.cargas_veneno": {"en":"{n} poison charges","pt":"{n} cargas de veneno"},
+  "ui.mestre.veneno_ativo": {"en":"Poison already applied","pt":"Veneno já aplicado"},
+  "ui.montaria.escolha_desmontar": {"en":"Choose where to dismount","pt":"Escolha onde desmontar"},
+  "ui.montaria.dir.norte": {"en":"North","pt":"Norte"},
+  "ui.montaria.dir.leste": {"en":"East","pt":"Leste"},
+  "ui.montaria.dir.sul": {"en":"South","pt":"Sul"},
+  "ui.montaria.dir.oeste": {"en":"West","pt":"Oeste"},
+  "ui.montaria.disparada": {"en":"Dash","pt":"Disparada"},
+  "ui.montaria.disparada_recarga": {"en":"Cooldown: {n} round(s)","pt":"Recarga: {n} rodada(s)"},
+  "ui.montaria.disparada_desc": {"en":"Doubles the horse's movement this turn.","pt":"Dobra o movimento do cavalo neste turno."},
+  "ui.montaria.desmontar": {"en":"Dismount","pt":"Desmontar"},
+  "ui.montaria.desmontar_desc": {"en":"Choose an adjacent orthogonal tile.","pt":"Escolha uma casa ortogonal adjacente."},
+  "ui.montaria.montar": {"en":"Mount {nome}","pt":"Montar {nome}"},
+  "ui.montaria.montar_desc": {"en":"Uses 8 movement · bonus action.","pt":"Usa movimento 8 · ação bônus."},
+  "ui.montaria.cavalo": {"en":"Saddle Horse","pt":"Cavalo de Sela"},
+  "ui.relampago_mao.nome": {"en":"Line Discharge","pt":"Descarga em Linha"},
+  "ui.relampago_mao.desc": {"en":"Line up to 4 squares: creatures in the path, allies included, take 3d6 lightning (Reflex DC 13 halves). The final target also takes a normal attack. Cooldown: 10 rounds.","pt":"Linha de até 4 casas: criaturas na trajetória, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também recebe um ataque normal. Recarga: 10 rodadas."},
+  "ui.relampago_mao.cancelada": {"en":"Discharge cancelled.","pt":"Descarga cancelada."},
+  "ui.relampago_mao.escolha_alvo": {"en":"Choose a highlighted enemy in the line of reach.","pt":"Escolha um inimigo destacado na linha de alcance."},
+  "ui.gamepad.cursor_fechado": {"en":"🖱 Interface cursor closed.","pt":"🖱 Cursor de interface fechado."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

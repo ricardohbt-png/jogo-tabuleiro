@@ -157,9 +157,9 @@ console.log("\n[6] game.js: XP de todos os meus heróis e destaque da vez");
     ["_xpAcumulado", "_ganhosXpMeusHerois", "_textoGanhosXp", "_heroiMeuNaVez"].map(extrair).join("\n")
     + "\nreturn { _ganhosXpMeusHerois, _textoGanhosXp, _heroiMeuNaVez };")(
     G, (k, p) => k + JSON.stringify(p || {}), Number(xpConst[1]));
-  const antes = new Map([["c", { xp: 290, level: 1 }], ["m", { xp: 10, level: 2 }], ["o", { xp: 0, level: 1 }]]);
+  const antes = new Map([["c", { xp: 1030, level: 1 }], ["m", { xp: 10, level: 2 }], ["o", { xp: 0, level: 1 }]]);
   const st = { players: [
-    { id: "c", name: "Ana", xp: 10, level: 2 },     // subiu: 290 → 300 (nível 2) + 10 = +20
+    { id: "c", name: "Ana", xp: 10, level: 2 },     // subiu: 1030 → 1040 (nível 2) + 10 = +20
     { id: "m", name: "Pedro", xp: 30, level: 2 },   // +20
     { id: "o", name: "Bia", xp: 20, level: 1 } ] }; // alheio
   const g = f._ganhosXpMeusHerois(antes, st);

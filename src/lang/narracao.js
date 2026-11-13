@@ -209,8 +209,8 @@ window.LANG_NARRACAO = {
     "pt": "⚡ **{caster}** acelera — ações dobradas e movimento dobrado por {dur} rodada(s)!"
   },
   "narracao.acende_a_e_a_luz_em_volta_e_sugada_fica": {
-    "en": "{item_emoji} **{heroi}** lights the **{item}**, and the light around it is swallowed: **hidden** until the end of the turn{extra}",
-    "pt": "{item_emoji} **{heroi}** acende a **{item}**, e a luz em volta é sugada: fica **oculto** até o fim do turno{extra}"
+    "en": "{item_emoji} **{heroi}** lights the **{item}**, and the light around it is swallowed: **hidden** until the end of the next turn (+1 round){extra}",
+    "pt": "{item_emoji} **{heroi}** acende a **{item}**, e a luz em volta é sugada: fica **oculto** até o fim do próximo turno (+1 rodada){extra}"
   },
   "narracao.acende_a_vela_reveladora": {
     "en": "🕯️ **{heroi}** lights the **{item}**. Active traps within 3 squares are revealed to the party for **{rodadas}** rounds.",
@@ -231,6 +231,18 @@ window.LANG_NARRACAO = {
   "narracao.usa_solucao_mecanismo": {
     "en": "📦 **{heroi}** turns the key in the **Solution of the Mechanism**. The runes disable **{quantidade}** active trap(s) in the 3-square area.",
     "pt": "📦 **{heroi}** gira a chave na **Solução do Mecanismo**. As runas desativam **{quantidade}** armadilha(s) ativa(s) na área de 3 casas."
+  },
+  "narracao.ativa_moeda_da_sorte": {
+    "en": "🪙 **{heroi}** activates the Lucky Coin. It will reroll their first failed attack or saving throw; the second result stands.",
+    "pt": "🪙 **{heroi}** ativa a Moeda da Sorte. Ela repetirá o primeiro ataque ou teste de resistência que falhar; o segundo resultado vale."
+  },
+  "narracao.moeda_sorte_rolou_ataque": {
+    "en": "🪙 The Lucky Coin rerolls **{heroi}**'s failed attack; the new result stands.",
+    "pt": "🪙 A Moeda da Sorte repete o ataque que **{heroi}** falhou; o novo resultado vale."
+  },
+  "narracao.usa_kit_reparo": {
+    "en": "🧰 **{heroi}** uses a Repair Kit on **{item}**, removing 1 corrosion level. The item now has {nivel} corrosion level(s).",
+    "pt": "🧰 **{heroi}** usa um Kit de Reparo em **{item}** e remove 1 nível de corrosão. A peça fica com {nivel} nível(is) de corrosão."
   },
   "narracao.acerta_em_d20_vs_ca": {
     "en": "{defn_emoji} **{heroi}** hits **{target}** with **{defn}** (d20={roll}+{p_atk_bonus}={total} vs AC {target_ac})!",
@@ -292,9 +304,21 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{heroi}** applies **{venenos_vid_nome}** to the weapon (free action) — {desc_veneno}! 💧-{custo_sede}",
     "pt": "☠️ **{heroi}** aplica **{venenos_vid_nome}** na arma (ação livre) — {desc_veneno}! 💧-{custo_sede}"
   },
+  "narracao.veneno_golpes_desc": {
+    "en": "the next {n} successful melee hits carry the poison",
+    "pt": "os próximos {n} golpes corpo a corpo certeiros carregam o veneno"
+  },
+  "narracao.municao_envenenada": {
+    "en": "☠️ **{heroi}** prepares poisoned ammunition for **{quantidade} projectile(s)** with **{venenos}** ({frascos} vial(s) consumed).",
+    "pt": "☠️ **{heroi}** prepara munição envenenada para **{quantidade} projétil(is)** com **{venenos}** ({frascos} frasco(s) consumido(s))."
+  },
   "narracao.aprendeu": {
     "en": "📖 **{heroi}** learned **{m_nome}**!",
     "pt": "📖 **{heroi}** aprendeu **{m_nome}**!"
+  },
+  "narracao.escolhendo_nova_magia": {
+    "en": "✨ **{heroi}** reached a new level and is choosing a new spell. The game waits.",
+    "pt": "✨ **{heroi}** subiu de nível e está escolhendo uma nova magia. O jogo espera."
   },
   "narracao.aprendeu_a_forma_de_para_metamorfose": {
     "en": "🦋 **{nome_criatura_atacante}** learned the form of **{forma_get_name_tipo}** for Polymorph.",
@@ -448,9 +472,13 @@ window.LANG_NARRACAO = {
     "en": "⚔️ **{a_nome}** attacks **{target}** and misses (d20={roll}+{bonus_ataque}={total} vs AC {target_ac}).",
     "pt": "⚔️ **{a_nome}** ataca **{target}** e erra (d20={roll}+{bonus_ataque}={total} vs CA {target_ac})."
   },
-  "narracao.ataca_em_bando_2_acerto": {
-    "en": "🐺 **{monstro}** attacks as a pack! (+2 to hit)",
-    "pt": "🐺 **{monstro}** ataca em bando! (+2 acerto)"
+  "narracao.ataca_em_bando_1_acerto": {
+    "en": "🐺 **{monstro}** attacks with its pack! (+1 to hit)",
+    "pt": "🐺 **{monstro}** ataca em bando! (+1 no acerto)"
+  },
+  "narracao.lider_da_matilha_bonus": {
+    "en": "🐺 **{monstro}** is empowered by the Pack Leader! (+{bonus} to hit and damage)",
+    "pt": "🐺 **{monstro}** é fortalecido pelo Líder da Matilha! (+{bonus} no ataque e no dano)"
   },
   "narracao.ataca_enquanto_preso_2_no_acerto": {
     "en": "⛓️ **{heroi}** attacks while restrained — **-2** to hit!",
@@ -723,6 +751,10 @@ window.LANG_NARRACAO = {
   "narracao.consegue_escapar_do_rodamoinho_e_pode_se": {
     "en": "🌊 **{nome_criatura_criatura}** escapes the whirlpool and can move normally.",
     "pt": "🌊 **{nome_criatura_criatura}** consegue escapar do rodamoinho e pode se mover normalmente."
+  },
+  "narracao.bebe_cerveja_ana": {
+    "en": "{item_emoji} **{heroi}** drinks **{item}** (+{val} hunger/thirst), but loses 1 AC for 10 rounds!",
+    "pt": "{item_emoji} **{heroi}** bebe **{item}** (+{val} fome/sede), mas perde 1 de CA por 10 rodadas!"
   },
   "narracao.consome": {
     "en": "{item_emoji} **{heroi}** consumes **{item}**: {e_join_partes}.",
@@ -1264,6 +1296,46 @@ window.LANG_NARRACAO = {
     "en": "💪 **{alvo}** breaks free of the freezing paralysis (Strength DC {dc}).",
     "pt": "💪 **{alvo}** escapa da paralisia congelante (Força CD {dc})."
   },
+  "narracao.maca_zero_absoluto_congela": {
+    "en": "❄️ **{alvo}** is trapped in supernatural ice by the Mace of Absolute Zero!",
+    "pt": "❄️ **{alvo}** fica preso em gelo sobrenatural pela Maça do Zero Absoluto!"
+  },
+  "narracao.choque_trovao_resiste_empurrao": {
+    "en": "💪 **{alvo}** resists Thunder Shock's push (Strength {total} vs. DC {dc}).",
+    "pt": "💪 **{alvo}** resiste ao empurrão do Choque do Trovão (Força {total} contra CD {dc})."
+  },
+  "narracao.choque_trovao_empurra": {
+    "en": "⚡ The critical blow from Thunder Shock pushes **{alvo}** one square away (failed Strength DC {dc}).",
+    "pt": "⚡ O golpe crítico do Choque do Trovão empurra **{alvo}** uma casa (falha no teste de Força CD {dc})."
+  },
+  "narracao.choque_trovao_empurrao_bloqueado": {
+    "en": "⚡ **{alvo}** fails the Strength check (DC {dc}), but an obstacle or creature blocks the push.",
+    "pt": "⚡ **{alvo}** falha no teste de Força CD {dc}, mas um obstáculo ou criatura bloqueia o empurrão."
+  },
+  "narracao.choque_trovao_pulso": {
+    "en": "⚡ **{heroi}** releases a Thunder Pulse from the warhammer! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 lightning damage; success halves it.",
+    "pt": "⚡ **{heroi}** libera um Pulso do Trovão pelo martelo! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de eletricidade; sucesso reduz à metade."
+  },
+  "narracao.mangual_sol_cativo_clarao": {
+    "en": "☀️ **{heroi}** swings the sun chained to the flail and releases a Solar Flash! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 holy damage; success halves it.",
+    "pt": "☀️ **{heroi}** gira o sol preso à corrente e libera um Clarão Solar! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de dano sagrado; sucesso reduz à metade."
+  },
+  "narracao.horizonte_ruptura_empurrao": {
+    "en": "🌅 **{alvo}** is hurled {casas} squares by the shattered horizon!",
+    "pt": "🌅 **{alvo}** é arremessado {casas} casas pela ruptura do horizonte!"
+  },
+  "narracao.horizonte_ruptura_inicio": {
+    "en": "🌅 **{heroi}** strikes the ground and tears open a horizon-wide rupture reaching {alcance} squares!",
+    "pt": "🌅 **{heroi}** golpeia o chão e rasga o horizonte numa onda de ruptura que alcança {alcance} casas!"
+  },
+  "narracao.bordao_serpente_resiste": {
+    "en": "🐍 **{alvo}** resists the bronze serpent's binding (Fortitude {total} vs. DC {dc})!",
+    "pt": "🐍 **{alvo}** resiste ao laço da serpente de bronze (Fortitude {total} vs. CD {dc})!"
+  },
+  "narracao.bordao_serpente_prende": {
+    "en": "🐍 **{heroi}**'s Bronze Serpent Staff coils around **{alvo}** (Fortitude {total} vs. DC {dc})! The target is immobilized through the end of its next turn.",
+    "pt": "🐍 A serpente do bordão de **{heroi}** se enrola em **{alvo}** (Fortitude {total} vs. CD {dc})! O alvo fica imobilizado até o fim do próximo turno."
+  },
   "narracao.escapa_do_rodamoinho_profundo_e_pode_agi": {
     "en": "🌊 **{nome_criatura_criatura}** escapes the deep whirlpool and can act normally.",
     "pt": "🌊 **{nome_criatura_criatura}** escapa do rodamoinho profundo e pode agir normalmente."
@@ -1467,6 +1539,22 @@ window.LANG_NARRACAO = {
   "narracao.fica_preso_na_rede_escapar_cd": {
     "en": "🕸️ **{nome}** is caught in the net! (escape: {es_tipo} DC {es_cd})",
     "pt": "🕸️ **{nome}** fica preso na rede! (escapar: {es_tipo} CD {es_cd})"
+  },
+  "narracao.rede_corrosiva_acerta": {
+    "en": "🧪 **{nome}** is trapped in the corrosive net! Fortitude DC {cd} at the start of each turn to escape.",
+    "pt": "🧪 **{nome}** fica preso na Rede Corrosiva! Teste de Fortitude CD {cd} no início de cada turno para escapar."
+  },
+  "narracao.rede_corrosiva_escapa": {
+    "en": "🟢 **{monstro}** breaks free of the corrosive net and can act this turn!",
+    "pt": "🟢 **{monstro}** escapa da Rede Corrosiva e pode agir nesta rodada!"
+  },
+  "narracao.rede_corrosiva_perde_turno": {
+    "en": "🧪 **{monstro}** fails to escape, loses its turn, and takes 1 acid damage.",
+    "pt": "🧪 **{monstro}** falha ao escapar, perde o turno e sofre 1 de dano ácido."
+  },
+  "narracao.rede_corrosiva_corrói_equipamento": {
+    "en": "🛡️ The corrosive net damages **{item}** ({estado}).",
+    "pt": "🛡️ A Rede Corrosiva danifica **{item}** ({estado})."
   },
   "narracao.fica_protegido_absorve_ate_de_dano_eleme": {
     "en": "🛡️ **{caster}** becomes protected: absorbs up to {reducao} elemental damage per round ({dur} round(s)).",
@@ -1988,6 +2076,10 @@ window.LANG_NARRACAO = {
     "en": "🧭 The group traveled from **{origem}** to **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} per hero).",
     "pt": "🧭 O grupo viajou de **{origem}** para **{world_locations_destinat}** (🍖-{cost_fome} 💧-{cost_sede} por herói)."
   },
+  "narracao.emboscada_vencida_recolham_o_saque": {
+    "en": "🏁 The ambush is defeated! Explore the road and gather the loot; when you're ready, use \"End mission\" to move on.",
+    "pt": "🏁 A emboscada foi derrotada! Explorem a estrada e recolham o saque; quando estiverem prontos, usem \"Encerrar missão\" para seguir viagem."
+  },
   "narracao.emboscada_derrotada_escolha_destino": {
     "en": "The ambush is over. The host can continue to the dungeon or return to the city of origin.",
     "pt": "A emboscada terminou. O anfitrião pode seguir para a masmorra ou retornar à cidade de origem."
@@ -2396,6 +2488,10 @@ window.LANG_NARRACAO = {
     "en": "😱 **{monstro}** regains its courage.",
     "pt": "😱 **{monstro}** recupera a coragem."
   },
+  "narracao.recupera_da_embriaguez_cerveja_ana": {
+    "en": "🍺 **{heroi}** sobers up; their AC returns to normal.",
+    "pt": "🍺 **{heroi}** se recupera da embriaguez; sua CA volta ao normal."
+  },
   "narracao.recupera_a_pontaria_penalidade_da_cervej": {
     "en": "🍺 **{heroi}** regains their aim (the beer penalty wore off).",
     "pt": "🍺 **{heroi}** recupera a pontaria (penalidade da cerveja acabou)."
@@ -2419,6 +2515,10 @@ window.LANG_NARRACAO = {
   "narracao.recusa_a_morte_ultimo_esforco_dois_turno": {
     "en": "🔥 **{heroi}** refuses to die — **LAST STAND**! Two turns of fury before falling.",
     "pt": "🔥 **{heroi}** recusa a morte — **ÚLTIMO ESFORÇO**! Dois turnos de fúria antes de cair."
+  },
+  "narracao.ultimo_suspiro_salva_heroi": {
+    "en": "📿 The Last Breath Amulet shatters and keeps **{heroi}** alive with **1 HP**!",
+    "pt": "📿 O amuleto Último Suspiro se parte e mantém **{heroi}** vivo com **1 PV**!"
   },
   "narracao.recusa_se_a_tombar_fortitude_vs_cd_fica": {
     "en": "🧟 **{monstro}** refuses to fall! (Fortitude {tot} vs DC {cd}) — left at **1 HP**.",
@@ -2592,6 +2692,11 @@ window.LANG_NARRACAO = {
     "en": "⛪ **{heroi}** pays {preco} coins at the temple and brings **{alvo}** back to life with **1 HP**.",
     "pt": "⛪ **{heroi}** paga {preco} moedas no templo e traz **{alvo}** de volta à vida com **1 PV**."
   },
+  "narracao.entrega_item_a_heroi": {"en":"{heroi} hands {item} to {alvo}.","pt":"{heroi} entrega {item} a {alvo}."},
+  "narracao.usa_lagrima_ultima_luz": {
+    "en": "💫 **{heroi}** uses the Tear of the Last Light to bring **{alvo}** back with **1 HP**!",
+    "pt": "💫 **{heroi}** usa a Lágrima da Última Luz e traz **{alvo}** de volta com **1 PV**!"
+  },
   "narracao.retorna_a_forma_normal": {
     "en": "🌙 **{heroi}** returns to their normal form.",
     "pt": "🌙 **{heroi}** retorna à forma normal."
@@ -2712,6 +2817,66 @@ window.LANG_NARRACAO = {
     "en": "🍷 **{heroi}** recovers from the drunkenness (the wine penalty wore off).",
     "pt": "🍷 **{heroi}** se recupera da embriaguez (penalidade do vinho acabou)."
   },
+  "narracao.usa_rum": {
+    "en": "🍾 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining another drunkenness stack: **−1 attack / −1 Reflex** for 10 rounds. {doses_msg}",
+    "pt": "🍾 **{heroi}** bebe o **{item}** (+{val} fome/sede) e fica mais embriagado: **−1 ataque / −1 Reflexos** por 10 rodadas. {doses_msg}"
+  },
+  "narracao.doses.garrafa_vazia": {
+    "en": " The bottle is empty.",
+    "pt": " A garrafa se esvazia."
+  },
+  "narracao.doses.restantes": {
+    "en": " {n}/{max} doses left.",
+    "pt": " {n}/{max} doses restantes."
+  },
+  "narracao.doses.restantes_destaque": {
+    "en": " **{n}/{max}** doses left.",
+    "pt": " **{n}/{max}** doses restantes."
+  },
+  "narracao.manto_raios_ativa": {
+    "en": "⚡ **{heroi}** activates the **Lightning Mantle** for {n} rounds!",
+    "pt": "⚡ **{heroi}** ativa o **Manto de Raios** por {n} rodadas!"
+  },
+  "narracao.rum_penalidade_expirou": {
+    "en": "🍾 **{heroi}** sobers up from {cargas} Rum penalty stack(s).",
+    "pt": "🍾 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Rum."
+  },
+  "narracao.usa_hidromel": {
+    "en": "🍯 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining −1 Reflex and −1 AC for 10 rounds. {doses_msg}",
+    "pt": "🍯 **{heroi}** bebe o **{item}** (+{val} fome/sede) e recebe −1 em Reflexos e −1 na CA por 10 rodadas. {doses_msg}"
+  },
+  "narracao.hidromel_penalidade_expirou": {
+    "en": "🍯 **{heroi}** recovers from {cargas} Hydromel penalty stack(s).",
+    "pt": "🍯 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Hidromel."
+  },
+  "narracao.usa_absinto": {
+    "en": "🍸 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining −1 attack and −1 AC for 10 rounds. {cargas} dose(s) active. {movimento_msg} {doses_msg}",
+    "pt": "🍸 **{heroi}** bebe o **{item}** (+{val} fome/sede) e recebe −1 no ataque e −1 na CA por 10 rodadas. {cargas} dose(s) ativa(s). {movimento_msg} {doses_msg}"
+  },
+  "narracao.usa_caldo_revigorante": {
+    "en": "🥣 **{heroi}** eats the **{item}** and restores **{val} HP**, **{fome} hunger**, and **{sede} thirst**!",
+    "pt": "🥣 **{heroi}** toma o **{item}** e recupera **{val} PV**, **{fome} de fome** e **{sede} de sede**!"
+  },
+  "narracao.usa_fermentado_raizes": {
+    "en": "🍶 **{heroi}** drinks the **{item}** and restores **{val} HP** and **{sede} thirst**!",
+    "pt": "🍶 **{heroi}** bebe o **{item}** e recupera **{val} PV** e **{sede} de sede**!"
+  },
+  "narracao.usa_fruto_de_lumen": {
+    "en": "🫐 **{heroi}** eats the **{item}** and restores **{val} HP** and **{fome} hunger**!",
+    "pt": "🫐 **{heroi}** come o **{item}** e recupera **{val} PV** e **{fome} de fome**!"
+  },
+  "narracao.absinto_movimento_atual": {
+    "en": "Movement is reduced by {movimento}.",
+    "pt": "O movimento está reduzido em {movimento}."
+  },
+  "narracao.absinto_movimento_sem_penalidade": {
+    "en": "Movement is not reduced.",
+    "pt": "O movimento ainda não foi reduzido."
+  },
+  "narracao.absinto_penalidade_expirou": {
+    "en": "🍸 **{heroi}** recovers from {cargas} Absinthe penalty stack(s).",
+    "pt": "🍸 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Absinto."
+  },
   "narracao.se_solta_da_rede": {
     "en": "🕸️ **{monstro}** breaks free of the net!",
     "pt": "🕸️ **{monstro}** se solta da rede!"
@@ -2776,9 +2941,13 @@ window.LANG_NARRACAO = {
     "en": "🧵 **{heroi}** can only stack {self_teto_metamagia_p} metamagic(s) per cast — the rest were ignored.",
     "pt": "🧵 **{heroi}** só pode empilhar {self_teto_metamagia_p} metamagia(s) por lançamento — as demais foram ignoradas."
   },
-  "narracao.sobe_as_escadas_rumo_a_cidade_e_volta_em": {
-    "en": "🚪 **{heroi}** climbs the stairs toward the city (🍖-{fome} 💧-{sede}) and returns in {espera} round(s).",
-    "pt": "🚪 **{heroi}** sobe as escadas rumo à cidade (🍖-{fome} 💧-{sede}) e volta em {espera} rodada(s)."
+  "narracao.sobe_as_escadas_rumo_a_cidade": {
+    "en": "🚪 **{heroi}** climbs the stairs toward the city (🍖-{fome} 💧-{sede}).",
+    "pt": "🚪 **{heroi}** sobe as escadas rumo à cidade (🍖-{fome} 💧-{sede})."
+  },
+  "narracao.parte_de_volta_a_masmorra": {
+    "en": "⛓️ **{heroi}** heads back to the dungeon and arrives in {espera} round(s).",
+    "pt": "⛓️ **{heroi}** parte de volta à masmorra e chega em {espera} rodada(s)."
   },
   "narracao.sofre": {
     "en": "🎵 **{monstro}** takes **{dano}**{metade_if_save_ok_else}.",
@@ -3044,6 +3213,14 @@ window.LANG_NARRACAO = {
     "en": "{item_emoji} **{heroi}** coats **{item}** on the weapon — {desc}!",
     "pt": "{item_emoji} **{heroi}** unta **{item}** na arma — {desc}!"
   },
+  "narracao.gilo_flash_acerta": {
+    "en": "Gilo answers the attack with a Flash Bomb. The throw hits; {restam} left.",
+    "pt": "Gilo reage ao ataque contra si com uma Bomba de Flash. O arremesso acerta; restam {restam}."
+  },
+  "narracao.gilo_flash_erra": {
+    "en": "Gilo answers the attack with a Flash Bomb. The throw misses; {restam} left.",
+    "pt": "Gilo reage ao ataque contra si com uma Bomba de Flash. O arremesso erra; restam {restam}."
+  },
   "narracao.usa": {
     "en": "{item_emoji} **{heroi}** uses **{item}**: {txt}{extra}",
     "pt": "{item_emoji} **{heroi}** usa **{item}**: {txt}{extra}"
@@ -3107,6 +3284,10 @@ window.LANG_NARRACAO = {
   "narracao.usa_investida_heroica_e_dobra_seu_desloc_2": {
     "en": "{nome_criatura_m} uses Heroic Charge and doubles its movement.",
     "pt": "{nome_criatura_m} usa Investida Heroica e dobra seu deslocamento."
+  },
+  "narracao.cavalo_disparada": {
+    "en": "🐎 **{monstro}** uses **Gallop** and doubles its movement while fleeing!",
+    "pt": "🐎 **{monstro}** usa **Disparada** e dobra seu deslocamento ao fugir!"
   },
   "narracao.usa_o_pergaminho_de_dominar_morto_vivo_e": {
     "en": "🧙 **{monstro}** uses the **Scroll of Dominate Undead** on **{alvo_nome}**!",
@@ -3295,6 +3476,38 @@ window.LANG_NARRACAO = {
   "narracao.mecanismo_desliga_armadilha": {
     "en": "⚙️ **{heroi}** activated the mechanism: a trap has been switched off!",
     "pt": "⚙️ **{heroi}** ativou o mecanismo: uma armadilha foi desligada!"
-  }
+  },
+  "narracao.unta_ataque_monstro": {"en":"☠️ **{m_get_name_o_monstro}** uses **{item}** to poison **{attack_name}**.","pt":"☠️ **{m_get_name_o_monstro}** usa **{item}** para envenenar **{attack_name}**."},
+  "narracao.resiste_a_provocacao_do_bardo": {"en":"{heroi} resists the Bard's Taunt.","pt":"{heroi} resiste à Provocação do Bardo."},
+  "narracao.requiem_do_bardo_causa_dano": {"en":"The Bard's Requiem deals {dano} sonic damage to {heroi}.","pt":"O Réquiem do Bardo causa {dano} de dano sonoro a {heroi}."},
+  "narracao.heroi_avanca_ate_o_bardo": {"en":"{heroi} advances toward {bardo}.","pt":"{heroi} avança em direção a {bardo}."},
+  "narracao.bardo_desafina": {"en":"{bardo} plays off-key and takes -1 on the next attack.","pt":"{bardo} desafina e sofre -1 no próximo ataque."},
+  "narracao.bardo_improvisa_sem_efeito": {"en":"{bardo} improvises to no effect.","pt":"{bardo} improvisa sem produzir efeito."},
+  "narracao.bardo_usa_habilidade": {"en":"{bardo} uses {habilidade}.","pt":"{bardo} usa {habilidade}."},
+  "narracao.bardo_provoca": {"en":"{bardo} taunts {heroi}: make a Will save (DC {cd}) at the start of the next turns.","pt":"{bardo} provoca {heroi}; faça Vontade CD {cd} no início dos próximos turnos."},
+  "narracao.bardo_inicia_o_requiem": {"en":"{bardo} begins the Final Requiem on {heroi}.","pt":"{bardo} inicia o Réquiem Final sobre {heroi}."},
+  "narracao.ecos_dolorosos_ferem": {"en":"The Painful Echoes hurt {heroi} for {dano}.","pt":"Os Ecos Dolorosos ferem {heroi} em {dano}."},
+  "narracao.bardo_entoa_a_cancao": {"en":"{bardo} sings the Heroic Song for {duracao} rounds.","pt":"{bardo} entoa a Canção Heroica por {duracao} rodadas."},
+  "narracao.bardo_sem_virotes": {"en":"{bardo} runs out of bolts and charges with the empty crossbow.","pt":"{bardo} fica sem virotes e avança com a besta descarregada."},
+  "narracao.dueto_fantasma_repete": {"en":"The Phantom Duet repeats the blow and deals {eco} damage.","pt":"O Dueto Fantasma repete o golpe e causa {eco} de dano."},
+  "narracao.habilidade_instrumento.harpa": {"en":"Cutting Note","pt":"Nota Cortante"},
+  "narracao.habilidade_instrumento.tambor": {"en":"Thunderous Chord","pt":"Acorde Trovejante"},
+  "narracao.habilidade_instrumento.sino": {"en":"Painful Echoes","pt":"Ecos Dolorosos"},
+  "narracao.habilidade_instrumento.alaude": {"en":"Heroic Symphony","pt":"Sinfonia Heroica"},
+  "narracao.habilidade_instrumento.trompa": {"en":"General's Call","pt":"Chamado do General"},
+  "narracao.habilidade_instrumento.lira": {"en":"Martial Duet","pt":"Dueto Marcial"},
+  "narracao.habilidade_instrumento.flauta": {"en":"Phantom Duet","pt":"Dueto Fantasma"},
+  "narracao.habilidade_instrumento.violino": {"en":"Final Requiem","pt":"Réquiem Final"},
+  "narracao.habilidade_instrumento.gaita": {"en":"Improvisation","pt":"Improviso"},
+  "narracao.portao_levadico_levanta": {"en":"⚙️ **{heroi}** raises the portcullis.","pt":"⚙️ **{heroi}** levanta o portão levadiço."},
+  "narracao.portao_levadico_abaixa": {"en":"⛓️ **{heroi}** lowers the portcullis.","pt":"⛓️ **{heroi}** abaixa o portão levadiço."},
+  "narracao.portao_levadico_reflexos_sucesso": {"en":"🏃 **{alvo}** dodges the portcullis, takes {dano} damage, and is pushed aside.","pt":"🏃 **{alvo}** desvia do portão, sofre {dano} de dano e é empurrado para o lado."},
+  "narracao.portao_levadico_desvia_sem_saida": {"en":"🧱 **{alvo}** dodges the portcullis and takes {dano} damage, but both exits are blocked and remains trapped without collision damage.","pt":"🧱 **{alvo}** desvia do portão e sofre {dano} de dano, mas as duas saídas estão bloqueadas e continua preso, sem dano de colisão."},
+  "narracao.portao_levadico_preso": {"en":"💥 **{alvo}** fails to dodge, takes {dano} damage, and is trapped beneath the portcullis.","pt":"💥 **{alvo}** não consegue desviar, sofre {dano} de dano e fica preso sob o portão."},
+  "narracao.portao_levadico_escapa": {"en":"💪 **{alvo}** escapes from under the portcullis (Strength {total}).","pt":"💪 **{alvo}** escapa debaixo do portão (Força {total})."},
+  "narracao.portao_levadico_saida_bloqueada": {"en":"🚧 **{alvo}** passes the Strength check, but both sides of the portcullis are blocked and remains trapped.","pt":"🚧 **{alvo}** passa no teste de Força, mas os dois lados do portão estão bloqueados e continua preso."},
+  "narracao.portao_levadico_falha_escapar": {"en":"⛓️ **{alvo}** fails to escape (Strength {total}) and takes {dano} damage.","pt":"⛓️ **{alvo}** falha ao escapar (Força {total}) e sofre {dano} de dano."},
+  "narracao.relampago_de_mao_acerta": {"en":"{heroi} hits {alvo} with the Hand Lightning spear ({total} vs AC {ca}; damage {dano}).","pt":"{heroi} acerta {alvo} com a lança Relâmpago de Mão ({total} contra CA {ca}; dano {dano})."},
+  "narracao.arma_retorna_a_mao": {"en":"{arma} returns to {heroi}'s hand.","pt":"{arma} retorna à mão de {heroi}."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

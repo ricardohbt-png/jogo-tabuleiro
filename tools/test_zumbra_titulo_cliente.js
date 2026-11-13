@@ -25,7 +25,7 @@ check('o título próprio vence o rótulo do tipo (e cai nele quando não há)',
 check('o texto vai por textContent (nome autoral nunca vira HTML)',
   !/shop-title'\)\.innerHTML/.test(abrir));
 check('as abas e a classe do Mercador continuam pelo tipo', abrir.includes("shopId==='mercador'")
-  && abrir.includes("'comprar','instrumentos'"));
+  && abrir.includes("'equipamentos','consumiveis','instrumentos'"));
 
 console.log(`\n=== ${pass} passaram, ${fail} falharam ===`);
 process.exit(fail ? 1 : 0);

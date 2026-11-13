@@ -346,15 +346,16 @@ async def main():
     print("\n[21] animados_done viaja no game_state")
     r, p = sala_com_servos(servo("s_a", 18), servo("s_b", 12), servo("s_c", 10))
     r.handle_end_turn = fake_end_turn_z
-    await r.handle_encerrar_animado("m", "s_c")     # escolha FORA de ordem
+    await r.handle_encerrar_animado("m", "s_c")     # FORA de ordem: recusado (fila estrita)
+    await r.handle_encerrar_animado("m", "s_a")     # o da vez encerra
     r.tiles = [[1, 1, 1], [1, 1, 1], [1, 1, 1]]     # mapa minimo p/ serializar
     r.map_w, r.map_h = 3, 3
     r.explored = {(x, y) for y in range(3) for x in range(3)}
     payload = r._game_state_payload()
     check("animados_done no payload", "animados_done" in payload)
-    check("traz a peca escolhida fora de ordem", "s_c" in payload["animados_done"])
-    check("nao traz quem ainda nao foi", "s_a" not in payload["animados_done"])
-    check("o atual segue sendo o primeiro", payload["animados_atual"]["m"] == "s_a")
+    check("traz a peca que encerrou", "s_a" in payload["animados_done"])
+    check("encerrar fora de ordem foi recusado", "s_c" not in payload["animados_done"])
+    check("a vez passou ao segundo da fila", payload["animados_atual"]["m"] == "s_b")
 
     # [22] Janela nao abre sem ninguem controlavel: todos os servos dormindo e
     # sem prisioneiro nao pode prender o jogador numa janela vazia.

@@ -8,6 +8,11 @@
 // REGRAS: JSON estrito DENTRO do objeto (aspas duplas, sem vírgula sobrando,
 // sem comentário lá dentro). Parâmetros {nome}, iguais nos dois idiomas.
 window.LANG_EDITOR = {
+  "ui.editor.masmorra.ferramenta.portao": {"pt":"portão", "en":"portcullis"},
+  "ui.editor.masmorra.barra.portao_largura": {"pt":"Largura do portão em quadrados", "en":"Portcullis width in squares"},
+  "ui.editor.masmorra.barra.portao_horizontal": {"pt":"Horizontal", "en":"Horizontal"},
+  "ui.editor.masmorra.barra.portao_vertical": {"pt":"Vertical", "en":"Vertical"},
+  "ui.editor.masmorra.barra.portao_colocacao_invalida": {"pt":"Não foi possível colocar o portão: confira os limites do mapa, portões existentes e condições ou salas diferentes no trecho.", "en":"Cannot place the portcullis: check map boundaries, existing gates, and differing rooms or conditions along the span."},
   "ui.editor.cinto.bolso": {"pt": "Bolso {n}", "en": "Pocket {n}"},
   "ui.editor.cinto.item": {"pt": "Item do bolso {n}", "en": "Pocket {n} item"},
   "ui.editor.cinto.quantidade": {"pt": "Quantidade do bolso {n}", "en": "Pocket {n} quantity"},
@@ -463,6 +468,10 @@ window.LANG_EDITOR = {
     "en": "Drag to fill; invalid squares are ignored.",
     "pt": "Arraste para preencher; casas inválidas são ignoradas."
   },
+  "ui.editor.masmorra.barra.grade_esgoto_arraste": {
+    "en": "Drag from one corner and release to size the walkable grate.",
+    "pt": "Arraste entre dois cantos e solte para definir o tamanho da grade pisável."
+  },
   "ui.editor.masmorra.barra.porta_girar": {
     "en": "↻ door 90° (R)",
     "pt": "↻ porta 90° (R)"
@@ -524,8 +533,8 @@ window.LANG_EDITOR = {
     "pt": "transição: declive"
   },
   "ui.editor.masmorra.barra.altura_hint": {
-    "en": "Click and drag on the floor; height is only visual in this phase.",
-    "pt": "Clique e arraste no chão; a altura é apenas visual nesta fase."
+    "en": "Drag to select a rectangular area and release to apply the chosen level.",
+    "pt": "Arraste para selecionar uma área retangular e solte para aplicar o nível escolhido."
   },
   "ui.editor.masmorra.barra.ponte_largura_singular": {
     "en": "width: {n} square",
@@ -735,6 +744,34 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.painel.seta_dourada_hint": {
     "en": "The golden arrow on the map shows the front. The orientation is saved on this door.",
     "pt": "A seta dourada no mapa mostra a frente. A orientação é salva nesta porta."
+  },
+  "ui.editor.masmorra.painel.estilo_porta": {
+    "en": "Door style",
+    "pt": "Estilo da porta"
+  },
+  "ui.editor.masmorra.painel.porta_comum": {
+    "en": "Ordinary door",
+    "pt": "Porta comum"
+  },
+  "ui.editor.masmorra.painel.portao_levadico": {
+    "en": "Portcullis",
+    "pt": "Portão levadiço"
+  },
+  "ui.editor.masmorra.painel.portao_largura": {
+    "en": "Width: {casas} tile(s)",
+    "pt": "Largura: {casas} quadrado(s)"
+  },
+  "ui.editor.masmorra.painel.portao_ajustar_largura": {
+    "en": "Adjust width by dragging",
+    "pt": "Ajustar largura arrastando"
+  },
+  "ui.editor.masmorra.painel.portao_arraste_hint": {
+    "en": "Drag from the first to the last contiguous door tile.",
+    "pt": "Arraste da primeira até a última casa contígua da porta."
+  },
+  "ui.editor.masmorra.painel.portao_span_invalido": {
+    "en": "Select a straight run of compatible native doors.",
+    "pt": "Selecione um trecho reto de portas nativas compatíveis."
   },
   "ui.editor.masmorra.painel.condicao_abertura": {
     "en": "Optional opening condition",
@@ -2048,6 +2085,10 @@ window.LANG_EDITOR = {
     "en": "invalid door opening condition: {chave}",
     "pt": "condição de abertura em porta inválida: {chave}"
   },
+  "ui.editor.masmorra.valid.porta_estilo_invalido": {
+    "en": "invalid style on door {chave}",
+    "pt": "estilo inválido na porta {chave}"
+  },
   "ui.editor.masmorra.valid.porta_cond_tipo": {
     "en": "invalid door condition type at {chave}",
     "pt": "tipo de condição de porta inválido em {chave}"
@@ -2261,6 +2302,10 @@ window.LANG_EDITOR = {
     "en": "R4: room {sala} is cut off from the main map.",
     "pt": "R4: sala {sala} isolada do mapa principal."
   },
+  "ui.editor.masmorra.design.r7": {
+    "en": "R7: room {sala} is locked but has no door. The game will unlock it when the map loads.",
+    "pt": "R7: sala {sala} está trancada, mas não tem porta. O jogo vai destrancá-la ao carregar o mapa."
+  },
   "ui.editor.masmorra.design.r2r5_sem_boss": {
     "en": "R2/R5: no room with role 'boss' (rules skipped).",
     "pt": "R2/R5: sem sala com role 'boss' (regras puladas)."
@@ -2388,6 +2433,18 @@ window.LANG_EDITOR = {
   "ui.editor.masmorra.valid.chao_sem_queda": {
     "en": "chao_illusorio at {pos} needs at least 1 level of drop",
     "pt": "chao_illusorio em {pos} precisa ter pelo menos 1 nível de queda"
+  },
+  "ui.editor.masmorra.valid.grade_esgoto_sem_ponte": {
+    "en": "sewer grate at {pos} needs a walkable cover",
+    "pt": "grade de esgoto em {pos} precisa ter uma cobertura pisável"
+  },
+  "ui.editor.masmorra.valid.grade_esgoto_sem_queda": {
+    "en": "sewer grate at {pos} needs lower FLOOR beneath a higher surrounding floor",
+    "pt": "grade de esgoto em {pos} precisa cobrir FLOOR mais baixo que o piso ao redor"
+  },
+  "ui.editor.masmorra.valid.grade_esgoto_abismo": {
+    "en": "sewer grate at {pos} cannot open over the abyss",
+    "pt": "grade de esgoto em {pos} não pode abrir sobre o abismo"
   },
   "ui.editor.masmorra.valid.bau_permanente_invalido": {
     "en": "trapped chest at {pos} with invalid permanent flag",

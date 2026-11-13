@@ -69,9 +69,15 @@ const InventoryModal = (() => {
     { id: 'flechas', key: 'ui.inv.auto_arrow.normal' },
     { id: 'flechas_incendiarias', key: 'ui.inv.auto_arrow.fire' },
     { id: 'flechas_prata', key: 'ui.inv.auto_arrow.silver' },
+    { id: 'flechas_explosivas', key: 'ui.inv.auto_arrow.explosive' },
+    { id: 'flechas_magicas', key: 'ui.inv.auto_arrow.magic' },
+    { id: 'flechas_magicas_mais_2', key: 'ui.inv.auto_arrow.magic_2' },
   ];
   // `t` e `_rotulo` são globais de game.js, carregado ANTES deste arquivo.
   const _slotLabel = key => _rotulo(key, 'ui.inv.slot', key);
+  const _itemDisplayName = item => window._nomeItemExibido
+    ? window._nomeItemExibido(item)
+    : (item?.name || item?.nome || item?.id || 'Item');
 
   // Instrumentos do Bardo (Fase 1): o instrumento vive na MÃO DO ESCUDO (o slot
   // off_hand do GEAR_LAYOUT), não em um slot próprio — não há 10º slot.
@@ -188,6 +194,17 @@ const InventoryModal = (() => {
 .inv-arrow-order-row .inv-arrow-name{flex:1;}
 .inv-arrow-order-row button{width:23px;height:22px;padding:0;border:1px solid #70572e;border-radius:4px;background:#2b1e11;color:#ffe5a4;cursor:pointer;}
 .inv-arrow-order-row button:disabled{opacity:.35;cursor:default;}
+.inv-hero-strip{display:none;gap:8px;justify-content:center;align-items:flex-start;margin:4px 0 6px;}
+.inv-hero-strip.on{display:flex;}
+.inv-hero-chip{width:56px;text-align:center;font-size:10px;color:#f4ecd8;cursor:pointer;border-radius:6px;padding:2px;border:2px solid transparent;}
+.inv-hero-chip img{width:48px;height:64px;object-fit:cover;border-radius:4px;display:block;margin:0 auto 2px;border:1px solid #6a5a3a;}
+.inv-hero-chip.drop-hover{border-color:#8fe08a;background:rgba(143,224,138,.18);}
+.inv-hero-chip.far{opacity:.45;}
+.inv-hero-chip.current{border-color:#d9b44a;cursor:default;}
+/* Com o inventário aberto, a barra de heróis da cidade fica acima do modal e vira alvo de soltura. */
+body.inv-open #city-hero-bar{z-index:1200;pointer-events:none;background:none;}
+body.inv-open #city-hero-bar .city-hcard{pointer-events:auto;}
+body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;background:rgba(143,224,138,.25);}
 .inv-gold{display:flex;align-items:center;justify-content:center;gap:6px;color:#ffcf7a;font-weight:bold;
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
@@ -200,6 +217,7 @@ const InventoryModal = (() => {
 .inv-belt-heading{font:12px Georgia,serif;color:#ead8b0;margin-bottom:7px;}
 .inv-belt-row{display:flex;gap:8px;}
 .inv-belt-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
+.inv-quiver-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
 .inv-belt-pocket .inv-bagslot-emoji{font-size:.8rem;}
 .inv-belt-pocket .inv-bagslot-emoji img{width:65%;height:65%;}
 .inv-belt-count{position:absolute;bottom:1px;right:2px;background:#26170d;color:#ffe7b2;border-radius:3px;padding:1px 3px;font:700 11px Georgia,serif;pointer-events:none;}
@@ -320,6 +338,7 @@ const InventoryModal = (() => {
     if(typeof window.fecharMenuMagias === 'function') window.fecharMenuMagias();
     if(typeof window.fecharMenuStatus === 'function') window.fecharMenuStatus();
     _openPid  = pid;
+    document.body.classList.add('inv-open');
     _readOnly = !!opts.readOnly;
     _selected = null;
     _gamepadAction = null;
@@ -335,6 +354,7 @@ const InventoryModal = (() => {
   }
 
   function close(){
+    document.body.classList.remove('inv-open');
     _openPid  = null;
     _storageCtx = null;
     _selected = null;
@@ -379,6 +399,7 @@ const InventoryModal = (() => {
       const selector = selected.kind === 'bag'
         ? `.inv-bagslot[data-bag-index="${selected.index}"]`
         : selected.kind === 'belt' ? `.inv-belt-pocket[data-gear-slot="${selected.gearSlot}"][data-pocket-index="${selected.pocketIndex}"]`
+        : selected.kind === 'quiver' ? `.inv-quiver-pocket[data-gear-slot="${selected.gearSlot}"][data-pocket-index="${selected.pocketIndex}"]`
         : selected.kind === 'gear' ? `.inv-slot[data-slot-key="${selected.slotKey}"]` : '';
       const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
       if(slot) slot.focus({ preventScroll:true });
@@ -393,6 +414,7 @@ const InventoryModal = (() => {
       return Number.isInteger(index) ? { kind:'bag', index } : null;
     }
     if(slot.dataset.inventorySlot === 'belt') return {kind:'belt', gearSlot:slot.dataset.gearSlot, pocketIndex:Number(slot.dataset.pocketIndex)};
+    if(slot.dataset.inventorySlot === 'quiver') return {kind:'quiver', gearSlot:slot.dataset.gearSlot, pocketIndex:Number(slot.dataset.pocketIndex)};
     if(slot.dataset.inventorySlot === 'gear' && slot.dataset.slotKey)
       return { kind:'gear', slotKey:slot.dataset.slotKey };
     return null;
@@ -404,6 +426,7 @@ const InventoryModal = (() => {
       const selector = focus.kind === 'bag'
         ? `.inv-bagslot[data-bag-index="${focus.index}"]`
         : focus.kind === 'belt' ? `.inv-belt-pocket[data-gear-slot="${focus.gearSlot}"][data-pocket-index="${focus.pocketIndex}"]`
+        : focus.kind === 'quiver' ? `.inv-quiver-pocket[data-gear-slot="${focus.gearSlot}"][data-pocket-index="${focus.pocketIndex}"]`
         : focus.kind === 'gear'
           ? `.inv-slot[data-slot-key="${focus.slotKey}"]` : '';
       const slot = selector && document.querySelector(`#inv-modal-overlay ${selector}`);
@@ -437,14 +460,17 @@ const InventoryModal = (() => {
     const isBonusAction = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
       && BONUS_ACTION_EFFECTS.has(item.effect);
     const bonusBloqueado = isBonusAction && !!player.bonus_action_used;
+    // Na cidade não há turno: só a poção de cura (efeito `heal`) pode ser usada.
+    const podeCurarNaCidade = !_readOnly && !gsNow && !!GS.cityState && player?.id === GS.myPid
+      && !!player.alive && item?.effect === 'heal';
     const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
       ? GS.CATALOGO_ITENS[item && item.id] : null;
     const isArremessavel = !!(catDef?.arremessavel || item?.arremessavel);
     return {
       isCarta, isScroll, isConsumable, isArremessavel,
       podeLer: isCarta,
-      podeUsar: isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
-        && !bonusBloqueado,
+      podeUsar: (isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
+        && !bonusBloqueado) || podeCurarNaCidade,
       podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster && !player.action_done,
       podeArremessar: isMyOwnDungeonTurn && isArremessavel
         && (typeof GS.canThrowItem !== 'function' || GS.canThrowItem(player)),
@@ -549,10 +575,10 @@ const InventoryModal = (() => {
         slot.tabIndex = 0;
         slot.dataset.inventorySlot = 'gear';
         slot.setAttribute('role', 'button');
-        slot.setAttribute('aria-label', item ? `${_slotLabel(cfg.key)}: ${item.name}` : _slotLabel(cfg.key));
+        slot.setAttribute('aria-label', item ? `${_slotLabel(cfg.key)}: ${_itemDisplayName(item)}` : _slotLabel(cfg.key));
       }
       slot.title = blocked ? t('ui.inv.bloqueado_duas_maos')
-                 : item ? item.name : _slotLabel(cfg.key);
+                 : item ? _itemDisplayName(item) : _slotLabel(cfg.key);
       slot.innerHTML = blocked
         ? `<span class="inv-slot-blocked-x">✕</span>`
         : item ? `<span class="inv-slot-emoji">${_itemIconHTML(item, cfg.empty)}</span>${_ammoCountBadgeHTML(item)}`
@@ -663,13 +689,66 @@ const InventoryModal = (() => {
     host.appendChild(panel);
   }
 
-  const BELT_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:2 };
+  const BELT_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:2, cinto_utilidades_aprimorado:4, cinto_arsenal_encantado:4, alforge_explorador:1, alforge_explorador_aprimorado:2, alforge_explorador_superior:3, maravilha_aventureiro_menor:4, maravilha_aventureiro_maior:4 };
+  const BELT_STACK_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:4, cinto_utilidades_aprimorado:8, cinto_arsenal_encantado:8, alforge_explorador:4, alforge_explorador_aprimorado:4, alforge_explorador_superior:4, maravilha_aventureiro_menor:4, maravilha_aventureiro_maior:8 };
+  const QUIVER_CAPACITIES = { mini_aljava:1, aljava_pequena:2, aljava_grande:3, cinto_arsenal_encantado:1, mochila_aljava_dimensional:1, maravilha_aventureiro_menor:1, maravilha_aventureiro_maior:2 };
+
+  function _onQuiverSlotClick(gearSlot, pocketIndex){
+    if(_readOnly) return;
+    if(_selected?.kind === 'bag'){
+      GS.moveQuiverAmmo('to_quiver', gearSlot, pocketIndex, _selected.index, _currentPlayer()?.gear?.[gearSlot]?.quiver_token);
+      _selected = null; _gamepadAction = null; return;
+    }
+    const item = _currentPlayer()?.gear?.[gearSlot]?.quiver_slots?.[pocketIndex];
+    _selected = _selected?.kind === 'quiver' && _selected.gearSlot === gearSlot && _selected.pocketIndex === pocketIndex
+      ? null : item ? {kind:'quiver', gearSlot, pocketIndex, quiverToken:_currentPlayer()?.gear?.[gearSlot]?.quiver_token} : null;
+    _gamepadAction = null; refresh(); _focusSelectedSlot();
+  }
+
+  function _renderQuivers(host, player){
+    for(const gearSlot of ['off_hand', 'item1', 'item2']){
+      const quiver = player.gear?.[gearSlot], capacity = QUIVER_CAPACITIES[quiver?.id];
+      if(!capacity) continue;
+      const section = document.createElement('section'); section.className = 'inv-belt-section';
+      const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
+      heading.textContent = `${quiver.name} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
+      const row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
+      for(let i = 0; i < capacity; i++){
+        const item = quiver.quiver_slots?.[i];
+        const slot = document.createElement('div');
+        slot.className = 'inv-bagslot inv-quiver-pocket' + (item ? ' filled' : ' empty');
+        slot.dataset.gearSlot = gearSlot; slot.dataset.pocketIndex = String(i);
+        slot.title = item ? `${_itemDisplayName(item)} ×${item.ammo_count}` : t('ui.inv.aljava_slot_vazio', {n:i + 1});
+        slot.setAttribute('aria-label', slot.title);
+        if(item){
+          slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🏹')}</span><span class="inv-belt-count">${item.ammo_count}</span>`;
+          _wireTooltip(slot, item.id, null, item);
+        }
+        if(_selected?.kind === 'quiver' && _selected.gearSlot === gearSlot && _selected.pocketIndex === i) slot.classList.add('selected');
+        if(!_readOnly){
+          slot.tabIndex = 0; slot.dataset.inventorySlot = 'quiver'; slot.setAttribute('role', 'button');
+          slot.onclick = () => _onQuiverSlotClick(gearSlot, i);
+          slot.addEventListener('keydown', e => {if(e.key === 'Enter' || e.key === ' '){e.preventDefault(); slot.click();}});
+          if(item){ slot.draggable = true; slot.addEventListener('dragstart', e => {
+            _selected = {kind:'quiver', gearSlot, pocketIndex:i, quiverToken:quiver.quiver_token};
+            e.dataTransfer.setData('text/plain', JSON.stringify(_selected)); e.dataTransfer.effectAllowed = 'move';
+          }); }
+          slot.addEventListener('dragover', e => {if(_selected?.kind === 'bag'){e.preventDefault(); slot.classList.add('drop-hover');}});
+          slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
+          slot.addEventListener('drop', e => {e.preventDefault(); e.stopPropagation(); slot.classList.remove('drop-hover'); _onQuiverSlotClick(gearSlot, i);});
+        }
+        row.appendChild(slot);
+      }
+      host.appendChild(section);
+    }
+  }
 
   function _beltEntry(player, gearSlot, pocketIndex){
     const belt = player?.gear?.[gearSlot];
     if(!BELT_CAPACITIES[belt?.id] || pocketIndex < 0 || pocketIndex >= BELT_CAPACITIES[belt.id]) return null;
     const entry = belt.utility_belt_slots?.[pocketIndex];
-    return entry?.item && Number.isInteger(entry.quantity) && entry.quantity >= 1 && entry.quantity <= 4 ? entry : null;
+    return entry?.item && Number.isInteger(entry.quantity) && entry.quantity >= 1
+      && entry.quantity <= BELT_STACK_CAPACITIES[belt.id] ? entry : null;
   }
 
   function _activateBeltItem(gearSlot, pocketIndex){
@@ -719,7 +798,7 @@ const InventoryModal = (() => {
         const slot = document.createElement('div');
         slot.className = 'inv-bagslot inv-belt-pocket' + (item ? ' filled' : ' empty');
         slot.dataset.gearSlot = gearSlot; slot.dataset.pocketIndex = String(pocketIndex);
-        slot.title = item ? `${item.name} ×${entry.quantity}` : t('ui.inv.cinto_bolso_vazio', {n:pocketIndex + 1});
+        slot.title = item ? `${_itemDisplayName(item)} ×${entry.quantity}` : t('ui.inv.cinto_bolso_vazio', {n:pocketIndex + 1});
         slot.setAttribute('aria-label', slot.title);
         if(item){
           slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🧪')}</span><span class="inv-belt-count">${entry.quantity}</span>`;
@@ -757,6 +836,7 @@ const InventoryModal = (() => {
       }
       host.appendChild(section);
     }
+    _renderQuivers(host, player);
   }
 
   function _renderBag(overlay, player){
@@ -774,9 +854,9 @@ const InventoryModal = (() => {
         slot.tabIndex = 0;
         slot.dataset.inventorySlot = 'bag';
         slot.setAttribute('role', 'button');
-        slot.setAttribute('aria-label', item ? item.name : t('ui.inv.espaco_vazio'));
+        slot.setAttribute('aria-label', item ? _itemDisplayName(item) : t('ui.inv.espaco_vazio'));
       }
-      slot.title = item ? item.name : 'Vazio';
+      slot.title = item ? _itemDisplayName(item) : 'Vazio';
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}` : '';
       const action = _bagActionState(item, player);
       const { isScroll, isConsumable, isArremessavel, podeUsar, podeConjurar, podeArremessar } = action;
@@ -930,6 +1010,7 @@ const InventoryModal = (() => {
                 <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button><div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div></div>
               </div>
               ${typeof window._renderAcoesExplicacaoHTML === 'function' ? window._renderAcoesExplicacaoHTML() : ''}
+              <div class="inv-hero-strip"></div>
               <div class="inv-grid"></div>
               <div class="inv-arrow-auto-host"></div>
               <div class="inv-gold">🪙 <span></span></div>
@@ -943,6 +1024,7 @@ const InventoryModal = (() => {
       </div>`;
     overlay.querySelector('.inv-close').onclick = close;
     overlay.querySelector('.inv-gold span').textContent = player.gold ?? 0;
+    _renderHeroStrip(overlay, player);
     _renderGear(overlay, player);
     _renderArrowAutoEquip(overlay, player);
     _renderBelts(overlay, player);
@@ -952,6 +1034,84 @@ const InventoryModal = (() => {
     _wirePanelToggles(overlay);
     _applyPanelPrefs(overlay);
     _restoreGamepadFocus(focusBeforeRender);
+  }
+
+  // Faixa com os retratos dos OUTROS heróis do jogador: soltar um item aqui o
+  // passa para a bolsa dele (o servidor valida adjacência e espaço livre).
+  function _renderHeroStrip(overlay, player){
+    const strip = overlay.querySelector('.inv-hero-strip');
+    if(!strip || typeof GS === 'undefined') return;
+    strip.innerHTML = '';
+    strip.classList.remove('on');
+    if(_readOnly || !GS.temGrupo || !GS.ehMeuHeroi(player.id)) return;
+    const gs = GS.gameState, estado = gs || GS.cityState;
+    const meus = (estado?.players || []).filter(q => GS.ehMeuHeroi(q.id) && q.class_id);
+    if(meus.length < 2) return;
+    const portraits = (typeof HERO_PORTRAIT_PATHS !== 'undefined') ? HERO_PORTRAIT_PATHS : {};
+    meus.forEach(q => {
+      const atual = q.id === player.id;
+      const longe = !atual && !!(gs && gs.phase === 'playing' && !q.fora_masmorra && !player.fora_masmorra
+        && Array.isArray(q.pos) && Array.isArray(player.pos)
+        && Math.max(Math.abs(q.pos[0] - player.pos[0]), Math.abs(q.pos[1] - player.pos[1])) > 1);
+      const chip = document.createElement('div');
+      chip.className = 'inv-hero-chip' + (longe ? ' far' : '') + (atual ? ' current' : '');
+      chip.dataset.heroId = q.id;
+      chip.title = atual ? (q.name || '') : t('ui.inv.passar_item_para', {nome: q.name || ''});
+      chip.innerHTML = `<img src="${portraits[q.class_id] || ''}" alt=""><span></span>`;
+      chip.querySelector('span').textContent = q.name || '';
+      chip.addEventListener('dragover', (e) => {
+        if(atual || !q.alive) return;
+        if(!_selected || (_selected.kind !== 'bag' && _selected.kind !== 'gear')) return;
+        e.preventDefault(); chip.classList.add('drop-hover');
+      });
+      chip.addEventListener('dragleave', () => chip.classList.remove('drop-hover'));
+      chip.addEventListener('drop', (e) => {
+        e.preventDefault(); e.stopPropagation(); chip.classList.remove('drop-hover');
+        if(!atual && q.alive) _transferSelectedTo(q.id);
+      });
+      // Sem item selecionado, o retrato leva ao inventário daquele herói.
+      chip.addEventListener('click', () => {
+        if(atual) return;
+        if(_selected){ if(q.alive) _transferSelectedTo(q.id); } else _irParaHeroi(q.id);
+      });
+      strip.appendChild(chip);
+    });
+    strip.classList.add('on');
+  }
+
+  // Troca o inventário aberto para outro herói meu (o foco do jogo vai junto,
+  // pois as ações do inventário valem para o herói em foco).
+  function _irParaHeroi(pid){
+    if(_readOnly || typeof GS === 'undefined' || !GS.ehMeuHeroi(pid)) return false;
+    // focarHeroi fecha o inventário (o que estava aberto era do herói anterior): reabre no novo.
+    if(GS.temGrupo && GS.myPid !== pid) GS.focarHeroi(pid);
+    open(pid);
+    return true;
+  }
+
+  // Alvo de soltura externo (retratos da barra da cidade): passa o item
+  // selecionado para o herói `pid`. Devolve true se havia um item arrastado.
+  function soltarNoHeroi(pid){
+    if(!_openPid || _readOnly || !_selected || (_selected.kind !== 'bag' && _selected.kind !== 'gear')) return false;
+    if(pid === _openPid || !GS.ehMeuHeroi(pid)) return false;
+    _transferSelectedTo(pid);
+    return true;
+  }
+  function temItemSelecionado(){ return !!(_openPid && !_readOnly && _selected
+    && (_selected.kind === 'bag' || _selected.kind === 'gear')); }
+
+  function _transferSelectedTo(toPid){
+    const sel = _selected, player = _currentPlayer();
+    if(!sel || !player || (sel.kind !== 'bag' && sel.kind !== 'gear')){ _selected = null; refresh(); return; }
+    const enviar = () => {
+      _selected = null; _gamepadAction = null;
+      GS.transferItem(sel.kind, sel.kind === 'bag' ? sel.index : sel.slotKey, toPid, player.id);
+    };
+    if(sel.kind === 'gear' && _botaAladaEmVoo(player, sel.slotKey)){
+      _confirmarDesequiparBota(player, sel.slotKey, enviar, () => { _gamepadAction = null; refresh(); });
+      return;
+    }
+    enviar();
   }
 
   function _onGearSlotClick(slotKey, blocked){
@@ -989,7 +1149,7 @@ const InventoryModal = (() => {
   function _attemptMoveToGear(slotKey){
     const sel = _selected;
     _gamepadAction = null;
-    if(!sel || sel.kind === 'gear' || sel.kind === 'belt'){ refresh(); return; }   // gear→gear: sem suporte, ignora
+    if(!sel || sel.kind === 'gear' || sel.kind === 'belt' || sel.kind === 'quiver'){ refresh(); return; }   // gear→gear: sem suporte, ignora
     // Soltar um item do baú no paperdoll é a mesma retirada de sempre: quem escolhe
     // o encaixe é o servidor, que já manda o item para o slot livre compatível.
     // (Cuidado: `sel.index` é índice DO BAÚ — tratá-lo como índice da bolsa
@@ -997,6 +1157,13 @@ const InventoryModal = (() => {
     if(sel.kind === 'stash'){ GS.refugioTake(_storageCtx.scope, sel.index); return; }
     const player = _currentPlayer();
     const item = player && player.bag ? player.bag[sel.index] : null;
+    // Munição solta sobre a pilha igual equipada: junta em vez de trocar.
+    if(sel.kind === 'bag' && slotKey === 'off_hand'
+        && GS.mesmaPilhaMunicao(item, (player.gear || {}).off_hand)){
+      _selected = null;
+      GS.juntarMunicao({ bolsa: sel.index }, { equip: 'off_hand' });
+      return;
+    }
     if(!item || !GS.canPlaceItem(item, slotKey, player.gear || {})){ refresh(); return; }
     const ehOffhand = slotKey === 'off_hand' && GS.isOffhandWeapon(item);
     const trocaBotaEmVoo = slotKey === 'boots'
@@ -1022,12 +1189,27 @@ const InventoryModal = (() => {
       GS.moveUtilityBeltItem('to_bag', sel.gearSlot, sel.pocketIndex, Math.min(toIndex, _currentPlayer()?.bag?.length || 0));
       _selected = null; _gamepadAction = null; return;
     }
-    if(sel.kind === 'bag'){
-      if(sel.index !== toIndex) GS.reorderBag(sel.index, toIndex);
-      else refresh();
-      return;
+    if(sel.kind === 'quiver'){
+      GS.moveQuiverAmmo('to_bag', sel.gearSlot, sel.pocketIndex, Math.min(toIndex, _currentPlayer()?.bag?.length || 0), sel.quiverToken);
+      _selected = null; _gamepadAction = null; return;
     }
     const player = _currentPlayer();
+    const alvo = player && player.bag ? player.bag[toIndex] : null;
+    if(sel.kind === 'bag'){
+      if(sel.index === toIndex){ refresh(); return; }
+      // Pilha de munição solta sobre outra igual: junta (até o limite da pilha).
+      if(GS.mesmaPilhaMunicao(player && player.bag ? player.bag[sel.index] : null, alvo)){
+        _selected = null;
+        GS.juntarMunicao({ bolsa: sel.index }, { bolsa: toIndex });
+      } else GS.reorderBag(sel.index, toIndex);
+      return;
+    }
+    if(sel.kind === 'gear' && sel.slotKey === 'off_hand'
+        && GS.mesmaPilhaMunicao((player.gear || {}).off_hand, alvo)){
+      _selected = null; _gamepadAction = null;
+      GS.juntarMunicao({ equip: 'off_hand' }, { bolsa: toIndex });
+      return;
+    }
     if(sel.kind === 'gear' && _botaAladaEmVoo(player, sel.slotKey)){
       _confirmarDesequiparBota(player, sel.slotKey, () => {
         _selected = null; _gamepadAction = null; GS.unequip(sel.slotKey);
@@ -1072,15 +1254,15 @@ const InventoryModal = (() => {
     const tooltipEl = document.getElementById('item-tooltip');
     if(!tooltipEl) return;
     // O catálogo do cliente não guarda o número de doses da instância na
-    // mochila. Para poções de cura, o quadro usa a cópia enviada pelo servidor.
+    // mochila. Para itens multiuso, o quadro usa a cópia enviada pelo servidor.
     const atual = itemInstance || item;
+    const maxUses = Number(atual.max_uses || 1);
+    const usesLeft = Number(atual.uses_left == null ? maxUses : atual.uses_left);
+    const doses = maxUses > 1
+      ? renderLinhaTooltip(atual.effect === 'rum' ? '🍾' : (atual.effect === 'hidromel' ? '🍯' : (atual.effect === 'absinto' ? '🍸' : '🧪')), t('ui.inv.doses_restantes'), `${usesLeft}/${maxUses}`)
+      : '';
     let html;
     if(atual.effect === 'heal' || atual.effect === 'regeneration'){
-      const maxUses = Number(atual.max_uses || 1);
-      const usesLeft = Number(atual.uses_left == null ? maxUses : atual.uses_left);
-      const doses = maxUses > 1
-        ? renderLinhaTooltip('🧪', t('ui.inv.doses_restantes'), `${usesLeft}/${maxUses}`)
-        : '';
       const regeneracao = atual.effect === 'regeneration';
       html = `
         <div style="padding:10px 14px 8px; border-bottom:1px solid #c8a95133;">
@@ -1091,11 +1273,18 @@ const InventoryModal = (() => {
           ${regeneracao
             ? renderLinhaTooltip('🌿', 'Reserva', `${atual.value || 0} HP; +1 HP por rodada`)
             : renderLinhaTooltip('❤️', t('ui.tooltip.cura_por_uso'), `+${atual.value ?? atual.valor ?? 0} HP`)}
+          ${Number(atual.fome || 0)
+            ? renderLinhaTooltip('🍖', t('ui.tooltip.fome'), `+${Number(atual.fome || 0)}`)
+            : ''}
+          ${Number(atual.sede || 0)
+            ? renderLinhaTooltip('💧', t('ui.tooltip.sede'), `+${Number(atual.sede || 0)}`)
+            : ''}
           ${renderLinhaTooltip('⚡', t('ui.acoes.uso'), t('ui.acoes.tipo_bonus'))}
           ${doses}
         </div>`;
     } else {
       html = gerarConteudoTooltip(item);
+      if(doses) html += `<div style="padding:0 14px 10px;">${doses}</div>`;
     }
     const equipped = comparisonItemId ? GS.CATALOGO_ITENS[comparisonItemId] : null;
     if(equipped){
@@ -1135,7 +1324,7 @@ const InventoryModal = (() => {
     if(!itemId) return;
     let pressTimer = null;
     const item = itemInstance || GS.CATALOGO_ITENS[itemId] || {};
-    _ligarTooltipItem(el, item.name || item.nome || itemId, () => {
+    _ligarTooltipItem(el, _itemDisplayName(item), () => {
       _showInventoryTooltip(itemId, comparisonItemId, null, itemInstance);
     });
     el.addEventListener('touchstart', (e) => {
@@ -1197,14 +1386,14 @@ const InventoryModal = (() => {
       slot.setAttribute('role', 'button');
       slot.setAttribute('data-gamepad-action', 'activate');
       slot.setAttribute('aria-label', item
-        ? `${item.name || item.id || t('ui.bau.slot.padrao')} — ${t('ui.refugio.retirar')}`
+        ? `${_itemDisplayName(item)} — ${t('ui.refugio.retirar')}`
         : `${t('ui.inv.espaco_vazio')} — ${t('ui.refugio.guardar')}`);
-      slot.title = item ? (item.name || item.id || t('ui.bau.slot.padrao')) : t('ui.inv.espaco_vazio');
+      slot.title = item ? _itemDisplayName(item) : t('ui.inv.espaco_vazio');
       slot.innerHTML = item
         ? `<span class="storage-slot-icon">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}<small></small>`
         : '<span class="storage-slot-plus">+</span>';
       if(item){
-        slot.querySelector('small').textContent = item.name || item.id || 'Item';
+        slot.querySelector('small').textContent = _itemDisplayName(item);
         _wireTooltip(slot, item.id, null, item);
         slot.draggable = true;
         slot.addEventListener('dragstart', (e) => {
@@ -1430,6 +1619,10 @@ const InventoryModal = (() => {
     const focused = _gamepadFocusedSlot();
     if(!focused) return false;
     const kind = focused.dataset.inventorySlot;
+    if(kind === 'quiver'){
+      _onQuiverSlotClick(focused.dataset.gearSlot, Number(focused.dataset.pocketIndex));
+      return true;
+    }
     if(kind === 'belt'){
       const gearSlot = focused.dataset.gearSlot, pocketIndex = Number(focused.dataset.pocketIndex);
       if(_selected?.kind === 'belt' && _selected.gearSlot === gearSlot && _selected.pocketIndex === pocketIndex){
@@ -1439,7 +1632,7 @@ const InventoryModal = (() => {
       }
       if(_selected?.kind === 'bag'){_onBeltSlotClick(gearSlot, pocketIndex); return true;}
       _selected = _beltEntry(_currentPlayer(), gearSlot, pocketIndex) ? {kind:'belt', gearSlot, pocketIndex} : null;
-      const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex};
+      const sourceInfo = {source:'utility_belt', gearSlot, pocketIndex, beltToken:_currentPlayer()?.gear?.[gearSlot]?.utility_belt_token};
       _gamepadAction = _selected && _canOfferGamepadAction(null, sourceInfo) ? {sourceInfo, choice:'use'} : null;
       _gamepadRefreshSelected(); return true;
     }
@@ -1556,6 +1749,6 @@ const InventoryModal = (() => {
     return true;
   }
 
-  return { open, close, toggle, isOpen, refresh, openStorage, updateStorage, storageScope,
+  return { open, close, toggle, isOpen, refresh, soltarNoHeroi, temItemSelecionado, irParaHeroi: _irParaHeroi, openStorage, updateStorage, storageScope,
     gamepadUseFocused, gamepadConfirmFocused, gamepadCycleAction, gamepadActionOpen, gamepadCancelSelection, gamepadDropSelected };
 })();

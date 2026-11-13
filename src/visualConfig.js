@@ -322,6 +322,20 @@ window.VC = {
       emissiva: [0.035, 0.130, 0.220],
       filtro2D: 'grayscale(0.24) sepia(0.28) hue-rotate(155deg) saturate(1.55) brightness(1.08) contrast(1.04)',
     },
+
+    // Servos do jogador (mortos-vivos reanimados e elementais): a mesma arte
+    // do monstro, puxada para o violeta, para não se confundir com o inimigo.
+    // 3D: cada parte vira violeta com o brilho que tinha (luminância × cor ×
+    // ganho) e se mistura `mistura` com a cor original — o desenho continua
+    // legível, só muda o tom.
+    servo: {
+      cor:      [0.66, 0.42, 1.00],
+      ganho:    1.5,
+      mistura:  0.75,
+      emissiva: [0.06, 0.015, 0.10],
+      sprite:   [0.80, 0.60, 1.00],
+      filtro2D: 'grayscale(0.4) sepia(0.7) hue-rotate(225deg) saturate(2.4) brightness(1.05)',
+    },
   },
 
   // ── Typography ─────────────────────────────────────────────────────────────

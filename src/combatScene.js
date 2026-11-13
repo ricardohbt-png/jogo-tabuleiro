@@ -92,6 +92,8 @@
     return {
       kind, item_id: p.item_id || null, item_emoji: p.item_emoji || null, item_elemento: p.item_elemento || null,
       area: !!p.area, area_raio: Math.max(0, Number(p.area_raio) || 0), sem_dado: !!p.sem_dado,
+      explosive_ammo: !!p.explosive_ammo,
+      explosion_pos: Array.isArray(p.explosion_pos) ? p.explosion_pos.slice() : null,
     };
   }
   function travelMsDe(kind, distCasas) {
@@ -220,6 +222,8 @@
       weaponId: s.weaponId,
       area: !!(s.projectile && s.projectile.area),
       area_raio: s.projectile ? s.projectile.area_raio : 0,
+      explosive_ammo: !!(s.projectile && s.projectile.explosive_ammo),
+      explosion_pos: s.projectile && s.projectile.explosion_pos ? s.projectile.explosion_pos.slice() : null,
       feedbacks: s.impact.feedbacks.splice(0),   // emitido UMA vez
       death: !!s.impact.death,
       onImpact: s.impact.onImpact.splice(0),

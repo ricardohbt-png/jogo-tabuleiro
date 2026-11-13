@@ -96,7 +96,18 @@ class MapaTests(unittest.TestCase):
         d = aplicado()
         Missao.aplicar(d)
         G.aplicar_guia(d)
-        self.assertEqual(d, aplicado())
+
+        def sem_ruido(m):
+            # O editor grava `tarefa.alvo: null` e gatilho de sala sem `raio`; o pipeline não escreve esses
+            # campos. Nenhum dos dois muda o jogo, então não contam como "desfazer" o trabalho do autor.
+            m = copy.deepcopy(m)
+            for f in m["falas"]:
+                if isinstance(f.get("tarefa"), dict) and f["tarefa"].get("alvo") is None:
+                    f["tarefa"].pop("alvo", None)
+                if isinstance(f.get("trigger"), dict) and f["trigger"].get("tipo") == "sala":
+                    f["trigger"].pop("raio", None)
+            return m
+        self.assertEqual(sem_ruido(d), sem_ruido(aplicado()))
 
 
 class LicoesTests(unittest.TestCase):

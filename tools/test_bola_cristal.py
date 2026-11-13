@@ -50,7 +50,8 @@ def main():
           and item.get("effect") == "crystal_ball_clairvoyance")
     check("estoque do mercador inclui a bola em cada cidade com mercador",
           all("bola_cristal_clarividencia" in stock.get("mercador", [])
-              for stock in server.CITY_SHOPS.values() if "mercador" in stock))
+              for cid, stock in server.CITY_SHOPS.items()
+              if "mercador" in stock and cid != "vila_dos_charcos"))   # loja especial da Zumbra
 
     print("\n[2] Uso por qualquer classe, sem gastar slot, com escala diferenciada")
     for class_id in ("warrior", "rogue", "paladin", "bard", "mage", "cleric"):

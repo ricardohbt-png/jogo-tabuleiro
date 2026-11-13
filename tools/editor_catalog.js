@@ -157,6 +157,120 @@ window.EDITOR_CATALOG = {
       "percepcao": 12
     },
     {
+      "type": "vaca",
+      "name": "Vaca Arisca",
+      "emoji": "🐄",
+      "boss": false,
+      "tier": 0,
+      "cr": 0.25,
+      "hp": 16,
+      "ac": 11,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "vaca",
+      "str_": 14,
+      "dex": 10,
+      "con_": 14,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 2,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Cabeçada",
+          "atk_bonus": 3,
+          "damage": "1d6+1",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [],
+      "loot_drops": [
+        {
+          "kind": "item",
+          "item_id": "carne_bovina",
+          "chance": 100,
+          "quantity_range": [
+            1,
+            3
+          ]
+        },
+        {
+          "kind": "item",
+          "item_id": "leite",
+          "chance": 100,
+          "quantity_range": [
+            1,
+            4
+          ]
+        }
+      ],
+      "gold": 0,
+      "ai_type": "vaca_passiva",
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 12
+    },
+    {
+      "type": "cavalo_sela",
+      "name": "Cavalo de Sela",
+      "emoji": "🐎",
+      "boss": false,
+      "tier": 0,
+      "cr": 0.25,
+      "hp": 16,
+      "ac": 11,
+      "movement": 8,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "cavalo_sela",
+      "str_": 16,
+      "dex": 12,
+      "con_": 14,
+      "int_": 2,
+      "fort": 4,
+      "ref_": 3,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Coice",
+          "atk_bonus": 4,
+          "damage": "1d6+2",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "disparada_cavalo_sela",
+          "name": "Disparada",
+          "icon": "💨",
+          "action_type": "passiva",
+          "cooldown_turns": 4,
+          "descricao": "Dobra o deslocamento neste turno. Recarga: 4 rodadas."
+        }
+      ],
+      "gold": 0,
+      "ai_type": "cavalo_passivo",
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 13
+    },
+    {
       "type": "skeleton",
       "name": "Esqueleto",
       "emoji": "💀",
@@ -195,18 +309,240 @@ window.EDITOR_CATALOG = {
       "type": "dark_mage",
       "name": "Mago das Trevas",
       "emoji": "🧟",
+      "boss": false,
       "tier": 2,
-      "cr": 0.5,
-      "hp": 12,
-      "ac": 12,
+      "cr": 1,
+      "hp": 7,
+      "ac": 11,
+      "natural_armor": 0,
       "movement": 6,
       "vision_base": 0,
-      "atk_bonus": 4,
-      "damage": "1d6",
-      "gold": 20,
-      "xp": 30,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "necromante",
+      "base_attack_bonus": 0,
+      "caster_level": 1,
+      "spell_slots_per_combat": 3,
+      "str_": 10,
+      "dex": 12,
+      "con_": 12,
+      "int_": 14,
+      "fort": 2,
+      "ref_": 2,
+      "will": 3,
+      "random_equipment": {
+        "rings": [
+          {
+            "id": "ring_vita",
+            "chance": 10
+          }
+        ],
+        "scrolls": [
+          {
+            "circle": 1,
+            "class": "mage",
+            "chance": 10
+          }
+        ]
+      },
+      "attacks": [
+        {
+          "name": "Cajado de Madeira",
+          "atk_bonus": 0,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1
+        }
+      ],
+      "special_abilities": [],
+      "monster_spells": [
+        {
+          "id": "relampago",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        },
+        {
+          "id": "barreira_arcana",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        },
+        {
+          "id": "sono",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        },
+        {
+          "id": "maldicao_corpo_pesado",
+          "limit_mode": "encounter",
+          "uses_per_combat": 3
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "equipped_items": [
+        "cloak",
+        "cajado_madeira"
+      ],
+      "gold_range": [
+        4,
+        12
+      ],
+      "undead": false,
       "subtipo": "raca_padrao",
       "percepcao": 13
+    },
+    {
+      "type": "bardo",
+      "name": "Bardo",
+      "emoji": "🎻",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 9,
+      "ac": 13,
+      "natural_armor": 0,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "bardo",
+      "portrait": "bardo",
+      "base_attack_bonus": 0,
+      "str_": 10,
+      "dex": 16,
+      "con_": 12,
+      "int_": 12,
+      "fort": 0,
+      "ref_": 2,
+      "will": 2,
+      "random_equipment": {
+        "armors": [
+          "cloak",
+          "leather",
+          "leather_plate"
+        ],
+        "weapons": [
+          "hand_crossbow",
+          "bordao",
+          "cajado_madeira",
+          "chicote",
+          "dagger",
+          "besta"
+        ],
+        "instruments": [
+          "harpa",
+          "tambor",
+          "sino",
+          "alaude",
+          "trompa",
+          "lira",
+          "flauta",
+          "violino",
+          "gaita"
+        ],
+        "instrument_qualities": [
+          {
+            "id": "velho",
+            "chance": 40
+          },
+          {
+            "id": "rustico",
+            "chance": 30
+          },
+          {
+            "id": "padrao",
+            "chance": 25
+          },
+          {
+            "id": "refinado",
+            "chance": 5
+          }
+        ],
+        "instrument_origins": [
+          {
+            "id": "humana",
+            "chance": 99
+          },
+          {
+            "id": "elfica",
+            "chance": 0.5
+          },
+          {
+            "id": "ana",
+            "chance": 0.5
+          }
+        ],
+        "ammunition": {
+          "count": 20,
+          "incendiary_chance": {
+            "hand_crossbow": 10,
+            "besta": 5
+          }
+        }
+      },
+      "attacks": [
+        {
+          "name": "Arma equipada",
+          "atk_bonus": 3,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "dex",
+          "damage_attribute": "dex",
+          "apply_attribute_damage": true,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "hero_bard_cancao_heroica",
+          "name": "Canção Heroica",
+          "source": "heroi",
+          "uses_per_combat": 1,
+          "duration_rounds": 4,
+          "action_type": "acao",
+          "descricao": "Uma vez por combate, concede +1 em 1d4+1 atributos aos monstros aliados em até 5 casas por 1d4+2 rodadas."
+        },
+        {
+          "id": "bardo_provocacao",
+          "name": "Provocação",
+          "cooldown_turns": 4,
+          "action_type": "acao_bonus",
+          "descricao": "Um herói a até 3 casas testa Vontade CD 11 por até 3 turnos; a falha força aproximação e ataque ao bardo."
+        },
+        {
+          "id": "bardo_habilidade_instrumento",
+          "name": "Habilidade do Instrumento",
+          "cooldown_turns": 4,
+          "action_type": "acao",
+          "descricao": "Ativa a habilidade do instrumento equipado. Recarga de 4 rodadas."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "gold_range": [
+        5,
+        15
+      ],
+      "ai_type": "bardo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
     },
     {
       "type": "troll",
@@ -1000,6 +1336,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "medio",
       "image": "jacare",
+      "portrait": "jacare",
       "str_": 18,
       "dex": 10,
       "con_": 16,
@@ -1393,6 +1730,102 @@ window.EDITOR_CATALOG = {
       "percepcao": 12
     },
     {
+      "type": "urso_pardo",
+      "name": "Urso Pardo",
+      "emoji": "🐻",
+      "boss": false,
+      "tier": 2,
+      "cr": 3,
+      "hp": 48,
+      "ac": 15,
+      "natural_armor": 4,
+      "movement": 6,
+      "vision_base": 3,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "grande",
+      "image": "ursoNegro",
+      "str_": 22,
+      "dex": 12,
+      "con_": 16,
+      "int_": 2,
+      "fort": 6,
+      "ref_": 3,
+      "will": 1,
+      "attacks": [
+        {
+          "name": "Mordida",
+          "atk_bonus": 7,
+          "damage": "1d10+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "perfurante"
+        },
+        {
+          "name": "Garra",
+          "atk_bonus": 7,
+          "damage": "1d8+5",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 2,
+          "on_hit": null,
+          "categoria": "cortante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "furia",
+          "name": "Fúria",
+          "action_type": "passiva",
+          "descricao": "Com HP < 50%: +2 de dano em todos os ataques"
+        },
+        {
+          "id": "golpe_devastador_urso_pardo",
+          "name": "Golpe Devastador II",
+          "icon": "💥",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 4,
+          "descricao": "A cada 4 rodadas, dobra os dados da próxima Mordida; o modificador fixo não é dobrado."
+        },
+        {
+          "id": "investida_heroica_urso_pardo",
+          "name": "Investida Heroica",
+          "icon": "⚡",
+          "action_type": "passiva",
+          "cooldown_turns": 0,
+          "descricao": "No primeiro avanço do combate, dobra o movimento para se aproximar. Se avançar 2 casas seguidas na mesma direção, a próxima mordida tem vantagem e +2 de dano."
+        }
+      ],
+      "immunities": [],
+      "weaknesses": [
+        {
+          "type": "physical",
+          "categoria": "perfurante",
+          "bonus_flat": 1,
+          "descricao": "Corpo massivo: +1 dano de perfuração/alcance (arcos, bestas, lanças)"
+        },
+        {
+          "type": "physical",
+          "categoria": "contundente",
+          "bonus_flat": -1,
+          "descricao": "Corpo massivo: -1 dano de concussão (martelos, maças, bastões)"
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "animal",
+      "percepcao": 13
+    },
+    {
       "type": "orc_guerreiro",
       "name": "Orc Guerreiro",
       "emoji": "👹",
@@ -1505,6 +1938,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "pequeno",
       "image": "goblinArqueiro",
+      "base_attack_bonus": 2,
       "str_": 10,
       "dex": 14,
       "con_": 10,
@@ -1522,7 +1956,7 @@ window.EDITOR_CATALOG = {
           ],
           "num_attacks": 1,
           "on_hit": null,
-          "range": 8,
+          "range": 6,
           "categoria": "perfurante"
         }
       ],
@@ -1551,23 +1985,13 @@ window.EDITOR_CATALOG = {
         }
       ],
       "loot_table": {
-        "1-40": null,
-        "41-70": {
+        "1-100": {
           "tipo": "gold",
-          "valor": 2
-        },
-        "71-90": {
-          "tipo": "gold",
-          "valor": 2
-        },
-        "91-100": {
-          "tipo": "gold",
-          "valor": 3
+          "valor": "1d6+4"
         }
       },
-      "guaranteed_loot": [
-        "arco_curto"
-      ],
+      "guaranteed_loot": [],
+      "equipment_enabled": true,
       "ai_type": "goblin_arqueiro",
       "undead": false,
       "subtipo": "raca_padrao",
@@ -1896,6 +2320,193 @@ window.EDITOR_CATALOG = {
       "percepcao": 13
     },
     {
+      "type": "bandido",
+      "name": "Bandido",
+      "emoji": "🗡️",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 9,
+      "ac": 14,
+      "natural_armor": 0,
+      "movement": 7,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "bandido",
+      "portrait": "bandido",
+      "atk_bonus": 4,
+      "base_attack_bonus": 0,
+      "str_": 10,
+      "dex": 18,
+      "con_": 12,
+      "int_": 10,
+      "fort": 0,
+      "ref_": 2,
+      "will": 0,
+      "random_equipment": {
+        "weapons": [
+          "dagger",
+          "bordao",
+          "besta"
+        ],
+        "crossbow_chance": 30,
+        "crossbow_bolts": 10,
+        "incendiary_bolts_chance": 10,
+        "silver_bolts_chance": 10,
+        "secondary_dagger_chance": 50
+      },
+      "attacks": [
+        {
+          "name": "Arma principal",
+          "atk_bonus": 4,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "dex",
+          "damage_attribute": "dex",
+          "apply_attribute_damage": true,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "hero_rogue_ataque_furtivo",
+          "name": "Ataque Furtivo 1",
+          "action_type": "passiva",
+          "hero_level": 1,
+          "requires_hidden": true,
+          "descricao": "O primeiro ataque ao sair das sombras tem vantagem e causa +2d4 de dano."
+        },
+        {
+          "id": "bandido_esconder_se",
+          "name": "Esconder-se 1",
+          "action_type": "acao_bonus",
+          "cooldown_turns": 4,
+          "descricao": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar."
+        },
+        {
+          "id": "bandido_preparar_armadilha",
+          "name": "Preparar Armadilha",
+          "action_type": "acao",
+          "cooldown_turns": 3,
+          "descricao": "Cada bandido sorteia lâmina escondida, armadilha incendiária ou rede. Prepara sua fórmula conhecida em uma casa livre adjacente; a preparação substitui o ataque do turno. Recarga de 3 rodadas."
+        },
+        {
+          "id": "envenenar_arma",
+          "name": "Envenenar Arma",
+          "action_type": "passiva",
+          "descricao": "20% de chance de carregar 1–2 frascos de Fungo Acre. Pode consumir um para envenenar a arma; o próximo acerto consome a dose."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "guaranteed_loot": [],
+      "equipment": [
+        "cloak",
+        "dagger",
+        "bordao",
+        "besta"
+      ],
+      "equipment_enabled": true,
+      "equipped_items": [
+        "cloak"
+      ],
+      "gold": "2–10",
+      "ai_type": "bandido",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
+    },
+    {
+      "type": "capanga",
+      "name": "Capanga",
+      "emoji": "🗡️",
+      "boss": false,
+      "tier": 1,
+      "cr": 1,
+      "hp": 14,
+      "ac": 10,
+      "natural_armor": 0,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "capanga",
+      "portrait": "capanga",
+      "atk_bonus": 5,
+      "base_attack_bonus": 2,
+      "str_": 16,
+      "dex": 10,
+      "con_": 14,
+      "int_": 8,
+      "fort": 4,
+      "ref_": 1,
+      "will": 0,
+      "attacks": [
+        {
+          "name": "Arma",
+          "atk_bonus": 5,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "str_",
+          "damage_attribute": "str_",
+          "apply_attribute_damage": true,
+          "categoria": "cortante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "capanga_mira_certeira",
+          "name": "Mira Certeira",
+          "action_type": "passiva",
+          "cooldown_turns": 2,
+          "descricao": "+2 no próximo ataque."
+        },
+        {
+          "id": "capanga_golpe_devastador",
+          "name": "Golpe Devastador",
+          "action_type": "passiva",
+          "cooldown_turns": 4,
+          "descricao": "Aumenta em 50% o dado do próximo ataque."
+        },
+        {
+          "id": "capanga_furia_berserker",
+          "name": "Fúria Berserker",
+          "action_type": "passiva",
+          "cooldown_turns": 8,
+          "descricao": "Desfere um ataque adicional."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment": [],
+      "equipment_enabled": true,
+      "equipped_items": [],
+      "gold_range": [
+        5,
+        20
+      ],
+      "ai_type": "capanga",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 12
+    },
+    {
       "type": "kobold_lanceiro",
       "name": "Kobold Lanceiro",
       "emoji": "🐊",
@@ -2045,6 +2656,84 @@ window.EDITOR_CATALOG = {
       "undead": false,
       "subtipo": "raca_padrao",
       "percepcao": 13
+    },
+    {
+      "type": "kobold_mago",
+      "name": "Kobold Mago",
+      "emoji": "🐊",
+      "boss": false,
+      "tier": 2,
+      "cr": 0.75,
+      "hp": 9,
+      "ac": 13,
+      "movement": 6,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "pequeno",
+      "image": "kobold_mago",
+      "caster_level": 1,
+      "spell_slots_per_combat": 3,
+      "str_": 8,
+      "dex": 15,
+      "con_": 10,
+      "int_": 14,
+      "fort": 2,
+      "ref_": 4,
+      "will": 4,
+      "random_equipment": {
+        "headwear": [
+          {
+            "id": "chapeu_bruxo",
+            "chance": 10
+          },
+          {
+            "id": "tiara_expansao_arcana",
+            "chance": 5
+          },
+          {
+            "id": "chapeu_arquimago",
+            "chance": 1
+          }
+        ]
+      },
+      "monster_spell_pool": [
+        "bola_fogo",
+        "relampago",
+        "sono",
+        "raio_congelante",
+        "barreira_arcana"
+      ],
+      "attacks": [
+        {
+          "name": "Adaga",
+          "atk_bonus": 3,
+          "damage": "1d4+1",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "on_hit": null,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [],
+      "monster_spells": [],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "equipped_items": [],
+      "gold_range": [
+        5,
+        20
+      ],
+      "ai_type": "agressivo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
     },
     {
       "type": "necromante",
@@ -3932,6 +4621,139 @@ window.EDITOR_CATALOG = {
       "percepcao": 15
     },
     {
+      "type": "bardo_da_caravana",
+      "name": "Bardo da Caravana",
+      "emoji": "🎻",
+      "boss": false,
+      "tier": 2,
+      "cr": 2,
+      "hp": 26,
+      "ac": 14,
+      "natural_armor": 0,
+      "movement": 6,
+      "movement_exception": true,
+      "vision_base": 0,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "bardo",
+      "portrait": "bardo",
+      "base_attack_bonus": 2,
+      "str_": 10,
+      "dex": 18,
+      "con_": 14,
+      "int_": 14,
+      "fort": 2,
+      "ref_": 4,
+      "will": 4,
+      "random_equipment": {
+        "armors": [
+          "leather_plate"
+        ],
+        "weapons": [
+          "besta",
+          "hand_crossbow",
+          "chicote"
+        ],
+        "instruments": [
+          "harpa",
+          "tambor",
+          "sino",
+          "alaude",
+          "trompa",
+          "lira",
+          "flauta",
+          "violino",
+          "gaita"
+        ],
+        "instrument_qualities": [
+          {
+            "id": "padrao",
+            "chance": 55
+          },
+          {
+            "id": "refinado",
+            "chance": 45
+          }
+        ],
+        "instrument_origins": [
+          {
+            "id": "humana",
+            "chance": 60
+          },
+          {
+            "id": "elfica",
+            "chance": 20
+          },
+          {
+            "id": "ana",
+            "chance": 20
+          }
+        ],
+        "ammunition": {
+          "count": 20,
+          "incendiary_chance": {
+            "hand_crossbow": 25,
+            "besta": 30
+          }
+        }
+      },
+      "attacks": [
+        {
+          "name": "Arma equipada",
+          "atk_bonus": 6,
+          "damage": "1d4",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "attack_attribute": "dex",
+          "damage_attribute": "dex",
+          "apply_attribute_damage": true,
+          "categoria": "perfurante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "hero_bard_cancao_heroica",
+          "name": "Canção Heroica",
+          "source": "heroi",
+          "uses_per_combat": 1,
+          "duration_rounds": 4,
+          "action_type": "acao",
+          "descricao": "Uma vez por combate, concede +1 em 1d4+1 atributos aos monstros aliados em até 5 casas por 1d4+2 rodadas."
+        },
+        {
+          "id": "bardo_provocacao",
+          "name": "Provocação",
+          "cooldown_turns": 3,
+          "action_type": "acao_bonus",
+          "descricao": "Um herói a até 3 casas testa Vontade CD 13 por até 3 turnos; a falha força aproximação e ataque ao bardo."
+        },
+        {
+          "id": "bardo_habilidade_instrumento",
+          "name": "Habilidade do Instrumento",
+          "cooldown_turns": 3,
+          "action_type": "acao",
+          "descricao": "Ativa a habilidade do instrumento equipado. Recarga de 3 rodadas."
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "gold_range": [
+        30,
+        60
+      ],
+      "ai_type": "bardo",
+      "undead": false,
+      "subtipo": "raca_padrao",
+      "percepcao": 14
+    },
+    {
       "type": "ferrao_charcos_jovem",
       "name": "Ferrão dos Charcos Jovem",
       "emoji": "🦂",
@@ -4733,6 +5555,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "enorme",
       "image": "ciclope",
+      "portrait": "ciclope",
       "str_": 24,
       "dex": 10,
       "con_": 18,
@@ -4920,6 +5743,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "enorme",
       "image": "gigante_guerreiro",
+      "portrait": "gigante_guerreiro",
       "str_": 22,
       "dex": 14,
       "con_": 20,
@@ -5138,6 +5962,7 @@ window.EDITOR_CATALOG = {
       ],
       "porte": "enorme",
       "image": "gigante_runas",
+      "portrait": "gigante_runas",
       "caster_level": 6,
       "str_": 20,
       "dex": 12,
@@ -6376,6 +7201,43 @@ window.EDITOR_CATALOG = {
       "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
     },
     {
+      "id": "disparada_cavalo_sela",
+      "name": "Disparada",
+      "icon": "💨",
+      "action_type": "passiva",
+      "cooldown_turns": 4,
+      "descricao": "Dobra o deslocamento neste turno. Recarga: 4 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "hero_bard_cancao_heroica",
+      "source": "heroi",
+      "source_id": "cancao_heroica",
+      "source_class": "bard",
+      "name": "Canção Heroica",
+      "icon": "🎵",
+      "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
+      "action_type": "acao",
+      "monster_effect": "vantagem_combate",
+      "monster_maintenance": true
+    },
+    {
+      "id": "bardo_provocacao",
+      "name": "Provocação",
+      "cooldown_turns": 4,
+      "action_type": "acao_bonus",
+      "descricao": "Um herói a até 3 casas testa Vontade CD 11 por até 3 turnos; a falha força aproximação e ataque ao bardo.",
+      "source": "monstro"
+    },
+    {
+      "id": "bardo_habilidade_instrumento",
+      "name": "Habilidade do Instrumento",
+      "cooldown_turns": 4,
+      "action_type": "acao",
+      "descricao": "Ativa a habilidade do instrumento equipado. Recarga de 4 rodadas.",
+      "source": "monstro"
+    },
+    {
       "id": "regeneracao_troll",
       "name": "Regeneração Troll",
       "action_type": "passiva",
@@ -6632,6 +7494,24 @@ window.EDITOR_CATALOG = {
       "source": "monstro"
     },
     {
+      "id": "golpe_devastador_urso_pardo",
+      "name": "Golpe Devastador II",
+      "icon": "💥",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 4,
+      "descricao": "A cada 4 rodadas, dobra os dados da próxima Mordida; o modificador fixo não é dobrado.",
+      "source": "monstro"
+    },
+    {
+      "id": "investida_heroica_urso_pardo",
+      "name": "Investida Heroica",
+      "icon": "⚡",
+      "action_type": "passiva",
+      "cooldown_turns": 0,
+      "descricao": "No primeiro avanço do combate, dobra o movimento para se aproximar. Se avançar 2 casas seguidas na mesma direção, a próxima mordida tem vantagem e +2 de dano.",
+      "source": "monstro"
+    },
+    {
       "id": "investida_brutal",
       "name": "Investida Brutal",
       "action_type": "passiva",
@@ -6717,6 +7597,46 @@ window.EDITOR_CATALOG = {
           "description": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
         }
       ]
+    },
+    {
+      "id": "bandido_esconder_se",
+      "name": "Esconder-se 1",
+      "action_type": "acao_bonus",
+      "cooldown_turns": 4,
+      "descricao": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar.",
+      "source": "monstro"
+    },
+    {
+      "id": "bandido_preparar_armadilha",
+      "name": "Preparar Armadilha",
+      "action_type": "acao",
+      "cooldown_turns": 3,
+      "descricao": "Cada bandido sorteia lâmina escondida, armadilha incendiária ou rede. Prepara sua fórmula conhecida em uma casa livre adjacente; a preparação substitui o ataque do turno. Recarga de 3 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "capanga_mira_certeira",
+      "name": "Mira Certeira",
+      "action_type": "passiva",
+      "cooldown_turns": 2,
+      "descricao": "+2 no próximo ataque.",
+      "source": "monstro"
+    },
+    {
+      "id": "capanga_golpe_devastador",
+      "name": "Golpe Devastador",
+      "action_type": "passiva",
+      "cooldown_turns": 4,
+      "descricao": "Aumenta em 50% o dado do próximo ataque.",
+      "source": "monstro"
+    },
+    {
+      "id": "capanga_furia_berserker",
+      "name": "Fúria Berserker",
+      "action_type": "passiva",
+      "cooldown_turns": 8,
+      "descricao": "Desfere um ataque adicional.",
+      "source": "monstro"
     },
     {
       "id": "covardia_kobold",
@@ -7780,11 +8700,11 @@ window.EDITOR_CATALOG = {
       "cooldown_turns": 6
     },
     {
-      "id": "caca_em_bando",
-      "name": "Caça em Bando",
+      "id": "lider_matilha",
+      "name": "Líder da Matilha",
       "action_type": "passiva",
       "source": "monstro",
-      "uses_per_day": 1,
+      "descricao": "Com o Alfa e outros lobos vivos e ativos na mesma sala, cada lobo recebe +1 no ataque e no dano por cada outro lobo. Soma com Caça em Bando.",
       "cooldown_turns": 0
     },
     {
@@ -7795,6 +8715,14 @@ window.EDITOR_CATALOG = {
       "save": "reflexos",
       "source": "monstro",
       "uses_per_day": 1,
+      "cooldown_turns": 0
+    },
+    {
+      "id": "caca_em_bando",
+      "name": "Caça em Bando",
+      "action_type": "passiva",
+      "source": "monstro",
+      "descricao": "Com 2 ou mais lobos vivos e ativos na mesma sala, todos recebem +1 no acerto.",
       "cooldown_turns": 0
     },
     {
@@ -7881,18 +8809,6 @@ window.EDITOR_CATALOG = {
           "description": "Estender Magia dá +3 rodadas de duração."
         }
       ]
-    },
-    {
-      "id": "hero_bard_cancao_heroica",
-      "source": "heroi",
-      "source_id": "cancao_heroica",
-      "source_class": "bard",
-      "name": "Canção Heroica",
-      "icon": "🎵",
-      "descricao": "Ativa buffs musicais para aliados em raio de 5 quadrados",
-      "action_type": "acao",
-      "monster_effect": "vantagem_combate",
-      "monster_maintenance": true
     },
     {
       "id": "guild_tecnica_grito_guerra",
@@ -8108,7 +9024,7 @@ window.EDITOR_CATALOG = {
           "requires": null,
           "name": "Veneno Rápido II",
           "icon": "☠️",
-          "description": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros."
+          "description": "Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes."
         },
         {
           "id": "ladino_veneno_3",
@@ -8116,7 +9032,7 @@ window.EDITOR_CATALOG = {
           "requires": "ladino_veneno_2",
           "name": "Veneno Rápido III",
           "icon": "☠️",
-          "description": "Pode manter 2 venenos diferentes na arma ao mesmo tempo."
+          "description": "Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo."
         }
       ]
     },
@@ -9124,7 +10040,7 @@ window.EDITOR_CATALOG = {
       "source_id": "ladino_veneno_2",
       "name": "Veneno Rápido II",
       "icon": "✦",
-      "descricao": "O veneno na arma (corpo a corpo) dura 2 golpes certeiros.",
+      "descricao": "Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -9135,7 +10051,7 @@ window.EDITOR_CATALOG = {
       "source_id": "ladino_veneno_3",
       "name": "Veneno Rápido III",
       "icon": "✦",
-      "descricao": "Pode manter 2 venenos diferentes na arma ao mesmo tempo.",
+      "descricao": "Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -9383,6 +10299,28 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_vaca",
+      "source": "guilda",
+      "source_id": "lenda_vaca",
+      "name": "Lenda: Vaca Arisca",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Vaca Arisca.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_cavalo_sela",
+      "source": "guilda",
+      "source_id": "lenda_cavalo_sela",
+      "name": "Lenda: Cavalo de Sela",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Cavalo de Sela.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_goblin",
       "source": "guilda",
       "source_id": "lenda_goblin",
@@ -9422,6 +10360,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Mago das Trevas",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Mago das Trevas.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_bardo",
+      "source": "guilda",
+      "source_id": "lenda_bardo",
+      "name": "Lenda: Bardo",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bardo.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -9603,6 +10552,17 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_urso_pardo",
+      "source": "guilda",
+      "source_id": "lenda_urso_pardo",
+      "name": "Lenda: Urso Pardo",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Urso Pardo.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_orc_guerreiro",
       "source": "guilda",
       "source_id": "lenda_orc_guerreiro",
@@ -9658,6 +10618,28 @@ window.EDITOR_CATALOG = {
       "guild_category": "especializacao"
     },
     {
+      "id": "guild_lenda_bandido",
+      "source": "guilda",
+      "source_id": "lenda_bandido",
+      "name": "Lenda: Bandido",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bandido.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_capanga",
+      "source": "guilda",
+      "source_id": "lenda_capanga",
+      "name": "Lenda: Capanga",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Capanga.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
       "id": "guild_lenda_goblin_xama",
       "source": "guilda",
       "source_id": "lenda_goblin_xama",
@@ -9686,6 +10668,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Kobold Besteiro",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Kobold Besteiro.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_kobold_mago",
+      "source": "guilda",
+      "source_id": "lenda_kobold_mago",
+      "name": "Lenda: Kobold Mago",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Kobold Mago.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -9906,6 +10899,17 @@ window.EDITOR_CATALOG = {
       "name": "Lenda: Lorde Vampiro",
       "icon": "✦",
       "descricao": "+1 de ataque e +1 nos saves contra Lorde Vampiro.",
+      "action_type": "passiva",
+      "monster_effect": "passiva_combate",
+      "guild_category": "especializacao"
+    },
+    {
+      "id": "guild_lenda_bardo_da_caravana",
+      "source": "guilda",
+      "source_id": "lenda_bardo_da_caravana",
+      "name": "Lenda: Bardo da Caravana",
+      "icon": "✦",
+      "descricao": "+1 de ataque e +1 nos saves contra Bardo da Caravana.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -10689,6 +11693,18 @@ window.EDITOR_CATALOG = {
   ],
   "items": [
     {
+      "id": "veneno_escorpiao_aprimorado",
+      "name": "Veneno Aprimorado do Escorpião Gigante",
+      "emoji": "🦂",
+      "icon": "assets/itens/veneno_escorpiao_pedra.png",
+      "item_slot": "bag",
+      "effect": "coat_poison",
+      "value": 0,
+      "veneno_id": "veneno_escorpiao_aprimorado",
+      "loot_only": true,
+      "descricao": "-1 em ataques e -1 quadrado de movimento por 1d6 rodadas. Fortitude CD 14 anula."
+    },
+    {
       "id": "banquete_viagem",
       "name": "Banquete de Viagem",
       "emoji": "🍗",
@@ -10713,6 +11729,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "corrosao_resistente": 1,
       "categoria": "cortante",
       "item_slot": "weapon"
     },
@@ -10775,16 +11792,6 @@ window.EDITOR_CATALOG = {
       "value": 0,
       "loot_only": true,
       "descricao": "Martelo colossal gravado com runas: dano 2d8+5 e alcance de 2 quadrados."
-    },
-    {
-      "id": "armadura_runica",
-      "name": "Armadura Rúnica",
-      "emoji": "🛡️",
-      "item_slot": "bag",
-      "effect": "treasure",
-      "value": 0,
-      "loot_only": true,
-      "descricao": "Armadura rúnica obtida do Gigante Rúnico; item especial para uso futuro."
     },
     {
       "id": "runa_ancestral",
@@ -10856,6 +11863,17 @@ window.EDITOR_CATALOG = {
       "range": 4,
       "categoria": "perfurante",
       "descricao": "Besta de Mão: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta."
+    },
+    {
+      "id": "besta_duelista",
+      "name": "Besta do Duelista",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/besta_do_duelista.png",
+      "range": 4,
+      "categoria": "perfurante",
+      "descricao": "Besta do Duelista: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista."
     },
     {
       "id": "lanca_curta",
@@ -10958,6 +11976,13 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
@@ -10974,6 +11999,7 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "warrior"
       ],
+      "off_hand_forca": true,
       "off_hand_stat": "str_",
       "throw_nat1_damage_levels": 2,
       "corrosion_max": 3,
@@ -10997,6 +12023,25 @@ window.EDITOR_CATALOG = {
       "range": 6,
       "categoria": "perfurante",
       "descricao": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
+    },
+    {
+      "id": "arco_composto_curto",
+      "name": "Arco Composto Curto",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_curto.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 6,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "descricao": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
     },
     {
       "id": "lanca",
@@ -11042,6 +12087,41 @@ window.EDITOR_CATALOG = {
       "descricao": "Arco Longo: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal."
     },
     {
+      "id": "arco_composto_longo",
+      "name": "Arco Composto Longo",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_longo.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "range": 10,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "arco_bruto_combatente",
+      "name": "Arco Bruto do Combatente",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_bruto_do_combatente.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "range": 10,
+      "range_all_directions": true,
+      "add_strength_to_damage": true,
+      "categoria": "perfurante",
+      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+    },
+    {
       "id": "warhammer",
       "name": "Martelo de Guerra",
       "emoji": "🔨",
@@ -11065,12 +12145,71 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "cleric",
         "rogue",
+        "bard",
         "paladin",
         "warrior"
       ],
       "range": 8,
       "categoria": "perfurante",
       "descricao": "Besta: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta."
+    },
+    {
+      "id": "besta_pesada",
+      "name": "Besta Pesada",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_pesada.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "cleric",
+        "rogue"
+      ],
+      "range": 12,
+      "categoria": "perfurante",
+      "descricao": "Besta Pesada mundana: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino."
+    },
+    {
+      "id": "besta_repetidora_patrulha",
+      "name": "Besta Repetidora de Patrulha",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_media.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "range": 6,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "descricao": "Besta Repetidora de Patrulha mundana: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
+    },
+    {
+      "id": "besta_repetidora_guerra",
+      "name": "Besta Repetidora de Guerra",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_poderosa.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "range": 8,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "descricao": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
     },
     {
       "id": "mangual",
@@ -11122,6 +12261,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d12",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -11136,6 +12276,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -11150,6 +12291,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -11164,11 +12306,13 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "2d8",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
       ],
       "categoria": "contundente",
+      "ignora_reducao_dano": 1,
       "descricao": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
     },
     {
@@ -11273,15 +12417,22 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "machado_basico_prata",
-      "name": "Machado de Ferro de Prata",
+      "name": "Machado de Prata",
       "emoji": "🪓",
       "die": "1d6",
       "stat": "str_",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
       "corrosion_max": 5,
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machado de Ferro de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machadinha_ana_prata",
@@ -11294,6 +12445,7 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "warrior"
       ],
+      "off_hand_forca": true,
       "off_hand_stat": "str_",
       "throw_nat1_damage_levels": 2,
       "corrosion_max": 5,
@@ -11402,6 +12554,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d12",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -11417,6 +12570,7 @@ window.EDITOR_CATALOG = {
       "emoji": "🪓",
       "die": "1d10",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -11432,6 +12586,7 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "2d6",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
@@ -11447,13 +12602,660 @@ window.EDITOR_CATALOG = {
       "emoji": "🔨",
       "die": "2d8",
       "stat": "str_",
+      "two_handed": true,
       "allowed_classes": [
         "paladin",
         "warrior"
       ],
       "corrosion_max": 5,
       "categoria": "contundente",
+      "ignora_reducao_dano": 1,
       "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "machadinha_runica_vai_e_volta",
+      "name": "Machadinha Rúnica Vai-e-Volta",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/vai_e_volta.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "off_hand_forca": true,
+      "off_hand_stat": "str_",
+      "throw_nat1_damage_levels": 2,
+      "corrosion_max": 3,
+      "throw_range": 5,
+      "return_on_throw": true,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+    },
+    {
+      "id": "machadinha_runica_vai_e_volta_maior",
+      "name": "Machadinha Rúnica Vai-e-Volta Maior",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/vai_e_volta.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "off_hand_forca": true,
+      "off_hand_stat": "str_",
+      "throw_nat1_damage_levels": 2,
+      "corrosion_max": 3,
+      "throw_range": 5,
+      "return_on_throw": true,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+    },
+    {
+      "id": "lamina_de_kriswoo",
+      "name": "Lâmina de Kriswoo",
+      "emoji": "🪓",
+      "die": "1d12",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/lamina_de_kriswoo.png",
+      "allowed_classes": [
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 3,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "granted_ability": "guild_tecnica_ataque_giratorio",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Lendária. Machado de guerra mágico de duas mãos: 1d12 cortante + Força, +2 no acerto e no dano. Crítico natural com 19–20, multiplicador ×3. Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede, uma varredura contra inimigos nos quatro quadrados ortogonais adjacentes; recarga de 10 rodadas. Uso exclusivo de Guerreiro."
+    },
+    {
+      "id": "punhal_assassino",
+      "name": "Punhal do Assassino",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/punhal_do_assassino.png",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "sneak_attack_extra_d4": 1,
+      "descricao": "Raridade: Rara. Adaga mágica +1 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +1d4 ao dano furtivo."
+    },
+    {
+      "id": "punhal_assassino_maior",
+      "name": "Punhal do Assassino Maior",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/punhal_do_assassino.png",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "sneak_attack_extra_d4": 2,
+      "descricao": "Raridade: Muito rara. Adaga mágica +2 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +2d4 ao dano furtivo."
+    },
+    {
+      "id": "espada_sangramento_longa",
+      "name": "Espada Longa do Sangramento",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_vorpal.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Rara. Arma mágica +1 no acerto e no dano. Cada acerto bem-sucedido aplica Sangramento, seguindo a progressão normal do jogo; um acerto crítico também aplica Hemorragia. Uso exclusivo de Guerreiro e Paladino."
+    },
+    {
+      "id": "espada_sangramento_bastarda",
+      "name": "Espada Bastarda do Sangramento",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_vorpal.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Arma mágica +1 no acerto e no dano. Cada acerto bem-sucedido aplica Sangramento, seguindo a progressão normal do jogo; um acerto crítico também aplica Hemorragia. Uso exclusivo de Guerreiro e Paladino."
+    },
+    {
+      "id": "chicote_fogo",
+      "name": "Chicote de Fogo",
+      "emoji": "🔥",
+      "die": "1d4",
+      "stat": "dex",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/chicote_flamejante.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 2,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "fire_on_hit": true,
+      "fire_crit_damage": "1d6",
+      "descricao": "Raridade: Rara. Chicote mágico +1 no acerto e no dano. Em um crítico, causa +1d6 de dano de fogo. Cada acerto bem-sucedido deixa o alvo em chamas por 1d4 rodadas; ele sofre 1 ponto de dano de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Água ou uma ação apagam as chamas. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "ferroada",
+      "name": "Ferroada",
+      "emoji": "🪢",
+      "die": "1d4",
+      "stat": "dex",
+      "off_hand_weapon": true,
+      "icon": "assets/itens magicos/ferroada.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 2,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Rara. Chicote mágico farpado +1 no acerto e no dano; causa 1d4 de dano cortante usando Destreza, tem alcance 2 e pode ser usado na mão secundária. Cada acerto bem-sucedido aplica Sangramento, sem limite por rodada, seguindo a progressão normal do jogo. Um crítico natural 20 que aplique Sangramento também causa Hemorragia. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "maca_zero_absoluto",
+      "name": "Maça do Zero Absoluto",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/maca_do_zero_absoluto.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "cold"
+        }
+      ],
+      "descricao": "Raridade: Muito rara. Maça mágica +1 no acerto e no dano; causa 1d6 contundente + Força e +1d4 de frio por acerto. Em um acerto crítico, uma vez por alvo por rodada, prende o alvo em gelo: no início de cada turno, ele faz um teste livre de Força CD 16 para escapar. Se falhar, permanece preso; o efeito termina após no máximo 2 rodadas. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "relampago_de_mao",
+      "name": "Relâmpago de Mão",
+      "emoji": "⚡",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/relampago_de_mao.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "throw_range": 4,
+      "return_on_throw": true,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Lança curta mágica +1 no acerto e no dano; causa 1d6 perfurante + Força e pode ser arremessada até 4 casas, retornando à mão. Como ação principal, arremesse-a em linha reta até 4 casas: todas as criaturas no caminho, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também sofre o dano normal da lança se o ataque acertar. Recarga de 10 rodadas."
+    },
+    {
+      "id": "espada_magica",
+      "name": "Espada Mágica",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_magica.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Raridade: Incomum. Espada curta mágica +1 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "espada_magica_mais_2",
+      "name": "Espada Mágica +2",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_magica.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Rara. Espada curta mágica +2 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "espada_magica_mais_3",
+      "name": "Espada Mágica +3",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_magica.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 3,
+      "damage_bonus": 3,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Espada curta mágica +3 no acerto e no dano. Causa 1d6 de dano cortante usando Força e mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "lamina_trovejante",
+      "name": "Lâmina Trovejante",
+      "emoji": "⚡",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/lamina_trovejante.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "lightning"
+        }
+      ],
+      "extra_damage_once_per_turn": true,
+      "descricao": "Raridade: Rara. Espada longa mágica +1 no acerto e no dano; causa 1d8 cortante + Força e acrescenta 1d4 elétrico ao primeiro acerto com ela a cada turno. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "cinzas_ardentes",
+      "name": "Cinzas Ardentes",
+      "emoji": "🔥",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "fire"
+        }
+      ],
+      "fire_on_hit": true,
+      "fire_crit_damage": "1d6",
+      "descricao": "Raridade: Muito rara. Espada longa mágica +1 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 1d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "cinzas_ardentes_mais_3",
+      "name": "Cinzas Ardentes +3",
+      "emoji": "🔥",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_maligna_das_chamas.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 3,
+      "damage_bonus": 3,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "fire"
+        }
+      ],
+      "fire_on_hit": true,
+      "fire_crit_damage": "2d6",
+      "descricao": "Raridade: Lendária. Espada longa mágica +3 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 2d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "choque_do_trovao",
+      "name": "Choque do Trovão",
+      "emoji": "⚡",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/choque_do_trovao.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "lightning"
+        }
+      ],
+      "thunder_push_on_crit": true,
+      "thunder_pulse": true,
+      "thunder_pulse_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Martelo de guerra mágico +1 no acerto e no dano; causa 1d8 contundente + Força e +1d4 elétrico por acerto. No crítico, se sobreviver, o alvo testa Força CD 13; falha é empurrada 1 casa. Como ação principal, o portador libera um pulso nas oito casas adjacentes: todas as criaturas, inclusive aliados, exceto o portador, sofrem 2d6 elétrico (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas. Clérigo, Paladino e Guerreiro."
+    },
+    {
+      "id": "mangual_sol_cativo",
+      "name": "Mangual do Sol Cativo",
+      "emoji": "☀️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/mangual_sol_cativo.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "extra_damages": [
+        {
+          "die": "1d4",
+          "type": "holy"
+        }
+      ],
+      "solar_flare": true,
+      "solar_flare_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."
+    },
+    {
+      "id": "mangual_elo_astral",
+      "name": "Mangual do Elo Astral",
+      "emoji": "🌌",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens magicos/mangual_elo_astral.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "astral_chain_reach": 4,
+      "categoria": "contundente",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Mangual mágico +2 no acerto e no dano; causa 1d8 contundente + Força e tem crítico natural ×2,5. Como poder passivo, a corrente astral alcança até 4 casas em linha reta ortogonal ou diagonal, desde que haja linha de visão; o ataque atinge apenas o alvo escolhido e a corrente retorna imediatamente. Sem recarga. Uso de Clérigo, Paladino e Guerreiro."
+    },
+    {
+      "id": "marreta_quebra_couracas",
+      "name": "Marreta Quebra-Couraças",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/marreta_quebra_couracas.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "ignora_reducao_dano": 2,
+      "descricao": "Raridade: Rara. Marreta mágica de duas mãos que causa 2d8 de dano contundente usando Força, concede +1 no acerto e no dano e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "espada_bastarda_ruptura",
+      "name": "Espada Bastarda da Ruptura",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens magicos/espada_ruptura.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 4,
+      "damage_bonus": 4,
+      "magical": true,
+      "ignora_reducao_dano": 2,
+      "descricao": "Raridade: Lendária. Espada bastarda mágica +4 no acerto e no dano; causa 1d10 cortante + Força, mantém crítico natural com 19–20 e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_serpente_bronze",
+      "name": "Bordão da Serpente de Bronze",
+      "emoji": "🐍",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_serpente_bronze.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "bronze_serpent_bind": true,
+      "bronze_serpent_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_punho_sismico",
+      "name": "Bordão do Punho Sísmico",
+      "emoji": "✊",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_punho_sismico.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "stun_crit_min_nat": 19,
+      "stun_fort_dc": 13,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_punho_ferro",
+      "name": "Bordão do Punho de Ferro",
+      "emoji": "✊",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_punho_ferro.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "stun_crit_min_nat": 20,
+      "stun_fort_dc": 15,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "alabarda_vendaval",
+      "name": "Alabarda do Vendaval",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/alabarda_do_vendaval.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "range": 2,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "wind_line": true,
+      "wind_line_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Alabarda mágica de duas mãos +1 no acerto e no dano; causa 1d10 perfurante + Força e tem alcance 2. Como ação principal, libera uma rajada em linha reta de até 4 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Se o alvo escolhido falhar, é empurrado 1 casa para trás. Recarga: 10 rodadas. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "alabarda_do_eclipse",
+      "name": "Alabarda do Eclipse",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens magicos/alabarda_do_eclipse.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "range": 2,
+      "categoria": "perfurante",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Raridade: Muito rara. Alabarda mágica de duas mãos +2 no acerto e no dano; causa 1d10 perfurante + Força, tem alcance 2 e crítico natural com 19–20. Uso de Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_horizonte_partido",
+      "name": "Bordão do Horizonte Partido",
+      "emoji": "🌅",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_horizonte_partido.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "horizon_shock": true,
+      "horizon_shock_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma onda de ruptura em linha reta de até 3 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Quem falhar no teste é empurrado 2 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "bordao_horizonte_despedacado",
+      "name": "Bordão do Horizonte Despedaçado",
+      "emoji": "🌄",
+      "die": "1d6",
+      "stat": "str_",
+      "finesse": true,
+      "icon": "assets/itens magicos/bordao_horizonte_despedacado.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 4,
+      "damage_bonus": 4,
+      "magical": true,
+      "horizon_shock": true,
+      "horizon_shock_cooldown": 10,
+      "horizon_shock_power": 4,
+      "descricao": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
     },
     {
       "id": "escudo_p",
@@ -11483,6 +13285,181 @@ window.EDITOR_CATALOG = {
       "descricao": "Bônus de CA +2. Reduz em 2 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução."
     },
     {
+      "id": "escudo_torre",
+      "name": "Escudo Torre Romano",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "damage_reduction": 2,
+      "descricao": "Escudo torre metálico, exclusivo do Paladino. Concede +3 CA e reduz em 2 cada instância de dano recebido. Pode ser corroído pelo Devorador de Metal."
+    },
+    {
+      "id": "escudo_madeira_grande",
+      "name": "Escudo Grande de Madeira Reforçado",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_grande.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 1,
+      "descricao": "Escudo grande de madeira reforçado. Concede +2 CA e reduz em 1 cada instância de dano recebido. Pode ser usado por Clérigo, Guerreiro e Paladino; pode ser corroído pelo Devorador Orgânico."
+    },
+    {
+      "id": "escudo_p_retalhacao_trovejante",
+      "name": "Escudo Pequeno da Retaliação Trovejante",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_pequeno_retalhacao_trovejante.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 2,
+      "magical": true,
+      "thunder_reaction": true,
+      "thunder_reaction_damage": "1d6",
+      "thunder_reaction_duration": 5,
+      "thunder_reaction_cooldown": 20,
+      "damage_reduction": 1,
+      "descricao": "Escudo Pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+    },
+    {
+      "id": "escudo_g_retalhacao_trovejante",
+      "name": "Escudo Grande da Retaliação Trovejante",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_grande_retalhacao_trovejante.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thunder_reaction": true,
+      "thunder_reaction_damage": "1d6",
+      "thunder_reaction_duration": 5,
+      "thunder_reaction_cooldown": 20,
+      "damage_reduction": 2,
+      "descricao": "Escudo Grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+    },
+    {
+      "id": "escudo_madeira_retalhacao_trovejante",
+      "name": "Escudo Grande de Madeira da Retaliação Trovejante",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_retalhacao_trovejante.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thunder_reaction": true,
+      "thunder_reaction_damage": "1d6",
+      "thunder_reaction_duration": 5,
+      "thunder_reaction_cooldown": 20,
+      "damage_reduction": 1,
+      "descricao": "Escudo Grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar. Pode ser corroído pelo Devorador Orgânico."
+    },
+    {
+      "id": "escudo_pequeno_vinculo_espinhoso",
+      "name": "Escudo Pequeno do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_pequeno_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 2,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 1,
+      "descricao": "Escudo pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+    },
+    {
+      "id": "escudo_grande_vinculo_espinhoso",
+      "name": "Escudo Grande do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_grande_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 2,
+      "descricao": "Escudo grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+    },
+    {
+      "id": "escudo_torre_vinculo_espinhoso",
+      "name": "Escudo Torre do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "shield",
+      "ac_bonus": 4,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 2,
+      "descricao": "Escudo torre metálico mágico, exclusivo do Paladino: concede +4 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador de Metal."
+    },
+    {
+      "id": "escudo_madeira_vinculo_espinhoso",
+      "name": "Escudo de Madeira do Vínculo Espinhoso",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_vinculo_espinhoso.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "shield",
+      "ac_bonus": 3,
+      "magical": true,
+      "thorn_bond_shield": true,
+      "thorn_bond_duration": 5,
+      "thorn_bond_cooldown": 25,
+      "damage_reduction": 1,
+      "descricao": "Escudo grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador Orgânico."
+    },
+    {
       "id": "cloak",
       "name": "Manto",
       "emoji": "🧣",
@@ -11491,6 +13468,43 @@ window.EDITOR_CATALOG = {
       ],
       "kind": "armor",
       "ac_bonus": 1
+    },
+    {
+      "id": "manto_das_sombras",
+      "name": "Manto das Sombras",
+      "emoji": "🌑",
+      "icon": "assets/itens/manto_das_sombras.png",
+      "allowed_classes": [
+        "rogue"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "armor",
+      "ac_bonus": 2,
+      "descricao": "Exclusivo do Ladino. Concede +2 de CA total e +2 em Esconder nas Sombras. Como ação principal, conjura Manto da Escuridão sem gastar espaço de magia. Recarga: 20 rodadas."
+    },
+    {
+      "id": "veste_egide_arcana",
+      "name": "Veste da Égide Arcana",
+      "emoji": "🧥",
+      "icon": "assets/itens/veste_egide_arcana.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "armor",
+      "ac_bonus": 2,
+      "bonuses": [
+        {
+          "effect": "magic_save_bonus",
+          "value": 1
+        }
+      ],
+      "descricao": "Exclusiva de Mago e Clérigo. Concede +2 de CA total e +1 nos testes de resistência contra magias."
     },
     {
       "id": "leather",
@@ -11525,6 +13539,108 @@ window.EDITOR_CATALOG = {
       ],
       "kind": "armor",
       "ac_bonus": 3
+    },
+    {
+      "id": "placas_da_besta",
+      "name": "Placas da Besta",
+      "emoji": "🛡️",
+      "icon": "assets/itens/placas_da_besta.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 4,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 3,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura de couro e placas reforçada com ônix. Concede +3 CA, reduz em 1 cada instância de dano físico recebido enquanto equipada e suporta 4 níveis de corrosão sem penalidade. Depois sofre as penalidades normais por 2 níveis; no nível seguinte é destruída."
+    },
+    {
+      "id": "armadura_placas_grotao",
+      "name": "Armadura de Placas de Grotão",
+      "emoji": "🛡️",
+      "icon": "assets/itens/leather_plate_onix.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_max": 6,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosion_immunities": [
+        "acid"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "corrosao_penalidade_max": 2,
+      "kind": "armor",
+      "ac_bonus": 3,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 2
+        },
+        {
+          "effect": "resist",
+          "type": "acid",
+          "value": 5
+        }
+      ],
+      "descricao": "Armadura leve de couro de monstro e placas espessas. Concede +3 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
+    },
+    {
+      "id": "armadura_placas_grotao_superior",
+      "name": "Armadura de Placas de Grotão Superior",
+      "emoji": "🛡️",
+      "icon": "assets/itens/armadura_placas_grotao.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_max": 6,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosion_immunities": [
+        "acid"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "corrosao_penalidade_max": 2,
+      "kind": "armor",
+      "ac_bonus": 7,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 2
+        },
+        {
+          "effect": "resist",
+          "type": "acid",
+          "value": 5
+        }
+      ],
+      "descricao": "Armadura pesada construída com placas grossas da carapaça do Grotão. Concede +7 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
     },
     {
       "id": "chainmail",
@@ -11588,6 +13704,22 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 6
     },
     {
+      "id": "armadura_runica",
+      "name": "Armadura Rúnica",
+      "emoji": "🛡️",
+      "icon": "assets/itens/armadura_runica.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "kind": "armor",
+      "ac_bonus": 7,
+      "descricao": "Armadura de Placas aprimorada com runas, +7 CA total. Guerreiro ou Paladino pode conjurar Barreira Arcana ou Proteção contra Energia por 5 rodadas, sem gastar espaço de magia. Recarga compartilhada: 30 rodadas."
+    },
+    {
       "id": "monster_leather_plate",
       "name": "Armadura de Couro de Monstro e Placas",
       "emoji": "🛡️",
@@ -11617,6 +13749,46 @@ window.EDITOR_CATALOG = {
       "ac_bonus": 8
     },
     {
+      "id": "aljava_pequena",
+      "name": "Aljava Pequena",
+      "emoji": "🏹",
+      "icon": "assets/itens/aljava.png",
+      "item_slot": "off_hand",
+      "effect": "quiver",
+      "quiver_slots_capacity": 2,
+      "descricao": "Equipada na mão secundária, oferece 2 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."
+    },
+    {
+      "id": "aljava_grande",
+      "name": "Aljava Grande",
+      "emoji": "🏹",
+      "icon": "assets/itens/aljava.png",
+      "item_slot": "off_hand",
+      "effect": "quiver",
+      "quiver_slots_capacity": 3,
+      "descricao": "Equipada na mão secundária, oferece 3 espaços para até 40 flechas ou virotes cada. O conteúdo permanece na aljava ao desequipá-la."
+    },
+    {
+      "id": "mini_aljava",
+      "name": "Mini Aljava",
+      "emoji": "🏹",
+      "icon": "assets/itens/aljava.png",
+      "item_slot": "item",
+      "effect": "quiver",
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipada em um espaço de item, oferece 1 espaço para até 40 flechas ou virotes. O conteúdo permanece na aljava ao desequipá-la."
+    },
+    {
+      "id": "kit_reparo_campo",
+      "name": "Kit de Reparo",
+      "emoji": "🧰",
+      "icon": "assets/itens/kit_reparo.png",
+      "item_slot": "bag",
+      "effect": "repair_corrosion",
+      "value": 1,
+      "descricao": "Ação principal. Remove 1 nível de corrosão de uma arma, armadura ou escudo danificado. Não recupera peças destruídas."
+    },
+    {
       "id": "flechas",
       "name": "Flechas (×10)",
       "emoji": "🏹",
@@ -11638,6 +13810,7 @@ window.EDITOR_CATALOG = {
       "id": "flechas_prata",
       "name": "Flechas de Prata (×10)",
       "emoji": "🏹",
+      "damage_bonus": 1,
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "flechas_prata",
@@ -11647,10 +13820,67 @@ window.EDITOR_CATALOG = {
       "id": "virotes_prata",
       "name": "Virotes de Prata (×10)",
       "emoji": "🏹",
+      "damage_bonus": 1,
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "virotes_prata",
       "ammo_count": 10
+    },
+    {
+      "id": "flechas_magicas",
+      "name": "Flechas Mágicas (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/flechas_magicas.png",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_magicas",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 flechas mágicas. Cada disparo concede +1 no acerto e no dano."
+    },
+    {
+      "id": "flechas_magicas_mais_2",
+      "name": "Flechas Mágicas +2 (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/flechas_magicas.png",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_magicas_mais_2",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 flechas mágicas. Cada disparo concede +2 no acerto e no dano."
+    },
+    {
+      "id": "virotes_magicos",
+      "name": "Virotes Mágicos (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/virotes_magicos.png",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_magicos",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 virotes mágicos. Cada disparo concede +1 no acerto e no dano."
+    },
+    {
+      "id": "virotes_magicos_mais_2",
+      "name": "Virotes Mágicos +2 (×10)",
+      "emoji": "🏹",
+      "icon": "assets/itens magicos/virotes_magicos.png",
+      "atk_bonus": 2,
+      "damage_bonus": 2,
+      "magical": true,
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_magicos_mais_2",
+      "ammo_count": 10,
+      "descricao": "Pacote com 10 virotes mágicos. Cada disparo concede +2 no acerto e no dano."
     },
     {
       "id": "virote_incendiario",
@@ -11677,6 +13907,28 @@ window.EDITOR_CATALOG = {
       "extra_damage_types": [
         "fire"
       ]
+    },
+    {
+      "id": "flechas_explosivas",
+      "name": "Flechas Explosivas",
+      "emoji": "💥",
+      "icon": "assets/itens magicos/municao_explosiva.png",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "flechas_explosivas",
+      "ammo_count": 5,
+      "descricao": "Pacote com 5 flechas. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
+    },
+    {
+      "id": "virotes_explosivos",
+      "name": "Virotes Explosivos",
+      "emoji": "💥",
+      "icon": "assets/itens magicos/municao_explosiva.png",
+      "item_slot": "ammo",
+      "effect": "ammo",
+      "ammo_type": "virotes_explosivos",
+      "ammo_count": 5,
+      "descricao": "Pacote com 5 virotes. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
     },
     {
       "id": "veneno_fungo_acre",
@@ -11749,8 +14001,8 @@ window.EDITOR_CATALOG = {
       "emoji": "🕯️",
       "item_slot": "bag",
       "effect": "veil_shadow",
-      "value": 0,
-      "descricao": "Ação bônus. Fica oculto até o fim do turno; o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
+      "value": 2,
+      "descricao": "Ação bônus. Fica oculto até o fim do próximo turno (+1 rodada); o próximo ataque tem vantagem. Para o Ladino, o próximo ataque ativa automaticamente o Ataque Furtivo."
     },
     {
       "id": "vela_reveladora",
@@ -11803,12 +14055,49 @@ window.EDITOR_CATALOG = {
       "descricao": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."
     },
     {
+      "id": "moeda_da_sorte",
+      "name": "Moeda da Sorte",
+      "emoji": "🪙",
+      "item_slot": "bag",
+      "effect": "luck_coin",
+      "value": 1,
+      "descricao": "Ação bônus. Consome a moeda ao ativar. A primeira falha do herói em um ataque ou teste de resistência é rolada novamente; o segundo resultado vale. Permanece ativa até disparar."
+    },
+    {
       "id": "ring_str",
-      "name": "Anel de Força",
+      "name": "Anel da Precisão",
       "emoji": "💍",
+      "icon": "assets/itens/ring_str.png",
       "item_slot": "ring",
       "effect": "atk",
-      "value": 1
+      "value": 1,
+      "descricao": "+1 de acerto em ataques enquanto estiver equipado."
+    },
+    {
+      "id": "anel_impacto",
+      "name": "Anel do Impacto",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "damage_bonus",
+      "value": 1,
+      "descricao": "+1 de dano por acerto com armas corpo a corpo ou à distância."
+    },
+    {
+      "id": "anel_supremacia",
+      "name": "Anel da Supremacia",
+      "emoji": "💍",
+      "icon": "assets/itens/ring_vita.png",
+      "item_slot": "ring",
+      "effect": "atk",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "damage_bonus",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."
     },
     {
       "id": "ring_vita",
@@ -11819,9 +14108,57 @@ window.EDITOR_CATALOG = {
       "value": 5
     },
     {
+      "id": "anel_protecao",
+      "name": "Anel de Proteção",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "def_",
+      "value": 1,
+      "descricao": "+1 de Classe de Armadura enquanto estiver equipado."
+    },
+    {
+      "id": "anel_vigia",
+      "name": "Anel do Vigia",
+      "emoji": "💍",
+      "icon": "assets/itens/ring.png",
+      "item_slot": "ring",
+      "effect": "vision",
+      "value": 2,
+      "descricao": "+2 de visão enquanto estiver equipado."
+    },
+    {
+      "id": "bracelete_guarda_reflexa",
+      "name": "Bracelete da Guarda Reflexa",
+      "emoji": "🛡️",
+      "icon": "assets/itens magicos/bracelete_guarda_reflexa.png",
+      "magical": true,
+      "bracelet_reaction_die": "1d8",
+      "bracelet_reaction_cooldown": 8,
+      "item_slot": "ring",
+      "descricao": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 1d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+    },
+    {
+      "id": "bracelete_guarda_reflexa_maior",
+      "name": "Bracelete Maior da Guarda Reflexa",
+      "emoji": "🛡️",
+      "icon": "assets/itens magicos/bracelete_guarda_reflexa.png",
+      "magical": true,
+      "bracelet_reaction_die": "2d8",
+      "bracelet_reaction_cooldown": 8,
+      "item_slot": "ring",
+      "descricao": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 2d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+    },
+    {
       "id": "helm_iron",
       "name": "Elmo de Ferro",
       "emoji": "⛑️",
+      "allowed_classes": [
+        "warrior",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
       "item_slot": "head",
       "effect": "def_",
       "value": 1
@@ -11830,9 +14167,184 @@ window.EDITOR_CATALOG = {
       "id": "circlet",
       "name": "Tiara Arcana",
       "emoji": "👑",
+      "allowed_classes": [
+        "mage",
+        "cleric",
+        "rogue",
+        "ranger",
+        "bard"
+      ],
       "item_slot": "head",
-      "effect": "maxhp",
-      "value": 4
+      "effect": "def_",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "maxhp",
+          "value": 2
+        }
+      ],
+      "descricao": "+1 de Classe de Armadura e +2 de vida máxima enquanto equipada."
+    },
+    {
+      "id": "amulet_alcance_arcano",
+      "name": "Amuleto do Alcance Arcano",
+      "emoji": "📿",
+      "icon": "assets/itens/amulet.png",
+      "item_slot": "item",
+      "effect": "spell_range",
+      "value": 1,
+      "descricao": "+1 quadrado ao alcance de lançamento das magias enquanto equipado."
+    },
+    {
+      "id": "ultimo_suspiro",
+      "name": "Último Suspiro",
+      "emoji": "📿",
+      "icon": "assets/itens/ultimo_suspiro.png",
+      "item_slot": "item",
+      "effect": "death_ward",
+      "value": 1,
+      "descricao": "Enquanto equipado, evita uma morte: ao chegar a 0 PV, o herói fica com 1 PV e este amuleto é consumido. Duas cópias equipadas concedem duas proteções, uma por vez."
+    },
+    {
+      "id": "tiara_expansao_arcana",
+      "name": "Tiara da Expansão Arcana",
+      "emoji": "👑",
+      "icon": "assets/itens/circlet.png",
+      "item_slot": "head",
+      "effect": "spell_area",
+      "value": 1,
+      "descricao": "+1 quadrado de raio nas magias de área enquanto equipada. Acumula com o Cajado Arcano."
+    },
+    {
+      "id": "boina_batedor",
+      "name": "Boina do Batedor",
+      "emoji": "🧢",
+      "icon": "assets/itens/chapeu1.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 1,
+      "descricao": "+1 de visão enquanto equipada."
+    },
+    {
+      "id": "boina_alerta",
+      "name": "Boina do Alerta",
+      "emoji": "🧢",
+      "icon": "assets/itens/chapeu1.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "save_bonus",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de visão e +1 em todos os testes de resistência enquanto equipada."
+    },
+    {
+      "id": "boina_gatuno",
+      "name": "Boina do Gatuno",
+      "emoji": "🧢",
+      "icon": "assets/itens/chapeu1.png",
+      "item_slot": "head",
+      "descricao": "+2 nos testes de Esconder nas Sombras do Ladino enquanto equipada. Acumula com a especialização e com o Manto das Sombras."
+    },
+    {
+      "id": "chapeu_aventureiro",
+      "name": "Chapéu do Aventureiro",
+      "emoji": "🤠",
+      "icon": "assets/itens/chapeu_aventureiro.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "initiative",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de visão e +1 de iniciativa enquanto equipado."
+    },
+    {
+      "id": "chapeu_explorador",
+      "name": "Chapéu do Explorador",
+      "emoji": "🤠",
+      "icon": "assets/itens/chapeu_aventureiro.png",
+      "item_slot": "head",
+      "effect": "vision",
+      "value": 2,
+      "bonuses": [
+        {
+          "effect": "atk",
+          "value": 1
+        }
+      ],
+      "descricao": "+2 de visão e +1 nos ataques enquanto equipado."
+    },
+    {
+      "id": "chapeu_cacador",
+      "name": "Chapéu do Caçador",
+      "emoji": "🤠",
+      "icon": "assets/itens/chapeu_aventureiro.png",
+      "item_slot": "head",
+      "effect": "damage_bonus",
+      "value": 2,
+      "descricao": "+2 de dano por acerto com armas corpo a corpo ou à distância."
+    },
+    {
+      "id": "chapeu_bruxo",
+      "name": "Chapéu do Bruxo",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo1.png",
+      "allowed_classes": [
+        "mage"
+      ],
+      "item_slot": "head",
+      "effect": "spell_dc",
+      "value": 1,
+      "descricao": "+1 na CD dos testes de resistência das magias enquanto equipado. Exclusivo do Mago."
+    },
+    {
+      "id": "chapeu_conjurador",
+      "name": "Chapéu do Conjurador",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo2.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "head",
+      "effect": "spell_dc",
+      "value": 2,
+      "descricao": "+2 na CD dos testes de resistência das magias enquanto equipado. Usável por Mago e Clérigo."
+    },
+    {
+      "id": "chapeu_arquimago",
+      "name": "Chapéu do Arquimago",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo2.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "head",
+      "descricao": "Concede um slot extra de magia de 1º círculo com recarga de 20 rodadas. O slot tem recarga independente e acumula com o Cajado Arcano.",
+      "extra_spell_circle": "primeiro",
+      "extra_spell_cooldown": 20
+    },
+    {
+      "id": "chapeu_arquimago_superior",
+      "name": "Chapéu do Arquimago Superior",
+      "emoji": "🧙",
+      "icon": "assets/itens/chapeu_bruxo2.png",
+      "allowed_classes": [
+        "mage",
+        "cleric"
+      ],
+      "item_slot": "head",
+      "descricao": "Concede um slot extra de magia de 2º círculo com recarga própria de 40 rodadas. Pode ser usado por Mago e Clérigo.",
+      "extra_spell_circle": "segundo",
+      "extra_spell_cooldown": 40
     },
     {
       "id": "bota_alada",
@@ -11854,12 +14366,102 @@ window.EDITOR_CATALOG = {
       "value": 1
     },
     {
+      "id": "botas_passo_felino",
+      "name": "Botas do Passo Felino",
+      "emoji": "👢",
+      "icon": "assets/itens/boots.png",
+      "item_slot": "boots",
+      "effect": "dex",
+      "value": 2,
+      "descricao": "+2 de Destreza enquanto equipada."
+    },
+    {
       "id": "amulet",
       "name": "Amuleto da Sorte",
       "emoji": "📿",
       "item_slot": "item",
       "effect": "maxhp",
       "value": 5
+    },
+    {
+      "id": "talisma_despertar_forca",
+      "name": "Talismã do Despertar: Força",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "str_",
+      "value": 1,
+      "descricao": "+1 de Força enquanto equipado."
+    },
+    {
+      "id": "talisma_despertar_destreza",
+      "name": "Talismã do Despertar: Destreza",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "dex",
+      "value": 1,
+      "descricao": "+1 de Destreza enquanto equipado."
+    },
+    {
+      "id": "talisma_despertar_inteligencia",
+      "name": "Talismã do Despertar: Inteligência",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "int_",
+      "value": 1,
+      "descricao": "+1 de Inteligência enquanto equipado."
+    },
+    {
+      "id": "talisma_despertar_constituicao",
+      "name": "Talismã do Despertar: Constituição",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao3.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 1,
+      "descricao": "+1 de Constituição enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_forca",
+      "name": "Talismã da Ascensão: Força",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "str_",
+      "value": 2,
+      "descricao": "+2 de Força enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_destreza",
+      "name": "Talismã da Ascensão: Destreza",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "dex",
+      "value": 2,
+      "descricao": "+2 de Destreza enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_inteligencia",
+      "name": "Talismã da Ascensão: Inteligência",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "int_",
+      "value": 2,
+      "descricao": "+2 de Inteligência enquanto equipado."
+    },
+    {
+      "id": "talisma_ascensao_constituicao",
+      "name": "Talismã da Ascensão: Constituição",
+      "emoji": "📿",
+      "icon": "assets/itens/medalhao4.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 2,
+      "descricao": "+2 de Constituição enquanto equipado."
     },
     {
       "id": "backpack",
@@ -11870,6 +14472,89 @@ window.EDITOR_CATALOG = {
       "value": 3
     },
     {
+      "id": "mochila_carga",
+      "name": "Mochila de Carga",
+      "emoji": "🎒",
+      "icon": "assets/itens/backpack.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 6,
+      "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila."
+    },
+    {
+      "id": "mochila_dimensional",
+      "name": "Mochila Dimensional",
+      "emoji": "🎒",
+      "icon": "assets/itens/backpack.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 9,
+      "descricao": "Equipado, aumenta em 9 espaços a capacidade da mochila."
+    },
+    {
+      "id": "mochila_aljava_dimensional",
+      "name": "Mochila-Aljava Dimensional",
+      "emoji": "🎒",
+      "icon": "assets/itens magicos/mochila_aljava_dimensional.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 9,
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipado, aumenta em 9 espaços a capacidade da mochila e oferece 1 espaço de aljava para até 40 flechas ou virotes. O conteúdo da aljava permanece guardado ao desequipá-la."
+    },
+    {
+      "id": "alforge_explorador",
+      "name": "Alforje de Explorador",
+      "emoji": "🎒",
+      "icon": "assets/itens/alforge2.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 2,
+      "descricao": "Equipado, aumenta em 2 espaços a capacidade da mochila e oferece 1 bolso para arremessáveis, frascos de efeito, poções e venenos, com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+    },
+    {
+      "id": "alforge_explorador_aprimorado",
+      "name": "Alforje de Explorador Aprimorado",
+      "emoji": "🎒",
+      "icon": "assets/itens/alforje1.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 4,
+      "descricao": "Equipado, aumenta em 4 espaços a capacidade da mochila e oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+    },
+    {
+      "id": "alforge_explorador_superior",
+      "name": "Alforje de Explorador Superior",
+      "emoji": "🎒",
+      "icon": "assets/itens/alforje1.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 6,
+      "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila e oferece 3 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+    },
+    {
+      "id": "maravilha_aventureiro_menor",
+      "name": "Maravilha do Aventureiro Menor Simples",
+      "emoji": "🎒",
+      "icon": "assets/itens/maravilha_do_aventureiro.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 9,
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipado, aumenta em 9 espaços a capacidade da mochila, oferece 4 bolsos para até 4 unidades iguais cada e 1 slot de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
+    },
+    {
+      "id": "maravilha_aventureiro_maior",
+      "name": "Maravilha do Aventureiro Maior",
+      "emoji": "🎒",
+      "icon": "assets/itens/maravilha_do_aventureiro.png",
+      "item_slot": "item",
+      "effect": "bagslots",
+      "value": 12,
+      "quiver_slots_capacity": 2,
+      "descricao": "Equipado, aumenta em 12 espaços a capacidade da mochila, oferece 4 bolsos para até 8 unidades iguais cada e 2 slots de aljava para até 40 flechas ou virotes cada. Os conteúdos permanecem guardados ao desequipá-lo."
+    },
+    {
       "id": "cinto_utilidades",
       "name": "Cinto de Utilidades",
       "emoji": "🎒",
@@ -11878,6 +14563,27 @@ window.EDITOR_CATALOG = {
       "effect": "utility_belt",
       "value": 0,
       "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+    },
+    {
+      "id": "cinto_utilidades_aprimorado",
+      "name": "Cinto de Utilidades Aprimorado",
+      "emoji": "🎒",
+      "icon": "assets/itens/cinto_e_bolsos.png",
+      "item_slot": "item",
+      "effect": "utility_belt",
+      "value": 0,
+      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 8 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+    },
+    {
+      "id": "cinto_arsenal_encantado",
+      "name": "Cinto-Arsenal Encantado",
+      "emoji": "🎒",
+      "icon": "assets/itens magicos/cinto_arsenal_encantado.png",
+      "item_slot": "item",
+      "effect": "utility_belt",
+      "value": 0,
+      "quiver_slots_capacity": 1,
+      "descricao": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com até 8 unidades iguais, e 1 espaço de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
     },
     {
       "id": "cinto_com_bolsos",
@@ -12050,6 +14756,16 @@ window.EDITOR_CATALOG = {
       "item_slot": "bag",
       "effect": "throwable",
       "value": 0
+    },
+    {
+      "id": "rede_corrosiva",
+      "name": "Rede Corrosiva",
+      "emoji": "🧪",
+      "icon": "assets/itens magicos/rede_corrosiva.png",
+      "item_slot": "bag",
+      "effect": "throwable",
+      "value": 0,
+      "descricao": "Arremesso (alcance 4, ataque por Destreza). Ao acertar, prende o alvo. No início de cada turno, teste de Fortitude CD 13: sucesso encerra o efeito e permite agir; falha consome o turno, causa 1 de dano ácido e corrói um equipamento na ordem armadura, escudo, cabeça, arma e botas. Cada peça é destruída após 3 falhas que a atinjam; sem equipamento restante, cada falha reduz a CA em 1 (mínimo 5). Consumível."
     },
     {
       "id": "instrumento_harpa_velho",
@@ -12533,12 +15249,88 @@ window.EDITOR_CATALOG = {
       "value": 10
     },
     {
+      "id": "cerveja_ana",
+      "name": "Cerveja Anã",
+      "emoji": "🍺",
+      "icon": "assets/itens/barril_de_cerveja.png",
+      "item_slot": "bag",
+      "effect": "ale_ac",
+      "value": 18,
+      "descricao": "Restaura 18 de fome e sede, mas reduz a CA em 1 por 10 rodadas."
+    },
+    {
       "id": "garrafa_vinho",
       "name": "Garrafa de Vinho",
       "emoji": "🍷",
       "item_slot": "bag",
       "effect": "wine",
       "value": 15
+    },
+    {
+      "id": "rum",
+      "name": "Rum",
+      "emoji": "🍾",
+      "icon": "assets/itens/rum.png",
+      "item_slot": "bag",
+      "effect": "rum",
+      "value": 15,
+      "max_uses": 3,
+      "uses_left": 3,
+      "descricao": "Garrafa com 3 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e em Reflexos por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+    },
+    {
+      "id": "hidromel",
+      "name": "Hidromel",
+      "emoji": "🍯",
+      "icon": "assets/itens/hidromel.png",
+      "item_slot": "bag",
+      "effect": "hidromel",
+      "value": 18,
+      "max_uses": 2,
+      "uses_left": 2,
+      "descricao": "Garrafa com 2 doses. Cada uso restaura 18 de fome e 18 de sede e aplica −1 em Reflexos e −1 na CA por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+    },
+    {
+      "id": "caldo_revigorante",
+      "name": "Caldo Revigorante",
+      "emoji": "🥣",
+      "icon": "assets/itens/caldo_revigorante.png",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 5,
+      "descricao": "Caldo portátil: restaura 5 PV, 10 de fome e 10 de sede."
+    },
+    {
+      "id": "fermentado_raizes",
+      "name": "Fermentado de Raízes",
+      "emoji": "🍶",
+      "icon": "assets/itens/bebida_raizes_fermentadas.png",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 3,
+      "descricao": "Bebida fermentada de raízes: restaura 3 PV e 17 de sede."
+    },
+    {
+      "id": "fruto_de_lumen",
+      "name": "Fruto de Lúmen",
+      "emoji": "🫐",
+      "icon": "assets/itens/fruto_de_lumen.png",
+      "item_slot": "bag",
+      "effect": "heal",
+      "value": 2,
+      "descricao": "Fruta mística: restaura 2 PV e 18 de fome."
+    },
+    {
+      "id": "absinto",
+      "name": "Absinto",
+      "emoji": "🍸",
+      "icon": "assets/itens/absinto.png",
+      "item_slot": "bag",
+      "effect": "absinto",
+      "value": 15,
+      "max_uses": 5,
+      "uses_left": 5,
+      "descricao": "Garrafa com 5 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e −1 na CA por 10 rodadas. Com 3–4 doses ativas, reduz o movimento em 1; com 5 ou mais, em 2. As penalidades acumulam; cada dose expira 10 rodadas após seu próprio uso."
     },
     {
       "id": "racao_viagem",
@@ -12563,11 +15355,47 @@ window.EDITOR_CATALOG = {
       "effect": "food"
     },
     {
+      "id": "carne_bovina",
+      "name": "Carne Bovina",
+      "emoji": "🍖",
+      "icon": "assets/itens/carne_bovina.png",
+      "item_slot": "bag",
+      "effect": "food",
+      "descricao": "+25 de fome."
+    },
+    {
+      "id": "pernil",
+      "name": "Pernil",
+      "emoji": "🍖",
+      "icon": "assets/itens/pernil.png",
+      "item_slot": "bag",
+      "effect": "food",
+      "descricao": "+35 de fome."
+    },
+    {
+      "id": "leite",
+      "name": "Leite",
+      "emoji": "🥛",
+      "icon": "assets/itens/leite.png",
+      "item_slot": "bag",
+      "effect": "food",
+      "descricao": "+5 de fome e +5 de sede."
+    },
+    {
       "id": "agua_benta",
       "name": "Água Benta",
       "emoji": "💧✝️",
       "item_slot": "bag",
       "effect": "throwable"
+    },
+    {
+      "id": "lagrima_ultima_luz",
+      "name": "Lágrima da Última Luz",
+      "emoji": "💫",
+      "icon": "assets/itens/lagrima_ultima_luz.png",
+      "item_slot": "bag",
+      "effect": "revive_ally",
+      "descricao": "Consumível. Use como ação principal em um aliado morto adjacente para trazê-lo de volta com 1 PV. Ele não age neste turno."
     },
     {
       "id": "health_potion",
@@ -12591,7 +15419,9 @@ window.EDITOR_CATALOG = {
       "emoji": "🧪",
       "item_slot": "bag",
       "effect": "heal",
-      "value": 10
+      "value": 10,
+      "max_uses": 3,
+      "uses_left": 3
     },
     {
       "id": "health_potion_improved",
@@ -12861,6 +15691,16 @@ window.EDITOR_CATALOG = {
       "granted_ability": "hero_rogue_esconder_sombras",
       "kind": "ring",
       "item_slot": "ring",
+      "bonuses": [
+        {
+          "effect": "atk_bonus",
+          "value": 1
+        },
+        {
+          "effect": "vision",
+          "value": 1
+        }
+      ],
       "descricao": "+1 de acerto e +1 de visão. Concede a habilidade Esconder nas Sombras enquanto estiver equipado: ação bônus (🍖-2 💧-1); teste de d20 + Destreza contra a percepção dos monstros que o enxergam. Em sucesso você fica invisível e não pode ser escolhido como alvo, e ainda pode atacar na mesma rodada; manter a invisibilidade custa 🍖-1 💧-1 por turno. Para o Ladino, o primeiro golpe saindo das sombras é um Ataque Furtivo."
     },
     {
@@ -12870,13 +15710,20 @@ window.EDITOR_CATALOG = {
       "die": "1d10",
       "stat": "str_",
       "finesse": false,
+      "two_handed": false,
       "allowed_classes": [
         "paladin",
         "warrior"
       ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "granted_ability": "guild_tecnica_ataque_giratorio",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "extra_damages": [],
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
@@ -12889,8 +15736,15 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "dex",
       "finesse": true,
+      "two_handed": false,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
       "categoria": "perfurante",
       "granted_ability": null,
+      "atk_bonus": 1,
+      "damage_bonus": 0,
+      "extra_damages": [],
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
@@ -12903,6 +15757,7 @@ window.EDITOR_CATALOG = {
       "granted_ability": null,
       "kind": "ring",
       "item_slot": "ring",
+      "bonuses": [],
       "descricao": "Uma relíquia pesada do Templo de Alva e Luz. Está quente ao toque."
     }
   ],
@@ -13315,6 +16170,10 @@ window.EDITOR_CATALOG = {
       "name": "Veneno do Escorpião Pedra"
     },
     {
+      "id": "veneno_escorpiao_aprimorado",
+      "name": "Veneno Aprimorado do Escorpião Gigante"
+    },
+    {
       "id": "veneno_cobra_cuspidora",
       "name": "Veneno de Cobra Cuspidora"
     },
@@ -13530,6 +16389,21 @@ window.EDITOR_CATALOG = {
   ],
   "decorations": [
     {
+      "type": "grade_esgoto",
+      "nome": "Grade de esgoto",
+      "emoji": "🕳️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "sewer_hatch",
+      "image": "grade_esgoto.png"
+    },
+    {
       "type": "cama",
       "nome": "Cama",
       "emoji": "🛏️",
@@ -13681,6 +16555,21 @@ window.EDITOR_CATALOG = {
       "image": "celeiro_medieval.png"
     },
     {
+      "type": "mansao_medieval",
+      "nome": "Mansão medieval",
+      "emoji": "🏰",
+      "size": [
+        4,
+        4
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "mansao_medieval.png"
+    },
+    {
       "type": "galinheiro",
       "nome": "Galinheiro com ninhos e ovos",
       "emoji": "🐔",
@@ -13754,6 +16643,171 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "lago_patos.png"
+    },
+    {
+      "type": "cocho",
+      "nome": "Cocho de madeira",
+      "emoji": "🪵",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cocho.png"
+    },
+    {
+      "type": "barco_medieval",
+      "nome": "Barco medieval",
+      "emoji": "🛶",
+      "size": [
+        2,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "barco_medieval.png"
+    },
+    {
+      "type": "navio_medieval",
+      "nome": "Navio medieval",
+      "emoji": "⛵",
+      "size": [
+        3,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "navio_medieval.png"
+    },
+    {
+      "type": "barraca_mercador",
+      "nome": "Barraca de mercador",
+      "emoji": "🏮",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "barraca_mercador.png"
+    },
+    {
+      "type": "cestos_feira",
+      "nome": "Cestos de frutas e pães",
+      "emoji": "🧺",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "cestos_feira.png"
+    },
+    {
+      "type": "banca_flores",
+      "nome": "Banca de flores",
+      "emoji": "💐",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "banca_flores.png"
+    },
+    {
+      "type": "saco_grao",
+      "nome": "Saco de grãos",
+      "emoji": "🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "saco_grao.png"
+    },
+    {
+      "type": "caixa_ferramentas",
+      "nome": "Caixa de ferramentas",
+      "emoji": "🧰",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "caixa_ferramentas.png"
+    },
+    {
+      "type": "ancinho",
+      "nome": "Ancinho",
+      "emoji": "🛠️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "ancinho.png"
+    },
+    {
+      "type": "forcado",
+      "nome": "Forcado",
+      "emoji": "🛠️",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "forcado.png"
+    },
+    {
+      "type": "balde_agua_chao",
+      "nome": "Balde com água",
+      "emoji": "🪣",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "balde_agua_chao.png"
     },
     {
       "type": "placa",
@@ -13922,6 +16976,81 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "poste_iluminacao",
+      "nome": "Poste de iluminação",
+      "emoji": "🏮",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "poste_iluminacao.png"
+    },
+    {
+      "type": "sofa_luxo",
+      "nome": "Sofá de luxo",
+      "emoji": "🛋️",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "sofa_luxo.png"
+    },
+    {
+      "type": "poltrona_luxo",
+      "nome": "Poltrona estofada",
+      "emoji": "🪑",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "poltrona_luxo.png"
+    },
+    {
+      "type": "escadaria_luxuosa",
+      "nome": "Escadaria luxuosa",
+      "emoji": "🏛️",
+      "size": [
+        4,
+        4
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "escadaria_luxuosa.png"
+    },
+    {
+      "type": "mesa_banquete_luxo",
+      "nome": "Mesa de banquete luxuosa",
+      "emoji": "🍷",
+      "size": [
+        2,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "mesa_banquete_luxo.png"
+    },
+    {
       "type": "estante",
       "nome": "Estante",
       "emoji": "🗄️",
@@ -13952,6 +17081,21 @@ window.EDITOR_CATALOG = {
       "image": "carroca.png"
     },
     {
+      "type": "carrinho_entregas",
+      "nome": "Carrinho de entregas",
+      "emoji": "🛒",
+      "size": [
+        1,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "carrinho_entregas.png"
+    },
+    {
       "type": "coluna",
       "nome": "Coluna de pedra",
       "emoji": "🏛️",
@@ -13980,6 +17124,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": true,
       "special": null,
       "image": null
+    },
+    {
+      "type": "barril_cerveja",
+      "nome": "Barril de cerveja",
+      "emoji": "🍺",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "barril_cerveja.png"
     },
     {
       "type": "arca_tesouros",
@@ -14267,6 +17426,21 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "caminho_pedras_terra",
+      "nome": "Caminho de pedra na terra",
+      "emoji": "🪨",
+      "size": [
+        1,
+        1
+      ],
+      "gira": false,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "floor",
+      "image": "caminho_pedras_terra.png"
+    },
+    {
       "type": "brasao_leao",
       "nome": "Brasão do Leão",
       "emoji": "🦁",
@@ -14372,6 +17546,81 @@ window.EDITOR_CATALOG = {
       "image": "vitral_templo.png"
     },
     {
+      "type": "espelho_dourado",
+      "nome": "Espelho dourado",
+      "emoji": "🪞",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": false,
+      "pisavel": true,
+      "loot_capaz": false,
+      "special": "wall",
+      "image": "espelho_dourado.png"
+    },
+    {
+      "type": "templo_alva_e_luz",
+      "nome": "Templo de Alva e Luz",
+      "emoji": "⛪",
+      "size": [
+        6,
+        6
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "templo_alva_e_luz.png"
+    },
+    {
+      "type": "igreja_corvin",
+      "nome": "Igreja de Corvin",
+      "emoji": "⛪",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "igreja_corvin.png"
+    },
+    {
+      "type": "quartel_medieval",
+      "nome": "Quartel medieval",
+      "emoji": "🏰",
+      "size": [
+        3,
+        3
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "quartel_medieval.png"
+    },
+    {
+      "type": "torre_alva_e_luz",
+      "nome": "Torre de Alva e Luz",
+      "emoji": "🗼",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "torre_alva_e_luz_v2.png"
+    },
+    {
       "type": "sino_ritualistico",
       "nome": "Sino ritualístico",
       "emoji": "🔔",
@@ -14385,6 +17634,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "sino_ritualistico.png"
+    },
+    {
+      "type": "sino_anuncio",
+      "nome": "Sino de anúncio",
+      "emoji": "🔔",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "sino_anuncio.png"
     },
     {
       "type": "estatua_divindade",
@@ -14447,6 +17711,36 @@ window.EDITOR_CATALOG = {
       "image": null
     },
     {
+      "type": "espantalho",
+      "nome": "Espantalho",
+      "emoji": "🧑‍🌾",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "espantalho.png"
+    },
+    {
+      "type": "carroca_feno",
+      "nome": "Carroça com feno",
+      "emoji": "🔥",
+      "size": [
+        2,
+        2
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "carroca_feno.png"
+    },
+    {
       "type": "bola_corrente",
       "nome": "Bola de ferro com corrente",
       "emoji": "⛓️",
@@ -14505,6 +17799,21 @@ window.EDITOR_CATALOG = {
       "loot_capaz": false,
       "special": null,
       "image": "moita_espinhosa.png"
+    },
+    {
+      "type": "moita",
+      "nome": "Moita",
+      "emoji": "🌿",
+      "size": [
+        1,
+        1
+      ],
+      "gira": true,
+      "alto": true,
+      "pisavel": false,
+      "loot_capaz": false,
+      "special": null,
+      "image": "moita.png"
     },
     {
       "type": "capim_alto",

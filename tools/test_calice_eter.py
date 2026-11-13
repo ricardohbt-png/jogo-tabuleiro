@@ -51,7 +51,8 @@ def main():
                and item.get("circle") == "primeiro"))
     check("todos os mercadores ativos oferecem o item",
           all("calice_eter" in stock.get("mercador", [])
-              for stock in server.CITY_SHOPS.values() if "mercador" in stock))
+              for cid, stock in server.CITY_SHOPS.items()
+              if "mercador" in stock and cid != "vila_dos_charcos"))   # loja especial da Zumbra
 
     print("\n[2] Restaura exatamente um slot gasto sem alterar o máximo")
     for class_id in ("mage", "cleric"):

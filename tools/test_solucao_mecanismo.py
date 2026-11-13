@@ -65,8 +65,9 @@ class SolucaoMecanismoTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"cat.item.solucao_mecanismo.nome"', translations)
         self.assertIn('"cat.item.solucao_mecanismo.desc"', translations)
         shops = json.loads((ROOT / "city_shops.json").read_text(encoding="utf-8"))
-        merchants = [v.get("mercador") for v in shops.values()
-                     if isinstance(v.get("mercador"), list)]
+        merchants = [v.get("mercador") for cid, v in shops.items()
+                     if isinstance(v.get("mercador"), list)
+                     and cid != "vila_dos_charcos"]   # loja especial da Zumbra, com estoque próprio
         self.assertEqual(len(merchants), 4)
         self.assertTrue(all("solucao_mecanismo" in stock for stock in merchants))
 

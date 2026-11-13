@@ -151,6 +151,8 @@ def test_executor_monstro_recusa_alvo_aereo_no_melee():
 def test_bola_fogo_residual_fica_no_chao():
     async def verificar():
         room = server.GameRoom("FLIGHT_FIREBALL_GROUND_TEST")
+        room.map_w = room.map_h = 8
+        room.tiles = [[server.FLOOR] * 8 for _ in range(8)]   # a reação elemental da Bola de Fogo lê o terreno
         room._tem_linha_de_visao = lambda *args, **kwargs: True
         room.gm_say = lambda *args, **kwargs: asyncio.sleep(0)
         voador = {"id": "p1", "name": "Voador", "alive": True, "hp": 30,

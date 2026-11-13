@@ -66,10 +66,12 @@ class DestinosTests(unittest.TestCase):
         self.assertEqual(self.vis(r), {"elara_graciero_cais"})
 
     def test_a_praca_depende_do_relogio_e_nunca_as_duas(self):
-        r = sala({R.F_RUMO}); r.world_adventure_progress.update({"elara_graciero_beco": 1, "elara_graciero_cais": 1})
-        self.assertEqual(self.vis(r), {"elara_graciero_praca_viva"})
-        r.fatos.add(R.F_LENTO)
-        self.assertEqual(self.vis(r), {"elara_graciero_praca_morta"})
+        for ramo, praca in ((R.F_RAMO_A, "elara_graciero_praca_viva"), (R.F_RAMO_B, "elara_graciero_praca_pedra")):
+            r = sala({R.F_RUMO, ramo})
+            r.world_adventure_progress.update({"elara_graciero_beco": 1, "elara_graciero_cais": 1})
+            self.assertEqual(self.vis(r), {praca})
+            r.fatos.add(R.F_LENTO)
+            self.assertEqual(self.vis(r), {"elara_graciero_praca_morta"})
 
     def test_esconderijo_normal_ou_alerta_nunca_os_dois(self):
         r = sala({R.F_GILO_MORREU})
@@ -105,6 +107,8 @@ class ConversasTests(unittest.TestCase):
         self.assertNotIn("elara_gilo_pertences", conversas(b), "uma vez só")
         self.assertNotIn("elara_gilo_pertences", conversas(sala({R.F_RAMO_A, R.F_GILO_MORREU})))
         self.assertNotIn("elara_gilo_pertences", conversas(sala({R.F_RAMO_B})), "antes da morte, nada")
+        self.assertNotIn("elara_gilo_pertences", conversas(sala({R.F_RAMO_B, R.F_GILO_MORREU, R.F_OLHO})),
+                         "quem venceu a praça já tem a pedra")
 
     def test_herois_so_falam_se_estiverem_no_grupo(self):
         self.assertNotIn("elara_graciero_pedro", conversas(sala({R.F_RUMO})))
@@ -125,6 +129,13 @@ class ObjetivosTests(unittest.IsolatedAsyncioTestCase):
         r = await self._cumpre_praca("elara_graciero_praca_viva.json")
         self.assertTrue({R.F_GILO_MORREU, M.F_VIU_MORRER, R.F_DICA_MONTANHA} <= r.fatos)
 
+    async def test_vencer_a_praca_da_pedra_entrega_o_olho_ali(self):
+        r = await self._cumpre_praca("elara_graciero_praca_pedra.json")
+        self.assertTrue({R.F_GILO_MORREU, M.F_VIU_MORRER, R.F_OLHO} <= r.fatos)
+        self.assertNotIn(R.F_DICA_MONTANHA, r.fatos)
+        itens = [i.get("id") for bau in r.chests.values() for i in bau.get("items", [])]
+        self.assertIn(F.ID_OLHO, itens)
+
     async def test_praca_morta_so_grava_a_morte(self):
         r = await self._cumpre_praca("elara_graciero_praca_morta.json")
         self.assertIn(R.F_GILO_MORREU, r.fatos)
@@ -138,9 +149,10 @@ class ObjetivosTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_porao_grava_leonel_e_a_cela_da_elara(self):
         r = masmorra("elara_leonel_2.json")
-        r.key_chest_opened = True
         for m in r.monsters.values():
             m["hp"] = 0
+        r.prisoner["freed"] = True
+        r.prisoner["pos"] = [40, 30]
         await r._check_objectives()
         self.assertTrue({M.F_LEONEL, M.F_ELARA} <= r.fatos)
 

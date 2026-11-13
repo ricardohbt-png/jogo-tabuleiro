@@ -171,9 +171,9 @@ async def main():
     # conta ataques via broadcast de "Dano"? Mais simples: conta chamadas de execução
     cnt = {"n": 0}
     orig_exec = r2._execute_one_monster_attack
-    async def spy(m, atk, tobj):
+    async def spy(m, atk, tobj, **kw):
         cnt["n"] += 1
-        return await orig_exec(m, atk, tobj)
+        return await orig_exec(m, atk, tobj, **kw)
     r2._execute_one_monster_attack = spy
     await r2._monster_execute_attacks(urso2, {"kind": "player", "obj": alvo})
     check("multi-ataque executa os 2 golpes", cnt["n"] == 2)
@@ -243,9 +243,10 @@ async def main():
     arq = make_monster(arq_def, {"id": 1, "cx": 5, "cy": 5})
     # Mente Fraca -2 Vontade
     check("Mente Fraca: -2 em Vontade", r._vulnerabilidade_save_pen(arq, "vontade") == -2)
-    check("Arqueiro: 10 flechas", arq.get("flechas") == 10)
-    check("Arqueiro: alcance 8", arq["attacks"][0].get("range") == 8)
-    check("Arqueiro: dropa o arco", arq.get("guaranteed_loot") == ["arco_curto"])
+    check("Arqueiro: 20 flechas", arq.get("flechas") == 20)
+    arco = arq.get("equipped_weapon") or {}
+    check("Arqueiro: alcance do arco equipado", arq["attacks"][0].get("range") == arco.get("range"))
+    check("Arqueiro: dropa o arco equipado", arco.get("id") in arq.get("equipped_items", []))
     check("Arqueiro não arremessa", arq.get("pode_arremessar") is False)
     # Combatente: seis armas equipadas; sem adaga auxiliar nem Arremesso.
     from test_goblin_combatente_equipamento import spawn, WEAPONS
@@ -733,9 +734,9 @@ async def main():
 
     def make_spy(room, store):
         orig = room._execute_one_monster_attack
-        async def spy(m, atk, tobj):
+        async def spy(m, atk, tobj, **kw):
             store.append((atk["name"], atk.get("atk_bonus")))
-            return await orig(m, atk, tobj)
+            return await orig(m, atk, tobj, **kw)
         room._execute_one_monster_attack = spy
 
     # Sensível a Venenos: perda de HP máximo dobrada (CON poison)

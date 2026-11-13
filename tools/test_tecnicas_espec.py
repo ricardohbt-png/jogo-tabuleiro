@@ -120,7 +120,7 @@ async def main():
         rr.monsters = {"m1": {"id":"m1","name":"Alvo","nome":"Alvo","pos":[0,1] if not w_range else [0,3],
                               "hp":30,"max_hp":30,"ac":10,"ca":10}}
         cap = {}
-        def fake_rolar(atk, ac, vant=False, desv=False):
+        def fake_rolar(atk, ac, vant=False, desv=False, atacante=None):
             cap["vant"] = vant; return (False, 5, 8, False, 3)   # erra (não precisa resolver dano)
         rr._rolar_ataque = fake_rolar
         rr._tem_linha_de_visao = lambda *a, **k: True
@@ -246,7 +246,7 @@ async def main():
     r = setup()
     async def _mdies(*a, **k): return None
     r._monster_dies = _mdies
-    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 18, 20, False, 3)
+    r._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (True, 18, 20, False, 3)
     atacante = hero("warrior"); atacante["atk_bonus"] = 3
     atacante["weapon"] = {"id":"machado_basico","name":"Machado","die":"1d6","stat":"str_"}
     alvo = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
@@ -254,13 +254,13 @@ async def main():
     hp0 = alvo["hp"]
     await r._ataque_basico_reativo(atacante, alvo)
     check("reativo: aplica dano no acerto", alvo["hp"] < hp0)
-    r._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 4, False, 1)
+    r._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (False, 2, 4, False, 1)
     alvo2 = {"id":"m2","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
     hp2 = alvo2["hp"]
     await r._ataque_basico_reativo(atacante, alvo2)
     check("reativo: erro não aplica dano", alvo2["hp"] == hp2)
     alvo3 = {"id":"m3","name":"Orc","nome":"Orc","pos":[0,1],"hp":0,"max_hp":20,"ac":10,"ca":10}
-    r._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 18, 20, False, 3)
+    r._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (True, 18, 20, False, 3)
     await r._ataque_basico_reativo(atacante, alvo3)
     check("reativo: ignora alvo morto", alvo3["hp"] == 0)
 
@@ -300,7 +300,7 @@ async def main():
     await r.handle_usar_tecnica("h", "tecnica_ataque_coordenado", "a")
     check("coord: par gravado", p["coordenado_alvo"] == "a" and p["coordenado_turno"] == r.turn_index)
     alvo = {"id":"m1","name":"Orc","nome":"Orc","pos":[0,1],"hp":20,"max_hp":20,"ac":10,"ca":10}
-    r.monsters = {"m1": alvo}; r._rolar_ataque = lambda a,b,v=False,d=False:(True,18,20,False,3)
+    r.monsters = {"m1": alvo}; r._rolar_ataque = lambda a,b,v=False,d=False,atacante=None:(True,18,20,False,3)
     async def _mdies(*a,**k): return None
     r._monster_dies = _mdies
     hp0 = alvo["hp"]
@@ -509,7 +509,8 @@ async def main():
         it = S.guild_item(tid)
         check(f"existe {tid}", it is not None)
         check(f"{tid} recarga 10", it and it["recarga_rodadas"] == 10)
-        check(f"{tid} preco 350", it and it["preco"] == 350)
+        preco = 700 if tid == "tecnica_ultimo_esforco" else 350   # Último Esforço encareceu (2026-10-26)
+        check(f"{tid} preco {preco}", it and it["preco"] == preco)
         check(f"{tid} custo {cf}/{cf}", it and it["custo_fome"] == cf and it["custo_sede"] == cf)
         check(f"{tid} classe None", it and it["classe"] is None)
 
@@ -556,7 +557,7 @@ async def main():
         rr.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
                               "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
         roll = 20 if natural20 else 12
-        rr._rolar_ataque = lambda atk, ac, v=False, d=False: (True, roll, roll + atk, roll == 20, None)
+        rr._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (True, roll, roll + atk, roll == 20, None)
         rr._golpe_raw = lambda p_, raw: raw   # sem especialização do guerreiro interferindo
         return rr, hh
     rr1, hh1 = _mk_room_golpe(False)
@@ -581,7 +582,7 @@ async def main():
     rr_reg.players["h"] = hh_reg
     rr_reg.monsters = {"m1": {"id": "m1", "name": "Alvo", "nome": "Alvo", "pos": [0, 1],
                               "hp": 30, "max_hp": 30, "ac": 10, "ca": 10}}
-    rr_reg._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 20, 20 + atk, True, None)
+    rr_reg._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (True, 20, 20 + atk, True, None)
     rr_reg._golpe_raw = lambda p_, raw: raw
     orig_roll_dice = S.roll_dice
     S.roll_dice = lambda die_str: 4
@@ -597,7 +598,7 @@ async def main():
 
     # Consumida mesmo em erro.
     rr3, hh3 = _mk_room_golpe(False)
-    rr3._rolar_ataque = lambda atk, ac, v=False, d=False: (False, 2, 2, False, None)
+    rr3._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (False, 2, 2, False, None)
     await rr3.handle_attack("h", "m1")
     check("golpe: consumida mesmo errando", hh3.get("tecnica_golpe_decisivo_armado") is False)
 
@@ -691,7 +692,7 @@ async def main():
     ri._monster_dies = _mdies
     ri._golpe_raw = lambda p_, raw: raw
     rolagens = iter([(False, 2, 2, False, None), (True, 18, 18, False, None)])
-    ri._rolar_ataque = lambda atk, ac, v=False, d=False: next(rolagens)
+    ri._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: next(rolagens)
     hp0 = ri.monsters["m1"]["hp"]
     await ri.handle_attack("h", "m1")
     check("sorte: erro de ataque oferece a reação", len(ri._prompts) == 1)

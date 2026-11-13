@@ -93,6 +93,7 @@ async def main():
     sala.player_order = ["p1"]
     sala.turn_index = 0
     sala.animados_phase_pid = "p1"
+    sala.animados_order = [elemental["id"]]   # fila estrita da janela dos servos
     sala._all_animados = lambda: [elemental]
     erros = []
     async def capturar_envio(_pid, evento):

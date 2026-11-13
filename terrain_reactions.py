@@ -67,6 +67,7 @@ REACOES = [
     {"id": "explodir_gas",    "elemento": RX_FIRE,      "estado": "gas",        "efeito": "_rx_explodir_gas",    "ativa": True},
     {"id": "derreter_gelo",   "elemento": RX_FIRE,      "estado": "gelo",      "efeito": "_rx_derreter_gelo",   "ativa": True},
     {"id": "incendiar_feno",  "elemento": RX_FIRE,      "estado": "feno",      "efeito": "_rx_incendiar_feno",  "ativa": True},
+    {"id": "incendiar_carroca_feno", "elemento": RX_FIRE, "estado": "carroca_feno", "efeito": "_rx_incendiar_carroca_feno", "ativa": True},
 ]
 
 
@@ -158,12 +159,22 @@ class TerrainReactions:
             return any(tile in self._rx_gas_tiles(z) for z in self._rx_gas_zonas())
         if estado == "feno":
             return self._rx_feno_em(tile) is not None
+        if estado == "carroca_feno":
+            return self._rx_carroca_feno_em(tile) is not None
         return False
 
     def _rx_feno_em(self, tile):
         """Monte de feno (ainda intacto) que ocupa a casa, ou None."""
         for d in getattr(self, "decorations", []):
             if d.get("type") == "monte_feno" and not d.get("queimando") and list(tile) in [list(t) for t in self._decor_tiles(d)]:
+                return d
+        return None
+
+    def _rx_carroca_feno_em(self, tile):
+        """Carroça carregada de feno intacta que ocupa a casa, ou None."""
+        for d in getattr(self, "decorations", []):
+            if (d.get("type") == "carroca_feno" and not d.get("queimando")
+                    and list(tile) in [list(t) for t in self._decor_tiles(d)]):
                 return d
         return None
 
@@ -409,6 +420,57 @@ class TerrainReactions:
 
     async def _rx_feno_acabou(self, zona):
         """Fim das chamas do feno: o monte queimado some e o chão fica com fuligem."""
+        ids = set(zona.get("decor_ids") or [])
+        self.decorations = [d for d in self.decorations if d.get("id") not in ids]
+        self._rebuild_decor_index()
+        await self._rx_anunciar("fuligem", zona.get("tiles", []), (zona.get("tiles") or [[0, 0]])[0])
+        await self.gm_say(self._rx_T("narracao.reacao.feno_virou_cinzas"))
+
+    async def _rx_incendiar_carroca_feno(self, tiles, origem, pend, prof):
+        """Acende apenas a carroça atingida; ela vira cinza no início da rodada 5."""
+        carrocas = {}
+        for tile in tiles:
+            d = self._rx_carroca_feno_em(tile)
+            if d is not None:
+                carrocas[d["id"]] = d
+        if not carrocas:
+            return
+
+        casas, ids = [], []
+        for d in carrocas.values():
+            d["queimando"] = True
+            d["fire_ignited_round"] = int(self.round_num)
+            d["burn_stage"] = 1
+            d["image"] = "carroca_feno_feno_fogo.png"
+            d["model3d"] = "assets/objetos/carroca_feno_feno_fogo.glb"
+            ids.append(d["id"])
+            casas.extend(list(q) for q in self._decor_tiles(d))
+        casas_unicas = sorted({(int(x), int(y)) for x, y in casas}, key=lambda t: (t[1], t[0]))
+        casas = [list(t) for t in casas_unicas]
+        self._rebuild_decor_index()
+        zona = {"id": self._rx_id("carroca_feno"), "tipo": "chamas_piche",
+                "feno": True, "carroca_feno": True, "dado": RX_DADO_FENO,
+                "tiles": casas, "decor_ids": ids, "criado_em": self.round_num,
+                "expira_em": self.round_num + 4, "ativa": True,
+                "caster": origem.get("caster_id"), "ignicao": {}}
+        for d in carrocas.values():
+            d["fire_zone_id"] = zona["id"]
+        self.zonas_especiais.append(zona)
+        await self._rx_anunciar("incendio", casas, casas[0])
+        centro = [int(casas[0][0]), int(casas[0][1])]
+        await self.broadcast({
+            "type": "spell_animation", "spell_id": "ignicao_piche", "phase": "start",
+            "animation_id": f"ignicao_carroca_{self.round_num}_{centro[0]}_{centro[1]}_{self._rx_id('anim')}",
+            "origin": centro, "center": centro, "tiles": casas, "one_shot": True,
+        })
+        await self.gm_say(self._rx_T("narracao.reacao.feno_pegou_fogo"))
+        for alvo in self._alvos_no_inverno(casas):
+            await self._rx_fogo_piche(alvo, zona, "ignição")
+            pos = alvo.get("pos") or [0, 0]
+            zona["ignicao"][str(alvo.get("id"))] = [self.round_num, int(pos[0]), int(pos[1])]
+
+    async def _rx_carroca_feno_acabou(self, zona):
+        """Remove a carroça consumida e marca o footprint com fuligem."""
         ids = set(zona.get("decor_ids") or [])
         self.decorations = [d for d in self.decorations if d.get("id") not in ids]
         self._rebuild_decor_index()

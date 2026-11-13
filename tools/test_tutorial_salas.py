@@ -290,7 +290,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         with patch.object(S.random,'randint',return_value=20):
             await r.handle_attack(p['id'],m['id'])
         self.assertEqual(p['licao_atual'],'treino_criar')
-        self.assertFalse(r._weapon_poison_slots(p))
+        self.assertEqual(len(r._weapon_poison_slots(p)),2)   # 3 cargas por frasco; o golpe gastou uma
 
     async def test_bard_maintenance_requires_upkeep(self):
         r,p=room('bard');await lesson(r,p,'treino_cancao',[11,23])

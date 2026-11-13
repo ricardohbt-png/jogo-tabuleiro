@@ -32,7 +32,7 @@ class Element {
 const potion={id:'potion',name:'Potion',item_slot:'bag',effect:'heal'};
 const oil={id:'oil',name:'Oil',item_slot:'bag',arremessavel:true};
 const player={id:'p',alive:true,bag:[potion,{id:'cinto_utilidades'}],gear:{item1:{id:'cinto_utilidades',utility_belt_token:'belt-A',utility_belt_slots:[{item:potion,quantity:4},{item:oil,quantity:2}]},item2:{id:'cinto_com_bolsos'}}};
-const sent=[],host=new Element(),doc={addEventListener(){},createElement:()=>new Element(),getElementById:()=>null,querySelector:()=>null,activeElement:null};
+const sent=[],host=new Element(),doc={body:new Element(),addEventListener(){},createElement:()=>new Element(),getElementById:()=>null,querySelector:()=>null,activeElement:null};
 const context={document:doc,localStorage:{getItem:()=>null},window:{_iniciarMiraArremesso:(...a)=>sent.push(['throw',...a])},GS:{gameState:{phase:'playing',players:[player]},myPid:'p',isMyTurn:true,CATALOGO_ITENS:{},moveUtilityBeltItem:(...a)=>sent.push(['move',...a])},t:x=>x,_rotulo:x=>x,itemIconHTML:()=>'',performance:{now:()=>1000},requestAnimationFrame:f=>f(),useItem:(...a)=>sent.push(['use',...a])};
 context._ligarTooltipItem = () => {}; // O hover compartilhado é coberto por test_item_tooltip_hover.js.
 vm.createContext(context);
@@ -78,3 +78,14 @@ for(const [lang,beltLabel,emptyLabel] of [['pt','Cinto','Bolso 1 vazio'],['en','
   check('actual inventory belt section and empty pocket '+lang, localized.children[0].children[0].textContent.startsWith(beltLabel+' — ') && localized.children[0].children[1].children[0].attrs['aria-label']===emptyLabel);
 }
 console.log(`Review final: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
+const arrows={id:'flechas',name:'Flechas',effect:'ammo',ammo_type:'flechas',ammo_count:30};
+player.gear.off_hand={id:'aljava_grande',name:'Aljava Grande',quiver_token:'q1',quiver_slots:[arrows,null,null]};
+context.GS.moveQuiverAmmo=(...args)=>sent.push(['quiver',...args]);
+const quiverHost=new Element();modal.testRender({querySelector:()=>quiverHost},player);
+const quiverSlots=quiverHost.children.at(-1).children[1].children;
+check('runtime large quiver renders three slots and ammunition count',quiverSlots.length===3&&quiverSlots[0].innerHTML.includes('>30</span>'));
+modal.testSelect({kind:'bag',index:0});quiverSlots[1].onclick();
+check('runtime bag to quiver request',JSON.stringify(sent.pop())===JSON.stringify(['quiver','to_quiver','off_hand',1,0,'q1']));
+modal.testSelect({kind:'quiver',gearSlot:'off_hand',pocketIndex:0,quiverToken:'q1'});modal.testBag(1);
+check('runtime quiver to bag request',JSON.stringify(sent.pop())===JSON.stringify(['quiver','to_bag','off_hand',0,1,'q1']));
+console.log(`Quiver: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;

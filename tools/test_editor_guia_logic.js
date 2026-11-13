@@ -39,7 +39,7 @@ check("passo sem texto", G.validar([{ texto: "  " }]).some(e => e.codigo === "gu
 check("ui inválida", G.validar([{ texto: "A", ui: "botao:Maiúscula" }]).some(e => e.codigo === "guia_ui_invalida"));
 check("mais de 2 dicas", G.validar([{ texto: "A", dica: ["1", "2", "3"] }]).some(e => e.codigo === "guia_dicas"));
 check("conclui_com de verbo desconhecido", G.validar([{ texto: "A", conclui_com: { tipo: "voar" } }, { texto: "B" }]).some(e => e.codigo === "guia_conclui_invalido"));
-check("último passo com conclui_com é aviso", G.validar([{ texto: "A", conclui_com: { tipo: "atacar" } }]).some(e => e.codigo === "guia_ultimo_conclui"));
+check("último passo com conclui_com é válido (redundante, não é aviso)", !G.validar([{ texto: "A", conclui_com: { tipo: "atacar" } }]).some(e => e.codigo === "guia_ultimo_conclui"));
 check("conclui_com válido no meio", ok([{ texto: "A", conclui_com: { tipo: "atacar" } }, { texto: "B" }]));
 check("passo vindo do dicionário é válido", ok([{ texto: "ui.tutorial.guia.fala_0.ver.texto" }]));
 

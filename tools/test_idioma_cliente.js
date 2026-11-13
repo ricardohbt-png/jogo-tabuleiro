@@ -88,7 +88,7 @@ check("ele escuta o body com subtree",
 check("so trabalha quando o no traz data-i18n",
       /\[data-i18n/.test(gjObs));
 check("continua havendo UM observador do body, nao dois",
-      (gjObs.match(/observe\(\s*document\.body/g) || []).length === 1);
+      (gjObs.match(/abilityIconObserver\.observe\(\s*document\.body/g) || []).length === 1);
 
 console.log("");
 console.log("[A] O icone de habilidade nao depende do nome em portugues");

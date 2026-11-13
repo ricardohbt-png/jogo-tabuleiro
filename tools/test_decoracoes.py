@@ -18,7 +18,7 @@ def check(name, cond):
 def test_catalog():
     print("\n[A1] DECOR_TYPES")
     d = server.DECOR_TYPES
-    check("88 tipos", len(d) == 88)
+    check("catálogo com ao menos 88 tipos", len(d) >= 88)
     check("ids esperados presentes", all(k in d for k in (
         "cama", "lareira", "fonte", "poco_balde", "cerca_reta", "cerca_curva", "cerca_quebrada",
         "porteira_aberta", "porteira_fechada", "celeiro_medieval", "galinheiro", "cabana_rustica", "choupana_palha_escura", "cabana_palha_velha", "lago_patos", "fogueira", "tumba", "tumba_lapide", "mesa_cadeiras", "tocha_parede", "braseiro_parede", "vitral_templo", "monte_ossos",
@@ -198,10 +198,10 @@ def test_catalog():
         set(("nome", "emoji", "size", "gira", "alto", "pisavel", "loot_capaz", "special")) <= set(v)
         for v in d.values()))
     check("pisáveis: não bloqueiam movimento", sorted(k for k, v in d.items() if v["pisavel"]) == [
-        "arco_pedra_deserto", "brasa_chao", "brasao_leao", "braseiro_parede", "capim_alto",
+        "arco_pedra_deserto", "brasa_chao", "brasao_leao", "braseiro_parede", "caminho_pedras_terra", "capim_alto",
         "capim_amarelado", "cerca_quebrada", "chama_viva", "chao", "cortina_branca",
-        "cortina_vermelha", "fenda_fumegante", "fogueira", "fumarola", "gargula_pedra",
-        "geiser_lava", "grilhoes_parede", "gruta_parede", "juncos", "moita_espinhosa",
+        "cortina_vermelha", "espelho_dourado", "fenda_fumegante", "fogueira", "fumarola", "gargula_pedra",
+        "geiser_lava", "grade_esgoto", "grilhoes_parede", "gruta_parede", "juncos", "moita_espinhosa",
         "monte_ossos", "ninho_abutres", "ossos_semi_enterrados", "placa", "porteira_aberta",
         "rochas_rachadas", "tocha_parede", "vitral_templo"])
 

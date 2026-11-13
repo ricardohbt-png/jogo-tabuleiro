@@ -1,0 +1,5 @@
+# Dependencias so dos testes (tools/test_*.py): o servidor nao as usa.
+-r requirements.txt
+numpy
+Pillow
+trimesh

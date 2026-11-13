@@ -1,5 +1,6 @@
 """Fatia 18: a ala 46-48 do Campo de Treinamento (hostilidade entre monstros) e a integração com a trilha comum."""
 import asyncio
+import random
 import sys
 import unittest
 from copy import deepcopy
@@ -35,7 +36,7 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual([SALAS[i]["x"] for i in (46, 47, 48)], [34, 41, 48])
         self.assertEqual([SALAS[i]["doors"] for i in (46, 47)], [[PORTA], [[40, 15]]])
         self.assertEqual(SALAS[48]["doors"], [[47, 15], [51, 19]])
-        self.assertEqual(D["exit"], {"x": 51, "y": 24})
+        self.assertEqual(D["exit"], {"x": 36, "y": 36})
         self.assertEqual(S.validar_dungeon(D), (True, "ok"))
         for rid in (46, 47, 48):
             self.assertTrue(SALAS[rid]["locked"])
@@ -47,7 +48,7 @@ class LayoutTests(unittest.TestCase):
 
     def test_conteudo_da_ala(self):
         tipos_de = lambda rid: sorted(m["type"] for m in D["monsters"] if m["room_id"] == rid)
-        self.assertEqual(tipos_de(46), ["escorpiao_pedra", "esqueleto_animal", "rato_gigante"])
+        self.assertEqual(tipos_de(46), ["escorpiao_pedra", "rato_gigante"])
         self.assertEqual(sum(t == "boneco_palha" for t in tipos_de(47)), 2)
         self.assertEqual(sum(t == "boneco_treino_veneno" for t in tipos_de(47)), 3)
         self.assertEqual(tipos_de(48), ["boneco_treino"])
@@ -207,6 +208,7 @@ class FluxoTests(unittest.IsolatedAsyncioTestCase):
                      if m["room_id"] == 46 and m.get("autonomous_hostility")]
         self.assertTrue(all(m["alertado"] and m["control_mode"] == "auto" for m in lutadores))
         antes = sum(m["hp"] for m in lutadores)
+        random.seed(7)   # os dados decidem se algum golpe acerta em 4 rodadas; semente fixa evita falha intermitente
         for _ in range(4):
             await r.handle_end_turn(p["id"])
             for _ in range(300):

@@ -10,6 +10,10 @@ from unittest.mock import patch
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
 
+# Preços vêm do catálogo: o autor ajusta valores na loja sem quebrar o teste.
+PRECO = {i['id']: i['price'] for i in S.SHOP_MERCHANT if i['id'] in ('cinto_utilidades', 'cinto_com_bolsos')}
+OURO = 1000
+
 
 def item(iid):
     return deepcopy(S._DUNGEON_ITEM_CATALOG[iid])
@@ -259,24 +263,25 @@ class BeltTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_merchant_purchase_charges_exact_belt_prices(self):
         self.r.phase = 'city'
-        self.p['gold'] = 200
+        self.p['gold'] = OURO
         await self.r.handle_shop_buy('p', 'mercador', 'cinto_utilidades')
-        self.assertEqual(self.p['gold'], 120)
+        self.assertEqual(self.p['gold'], OURO - PRECO['cinto_utilidades'])
         await self.r.handle_shop_buy('p', 'mercador', 'cinto_com_bolsos')
-        self.assertEqual(self.p['gold'], 90)
+        self.assertEqual(self.p['gold'], OURO - PRECO['cinto_utilidades'] - PRECO['cinto_com_bolsos'])
         self.assertEqual([b['id'] for b in self.p['bag']], ['cinto_utilidades', 'cinto_com_bolsos'])
-        self.assertEqual([b['buy_price'] for b in self.p['bag']], [80, 30])
+        self.assertEqual([b['buy_price'] for b in self.p['bag']],
+                         [PRECO['cinto_utilidades'], PRECO['cinto_com_bolsos']])
         self.assertIsNone(self.p['gear']['item1'])
         self.assertIsNone(self.p['gear']['item2'])
 
     async def test_full_bag_purchase_rescues_belts_into_independent_slots(self):
         self.r.phase = 'city'
-        self.p['gold'] = 200
+        self.p['gold'] = OURO
         self.p['bag'] = [item('elixir') for _ in range(6)]
         original_bag = deepcopy(self.p['bag'])
         await self.r.handle_shop_buy('p', 'mercador', 'cinto_utilidades')
         await self.r.handle_shop_buy('p', 'mercador', 'cinto_com_bolsos')
-        self.assertEqual(self.p['gold'], 90)
+        self.assertEqual(self.p['gold'], OURO - PRECO['cinto_utilidades'] - PRECO['cinto_com_bolsos'])
         self.assertEqual(self.p['bag'], original_bag)
         self.assertEqual(self.p['gear']['item1']['id'], 'cinto_utilidades')
         self.assertEqual(self.p['gear']['item1']['utility_belt_slots'], [None] * 4)
@@ -285,7 +290,7 @@ class BeltTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_full_inventory_belt_purchase_rolls_back_gold_and_inventory(self):
         self.r.phase = 'city'
-        self.p['gold'] = 200
+        self.p['gold'] = OURO
         self.p['bag'] = [item('elixir') for _ in range(6)]
         self.belt(entries=[stack(quantity=3), None, None, None])
         self.belt('cinto_com_bolsos', [stack('fogo_grego', 2), None], 'item2')

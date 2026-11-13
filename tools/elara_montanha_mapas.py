@@ -3,6 +3,7 @@
 Tudo é determinístico (semente fixa por mapa). Calibração: 4 heróis nível 5, a rota mais difícil da campanha.
 As duas vias (com o bardo que guia ou sem ele) vivem no MESMO mapa: o que muda são as falas, que levam `requisito`.
 """
+import copy
 import os
 import sys
 
@@ -74,35 +75,55 @@ def masmorra_trilha():
 
 
 def masmorra_desfiladeiro():
-    c, xs, hs = _montar("desfil", 5102, [12, 12, 12])
-    m = c.m
-    ent, sai = m.em(0, 1, hs // 2), m.em(2, 10, hs // 2)
-    c.proteger(ent, sai)
-    c.mon(SOLDADO, 0, 9, 3); c.mon(SOLDADO, 0, 9, 7)
-    c.mon_livre(DUAL, 0, 3); c.mon_livre(ORC, 0, 3); c.mon_livre(ARQUEIRO, 0, 4); c.mon_livre(SOLDADO, 0, 1)
-    c.espalha("rocha_grande", 0, 1); c.espalha("rochas_rachadas", 0, 3)
-    c.armadilhas.append({"tipo": "fosso_estacas", "pos": m.em(0, 5, 2)})
-    c.mon(ORC, 1, 9, 3); c.mon(ORC, 1, 9, 6)
-    c.mon_livre(SOLDADO, 1, 4); c.mon_livre(DUAL, 1, 3); c.mon_livre(ARQUEIRO, 1, 4)
-    c.espalha("estalactites_estalagmites", 1, 3); c.espalha("rochas_rachadas", 1, 2)
-    c.armadilhas.append({"tipo": "armadilha_urso", "pos": m.em(1, 4, 5)})
-    c.armadilhas.append({"tipo": "rede", "pos": m.em(1, 6, 2)})
-    c.mon(DUAL, 2, 7, 3); c.mon(DUAL, 2, 7, 7)
-    c.mon_livre(SOLDADO, 2, 4); c.mon_livre(ORC, 2, 3); c.mon_livre(ARQUEIRO, 2, 3)
-    c.espalha("rocha_grande", 2, 1); c.espalha("rochas_rachadas", 2, 3)
-    c.armadilhas.append({"tipo": "armadilha_dardos_envenenados", "pos": m.em(2, 4, 4),
-                         "veneno_id": "veneno_escorpiao_pedra"})
-    _fala(c, "desfil_chegada", m.em(0, 1, 2), "Narrador", "🌬️",
-          "O desfiladeiro é uma fenda estreita entre dois paredões. O vento assobia por ela como um aviso.", 4)
-    _fala(c, "desfil_morte", m.em(1, 2, hs // 2), "Narrador", "🏹",
-          "Um zumbido seco. O bardo, que ia à frente, cai de joelhos com uma flecha de ponta tingida no peito e uma "
-          "moeda de prata sem cunho na mão aberta. Não houve tempo. Nem de gritar.", 5, COM_GUIA)
-    _fala(c, "desfil_rastro", m.em(1, 2, hs // 2), "Narrador", "🩸",
-          "Ao pé de um rochedo, o rastro de alguém que subiu antes de vocês e foi calado no caminho: pegadas, sangue "
-          "seco e uma flecha de ponta tingida.", 5, SEM_GUIA)
-    return c.finalizar("elara_montanha_2", "O Desfiladeiro", "ar_livre", 5, {
-        "primary": obj("reach_exit", 240, 80, fato=F_DESFILADEIRO), "secondary": []}, ent, sai,
-        expected_party=dict(EXPECTED), marcador_entrada="poste", saida_permitida=False)
+    """Terreno do `penhasco.json` do autor; aqui só entram história, monstros e objetivo.
+
+    Ordem: chegada na margem sul, a guarda da ponte, o bardo (ou o rastro) na cabeceira, a travessia sob as flechas
+    da outra margem e a trilha que sobe até a saída, no fim do caminho de pedras."""
+    d = copy.deepcopy(S.carregar_dungeon("penhasco.json"))
+    sul = {"id": 0, "x": 0, "y": 13, "w": 26, "h": 6, "role": "entrance", "locked": False, "doors": []}
+    norte = {"id": 1, "x": 0, "y": 0, "w": 26, "h": 7, "role": "monster", "locked": False, "doors": []}
+    monstros = {
+        0: ((SOLDADO, (12, 14)), (SOLDADO, (13, 14)),
+            (ORC, (10, 14)), (ORC, (15, 14)), (ORC, (16, 15)),
+            (DUAL, (6, 16)), (DUAL, (19, 17)), (DUAL, (20, 16)),
+            (ARQUEIRO, (9, 13)), (ARQUEIRO, (16, 13)), (ARQUEIRO, (5, 16))),
+        1: ((SOLDADO, (11, 5)), (SOLDADO, (14, 5)), (SOLDADO, (10, 4)), (SOLDADO, (15, 4)),
+            (DUAL, (9, 5)), (DUAL, (16, 5)), (DUAL, (12, 2)),
+            (ORC, (13, 2)), (ORC, (18, 3)), (ORC, (6, 3)),
+            (ARQUEIRO, (10, 6)), (ARQUEIRO, (15, 6)), (ARQUEIRO, (9, 6)), (ARQUEIRO, (16, 6))),
+    }
+    falas = [
+        ("desfil_chegada", (12, 17), "🌬️", 4, None,
+         "A trilha acaba na beira do desfiladeiro. Uma ponte de madeira range sobre o vazio, e o vento sobe do abismo "
+         "como um aviso."),
+        ("desfil_morte", (13, 13), "🏹", 1, COM_GUIA,
+         "Um zumbido seco vindo da outra margem. O bardo, que ia à frente, cai de joelhos na cabeceira da ponte com "
+         "uma flecha de ponta tingida no peito e uma moeda de prata sem cunho na mão aberta. Não houve tempo. Nem de "
+         "gritar."),
+        ("desfil_rastro", (13, 13), "🩸", 1, SEM_GUIA,
+         "Na cabeceira da ponte, o rastro de alguém que subiu antes de vocês e foi calado no caminho: pegadas, sangue "
+         "seco e uma flecha de ponta tingida, vinda da outra margem."),
+        ("desfil_margem", (13, 4), "🌬️", 2, None,
+         "A ponte fica para trás. O caminho de pedras segue margem acima, e ao longe sobe a fumaça de um acampamento."),
+    ]
+    d.update({
+        "id": "elara_montanha_2", "name": "O Desfiladeiro", "ambiente": "ar_livre", "saida_permitida": False,
+        "marcador_entrada": "poste", "expected_party": dict(EXPECTED), "exit": {"x": 16, "y": 0},
+        "rooms": [sul, norte],
+        "monsters": [{"type": t, "pos": list(pos), "room_id": sala, "boss": False, "target": False}
+                     for sala, grupo in monstros.items() for t, pos in grupo],
+        "chests": [{"pos": [16, 17], "gold": 0, "items": [{"id": "health_potion_improved"} for _ in range(4)],
+                    "key_objective": False}],
+        "traps": [{"tipo": "fosso_estacas", "pos": [8, 15]}, {"tipo": "rede", "pos": [15, 2]},
+                  {"tipo": "armadilha_urso", "pos": [16, 2]},
+                  {"tipo": "armadilha_dardos_envenenados", "pos": [15, 1], "veneno_id": "veneno_escorpiao_pedra"}],
+        "falas": [{"id": fid, "pos": list(pos), "falante": {"nome": "Narrador", "emoji": emoji}, "texto": texto,
+                   "trigger": {"tipo": "proximidade", "raio": raio},
+                   **({"requisito": S._clean_requirement(req)} if req else {})}
+                  for fid, pos, emoji, raio, req, texto in falas],
+        "objectives": {"primary": obj("reach_exit", 240, 80, fato=F_DESFILADEIRO), "secondary": []},
+    })
+    return d
 
 
 def masmorra_caravana():

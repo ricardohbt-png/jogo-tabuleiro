@@ -31,7 +31,8 @@ def target(r):
 async def kill(r, m, loot_roll=1):
     r.monsters[m["id"]] = m
     m["hp"] = 0
-    with patch.object(S.random, "randint", return_value=loot_roll):
+    # A comida extra de 10% (test_comida_no_loot) é sorteio à parte: aqui o baú tem de ser exato.
+    with patch.object(S.random, "randint", return_value=loot_roll),             patch.object(S, "CHANCE_COMIDA_MONSTRO", 0.0):
         await r._monster_dies(m, None)
     return next(iter(r.chests.values()))
 

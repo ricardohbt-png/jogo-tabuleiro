@@ -42,14 +42,19 @@ class DadosTests(unittest.TestCase):
         self.assertEqual(traicao["efeito"]["fatos"], [R.F_CAUTELOSO])
         olho = t["elara_gilo_pertences"][1]
         self.assertEqual(olho["efeito"]["item_id"], F.ID_OLHO)
-        self.assertEqual((olho["requisito"]["fato"], olho["requisito"]["sem_fato"]), (R.F_GILO_MORREU, R.F_RAMO_A))
+        self.assertEqual((olho["requisito"]["fato"], olho["requisito"]["tambem_fato"], olho["requisito"]["sem_fato"]),
+                         (R.F_GILO_MORREU, R.F_RAMO_B, R.F_OLHO))
 
     def test_destinos(self):
         d = R.destinos()
         self.assertEqual(d["elara_graciero_beco"]["requisito"]["fato"], R.F_RUMO)
         self.assertEqual(d["elara_graciero_cais"]["requisito"]["aventura_id"], "elara_graciero_beco")
         viva, morta = d["elara_graciero_praca_viva"]["requisito"], d["elara_graciero_praca_morta"]["requisito"]
-        self.assertEqual((viva["aventura_id"], viva["sem_fato"]), ("elara_graciero_cais", R.F_LENTO))
+        pedra = d["elara_graciero_praca_pedra"]["requisito"]
+        self.assertEqual((viva["aventura_id"], viva["fato"], viva["sem_fato"]),
+                         ("elara_graciero_cais", R.F_RAMO_A, R.F_LENTO))
+        self.assertEqual((pedra["aventura_id"], pedra["fato"], pedra["sem_fato"]),
+                         ("elara_graciero_cais", R.F_RAMO_B, R.F_LENTO))
         self.assertEqual((morta["aventura_id"], morta["fato"]), ("elara_graciero_cais", R.F_LENTO))
         n, a = d["elara_leonel_casa"], d["elara_leonel_casa_alerta"]
         self.assertEqual([(e["file"], e["encadear"]) for e in n["dungeons"]],

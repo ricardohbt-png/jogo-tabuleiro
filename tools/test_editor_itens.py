@@ -359,15 +359,16 @@ def test_veneno_uso():
     r, p = _room_com_alvo()
     p["weapon"] = {"id": "wt", "name": "Lâmina", "die": "1d8", "stat": "str_",
                    "categoria": "cortante", "poison_slots": []}
+    p.setdefault("gear", {})["weapon"] = deepcopy(p["weapon"])
     p["bag"] = [dict(S._custom_poison_inventory_dict(it))]
     asyncio.run(r.handle_use_item("p1", "veneno_teste"))
-    check("arma recebeu carga de veneno", r._weapon_poison_slots(p) == ["veneno_teste"])
+    check("arma recebeu carga de veneno", r._weapon_poison_slots(p) == ["veneno_teste"] * 3)
     check("frasco consumido", not any(i["id"] == "veneno_teste" for i in p["bag"]))
     import random; random.seed(99)
     asyncio.run(r.handle_attack("p1", "m1"))
     efeitos = r.monsters["m1"].get("efeitos_veneno", [])
     check("alvo envenenado no acerto", any(e.get("nome") == "Veneno Teste" for e in efeitos))
-    check("carga consumida", r._weapon_poison_slots(p) == [])
+    check("carga consumida", r._weapon_poison_slots(p) == ["veneno_teste"] * 2)
     S._apply_custom_items([])
 
 def test_veneno_efeitos():
@@ -1070,6 +1071,8 @@ def _item_com_habilidade(aid, **over):
 def test_habilidade_concedida_helper():
     print("\n[I1] _habilidades_concedidas varre o gear equipado")
     p = S.make_player("p1", "Victor", "warrior", 0)
+    # O machado inicial do guerreiro já concede Arremesso Bruto: começa sem nada.
+    p["gear"] = {k: None for k in p["gear"]}
     check("sem itens: conjunto vazio", S._habilidades_concedidas(p) == set())
     p["gear"]["weapon"] = _item_com_habilidade("guild_brutalidade")
     check("coleta da arma", S._habilidades_concedidas(p) == {"guild_brutalidade"})
@@ -1326,6 +1329,7 @@ def test_hab_ladino_concedida():
     r2, p2 = _turn_room_hero("warrior")
     p2["weapon"] = {"id": "wt", "name": "Lâmina", "die": "1d8", "stat": "str_",
                     "categoria": "cortante", "poison_slots": []}
+    p2["gear"]["weapon"] = deepcopy(p2["weapon"])
     p2["bag"] = [{"id": "veneno_aranha_sombria", "name": "Veneno", "emoji": "🕷️",
                   "item_slot": "bag", "effect": "coat_poison",
                   "veneno_id": "veneno_aranha_sombria"}]

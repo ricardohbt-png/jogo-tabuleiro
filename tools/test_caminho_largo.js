@@ -1,0 +1,10 @@
+const assert = require('assert');
+const road = require('../src/stoneRoad.js');
+const coords = (a, b, axis, width, w=10, h=10) => road.strokeCells(a,b,axis,width,w,h);
+assert.deepStrictEqual(coords([2,2],[4,2],'x',1), [[2,2],[3,2],[4,2]]);
+assert.deepStrictEqual(coords([4,2],[2,2],'x',2), [[4,2],[4,3],[3,2],[3,3],[2,2],[2,3]]);
+assert.deepStrictEqual(coords([2,2],[2,3],'y',3), [[1,2],[2,2],[3,2],[1,3],[2,3],[3,3]]);
+assert.deepStrictEqual(coords([0,0],[1,0],'x',5), [[0,0],[0,1],[0,2],[1,0],[1,1],[1,2]]);
+assert.strictEqual(road.neighborMask(new Set(['1,0','2,1','1,2','0,1']),1,1),15);
+assert.strictEqual(road.neighborMask(new Set(['1,0','0,1']),1,1),9);
+console.log('stone road width and neighbors: 6 checks passed');

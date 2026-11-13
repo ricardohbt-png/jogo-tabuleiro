@@ -36,6 +36,7 @@ const sandbox = {
 sandbox.window = sandbox;
 vm.createContext(sandbox);
 vm.runInContext(section('function criarCartaMagia(', '// Tooltip da carta')
+  + section('function _slotsExtrasMagiaEquipados(', 'function renderMagiasFichaEmJogo(')
   + section('function renderMagiasFichaEmJogo(', '// Seleção de magias na criação'), sandbox);
 
 console.log('\n[1] Conteúdo das ofertas de loja');

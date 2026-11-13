@@ -116,7 +116,7 @@ async def main():
     async def cap_send2(pid, m):
         if m.get("type") == "spell_pick_prompt": prompts.append(m)
     r.send_to = cap_send2
-    p["xp"] = 999   # garante subir de nível
+    p["xp"] = 1040   # garante subir de nível (a curva do jogo: nível N -> N+1 custa N×1040)
     await r._check_level_up(p)
     check("subiu para nível 2", p["level"] == 2)
     check("slot novo de 1º entra cheio (3)", r._slots_disponiveis(p, "primeiro") == 3)

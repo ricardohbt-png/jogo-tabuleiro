@@ -877,13 +877,30 @@
         "file": "casa_secreta.json",
         "encadear": true,
         "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira a poeira e a algo pior.",
-        "outro": ""
+        "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem luz: a Fazenda do Leste."
       },
       {
         "file": "fazenda.json",
         "encadear": false,
         "intro": "",
-        "outro": "Estábulos vazios, rastros de carroça e camas feitas às pressas. Quem quer que estivesse ali já cumpriu a sua parte. Voltem ao Templo."
+        "outro": {
+          "slides": [
+            {
+              "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.",
+              "fit": "cover"
+            },
+            {
+              "image": "assets/story/exequiel_templo.png",
+              "fit": "contain",
+              "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais do que isso, só que ele não pode ficar em mãos erradas.”"
+            },
+            {
+              "image": "assets/story/exequiel_templo.png",
+              "fit": "contain",
+              "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. Procurem o Mestre de Armas, ele explica como usá-la.”"
+            }
+          ]
+        }
       }
     ],
     "espera_retorno": {
@@ -894,6 +911,7 @@
     "oculto_ate_liberar": true,
     "revisitavel": false,
     "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -928,12 +946,13 @@
     "oculto_ate_liberar": true,
     "revisitavel": false,
     "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
       "nivel_grupo_min": 0,
       "item_id": "",
-      "fato": "elara_ramo_a",
+      "fato": "elara_casa_tome_descoberta",
       "sem_fato": "",
       "aventura_id": ""
     },
@@ -962,6 +981,7 @@
     "oculto_ate_liberar": true,
     "revisitavel": false,
     "ocultar_apos_concluir": true,
+    "so_na_cidade": true,
     "outro_rota": "",
     "requisito": {
       "renome_min": 0,
@@ -969,7 +989,8 @@
       "item_id": "",
       "fato": "elara_bardo_decidido",
       "sem_fato": "",
-      "aventura_id": ""
+      "aventura_id": "",
+      "tambem_fato": "elara_celeiro_descoberto"
     },
     "renome_recompensa": 1
   },
@@ -1132,7 +1153,55 @@
       {
         "file": "elara_graciero_praca_viva.json",
         "encadear": false,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "A Praça de Graciero dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto."
+            },
+            {
+              "video": "assets/story/gilo_cena_2_susto.mp4",
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois outro. O Gilo recua e aponta a besta para um, para o outro, sem saber em qual atirar."
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... A pedra já foi entregue aos que sobem a montanha... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... Só mais uma rua... eu vou conseguir... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_cena_4_queda.mp4",
+              "image": "assets/story/gilo_escorpioes_praca.png",
+              "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."
+            },
+            {
+              "video": "assets/story/gilo_cena_5_roupas.mp4",
+              "image": "assets/story/gilo_cena_4_queda.jpg",
+              "text": "Depois, silêncio. Os escorpiões voltam às grades. Da praça sobram o chapéu, a capa em tiras e as manchas nas pedras."
+            }
+          ]
+        },
         "outro": ""
       }
     ],
@@ -1149,7 +1218,7 @@
       "renome_min": 0,
       "nivel_grupo_min": 0,
       "item_id": "",
-      "fato": "",
+      "fato": "elara_ramo_a",
       "sem_fato": "elara_graciero_lento",
       "aventura_id": "elara_graciero_cais"
     },
@@ -1200,13 +1269,80 @@
       {
         "file": "elara_leonel_1.json",
         "encadear": true,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "Todas as pistas de Graciero terminam no mesmo lugar: a casa de leilões do Leonel, uma mansão cercada de jardins que ninguém de fora atravessa."
+            },
+            {
+              "text": "\"A culpa é do Leonel!\" O último grito do Gilo ainda acompanha vocês pela rua.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_viu_gilo_morrer",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O bilhete achado entre os ossos da praça pesa no bolso: \"Pelas moças, o ouro combinado. Leonel.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_viu_gilo_morrer",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O mago não fala desde o cais. A irmã dele está em algum lugar daquela casa, e ninguém precisa dizer isso em voz alta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            },
+            {
+              "text": "Ao entardecer, vocês entram no terreno pela sombra das árvores. Ninguém espera por vocês. Por enquanto."
+            }
+          ]
+        },
         "outro": ""
       },
       {
         "file": "elara_leonel_2.json",
         "encadear": false,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "A porta de serviço cede sem barulho. O jardim e os guardas caídos ficam para trás."
+            },
+            {
+              "text": "Lá dentro o ar cheira a cera e dinheiro. Cortinas pesadas, ouro nas paredes, cadeiras arrumadas para o próximo leilão. Nada ali parece esconder uma cela."
+            },
+            {
+              "text": "Mas, em algum ponto atrás das paredes, alguém chora baixo."
+            },
+            {
+              "text": "O mago para no meio do corredor. Ele conhece esse choro.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            }
+          ]
+        },
         "outro": ""
       }
     ],
@@ -1221,16 +1357,24 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
-        },
-        {
-          "text": "O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Pelo salão secreto, a Elara sai vendo a luz, magra e furiosa, mas viva.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "mage"
           }
@@ -1242,13 +1386,36 @@
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "bard"
           }
         },
         {
-          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, sem acreditar que a luz do dia é para elas.",
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. A Elara não saiu daquele salão. Vocês a levam nos braços, e ninguém encontra o que dizer.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O mago carrega a irmã sozinho durante todo o caminho e não deixa ninguém ajudar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "mage"
+          }
+        },
+        {
+          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, sem acreditar que a luz do dia é para elas.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1259,7 +1426,7 @@
           }
         },
         {
-          "text": "Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
+          "text": "Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1340,13 +1507,102 @@
       {
         "file": "elara_leonel_1_alerta.json",
         "encadear": true,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "Todas as pistas de Graciero terminam no mesmo lugar: a casa de leilões do Leonel, uma mansão cercada de jardins que ninguém de fora atravessa."
+            },
+            {
+              "text": "\"A culpa é do Leonel!\" O último grito do Gilo ainda acompanha vocês pela rua.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_viu_gilo_morrer",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O bilhete achado entre os ossos da praça pesa no bolso: \"Pelas moças, o ouro combinado. Leonel.\"",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_viu_gilo_morrer",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O mago não fala desde o cais. A irmã dele está em algum lugar daquela casa, e ninguém precisa dizer isso em voz alta.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            },
+            {
+              "text": "A notícia do bardo executado em Riacho chegou antes de vocês. Há tochas dobradas nos jardins, e os guardas já olham para a estrada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_morto",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            },
+            {
+              "text": "O assobio do bardo na taverna fez o trabalho dele. Há tochas dobradas nos jardins, e os guardas já olham para a estrada.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_bardo_traiu",
+                "sem_fato": "",
+                "aventura_id": ""
+              }
+            }
+          ]
+        },
         "outro": ""
       },
       {
         "file": "elara_leonel_2.json",
         "encadear": false,
-        "intro": "",
+        "intro": {
+          "slides": [
+            {
+              "text": "A porta de serviço cede sem barulho. O jardim e os guardas caídos ficam para trás."
+            },
+            {
+              "text": "Lá dentro o ar cheira a cera e dinheiro. Cortinas pesadas, ouro nas paredes, cadeiras arrumadas para o próximo leilão. Nada ali parece esconder uma cela."
+            },
+            {
+              "text": "Mas, em algum ponto atrás das paredes, alguém chora baixo."
+            },
+            {
+              "text": "O mago para no meio do corredor. Ele conhece esse choro.",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "",
+                "aventura_id": "",
+                "heroi_no_grupo": "mage"
+              }
+            },
+            {
+              "text": "Um sino toca duas vezes no andar de cima. A casa já sabe que vocês entraram."
+            }
+          ]
+        },
         "outro": ""
       }
     ],
@@ -1361,16 +1617,24 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai vendo a luz, magra e furiosa, mas viva."
-        },
-        {
-          "text": "O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. Pelo salão secreto, a Elara sai vendo a luz, magra e furiosa, mas viva.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "mage"
           }
@@ -1382,13 +1646,36 @@
             "nivel_grupo_min": 0,
             "item_id": "",
             "fato": "",
-            "sem_fato": "",
+            "sem_fato": "elara_morta",
             "aventura_id": "",
             "heroi_no_grupo": "bard"
           }
         },
         {
-          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, sem acreditar que a luz do dia é para elas.",
+          "text": "A casa de leilões fica em silêncio quando o Leonel cai. A Elara não saiu daquele salão. Vocês a levam nos braços, e ninguém encontra o que dizer.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "O mago carrega a irmã sozinho durante todo o caminho e não deixa ninguém ajudar.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_morta",
+            "sem_fato": "",
+            "aventura_id": "",
+            "heroi_no_grupo": "mage"
+          }
+        },
+        {
+          "text": "As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, sem acreditar que a luz do dia é para elas.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1399,7 +1686,7 @@
           }
         },
         {
-          "text": "Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
+          "text": "Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, agradecendo calada.",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
@@ -1556,6 +1843,88 @@
       "sem_fato": "elara_leonel_vencido",
       "aventura_id": "",
       "tambem_fato": "elara_ramo_a"
+    },
+    "renome_recompensa": 2
+  },
+  "elara_graciero_praca_pedra": {
+    "id": "elara_graciero_praca_pedra",
+    "nome": "A Praça dos Escorpiões",
+    "x": 66.06,
+    "y": 28.77,
+    "fome": 1,
+    "sede": 1,
+    "dungeons": [
+      {
+        "file": "elara_graciero_praca_pedra.json",
+        "encadear": false,
+        "intro": {
+          "slides": [
+            {
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "A Praça de Graciero dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto."
+            },
+            {
+              "video": "assets/story/gilo_cena_2_susto.mp4",
+              "image": "assets/story/gilo_cena_1_chegada.jpg",
+              "text": "Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois outro. O Gilo recua e aponta a besta para um, para o outro, sem saber em qual atirar."
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "elara_ramo_a",
+                "sem_fato": "",
+                "aventura_id": ""
+              },
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... A pedra já foi entregue aos que sobem a montanha... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_cena_3_cerco.mp4",
+              "image": "assets/story/gilo_cena_2_susto.jpg",
+              "requisito": {
+                "renome_min": 0,
+                "nivel_grupo_min": 0,
+                "item_id": "",
+                "fato": "",
+                "sem_fato": "elara_ramo_a",
+                "aventura_id": ""
+              },
+              "text": "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr. Aperta contra o peito um embrulho de pano.\n\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou ouro demais para eu dizer não... Só mais uma rua... eu vou conseguir... Eles... estão vindo...\""
+            },
+            {
+              "video": "assets/story/gilo_cena_4_queda.mp4",
+              "image": "assets/story/gilo_escorpioes_praca.png",
+              "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."
+            },
+            {
+              "video": "assets/story/gilo_cena_5_roupas.mp4",
+              "image": "assets/story/gilo_cena_4_queda.jpg",
+              "text": "Depois, silêncio. Os escorpiões voltam às grades. Da praça sobram o chapéu, a capa em tiras e as manchas nas pedras."
+            }
+          ]
+        },
+        "outro": ""
+      }
+    ],
+    "espera_retorno": {
+      "modo": "fixa",
+      "rodadas": 0,
+      "dados": ""
+    },
+    "oculto_ate_liberar": true,
+    "revisitavel": false,
+    "ocultar_apos_concluir": true,
+    "outro_rota": "",
+    "requisito": {
+      "renome_min": 0,
+      "nivel_grupo_min": 0,
+      "item_id": "",
+      "fato": "elara_ramo_b",
+      "sem_fato": "elara_graciero_lento",
+      "aventura_id": "elara_graciero_cais"
     },
     "renome_recompensa": 2
   }

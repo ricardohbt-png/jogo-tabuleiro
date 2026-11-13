@@ -32,7 +32,7 @@ check("lixo não quebra", G.placaEmEvidencia(null, "p1", tudo) === null
 check("sem visivel: assume visível", G.placaEmEvidencia(estado(), "p1") !== null);
 
 const jogo = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
-check("fiação 2D: halo da placa desenhado antes do alvo do passo", /_guiaPlacaDesenhar2D\(ctx, state, visionSet, alvo\);\s*if\(!alvo\) return;/.test(jogo));
+check("fiação 2D: halo da placa desenhado antes do alvo do passo", /_guiaPlacaDesenhar2D\(ctx, state, visionSet, alvo\);[\s\S]{0,120}if\(!alvo\) return;/.test(jogo));
 check("fiação 3D: marca guiaPlaca criada e descartada", jogo.includes("_guiaMarca3D('guiaPlaca')") && jogo.includes("['guiaMarca', 'guiaPlaca']"));
 check("fiação: usa o módulo puro", jogo.includes("GuiaTutorial.placaEmEvidencia("));
 

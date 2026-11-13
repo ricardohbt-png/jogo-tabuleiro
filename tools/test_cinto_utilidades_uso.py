@@ -114,7 +114,7 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
                     if iid == 'health_potion_concentrated': old_item['uses_left'] = 2
                     original_bonus = self.r._executar_acao_bonus
                     suspended, resume = asyncio.Event(), asyncio.Event()
-                    async def gated_bonus(player):
+                    async def gated_bonus(player, narrar=True):
                         result = await original_bonus(player)
                         suspended.set()
                         await resume.wait()
@@ -152,7 +152,7 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
                 entry = belt['utility_belt_slots'][0]
                 if doses is not None: entry['item']['uses_left'] = doses
                 # The real bonus action has its own narration; isolate the effect narration.
-                async def bonus(player): return True
+                async def bonus(player, narrar=True): return True
                 self.r._executar_acao_bonus = bonus
                 observations = []
                 async def effect_narration(message):
@@ -203,7 +203,7 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
             for mode in ('hit', 'miss', 'area'):
                 with self.subTest(slot=slot, mode=mode):
                     self.setUp()
-                    iid = 'bomba_incendiaria' if mode == 'area' else 'frasco_oleo'
+                    iid = 'bomba_incendiaria' if mode == 'area' else 'frasco_acido'   # acerto/erro: alvo único (o óleo virou área)
                     belt = self.belt(iid, 2, slot)
                     self.p['bag'] = [item(iid)]
                     before_hp = self.r.monsters['m1']['hp']
@@ -236,6 +236,7 @@ class BeltActionTests(unittest.IsolatedAsyncioTestCase):
                 if reason == 'dead': self.r.monsters['m1']['hp'] = 0
                 if reason == 'range': self.r.monsters['m1']['pos'] = [99, 99]
                 if 'wall' in reason: self.r._tem_linha_de_visao = lambda *a, **k: False
+                if reason == 'area_missing': options['target_id'] = None   # sem ponto e sem o alvo do payload antigo
                 if reason == 'area_range': options.update(tx=99, ty=99)
                 if reason == 'area_wall': options.update(tx=4, ty=1)
                 before = deepcopy(self.p)

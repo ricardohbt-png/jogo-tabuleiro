@@ -53,7 +53,7 @@ async def main():
     room.gm_say = noop
     room.push_state = noop
     mage = make_player("mage", "Mago de teste", "mage", 0)
-    mage.update(test_hero=True, level=2, xp=999, magias_conhecidas=[], pending_spell_pick=[])
+    mage.update(test_hero=True, level=2, xp=2080, magias_conhecidas=[], pending_spell_pick=[])
     room.players["mage"] = mage
     await room._check_level_up(mage)
     mage_choices = [mid for mid, spell in S.GRIMORIO.items()
@@ -74,7 +74,7 @@ async def main():
 
     sent.clear()
     mage["level"] = 3
-    mage["xp"] = 999
+    mage["xp"] = 3120
     # Deixa uma opção distinta disponível para observar o ganho unitário.
     mage["magias_conhecidas"] = [mage_choices[0]]
     await room._check_level_up(mage)
@@ -83,7 +83,7 @@ async def main():
           and sent[-1].get("circulo") == "primeiro" and sent[-1].get("count") == 1)
 
     cleric = make_player("cleric", "Clérigo de teste", "cleric", 0)
-    cleric.update(test_hero=True, level=2, xp=999, magias_conhecidas=[], pending_spell_pick=[])
+    cleric.update(test_hero=True, level=2, xp=2080, magias_conhecidas=[], pending_spell_pick=[])
     room.players["cleric"] = cleric
     await room._check_level_up(cleric)
     check("clérigo recebe 2 escolhas ao desbloquear o 2º círculo",

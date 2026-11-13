@@ -37,7 +37,7 @@ def test_tipo_item_e_maos():
     assert server.INSTRUMENTOS_BASE["sino"]["maos"] == 1
 
 def _room_bardo():
-    room = server.GameRoom.__new__(server.GameRoom)
+    room = server.GameRoom("BARDO")
     room.phase = "playing"
     room.round_num = 1
     room.turn_index = 0
@@ -585,7 +585,7 @@ def test_reacao_lira_kill_via_handle_attack_processa_morte_1x():
     room._is_turn = lambda pid: pid == "h"
     monstro = {"id": "m1", "name": "Goblin", "hp": 5, "max_hp": 20, "ac": 5, "pos": [0, 1], "alive": True}
     room.monsters = {"m1": monstro}
-    room._rolar_ataque = lambda atk, ac, v=False, d=False: (True, 10, 10 + atk, False, None)
+    room._rolar_ataque = lambda atk, ac, v=False, d=False, atacante=None: (True, 10, 10 + atk, False, None)
     orig_roll_dice = server.roll_dice
     server.roll_dice = lambda die_str: 3
     mortes = []

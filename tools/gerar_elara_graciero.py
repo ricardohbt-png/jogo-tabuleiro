@@ -10,7 +10,7 @@ Plano: docs/superpowers/plans/2026-10-22-campanha-elara-parte4-graciero.md
 
 Só toca no que é dele: as conversas `elara_*` dos slots ativos da taverna de Graciero (as conversas do
 autor ficam), os destinos `elara_graciero_*`/`elara_leonel_*` do mapa-múndi, as fichas `escorpiao_gigante` e
-`leonel`, o item `olho_de_arveluz` e os sete mapas (protegidos por assinatura: mapa editado depois de gerado
+`leonel`, o item `olho_de_arveluz` e os oito mapas (protegidos por assinatura: mapa editado depois de gerado
 só é regravado com --forcar).
 """
 import argparse
@@ -42,10 +42,13 @@ F_AJUDOU = "elara_bardo_ajudou"
 F_TRAIU = "elara_bardo_traiu"
 F_CAUTELOSO = "elara_leonel_cauteloso"
 F_LENTO = "elara_graciero_lento"
+F_VIU_MORRER = "elara_viu_gilo_morrer"
+F_BARDO_MORTO = "elara_bardo_morto"
 F_GILO_MORREU = "elara_gilo_morreu"
 F_DICA_MONTANHA = "elara_dica_montanha"
 F_OLHO = "elara_olho_recuperado"
 F_LEONEL_VENCIDO = "elara_leonel_vencido"
+F_ELARA_MORTA = "elara_morta"
 F_PEDRO = "elara_graciero_pedro_falou"
 F_HENRIQUE = "elara_graciero_henrique_falou"
 
@@ -70,7 +73,8 @@ def conversas():
                       "Os guardas da cidade, ainda pálidos por causa dos escorpiões, entregam ao grupo o que "
                       "acharam entre os ossos do mercenário: um embrulho de pano que pesa mais do que devia. "
                       "Está quente ao toque.",
-                      _req(fato=F_GILO_MORREU, sem_fato=F_RAMO_A), fato=F_OLHO, item_id=F.ID_OLHO, uma_vez=True),
+                      _req(fato=F_GILO_MORREU, tambem_fato=F_RAMO_B, sem_fato=F_OLHO),
+                      fato=F_OLHO, item_id=F.ID_OLHO, uma_vez=True),
         ],
         "npc_ms2ee41a": [
             _conversa("elara_graciero_garconete",
@@ -118,15 +122,19 @@ def conversas():
 
 
 SLIDES_FINAIS = [
-    ("A casa de leilões fica em silêncio quando o Leonel cai. Nos porões, a grade se abre e a Elara sai "
-     "vendo a luz, magra e furiosa, mas viva.", {}),
-    ("O mago atravessa o porão em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
-     {"heroi_no_grupo": "mage"}),
+    ("A casa de leilões fica em silêncio quando o Leonel cai. Pelo salão secreto, a Elara sai vendo a luz, "
+     "magra e furiosa, mas viva.", {"sem_fato": F_ELARA_MORTA}),
+    ("O mago atravessa a sala em três passos e abraça a irmã. Por um instante, nenhum dos dois consegue falar.",
+     {"heroi_no_grupo": "mage", "sem_fato": F_ELARA_MORTA}),
     ("O bardo faz uma reverência elaborada diante da Elara e ouve dela, seca, que já ouviu a piada sobre ela "
-     "e não achou graça.", {"heroi_no_grupo": "bard"}),
-    ("As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem dos porões, uma a uma, "
+     "e não achou graça.", {"heroi_no_grupo": "bard", "sem_fato": F_ELARA_MORTA}),
+    ("A casa de leilões fica em silêncio quando o Leonel cai. A Elara não saiu daquele salão. Vocês a levam "
+     "nos braços, e ninguém encontra o que dizer.", {"fato": F_ELARA_MORTA}),
+    ("O mago carrega a irmã sozinho durante todo o caminho e não deixa ninguém ajudar.",
+     {"heroi_no_grupo": "mage", "fato": F_ELARA_MORTA}),
+    ("As moças de Riacho já tinham voltado para casa. Aqui, outras jovens do Templo saem da passagem secreta, uma a uma, "
      "sem acreditar que a luz do dia é para elas.", {"fato": "elara_mocas_salvas"}),
-    ("Nos porões, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
+    ("Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
      "agradecendo calada.", {"fato": F_RAMO_B}),
     ("O Olho de Arveluz volta ao Templo pesado e quente. O sacerdote o toma sem agradecer e o esconde "
      "debaixo do manto, olhando para longe.", {"item_id": F.ID_OLHO}),
@@ -139,6 +147,78 @@ SLIDES_FINAIS = [
     ("Fica no ar uma sensação ruim. O Gilo era pequeno demais para tudo isso. Alguma coisa muito maior, "
      "muito irritada, continua se movendo longe daqui.", {}),
 ]
+
+
+def intro_gilo():
+    """Abertura da Praça viva: a morte do Gilo, cena a cena, antes de o tabuleiro aparecer. Cada vídeo dissolve a cena
+    anterior na seguinte (`tools/gerar_gilo_cenas.py`), e a imagem do slide é a cena de onde ele parte, para a troca não
+    piscar. Ao fim os escorpiões voltam às grades, onde o mapa os coloca. Quem chega tarde vai para a Praça morta, então
+    as cenas não precisam de condição (`elara_viu_gilo_morrer` só existe depois de vencer a praça). No ramo B o Olho
+    ainda está com o Gilo: nada de pista da montanha."""
+    pasta = "assets/story/"
+    cerco = pasta + "gilo_escorpioes_praca.png"
+    antes_da_fala = "Agora estão por toda parte. O Gilo gira no meio do cerco, sem ter para onde correr."
+    return {"slides": [
+        {"image": pasta + "gilo_cena_1_chegada.jpg",
+         "text": ("A Praça de Graciero dorme sob a lua. O Gilo Dedos Sujos entra correndo, de besta em punho, "
+                  "olhando para trás. Então para: a grade diante dele está arrancada, e algo se mexe no esgoto.")},
+        {"video": pasta + "gilo_cena_2_susto.mp4", "image": pasta + "gilo_cena_1_chegada.jpg",
+         "text": ("Garras sobem pela beira do buraco. Um escorpião do tamanho de um cavalo salta para as pedras, depois "
+                  "outro. O Gilo recua e aponta a besta para um, para o outro, sem saber em qual atirar.")},
+        {"video": pasta + "gilo_cena_3_cerco.mp4", "image": pasta + "gilo_cena_2_susto.jpg",
+         "requisito": _req(fato=F_RAMO_A),
+         "text": (antes_da_fala + "\n"
+                  "\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou "
+                  "ouro demais para eu dizer não... A pedra já foi entregue aos que sobem a montanha... Eles... "
+                  "estão vindo...\"")},
+        {"video": pasta + "gilo_cena_3_cerco.mp4", "image": pasta + "gilo_cena_2_susto.jpg",
+         "requisito": _req(sem_fato=F_RAMO_A),
+         "text": (antes_da_fala + " Aperta contra o peito um embrulho de pano.\n"
+                  "\"Não... não era para ser assim! A culpa é do Leonel! Foi ele quem insistiu nas moças... pagou "
+                  "ouro demais para eu dizer não... Só mais uma rua... eu vou conseguir... Eles... estão vindo...\"")},
+        {"video": pasta + "gilo_cena_4_queda.mp4", "image": cerco,
+         "text": "O cerco se fecha. Um ferrão o derruba, a besta escorrega pelas pedras e as garras caem sobre ele."},
+        {"video": pasta + "gilo_cena_5_roupas.mp4", "image": pasta + "gilo_cena_4_queda.jpg",
+         "text": ("Depois, silêncio. Os escorpiões voltam às grades. Da praça sobram o chapéu, a capa em tiras e as "
+                  "manchas nas pedras.")},
+    ]}
+
+
+def _cena(*slides):
+    """Slides de texto; cada um é `texto` ou (`texto`, requisito)."""
+    saida = []
+    for s in slides:
+        texto, cond = (s, None) if isinstance(s, str) else s
+        saida.append({"text": texto, **({"requisito": _req(**cond)} if cond else {})})
+    return {"slides": saida}
+
+
+def intro_casa(alerta):
+    """Abertura da mansão: lembra como o grupo chegou ao nome do Leonel e se ele foi avisado."""
+    tochas = "Há tochas dobradas nos jardins, e os guardas já olham para a estrada."
+    fim = ([(f"A notícia do bardo executado em Riacho chegou antes de vocês. {tochas}", {"fato": F_BARDO_MORTO}),
+            (f"O assobio do bardo na taverna fez o trabalho dele. {tochas}", {"fato": F_TRAIU})] if alerta else
+           ["Ao entardecer, vocês entram no terreno pela sombra das árvores. Ninguém espera por vocês. Por enquanto."])
+    return _cena(
+        "Todas as pistas de Graciero terminam no mesmo lugar: a casa de leilões do Leonel, uma mansão cercada de "
+        "jardins que ninguém de fora atravessa.",
+        ("\"A culpa é do Leonel!\" O último grito do Gilo ainda acompanha vocês pela rua.", {"fato": F_VIU_MORRER}),
+        ("O bilhete achado entre os ossos da praça pesa no bolso: \"Pelas moças, o ouro combinado. Leonel.\"",
+         {"sem_fato": F_VIU_MORRER}),
+        ("O mago não fala desde o cais. A irmã dele está em algum lugar daquela casa, e ninguém precisa dizer isso "
+         "em voz alta.", {"heroi_no_grupo": "mage"}),
+        *fim)
+
+
+def intro_mansao(alerta):
+    """Transição do terreno para dentro da casa; o choro prepara a passagem secreta."""
+    return _cena(
+        "A porta de serviço cede sem barulho. O jardim e os guardas caídos ficam para trás.",
+        "Lá dentro o ar cheira a cera e dinheiro. Cortinas pesadas, ouro nas paredes, cadeiras arrumadas para o "
+        "próximo leilão. Nada ali parece esconder uma cela.",
+        "Mas, em algum ponto atrás das paredes, alguém chora baixo.",
+        ("O mago para no meio do corredor. Ele conhece esse choro.", {"heroi_no_grupo": "mage"}),
+        *(["Um sino toca duas vezes no andar de cima. A casa já sabe que vocês entraram."] if alerta else []))
 
 
 def outro_rota():
@@ -161,10 +241,11 @@ def destinos():
     def perto(dx, dy):
         return round(min(100, max(0, base["x"] + dx)), 2), round(min(100, max(0, base["y"] + dy)), 2)
 
-    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False):
+    def destino(did, nome, dx, dy, etapas, requisito, renome, final=False, intro_etapa="", intros=None):
         x, y = perto(dx, dy)
         return {"id": did, "nome": nome, "x": x, "y": y, "fome": 1, "sede": 1,
-                "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": ""} for arq, enc in etapas],
+                "dungeons": [{"file": arq, "encadear": enc, "intro": intros[i] if intros else intro_etapa, "outro": ""}
+                             for i, (arq, enc) in enumerate(etapas)],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
                 "outro_rota": outro_rota() if final else "", "requisito": requisito, "renome_recompensa": renome}
@@ -176,16 +257,23 @@ def destinos():
                                        _req(aventura_id="elara_graciero_beco"), 1),
         "elara_graciero_praca_viva": destino("elara_graciero_praca_viva", "A Praça dos Escorpiões", 3.0, 0.5,
                                              [("elara_graciero_praca_viva.json", False)],
-                                             _req(aventura_id="elara_graciero_cais", sem_fato=F_LENTO), 2),
+                                             _req(aventura_id="elara_graciero_cais", fato=F_RAMO_A, sem_fato=F_LENTO),
+                                             2, intro_etapa=intro_gilo()),
+        "elara_graciero_praca_pedra": destino("elara_graciero_praca_pedra", "A Praça dos Escorpiões", 3.0, 0.5,
+                                              [("elara_graciero_praca_pedra.json", False)],
+                                              _req(aventura_id="elara_graciero_cais", fato=F_RAMO_B, sem_fato=F_LENTO),
+                                              2, intro_etapa=intro_gilo()),
         "elara_graciero_praca_morta": destino("elara_graciero_praca_morta", "A Praça dos Escorpiões", 3.0, 0.5,
                                               [("elara_graciero_praca_morta.json", False)],
                                               _req(aventura_id="elara_graciero_cais", fato=F_LENTO), 2),
         "elara_leonel_casa": destino("elara_leonel_casa", "A Casa de Leilões", 0.5, -2.5,
                                      [("elara_leonel_1.json", True), ("elara_leonel_2.json", False)],
-                                     _req(fato=F_GILO_MORREU, sem_fato=F_CAUTELOSO), 3, final=True),
+                                     _req(fato=F_GILO_MORREU, sem_fato=F_CAUTELOSO), 3, final=True,
+                                     intros=[intro_casa(False), intro_mansao(False)]),
         "elara_leonel_casa_alerta": destino("elara_leonel_casa_alerta", "A Casa de Leilões", 0.5, -2.5,
                                             [("elara_leonel_1_alerta.json", True), ("elara_leonel_2.json", False)],
-                                            _req(fato=F_GILO_MORREU, tambem_fato=F_CAUTELOSO), 3, final=True),
+                                            _req(fato=F_GILO_MORREU, tambem_fato=F_CAUTELOSO), 3, final=True,
+                                            intros=[intro_casa(True), intro_mansao(True)]),
     }
 
 

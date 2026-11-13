@@ -133,6 +133,10 @@ window.LANG_ERROS = {
     "en": "The trip still takes {rodadas} round(s).",
     "pt": "A viagem ainda leva {rodadas} rodada(s)."
   },
+  "erro.acao_bonus_ja_usada": {
+    "en": "Bonus action already used.",
+    "pt": "Ação bônus já usada."
+  },
   "erro.acao_bonus_ja_usada_neste_turno": {
     "en": "Bonus action already used this turn.",
     "pt": "Ação bônus já usada neste turno."
@@ -276,6 +280,10 @@ window.LANG_ERROS = {
   "erro.alvo_fora_de_alcance_aproxime_ortogonal": {
     "en": "⚠ {alvo} is out of range! Get closer (1 orthogonal square).",
     "pt": "⚠ {alvo} está fora de alcance! Aproxime-se (1 quadrado ortogonal)."
+  },
+  "erro.desnivel_corpo_a_corpo": {
+    "en": "⚠ {alvo} is on different ground: the height adds {n} square(s) to the distance. Use a ranged weapon, a thrown weapon or a spear.",
+    "pt": "⚠ {alvo} está em outra altura: o desnível soma {n} quadrado(s) à distância. Use arma à distância, arremesso ou lança."
   },
   "erro.alvo_fora_de_alcance_de_arremesso": {
     "en": "⚠ {alvo} out of throwing range (max {alcance} squares).",
@@ -1005,6 +1013,18 @@ window.LANG_ERROS = {
     "en": "Invalid item.",
     "pt": "Item inválido."
   },
+  "erro.veneno_municao_cargas_legadas": {
+    "en": "This weapon still has old poison charges. Use them before coating ammunition.",
+    "pt": "Esta arma ainda tem cargas antigas de veneno. Use-as antes de envenenar munição."
+  },
+  "erro.municao_ja_envenenada": {
+    "en": "This ammunition stack is already poisoned.",
+    "pt": "Esta pilha de munição já está envenenada."
+  },
+  "erro.selecione_municao_para_envenenar": {
+    "en": "Choose ammunition in the poison panel before using this vial.",
+    "pt": "Escolha a munição no painel de veneno antes de usar este frasco."
+  },
   "erro.calice_eter_sem_slot_gasto": {
     "en": "You have no spent 1st-circle spell slot to restore.",
     "pt": "Você não tem um espaço gasto de magia de 1º círculo para recuperar."
@@ -1017,6 +1037,13 @@ window.LANG_ERROS = {
     "en": "Item can't be thrown.",
     "pt": "Item não arremessável."
   },
+  "erro.a_vida_ja_esta_cheia": {
+    "en": "Your health is already full.",
+    "pt": "A vida já está cheia."
+  },
+  "erro.transferencia_destino_invalido": {"en":"That hero cannot receive the item.","pt":"Esse herói não pode receber o item."},
+  "erro.transferencia_precisa_adjacente": {"en":"Both heroes must be adjacent to pass an item.","pt":"Os dois heróis precisam estar adjacentes para passar um item."},
+  "erro.transferencia_bolsa_cheia": {"en":"The other hero's bag is full.","pt":"A bolsa do outro herói está cheia."},
   "erro.item_nao_encontrado": {
     "en": "Item not found.",
     "pt": "Item não encontrado."
@@ -1044,6 +1071,14 @@ window.LANG_ERROS = {
   "erro.item_sem_reparo_disponivel": {
     "en": "This item has no repairable corrosion.",
     "pt": "Este item não possui corrosão reparável."
+  },
+  "erro.kit_reparo_sem_alvo": {
+    "en": "Choose a damaged weapon, armor or shield to repair.",
+    "pt": "Escolha uma arma, armadura ou escudo danificado para reparar."
+  },
+  "erro.moeda_da_sorte_ja_ativa": {
+    "en": "A Lucky Coin is already active for you.",
+    "pt": "Você já tem uma Moeda da Sorte ativa."
   },
   "erro.ja_criou_redemoinhos": {
     "en": "You have already created the {n} whirlpool(s) of this spell.",
@@ -1169,6 +1204,10 @@ window.LANG_ERROS = {
     "en": "Couldn't poison the weapon.",
     "pt": "Não foi possível envenenar a arma."
   },
+  "erro.veneno_arma_limite": {
+    "en": "This weapon already has its full set of distinct poisons. Use an active poison again or choose another weapon.",
+    "pt": "Esta arma já atingiu o limite de venenos diferentes. Reaplique um veneno ativo ou escolha outra arma."
+  },
   "erro.nao_foi_possivel_salvar_o_ponto_da_cidad": {
     "en": "Couldn't save the town point.",
     "pt": "Não foi possível salvar o ponto da cidade."
@@ -1212,6 +1251,10 @@ window.LANG_ERROS = {
   "erro.nao_ha_prisioneiro_para_mover": {
     "en": "No prisoner to move.",
     "pt": "Não há prisioneiro para mover."
+  },
+  "erro.nao_e_a_vez_deste_servo": {
+    "en": "It's not this minion's turn. Minions act in initiative order.",
+    "pt": "Não é a vez deste servo. Os servos agem na ordem de iniciativa."
   },
   "erro.nao_ha_servo_seu_para_encerrar_agora": {
     "en": "You have no minion to end right now.",
@@ -1440,6 +1483,10 @@ window.LANG_ERROS = {
   "erro.ouro_insuficiente": {
     "en": "Not enough gold.",
     "pt": "Ouro insuficiente."
+  },
+  "erro.ninguem_precisa_de_cura": {
+    "en": "Nobody in the party needs healing.",
+    "pt": "Ninguém do grupo precisa de cura."
   },
   "erro.ouro_insuficiente_2": {
     "en": "Not enough gold!",
@@ -2005,10 +2052,6 @@ window.LANG_ERROS = {
     "en": "You are already maintaining a creature under Polymorph.",
     "pt": "Você já mantém uma criatura sob Metamorfose."
   },
-  "erro.voce_ja_pode_voltar_a_masmorra": {
-    "en": "You can already return to the dungeon.",
-    "pt": "Você já pode voltar à masmorra."
-  },
   "erro.voce_ja_possui_isto": {
     "en": "You already own this.",
     "pt": "Você já possui isto."
@@ -2244,6 +2287,7 @@ window.LANG_ERROS = {
   "erro.mecanismo_ja_ativado": {
     "en": "The mechanism has already been activated.",
     "pt": "O mecanismo já foi ativado."
-  }
+  },
+  "erro.alvo_fora_do_alcance_de_arremesso": {"en":"{alvo} is out of throwing range ({alcance} squares).","pt":"{alvo} está fora do alcance de arremesso ({alcance} casas)."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);

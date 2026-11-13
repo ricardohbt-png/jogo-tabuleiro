@@ -170,6 +170,43 @@ async def main():
     await asyncio.sleep(0.2)
 
     print()
+    print("[7] Solo com grupo: o mago e heroi EXTRA da conexao")
+    # Bug relatado: no Solo com grupo o mago tem pid proprio (p1) e
+    # `controlador` = pid da conexao (p2). As mensagens mestre_* NAO sao
+    # traduzidas para o heroi (prefixo da conexao), entao chegam com p2,
+    # enquanto a janela foi aberta para p1: toda ordem era recusada.
+    r4, p4, q4, m4 = montar()
+    gob = make_monster(next(d for d in MONSTER_DEFS if d["type"] == "goblin"),
+                       {"id": "r0", "cx": 6, "cy": 5})
+    gob.update({"id": "m1", "pos": [6, 5], "hp": 20, "room_id": "r0", "alertado": True})
+    r4.monsters = {"m1": gob}; m4 = gob
+    p4["controlador"] = "p2"           # o mago e extra da conexao p2
+    estranho = make_player("p9", "Estranho", "warrior", 2)
+    estranho.update({"pos": [10, 10], "alive": True, "connected": True})
+    r4.players["p9"] = estranho
+    r4._rebuild_initiative()
+    r4.initiative_index = next(i for i, e in enumerate(r4.initiative_order)
+                               if e["kind"] == "player" and e["id"] == "p1")
+    q4["pos"] = [6, 9]; q4["hp"] = q4["max_hp"] = 200
+    await abrir_janela(r4, p4, m4)
+    check("a janela abriu para o mago", r4.command_control_mid == "m1"
+          and r4.command_control_pid == "p1")
+    check("a conexao do mago e reconhecida como controladora",
+          r4._manual_control_kind("p2", "m1") == "command")
+    check("outra conexao NAO controla", r4._manual_control_kind("p9", "m1") is None)
+    await r4.handle_mestre_mover_monstro_para("p9", "m1", 6, 8)
+    check("ordem de outra conexao e recusada", m4["pos"] == [6, 5])
+    await r4.handle_mestre_mover_monstro_para("p2", "m1", 6, 8)
+    check("ordem de movimento pela conexao do mago e aceita", m4["pos"] == [6, 8],
+          f"(pos={m4['pos']}, erros={r4.erros.get('p2')})")
+    await r4.handle_mestre_atacar_monstro("p2", "m1", "p2")
+    check("ordem de ataque pela conexao do mago e aceita", m4.get("_master_acted") is True,
+          f"({r4.erros.get('p2')})")
+    await r4.handle_mestre_encerrar_monstro("p2", "m1")
+    await asyncio.sleep(0.2)
+    check("encerrar a vez pela conexao do mago fecha a janela", r4.command_control_mid is None)
+
+    print()
     print(f"===== {OK} OK / {FAIL} FALHAS =====")
     return 1 if FAIL else 0
 

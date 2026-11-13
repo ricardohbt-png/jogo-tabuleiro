@@ -1,5 +1,5 @@
 """Prévia de acerto do tooltip (prever_ataque). Roda da raiz: python tools/test_previsao_ataque.py"""
-import asyncio, sys, os, random
+import asyncio, sys, os, random, re
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -123,11 +123,32 @@ async def main():
     r.phase = "playing"; p["alive"] = False
     check("herói morto: sem resposta", await prever(r) is None)
 
+    print("\n[7b] Ladino escondido: furtivo na prévia, com e sem arma")
+    r, p, m = sala(classe="rogue")
+    p["invisivel_sombras"] = True
+    p["weapon"] = None
+    p.setdefault("gear", {})["weapon"] = None
+    prev = None
+    try:
+        prev = await prever(r)
+    except Exception as e:   # weapon None estourava ao ler o bônus do punhal
+        check(f"desarmado e escondido não quebra a prévia ({type(e).__name__}: {e})", False)
+    else:
+        check("desarmado e escondido: a prévia responde", prev is not None)
+    r, p, m = sala(classe="rogue")
+    p["invisivel_sombras"] = True
+    p["weapon"] = dict(S.WEAPONS["punhal_assassino_maior"])
+    prev = await prever(r)
+    base = r._dados_furtivo(p.get("level", 1))
+    check("Punhal do Assassino Maior soma +2d4 ao furtivo da prévia",
+          prev is not None and prev.get("furtivo_d4") == base + 2)
+
     print("\n[8] Fiação")
     fonte = open(S.__file__, encoding="utf-8").read()
     check("o despacho conhece prever_ataque", 'elif t == "prever_ataque":' in fonte)
     check("handle_attack usa o MESMO helper da prévia",
-          "_mods = self._modificadores_ataque_heroi(p, target, target_tile, w_range, attacker_id=pid)" in fonte)
+          re.search(r"_mods = self\._modificadores_ataque_heroi\(\s*p, target, target_tile, w_range, attacker_id=pid", fonte)
+          is not None)
 
     print(f"\n{'=' * 50}\n  {PASS} passaram, {FAIL} falharam\n{'=' * 50}")
     sys.exit(1 if FAIL else 0)

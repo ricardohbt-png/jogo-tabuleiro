@@ -162,8 +162,8 @@ console.log('\n[6] A área verde da mira acompanha o nível — com ou sem Cajad
   // escolhia o lado do cajado (area_lado + 1, cego ao nível) antes do lado
   // por nível: com o cajado equipado a prévia ficava presa em 4x4 enquanto a
   // lava real crescia com o nível.
-  const code = [declSource('MAGIAS_AREA_CAJADO_ADITIVO'), fnSource('_prisaoChamasLadoEscolhido'),
-    fnSource('_cajadoArcanoAreaLado'), fnSource('_cajadoArcanoAreaBonus'), fnSource('_areaLadoMiraMagia')].join('\n');
+  const code = [declSource('MAGIAS_AREA_EQUIPAMENTO_ADITIVO'), fnSource('_prisaoChamasLadoEscolhido'),
+    fnSource('_equipamentoAreaMagiaLado'), fnSource('_equipamentoAreaMagiaBonus'), fnSource('_areaLadoMiraMagia')].join('\n');
   const grim = {
     ira_rocha_ardente:    { id: 'ira_rocha_ardente',    tipo: 'area_fixa', area_lado: 3, area_lado_niveis: 3 },
     tempestade_ciclones:  { id: 'tempestade_ciclones',  tipo: 'area_fixa', area_lado: 3, area_lado_niveis: 3 },

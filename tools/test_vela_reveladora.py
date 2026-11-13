@@ -61,7 +61,8 @@ async def main():
                and os.path.isfile(os.path.join(os.path.dirname(__file__), "..",
                                                "assets", "itens", "vela_reveladora.png"))))
     cidades_com_mercador = [cidade for cidade, lojas in CITY_SHOPS.items()
-                            if isinstance(lojas.get("mercador"), list)]
+                            if isinstance(lojas.get("mercador"), list)
+                            and cidade != "vila_dos_charcos"]   # loja especial da Zumbra
     check("está no estoque dos mercadores das cidades que já têm essa loja",
           len(cidades_com_mercador) == 4 and all(
               any(i["id"] == "vela_reveladora"

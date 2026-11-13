@@ -247,7 +247,7 @@ async def main():
     r = lobby_room(); r.phase = "playing"
     r.master_pid = "m1"; r.connections["m1"] = object()
     ataques2 = {"n": 0}
-    async def fake_atk2(m, atk_def, target_obj): ataques2["n"] += 1; return True
+    async def fake_atk2(m, atk_def, target_obj, **_kw): ataques2["n"] += 1; return True
     r._execute_one_monster_attack = fake_atk2
     m = {"id": "g1", "hp": 8, "pos": [1, 1], "control_mode": "manual", "attacks": [{"name": "garra"}]}
     r.monsters = {"g1": m}; r.master_manual_mid = "g1"; m["_master_acted"] = False
@@ -426,7 +426,7 @@ async def main():
     check("goblin legado cr 0.25", S.monster_cr(_by("goblin")) == 0.25)
     check("skeleton legado cr 0.5", S.monster_cr(_by("skeleton")) == 0.5)
     check("orc legado cr 0.75", S.monster_cr(_by("orc")) == 0.75)
-    check("dark_mage legado cr 0.5", S.monster_cr(_by("dark_mage")) == 0.5)
+    check("dark_mage (Mago das Trevas redesenhado) cr 1", S.monster_cr(_by("dark_mage")) == 1)
     # O troll deixou de ser stub legado e ganhou ficha completa (tier 4, cr 4).
     check("troll (ficha completa) cr 4", S.monster_cr(_by("troll")) == 4)
     check("dragon legado cr 5", S.monster_cr(_by("dragon")) == 5.0)
@@ -895,7 +895,7 @@ async def main():
     print("\n[32] ataques granulares — cargas, alvos distintos, recusa da 4ª")
     r = playing_room_com_mestre()
     golpes = []
-    async def fake_atk(mm, atk_def, target_obj):
+    async def fake_atk(mm, atk_def, target_obj, **_kw):
         golpes.append((atk_def.get("name"), target_obj["obj"]["id"])); return True
     r._execute_one_monster_attack = fake_atk
     m = {"id": "g1", "name": "Lobisomem", "hp": 30, "max_hp": 30, "pos": [2, 2],
@@ -925,7 +925,7 @@ async def main():
     print("\n[32b] attack_index ausente = índice 0 (cliente antigo)")
     r = playing_room_com_mestre()
     golpes2 = []
-    async def fake_atk2(mm, atk_def, target_obj):
+    async def fake_atk2(mm, atk_def, target_obj, **_kw):
         golpes2.append(atk_def.get("name")); return True
     r._execute_one_monster_attack = fake_atk2
     m = {"id": "g1", "name": "Orc", "hp": 12, "max_hp": 12, "pos": [2, 2],
@@ -942,7 +942,7 @@ async def main():
     r = playing_room_com_mestre()
     r.test_mode = True
     golpes3 = []
-    async def fake_atk3(mm, atk_def, target_obj):
+    async def fake_atk3(mm, atk_def, target_obj, **_kw):
         golpes3.append(target_obj["obj"]["id"]); return True
     r._execute_one_monster_attack = fake_atk3
     atacante = {"id": "g1", "name": "Goblin", "hp": 20, "max_hp": 20,
@@ -958,7 +958,7 @@ async def main():
 
     print("\n[32c] Fúria Bestial sob controle Manual")
     r = playing_room_com_mestre()
-    async def fake_atk_no_dano(mm, atk_def, target_obj):
+    async def fake_atk_no_dano(mm, atk_def, target_obj, **_kw):
         return True
     r._execute_one_monster_attack = fake_atk_no_dano
     m = {"id": "g1", "name": "Grotão", "hp": 30, "max_hp": 30, "pos": [2, 2],
@@ -1081,7 +1081,7 @@ async def main():
     print("\n[33b] atacar depois de habilidade de ação é recusado")
     r._errs.clear()
     golpes = []
-    async def fake_atk(mm, atk_def, target_obj): golpes.append(1); return True
+    async def fake_atk(mm, atk_def, target_obj, **_kw): golpes.append(1); return True
     r._execute_one_monster_attack = fake_atk
     await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
     check("ataque após magia recusado", golpes == [])
@@ -1228,7 +1228,7 @@ async def main():
 
     print("\n[35b] o golpe seguinte consome o bônus armado")
     golpes = []
-    async def fake_atk(mm, atk_def, target_obj):
+    async def fake_atk(mm, atk_def, target_obj, **_kw):
         golpes.append(mm.get("_golpe_brutal_ativo")); return True
     r._execute_one_monster_attack = fake_atk
     await r.handle_mestre_atacar_monstro("m1", "g1", "hA", 0)
@@ -1640,15 +1640,16 @@ async def main():
     r = playing_room_com_mestre()
     m = {"id": "g1", "name": "Aranha", "hp": 12, "max_hp": 12, "pos": [1, 1],
          "size": [1, 1], "special_abilities": [{"id": "envenenar_arma"}],
-         "attacks": [{"name": "Ferrão", "num_attacks": 1}],
+         "attacks": [{"name": "Ferrão", "num_attacks": 1, "damage": "1d4"}],
          "equipment_consumables": [{"id": "v1", "effect": "coat_poison",
-                                     "veneno_id": "veneno_fraco", "name": "Veneno"}]}
+                                     "veneno_id": "veneno_fungo_acre", "name": "Veneno"}]}
     r.monsters = {"g1": m}
     r.master_manual_mid = "g1"
-    async def fake_envenenar(mm): return True
+    async def fake_envenenar(mm, *a, **k): return True
     r._envenenar_arma_do_inventario = fake_envenenar
     m.pop("_master_touched", None)
-    await r.handle_mestre_usar_item("m1", "g1", "v1", None, None, None)
+    # O Mestre escolhe qual ataque recebe o veneno (attack_index).
+    await r.handle_mestre_usar_item("m1", "g1", "v1", None, None, None, attack_index=0)
     check("veneno_livre marca _master_touched", m.get("_master_touched") is True)
 
     print("\n[41d] _master_touched marcado mesmo com 0 casas andadas (1º passo bloqueado)")

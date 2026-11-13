@@ -60,12 +60,14 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
     fatos, prog, local = set(), {}, "alva_e_luz"
     n = PONTOS.index(ate)
     if n >= 1:
-        fatos |= {P1.F_PEDIU, P1.F_CASA, P1.F_FAZENDA, P1.F_PRESSIONOU}
+        fatos |= {P1.F_PEDIU, P1.F_CASA, P1.F_CARTA, P1.F_FAZENDA, P1.F_PRESSIONOU}
         prog["elara_parte1"] = 2
         if lento:
             fatos.add(P1.F_LENTO)
     if n >= 2:
         fatos.add(RI.F_RAMO_A if ramo == "a" else GI.F_RAMO_B)
+        if ramo == "a":   # a casa só abre depois das pistas e do endereço na taverna
+            fatos |= {RI.F_SONDOU, RI.F_PISTA_BOLSA, RI.F_PISTA_RUA, RI.F_CASA_DESCOBERTA}
     if n >= 3:
         if ramo == "a":
             fatos |= {RI.F_T1_FEITO, RI.F_EXPOSTO}
@@ -78,6 +80,7 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
     if n >= 4:
         if ramo == "a":
             fatos.add(RI.F_DECIDIDO)
+            fatos.add(RI.F_CELEIRO_DESCOBERTO)   # a garçonete aponta o celeiro
             if bardo == "morto":
                 fatos |= {RI.F_MORTO, RI.F_LEONEL_CAUTELOSO}
             elif bardo == "interrogado":
@@ -106,8 +109,13 @@ def estado_ate(ate, ramo="a", bardo="gentil", lento=False):
         if lento:
             prog["elara_graciero_praca_morta"] = 1
         else:
-            fatos |= {GRM.F_VIU_MORRER, GR.F_DICA_MONTANHA}
-            prog["elara_graciero_praca_viva"] = 1
+            fatos.add(GRM.F_VIU_MORRER)
+            if GR.F_RAMO_B in fatos:
+                fatos.add(GR.F_OLHO)
+                prog["elara_graciero_praca_pedra"] = 1
+            else:
+                fatos.add(GR.F_DICA_MONTANHA)
+                prog["elara_graciero_praca_viva"] = 1
     return fatos, prog, local
 
 

@@ -1,5 +1,6 @@
 """Roundtrip/save contracts for optional route-exit completion on world stages."""
 import copy
+import os
 import sys
 import unittest
 from pathlib import Path
@@ -8,6 +9,14 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import server as S
+
+# Os saves do editor gravam os arquivos de dados reais: redireciona para uma pasta temporária para este
+# teste nunca tocar em world_adventures.json (um conflito de acesso já o deixou com dados de teste).
+import atexit, shutil, tempfile
+_TMP_DADOS = tempfile.mkdtemp()
+atexit.register(shutil.rmtree, _TMP_DADOS, True)
+S.WORLD_ADVENTURES_FILE = os.path.join(_TMP_DADOS, "world_adventures.json")
+S.WORLD_MAP_POINTS_FILE = os.path.join(_TMP_DADOS, "world_map_points.json")
 
 
 class WorldAdventureRouteTests(unittest.TestCase):

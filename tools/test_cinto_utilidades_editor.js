@@ -105,7 +105,7 @@ for iid,n in [('cinto_utilidades',4),('cinto_com_bolsos',2)]:
     assert len(hydrated)==1
     belt=hydrated[0]
     assert belt['price']==S._DUNGEON_ITEM_CATALOG[iid]['price']
-    assert belt['price']==(80 if n==4 else 30)
+    assert belt['price']==(250 if n==4 else 120)
     assert belt['icon']=='assets/itens/cinto_e_bolsos.png'
     assert len(belt['utility_belt_slots'])==n
     assert belt['utility_belt_slots'][0]['item']==S._DUNGEON_ITEM_CATALOG['health_potion']

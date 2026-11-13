@@ -16,6 +16,8 @@
       fit: s.fit === "contain" ? "contain" : "cover", _url: "",
       // condição do slide (item/fato/...): o painel só edita o item, mas conserva o resto
       requisito: s.requisito && typeof s.requisito === "object" ? s.requisito : null,
+      cinematica: typeof s.cinematica === "string" ? s.cinematica : "",
+      video: typeof s.video === "string" ? s.video : "",
       negar: s.negar === true }));
     return { slides, audio: val.audio || null, _audioUrl: null };
   }
@@ -27,15 +29,17 @@
   }
   // -> string (1 slide só-texto, sem áudio) | objeto | undefined (vazio)
   function storyToSaved(st) {
-    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image);
+    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image || s.cinematica || s.video);
     if (!slides.length) return undefined;
     if (slides.length === 1 && slides[0].text && slides[0].text.trim()
-        && !slides[0].image && !st.audio && !condicaoAtiva(slides[0]))
+        && !slides[0].image && !slides[0].cinematica && !slides[0].video && !st.audio && !condicaoAtiva(slides[0]))
       return slides[0].text;
     const out = { slides: slides.map(s => {
       const o = {};
       if (s.text && s.text.trim()) o.text = s.text;
       if (s.image) o.image = s.image;
+      if (s.cinematica) o.cinematica = s.cinematica;
+      if (s.video) o.video = s.video;
       if (s.fit === "contain") o.fit = "contain";
       if (condicaoAtiva(s)) { o.requisito = s.requisito; if (s.negar) o.negar = true; }
       return o;
@@ -43,7 +47,7 @@
     if (st.audio) out.audio = st.audio;
     return out;
   }
-  function storyCount(st) { return (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image).length; }
+  function storyCount(st) { return (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image || s.video).length; }
 
   // ── Botão de história + painel de slides ─────────────────────────────────
   function histButtonHTML(cls, st) {
@@ -82,7 +86,7 @@
            <div class="hist-slides"></div>
            <button class="hist-add">＋ adicionar slide</button>
            <div class="hist-foot">
-             <span class="hist-note">imagens e áudios precisam estar na pasta <code>assets/story/</code></span>
+             <span class="hist-note">imagens, vídeos e áudios precisam estar na pasta <code>assets/story/</code></span>
              <button class="hist-close">fechar</button>
            </div>
          </div>`;
@@ -109,6 +113,7 @@
     function slideCard(s, i) {
       const card = document.createElement("div"); card.className = "hist-slide";
       const imgName = s._imgFile || (s.image ? s.image.split("/").pop() : "");
+      const videoName = s._videoFile || (s.video ? s.video.split("/").pop() : "");
       card.innerHTML =
         `<div class="hist-thumb">${(s._url || s.image)
             ? `<img src="${s._url || s.image}" alt="">` : `<span class="hist-noimg">sem imagem</span>`}
@@ -117,6 +122,8 @@
          <div class="hist-fields">
            <div class="hist-row1">
              <button class="hist-img-pick">${imgName ? "trocar imagem" : "escolher imagem"}</button>
+             <button class="hist-video-pick">${videoName ? "trocar vídeo" : "escolher vídeo"}</button>
+             ${videoName ? `<span class="hist-audio-name">🎬 ${videoName}</span><span class="hist-video-x">✕</span>` : ""}
              <span class="hist-fit">
                <span class="fit-opt ${s.fit !== "contain" ? "on" : ""}" data-fit="cover">cobrir</span>
                <span class="fit-opt ${s.fit === "contain" ? "on" : ""}" data-fit="contain">inteira</span>
@@ -144,6 +151,20 @@
           .then(() => { s._upStatus = "✓ enviado"; render(); })
           .catch(err => { s._upStatus = "✗ " + err.message; render(); });
       });
+      card.querySelector(".hist-video-pick").onclick = () => pickFile("video/mp4,video/webm", f => {
+        if (s._videoUrl) URL.revokeObjectURL(s._videoUrl);
+        s._videoUrl = URL.createObjectURL(f); s._videoFile = f.name;
+        s.video = "assets/story/" + f.name;
+        s._upStatus = "enviando…"; render();
+        window.STORY_UPLOAD.upload(f)
+          .then(() => { s._upStatus = "✓ enviado"; render(); })
+          .catch(err => { s._upStatus = "✗ " + err.message; render(); });
+      });
+      const videoX = card.querySelector(".hist-video-x");
+      if (videoX) videoX.onclick = () => {
+        if (s._videoUrl) URL.revokeObjectURL(s._videoUrl);
+        s._videoUrl = ""; s._videoFile = ""; s.video = ""; render();
+      };
       card.querySelectorAll(".fit-opt").forEach(el => el.onclick = () => { s.fit = el.dataset.fit; render(); });
       card.querySelector(".hist-text").oninput = e => { s.text = e.target.value; };
       const condModo = card.querySelector(".hist-cond-modo"), condItem = card.querySelector(".hist-cond-item");
@@ -164,7 +185,7 @@
         st.slides.splice(i + 1, 0, {
           text: s.text || "", image: s.image || "", fit: s.fit === "contain" ? "contain" : "cover",
           _url: "", _imgFile: s._imgFile || "",
-          requisito: s.requisito ? Object.assign({}, s.requisito) : null, negar: !!s.negar
+          cinematica: s.cinematica || "", video: s.video || "", _videoFile: s._videoFile || "", requisito: s.requisito ? Object.assign({}, s.requisito) : null, negar: !!s.negar
         });
         render();
       };
@@ -176,8 +197,8 @@
   }
 
   function previewStory(st) {
-    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image);
-    if (!slides.length) { alert("Adicione ao menos um slide com texto ou imagem."); return; }
+    const slides = (st.slides || []).filter(s => (s.text && s.text.trim()) || s.image || s.video);
+    if (!slides.length) { alert("Adicione ao menos um slide com texto, imagem ou vídeo."); return; }
     let idx = 0, muted = false, audioEl = null;
     const ov = document.createElement("div"); ov.className = "spv-overlay";
     ov.innerHTML =
@@ -187,13 +208,23 @@
          <div class="spv-nav"><button class="spv-prev">‹ Voltar</button>
            <div class="spv-dots"></div>
            <button class="spv-next">Continuar →</button></div></div>`;
-    function stop() { if (audioEl) { try { audioEl.pause(); } catch (e) {} audioEl = null; } }
+    function stop() {
+      if (audioEl) { try { audioEl.pause(); } catch (e) {} audioEl = null; }
+      const v = ov.querySelector("video"); if (v) v.pause();
+    }
     function paint() {
       const s = slides[idx] || {};
       const img = ov.querySelector(".spv-img");
       const src = s._url || s.image;
       if (src) { img.style.backgroundImage = `url("${src}")`; img.style.backgroundSize = s.fit === "contain" ? "contain" : "cover"; }
       else { img.style.backgroundImage = "none"; }
+      img.innerHTML = "";
+      if (s.video) {
+        const v = document.createElement("video");
+        v.src = s._videoUrl || "../" + s.video; v.autoplay = true; v.muted = muted; v.playsInline = true;
+        v.style.cssText = `width:100%;height:100%;object-fit:${s.fit === "contain" ? "contain" : "cover"}`;
+        img.appendChild(v);
+      }
       const t = ov.querySelector(".spv-text"); t.textContent = s.text || ""; t.style.display = s.text ? "block" : "none";
       const dots = ov.querySelector(".spv-dots"); dots.innerHTML = "";
       slides.forEach((_, i) => { const d = document.createElement("span"); d.className = "spv-dot" + (i === idx ? " on" : ""); dots.appendChild(d); });

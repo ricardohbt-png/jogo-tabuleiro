@@ -104,6 +104,34 @@
       loot_capaz: false, special: null, image: "sino_ritualistico.png",
     });
   }
+  if (!(CAT.decorations || []).some(d => d && d.type === "sino_anuncio")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "sino_anuncio", nome: nomeCat("decor", "sino_anuncio", "Sino de anúncio"), emoji: "🔔",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "sino_anuncio.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "igreja_corvin")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "igreja_corvin", nome: nomeCat("decor", "igreja_corvin", "Igreja de Corvin"), emoji: "⛪",
+      size: [3, 3], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "igreja_corvin.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "quartel_medieval")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "quartel_medieval", nome: nomeCat("decor", "quartel_medieval", "Quartel medieval"), emoji: "🏰",
+      size: [3, 3], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "quartel_medieval.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "torre_alva_e_luz")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "torre_alva_e_luz", nome: nomeCat("decor", "torre_alva_e_luz", "Torre de Alva e Luz"), emoji: "🗼",
+      size: [2, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "torre_alva_e_luz.png",
+    });
+  }
   if (!(CAT.decorations || []).some(d => d && d.type === "estatua_divindade")) {
     CAT.decorations = (CAT.decorations || []).concat({
       type: "estatua_divindade", nome: nomeCat("decor", "estatua_divindade", "Estátua de divindade"), emoji: "🛐",
@@ -144,6 +172,48 @@
       type: "grilhoes_parede", nome: nomeCat("decor", "grilhoes_parede", "Grilhões de parede"), emoji: "⛓️",
       size: [1, 1], gira: true, alto: false, pisavel: true,
       loot_capaz: false, special: "wall", image: "grilhoes_parede.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "espelho_dourado")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "espelho_dourado", nome: nomeCat("decor", "espelho_dourado", "Espelho dourado"), emoji: "🪞",
+      size: [1, 1], gira: true, alto: false, pisavel: true,
+      loot_capaz: false, special: "wall", image: "espelho_dourado.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "sofa_luxo")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "sofa_luxo", nome: nomeCat("decor", "sofa_luxo", "Sofá de luxo"), emoji: "🛋️",
+      size: [1, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "sofa_luxo.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "poltrona_luxo")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "poltrona_luxo", nome: nomeCat("decor", "poltrona_luxo", "Poltrona estofada"), emoji: "🪑",
+      size: [1, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "poltrona_luxo.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "poste_iluminacao")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "poste_iluminacao", nome: nomeCat("decor", "poste_iluminacao", "Poste de iluminação"), emoji: "🏮",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "poste_iluminacao.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "banca_flores")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "banca_flores", nome: nomeCat("decor", "banca_flores", "Banca de flores"), emoji: "💐",
+      size: [1, 1], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "banca_flores.png",
+    });
+  }
+  if (!(CAT.decorations || []).some(d => d && d.type === "carrinho_entregas")) {
+    CAT.decorations = (CAT.decorations || []).concat({
+      type: "carrinho_entregas", nome: nomeCat("decor", "carrinho_entregas", "Carrinho de entregas"), emoji: "🛒",
+      size: [1, 2], gira: true, alto: true, pisavel: false,
+      loot_capaz: false, special: null, image: "carrinho_entregas.png",
     });
   }
   if (!(CAT.decorations || []).some(d => d && d.type === "tronco_musgo")) {
@@ -343,6 +413,10 @@
   // Default por categoria: pintar o default limpa a casa (mantém JSON esparso e
   // serve de borracha de material). Espelha MATERIAIS_*_DEFAULT do servidor.
   const MAT_DEFAULT = { piso: "pedra_cinza", parede: "pedra_normal" };
+  const FLOOR_STONE_ROAD = "__floor_decor:caminho_pedras_terra";
+  const FLOOR_STONE_ROAD_TYPE = "caminho_pedras_terra";
+  const ROAD_CONNECTIONS = [[0, -1, 1], [1, 0, 2], [0, 1, 4], [-1, 0, 8]];
+  const ROAD_FACING_BY_TURN = [[0, 1], [1, 0], [0, -1], [-1, 0]];
   const HERO_SPAWN_META = [
     { id: "warrior", emoji: "⚔️", mark: "G" },
     { id: "mage", emoji: "🔮", mark: "M" },
@@ -397,13 +471,18 @@
     ponteLargura: 1,
     ponteMaterial: "madeira",
     ponteDrag: null,
+    portaoLargura: 1,
+    portaoDirecao: "horizontal",
     materiais: {},                 // {"x,y": id}
     elevacoes: {},                 // {"x,y": nível visual (-1..40)}
     alturasParede: {},             // {"x,y": nível manual da parede (0..40); ausente = automático}
     transicaoAltura: "rampa",      // transição visual entre níveis diferentes
     elevacaoValor: 1,              // nível aplicado pela ferramenta de altura
     doorRotations: {},              // {"x,y": giros de 90° relativos à orientação da parede}
+    doorStyles: {},                 // {"x,y": "portao_levadico"}, keyed by group anchor
+    portcullisGroups: {},           // {"anchorX,anchorY": [[x,y], ...]}
     matFloor: "pedra_cinza",       // material atual da ferramenta "chão"
+    stoneRoadWidth: 1,
     matWall: "pedra_normal",       // material atual da ferramenta "parede"
     matFill: false,                // false = pincel; true = balde (preenchimento)
   };
@@ -415,14 +494,20 @@
   // para colar uma peça isolada sem transformar todo clique em preenchimento.
   let decorBrushActive = false;
   let decorAreaPaint = null;
+  let elevationAreaPaint = null;
+  let gradeEsgotoDrag = null;
   let lastPointerCell = null;
   let regionSelection = null, regionClipboard = null;
   let regionDrag = null, regionMoveDrag = null;
+  let portcullisSpanPick = false, portcullisSpanDrag = null, portcullisSpanMessage = "", portcullisSpanSource = null;
 
   function initGrid(w, h) {
     S.grid = { w, h };
     S.tiles = [];
     S.doorRotations = {};
+    S.doorStyles = {};
+    S.portcullisGroups = {};
+    portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanMessage = ""; portcullisSpanSource = null;
     S.elevacoes = {};
     S.alturasParede = {};
     for (let y = 0; y < h; y++) S.tiles.push(new Array(w).fill(WALL));
@@ -518,6 +603,34 @@
     return out;
   }
 
+  function rotateRoadMask(mask, turns) {
+    for (let i = 0; i < turns; i++) mask = ((mask << 1) & 15) | ((mask >> 3) & 1);
+    return mask;
+  }
+  function _refreshStoneRoadConnections() {
+    const roads = S.decorations.filter(d => d.type === FLOOR_STONE_ROAD_TYPE);
+    if (!roads.length) return;
+    const occupied = new Set(roads.map(d => d.pos[0] + "," + d.pos[1]));
+    for (const d of roads) {
+      const [x, y] = d.pos;
+      let mask = 0;
+      for (const [dx, dy, bit] of ROAD_CONNECTIONS)
+        if (occupied.has((x + dx) + "," + (y + dy))) mask |= bit;
+      const degree = ((mask & 1) ? 1 : 0) + ((mask & 2) ? 1 : 0)
+        + ((mask & 4) ? 1 : 0) + ((mask & 8) ? 1 : 0);
+      let image = "caminho_pedras_terra.png", canonical = 5;
+      if (degree === 0) { image = "caminho_pedras_terra_isolado.png"; canonical = 0; }
+      else if (degree === 1) { image = "caminho_pedras_terra_ponta.png"; canonical = 1; }
+      else if (degree === 2 && mask !== 5 && mask !== 10) { image = "caminho_pedras_terra_curva.png"; canonical = 3; }
+      else if (degree === 3) { image = "caminho_pedras_terra_t.png"; canonical = 11; }
+      else if (degree === 4) { image = "caminho_pedras_terra_cruzamento.png"; canonical = 15; }
+      let turns = 0;
+      while (turns < 4 && rotateRoadMask(canonical, turns) !== mask) turns++;
+      d.image = image;
+      d.facing = ROAD_FACING_BY_TURN[turns % 4].slice();
+    }
+  }
+
   function rotateFacing(f) {
     // A sequência acompanha facingAngle2D: cada passo equivale a ctx.rotate(+90°),
     // isto é, um giro visual HORÁRIO no canvas.
@@ -526,6 +639,117 @@
     return order[(i < 0 ? 0 : i + 1) % 4];
   }
   function doorKey(x, y) { return x + "," + y; }
+  function portcullisGroupAt(x, y) {
+    const key = doorKey(x, y);
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {})) {
+      if (Array.isArray(cells) && cells.some(p => Array.isArray(p) && p[0] === x && p[1] === y))
+        return { anchor, cells: cells.map(p => p.slice()) };
+    }
+    if (S.doorStyles[key] === "portao_levadico") return { anchor: key, cells: [[x, y]] };
+    return null;
+  }
+  function removePortcullisGroup(anchor) {
+    const cells = S.portcullisGroups[anchor] || [anchor.split(",").map(Number)];
+    for (const [x, y] of cells) delete S.doorStyles[doorKey(x, y)];
+    delete S.doorStyles[anchor];
+    delete S.portcullisGroups[anchor];
+  }
+  function doorOwnersAt(x, y) {
+    return S.rooms.filter(r => (r.doors || []).some(p => p[0] === x && p[1] === y))
+      .map(r => String(r.id)).sort();
+  }
+  function doorFinalQuarter(x, y) {
+    return ((Math.round((doorBaseAngle(x, y) + doorRotationAt(x, y) * Math.PI / 2) / (Math.PI / 2)) % 4) + 4) % 4;
+  }
+  function portcullisSpanCells(start, end) {
+    const [sx, sy] = start, [ex, ey] = end;
+    if (sx !== ex && sy !== ey) return null;
+    const dx = Math.sign(ex - sx), dy = Math.sign(ey - sy);
+    const length = Math.max(Math.abs(ex - sx), Math.abs(ey - sy)) + 1;
+    const cells = Array.from({ length }, (_, i) => [sx + dx * i, sy + dy * i]);
+    cells.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    return cells;
+  }
+  function validPortcullisSpan(cells, sourceAnchor = null) {
+    if (!Array.isArray(cells) || !cells.length
+        || !cells.every(p => Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]))
+        || cells.some(([x, y]) => S.tiles[y]?.[x] !== DOOR)) return false;
+    const sorted = cells.slice().sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    if (new Set(cells.map(([x, y]) => doorKey(x, y))).size !== cells.length
+        || sorted.some((p, i) => p[0] !== cells[i][0] || p[1] !== cells[i][1])) return false;
+    const horizontal = cells.every(p => p[1] === cells[0][1]);
+    const vertical = cells.every(p => p[0] === cells[0][0]);
+    if (!horizontal && !vertical) return false;
+    const direction = horizontal ? 0 : 1;
+    if (cells.length > 1 && doorFinalQuarter(...cells[0]) % 2 !== direction) return false;
+    const quarter = doorFinalQuarter(...cells[0]);
+    const owners = JSON.stringify(doorOwnersAt(...cells[0]));
+    const condition = JSON.stringify(S.doorConditions[doorKey(...cells[0])] || null);
+    for (const [x, y] of cells) {
+      if (doorFinalQuarter(x, y) !== quarter
+          || JSON.stringify(doorOwnersAt(x, y)) !== owners
+          || JSON.stringify(S.doorConditions[doorKey(x, y)] || null) !== condition) return false;
+    }
+    const selected = new Set(cells.map(([x, y]) => doorKey(x, y)));
+    for (const [anchor, group] of Object.entries(S.portcullisGroups || {})) {
+      if (!group.some(([x, y]) => selected.has(doorKey(x, y)))) continue;
+      if (anchor !== sourceAnchor && !group.every(([x, y]) => selected.has(doorKey(x, y)))) return false;
+    }
+    if (sourceAnchor) {
+      const sourceCells = S.portcullisGroups[sourceAnchor] || [sourceAnchor.split(",").map(Number)];
+      if (!sourceCells.some(([x, y]) => selected.has(doorKey(x, y)))) return false;
+    }
+    return true;
+  }
+  function setPortcullisSpan(cells, sourceAnchor = null) {
+    if (!validPortcullisSpan(cells, sourceAnchor)) return false;
+    const normalized = cells.map(p => p.slice()).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    const anchor = doorKey(...normalized[0]);
+    const selected = new Set(normalized.map(([x, y]) => doorKey(x, y)));
+    for (const [oldAnchor, group] of Object.entries(S.portcullisGroups || {})) {
+      if (group.some(([x, y]) => selected.has(doorKey(x, y)))) removePortcullisGroup(oldAnchor);
+    }
+    for (const key of selected) delete S.doorStyles[key];
+    S.doorStyles[anchor] = "portao_levadico";
+    if (normalized.length > 1) S.portcullisGroups[anchor] = normalized;
+    return true;
+  }
+  function portcullisPlacementCells(x, y, width, direction) {
+    if (!Number.isInteger(width) || width < 1 || !["horizontal", "vertical"].includes(direction)) return null;
+    const cells = Array.from({length: width}, (_, i) => [x + (direction === "horizontal" ? i : 0), y + (direction === "vertical" ? i : 0)]);
+    if (cells.some(([cx, cy]) => cx < 0 || cy < 0 || cx >= S.grid.w || cy >= S.grid.h || portcullisGroupAt(cx, cy))) return null;
+    const owners = ([cx, cy]) => JSON.stringify(S.rooms.filter(r => roomBorderTouches(r, cx, cy)).map(r => String(r.id)).sort());
+    const condition = ([cx, cy]) => JSON.stringify(S.doorConditions[cx + "," + cy] || null);
+    if (cells.some(cell => owners(cell) !== owners(cells[0]) || condition(cell) !== condition(cells[0]))) return null;
+    return cells;
+  }
+  function placePortcullis(x, y, width, direction) {
+    const cells = portcullisPlacementCells(x, y, width, direction);
+    if (!cells) return false;
+    const previous = {
+      tiles: cells.map(([cx, cy]) => S.tiles[cy][cx]),
+      rotations: {...S.doorRotations}, styles: {...S.doorStyles}, groups: {...S.portcullisGroups},
+      rooms: S.rooms.map(r => r.doors.map(p => p.slice())),
+    };
+    for (const [cx, cy] of cells) { S.tiles[cy][cx] = DOOR; doorLink(cx, cy); }
+    const quarter = direction === "horizontal" ? 0 : 1;
+    for (const [cx, cy] of cells) {
+      const base = Math.round(doorBaseAngle(cx, cy) / (Math.PI / 2));
+      S.doorRotations[cx + "," + cy] = (quarter - base + 4) % 4;
+    }
+    if (!setPortcullisSpan(cells)) {
+      cells.forEach(([cx, cy], i) => { S.tiles[cy][cx] = previous.tiles[i]; });
+      S.doorRotations = previous.rotations; S.doorStyles = previous.styles; S.portcullisGroups = previous.groups;
+      S.rooms.forEach((r, i) => { r.doors = previous.rooms[i]; });
+      return false;
+    }
+    for (const [cx, cy] of cells) {
+      const key = cx + "," + cy;
+      if (S.alturasParede) delete S.alturasParede[key];
+      if (S.materiais && S.materiais[key] && !matCompat(S.materiais[key], cx, cy)) delete S.materiais[key];
+    }
+    return true;
+  }
   function doorRotationAt(x, y) {
     const n = Number(S.doorRotations[doorKey(x, y)]);
     return Number.isFinite(n) ? ((Math.round(n) % 4) + 4) % 4 : 0;
@@ -541,8 +765,10 @@
     return t("ui.editor.masmorra.direcao." + ["norte", "leste", "sul", "oeste"][quarter]);
   }
   function rotateDoorAt(x, y) {
-    const k = doorKey(x, y);
-    S.doorRotations[k] = (doorRotationAt(x, y) + 1) % 4;
+    const group = portcullisGroupAt(x, y);
+    const cells = group ? group.cells : [[x, y]];
+    const next = (doorRotationAt(x, y) + 1) % 4;
+    for (const [tx, ty] of cells) S.doorRotations[doorKey(tx, ty)] = next;
     renderPanel(); render();
   }
   function rotateDoorSelected() {
@@ -605,6 +831,14 @@
   }
   window.addEventListener("keydown", (ev) => {
     if (editingText(ev)) return;
+    if (ev.key === "Escape" && stoneRoadStroke) {
+      stoneRoadStroke = null; painting = false;
+      render(); ev.preventDefault(); return;
+    }
+    if (ev.key === "Escape" && elevationAreaPaint) {
+      elevationAreaPaint = null;
+      render(); ev.preventDefault(); return;
+    }
     if (ev.key === "Delete") {
       if (deleteSelectedEntity()) ev.preventDefault();
       return;
@@ -627,10 +861,11 @@
       } else if (!regionClipboard && lastPointerCell && pasteDecorAt(lastPointerCell[0], lastPointerCell[1])) ev.preventDefault();
       return;
     }
-    if (ev.key === "Escape" && (regionDrag || regionMoveDrag || regionSelection || decorBrushActive)) {
+    if (ev.key === "Escape" && (regionDrag || regionMoveDrag || regionSelection || decorBrushActive || portcullisSpanPick || portcullisSpanDrag)) {
       regionDrag = null; regionMoveDrag = null; regionSelection = null;
       if (decorBrushActive) { decorBrushActive = false; decorAreaPaint = null; buildToolbar(); }
-      render(); ev.preventDefault(); return;
+      portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanMessage = ""; portcullisSpanSource = null;
+      renderPanel(); render(); ev.preventDefault(); return;
     }
     if (ev.key === "r" || ev.key === "R") {
       if (S.sel && S.sel.kind === "door") rotateDoorSelected();
@@ -777,6 +1012,7 @@
     } else d.pos = [x, y];
     const size = decorBaseSize(d);
     if (!decorWouldFit(d, d.pos, size, d.facing)) return false;
+    if (d.type === "grade_esgoto" && !gradeEsgotoValida(d, d.pos, size)) return false;
     d.id = nextDecorId();
     S.decorations.push(d);
     if (selectCopy) S.sel = { kind: "decor", ref: d, pos: d.pos.slice() };
@@ -1219,7 +1455,39 @@
     ctx.restore();
   }
 
+  function drawPortcullisEditor(cells, preview = false, valid = true) {
+    if (!Array.isArray(cells) || !cells.length) return;
+    const xs = cells.map(p => p[0]), ys = cells.map(p => p[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+    const x = minX * CELL + CELL * .12, y = minY * CELL + CELL * .12;
+    const w = (maxX - minX + 1) * CELL - CELL * .24, h = (maxY - minY + 1) * CELL - CELL * .24;
+    const tint = preview ? (valid ? "#ffe08a" : "#ff6767") : "#b9a35d";
+    ctx.save();
+    ctx.fillStyle = preview ? "rgba(29,32,36,.82)" : "rgba(29,32,36,.90)";
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = tint; ctx.lineWidth = Math.max(2, CELL * .055); ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = preview ? "rgba(215,220,225,.92)" : "#c3c7ca";
+    ctx.lineWidth = Math.max(1, CELL * .035);
+    if (maxX > minX) {
+      for (let i = 1; i < maxX - minX + 1; i++) {
+        const bx = minX * CELL + i * CELL;
+        ctx.beginPath(); ctx.moveTo(bx, y + 1); ctx.lineTo(bx, y + h - 1); ctx.stroke();
+      }
+      for (let i = 0; i <= maxX - minX; i++) {
+        const bx = minX * CELL + (i + .5) * CELL;
+        ctx.beginPath(); ctx.moveTo(bx, y + 2); ctx.lineTo(bx, y + h - 2); ctx.stroke();
+      }
+    } else {
+      for (let i = 0; i <= maxY - minY; i++) {
+        const by = minY * CELL + (i + .5) * CELL;
+        ctx.beginPath(); ctx.moveTo(x + 2, by); ctx.lineTo(x + w - 2, by); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
   function render() {
+    _refreshStoneRoadConnections();
     board.width = S.grid.w * CELL;
     board.height = S.grid.h * CELL;
     for (let y = 0; y < S.grid.h; y++) {
@@ -1257,6 +1525,16 @@
         }
       }
     }
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {}))
+      drawPortcullisEditor(cells);
+    for (const [anchor, style] of Object.entries(S.doorStyles || {})) {
+      if (style !== "portao_levadico" || S.portcullisGroups[anchor]) continue;
+      drawPortcullisEditor([anchor.split(",").map(Number)]);
+    }
+    if (portcullisSpanDrag) {
+      const cells = portcullisSpanCells(portcullisSpanDrag.start, portcullisSpanDrag.end);
+      if (cells) drawPortcullisEditor(cells, true, validPortcullisSpan(cells, portcullisSpanSource));
+    }
     for (let y = 0; y < S.grid.h; y++)
       for (let x = 0; x < S.grid.w; x++)
         if (S.tiles[y][x] === FLOOR || S.tiles[y][x] === DOOR) drawElevationEditor(x, y);
@@ -1286,6 +1564,7 @@
     // Preview 2D: desenha o PNG da decoração cobrindo o footprint (se d.image disponível).
     // Chão (piso) primeiro → fica EMBAIXO; objetos empilhados desenham por cima.
     const _decorDrawOrder = [...S.decorations].sort((a, b) => (isFloorDecor(a) ? 0 : 1) - (isFloorDecor(b) ? 0 : 1));
+    const roadOccupied = new Set(S.decorations.filter(d => d.type === FLOOR_STONE_ROAD_TYPE).map(d => d.pos.join(',')));
     for (const d of _decorDrawOrder) {
       if (!d.image) continue;
       const im = isWallDecor(d) ? wallImg(d.image) : objImg(d.image);
@@ -1293,8 +1572,22 @@
       const tiles = decorTiles(d);
       const _dm = decorMeta(d.type);
       if (_dm && _dm.special === "floor") {
+        if (d.type === FLOOR_STONE_ROAD_TYPE && d.road_wide) {
+          const source = objImg('caminho_pedras_terra_cruzamento.png');
+          const tile = StoneRoad.wideTile(source, StoneRoad.neighborMask(roadOccupied, d.pos[0], d.pos[1]));
+          if (tile) ctx.drawImage(tile, d.pos[0]*CELL, d.pos[1]*CELL, CELL, CELL);
+          continue;
+        }
         // Chão: preenche cada casa borda-a-borda (sem manter proporção).
-        for (const [tx, ty] of tiles) ctx.drawImage(im, tx * CELL, ty * CELL, CELL, CELL);
+        const roadAngle = d.type === FLOOR_STONE_ROAD_TYPE
+          ? facingAngle2D(d.facing, d.type, d.image) : 0;
+        for (const [tx, ty] of tiles) {
+          if (!roadAngle) ctx.drawImage(im, tx * CELL, ty * CELL, CELL, CELL);
+          else {
+            ctx.save(); ctx.translate((tx + .5) * CELL, (ty + .5) * CELL); ctx.rotate(roadAngle);
+            ctx.drawImage(im, -CELL / 2, -CELL / 2, CELL, CELL); ctx.restore();
+          }
+        }
         continue;
       }
       const minX = Math.min(...tiles.map(p => p[0])), maxX = Math.max(...tiles.map(p => p[0]));
@@ -1509,7 +1802,24 @@
         valid ? "#72e6a1" : "#ed7777", valid ? "rgba(67,180,111,.13)" : "rgba(210,75,75,.13)");
     }
     if (decorClipboard && lastPointerCell && !_drag && !regionClipboard) drawClipboardPreview();
+    if (S.tool === "portao" && lastPointerCell) {
+      const [x, y] = lastPointerCell, horizontal = S.portaoDirecao === "horizontal";
+      const w = horizontal ? S.portaoLargura : 1, h = horizontal ? 1 : S.portaoLargura;
+      const valid = !!portcullisPlacementCells(x, y, S.portaoLargura, S.portaoDirecao);
+      drawRegionOutline({x, y, w, h}, valid ? "#72e6a1" : "#ed7777", valid ? "rgba(67,180,111,.15)" : "rgba(210,75,75,.15)");
+    }
     if (decorAreaPaint) drawDecorAreaPreview(decorAreaPaint);
+    if (elevationAreaPaint) drawElevationAreaPreview(elevationAreaPaint);
+    if (gradeEsgotoDrag) drawGradeEsgotoPreview(gradeEsgotoDrag);
+    if (stoneRoadStroke) {
+      ctx.save(); ctx.fillStyle = "rgba(75,180,230,.32)";
+      ctx.strokeStyle = "#79d6ff"; ctx.lineWidth = 2;
+      for (const [x, y] of stoneRoadStrokeCells()) {
+        ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+        ctx.strokeRect(x * CELL + 1, y * CELL + 1, CELL - 2, CELL - 2);
+      }
+      ctx.restore();
+    }
     if (_drag && _drag.candidate) drawDragPreview();
     if (document.getElementById("status")) updateStatus();
   }
@@ -1542,6 +1852,21 @@
     ctx.setLineDash([]); ctx.restore();
   }
 
+  function drawGradeEsgotoPreview(area) {
+    if (!area) return;
+    const x = Math.min(area.start[0], area.end[0]), y = Math.min(area.start[1], area.end[1]);
+    const w = Math.abs(area.end[0] - area.start[0]) + 1;
+    const h = Math.abs(area.end[1] - area.start[1]) + 1;
+    const sample = { type: "grade_esgoto", pos: [x, y], size: [w, h], facing: [0, 1] };
+    const valid = gradeEsgotoValida(sample);
+    ctx.save(); ctx.lineWidth = 2;
+    ctx.strokeStyle = valid ? "#72e6a1" : "#ed7777";
+    ctx.fillStyle = valid ? "rgba(67,180,111,.22)" : "rgba(210,75,75,.22)";
+    ctx.fillRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
+    ctx.strokeRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
+    ctx.restore();
+  }
+
   // Preview do destino durante o arrasto: contorno verde (válido) / vermelho.
   function drawDragPreview() {
     if (!_drag || !_drag.candidate) return;
@@ -1562,6 +1887,7 @@
     { id: "wall", group: "tiles" },
     { id: "floor", group: "tiles" },
     { id: "door", group: "tiles" },
+    { id: "portao", group: "tiles" },
     { id: "altura", group: "tiles" },
     { id: "ponte", group: "tiles" },
     { id: "entrance", group: "entidades" },
@@ -1666,8 +1992,14 @@
       sel.innerHTML = `<optgroup label="${t("ui.editor.masmorra.barra.decor_chao")}">${floor.map(d =>
         `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup><optgroup label="${t("ui.editor.masmorra.barra.decor_parede")}">${walls.map(d =>
         `<option value="${d.type}"${d.type === S.decorType ? " selected" : ""}>${d.emoji} ${nomeCat("decor", d.type, d.nome)}</option>`).join("")}</optgroup>`;
-      sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; };
+      sel.onchange = e => { S.decorType = e.target.value; S.decorFacing = [0, 1]; buildToolbar(); render(); };
       tb.appendChild(sel);
+      if (S.decorType === "grade_esgoto") {
+        const hint = document.createElement("small");
+        hint.textContent = t("ui.editor.masmorra.barra.grade_esgoto_arraste");
+        hint.style.color = "#b9a87f";
+        tb.appendChild(hint);
+      }
       const rot = document.createElement("button");
       rot.textContent = t("ui.editor.masmorra.barra.girar_90");
       rot.onclick = () => { rotateDecorPending(); };
@@ -1701,9 +2033,20 @@
       const sel = document.createElement("select");
       sel.id = "mat-id";
       sel.innerHTML = opts.map(m =>
-        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${nomeMaterial(m)}${Number(m.custo_mov) > 1 ? t("ui.editor.masmorra.barra.movimento_penalidade", { n: Number(m.custo_mov) - 1 }) : ""}</option>`).join("");
-      sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; };
+        `<option value="${m.id}"${m.id === cur ? " selected" : ""}>${m.categoria === "parede" ? "🧱" : (m.id === "entulho" ? "⛰️" : "▦")} ${nomeMaterial(m)}${Number(m.custo_mov) > 1 ? t("ui.editor.masmorra.barra.movimento_penalidade", { n: Number(m.custo_mov) - 1 }) : ""}</option>`).join("")
+        + (!isWall ? `<option value="${FLOOR_STONE_ROAD}"${cur === FLOOR_STONE_ROAD ? " selected" : ""}>🪨 ${nomeCat("decor", FLOOR_STONE_ROAD_TYPE, "Caminho de pedra na terra")}</option>` : "");
+      sel.onchange = e => { if (isWall) S.matWall = e.target.value; else S.matFloor = e.target.value; buildToolbar(); };
       tb.appendChild(sel);
+      if (!isWall && cur === FLOOR_STONE_ROAD) {
+        const label = document.createElement("label"); label.textContent = t("ui.editor.masmorra.barra.largura_caminho");
+        const width = document.createElement("select"); width.id = "stone-road-width";
+        for (let n = 1; n <= 5; n++) {
+          const option = document.createElement("option"); option.value = String(n);
+          option.textContent = String(n); option.selected = n === S.stoneRoadWidth; width.appendChild(option);
+        }
+        width.onchange = e => { S.stoneRoadWidth = Number(e.target.value); };
+        label.appendChild(width); tb.appendChild(label);
+      }
       const fill = document.createElement("button");
       fill.textContent = S.matFill ? t("ui.editor.masmorra.barra.balde_on") : t("ui.editor.masmorra.barra.balde_off");
       fill.title = t("ui.editor.masmorra.barra.balde_title");
@@ -1758,6 +2101,18 @@
       hint.style.color = "#b9a87f"; hint.style.marginLeft = "6px";
       tb.appendChild(hint);
     }
+    if (S.tool === "portao") {
+      const width = document.createElement("input"); width.type = "number"; width.id = "portcullis-width";
+      width.min = "1"; width.max = String(Math.max(S.grid.w, S.grid.h)); width.value = String(S.portaoLargura);
+      width.title = t("ui.editor.masmorra.barra.portao_largura"); width.setAttribute("aria-label", width.title);
+      width.onchange = e => { S.portaoLargura = Math.max(1, Math.min(Math.max(S.grid.w,S.grid.h), Number(e.target.value) | 0)); e.target.value = S.portaoLargura; render(); };
+      const widthLabel = document.createElement("label"); widthLabel.textContent = t("ui.editor.masmorra.barra.portao_largura") + ": ";
+      widthLabel.appendChild(width); tb.appendChild(widthLabel);
+      const direction = document.createElement("select"); direction.id = "portcullis-direction";
+      direction.innerHTML = `<option value="horizontal">${t("ui.editor.masmorra.barra.portao_horizontal")}</option><option value="vertical">${t("ui.editor.masmorra.barra.portao_vertical")}</option>`;
+      direction.value = S.portaoDirecao; direction.onchange = e => { S.portaoDirecao = e.target.value; render(); };
+      tb.appendChild(direction);
+    }
   }
 
   function cellFromEvent(ev) {
@@ -1788,10 +2143,22 @@
   function doorConditionAt(x, y) {
     return S.doorConditions[doorKey(x, y)] || null;
   }
+  function setDoorConditionGroup(x, y, condition) {
+    const group = portcullisGroupAt(x, y);
+    const cells = group ? group.cells : [[x, y]];
+    for (const [tx, ty] of cells) {
+      const key = doorKey(tx, ty);
+      if (condition == null) delete S.doorConditions[key];
+      else S.doorConditions[key] = condition;
+    }
+  }
   function doorUnlink(x, y) {
+    const group = portcullisGroupAt(x, y);
+    if (group) removePortcullisGroup(group.anchor);
     for (const r of S.rooms) r.doors = r.doors.filter(d => !(d[0] === x && d[1] === y));
     delete S.doorRotations[doorKey(x, y)];
     delete S.doorConditions[doorKey(x, y)];
+    delete S.doorStyles[doorKey(x, y)];
   }
 
   function paintTile(x, y) {
@@ -1799,8 +2166,22 @@
     // Altura manual só existe em parede: virar chão/porta/entulho a descarta.
     if (S.tiles[y][x] !== WALL) delete S.alturasParede[x + "," + y];
   }
+  function updateStoneRoadStroke(x, y) {
+    const dx = x - stoneRoadStroke.anchor[0], dy = y - stoneRoadStroke.anchor[1];
+    stoneRoadStroke.axis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+    stoneRoadStroke.end = stoneRoadStroke.axis === "x"
+      ? [x, stoneRoadStroke.anchor[1]] : [stoneRoadStroke.anchor[0], y];
+  }
+  function stoneRoadStrokeCells() {
+    const { anchor, end, axis, width } = stoneRoadStroke;
+    return StoneRoad.strokeCells(anchor, end, axis, width, S.grid.w, S.grid.h);
+  }
   function _paintTile(x, y) {
+    const floorRoadAt = S.decorations.some(d => d.type === FLOOR_STONE_ROAD_TYPE
+      && d.pos?.[0] === x && d.pos?.[1] === y);
     if (S.tool === "wall") {
+      if (floorRoadAt) S.decorations = S.decorations.filter(d => !(d.type === FLOOR_STONE_ROAD_TYPE
+        && d.pos?.[0] === x && d.pos?.[1] === y));
       if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
       delete S.elevacoes[x + "," + y];
       if (S.matWall === "entulho") { S.tiles[y][x] = FLOOR; S.materiais[x + "," + y] = "entulho"; return; }
@@ -1809,7 +2190,18 @@
     } else if (S.tool === "floor") {
       if (S.tiles[y][x] === DOOR) doorUnlink(x, y);
       S.tiles[y][x] = FLOOR;
-      _applyMat(x, y, S.matFloor, "piso");
+      if (S.matFloor === FLOOR_STONE_ROAD) {
+        S.materiais[x + "," + y] = "terra";
+        S.decorations = S.decorations.filter(d => !(d.type === FLOOR_STONE_ROAD_TYPE
+          && d.pos?.[0] === x && d.pos?.[1] === y));
+        S.decorations.push({ id: nextDecorId(), type: FLOOR_STONE_ROAD_TYPE,
+          pos: [x, y], facing: [0, 1], loot: null, key_objective: false,
+          image: decorMeta(FLOOR_STONE_ROAD_TYPE)?.image });
+      } else {
+        if (floorRoadAt) S.decorations = S.decorations.filter(d => !(d.type === FLOOR_STONE_ROAD_TYPE
+          && d.pos?.[0] === x && d.pos?.[1] === y));
+        _applyMat(x, y, S.matFloor, "piso");
+      }
     } else if (S.tool === "door") {
       S.tiles[y][x] = DOOR; doorLink(x, y);
       const mid = S.materiais[x + "," + y];
@@ -1884,6 +2276,52 @@
     return S.pontes.find(p => bridgeTilesOf(p).some(([tx, ty]) => tx === x && ty === y)) || null;
   }
 
+  function gradeEsgotoAltura(pos, size) {
+    const covered = new Set(tilesFor(pos, size, [0, 1]).map(([x, y]) => `${x},${y}`));
+    const borda = new Set();
+    for (const [x, y] of tilesFor(pos, size, [0, 1])) {
+      for (const [nx, ny] of [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]]) {
+        const key = `${nx},${ny}`;
+        if (covered.has(key) || nx < 0 || ny < 0 || nx >= S.grid.w || ny >= S.grid.h
+            || ![FLOOR, DOOR].includes(S.tiles[ny]?.[nx])) continue;
+        const ponte = bridgeAt(nx, ny);
+        borda.add(ponte ? bridgeAltura(ponte) : elevationAt(nx, ny));
+      }
+    }
+    return borda.size ? Math.max(...borda) : null;
+  }
+
+  function gradeEsgotoPonteLegada(d) {
+    const tiles = decorTiles(d);
+    const pontes = tiles.map(([x, y]) => bridgeAt(x, y));
+    if (!pontes.length || !pontes[0] || pontes.some(p => p !== pontes[0])) return null;
+    const covered = new Set(bridgeTilesOf(pontes[0]).map(p => `${p[0]},${p[1]}`));
+    return tiles.every(([x, y]) => covered.has(`${x},${y}`)) ? pontes[0] : null;
+  }
+
+  function gradeEsgotoValida(d, posOverride=null, sizeOverride=null) {
+    const candidato = { ...d, pos: posOverride || d.pos, size: sizeOverride || decorBaseSize(d) };
+    const size = decorBaseSize(candidato);
+    if (!decorWouldFit(d, candidato.pos, size, [0, 1])) return false;
+    const ponteLegada = gradeEsgotoPonteLegada(candidato);
+    if (decorTiles(candidato).some(([x, y]) => bridgeAt(x, y)) && !ponteLegada) return false;
+    const altura = ponteLegada ? bridgeAltura(ponteLegada) : gradeEsgotoAltura(candidato.pos, size);
+    if (!Number.isInteger(altura)) return false;
+    return decorTiles(candidato).every(([x, y]) =>
+      S.materiais[`${x},${y}`] !== "ceu_abismo" && elevationAt(x, y) < altura);
+  }
+
+  function placeGradeEsgotoArea(start, end) {
+    const pos = [Math.min(start[0], end[0]), Math.min(start[1], end[1])];
+    const size = [Math.abs(end[0] - start[0]) + 1, Math.abs(end[1] - start[1]) + 1];
+    const d = { id: nextDecorId(), type: "grade_esgoto", pos, size, facing: [0, 1],
+      image: "grade_esgoto.png", key_objective: false, loot: null };
+    if (!gradeEsgotoValida(d)) return false;
+    S.decorations.push(d);
+    S.sel = { kind: "decor", ref: d, pos: pos.slice() };
+    return true;
+  }
+
   function removeBridge(bridge) {
     if (!bridge) return false;
     const before = S.pontes.length;
@@ -1930,6 +2368,7 @@
   }
 
   let painting = false;
+  let stoneRoadStroke = null;
   let materialAreaPaint = null;
   let roomDrag = null;
   let _drag = null;  // arrasto na ferramenta "selecionar"
@@ -1940,6 +2379,8 @@
       const placement = wallPlacementAt(ax, ay, sel.ref.facing);
       return !!placement && decorFits(sel.ref.type, placement.pos[0], placement.pos[1], placement.facing, sel.ref);
     }
+    if (sel.kind === "decor" && sel.ref.type === "grade_esgoto")
+      return gradeEsgotoValida(sel.ref, [ax, ay]);
     if (sel.kind === "decor")
       return decorWouldFit(sel.ref, [ax, ay], decorBaseSize(sel.ref), sel.ref.facing);
     if (sel.kind === "monster")
@@ -2267,7 +2708,10 @@
   }
   function utilityBeltCapacity(item) {
     if (!item || typeof item.id !== "string") return 0;
-    return item.id === "cinto_utilidades" ? 4 : item.id === "cinto_com_bolsos" ? 2 : 0;
+    return item.id === "cinto_utilidades" || item.id === "cinto_utilidades_aprimorado" || item.id === "cinto_arsenal_encantado" || item.id === "maravilha_aventureiro_menor" || item.id === "maravilha_aventureiro_maior" ? 4 : item.id === "cinto_com_bolsos" || item.id === "alforge_explorador_aprimorado" ? 2 : item.id === "alforge_explorador_superior" ? 3 : item.id === "alforge_explorador" ? 1 : 0;
+  }
+  function utilityBeltStackCapacity(item) {
+    return item && (item.id === "cinto_utilidades_aprimorado" || item.id === "cinto_arsenal_encantado" || item.id === "maravilha_aventureiro_maior") ? 8 : 4;
   }
   function utilityBeltConsumables() {
     // Keep full custom definitions: the regular loot selector has reduced metadata.
@@ -2292,7 +2736,8 @@
     return Array.from({length: utilityBeltCapacity(item)}, (_, index) => {
       const entry = raw[index], id = entry && entry.item && entry.item.id;
       if (!entry || typeof id !== "string" || !eligible.has(id) || seen.has(id)
-        || !Number.isInteger(entry.quantity) || entry.quantity < 1 || entry.quantity > 4) return null;
+        || !Number.isInteger(entry.quantity) || entry.quantity < 1
+        || entry.quantity > utilityBeltStackCapacity(item)) return null;
       seen.add(id);
       return {item: {id}, quantity: entry.quantity};
     });
@@ -2305,7 +2750,7 @@
         <select data-belt-item data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.item', {n:pocket + 1})}">
           <option value="">${t('ui.editor.cinto.vazio')}</option>${choices.map(choice => `<option value="${editorEscapeText(choice.id)}"${entry && entry.item.id === choice.id ? " selected" : ""}>${editorEscapeText(nomeCat("item", choice.id, choice.name || choice.id))}</option>`).join("")}
         </select>
-        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.quantidade', {n:pocket + 1})}" type="number" min="1" max="4" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
+        <input data-belt-quantity data-i="${index}" data-pocket="${pocket}" aria-label="${t('ui.editor.cinto.quantidade', {n:pocket + 1})}" type="number" min="1" max="${utilityBeltStackCapacity(item)}" step="1" value="${entry ? entry.quantity : 1}"${entry ? "" : " disabled"}>
       </label>`).join("")}</div>`;
   }
   function wireUtilityBeltFields(root, items, rerender) {
@@ -2642,6 +3087,7 @@
     var g = _grafoSalas(), nd = _ndSalaMap();
     var pod = window.Difficulty ? window.Difficulty.poder(S.expectedParty.heroes, S.expectedParty.level) : Math.max(1, S.expectedParty.heroes * S.expectedParty.level);
     S.rooms.forEach(function (r) { if (!g.reach.has(r.id)) avisos.push(t("ui.editor.masmorra.design.r4", { sala: _salaRef(r.id) })); });
+    S.rooms.forEach(function (r) { if (r.locked && !(r.doors || []).length) avisos.push(t("ui.editor.masmorra.design.r7", { sala: _salaRef(r.id) })); });
     if (g.bossId == null) { avisos.push(t("ui.editor.masmorra.design.r2r5_sem_boss")); }
     else {
       var dist = _distSalas(g.adj, g.entradaId, g.bossId);
@@ -3049,8 +3495,11 @@
     }
     if (k === "door") {
       const rot = doorRotationAt(ref.x, ref.y);
-      const conditionKey = doorKey(ref.x, ref.y);
-      const condition = doorConditionAt(ref.x, ref.y);
+      const group = portcullisGroupAt(ref.x, ref.y);
+      const conditionKey = group ? group.anchor : doorKey(ref.x, ref.y);
+      const [conditionX, conditionY] = conditionKey.split(",").map(Number);
+      const condition = doorConditionAt(conditionX, conditionY);
+      if (group && condition) for (const [x, y] of group.cells) S.doorConditions[doorKey(x, y)] = condition;
       const keyItems = CAT.items.map(it => ({ v: it.id, name: nomeCat("item", it.id, it.name) }));
       const keyDecors = S.decorations.filter(d => d.key_objective);
       const selectedDecorKeys = new Set(condition?.key_decor_ids || []);
@@ -3059,6 +3508,15 @@
         <div style="font-size:11px;color:#8a7a5a;margin-top:4px">${t("ui.editor.masmorra.painel.giros_aplicados", { n: rot })}</div>
         <button id="door-rotate" style="margin-top:8px">↻ ${t("ui.editor.masmorra.painel.girar_90_r")}</button>
         <small style="display:block;color:#8a7a5a;margin-top:6px">${t("ui.editor.masmorra.painel.seta_dourada_hint")}</small>
+        <label style="margin-top:10px;display:block">${t("ui.editor.masmorra.painel.estilo_porta")}</label>
+        <select id="door-style">
+          <option value=""${!group ? " selected" : ""}>${t("ui.editor.masmorra.painel.porta_comum")}</option>
+          <option value="portao_levadico"${group ? " selected" : ""}>${t("ui.editor.masmorra.painel.portao_levadico")}</option>
+        </select>
+        ${group ? `<div style="font-size:11px;color:#b9a87f;margin-top:5px">${t("ui.editor.masmorra.painel.portao_largura", { casas: group.cells.length })}</div>
+          <button id="door-span-pick" style="margin-top:6px">↔ ${t("ui.editor.masmorra.painel.portao_ajustar_largura")}</button>
+          ${portcullisSpanPick ? `<small style="display:block;color:#f0c867;margin-top:5px">${t("ui.editor.masmorra.painel.portao_arraste_hint")}</small>` : ""}
+          ${portcullisSpanMessage ? `<small style="display:block;color:#e07868;margin-top:5px">${portcullisSpanMessage}</small>` : ""}` : ""}
         <div style="margin-top:10px;border-top:1px solid #4a3a2a;padding-top:8px">
           <b>🔐 ${t("ui.editor.masmorra.painel.condicao_abertura")}</b>
           <select id="door-condition-type">
@@ -3089,12 +3547,26 @@
             ${keyDecors.length ? keyDecors.map(d => `<label style="display:block"><input type="checkbox" class="door-condition-key" data-id="${d.id}"${selectedDecorKeys.has(d.id) ? " checked" : ""}> ${nomeCat("decor", d.type, decorMeta(d.type)?.nome || d.type)} ${_xy(d.pos)}</label>`).join("") : `<small style="color:#d8a0a0">${t("ui.editor.masmorra.painel.marque_decor_chave")}</small>`}` : ""}
         </div>`;
       document.getElementById("door-rotate").onclick = rotateDoorSelected;
+      document.getElementById("door-style").onchange = e => {
+        const current = portcullisGroupAt(ref.x, ref.y);
+        if (current) removePortcullisGroup(current.anchor);
+        if (e.target.value === "portao_levadico") S.doorStyles[doorKey(ref.x, ref.y)] = e.target.value;
+        portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanSource = null;
+        renderPanel(); render();
+      };
+      const spanButton = document.getElementById("door-span-pick");
+      if (spanButton) spanButton.onclick = () => {
+        portcullisSpanPick = true; portcullisSpanDrag = null; portcullisSpanMessage = "";
+        portcullisSpanSource = group.anchor;
+        S.tool = "select"; regionSelection = null;
+        renderPanel(); render();
+      };
       document.getElementById("door-condition-type").onchange = e => {
-        if (e.target.value === "none") delete S.doorConditions[conditionKey];
-        else if (e.target.value === "item") S.doorConditions[conditionKey] = { type: "item", item_id: keyItems[0]?.v || "" };
-        else if (e.target.value === "licao") S.doorConditions[conditionKey] = { type: "licao", licao_id: (S.falas.find(f => f.tarefa && f.tarefa.tipo) || {}).id || "" };
-        else if (e.target.value === "requirement") S.doorConditions[conditionKey] = { type: "requirement", requirement: { renome_min: 0, nivel_grupo_min: 0, item_id: "", fato: "", aventura_id: "" } };
-        else S.doorConditions[conditionKey] = { type: "decor", key_decor_ids: [], keys_mode: "any" };
+        if (e.target.value === "none") setDoorConditionGroup(ref.x, ref.y, null);
+        else if (e.target.value === "item") setDoorConditionGroup(ref.x, ref.y, { type: "item", item_id: keyItems[0]?.v || "" });
+        else if (e.target.value === "licao") setDoorConditionGroup(ref.x, ref.y, { type: "licao", licao_id: (S.falas.find(f => f.tarefa && f.tarefa.tipo) || {}).id || "" });
+        else if (e.target.value === "requirement") setDoorConditionGroup(ref.x, ref.y, { type: "requirement", requirement: { renome_min: 0, nivel_grupo_min: 0, item_id: "", fato: "", aventura_id: "" } });
+        else setDoorConditionGroup(ref.x, ref.y, { type: "decor", key_decor_ids: [], keys_mode: "any" });
         renderPanel(); render();
       };
       const conditionLicao = document.getElementById("door-condition-licao");
@@ -3427,7 +3899,7 @@
         <label>${t("ui.editor.masmorra.painel.emoji_falante")}</label><input id="f-emoji" value="${(fal.emoji || "").replace(/"/g, "&quot;")}" maxlength="4" style="width:60px">
         <label>${t("ui.editor.masmorra.painel.nome_falante")}</label><input id="f-nome" value="${(fal.nome || "").replace(/"/g, "&quot;")}" placeholder="${t("ui.editor.masmorra.painel.opcional")}">
         <label>${t("ui.editor.masmorra.painel.retrato_falante")}</label><input id="f-retrato" value="${escGuia(fal.retrato)}" placeholder="assets/portraits/nome.png" style="width:100%">
-        <label>${t("ui.editor.masmorra.painel.cena_fala")}</label><input id="f-cena" value="${escGuia(fal.cena)}" placeholder="assets/tela de transição/tutorial/nome.png" style="width:100%">
+        <label>${t("ui.editor.masmorra.painel.cena_fala")}</label><input id="f-cena" value="${escGuia(fal.cena)}" placeholder="assets/tela de transi&ccedil;&atilde;o/tutorial/nome.png" style="width:100%">
         <label>${t("ui.editor.masmorra.painel.texto")}</label><textarea id="f-texto" rows="3" style="width:100%">${(ref.texto || "").replace(/</g, "&lt;")}</textarea>
         <label>${t("ui.editor.masmorra.painel.gatilho")}</label><select id="f-tipo">
           <option value="proximidade"${tg.tipo === "proximidade" ? " selected" : ""}>${t("ui.editor.masmorra.painel.gatilho_proximidade")}</option>
@@ -3833,7 +4305,9 @@
         const nw = Math.max(1, Number(document.getElementById("d-fw").value) | 0);
         const nh = Math.max(1, Number(document.getElementById("d-fh").value) | 0);
         const msg = document.getElementById("d-size-msg");
-        if (decorWouldFit(ref, ref.pos, [nw, nh], ref.facing)) {
+        const sizeValida = decorWouldFit(ref, ref.pos, [nw, nh], ref.facing)
+          && (ref.type !== "grade_esgoto" || gradeEsgotoValida(ref, ref.pos, [nw, nh]));
+        if (sizeValida) {
           const def = decorMeta(ref.type);
           if (def && def.size[0] === nw && def.size[1] === nh) delete ref.size;
           else ref.size = [nw, nh];
@@ -3916,6 +4390,15 @@
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
     const [x, y] = c;
+    if (portcullisSpanPick) {
+      if (S.tiles[y]?.[x] !== DOOR) {
+        portcullisSpanMessage = t("ui.editor.masmorra.painel.portao_span_invalido");
+        renderPanel(); return;
+      }
+      portcullisSpanMessage = "";
+      portcullisSpanDrag = { start: c.slice(), end: c.slice() };
+      render(); return;
+    }
     if (S.teleportExitPick) {
       if (S.tiles[y][x] !== FLOOR) {
         const help = document.getElementById("p-out-help") || document.getElementById("d-trap-out-help");
@@ -3927,22 +4410,33 @@
       renderPanel(); render(); updateStatus();
       return;
     }
-    if (S.tool === "ponte") {
+    if (S.tool === "portao") {
+      if (!placePortcullis(x, y, S.portaoLargura, S.portaoDirecao)) alert(t("ui.editor.masmorra.barra.portao_colocacao_invalida"));
+      else S.sel = entityAt(x, y);
+      renderPanel(); render(); updateStatus();
+    }
+    else if (S.tool === "ponte") {
       S.ponteDrag = { start: c.slice(), end: c.slice(), width: S.ponteLargura, material: S.ponteMaterial };
       render(); updateStatus();
+    }
+    else if (S.tool === "decor" && S.decorType === "grade_esgoto") {
+      gradeEsgotoDrag = { start: c.slice(), end: c.slice() };
+      render();
     }
     else if (S.tool === "decor" && decorBrushActive && decorClipboard) {
       decorAreaPaint = { x0: x, y0: y, x1: x, y1: y };
       render();
     }
     else if (S.tool === "altura") {
-      painting = true;
-      paintElevation(x, y);
-      render(); updateStatus();
+      elevationAreaPaint = { x0: x, y0: y, x1: x, y1: y };
+      render();
     }
     else if (["wall", "floor", "door"].includes(S.tool)) {
       const areaMat = S.tool === "floor" ? S.matFloor : S.matWall;
-      if (S.tool === "floor"
+      if (S.tool === "floor" && areaMat === FLOOR_STONE_ROAD) {
+        stoneRoadStroke = { anchor: [x, y], end: [x, y], axis: "x", width: S.stoneRoadWidth };
+        render();
+      } else if (S.tool === "floor"
           && (areaMat === "rodamoinho" || areaMat === "rodamoinho_profundo")) {
         materialAreaPaint = { x0: x, y0: y, x1: x, y1: y, mat: areaMat };
         render(); drawMaterialAreaPreview(materialAreaPaint);
@@ -4008,7 +4502,7 @@
     const b = _regionBounds(rect); if (!b) return null;
     const data = { tiles: [], rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
       secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null,
-      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {} };
+      materials: {}, elevations: {}, wallHeights: {}, doorRotations: {}, doorConditions: {}, doorStyles: {}, portcullisGroups: {} };
     const refs = { rooms: [], heroSpawns: [], monsters: [], chests: [], traps: [], decorations: [],
       secretPassages: [], falas: [], pontes: [], entrance: null, exit: null, prisoner: null };
     for (let y = b.y; y <= b.y2; y++) data.tiles.push(S.tiles[y].slice(b.x, b.x2 + 1));
@@ -4059,9 +4553,18 @@
       const key = doorKey(x, y), local = doorKey(x - b.x, y - b.y);
       if (S.doorRotations[key] != null) data.doorRotations[local] = S.doorRotations[key];
       if (S.doorConditions[key]) data.doorConditions[local] = _cloneRegionValue(S.doorConditions[key]);
+      if (S.doorStyles[key]) data.doorStyles[local] = S.doorStyles[key];
       if (S.materiais[key] != null) data.materials[local] = S.materiais[key];
       if (S.elevacoes[key] != null) data.elevations[local] = S.elevacoes[key];
       if (S.alturasParede[key] != null) data.wallHeights[local] = S.alturasParede[key];
+    }
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {})) {
+      const relation = _regionContainsCells(cells, b);
+      if (relation < 0) { alert(t(K_CM + "regiao_objeto_parcial")); return null; }
+      if (relation) {
+        const [ax, ay] = anchor.split(",").map(Number);
+        data.portcullisGroups[doorKey(ax - b.x, ay - b.y)] = cells.map(([x, y]) => [x - b.x, y - b.y]);
+      }
     }
     return { x: b.x, y: b.y, w: b.w, h: b.h, data, refs };
   }
@@ -4134,6 +4637,11 @@
       const [x, y] = key.split(",").map(Number); return [doorKey(x + target[0], y + target[1]), value];
     }));
     d.doorRotations = remapKeys(d.doorRotations); d.doorConditions = remapKeys(d.doorConditions);
+    d.doorStyles = remapKeys(d.doorStyles || {});
+    d.portcullisGroups = Object.fromEntries(Object.entries(d.portcullisGroups || {}).map(([key, cells]) => {
+      const [x, y] = key.split(",").map(Number);
+      return [doorKey(x + target[0], y + target[1]), cells.map(([cx, cy]) => [cx + target[0], cy + target[1]])];
+    }));
     d.materials = remapKeys(d.materials); d.elevations = remapKeys(d.elevations);
     d.wallHeights = remapKeys(d.wallHeights || {});
     d.doorConditions = Object.fromEntries(Object.entries(d.doorConditions).map(([key, c]) => [key,
@@ -4151,6 +4659,8 @@
     S.rooms.push(...d.rooms); S.heroSpawns.push(...d.heroSpawns); S.monsters.push(...d.monsters);
     S.chests.push(...d.chests); S.traps.push(...d.traps); S.decorations.push(...d.decorations);
     S.secretPassages.push(...d.secretPassages); S.falas.push(...d.falas); S.pontes.push(...d.pontes);
+    Object.assign(S.doorStyles, d.doorStyles);
+    Object.assign(S.portcullisGroups, d.portcullisGroups);
     if (d.entrance) S.entrance = d.entrance;
     if (d.exit) S.exit = d.exit;
     if (d.prisoner) S.prisoner = d.prisoner;
@@ -4162,10 +4672,14 @@
   }
   function removeRegion(clip) {
     const b = _regionBounds(clip); if (!b) return false;
+    for (const cells of Object.values(S.portcullisGroups || {})) {
+      if (_regionContainsCells(cells, b) < 0) { alert(t(K_CM + "regiao_objeto_parcial")); return false; }
+    }
     for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) S.tiles[y][x] = WALL;
-    for (const key of ["materials", "elevations", "wallHeights", "doorRotations", "doorConditions"]) {
+    for (const key of ["materials", "elevations", "wallHeights", "doorRotations", "doorConditions", "doorStyles", "portcullisGroups"]) {
       const target = key === "materials" ? S.materiais : key === "elevations" ? S.elevacoes
-        : key === "wallHeights" ? S.alturasParede : key === "doorRotations" ? S.doorRotations : S.doorConditions;
+        : key === "wallHeights" ? S.alturasParede : key === "doorRotations" ? S.doorRotations
+        : key === "doorStyles" ? S.doorStyles : key === "portcullisGroups" ? S.portcullisGroups : S.doorConditions;
       for (let y = b.y; y <= b.y2; y++) for (let x = b.x; x <= b.x2; x++) delete target[doorKey(x, y)];
     }
     for (const key of ["rooms", "heroSpawns", "monsters", "chests", "traps", "decorations", "secretPassages", "falas", "pontes"])
@@ -4205,12 +4719,39 @@
     ctx.restore();
   }
 
+  function drawElevationAreaPreview(area) {
+    const x0 = Math.min(area.x0, area.x1), y0 = Math.min(area.y0, area.y1);
+    const x1 = Math.max(area.x0, area.x1), y1 = Math.max(area.y0, area.y1);
+    const nivel = Number(S.elevacaoValor) || 0;
+    const rotulo = nivel > 0 ? `+${nivel}` : (nivel < 0 ? `−${Math.abs(nivel)}` : "0");
+    const label = t("ui.editor.masmorra.barra.nivel_generico", { n: rotulo });
+    ctx.save(); ctx.setLineDash([5, 3]); ctx.lineWidth = 2;
+    ctx.fillStyle = "rgba(110,175,245,.20)"; ctx.strokeStyle = "#93ceff";
+    ctx.fillRect(x0 * CELL + 1, y0 * CELL + 1, (x1 - x0 + 1) * CELL - 2, (y1 - y0 + 1) * CELL - 2);
+    ctx.strokeRect(x0 * CELL + 1, y0 * CELL + 1, (x1 - x0 + 1) * CELL - 2, (y1 - y0 + 1) * CELL - 2);
+    ctx.setLineDash([]); ctx.font = "11px sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillStyle = "rgba(0,0,0,.72)"; ctx.fillRect(x0 * CELL + 3, y0 * CELL + 3, ctx.measureText(label).width + 7, 15);
+    ctx.fillStyle = "#d8edff"; ctx.fillText(label, x0 * CELL + 6, y0 * CELL + 4);
+    ctx.restore();
+  }
+
   board.addEventListener("mousemove", (ev) => {
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
     _mostrarCoordsCursor(c);
+    if (stoneRoadStroke) { updateStoneRoadStroke(c[0], c[1]); render(); return; }
+    if (portcullisSpanDrag) {
+      portcullisSpanDrag.end = c.slice(); render(); return;
+    }
     if (S.ponteDrag) {
       S.ponteDrag.end = c.slice(); render(); return;
+    }
+    if (gradeEsgotoDrag) {
+      gradeEsgotoDrag.end = c.slice(); render(); return;
+    }
+    if (elevationAreaPaint) {
+      elevationAreaPaint.x1 = c[0]; elevationAreaPaint.y1 = c[1];
+      render(); return;
     }
     if (decorAreaPaint) {
       decorAreaPaint.x1 = c[0]; decorAreaPaint.y1 = c[1]; render(); return;
@@ -4235,8 +4776,7 @@
       return;
     }
     if (painting) {
-      if (S.tool === "altura") { paintElevation(c[0], c[1]); updateStatus(); }
-      else if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
+      if ((S.tool === "floor" || S.tool === "wall") && S.matFill) { paintMaterial(c[0], c[1]); updateStatus(); }
       else { paintTile(c[0], c[1]); updateStatus(); }
       render(); return;
     }
@@ -4249,17 +4789,69 @@
       ctx.strokeRect(x * CELL + 1, y * CELL + 1, w * CELL - 2, h * CELL - 2);
       return;
     }
-    if (decorClipboard || regionClipboard) render();
+    if (decorClipboard || regionClipboard || S.tool === "portao") render();
   });
   board.addEventListener("contextmenu", ev => {
     ev.preventDefault();
+    if (stoneRoadStroke) { stoneRoadStroke = null; painting = false; render(); return; }
     const c = cellFromEvent(ev); if (!c) return;
     lastPointerCell = c;
     render();
     showCopyMenu(ev, c);
   });
-  window.addEventListener("mouseup", () => {
+  window.addEventListener("mouseup", (ev) => {
+    if (stoneRoadStroke) {
+      if (ev.button !== 0) return;
+      const c = cellFromEvent(ev);
+      if (c) updateStoneRoadStroke(c[0], c[1]);
+      const cells = stoneRoadStrokeCells(), wide = stoneRoadStroke.width > 1;
+      stoneRoadStroke = null;
+      if (c && S.tool === "floor" && S.matFloor === FLOOR_STONE_ROAD)
+        for (const [x, y] of cells) {
+          paintTile(x, y);
+          if (wide) S.decorations[S.decorations.length - 1].road_wide = true;
+        }
+      render(); updateStatus(); return;
+    }
+    if (gradeEsgotoDrag) {
+      const drag = gradeEsgotoDrag;
+      const c = cellFromEvent(ev);
+      if (c) drag.end = c.slice();
+      gradeEsgotoDrag = null;
+      if (ev.button === 0 && !placeGradeEsgotoArea(drag.start, drag.end))
+        alert(t("ui.editor.masmorra.valid.grade_esgoto_sem_queda", { pos: `${drag.start[0]},${drag.start[1]}` }));
+      renderPanel(); render(); updateStatus();
+      return;
+    }
+    if (elevationAreaPaint) {
+      const area = elevationAreaPaint;
+      const c = cellFromEvent(ev);
+      if (c) { area.x1 = c[0]; area.y1 = c[1]; }
+      elevationAreaPaint = null;
+      if (ev.button === 0) {
+        const x0 = Math.max(0, Math.min(area.x0, area.x1));
+        const y0 = Math.max(0, Math.min(area.y0, area.y1));
+        const x1 = Math.min(S.grid.w - 1, Math.max(area.x0, area.x1));
+        const y1 = Math.min(S.grid.h - 1, Math.max(area.y0, area.y1));
+        for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++)
+          paintElevation(x, y);
+      }
+      render(); updateStatus();
+      return;
+    }
     painting = false;
+    stoneRoadStroke = null;
+    if (portcullisSpanDrag) {
+      const drag = portcullisSpanDrag;
+      portcullisSpanDrag = null;
+      const cells = portcullisSpanCells(drag.start, drag.end);
+      if (cells && setPortcullisSpan(cells, portcullisSpanSource)) {
+        portcullisSpanPick = false; portcullisSpanMessage = ""; portcullisSpanSource = null;
+        const [x, y] = cells[0]; S.sel = entityAt(x, y);
+      } else portcullisSpanMessage = t("ui.editor.masmorra.painel.portao_span_invalido");
+      renderPanel(); render(); updateStatus();
+      return;
+    }
     if (regionDrag) {
       const d = regionDrag; regionDrag = null;
       const x = Math.min(d.x0, d.x1), y = Math.min(d.y0, d.y1);
@@ -4321,6 +4913,7 @@
   });
 
   function buildJSON() {
+    _refreshStoneRoadConnections();
     if (!S.objectives.primary) S.objectives.primary = { type: "kill_all" };
     if (!Array.isArray(S.objectives.secondary)) S.objectives.secondary = [];
     normalizeObjective(S.objectives.primary, true);
@@ -4353,6 +4946,17 @@
         : c.type === "requirement" ? { type: "requirement", requirement: Object.assign({}, c.requirement || {}) }
         : c.type === "gas" ? { type: "gas", zona_id: c.zona_id || "" }
         : { type: "decor", key_decor_ids: (c.key_decor_ids || []).slice(), keys_mode: c.keys_mode === "all" ? "all" : "any" }])),
+      ...(Object.keys(S.doorStyles).length ? { door_styles: Object.fromEntries(Object.entries(S.doorStyles).filter(([key, style]) => {
+        const [x, y] = key.split(",").map(Number);
+        return style === "portao_levadico" && S.tiles[y]?.[x] === DOOR;
+      })) } : {}),
+      ...(Object.keys(S.portcullisGroups).length ? { portcullis_groups: Object.fromEntries(Object.entries(S.portcullisGroups).filter(([anchor, cells]) => {
+        const [x, y] = anchor.split(",").map(Number);
+        return Array.isArray(cells) && cells.length > 1 && cells.every(p => Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]))
+          && S.doorStyles[anchor] === "portao_levadico"
+          && doorKey(...cells[0]) === anchor && validPortcullisSpan(cells)
+          && cells.some(p => p[0] === x && p[1] === y);
+      }).map(([anchor, cells]) => [anchor, cells.map(p => p.slice())])) } : {}),
       entrance: S.startMode === "entrance" && S.entrance ? { x: S.entrance.x, y: S.entrance.y } : null,
       hero_spawns: S.heroSpawns.map(s => ({ class_id: s.class_id, pos: s.pos.slice(), room_id: s.room_id ?? null })),
       exit: S.exit ? { x: S.exit.x, y: S.exit.y } : null,
@@ -4436,6 +5040,7 @@
           o.intervalo_rodadas = Math.max(1, Math.min(12,
             Number(d.intervalo_rodadas ?? m.intervalo_rodadas) | 0));
         if (d.image) o.image = d.image;
+        if (d.type === FLOOR_STONE_ROAD_TYPE && d.road_wide === true) o.road_wide = true;
         // Override de tamanho por-objeto (editor-only; o servidor ignora estes campos).
         if (Array.isArray(d.size) && d.size.length === 2) o.size = [d.size[0] | 0, d.size[1] | 0];
         if (Array.isArray(d.vscale) && (d.vscale[0] !== 1 || d.vscale[1] !== 1)) o.vscale = [d.vscale[0], d.vscale[1]];
@@ -4489,9 +5094,19 @@
       ...(S.relogio && S.relogio.id ? { relogio: { id: S.relogio.id, limite: S.relogio.limite, ...(S.relogio.fato_ao_passar ? { fato_ao_passar: S.relogio.fato_ao_passar } : {}),
         avisos: S.relogio.avisos.filter(a => a.texto && a.texto.trim()).map(a => ({ em: a.em, texto: a.texto.trim() })) } } : {}),
       expected_party: { heroes: S.expectedParty.heroes, level: S.expectedParty.level },
-      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}) } : null,
+      prisoner: S.prisoner ? { pos: S.prisoner.pos.slice(), room_id: S.prisoner.room_id, ...(S.prisoner.image ? { image: S.prisoner.image } : {}), ...(S.prisoner.model3d ? { model3d: S.prisoner.model3d } : {}), ...(S.prisoner.nome ? { nome: S.prisoner.nome } : {}) } : null,
       materiais: { ...S.materiais },
-      pontes: S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p), material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" })),
+      pontes: [
+        ...S.pontes.map(p => ({ id: p.id, inicio: p.inicio.slice(), fim: p.fim.slice(), largura: p.largura | 0, altura: bridgeAltura(p), material: p.material === "pedra_rustica" ? "pedra_rustica" : "madeira" })),
+        ...S.decorations.filter(d => d.type === "grade_esgoto" && !gradeEsgotoPonteLegada(d)).map(d => ({
+          id: `cobertura_${d.id}`, tipo: "grade_esgoto", decor_id: d.id,
+          inicio: d.pos.slice(), fim: [d.pos[0] + Math.max(0, decorBaseSize(d)[0] - 1), d.pos[1]], largura: 1,
+          ...(decorBaseSize(d)[1] > decorBaseSize(d)[0]
+            ? { fim: [d.pos[0], d.pos[1] + decorBaseSize(d)[1] - 1] } : {}),
+          altura: gradeEsgotoAltura(d.pos, decorBaseSize(d)), material: "pedra_rustica",
+          tiles: decorTiles(d).map(p => p.slice()),
+        })),
+      ],
       elevacoes: Object.fromEntries(Object.entries(S.elevacoes)
         .filter(([key, value]) => value && Number.isInteger(value))
         .map(([key, value]) => [key, Math.max(ELEVACAO_MIN, Math.min(ELEVACAO_MAX, value))])),
@@ -4669,6 +5284,12 @@
         e.push(V("placa_sem_mensagem", { id: d.id, pos: P(d.pos) }));
       if (decorCat?.special === "plaque" && String(d.texto || "").length > 600)
         e.push(V("placa_longa", { id: d.id, pos: P(d.pos) }));
+      if (decorCat?.special === "sewer_hatch") {
+        if (decorTiles(d).some(([x, y]) => S.materiais[`${x},${y}`] === "ceu_abismo"))
+          e.push(V("grade_esgoto_abismo", { pos: P(d.pos) }));
+        else if (!gradeEsgotoValida(d))
+          e.push(V("grade_esgoto_sem_queda", { pos: P(d.pos) }));
+      }
       if (isWallDecor(d)) {
         const [wx, wy] = d.pos;
         const validFace = wallFacesAt(wx, wy).some(face => sameFace(face, d.facing));
@@ -4715,6 +5336,26 @@
           if (mode === "aleatoria" && !["leve", "media", "grave"].includes(d.trap.curse_category || "leve")) e.push(V("decor_maldicao_gravidade", { pos: P(d.pos) }));
         }
       }
+    }
+    for (const [key, style] of Object.entries(S.doorStyles || {})) {
+      const pos = key.split(",").map(Number);
+      if (pos.length !== 2 || !Number.isInteger(pos[0]) || !Number.isInteger(pos[1])
+          || S.tiles[pos[1]]?.[pos[0]] !== DOOR || style !== "portao_levadico")
+        e.push(V("porta_estilo_invalido", { chave: key }));
+    }
+    const portcullisMembers = new Set();
+    for (const [anchor, cells] of Object.entries(S.portcullisGroups || {})) {
+      const parsedAnchor = anchor.split(",").map(Number);
+      const valid = /^\d+,\d+$/.test(anchor) && Array.isArray(cells) && cells.length > 1
+        && cells.every(p => Array.isArray(p) && p.length === 2 && Number.isInteger(p[0]) && Number.isInteger(p[1]))
+        && doorKey(...cells[0]) === anchor && S.doorStyles[anchor] === "portao_levadico"
+        && validPortcullisSpan(cells)
+        && cells.every(([x, y]) => {
+          const key = doorKey(x, y);
+          if (portcullisMembers.has(key)) return false;
+          portcullisMembers.add(key); return true;
+        });
+      if (!valid || parsedAnchor.length !== 2) e.push(V("porta_estilo_invalido", { chave: anchor }));
     }
     const decorIds = new Set(S.decorations.map(d => d.id));
     for (const [key, c] of Object.entries(S.doorConditions || {})) {
@@ -4804,6 +5445,13 @@
         bridgeOccupied.add(key);
       }
     }
+    for (const d of S.decorations.filter(decor => decor.type === "grade_esgoto")) {
+      if (gradeEsgotoPonteLegada(d)) continue;
+      for (const [x, y] of decorTiles(d)) {
+        const key = `${x},${y}`;
+        if (bridgeOccupied.has(key)) e.push(V("pontes_sobrepostas", { chave: key }));
+      }
+    }
     for (const [key, value] of Object.entries(S.elevacoes)) {
       const p = key.split(",").map(Number);
       if (p.length !== 2 || !Number.isInteger(p[0]) || !Number.isInteger(p[1])
@@ -4840,6 +5488,7 @@
   }
 
   function loadJSON(obj) {
+    portcullisSpanPick = false; portcullisSpanDrag = null; portcullisSpanMessage = ""; portcullisSpanSource = null;
     S.meta = { schema_version: 1, id: obj.id || "masmorra", name: obj.name || t("ui.editor.masmorra.salvar.nome_padrao"),
                ambiente: ["penumbra", "masmorra", "ar_livre", "bruma_tenebrosa"].includes(obj.ambiente) ? obj.ambiente : "masmorra",
                // Ausente = permitida: masmorras salvas antes deste campo não mudam de comportamento.
@@ -4869,6 +5518,26 @@
     };
     loadDoorRotations(obj.door_orientations);
     for (const r of (obj.rooms || [])) loadDoorRotations(r.door_orientations);
+    S.doorStyles = {};
+    for (const [key, style] of Object.entries(obj.door_styles || {})) {
+      if (!/^\d+,\d+$/.test(key) || style !== "portao_levadico") continue;
+      const [x, y] = key.split(",").map(Number);
+      if (S.tiles[y]?.[x] === DOOR) S.doorStyles[key] = style;
+    }
+    S.portcullisGroups = {};
+    for (const [anchor, cells] of Object.entries(obj.portcullis_groups || {})) {
+      if (!/^\d+,\d+$/.test(anchor) || !Array.isArray(cells) || cells.length < 2
+          || S.doorStyles[anchor] !== "portao_levadico") continue;
+      const parsed = cells.filter(p => Array.isArray(p) && p.length === 2
+        && Number.isInteger(p[0]) && Number.isInteger(p[1])).map(p => p.slice());
+      const sorted = parsed.slice().sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+      const members = new Set(parsed.map(([x, y]) => doorKey(x, y)));
+      const overlaps = Object.values(S.portcullisGroups).some(old => old.some(([x, y]) => members.has(doorKey(x, y))));
+      const otherStyle = parsed.some(([x, y]) => doorKey(x, y) !== anchor && S.doorStyles[doorKey(x, y)]);
+      if (parsed.length === cells.length && sorted.every((p, i) => p[0] === parsed[i][0] && p[1] === parsed[i][1])
+          && !overlaps && !otherStyle && doorKey(...parsed[0]) === anchor && validPortcullisSpan(parsed))
+        S.portcullisGroups[anchor] = parsed;
+    }
     S.nextRoomId = S.rooms.reduce((m, r) => Math.max(m, r.id + 1), 0);
     S.startMode = obj.start_mode === "hero_spawns" || (!obj.entrance && Array.isArray(obj.hero_spawns) && obj.hero_spawns.length)
       ? "hero_spawns" : "entrance";
@@ -4880,7 +5549,7 @@
     S.exit = obj.exit || null;
     S.routes = (obj.routes || []).map((r, i) => ({
       id: typeof r.id === "string" ? r.id : "rota_" + i,
-      name: String(r.name || ("Rota " + (i + 1))).slice(0, 80),
+      name: String(r.name || (t("ui.editor.masmorra.rotas.rota") + " " + (i + 1))).slice(0, 80),
       monster_policy: r.monster_policy === "reaparecer" ? "reaparecer" : "persistir_derrotas",
     }));
     S.nextRouteId = S.routes.reduce((n, r) => { const m = /^rota_(\d+)$/.exec(r.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, 0);
@@ -4889,7 +5558,7 @@
       let id = typeof e.id === "string" && e.id && !usedRouteExitIds.has(e.id) ? e.id : "route_exit_" + routeExitSeq++;
       while (usedRouteExitIds.has(id)) id = "route_exit_" + routeExitSeq++;
       usedRouteExitIds.add(id);
-      return { id, name: String(e.name || ("Saída " + (i + 1))).slice(0, 80), route_id: String(e.route_id || ""), pos: Array.isArray(e.pos) ? e.pos.slice() : [0, 0] };
+      return { id, name: String(e.name || (t("ui.editor.masmorra.painel.saida") + " " + (i + 1))).slice(0, 80), route_id: String(e.route_id || ""), pos: Array.isArray(e.pos) ? e.pos.slice() : [0, 0] };
     });
     S.nextRouteExitId = S.routeExits.reduce((n, e) => { const m = /^route_exit_(\d+)$/.exec(e.id); return m ? Math.max(n, Number(m[1]) + 1) : n; }, routeExitSeq);
     S.routeExitRouteId = S.routes[0]?.id || "";
@@ -5000,6 +5669,7 @@
       // Decorações catalogadas de parede sempre recuperam sua arte padrão,
       // inclusive em arquivos antigos que ainda não guardavam `image`.
       ...((d.image || decorMeta(d.type)?.image) ? { image: d.image || decorMeta(d.type).image } : {}),
+      ...(d.type === FLOOR_STONE_ROAD_TYPE && d.road_wide === true ? { road_wide: true } : {}),
       ...(Array.isArray(d.size) && d.size.length === 2 ? { size: [d.size[0] | 0, d.size[1] | 0] } : {}),
       ...(Array.isArray(d.vscale) && d.vscale.length === 2 ? { vscale: [Number(d.vscale[0]), Number(d.vscale[1])] } : {}),
       ...(Array.isArray(d.voffset) && d.voffset.length === 2 ? { voffset: [Number(d.voffset[0]), Number(d.voffset[1])] } : {}),
@@ -5077,7 +5747,7 @@
           && Number.isInteger(n) && n >= 0 && n <= ELEVACAO_MAX)
         S.alturasParede[key] = n;
     }
-    S.pontes = (Array.isArray(obj.pontes) ? obj.pontes : []).map((p, i) => {
+    S.pontes = (Array.isArray(obj.pontes) ? obj.pontes : []).filter(p => p?.tipo !== "grade_esgoto").map((p, i) => {
       const inicio = Array.isArray(p.inicio || p.start) ? (p.inicio || p.start).slice(0, 2).map(Number) : [0, 0];
       const fim = Array.isArray(p.fim || p.end) ? (p.fim || p.end).slice(0, 2).map(Number) : inicio.slice();
       return { id: p.id || `ponte_${i}`, inicio, fim,

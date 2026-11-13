@@ -7,7 +7,7 @@ Seções:
   [1] select_party no lobby
   [2] início: vínculo no jogo salvo, magias por herói, XP dividido
   [3] masmorra: a vez passa entre os heróis; ação alheia/fora da vez recusada
-  [4] escada: herói fora só espera enquanto o grupo está dentro
+  [4] escada: o herói que sai compra na cidade com o grupo dentro
   [5] queda e volta religam todos os heróis
   [6] Continuar na cidade recria o grupo
   [7] Continuar com foto da masmorra recria o grupo dentro dela
@@ -395,11 +395,16 @@ async def secao_masmorra():
             r = sala_do_jogo(c["sid"])
             conexao = next(p["id"] for p in r.players.values() if not p.get("controlador"))
             extra = next(p for p in r.players.values() if p.get("controlador"))
-            extra["fora_masmorra"] = {"rodadas_restantes": 2}
+            # Regra nova: comprando na cidade (fase "cidade") a masmorra para e a
+            # conexão vê a cidade; a caminho de volta (fase "voltando") não compra.
+            extra["fora_masmorra"] = {"fase": "cidade"}
             obs["em_cidade_extra"] = r._em_cidade(extra["id"])
             obs["conexao_fora_um"] = conexao in r._conexoes_fora()
+            extra["fora_masmorra"] = {"fase": "voltando", "rodadas_restantes": 2}
+            obs["em_cidade_voltando"] = r._em_cidade(extra["id"])
+            obs["conexao_fora_voltando"] = conexao in r._conexoes_fora()
             for p in r.players.values():
-                p["fora_masmorra"] = {"rodadas_restantes": 2}
+                p["fora_masmorra"] = {"fase": "cidade"}
             obs["em_cidade_todos"] = r._em_cidade(extra["id"])
             obs["conexao_fora_todos"] = conexao in r._conexoes_fora()
             for p in r.players.values():
@@ -430,9 +435,11 @@ async def secao_masmorra():
     check("a vez passou pelos 3 heróis (end_turn sem `heroi` encerra quem está na vez)",
           len(obs["vezes"]) == 3, obs["vezes"])
 
-    print("\n[4] escada: herói fora só espera enquanto o grupo está dentro")
-    check("1 extra fora, grupo dentro: sem lojas", obs["em_cidade_extra"] is False)
-    check("…e a conexão segue recebendo game_state", obs["conexao_fora_um"] is False)
+    print("\n[4] escada: o herói que sai compra na cidade com o grupo dentro")
+    check("1 extra na cidade, grupo dentro: lojas liberadas para ele", obs["em_cidade_extra"] is True)
+    check("…e a conexão vê a cidade (masmorra parada)", obs["conexao_fora_um"] is True)
+    check("a caminho de volta: sem lojas", obs["em_cidade_voltando"] is False)
+    check("…e a conexão volta ao tabuleiro", obs["conexao_fora_voltando"] is False)
     check("extra volta com o principal dentro: sem novo enter_dungeon", obs["enter_extra"] == 0, obs["enter_extra"])
     check("…e reaparece no tabuleiro", obs["extra_de_volta"] is True)
     check("todos fora: lojas liberadas", obs["em_cidade_todos"] is True)

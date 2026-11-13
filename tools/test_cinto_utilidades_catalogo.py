@@ -11,8 +11,8 @@ import server
 from tools import export_catalog
 
 BELTS = {
-    "cinto_utilidades": (80, 4, "Cinto de Utilidades"),
-    "cinto_com_bolsos": (30, 2, "Cinto com Bolsos"),
+    "cinto_utilidades": (250, 4, "Cinto de Utilidades"),
+    "cinto_com_bolsos": (120, 2, "Cinto com Bolsos"),
 }
 ICON = "assets/itens/cinto_e_bolsos.png"
 
@@ -47,8 +47,8 @@ class BeltCatalogTests(unittest.TestCase):
         room.phase = 'city'
         room.world_location = 'alva_e_luz'
         merchant = {entry['id']: entry for entry in room._city_state_payload()['shops']['mercador']}
-        for iid, price, name in [('cinto_utilidades', 80, 'Cinto de Utilidades'),
-                                 ('cinto_com_bolsos', 30, 'Cinto com Bolsos')]:
+        for iid, price, name in [('cinto_utilidades', 250, 'Cinto de Utilidades'),
+                                 ('cinto_com_bolsos', 120, 'Cinto com Bolsos')]:
             with self.subTest(iid=iid):
                 self.assertIn(iid, merchant)
                 self.assertEqual(merchant[iid]['price'], price)
@@ -92,7 +92,7 @@ const context = {_assetURL: x => x};
 vm.createContext(context);
 vm.runInContext(fs.readFileSync('src/gameState.js', 'utf8'), context);
 const source = fs.readFileSync('game.js', 'utf8');
-const start = source.indexOf('function itemIconHTML(');
+const start = source.indexOf('const ITEM_ICON_OVERRIDES');
 const end = source.indexOf('\nfunction _guardarSelecaoLoja', start);
 vm.runInContext(source.slice(start,end), context);
 const items = [{id:'cinto_utilidades'}, {id:'cinto_com_bolsos'},

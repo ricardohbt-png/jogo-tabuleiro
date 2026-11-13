@@ -32,10 +32,27 @@ class MapasTests(unittest.TestCase):
     def test_salas_alcancaveis_e_nd_contido(self):
         for arq, f in M.ARQUIVOS.items():
             d = f()
-            self.assertEqual(len(salas_alcancaveis(d)), len(d["rooms"]), arq)
+            self.assertEqual(len(salas_alcancaveis(d, passagens_abertas=True)), len(d["rooms"]), arq)
             poder = d["expected_party"]["heroes"] * d["expected_party"]["level"]
+            teto = 1.2 if arq == "elara_graciero_praca_pedra.json" else 0.8   # luta pela pedra: Difícil de propósito
             for rid, nd in M.nd_por_sala(d).items():
-                self.assertLessEqual(nd, 0.8 * poder, f"{arq} sala {rid}")
+                self.assertLess(nd, teto * poder, f"{arq} sala {rid}") if teto > 1 else \
+                    self.assertLessEqual(nd, teto * poder, f"{arq} sala {rid}")
+
+    def test_praca_da_pedra_e_a_viva_com_o_dobro_de_escorpioes(self):
+        viva = S.carregar_dungeon("elara_graciero_praca_viva.json")
+        pedra = M.masmorra_praca_pedra()
+        self.assertEqual(len(viva["monsters"]), 6)
+        self.assertEqual([m["type"] for m in pedra["monsters"]], [M.TIPO_ESCORPIAO] * 12)
+        self.assertEqual(len({tuple(m["pos"]) for m in pedra["monsters"]}), 12)
+        self.assertEqual(len({m["source_id"] for m in pedra["monsters"]}), 12)
+        self.assertEqual(pedra["decorations"], viva["decorations"])
+        r = S.GameRoom("PEDRA")
+        r.load_authored_dungeon(pedra)
+        self.assertEqual(len(r.monsters), 12)
+        for m in r.monsters.values():
+            self.assertFalse(r._blocks_tile(*m["pos"]), m["pos"])
+        self.assertIn("embrulho", pedra["falas"][0]["texto"])
 
     def test_frentes_tem_relogio_baus_e_fatos(self):
         for f, fato in ((M.masmorra_beco, M.F_BECO), (M.masmorra_cais, M.F_CAIS)):
@@ -60,7 +77,7 @@ class MapasTests(unittest.TestCase):
         self.assertNotIn("fatos", pm)
         self.assertFalse(any(x["type"] == "monte_ossos" for x in v["decorations"]))
         self.assertTrue(any(x["type"] == "monte_ossos" for x in m["decorations"]))
-        self.assertTrue(any("montanha" in fl["texto"] for fl in v["falas"]))
+        self.assertFalse(any("montanha" in fl["texto"] for fl in v["falas"]), "a pista mora na abertura da etapa")
 
     def test_alerta_acrescenta_sem_deslocar(self):
         n, a = M.masmorra_leonel_1(), M.masmorra_leonel_1_alerta()
@@ -73,9 +90,10 @@ class MapasTests(unittest.TestCase):
         d = M.masmorra_leonel_2()
         leo = [m for m in d["monsters"] if m["type"] == F.TIPO_LEONEL]
         self.assertEqual(len(leo), 1); self.assertTrue(leo[0]["target"])
-        self.assertEqual(d["objectives"]["primary"]["type"], "kill_target")
-        sec = d["objectives"]["secondary"][0]
-        self.assertEqual((sec["type"], sec["fato"]), ("open_key_chest", M.F_ELARA))
+        o = d["objectives"]
+        self.assertEqual((o["primary"]["type"], o["primary"]["fatos"]), ("rescue_prisoner", [M.F_ELARA]))
+        self.assertEqual(o["alternativo"]["type"], "kill_target")
+        self.assertEqual(o["secondary"][0]["type"], "open_key_chest")
         self.assertFalse(d["saida_permitida"])
 
     def test_nada_da_rede_por_nome(self):

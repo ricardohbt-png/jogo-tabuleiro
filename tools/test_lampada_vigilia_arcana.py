@@ -63,7 +63,8 @@ async def main():
                and os.path.isfile(os.path.join(os.path.dirname(__file__), "..", "assets",
                                                "itens", "lampada_vigilia_arcana.png"))))
     cidades = [c for c, shops in CITY_SHOPS.items()
-               if isinstance(shops.get("mercador"), list)]
+               if isinstance(shops.get("mercador"), list)
+               and c != "vila_dos_charcos"]   # loja especial da Zumbra, com estoque próprio
     check("está no estoque de todos os mercadores cadastrados",
           len(cidades) == 4 and all(any(i["id"] == "lampada_vigilia_arcana"
                                         for i in _city_shop_items(c, "mercador"))

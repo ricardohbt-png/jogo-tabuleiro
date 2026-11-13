@@ -12,7 +12,7 @@ import elara_graciero_fichas as F
 
 class FichasTests(unittest.TestCase):
     def test_fichas_validam_e_tem_o_cr(self):
-        for fn, cr in ((F.ficha_escorpiao_gigante, 1), (F.ficha_leonel, 3)):
+        for fn, cr in ((F.ficha_escorpiao_gigante, 1.5), (F.ficha_leonel, 3)):
             ok, norm = S._validate_custom_monster(fn())
             self.assertTrue(ok, norm)
             self.assertEqual(S.monster_cr(norm), cr, norm["type"])
@@ -24,7 +24,7 @@ class FichasTests(unittest.TestCase):
 
     def test_escorpiao_gigante_golpeia_forte(self):
         ok, n = S._validate_custom_monster(F.ficha_escorpiao_gigante())
-        self.assertEqual(n["attacks"][0]["damage"], "1d8")
+        self.assertEqual(n["attacks"][0]["damage"], "2d4")
 
     def test_olho_valida_e_nao_vai_a_loja_nem_ao_loot(self):
         ok, item = S._validate_custom_item(F.item_olho())

@@ -387,9 +387,125 @@
   },
   "hero_spawns": [],
   "exit": null,
-  "monsters": [],
+  "monsters": [
+    {
+      "type": "bandido",
+      "pos": [
+        12,
+        7
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "bandido",
+      "pos": [
+        5,
+        10
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "bandido",
+      "pos": [
+        15,
+        6
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "lobo_cinzento",
+      "pos": [
+        15,
+        12
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    },
+    {
+      "type": "lobo_cinzento",
+      "pos": [
+        10,
+        13
+      ],
+      "room_id": 0,
+      "boss": false,
+      "target": false
+    }
+  ],
   "chests": [],
-  "traps": [],
+  "traps": [
+    {
+      "id": "trap_0",
+      "tipo": "armadilha_urso",
+      "pos": [
+        7,
+        5
+      ],
+      "dificuldade": 13
+    },
+    {
+      "id": "trap_1",
+      "tipo": "rede",
+      "pos": [
+        11,
+        6
+      ],
+      "dificuldade": 13
+    },
+    {
+      "id": "trap_2",
+      "tipo": "armadilha_dardos_envenenados",
+      "pos": [
+        7,
+        8
+      ],
+      "dificuldade": 14,
+      "veneno_id": "veneno_escorpiao_pedra"
+    },
+    {
+      "id": "trap_3",
+      "tipo": "fosso_estacas",
+      "pos": [
+        7,
+        11
+      ],
+      "dificuldade": 14
+    },
+    {
+      "id": "trap_4",
+      "tipo": "mina_terrestre",
+      "pos": [
+        12,
+        12
+      ],
+      "dificuldade": 13
+    },
+    {
+      "id": "trap_5",
+      "tipo": "armadilha_urso",
+      "pos": [
+        14,
+        11
+      ],
+      "dificuldade": 13
+    },
+    {
+      "id": "trap_6",
+      "tipo": "lamina_escondida",
+      "pos": [
+        8,
+        14
+      ],
+      "dificuldade": 13
+    }
+  ],
   "decorations": [
     {
       "id": "decor_0",

@@ -17,7 +17,7 @@ function fnSource(name){
   throw new Error('chaves desbalanceadas em ' + name);
 }
 const decl = SRC.match(/^const SLOTS_POR_NIVEL_CLIENT = [\s\S]*?^};/m)[0].replace(/^const /, 'var ');
-const code = [decl, fnSource('_slotsMaxParaHeroi'), fnSource('_slotsMenuMagias'), fnSource('renderSlotsMenuMagias')].join('\n');
+const code = [decl, fnSource('_slotsMaxParaHeroi'), fnSource('_slotsExtrasMagiaEquipados'), fnSource('_slotsMenuMagias'), fnSource('renderSlotsMenuMagias')].join('\n');
 const ctx = { GS: { gameState: { round: 3 } }, t: (k, p) => k + (p ? JSON.stringify(p) : ''), _labelCirculo: c => c };
 new Function('ctx', 'with(ctx){' + code + '\nctx.menu = _slotsMenuMagias; ctx.render = renderSlotsMenuMagias;}')(ctx);
 
