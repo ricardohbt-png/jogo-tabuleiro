@@ -75,3 +75,24 @@ jobs:
           print("\n".join(ruins) or "JSON ok")
           sys.exit(1 if ruins else 0)
           PY
+
+  navegador:
+    # Teste de ponta a ponta: servidor isolado + Chromium (Playwright) percorrendo
+    # login, criar jogo, escolher heroi, cidade e masmorra, falhando em qualquer
+    # erro de JavaScript no console. Ver tools/e2e/e2e_navegador.py.
+    name: Navegador (E2E)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Instalar dependências e o Chromium
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+      - name: Rodar o teste no navegador
+        run: python -X utf8 tools/e2e/e2e_navegador.py
