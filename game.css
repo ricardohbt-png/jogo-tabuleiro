@@ -1038,7 +1038,9 @@ input:focus { outline: none; border-color: var(--gold); }
   position:absolute; top:50%; left:0; right:min(340px,36vw);
   z-index:3; display:grid; grid-template-columns:repeat(3,1fr);
   grid-template-rows:repeat(2,1fr); overflow:hidden; background:#000;
-  width:min(100%,150vh); height:auto; aspect-ratio:3 / 2;
+  /* 100% é a janela inteira: desconta o painel da direita, senão a grade passa por
+     baixo dele (1280x800, 1024x768 e 1440x900 escondiam o Bardo e o Mago). */
+  width:min(calc(100% - min(340px,36vw)),150vh); height:auto; aspect-ratio:3 / 2;
   margin-inline:auto; transform:translateY(-50%);
 }
 .cs-hero-tile{

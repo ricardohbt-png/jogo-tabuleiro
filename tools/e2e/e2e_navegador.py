@@ -126,6 +126,12 @@ def main():
         pg.fill("#sg-name", "Jogo E2E")
         pg.click("text=Criar jogo")
         etapa("criar jogo leva a escolha de heroi", esperar_tela("screen-class-select"), tela())
+        pg.wait_for_selector(".cs-hero-tile")
+        pg.wait_for_timeout(1200)                          # o painel da direita aparece em fade
+        cobertos = pg.evaluate("""() => [...document.querySelectorAll('.cs-hero-tile')].filter(t => {
+            const r = t.getBoundingClientRect(); const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            return !(t === el || t.contains(el)); }).map(t => t.getAttribute('aria-label'))""")
+        etapa("nenhum heroi fica coberto pelo painel de informacoes", not cobertos, str(cobertos))
         pg.select_option("select:has(option[value='campo_de_treinamento.json'])", "campo_de_treinamento.json")
         pg.click("[aria-label='Selecionar Guerreiro Anão']")
         pg.click("text=Adicionar ao grupo")
