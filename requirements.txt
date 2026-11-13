@@ -1,5 +1,5 @@
 # Servidor HTTP + WebSocket. E a camada de servico do jogo.
-aiohttp>=3.14.3
+aiohttp>=3.14.5
 
 # Cliente de WebSocket, usado APENAS por tools/medir_cold_start.py.
 # O SERVIDOR nao usa mais: a lib recusa todo metodo HTTP != GET dentro do
