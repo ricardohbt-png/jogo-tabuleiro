@@ -8,6 +8,7 @@ Roda da raiz: python -X utf8 tools/test_escudo_trovejante_legado.py
 import asyncio
 import copy
 import os
+import random
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -23,6 +24,7 @@ def check(cond, msg):
 
 
 async def rodada(tipo, ativo=True):
+    random.seed(7)                     # 1 natural sempre erra: sem semente o teste falhava ~12% das vezes
     r = S.GameRoom("TROVAO")
 
     async def nada(*a, **k):
