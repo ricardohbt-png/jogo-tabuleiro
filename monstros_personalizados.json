@@ -4256,19 +4256,46 @@
     "will": 1,
     "attacks": [
       {
-        "name": "Adaga",
-        "damage": "1d6",
+        "name": "Espada Longa de Aço Damasco",
+        "damage": "1d8",
         "fire_damage": null,
         "damage_types": [
           "physical"
         ],
-        "num_attacks": 2,
+        "num_attacks": 1,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 2,
+        "base_attack_bonus": 1,
+        "atk_bonus": 4,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "disease_severity": null,
+        "disease_dc": 10,
+        "disease_save": "fortitude",
+        "causa_sangramento": false,
+        "aplica_hemorragia": false,
+        "extra_damage": null,
+        "extra_damage_types": []
+      },
+      {
+        "name": "Adaga de Obsidiana de Ferro",
+        "damage": "1d4",
+        "fire_damage": null,
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 1,
         "attack_attribute": "dex",
         "damage_attribute": "dex",
         "apply_attribute_damage": true,
         "attribute_mod_base": 3,
-        "base_attack_bonus": 0,
-        "atk_bonus": 3,
+        "base_attack_bonus": 1,
+        "atk_bonus": 4,
+        "damage_bonus": 1,
         "range": null,
         "on_hit": null,
         "on_hit_effect": null,
@@ -4284,33 +4311,22 @@
     ],
     "special_abilities": [
       {
-        "id": "hero_warrior_mira_certeira",
-        "source": "heroi",
-        "source_id": "mira_certeira",
-        "source_class": "warrior",
-        "name": "Mira Certeira",
-        "icon": "⚔️",
-        "descricao": "+2 no dado de acerto neste turno",
-        "action_type": "acao",
-        "monster_effect": "vantagem_combate",
-        "guild_progressions": [
-          {
-            "id": "guerreiro_mira_3",
-            "level": 3,
-            "requires": "guerreiro_combinar_2",
-            "name": "Mira Certeira III",
-            "icon": "🎯",
-            "description": "Mira Certeira também concede +2 de dano (além do +2 de acerto)."
-          }
-        ],
-        "uses_per_day": 3,
+        "id": "assassino_veneno_rapido",
+        "source": "monstro",
+        "name": "Veneno Rápido",
+        "icon": "☠️",
+        "descricao": "Ação livre antes de atacar. Consome um frasco de Agonia Sufocante e envenena uma arma por 3 acertos; prioriza a adaga e, se ela já estiver envenenada, usa a espada. Recarga: 4 rodadas.",
+        "action_type": "acao_livre",
+        "repeatable": true,
+        "uses_per_day": null,
         "cooldown_turns": 4
       }
     ],
     "monster_abilities": [
       {
-        "id": "hero_warrior_mira_certeira",
-        "uses_per_day": 3,
+        "id": "assassino_veneno_rapido",
+        "uses_per_day": null,
+        "repeatable": true,
         "cooldown_turns": 4
       }
     ],
@@ -4326,9 +4342,24 @@
         "multiplier": 2
       }
     ],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
+    "equipment_enabled": true,
+    "equipped_items": [
+      "longsword_aco_damasco",
+      "dagger_obsidiana_ferro"
+    ],
+    "equipment": [
+      "longsword_aco_damasco",
+      "dagger_obsidiana_ferro"
+    ],
+    "assassino_loadout": {
+      "weapons": [
+        "longsword_aco_damasco",
+        "dagger_obsidiana_ferro"
+      ],
+      "consumables": {
+        "veneno_agonia_sufocante": 4
+      }
+    },
     "guaranteed_loot": [],
     "loot_table": {},
     "loot_drops": [
@@ -4343,7 +4374,7 @@
     "ai_type": "agressivo",
     "ai_profile": "agressivo",
     "ai_tactics": [],
-    "image": "soldado",
+    "image": "assassino_da_serra",
     "portrait": "soldado",
     "model3d": "assets/models3d/monstros/assassino_da_serra.glb",
     "armor_description": null,

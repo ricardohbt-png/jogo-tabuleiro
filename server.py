@@ -14034,6 +14034,95 @@ def _configurar_gilo_spawn(monstro):
     monstro["attacks"] = ataques
     monstro["boss"] = True
 
+
+def _configurar_assassino_da_serra_spawn(monstro):
+    """Materializa as armas e os frascos fixos do Assassino da Serra."""
+    loadout = monstro.get("assassino_loadout") or {}
+    weapons = loadout.get("weapons") or []
+    catalog_weapons = {item.get("id"): item for item in monstro.get("equipment_items", [])
+                       if item.get("die")}
+    attacks = []
+    for weapon_id in weapons[:2]:
+        weapon = catalog_weapons.get(weapon_id)
+        if not weapon:
+            continue
+        # O assassino luta com a espada na mão principal e usa a Adaga
+        # finesse na secundária com Destreza, como na ficha anterior.
+        attr = "dex" if weapon.get("finesse") else ("dex" if weapon.get("stat") == "dex" else "str_")
+        attr_mod = mod(monstro.get(attr, 10))
+        attacks.append({
+            "name": weapon.get("name", "Arma"),
+            "damage": weapon["die"], "damage_types": [DMG_PHYSICAL],
+            "num_attacks": 1, "attack_attribute": attr, "damage_attribute": attr,
+            "apply_attribute_damage": True, "attribute_mod_base": attr_mod,
+            "base_attack_bonus": int(monstro.get("base_attack_bonus", 0) or 0),
+            "atk_bonus": int(monstro.get("base_attack_bonus", 0) or 0) + attr_mod
+                         + int(weapon.get("atk_bonus", 0) or 0),
+            "damage_bonus": int(weapon.get("damage_bonus", 0) or 0),
+            "range": weapon.get("range"), "reach": weapon.get("reach"),
+            "categoria": weapon.get("categoria"), "equipment_weapon_id": weapon_id,
+            "on_hit": None, "on_hit_effect": None, "poison_dc": 10,
+            "extra_damage": None, "extra_damage_types": [],
+        })
+    if attacks:
+        # Os bônus de material são aplicados no ataque correspondente abaixo,
+        # não como bônus agregados que contaminariam as duas armas.
+        weapon_attack_bonus = sum(int(item.get("atk_bonus", 0) or 0)
+                                  for item in catalog_weapons.values())
+        weapon_damage_bonus = sum(int(item.get("damage_bonus", 0) or 0)
+                                  for item in catalog_weapons.values())
+        monstro["equipment_attack_bonus"] = max(
+            0, int(monstro.get("equipment_attack_bonus", 0) or 0) - weapon_attack_bonus)
+        monstro["equipment_damage_bonus"] = max(
+            0, int(monstro.get("equipment_damage_bonus", 0) or 0) - weapon_damage_bonus)
+        monstro["attacks"] = attacks
+        monstro["equipped_weapon"] = catalog_weapons.get(weapons[0])
+        if not monstro["equipment_attack_bonus"]:
+            monstro.pop("equipment_attack_bonus", None)
+        if not monstro["equipment_damage_bonus"]:
+            monstro.pop("equipment_damage_bonus", None)
+
+    consumables = loadout.get("consumables") or {}
+    monstro["equipment_consumables"] = []
+    for item_id, quantity in consumables.items():
+        item = _DUNGEON_ITEM_CATALOG.get(item_id)
+        if not item or item.get("effect") != "coat_poison":
+            continue
+        monstro["equipment_consumables"].extend(
+            deepcopy(item) for _ in range(max(0, min(4, int(quantity or 0)))))
+
+
+async def _assassino_veneno_rapido(room, monstro, target_obj):
+    """Gasta um frasco para untar uma arma por três acertos, com recarga 4."""
+    if monstro.get("type") != "assassino_da_caravana" or not target_obj:
+        return False
+    aid = "assassino_veneno_rapido"
+    cooldowns = monstro.setdefault("monster_ability_cooldowns", {})
+    if int(cooldowns.get(aid, 0) or 0) > 0:
+        return False
+    bag = monstro.get("equipment_consumables", [])
+    item = next((item for item in bag if item.get("effect") == "coat_poison"
+                 and item.get("veneno_id") == "veneno_agonia_sufocante"), None)
+    if not item:
+        return False
+    attacks = monstro.get("attacks", [])
+    priority = sorted(
+        range(len(attacks)),
+        key=lambda index: (attacks[index].get("equipment_weapon_id") != "dagger_obsidiana_ferro", index),
+    )
+    for index in priority:
+        attack = attacks[index]
+        if room._monster_attack_poison_slots(monstro, index):
+            continue
+        if not room._adicionar_veneno_ao_ataque_monstro(monstro, index, item["veneno_id"]):
+            continue
+        bag.remove(item)
+        cooldowns[aid] = 4
+        await room.gm_say(T("narracao.unta_ataque_monstro", m_get_name_o_monstro=nome_criatura(monstro),
+                            item=nome_item(item), attack_name=attack.get("name") or T("ui.mestre.golpe")))
+        return True
+    return False
+
 def make_monster(mdef, room):
     m = deepcopy(mdef)
     _vincular_envenenar_ataque(m)
@@ -14177,6 +14266,8 @@ def make_monster(mdef, room):
     _aplicar_equipamentos_monstro(m)
     if m.get("type") == "gilo_dedos_sujos":
         _configurar_gilo_spawn(m)
+    elif m.get("type") == "assassino_da_caravana":
+        _configurar_assassino_da_serra_spawn(m)
     if m.get("type") == "bandido" and m.get("bandido_veneno_doses", 0) > 0:
         poison_def = _DUNGEON_ITEM_CATALOG.get("veneno_fungo_acre")
         if poison_def:
@@ -52670,6 +52761,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     continue
                 await self._execute_one_monster_attack(m, atk_def, target_obj)
             return
+        if m.get("type") == "assassino_da_caravana":
+            await _assassino_veneno_rapido(self, m, target_obj)
         hits_by_group = []
         claw_hits = 0
         for atk_def in m.get("attacks", []):
@@ -62863,6 +62956,14 @@ def _base_ability_library():
     origem para não colidirem com habilidades nativas de monstros.
     """
     out = {
+        "assassino_veneno_rapido": {
+            "id": "assassino_veneno_rapido", "source": "monstro",
+            "name": "Veneno Rápido", "icon": "☠️", "action_type": "acao_livre",
+            "cooldown_turns": 4, "uses_per_day": None,
+            "descricao": ("Ação livre antes de atacar. Consome um frasco de Agonia Sufocante "
+                          "e envenena uma arma por 3 acertos; prioriza a adaga e, se ela já "
+                          "estiver envenenada, usa a espada. Recarga: 4 rodadas."),
+        },
         "agarrar_aereo": {
             "id": "agarrar_aereo", "source": "monstro", "name": "Agarrão Aéreo",
             "icon": "🦅", "action_type": "passiva", "dc": 14, "save": "forca",
@@ -64054,6 +64155,18 @@ def _validate_custom_monster(raw):
         # Metadados autorais da ficha do chefe: quantidades de equipamento,
         # munição e habilidades não cabem no campo legado de IDs únicos.
         result["gilo_loadout"] = deepcopy(raw["gilo_loadout"])
+    if typ == "assassino_da_caravana" and isinstance(raw.get("assassino_loadout"), dict):
+        loadout = raw["assassino_loadout"]
+        weapons = [str(item_id) for item_id in loadout.get("weapons", [])
+                   if str(item_id) in _DUNGEON_ITEM_CATALOG
+                   and _DUNGEON_ITEM_CATALOG[str(item_id)].get("die")][:2]
+        consumables = loadout.get("consumables") if isinstance(loadout.get("consumables"), dict) else {}
+        poison_count = _monster_int(
+            consumables.get("veneno_agonia_sufocante", 4), 4, 0, 4)
+        result["assassino_loadout"] = {
+            "weapons": weapons,
+            "consumables": {"veneno_agonia_sufocante": poison_count},
+        }
     if vscale != [1.0, 1.0]:
         result["vscale"] = vscale
     if fill_footprint_3d:
@@ -64076,6 +64189,7 @@ def _validate_custom_monster(raw):
             "xp", "ai_type", "ai_profile", "ai_tactics", "image", "portrait",
             "model3d", "armor_description", "size", "oriented", "porte", "vscale", "fill_footprint_3d", "undead", "subtipo", "boss",
             "voo", "altura_inicial", "altura_max", "pode_alterar_altura", "custo_mov_altura", "ignora_obstaculos_voo",
+            "assassino_loadout",
         }
         for key, value in native_source.items():
             if key in editor_fields or key in {"_personalizado", "original_type"}:
