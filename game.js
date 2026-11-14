@@ -4927,15 +4927,16 @@ function _iniciativaDeStatsHeroi(heroi){
 // `t` existir e abortaria o carregamento do game.js).
 function _iniciativaBox(valor){
   return `
-    <div style="margin-top:8px; padding:8px 12px; background:rgba(255,190,80,0.06); border:1px solid #ffbe5044; display:flex; justify-content:space-between;">
-      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.iniciativa')}</span>
-      <span style="color:#ffd27a; font-size:14px; font-weight:bold;">⚡ ${valor}</span>
+    <div class="fc-initiative-box" style="margin-top:8px; padding:8px 12px; background:rgba(255,190,80,0.06); border:1px solid #ffbe5044; display:flex; justify-content:space-between;">
+      <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.iniciativa')}</span>
+      <span class="fc-value-main" style="color:#ffd27a; font-size:14px; font-weight:bold;">⚡ ${valor}</span>
     </div>
   `
 }
 
 // Renderiza atributos usando dados do servidor quando disponíveis
-function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
+function renderConteudoAtributosFichaJogo(heroi, estadoServidor, opcoes = {}) {
+  const mostrarModificadores = opcoes.mostrarModificadores === true
   const ATRIBUTOS = [
     { key: 'forca',        serverKey: 'str_', icone: '⚔️' },
     { key: 'destreza',     serverKey: 'dex',  icone: '🏃' },
@@ -4963,38 +4964,38 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   // o nome é a MESMA chave que o templo usa em _renderShopItems.
   const maldicoes = (estadoServidor.maldicoes||[]).map(m=>`<li>☠️ <b>${_rotulo(m.id,'ui.maldicao',m.id)}</b> — ${_rotulo(m.id+'.ef','ui.maldicao',t('ui.maldicao.ativa'))}${m.aventuras!=null&&['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(m.id)?` ${t('ui.maldicao.estagio',{n:Math.min(5,1+Math.floor(m.aventuras/2))})}`:''}</li>`).join('')
   const doenca = estadoServidor.doente ? `<li>🦠 <b>${t('ui.ficha.doenca',{tipo:estadoServidor.doenca_tipo||''})}</b> — ${((estadoServidor.doenca||{}).sintomas||[]).join(', ')}</li>` : ''
-  const modificadores = (maldicoes||doenca) ? `<div style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">${t('ui.ficha.modificadores_males')}</div><ul style="margin:0;padding-left:16px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
+  const modificadores = (maldicoes||doenca) ? `<div class="fc-maleficios" style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div class="fc-maleficios-title" style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">${t('ui.ficha.modificadores_males')}</div><ul class="fc-maleficios-list" style="margin:0;padding-left:18px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
 
   return `
     <!-- VIDA -->
-    <div style="
+    <div class="fc-health" style="
       margin-bottom:14px; padding:10px 12px;
       background:rgba(255,65,54,0.08);
       border:1px solid #ff413644;
       display:flex; justify-content:space-between; align-items:center;
     ">
-      <span style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">
+      <span class="fc-stat-label" style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">
         ❤️ ${t('ui.ficha.pontos_de_vida')}
       </span>
       <div>
-        <span style="color:#ff4136; font-size:18px; font-weight:bold;">
+        <span class="fc-value-main" style="color:#ff4136; font-size:18px; font-weight:bold;">
           ${hpAtual}
         </span>
-        <span style="color:#4a4a4a; font-size:13px;"> / ${hpMax}</span>
+        <span class="fc-value-sub" style="color:#4a4a4a; font-size:13px;"> / ${hpMax}</span>
       </div>
     </div>
 
     <!-- FOME E SEDE -->
     ${(fomeAtual !== undefined || sedeAtual !== undefined) ? `
-      <div style="
+      <div class="fc-survival-grid" style="
         display:flex; gap:8px; margin-bottom:14px;
       ">
-        <div style="
+        <div class="fc-survival-card" style="
           flex:1; padding:8px 10px;
           background:rgba(255,133,27,0.08);
           border:1px solid #ff851b44;
         ">
-          <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
+          <div class="fc-stat-label" style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
             🍖 ${t('ui.ficha.fome')}
           </div>
           <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
@@ -5003,16 +5004,16 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
               height:100%; background:#ff851b;
             "></div>
           </div>
-          <div style="color:#ff851b; font-size:10px; margin-top:3px;">
+          <div class="fc-small-value" style="color:#ff851b; font-size:10px; margin-top:3px;">
             ${fomeValor}/${fomeMax}
           </div>
         </div>
-        <div style="
+        <div class="fc-survival-card" style="
           flex:1; padding:8px 10px;
           background:rgba(68,136,255,0.08);
           border:1px solid #4488ff44;
         ">
-          <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
+          <div class="fc-stat-label" style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
             💧 ${t('ui.ficha.sede')}
           </div>
           <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
@@ -5021,7 +5022,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
               height:100%; background:#4488ff;
             "></div>
           </div>
-          <div style="color:#4488ff; font-size:10px; margin-top:3px;">
+          <div class="fc-small-value" style="color:#4488ff; font-size:10px; margin-top:3px;">
             ${sedeValor}/${sedeMax}
           </div>
         </div>
@@ -5029,27 +5030,23 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
     ` : ''}
 
     <!-- ATRIBUTOS -->
+    <div class="fc-attributes-grid">
     ${ATRIBUTOS.map(attr => {
       const valor = estadoServidor[attr.serverKey]
             || heroi.statsModificados?.[attr.key]
             || heroi.stats?.[attr.key]
             || 10
+      const modificador = _modAtributo(valor)
       const pct = (valor / 25) * 100
       return `
-        <div style="margin-bottom:12px;">
-          <div style="
-            display:flex; justify-content:space-between;
-            align-items:center; margin-bottom:4px;
-          ">
-            <span style="
-              color:#8a7a5a; font-family:'Cinzel',serif;
-              font-size:11px; letter-spacing:2px;
-            ">${attr.icone} ${_rotulo(attr.key, 'ui.atributo', attr.key)}</span>
-            <span style="color:#c8a951; font-size:13px; font-weight:bold;">
-              ${valor}
+        <div class="fc-attribute-card" style="margin-bottom:12px;">
+          <div class="fc-attribute-heading" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="fc-attribute-name" style="color:#8a7a5a; font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px;">${attr.icone} ${_rotulo(attr.key, 'ui.atributo', attr.key)}</span>
+            <span class="fc-attribute-score" style="color:#c8a951;">
+              <b>${valor}</b>${mostrarModificadores ? `<small>(${modificador >= 0 ? '+' : ''}${modificador})</small>` : ''}
             </span>
           </div>
-          <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
+          <div class="fc-attribute-meter" style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
             <div style="
               width:${pct}%; height:100%; background:#c8a951;
               transition:width 0.5s ease;
@@ -5058,46 +5055,47 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         </div>
       `
     }).join('')}
+    </div>
 
     <!-- CA e NÍVEL -->
-    <div style="
+    <div class="fc-summary-grid" style="
       display:flex; gap:8px; margin-top:14px;
     ">
-      <div style="
+      <div class="fc-summary-card" style="
         flex:1; padding:8px 12px;
         background:rgba(200,169,81,0.06);
         border:1px solid #c8a95133;
         display:flex; justify-content:space-between;
       ">
-        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.nivel')}</span>
-        <span style="color:#c8a951; font-size:14px; font-weight:bold;">${nivel}</span>
+        <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.nivel')}</span>
+        <span class="fc-value-main" style="color:#c8a951; font-size:14px; font-weight:bold;">${nivel}</span>
       </div>
       ${estadoServidor.ac ? `
-        <div style="
+        <div class="fc-summary-card" style="
           flex:1; padding:8px 12px;
           background:rgba(200,169,81,0.06);
           border:1px solid #c8a95133;
           display:flex; justify-content:space-between;
         ">
-          <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.bau.stat_ca')}</span>
-          <span style="color:#c8a951; font-size:14px; font-weight:bold;">
+          <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.bau.stat_ca')}</span>
+          <span class="fc-value-main" style="color:#c8a951; font-size:14px; font-weight:bold;">
             ${estadoServidor.ac}${(estadoServidor.buffs_cancao && estadoServidor.buffs_cancao.bonus_ca) ? ` <span style="color:#4db8ff;font-size:.78em;" title="${t('ui.hud.cancao_de_henrique')}">🎵+${estadoServidor.buffs_cancao.bonus_ca}</span>` : ''}
           </span>
         </div>
       ` : ''}
-      <div style="
+      <div class="fc-summary-card" style="
         flex:1; padding:8px 12px;
         background:rgba(100,180,255,0.06);
         border:1px solid #64b4ff44;
         display:flex; justify-content:space-between;
       ">
-        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.raio_visao')}</span>
-        <span style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
+        <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.raio_visao')}</span>
+        <span class="fc-value-main" style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
       </div>
     </div>
-    <div style="margin-top:8px; padding:8px 12px; background:rgba(170,130,255,0.06); border:1px solid #aa82ff44; display:flex; justify-content:space-between;">
-      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.percepcao')}</span>
-      <span style="color:#c4a7ff; font-size:14px; font-weight:bold;">👁‍🗨 ${percepcao}</span>
+    <div class="fc-perception-card" style="margin-top:8px; padding:8px 12px; background:rgba(170,130,255,0.06); border:1px solid #aa82ff44; display:flex; justify-content:space-between;">
+      <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.percepcao')}</span>
+      <span class="fc-value-main" style="color:#c4a7ff; font-size:14px; font-weight:bold;">👁‍🗨 ${percepcao}</span>
     </div>
     ${_iniciativaBox(iniciativa)}
     ${modificadores}
@@ -30620,27 +30618,28 @@ function renderFichaCidadeBody(panel, player, editable){
 
   // Atributos (reuso)
   const attr = document.createElement('div');
-  attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player);
+  attr.className = 'fc-attributes-content';
+  attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player, {mostrarModificadores:true});
   body.appendChild(attr);
 
   // Botão pra abrir o inventário (equipamento+bolsa) deste jogador — o
   // InventoryModal cuida disso agora; este painel só mostra atributos+guilda.
   const invBtn = document.createElement('button');
-  invBtn.className = 'section-title';
+  invBtn.className = 'section-title fc-section-button';
   invBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);';
   invBtn.innerHTML = `<img class="menu-inventario-icone" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_inventario')}`;
   invBtn.onclick = () => InventoryModal.open(player.id, { readOnly: !editable });
   body.appendChild(invBtn);
 
   const statusBtn = document.createElement('button');
-  statusBtn.className = 'section-title';
+  statusBtn.className = 'section-title fc-section-button';
   statusBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
   statusBtn.textContent = t('ui.ficha.status_botao');
   statusBtn.onclick = () => abrirMenuStatus(player.id);
   body.appendChild(statusBtn);
 
   const abilityBtn = document.createElement('button');
-  abilityBtn.className = 'section-title';
+  abilityBtn.className = 'section-title fc-section-button';
   abilityBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
   abilityBtn.innerHTML = `<img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> ${t('ui.ficha.habilidades_botao')}`;
   abilityBtn.dataset.guia = 'botao:habilidades';
@@ -30652,7 +30651,7 @@ function renderFichaCidadeBody(panel, player, editable){
   // Grimório/Metamagia: disponível para as classes que lançam magias.
   if(player.class_id === 'mage' || player.class_id === 'cleric'){
     const magicBtn = document.createElement('button');
-    magicBtn.className = 'section-title';
+    magicBtn.className = 'section-title fc-section-button';
     magicBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
     magicBtn.innerHTML = `<img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_magias')}`;
     magicBtn.dataset.guia = 'botao:magias';
