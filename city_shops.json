@@ -3,6 +3,7 @@
     "ferreiro_weapon": [
       "dagger",
       "chicote",
+      "chicote_encore",
       "hand_crossbow",
       "besta_duelista",
       "gancho_corrente",
@@ -394,7 +395,8 @@
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
-      "botas_passo_felino"
+      "botas_passo_felino",
+      "laminas_riposta"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -457,6 +459,7 @@
       "lamina_do_vento",
       "dagger",
       "chicote",
+      "chicote_encore",
       "hand_crossbow",
       "besta_duelista",
       "gancho_corrente",
@@ -847,7 +850,8 @@
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
-      "botas_passo_felino"
+      "botas_passo_felino",
+      "laminas_riposta"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -910,6 +914,7 @@
       "lamina_do_vento",
       "dagger",
       "chicote",
+      "chicote_encore",
       "hand_crossbow",
       "besta_duelista",
       "gancho_corrente",
@@ -1300,7 +1305,8 @@
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
-      "botas_passo_felino"
+      "botas_passo_felino",
+      "laminas_riposta"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -1363,6 +1369,7 @@
       "lamina_do_vento",
       "dagger",
       "chicote",
+      "chicote_encore",
       "hand_crossbow",
       "besta_duelista",
       "gancho_corrente",
@@ -1753,7 +1760,8 @@
       "talisma_ascensao_destreza",
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
-      "botas_passo_felino"
+      "botas_passo_felino",
+      "laminas_riposta"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -1841,6 +1849,7 @@
       "lamina_do_vento",
       "dagger",
       "chicote",
+      "chicote_encore",
       "hand_crossbow",
       "besta_duelista",
       "gancho_corrente",
@@ -2155,7 +2164,8 @@
       "tiara_expansao_arcana",
       "amulet_alcance_arcano",
       "ultimo_suspiro",
-      "botas_passo_felino"
+      "botas_passo_felino",
+      "laminas_riposta"
     ]
   }
 }

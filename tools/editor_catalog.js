@@ -12889,6 +12889,24 @@ window.EDITOR_CATALOG = {
       "descricao": "Raridade: Rara. Chicote mágico +1 no acerto e no dano. Em um crítico, causa +1d6 de dano de fogo. Cada acerto bem-sucedido deixa o alvo em chamas por 1d4 rodadas; ele sofre 1 ponto de dano de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Água ou uma ação apagam as chamas. Uso de Bardo, Ladino, Paladino e Guerreiro."
     },
     {
+      "id": "chicote_encore",
+      "name": "Chicote do Encore",
+      "emoji": "🎭",
+      "die": "1d4",
+      "stat": "dex",
+      "off_hand_weapon": true,
+      "icon": "assets/itens/chicote_do_encore.png",
+      "allowed_classes": [
+        "bard"
+      ],
+      "range": 2,
+      "categoria": "cortante",
+      "magical": true,
+      "chicote_encore": true,
+      "chicote_encore_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Chicote mágico exclusivo do Bardo; causa 1d4 cortante usando Destreza, tem alcance 2 e pode ser usado na mão secundária. Enquanto estiver equipado junto com uma Gaita, uma vez a cada 10 rodadas após a rolagem inicial de Improviso, o Bardo pode substituir qualquer resultado por um Encore (rola os dois resultados extras normalmente) ou, se obtiver um 12 natural, transformá-lo em Grande Encore. A escolha gasta a mesma recarga de 10 rodadas. Não concede bônus numérico no acerto ou dano."
+    },
+    {
       "id": "ferroada",
       "name": "Ferroada",
       "emoji": "🪢",
@@ -16560,6 +16578,19 @@ window.EDITOR_CATALOG = {
       "ammo_type": "virotes_explosivos",
       "ammo_count": 5,
       "descricao": "Pacote com 5 virotes. Ao acertar, causa +1d6 de dano físico ao alvo e 1d6 às outras criaturas em raio 1 (Reflexos CD 12 reduz à metade). A explosão pode atingir aliados."
+    },
+    {
+      "id": "laminas_riposta",
+      "name": "Lâminas de Riposta",
+      "emoji": "🗡️",
+      "icon": "assets/itens/laminas_de_riposta.png",
+      "allowed_classes": [
+        "rogue"
+      ],
+      "item_slot": "bag",
+      "effect": "counter_blades",
+      "value": 2,
+      "descricao": "Consumível do Ladino. Quando um ataque corpo a corpo errar contra você e o inimigo estiver adjacente, pode gastar uma lâmina para fazer um contra-ataque corpo a corpo de Destreza que causa 2 de dano. Uma vez por rodada. Pilha máxima: 10."
     },
     {
       "id": "veneno_fungo_acre",

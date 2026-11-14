@@ -3310,6 +3310,14 @@ window.LANG_CATALOGO = {
     "en": "Whip",
     "pt": "Chicote"
   },
+  "cat.item.chicote_encore.desc": {
+    "en": "Very rare magical Bard-only whip: 1d4 slashing damage using Dexterity, range 2, and usable in the off hand. When equipped with Bagpipes, once every 10 rounds after the initial Improvisation roll, the Bard may replace any result with an Encore and roll its two extra results normally, or turn a natural 12 into a Great Encore. Either choice starts the same 10-round cooldown. No flat attack or damage bonus.",
+    "pt": "Raridade: Muito rara. Chicote mágico exclusivo do Bardo; causa 1d4 cortante usando Destreza, tem alcance 2 e pode ser usado na mão secundária. Enquanto estiver equipado junto com uma Gaita, uma vez a cada 10 rodadas após a rolagem inicial de Improviso, o Bardo pode substituir qualquer resultado por um Encore (rola os dois resultados extras normalmente) ou, se obtiver um 12 natural, transformá-lo em Grande Encore. A escolha gasta a mesma recarga de 10 rodadas. Não concede bônus numérico no acerto ou dano."
+  },
+  "cat.item.chicote_encore.nome": {
+    "en": "Encore Whip",
+    "pt": "Chicote do Encore"
+  },
   "cat.item.chicote_fogo.desc": {
     "en": "Rare magical whip: 1d4 slashing damage, +1 to hit and damage. A critical hit deals +1d6 fire damage. Each successful hit sets the target on fire for 1d4 rounds; it takes 1 fire damage per round. Burning damage does not stack. New hits keep the longer duration. Water or spending an action extinguishes it. Bard, Rogue, Paladin, and Warrior only.",
     "pt": "Raridade: Rara. Chicote mágico +1 no acerto e no dano. Em um crítico, causa +1d6 de dano de fogo. Cada acerto bem-sucedido deixa o alvo em chamas por 1d4 rodadas; ele sofre 1 ponto de dano de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Água ou uma ação apagam as chamas. Uso de Bardo, Ladino, Paladino e Guerreiro."
@@ -4353,6 +4361,14 @@ window.LANG_CATALOGO = {
   "cat.item.lamina_trovejante.nome": {
     "en": "Thunder Blade",
     "pt": "Lâmina Trovejante"
+  },
+  "cat.item.laminas_riposta.desc": {
+    "en": "Rogue-only consumable. When a melee attack misses you and the enemy is adjacent, spend one blade to make a melee counterattack using Dexterity for 2 damage. Once per round. Stack limit: 10. A vial coats up to 10 blades.",
+    "pt": "Consumível do Ladino. Quando um ataque corpo a corpo errar contra você e o inimigo estiver adjacente, pode gastar uma lâmina para fazer um contra-ataque corpo a corpo de Destreza que causa 2 de dano. Uma vez por rodada. Pilha máxima: 10."
+  },
+  "cat.item.laminas_riposta.nome": {
+    "en": "Riposte Blades",
+    "pt": "Lâminas de Riposta"
   },
   "cat.item.lampada_vigilia_arcana.desc": {
     "en": "Bonus action. For 10 rounds, reveals shadow-hidden creatures to the party within a moving radius of 3 squares around any active hero. The reveal does not end concealment; creatures are hidden again when they leave the radius or the duration ends.",

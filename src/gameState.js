@@ -2442,6 +2442,10 @@ const GS = (() => {
         _emit('improvisoResultado', msg);
         break;
 
+      case 'improviso_encore_choice':
+        _emit('improvisoEncoreChoice', msg);
+        break;
+
       case 'login_result':
         if (msg.ok) {
           account = msg.username;
@@ -2766,6 +2770,13 @@ const GS = (() => {
                     Math.abs(player.pos[1] - gi.pos[1])) <= 1;
   }
   function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
+  function juntarLaminas(origem, destino) { send({type:'juntar_laminas', origem, destino}); }
+  function mesmaPilhaLaminas(a, b) {
+    if (!a || !b || a.id !== 'laminas_riposta' || b.id !== 'laminas_riposta'
+        || a.effect !== 'counter_blades' || b.effect !== 'counter_blades') return false;
+    const venom = it => JSON.stringify([...new Set(it.poison_ids || [])].sort());
+    return venom(a) === venom(b);
+  }
   // Juntar pilhas de munição: origem/destino = {bolsa: i} ou {equip: 'off_hand'}.
   function juntarMunicao(origem, destino) { send({ type: 'juntar_municao', origem, destino }); }
   // Espelho de `_ammo_stack_key` do servidor: mesmo item, tipo, propriedades do
@@ -3169,6 +3180,9 @@ const GS = (() => {
     send({ type: 'improviso_alvo',
            target_id: targetId != null ? targetId : null,
            dir: dir || null });
+  }
+  function improvisoEncoreChoice(requestId, choice) {
+    send({ type: 'improviso_encore_choice', request_id: requestId, choice });
   }
 
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
@@ -3909,6 +3923,16 @@ const GS = (() => {
     }
 
     const municoes = [];
+    const laminas = [];
+    if (me?.class_id === 'rogue') {
+      ((me && me.bag) || []).forEach((it, index) => {
+        if (it?.id === 'laminas_riposta' && it.effect === 'counter_blades'
+            && (!Array.isArray(it.poison_ids) || it.poison_ids.length === 0)) {
+          laminas.push({tipo:'laminas',source:'bag',index,item:it,
+            total:Math.max(0,Number(it.counter_blade_count)||0),qtd:Math.min(10,Math.max(0,Number(it.counter_blade_count)||0))});
+        }
+      });
+    }
     for (const { slot, item } of slots) {
       if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, item.id)) continue;
       const validos = MUNICAO[item.id];
@@ -3940,7 +3964,7 @@ const GS = (() => {
         });
       }
     }
-    return { armas, municoes };
+    return { armas, municoes, laminas };
   }
   function ladinoEsconderBonus() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
@@ -4441,6 +4465,8 @@ const GS = (() => {
     unequip,
     repairItem,
     reorderBag,
+    juntarLaminas,
+    mesmaPilhaLaminas,
     juntarMunicao,         // sender: junta duas pilhas de munição iguais
     mesmaPilhaMunicao,     // puro: duas pilhas de munição podem se juntar?
     maxAmmoStackFor,       // puro: limite das pilhas comuns de munição
@@ -4577,6 +4603,7 @@ const GS = (() => {
     instrumentoStatsClient,
     instrumentoDisponivel,
     improvisoAlvo,          // Fase 5 (Gaita/Improviso) — sender (chamado com parênteses)
+    improvisoEncoreChoice,
 
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)

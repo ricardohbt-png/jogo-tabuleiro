@@ -283,9 +283,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   }
 
   function _ammoCountBadgeHTML(item){
-    if(!item || item.effect !== 'ammo') return '';
-    const count = Math.max(0, Number(item.ammo_count) || 0);
-    return `<span class="inv-ammo-count" aria-label="${t('ui.inv.municao_aria', {n:count})}">${count}</span>`;
+    if(!item || (item.effect !== 'ammo' && item.effect !== 'counter_blades')) return '';
+    const count = Math.max(0, Number(item.effect === 'counter_blades'
+      ? item.counter_blade_count : item.ammo_count) || 0);
+    return `<span class="inv-ammo-count" aria-label="${t(item.effect === 'counter_blades' ? 'ui.inv.pilha_aria' : 'ui.inv.municao_aria', {n:count})}">${count}</span>`;
   }
 
   function _injectStyles(){
@@ -449,6 +450,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const isCarta = _isCarta(item);
     const isScroll = !!item && item.effect === 'scroll';
     const isConsumable = !!item && !isCarta && !item.die
+      && item.effect !== 'counter_blades'
       && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
     const ehCaster = player?.class_id === 'mage' || player?.class_id === 'cleric';
     const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
@@ -1198,7 +1200,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     if(sel.kind === 'bag'){
       if(sel.index === toIndex){ refresh(); return; }
       // Pilha de munição solta sobre outra igual: junta (até o limite da pilha).
-      if(GS.mesmaPilhaMunicao(player && player.bag ? player.bag[sel.index] : null, alvo)){
+      if(GS.mesmaPilhaLaminas?.(player && player.bag ? player.bag[sel.index] : null, alvo)){
+        _selected = null;
+        GS.juntarLaminas({ bolsa: sel.index }, { bolsa: toIndex });
+      } else if(GS.mesmaPilhaMunicao(player && player.bag ? player.bag[sel.index] : null, alvo)){
         _selected = null;
         GS.juntarMunicao({ bolsa: sel.index }, { bolsa: toIndex });
       } else GS.reorderBag(sel.index, toIndex);
