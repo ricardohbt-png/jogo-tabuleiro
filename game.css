@@ -927,10 +927,15 @@ input:focus { outline: none; border-color: var(--gold); }
 .shop-items { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
 .shop-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px;
              background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); }
-.shop-item-emoji { font-size: 1.4rem; width: 30px; text-align: center; flex-shrink: 0; }
+.shop-item-emoji { font-size: 1.4rem; width: 46px; text-align: center; flex-shrink: 0; }
 .item-icon-img { transition: transform .14s ease, filter .14s ease; transform-origin:center; }
 .item-icon-img:hover { transform:scale(2); filter:drop-shadow(0 2px 4px rgba(0,0,0,.55)); position:relative; z-index:2; }
-.shop-item-emoji img { width: 26px; height: 26px; object-fit: contain; display: inline-block; vertical-align: middle; }
+.shop-item-emoji img { width: 40px; height: 40px; object-fit: contain; display: inline-block; vertical-align: middle; }
+.shop-item-emoji .item-icon-img:hover { transform:scale(1.4); }
+@media (max-width: 600px) {
+  .shop-item-emoji { width: 40px; }
+  .shop-item-emoji img { width: 36px; height: 36px; }
+}
 .shop-item-info { flex: 1; }
 .poison-upgrade-controls label{display:grid;gap:3px;min-width:0}
 .poison-upgrade-controls select{width:100%;min-width:0;padding:4px 3px;border:1px solid var(--border2);border-radius:4px;background:var(--bg2);color:var(--text);font:inherit;font-size:.68rem}

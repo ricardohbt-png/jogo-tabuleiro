@@ -3073,7 +3073,7 @@ function openShop(pointId, type, sceneOverride){
   // A ORDEM das abas é índice de lógica (GS.shopTabIdx) — traduzir o rótulo é
   // seguro; trocar a ordem não seria.
   const shopTabs = (shopId==='ferreiro'
-    ? ['armas','armaduras','municao','reparar','vender']
+    ? ['armas','arcos_bestas','armaduras','escudos','municao','reparar','vender']
     : shopId==='mercador'
     ? ['equipamentos','consumiveis','instrumentos','arremessaveis','venenos','pergaminhos','vender']
     : shopId==='templo'
@@ -3328,6 +3328,17 @@ function _restaurarSelecaoLoja(){
   });
 }
 
+const _FERREIRO_BOW_CROSSBOW_BASE_IDS = [
+  'arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo',
+  'arco_bruto_combatente', 'hand_crossbow', 'besta_duelista', 'besta',
+  'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra',
+];
+function _ferreiroIsBowOrCrossbow(item){
+  const id = String(item?.id || '');
+  return _FERREIRO_BOW_CROSSBOW_BASE_IDS.some(baseId =>
+    id === baseId || id.startsWith(baseId + '_'));
+}
+
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
   // A cena em tela cheia vale só para a aba de conversas (e só quando ela tem
@@ -3339,10 +3350,10 @@ function _renderShopItems(){
   if(temCena && GS.shopTabIdx===0){ _renderCenaConversas(); return; }
   const aba = GS.shopTabIdx - (temCena ? 1 : 0);
   // Route sell tabs
-  if(GS.activeShop==='ferreiro'&&aba===3){ _renderRepairItems(); return; }
+  if(GS.activeShop==='ferreiro'&&aba===5){ _renderRepairItems(); return; }
   // Todas as abas de venda exibem o inventário completo: equipamento e bolsa.
   // A venda continua autoritativa no servidor, independentemente da loja.
-  if(GS.activeShop==='ferreiro'&&aba===4){ _renderSellItems('all'); return; }
+  if(GS.activeShop==='ferreiro'&&aba===6){ _renderSellItems('all'); return; }
   if(GS.activeShop==='mercador'&&aba===6){ _renderSellItems('all'); return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
@@ -3352,9 +3363,21 @@ function _renderShopItems(){
   const shops=GS.cityState.shops;
   let items=[], shopKey=GS.activeShop;
   if(GS.activeShop==='ferreiro'){
-    if(aba===0)      { items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
-    else if(aba===1) { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
-    else                       { items=shops.ferreiro.ammo;    shopKey='ferreiro_ammo';   }
+    if(aba===0) {
+      items=(shops.ferreiro.weapons||[]).filter(item=>!_ferreiroIsBowOrCrossbow(item));
+      shopKey='ferreiro_weapon';
+    } else if(aba===1) {
+      items=(shops.ferreiro.weapons||[]).filter(_ferreiroIsBowOrCrossbow);
+      shopKey='ferreiro_weapon';
+    } else if(aba===2) {
+      items=(shops.ferreiro.armors||[]).filter(item=>item.kind!=='shield');
+      shopKey='ferreiro_armor';
+    } else if(aba===3) {
+      items=(shops.ferreiro.armors||[]).filter(item=>item.kind==='shield');
+      shopKey='ferreiro_armor';
+    } else {
+      items=shops.ferreiro.ammo; shopKey='ferreiro_ammo';
+    }
   } else if(GS.activeShop==='mercador') {
     const mercadorItems=shops.mercador||[];
     if(aba===2) {
