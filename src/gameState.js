@@ -537,15 +537,60 @@ const GS = (() => {
       allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
       descricao:'Exclusiva do Guerreiro Anão. 1d6 cortante + Força. Arremesso Bruto até 3 casas usa Força no acerto e no dano. Na mão do escudo, faz um ataque automático contra o mesmo alvo vivo e adjacente após o ataque principal, usando Força e a ação bônus (1 fome e 1 sede), uma vez por turno. Não combina com arma de duas mãos. Arremessar usa a ação principal ou, depois dela, a ação bônus disponível e retira a arma da mão. Possui 3 de vitalidade; cada nível de dano reduz acerto e dano em 1. Um 1 natural no arremesso causa 2 níveis: cai recuperável se sobreviver, é destruída no 3º nível. O desgaste permanece até o reparo no ferreiro. Crítico normal no 20; sem dano mágico ou retorno automático.',
     },
+    machadinha_runica_vai_e_volta: {
+      id:'machadinha_runica_vai_e_volta', nome:'Machadinha Rúnica Vai-e-Volta',
+      emoji:'🪓', icon:'assets/itens magicos/vai_e_volta.png',
+      tipo:'arma', item_slot:'weapon', loja:'ferreiro', preco:1500,
+      dano:'1d6', atributo:'forca', bonusAtaque:'forca', bonusDano:'forca',
+      categoria:'cortante', escudo:true, duasMaos:false,
+      off_hand_weapon:true, off_hand_forca:true, off_hand_stat:'str_',
+      arremesso:true, alcanceArremesso:5, throw_range:5,
+      granted_ability:'arremesso_bruto', throw_nat1_damage_levels:2, corrosion_max:3,
+      return_on_throw:true, magical:true, atk_bonus:1, damage_bonus:1,
+      allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
+      descricao:'Machadinha mágica Rara de 1d6 cortante + Força, com +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto até 5 casas e retorno automático à mão de quem arremessou, mesmo se errar.',
+    },
+    machadinha_runica_vai_e_volta_maior: {
+      id:'machadinha_runica_vai_e_volta_maior', nome:'Machadinha Rúnica Vai-e-Volta Maior',
+      emoji:'🪓', icon:'assets/itens magicos/vai_e_volta.png',
+      tipo:'arma', item_slot:'weapon', loja:'ferreiro', preco:3000,
+      dano:'1d6', atributo:'forca', bonusAtaque:'forca', bonusDano:'forca',
+      categoria:'cortante', escudo:true, duasMaos:false,
+      off_hand_weapon:true, off_hand_forca:true, off_hand_stat:'str_',
+      arremesso:true, alcanceArremesso:5, throw_range:5,
+      granted_ability:'arremesso_bruto', throw_nat1_damage_levels:2, corrosion_max:3,
+      return_on_throw:true, magical:true, atk_bonus:2, damage_bonus:2,
+      allowed_classes:['warrior'], permitidoPara:['victorCoiceBravo'],
+      descricao:'Machadinha mágica Muito Rara de 1d6 cortante + Força, com +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto até 5 casas e retorno automático à mão de quem arremessou, mesmo se errar.',
+    },
+    lamina_de_kriswoo: {
+      id:'lamina_de_kriswoo', nome:'Lâmina de Kriswoo', emoji:'🪓',
+      icon:'assets/itens magicos/lamina_de_kriswoo.png', tipo:'arma', item_slot:'weapon',
+      loja:'ferreiro', preco:5000, dano:'1d12', atributo:'forca', categoria:'cortante',
+      duasMaos:true, magical:true, atk_bonus:2, damage_bonus:2,
+      crit_nat20_multiplier:3, crit_min_nat_roll:19,
+      granted_ability:'guild_tecnica_ataque_giratorio', allowed_classes:['warrior'],
+      permitidoPara:['todos'],
+      descricao:'Machado de guerra mágico de duas mãos: 1d12 cortante + Força, +2 no acerto e no dano. Crítico natural com 19–20, multiplicador ×3. Concede Ataque Giratório com recarga de 10 rodadas. Uso exclusivo de Guerreiro.',
+    },
     lanca_curta:     { id:'lanca_curta',     nome:'Lança Curta',          tipo:'arma', loja:'ferreiro', preco:20, dano:'1d6', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'Todos os 8 quadrados adjacentes' }, permitidoPara:['victorCoiceBravo','richardCavaleiro','lewis','luccas','henrique'] },
     lanca:           { id:'lanca',           nome:'Lança',                tipo:'arma', loja:'ferreiro', preco:14, dano:'1d8', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
+    besta_duelista:  { id:'besta_duelista',  nome:'Besta do Duelista',    emoji:'🏹', icon:'assets/itens/besta_do_duelista.png', tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:4, range:4, linhaVisao:true, slotSecundario:'livre', duasMaos:false, two_handed:false, permitidoPara:['todos'] },
+    gancho_corrente: { id:'gancho_corrente', nome:'Gancho de Corrente', emoji:'🪝', icon:'assets/itens/get_over_here.png', tipo:'armaDistancia', loja:'ferreiro', preco:80, dano:'1d6', atributo:'destreza', alcance:3, range:3, chain_hook_range:3, chain_pull_distance:2, chain_pull_cooldown:10, chain_pull_save_dc:13, linhaVisao:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['todos'] },
+    gancho_escorpiao_superior: { id:'gancho_escorpiao_superior', nome:'Gancho do Escorpião Superior', emoji:'🪝', icon:'assets/itens/get_over_here.png', tipo:'armaDistancia', loja:'ferreiro', preco:180, dano:'1d6', atributo:'destreza', alcance:5, range:5, chain_hook_range:5, chain_pull_distance:3, chain_pull_cooldown:10, chain_pull_save_dc:13, linhaVisao:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['todos'] },
     espada_longa:    { id:'espada_longa',    nome:'Espada Longa',         tipo:'arma', loja:'ferreiro', preco:25, dano:'1d8', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_composto_curto: { id:'arco_composto_curto', nome:'Arco Composto Curto', emoji:'🏹', icon:'assets/itens/arco_composto_curto.png', tipo:'armaDistancia', loja:'ferreiro', preco:35, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:6, range:6, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     machado:         { id:'machado',         nome:'Machado',              tipo:'arma', loja:'ferreiro', preco:35, dano:'1d10', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_leve:      { id:'besta_leve',      nome:'Besta Leve',           tipo:'armaDistancia', loja:'ferreiro', preco:40, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:8, linhaVisao:true, slotSecundario:'livre',   duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas','henrique'] },
+    besta_pesada:    { id:'besta_pesada',    nome:'Besta Pesada',         emoji:'🏹', icon:'assets/itens/besta_pesada.png', tipo:'armaDistancia', loja:'ferreiro', preco:100, dano:'1d10', atributo:'destreza', bonusDano:'destreza', alcance:12, range:12, linhaVisao:true, slotSecundario:'livre', duasMaos:true, two_handed:true, allowed_classes:['warrior','paladin','cleric','rogue'], permitidoPara:['todos'] },
+    besta_repetidora_patrulha: { id:'besta_repetidora_patrulha', nome:'Besta Repetidora de Patrulha', emoji:'🏹', icon:'assets/itens/besta_repetidora_media.png', tipo:'armaDistancia', loja:'ferreiro', preco:70, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, range:6, linhaVisao:true, slotSecundario:'livre', duasMaos:true, two_handed:true, allowed_classes:['warrior','paladin','bard','rogue'], repeating_crossbow:true, repeating_crossbow_cooldown:10, permitidoPara:['todos'] },
+    besta_repetidora_guerra: { id:'besta_repetidora_guerra', nome:'Besta Repetidora de Guerra', emoji:'🏹', icon:'assets/itens/besta_repetidora_poderosa.png', tipo:'armaDistancia', loja:'ferreiro', preco:120, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:8, range:8, linhaVisao:true, slotSecundario:'livre', duasMaos:true, two_handed:true, allowed_classes:['warrior','paladin','bard','rogue'], repeating_crossbow:true, repeating_crossbow_cooldown:10, permitidoPara:['todos'] },
     lanca_longa:     { id:'lanca_longa',     nome:'Lança Longa',          tipo:'arma', loja:'ferreiro', preco:40, dano:'1d8', atributo:'forca', escudo:false, arremesso:false, duasMaos:true,  alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_longo:      { id:'arco_longo',      nome:'Arco Longo',           tipo:'armaDistancia', loja:'ferreiro', preco:50, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:10, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_composto_longo: { id:'arco_composto_longo', nome:'Arco Composto Longo', emoji:'🏹', icon:'assets/itens/arco_composto_longo.png', tipo:'armaDistancia', loja:'ferreiro', preco:60, dano:'1d10', atributo:'destreza', bonusDano:'destreza', alcance:10, range:10, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    arco_bruto_combatente: { id:'arco_bruto_combatente', nome:'Arco Bruto do Combatente', emoji:'🏹', icon:'assets/itens/arco_bruto_do_combatente.png', tipo:'armaDistancia', loja:'ferreiro', preco:120, dano:'1d10', atributo:'destreza', bonusDano:'destreza', bonusDanoForca:true, alcance:10, range:10, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     espada_bastarda: { id:'espada_bastarda', nome:'Espada Bastarda',      tipo:'arma', loja:'ferreiro', preco:50, danoUmaMao:'1d10', danoDuasMaos:'3d4', atributo:'forca', escudo:true, arremesso:false, duasMaos:false, modosDuasMaos:true, permitidoPara:['richardCavaleiro'] },
     instrumento:     { id:'instrumento',     nome:'Instrumento Musical',  tipo:'arma', loja:'ferreiro', preco:60, dano:'—', atributo:'carisma', escudo:false, arremesso:false, duasMaos:false, permitidoPara:['henrique'] },
     alabarda:        { id:'alabarda',        nome:'Alabarda',             tipo:'arma', loja:'ferreiro', preco:80, dano:'1d10', atributo:'forca', escudo:false, arremesso:false, duasMaos:true,  alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
@@ -568,18 +613,18 @@ const GS = (() => {
     solucao_mecanismo:{ id:'solucao_mecanismo', nome:'Solução do Mecanismo', tipo:'consumivel', loja:'mercado', preco:250, icon:'assets/itens/solucao_mecanismo.png', item_slot:'bag', effect:'disarm_traps_area', value:3, descricao:'Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro.', permitidoPara:['todos'] },
 
     // ── FERREIRO — Munição ──
-    flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes:               { id:'virotes',               nome:'Virotes (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_prata:         { id:'flechas_prata',         nome:'Flechas de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_prata:         { id:'virotes_prata',         nome:'Virotes de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_incendiarias:  { id:'flechas_incendiarias',  nome:'Flechas Incendiárias (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (10)',   tipo:'municao', loja:'ferreiro', preco:20, quantidade:10, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_explosivas:    { id:'flechas_explosivas',    nome:'Flechas Explosivas (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_explosivos:    { id:'virotes_explosivos',    nome:'Virotes Explosivos (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    flechas_magicas:       { id:'flechas_magicas',       nome:'Flechas Mágicas (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    flechas_magicas_mais_2:{ id:'flechas_magicas_mais_2',nome:'Flechas Mágicas +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['arco_curto','arco_longo'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
-    virotes_magicos:       { id:'virotes_magicos',       nome:'Virotes Mágicos (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
-    virotes_magicos_mais_2:{ id:'virotes_magicos_mais_2',nome:'Virotes Mágicos +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['besta_mao','besta_leve'], permitidoPara:['todos'] },
+    flechas:               { id:'flechas',               nome:'Flechas (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes:               { id:'virotes',               nome:'Virotes (10)',                tipo:'municao', loja:'ferreiro', preco:5,  quantidade:10, danoExtra:null,  paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_prata:         { id:'flechas_prata',         nome:'Flechas de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_prata:         { id:'virotes_prata',         nome:'Virotes de Prata (10)',       tipo:'municao', loja:'ferreiro', preco:30, quantidade:10, danoExtra:1, prata:true, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_incendiarias:  { id:'flechas_incendiarias',  nome:'Flechas Incendiárias (5)',    tipo:'municao', loja:'ferreiro', preco:20, quantidade:5, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_incendiarios:  { id:'virotes_incendiarios',  nome:'Virotes Incendiários (5)',    tipo:'municao', loja:'ferreiro', preco:20, quantidade:5, danoExtra:'1d4', tipoDano:'fogo', paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_explosivas:    { id:'flechas_explosivas',    nome:'Flechas Explosivas (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_explosivos:    { id:'virotes_explosivos',    nome:'Virotes Explosivos (5)',      tipo:'municao', loja:'ferreiro', preco:60, quantidade:5, icon:'assets/itens magicos/municao_explosiva.png', danoExtra:'1d6', danoArea:'1d6', areaRaio:1, saveTipo:'reflexos', saveCD:12, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    flechas_magicas:       { id:'flechas_magicas',       nome:'Flechas Mágicas (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    flechas_magicas_mais_2:{ id:'flechas_magicas_mais_2',nome:'Flechas Mágicas +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/flechas_magicas.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['arco_curto','arco_longo','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
+    virotes_magicos:       { id:'virotes_magicos',       nome:'Virotes Mágicos (10)',         tipo:'municao', loja:'ferreiro', preco:50, quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:1, danoExtra:1, damage_bonus:1, magical:true, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
+    virotes_magicos_mais_2:{ id:'virotes_magicos_mais_2',nome:'Virotes Mágicos +2 (10)',      tipo:'municao', loja:'ferreiro', preco:120,quantidade:10, icon:'assets/itens magicos/virotes_magicos.png', atk_bonus:2, danoExtra:2, damage_bonus:2, magical:true, paraArmas:['besta_mao','besta_duelista','besta_leve','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra'], permitidoPara:['todos'] },
 
     // ── TAVERNA — Itens de sobrevivência ──
     carta:             { id:'carta',             nome:'Carta',               tipo:'carta',      loja:'masmorra', preco:0, item_slot:'bag', effect:'letter', value:0, texto:'Esta carta não contém nenhuma mensagem.', descricao:'Ao ler, abre a mensagem escrita sem consumir a carta.', permitidoPara:['todos'] },
@@ -604,6 +649,14 @@ const GS = (() => {
     mochila_viajante:  { id:'mochila_viajante',  nome:'Mochila do Viajante',        tipo:'itemMagico', loja:'mercado', preco:80,  slotsExtras:4, descricao:'+4 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     bolsa_dimensao:    { id:'bolsa_dimensao',    nome:'Bolsa de Dimensão',          tipo:'itemMagico', loja:'mercado', preco:150, slotsExtras:6, descricao:'+6 slots de inventário livre.', slot:'magico', permitidoPara:['todos'] },
     cinto_utilidades:  { id:'cinto_utilidades', nome:'Cinto de Utilidades', tipo:'itemMagico', loja:'mercado', preco:250, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
+    cinto_utilidades_aprimorado: { id:'cinto_utilidades_aprimorado', nome:'Cinto de Utilidades Aprimorado', tipo:'itemMagico', loja:'mercado', preco:750, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 8 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
+    cinto_arsenal_encantado: { id:'cinto_arsenal_encantado', nome:'Cinto-Arsenal Encantado', tipo:'itemMagico', loja:'mercado', preco:2000, item_slot:'item', slot:'magico', icon:'assets/itens magicos/cinto_arsenal_encantado.png', effect:'utility_belt', quiver_slots_capacity:1, descricao:'Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com até 8 unidades iguais, e 1 espaço de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo.', permitidoPara:['todos'] },
+    mochila_aljava_dimensional: { id:'mochila_aljava_dimensional', nome:'Mochila-Aljava Dimensional', tipo:'itemMagico', loja:'mercado', preco:1200, item_slot:'item', slot:'magico', icon:'assets/itens magicos/mochila_aljava_dimensional.png', effect:'bagslots', value:9, quiver_slots_capacity:1, descricao:'Equipado, aumenta em 9 espaços a capacidade da mochila e oferece 1 espaço de aljava para até 40 flechas ou virotes. O conteúdo da aljava permanece guardado ao desequipá-la.', permitidoPara:['todos'] },
+    alforge_explorador: { id:'alforge_explorador', nome:'Alforje de Explorador', tipo:'itemMagico', loja:'mercado', preco:220, item_slot:'item', slot:'magico', icon:'assets/itens/alforge2.png', effect:'bagslots', value:2, descricao:'Equipado, aumenta em 2 espaços a capacidade da mochila e oferece 1 bolso para arremessáveis, frascos de efeito, poções e venenos, com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo.', permitidoPara:['todos'] },
+    alforge_explorador_aprimorado: { id:'alforge_explorador_aprimorado', nome:'Alforje de Explorador Aprimorado', tipo:'itemMagico', loja:'mercado', preco:500, item_slot:'item', slot:'magico', icon:'assets/itens/alforje1.png', effect:'bagslots', value:4, descricao:'Equipado, aumenta em 4 espaços a capacidade da mochila e oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo.', permitidoPara:['todos'] },
+    alforge_explorador_superior: { id:'alforge_explorador_superior', nome:'Alforje de Explorador Superior', tipo:'itemMagico', loja:'mercado', preco:800, item_slot:'item', slot:'magico', icon:'assets/itens/alforje1.png', effect:'bagslots', value:6, descricao:'Equipado, aumenta em 6 espaços a capacidade da mochila e oferece 3 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo.', permitidoPara:['todos'] },
+    maravilha_aventureiro_menor: { id:'maravilha_aventureiro_menor', nome:'Maravilha do Aventureiro Menor Simples', tipo:'itemMagico', loja:'mercado', preco:2500, item_slot:'item', slot:'magico', icon:'assets/itens/maravilha_do_aventureiro.png', effect:'bagslots', value:9, quiver_slots_capacity:1, descricao:'Equipado, aumenta em 9 espaços a capacidade da mochila, oferece 4 bolsos para até 4 unidades iguais cada e 1 slot de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo.', permitidoPara:['todos'] },
+    maravilha_aventureiro_maior: { id:'maravilha_aventureiro_maior', nome:'Maravilha do Aventureiro Maior', tipo:'itemMagico', loja:'mercado', preco:6000, item_slot:'item', slot:'magico', icon:'assets/itens/maravilha_do_aventureiro.png', effect:'bagslots', value:12, quiver_slots_capacity:2, descricao:'Equipado, aumenta em 12 espaços a capacidade da mochila, oferece 4 bolsos para até 8 unidades iguais cada e 2 slots de aljava para até 40 flechas ou virotes cada. Os conteúdos permanecem guardados ao desequipá-lo.', permitidoPara:['todos'] },
     cinto_com_bolsos:  { id:'cinto_com_bolsos', nome:'Cinto com Bolsos', tipo:'itemMagico', loja:'mercado', preco:120, item_slot:'item', slot:'magico', icon:'assets/itens/cinto_e_bolsos.png', descricao:'Equipado, oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 4 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente.', permitidoPara:['todos'] },
     bota_alada:        { id:'bota_alada',        nome:'Bota Alada',                 tipo:'itemMagico', loja:'mercado', preco:0, item_slot:'boots', kind:'boots', effect:'voo', descricao:'Enquanto equipada, permite Voo por tempo indeterminado, com altura máxima 10.', permitidoPara:['todos'] },
 
@@ -1056,6 +1109,7 @@ const GS = (() => {
   }
 
   const ALTURA_POR_QUADRADO_ALCANCE = 2;
+  const ALTURA_OLHO_NIVEIS = 1;   // espelho do server.py
   // Espelha ALTURA_SOBREPOR_POR_PORTE do servidor: altura (em pontos) acima de
   // quem está embaixo para voar por cima dele. Herói/porte ausente = médio.
   const ALTURA_SOBREPOR_POR_PORTE = {
@@ -1141,8 +1195,12 @@ const GS = (() => {
     const alvo = [...(state.players || []), ...(state.monsters || [])]
       .find(entidade => entidade && entidade.pos?.[0] === (bx | 0) && entidade.pos?.[1] === (by | 0));
     const vooLivre = !!(origem?.voo && origem.ignora_obstaculos_voo && alturaDe(origem) > 0);
-    const z0 = _elevacaoTerreno(ax | 0, ay | 0, state) + (origem ? alturaDe(origem) : 0);
-    const z1 = _elevacaoTerreno(bx | 0, by | 0, state) + (alvo ? alturaDe(alvo) : 0);
+    // Espelho de `_tem_linha_de_visao`: em níveis, do olho de quem olha ao
+    // corpo do alvo (1 nível acima de cada piso); voo vale 2 pontos por nível.
+    const z0 = _elevacaoTerreno(ax | 0, ay | 0, state) + ALTURA_OLHO_NIVEIS
+      + (origem ? alturaDe(origem) / ALTURA_POR_QUADRADO_ALCANCE : 0);
+    const z1 = _elevacaoTerreno(bx | 0, by | 0, state) + ALTURA_OLHO_NIVEIS
+      + (alvo ? alturaDe(alvo) / ALTURA_POR_QUADRADO_ALCANCE : 0);
     const dxAbs = Math.abs((bx | 0) - (ax | 0));
     const dyAbs = Math.abs((by | 0) - (ay | 0));
     const dz2 = dxAbs * dxAbs + dyAbs * dyAbs;
@@ -1885,12 +1943,13 @@ const GS = (() => {
     'metamorfose_save_prompt',      // consentir/resistir à metamorfose
     'tempestade_ciclones_prompt',   // posicionar ciclones
     'ira_rocha_ardente_prompt',     // posicionar a Ira da Rocha Ardente
+    'veredito_radiante_prompt',     // ativar o dano sagrado da espada bastarda
   ]);
   // As mensagens que RESPONDEM a esses avisos (enviá-las marca a volta do foco).
   const _RESPOSTAS_DE_AVISO = new Set([
     'escolher_magia_nivel', 'sorte_reacao', 'fire_choice', 'teleporte_destino',
     'teleporte_consent', 'metamorfose_consent', 'tempestade_ciclones_posicoes',
-    'ira_rocha_ardente_chamas',
+    'ira_rocha_ardente_chamas', 'veredito_radiante_choice',
   ]);
   function souAnfitriao(host) {
     return host != null && host === (connPid || myPid);
@@ -2384,6 +2443,18 @@ const GS = (() => {
         _emit('improvisoResultado', msg);
         break;
 
+      case 'improviso_encore_choice':
+        _emit('improvisoEncoreChoice', msg);
+        break;
+
+      case 'voto_guardiao_prompt':
+        _emit('votoGuardiaoPrompt', msg);
+        break;
+
+      case 'veredito_radiante_prompt':
+        _emit('vereditoRadiantePrompt', msg);
+        break;
+
       case 'login_result':
         if (msg.ok) {
           account = msg.username;
@@ -2666,7 +2737,15 @@ const GS = (() => {
   function useLightningLineWeapon(slot, targetId, targetPos) {
     send({ type: 'lightning_line_weapon', slot, target_id: targetId, target_pos: targetPos });
   }
+  function useWindLineWeapon(slot, targetId, targetPos) {
+    send({ type: 'wind_line_weapon', slot, target_id: targetId, target_pos: targetPos });
+  }
+  function useHorizonShockWeapon(targetId, targetPos) {
+    send({ type: 'horizon_shock_weapon', target_id: targetId, target_pos: targetPos });
+  }
   function useThunderPulseWeapon() { send({ type: 'thunder_pulse_weapon' }); }
+  function useSolarFlareWeapon() { send({ type: 'solar_flare_weapon' }); }
+  function useRepeatingCrossbow(targetId, targetPos) { send({ type: 'repeating_crossbow_weapon', target_id: targetId, target_pos: targetPos }); }
   function apagarChamas()          { send({ type: 'apagar_chamas' }); }
   function estancarSangramento()   { send({ type: 'estancar_sangramento' }); }
   function escaparEstomago()       { send({ type: 'escapar_estomago' }); }
@@ -2700,6 +2779,13 @@ const GS = (() => {
                     Math.abs(player.pos[1] - gi.pos[1])) <= 1;
   }
   function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
+  function juntarLaminas(origem, destino) { send({type:'juntar_laminas', origem, destino}); }
+  function mesmaPilhaLaminas(a, b) {
+    if (!a || !b || a.id !== 'laminas_riposta' || b.id !== 'laminas_riposta'
+        || a.effect !== 'counter_blades' || b.effect !== 'counter_blades') return false;
+    const venom = it => JSON.stringify([...new Set(it.poison_ids || [])].sort());
+    return venom(a) === venom(b);
+  }
   // Juntar pilhas de munição: origem/destino = {bolsa: i} ou {equip: 'off_hand'}.
   function juntarMunicao(origem, destino) { send({ type: 'juntar_municao', origem, destino }); }
   // Espelho de `_ammo_stack_key` do servidor: mesmo item, tipo, propriedades do
@@ -3108,6 +3194,15 @@ const GS = (() => {
            target_id: targetId != null ? targetId : null,
            dir: dir || null });
   }
+  function improvisoEncoreChoice(requestId, choice) {
+    send({ type: 'improviso_encore_choice', request_id: requestId, choice });
+  }
+  function votoGuardiaoChoice(requestId, targetId) {
+    send({ type: 'voto_guardiao_choice', request_id: requestId, target_id: targetId ?? null });
+  }
+  function vereditoRadianteChoice(requestId, choice) {
+    send({ type: 'veredito_radiante_choice', request_id: requestId, choice });
+  }
 
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
   // file: nome do arquivo da masmorra autoral, ou null para modo procedural.
@@ -3183,13 +3278,28 @@ const GS = (() => {
     return (guildOwnedOf(myPid).especializacoes || []).includes('disparo_duplo');
   }
 
+  // Variantes de material (Aço Damasco, Freixo Negro, Prata...) seguem as regras da
+  // arma-base: espelho de `_arma_base_id` do servidor.
+  const MATERIAL_SUFIXOS_ARMA = ['_aco_damasco', '_obsidiana_ferro', '_liga_titanio', '_freixo_negro', '_cedro_rubro', '_cerne_tita', '_prata'];
+  function armaBaseId(id){
+    const wid = String(id || '');
+    if(wid === 'machadinha_ana_prata') return 'machadinha_arremesso_ana';
+    for(const suf of MATERIAL_SUFIXOS_ARMA){
+      if(wid.endsWith(suf) && wid.length > suf.length) return wid.slice(0, -suf.length);
+    }
+    return wid;
+  }
+  const BESTAS_BASE_IDS = ['besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista'];
+  const ARCOS_DIAGONAL_REDUZIDA_IDS = ['arco_curto', 'longbow', 'arco_composto_curto', 'arco_composto_longo', 'arco_bruto_combatente'];
+  const BESTAS_DE_MAO_IDS = ['hand_crossbow', 'besta_duelista'];
+
   function isOffhandWeapon(item, gearSnapshot){
     if(!item || !(item.die || item.dano)) return false;
     const iid = (item.id || '').toLowerCase();
     const nm = (item.name || '').toLowerCase();
-    if(iid === 'hand_crossbow'){
+    if(BESTAS_DE_MAO_IDS.includes(armaBaseId(iid))){
       const gear = gearSnapshot || GS.me?.gear || {};
-      return hasDisparoDuplo() && gear.weapon?.id === 'hand_crossbow';
+      return hasDisparoDuplo() && BESTAS_DE_MAO_IDS.includes(armaBaseId(gear.weapon?.id));
     }
     return !!item.off_hand_weapon || isDagger(item) || iid === 'chicote' || nm.includes('chicote');
   }
@@ -3213,7 +3323,8 @@ const GS = (() => {
     const gear = gearSnapshot || {};
     if(slotKey === 'weapon'){
       if(cat !== 'weapon') return false;
-      if(gear.off_hand?.id === 'hand_crossbow' && item.id !== 'hand_crossbow') return false;
+      if(BESTAS_DE_MAO_IDS.includes(armaBaseId(gear.off_hand?.id))
+          && !BESTAS_DE_MAO_IDS.includes(armaBaseId(item.id))) return false;
       if(item.two_handed){
         const off = gear.off_hand;
         const offOcupaMao = !!off && (off.kind === 'shield' || off.item_slot === 'shield' || !!off.die);
@@ -3469,17 +3580,27 @@ const GS = (() => {
     const st = state || gameState;
     const pisoA = _elevacaoTerreno(posA?.[0] || 0, posA?.[1] || 0, st);
     const pisoB = _elevacaoTerreno(posB?.[0] || 0, posB?.[1] || 0, st);
-    const zA = pisoA + alturaDe({ altura: alturaA });
-    const zB = pisoB + alturaDe({ altura: alturaB });
-    return Math.ceil(Math.abs(zA - zB) / 2);
+    // Em pontos de altura: cada nível de terreno vale 1 quadrado (2 pontos),
+    // como no servidor (`_altura_efetiva`).
+    const zA = pisoA * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaA });
+    const zB = pisoB * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaB });
+    return Math.ceil(Math.abs(zA - zB) / ALTURA_POR_QUADRADO_ALCANCE);
   }
 
   function diferencaVerticalTerreno(posA, alturaA, posB, alturaB, state=null) {
     const st = state || gameState;
     const pisoA = _elevacaoTerreno(posA?.[0] || 0, posA?.[1] || 0, st);
     const pisoB = _elevacaoTerreno(posB?.[0] || 0, posB?.[1] || 0, st);
-    return Math.abs((pisoA + alturaDe({ altura: alturaA })) -
-      (pisoB + alturaDe({ altura: alturaB })));
+    return Math.abs((pisoA * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaA })) -
+      (pisoB * ALTURA_POR_QUADRADO_ALCANCE + alturaDe({ altura: alturaB })));
+  }
+
+  // Quadrados de subida que um golpe corpo a corpo precisa vencer (espelho de
+  // `_degraus_corpo_a_corpo`): 1 ponto de voo ainda é tolerado; acima disso
+  // conta em meio-quadrados (1 nível de terreno = 1 quadrado).
+  function degrausCorpoACorpo(posA, alturaA, posB, alturaB, state=null) {
+    const d = diferencaVerticalTerreno(posA, alturaA, posB, alturaB, state);
+    return d <= 1 ? 0 : d / ALTURA_POR_QUADRADO_ALCANCE;
   }
 
   function faixaAlturaQueda(altura) {
@@ -3518,18 +3639,23 @@ const GS = (() => {
       const alcanceTotal = alcance + vento;
       if (alcanceTotal < 1) return false;
       const distancia = Math.max(dx, dy);
-      if (weapon.id === 'besta' || weapon.id === 'hand_crossbow')
+      if (BESTAS_BASE_IDS.includes(armaBaseId(weapon.id)))
         return (dx === 0 || dy === 0) && distancia <= alcanceTotal;
-      if (weapon.id === 'arco_curto' || weapon.id === 'longbow') {
+      if (weapon.chain_hook_range)
+        return (dx === 0 || dy === 0 || dx === dy) && distancia <= alcanceTotal;
+      if (ARCOS_DIAGONAL_REDUZIDA_IDS.includes(armaBaseId(weapon.id)) && !weapon.range_all_directions) {
         const limite = (dx === 0 || dy === 0) ? alcanceTotal : Math.ceil(alcanceTotal / 2);
         return distancia <= limite;
       }
       return distancia <= alcanceTotal;
     }
-    if (diferencaVerticalTerreno(myP.pos, alturaDe(myP), [tx, ty], targetAltitude) > 1) return false;
+    const degraus = degrausCorpoACorpo(myP.pos, alturaDe(myP), [tx, ty], targetAltitude);
+    // A subida soma à distância: só a lança (alcance 2) ainda alcança quem
+    // está adjacente e 1 nível acima/abaixo (espelho de `_haste_vence_desnivel`).
+    if (degraus) return degraus <= 1 && weapon.reach === 'lanca' && Math.max(dx, dy) === 1;
     if (weapon.reach === 'lanca')
       return Math.max(dx, dy) === 1 || (dx === 0 && dy === 2) || (dx === 2 && dy === 0);
-    if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
+    if (armaBaseId(weapon.id) === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
       return Math.max(dx, dy) === 1;
     return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
   }
@@ -3555,7 +3681,7 @@ const GS = (() => {
   }
 
   function weaponRangePotionBonus(myP, weapon = myP?.weapon || {}) {
-    const hasProjectile = ['arco_curto', 'longbow', 'besta', 'hand_crossbow'].includes(weapon?.id)
+    const hasProjectile = [...ARCOS_DIAGONAL_REDUZIDA_IDS, ...BESTAS_BASE_IDS].includes(armaBaseId(weapon?.id))
       || ['arrow', 'bolt'].includes(weapon?.projectile)
       || ['flechas', 'virotes'].includes(weapon?.ammo);
     return hasProjectile && Number(myP?.essencia_vento_rodadas || 0) > 0 ? 2 : 0;
@@ -3850,9 +3976,16 @@ const GS = (() => {
     const limiteDistintos = opts.doisVenenos ? 2 : 1;
     const MUNICAO = {
       arco_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      arco_composto_curto: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
       longbow: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      arco_composto_longo: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
+      arco_bruto_combatente: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
       besta: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_pesada: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_repetidora_patrulha: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_repetidora_guerra: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
       hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_duelista: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
     };
     const gear = (me && me.gear) || {};
     // O item inicial da mão principal pode vir reduzido em gear.weapon (sem dado de dano): completa
@@ -3873,19 +4006,29 @@ const GS = (() => {
     const armas = [];
     for (const { slot, item } of slots) {
       if (!item || !item.die) continue;
-      const ranged = Object.prototype.hasOwnProperty.call(MUNICAO, item.id);
+      const ranged = Object.prototype.hasOwnProperty.call(MUNICAO, armaBaseId(item.id));
       // Arco e besta recebem veneno pela munição; só a besta de mão na mão secundária
       // aceita o veneno direto, e apenas pelo Veneno Rápido (o frasco exige munição).
-      if (ranged && !(slot === 'off_hand' && item.id === 'hand_crossbow' && metodo === 'veneno_rapido')) continue;
+      if (ranged && !(slot === 'off_hand' && BESTAS_DE_MAO_IDS.includes(armaBaseId(item.id)) && metodo === 'veneno_rapido')) continue;
       const ativos = Array.isArray(item.poison_slots) ? item.poison_slots : [];
       const cabe = !opts.venenoId || ativos.includes(opts.venenoId) || new Set(ativos).size < limiteDistintos;
       armas.push({ tipo: 'arma', slot, item, ativos, cabe, limite: limiteDistintos, ranged });
     }
 
     const municoes = [];
+    const laminas = [];
+    if (me?.class_id === 'rogue') {
+      ((me && me.bag) || []).forEach((it, index) => {
+        if (it?.id === 'laminas_riposta' && it.effect === 'counter_blades'
+            && (!Array.isArray(it.poison_ids) || it.poison_ids.length === 0)) {
+          laminas.push({tipo:'laminas',source:'bag',index,item:it,
+            total:Math.max(0,Number(it.counter_blade_count)||0),qtd:Math.min(10,Math.max(0,Number(it.counter_blade_count)||0))});
+        }
+      });
+    }
     for (const { slot, item } of slots) {
-      if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, item.id)) continue;
-      const validos = MUNICAO[item.id];
+      if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, armaBaseId(item.id))) continue;
+      const validos = MUNICAO[armaBaseId(item.id)];
       const legado = Array.isArray(item.poison_slots) && item.poison_slots.length > 0;
       const pilhas = [];
       const off = gear.off_hand;
@@ -3914,11 +4057,17 @@ const GS = (() => {
         });
       }
     }
-    return { armas, municoes };
+    return { armas, municoes, laminas };
   }
   function ladinoEsconderBonus() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
-    return (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
+    const bonusEspecializacao = (e.includes('ladino_esconder_2') || e.includes('ladino_esconder_3')) ? 2 : 0;
+    const hero = (gameState?.players || []).find(p => p?.id === myPid);
+    const bonusBoina = hero?.gear?.head?.id === 'boina_gatuno'
+      ? Number(hero.gear.head.hide_bonus) || 0 : 0;
+    const armor = hero?.gear?.armor;
+    const bonusManto = armor?.id === 'manto_das_sombras' ? Number(armor.hide_bonus) || 0 : 0;
+    return bonusEspecializacao + bonusBoina + bonusManto;
   }
   function ladinoEsconderLivre() {
     return false;
@@ -4242,6 +4391,7 @@ const GS = (() => {
     coberturaBaixa,
     custoVerticalTerreno,
     diferencaVerticalTerreno,
+    degrausCorpoACorpo,
 
     // ── Footprint de um monstro (1×1, bloco size, ou 2 casas orientadas) ──
     monsterTiles,
@@ -4402,7 +4552,11 @@ const GS = (() => {
     throwItemArea,
     throwWeapon,
     useLightningLineWeapon,
+    useWindLineWeapon,
+    useHorizonShockWeapon,
     useThunderPulseWeapon,
+    useSolarFlareWeapon,
+    useRepeatingCrossbow,
     apagarChamas,
     estancarSangramento,
     escaparEstomago,
@@ -4413,6 +4567,8 @@ const GS = (() => {
     unequip,
     repairItem,
     reorderBag,
+    juntarLaminas,
+    mesmaPilhaLaminas,
     juntarMunicao,         // sender: junta duas pilhas de munição iguais
     mesmaPilhaMunicao,     // puro: duas pilhas de munição podem se juntar?
     maxAmmoStackFor,       // puro: limite das pilhas comuns de munição
@@ -4432,6 +4588,7 @@ const GS = (() => {
     compareItemStats,
     isDagger,
     isOffhandWeapon,
+    armaBaseId,
     setKnownSpells,
     focarHeroi,
     souAnfitriao,
@@ -4549,6 +4706,9 @@ const GS = (() => {
     instrumentoStatsClient,
     instrumentoDisponivel,
     improvisoAlvo,          // Fase 5 (Gaita/Improviso) — sender (chamado com parênteses)
+    improvisoEncoreChoice,
+    votoGuardiaoChoice,
+    vereditoRadianteChoice,
 
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)

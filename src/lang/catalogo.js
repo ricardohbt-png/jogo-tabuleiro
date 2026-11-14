@@ -2,7 +2,6 @@
 // Preencha só a coluna "en"; rodar o gerador de novo preserva o que
 // você já traduziu e acrescenta o que for novo.
 window.LANG_CATALOGO = {
-  "cat.decor.mansao_medieval.nome": {"pt":"Mansão medieval", "en":"Medieval mansion"},
   "cat.armadilha.armadilha_dardos_envenenados.desc": {
     "en": "Takes 1d4 piercing damage and makes a Fortitude save against the chosen poison.",
     "pt": "Sofre 1d4 perfurante e testa Fortitude contra o veneno escolhido."
@@ -419,6 +418,10 @@ window.LANG_CATALOGO = {
     "en": "Crypt",
     "pt": "Cripta"
   },
+  "cat.decor.escadaria_luxuosa.nome": {
+    "en": "Luxurious staircase",
+    "pt": "Escadaria luxuosa"
+  },
   "cat.decor.espantalho.nome": {
     "en": "Scarecrow",
     "pt": "Espantalho"
@@ -530,6 +533,10 @@ window.LANG_CATALOGO = {
   "cat.decor.lareira.nome": {
     "en": "Fireplace",
     "pt": "Lareira"
+  },
+  "cat.decor.mansao_medieval.nome": {
+    "en": "Medieval mansion",
+    "pt": "Mansão medieval"
   },
   "cat.decor.mesa_banquete_luxo.nome": {
     "en": "Luxurious Banquet Table",
@@ -2363,6 +2370,14 @@ window.LANG_CATALOGO = {
     "en": "Violin",
     "pt": "Violino"
   },
+  "cat.item.absinto.desc": {
+    "en": "Bottle with 5 doses. Each use restores 15 hunger and thirst and applies −1 attack and −1 AC for 10 rounds. With 3–4 active doses, movement is reduced by 1; with 5 or more, by 2. Penalties stack; each dose expires 10 rounds after its own use.",
+    "pt": "Garrafa com 5 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e −1 na CA por 10 rodadas. Com 3–4 doses ativas, reduz o movimento em 1; com 5 ou mais, em 2. As penalidades acumulam; cada dose expira 10 rodadas após seu próprio uso."
+  },
+  "cat.item.absinto.nome": {
+    "en": "Absinthe",
+    "pt": "Absinto"
+  },
   "cat.item.agua_benta.nome": {
     "en": "Holy Water",
     "pt": "Água Benta"
@@ -2375,6 +2390,14 @@ window.LANG_CATALOGO = {
     "en": "Halberd",
     "pt": "Alabarda"
   },
+  "cat.item.alabarda_aco_damasco.desc": {
+    "en": "Damascus Steel Halberd: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Alabarda de Aço Damasco: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.alabarda_aco_damasco.nome": {
+    "en": "Damascus Steel Halberd",
+    "pt": "Alabarda de Aço Damasco"
+  },
   "cat.item.alabarda_colossal.desc": {
     "en": "Two-handed weapon: 4-square reach in a straight line and 2 diagonally; 2d10+6 damage.",
     "pt": "Arma de duas mãos: alcance de 4 quadrados em linha reta e 2 na diagonal; dano 2d10+6."
@@ -2383,13 +2406,69 @@ window.LANG_CATALOGO = {
     "en": "Colossal Halberd",
     "pt": "Alabarda Colossal"
   },
+  "cat.item.alabarda_do_eclipse.desc": {
+    "en": "Very rare two-handed magical halberd: +2 to hit and damage, 1d10 piercing damage + Strength, range 2, and a natural critical range of 19–20. Paladin and Warrior only.",
+    "pt": "Raridade: Muito rara. Alabarda mágica de duas mãos +2 no acerto e no dano; causa 1d10 perfurante + Força, tem alcance 2 e crítico natural com 19–20. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.alabarda_do_eclipse.nome": {
+    "en": "Eclipse Halberd",
+    "pt": "Alabarda do Eclipse"
+  },
+  "cat.item.alabarda_liga_titanio.desc": {
+    "en": "Titanium Alloy Halberd: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Alabarda de Liga de Titânio: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.alabarda_liga_titanio.nome": {
+    "en": "Titanium Alloy Halberd",
+    "pt": "Alabarda de Liga de Titânio"
+  },
+  "cat.item.alabarda_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Halberd: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Alabarda de Obsidiana de Ferro: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.alabarda_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Halberd",
+    "pt": "Alabarda de Obsidiana de Ferro"
+  },
   "cat.item.alabarda_prata.desc": {
-    "en": "Silver Halberd: 1d10 piercing damage, using Strength. Range: 2 squares in a straight line. Requires both hands. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Halberd: 1d10 piercing damage, using Strength. Range: 2 squares in a straight line. Requires both hands. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.alabarda_prata.nome": {
     "en": "Silver Halberd",
     "pt": "Alabarda de Prata"
+  },
+  "cat.item.alabarda_vendaval.desc": {
+    "en": "Very rare two-handed magical halberd: 1d10 piercing damage + Strength, range 2, +1 to hit and damage. As a main action, sends a straight gust up to 4 squares; creatures in the line take 2d6 magical damage (Reflex DC 13 halves it). If the chosen target fails, it is pushed back 1 square. Recharge: 10 rounds. Paladin and Warrior only.",
+    "pt": "Raridade: Muito rara. Alabarda mágica de duas mãos +1 no acerto e no dano; causa 1d10 perfurante + Força e tem alcance 2. Como ação principal, libera uma rajada em linha reta de até 4 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Se o alvo escolhido falhar, é empurrado 1 casa para trás. Recarga: 10 rodadas. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.alabarda_vendaval.nome": {
+    "en": "Gale Halberd",
+    "pt": "Alabarda do Vendaval"
+  },
+  "cat.item.alforge_explorador.desc": {
+    "en": "While equipped, increases backpack capacity by 2 slots and provides 1 pocket for eligible throwables, potions, and poisons, holding up to 4 identical units. Its contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 2 espaços a capacidade da mochila e oferece 1 bolso para arremessáveis, frascos de efeito, poções e venenos, com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+  },
+  "cat.item.alforge_explorador.nome": {
+    "en": "Explorer's Pack",
+    "pt": "Alforje de Explorador"
+  },
+  "cat.item.alforge_explorador_aprimorado.desc": {
+    "en": "While equipped, increases backpack capacity by 4 slots and provides 2 pockets for eligible throwables, potions, and poisons, each holding up to 4 identical units. Its contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 4 espaços a capacidade da mochila e oferece 2 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+  },
+  "cat.item.alforge_explorador_aprimorado.nome": {
+    "en": "Improved Explorer's Pack",
+    "pt": "Alforje de Explorador Aprimorado"
+  },
+  "cat.item.alforge_explorador_superior.desc": {
+    "en": "While equipped, increases backpack capacity by 6 slots and provides 3 pockets for eligible throwables, potions, and poisons, each holding up to 4 identical units. Its contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 6 espaços a capacidade da mochila e oferece 3 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com capacidade para até 4 unidades iguais. O conteúdo permanece guardado ao desequipá-lo."
+  },
+  "cat.item.alforge_explorador_superior.nome": {
+    "en": "Superior Explorer's Pack",
+    "pt": "Alforje de Explorador Superior"
   },
   "cat.item.aljava_grande.desc": {
     "en": "Equipped in the off hand, provides 3 slots for up to 40 arrows or bolts each. Contents remain inside when unequipped.",
@@ -2419,6 +2498,30 @@ window.LANG_CATALOGO = {
     "en": "Amulet of Arcane Reach",
     "pt": "Amuleto do Alcance Arcano"
   },
+  "cat.item.anel_aguia.desc": {
+    "en": "+2 Dexterity and +2 vision while equipped.",
+    "pt": "+2 de Destreza e +2 de visão enquanto estiver equipado."
+  },
+  "cat.item.anel_aguia.nome": {
+    "en": "Eagle Ring",
+    "pt": "Anel da Águia"
+  },
+  "cat.item.anel_bastiao_basalto.desc": {
+    "en": "+4 Constitution while equipped.",
+    "pt": "+4 de Constituição enquanto estiver equipado."
+  },
+  "cat.item.anel_bastiao_basalto.nome": {
+    "en": "Basalt Bastion Ring",
+    "pt": "Anel do Bastião de Basalto"
+  },
+  "cat.item.anel_danca_vento.desc": {
+    "en": "+4 Dexterity while equipped.",
+    "pt": "+4 de Destreza enquanto estiver equipado."
+  },
+  "cat.item.anel_danca_vento.nome": {
+    "en": "Dance of the Wind Ring",
+    "pt": "Anel da Dança do Vento"
+  },
   "cat.item.anel_impacto.desc": {
     "en": "+1 damage per successful melee or ranged weapon hit.",
     "pt": "+1 de dano por acerto com armas corpo a corpo ou à distância."
@@ -2426,6 +2529,22 @@ window.LANG_CATALOGO = {
   "cat.item.anel_impacto.nome": {
     "en": "Ring of Impact",
     "pt": "Anel do Impacto"
+  },
+  "cat.item.anel_negro_corvo.desc": {
+    "en": "+1 Intelligence, +1 Dexterity, and +1 movement while equipped.",
+    "pt": "+1 de Inteligência, +1 de Destreza e +1 de movimento enquanto estiver equipado."
+  },
+  "cat.item.anel_negro_corvo.nome": {
+    "en": "Black Raven Ring",
+    "pt": "Anel Negro do Corvo"
+  },
+  "cat.item.anel_olho_esfinge.desc": {
+    "en": "+4 Intelligence while equipped.",
+    "pt": "+4 de Inteligência enquanto estiver equipado."
+  },
+  "cat.item.anel_olho_esfinge.nome": {
+    "en": "Eye of the Sphinx Ring",
+    "pt": "Anel do Olho da Esfinge"
   },
   "cat.item.anel_protecao.desc": {
     "en": "+1 Armor Class while equipped.",
@@ -2443,6 +2562,30 @@ window.LANG_CATALOGO = {
     "en": "Ring of Supremacy",
     "pt": "Anel da Supremacia"
   },
+  "cat.item.anel_tigre.desc": {
+    "en": "+2 Dexterity and +2 Strength while equipped.",
+    "pt": "+2 de Destreza e +2 de Força enquanto estiver equipado."
+  },
+  "cat.item.anel_tigre.nome": {
+    "en": "Tiger Ring",
+    "pt": "Anel do Tigre"
+  },
+  "cat.item.anel_touro_ferro.desc": {
+    "en": "+4 Strength while equipped.",
+    "pt": "+4 de Força enquanto estiver equipado."
+  },
+  "cat.item.anel_touro_ferro.nome": {
+    "en": "Iron Bull Ring",
+    "pt": "Anel do Touro de Ferro"
+  },
+  "cat.item.anel_urso_cinzento.desc": {
+    "en": "+3 Strength and +2 Constitution while equipped.",
+    "pt": "+3 de Força e +2 de Constituição enquanto estiver equipado."
+  },
+  "cat.item.anel_urso_cinzento.nome": {
+    "en": "Gray Bear Ring",
+    "pt": "Anel do Urso Cinzento"
+  },
   "cat.item.anel_vigia.desc": {
     "en": "+2 vision while equipped.",
     "pt": "+2 de visão enquanto estiver equipado."
@@ -2459,6 +2602,102 @@ window.LANG_CATALOGO = {
     "en": "Antidote",
     "pt": "Antídoto"
   },
+  "cat.item.arco_bruto_combatente.desc": {
+    "en": "Combatant’s Brutish Bow: a sturdy, nonmagical long composite bow with thick black wood and war carvings. Deals 1d10 piercing damage; uses Dexterity for attack rolls and adds both Dexterity and Strength modifiers to damage. Range: 10 squares in any direction, including diagonals. Requires two hands, accepts all arrow types, and is exclusive to Paladins and Warriors.",
+    "pt": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+  },
+  "cat.item.arco_bruto_combatente.nome": {
+    "en": "Combatant’s Brutish Bow",
+    "pt": "Arco Bruto do Combatente"
+  },
+  "cat.item.arco_bruto_combatente_cedro_rubro.desc": {
+    "en": "Red Cedar Combatant Bow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_bruto_combatente_cedro_rubro.nome": {
+    "en": "Red Cedar Combatant Bow",
+    "pt": "Arco Bruto do Combatente de Cedro Rubro"
+  },
+  "cat.item.arco_bruto_combatente_cerne_tita.desc": {
+    "en": "Titan Heartwood Combatant Bow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_bruto_combatente_cerne_tita.nome": {
+    "en": "Titan Heartwood Combatant Bow",
+    "pt": "Arco Bruto do Combatente de Cerne de Titã"
+  },
+  "cat.item.arco_bruto_combatente_freixo_negro.desc": {
+    "en": "Black Ash Combatant Bow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_bruto_combatente_freixo_negro.nome": {
+    "en": "Black Ash Combatant Bow",
+    "pt": "Arco Bruto do Combatente de Freixo Negro"
+  },
+  "cat.item.arco_composto_curto.desc": {
+    "en": "Nonmagical short composite bow: 1d8 piercing damage, using Dexterity. Range: 6 squares in any direction, including diagonals. Requires two hands and accepts all arrow types.",
+    "pt": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.arco_composto_curto.nome": {
+    "en": "Short Composite Bow",
+    "pt": "Arco Composto Curto"
+  },
+  "cat.item.arco_composto_curto_cedro_rubro.desc": {
+    "en": "Red Cedar Composite Shortbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_composto_curto_cedro_rubro.nome": {
+    "en": "Red Cedar Composite Shortbow",
+    "pt": "Arco Composto Curto de Cedro Rubro"
+  },
+  "cat.item.arco_composto_curto_cerne_tita.desc": {
+    "en": "Titan Heartwood Composite Shortbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Arco Composto Curto de Cerne de Titã: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_composto_curto_cerne_tita.nome": {
+    "en": "Titan Heartwood Composite Shortbow",
+    "pt": "Arco Composto Curto de Cerne de Titã"
+  },
+  "cat.item.arco_composto_curto_freixo_negro.desc": {
+    "en": "Black Ash Composite Shortbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Arco Composto Curto de Freixo Negro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_composto_curto_freixo_negro.nome": {
+    "en": "Black Ash Composite Shortbow",
+    "pt": "Arco Composto Curto de Freixo Negro"
+  },
+  "cat.item.arco_composto_longo.desc": {
+    "en": "Nonmagical long composite bow: 1d10 piercing damage, using Dexterity. Range: 10 squares in any direction, including diagonals. Requires two hands and accepts all arrow types.",
+    "pt": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.arco_composto_longo.nome": {
+    "en": "Long Composite Bow",
+    "pt": "Arco Composto Longo"
+  },
+  "cat.item.arco_composto_longo_cedro_rubro.desc": {
+    "en": "Red Cedar Composite Longbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_composto_longo_cedro_rubro.nome": {
+    "en": "Red Cedar Composite Longbow",
+    "pt": "Arco Composto Longo de Cedro Rubro"
+  },
+  "cat.item.arco_composto_longo_cerne_tita.desc": {
+    "en": "Titan Heartwood Composite Longbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Arco Composto Longo de Cerne de Titã: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_composto_longo_cerne_tita.nome": {
+    "en": "Titan Heartwood Composite Longbow",
+    "pt": "Arco Composto Longo de Cerne de Titã"
+  },
+  "cat.item.arco_composto_longo_freixo_negro.desc": {
+    "en": "Black Ash Composite Longbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Arco Composto Longo de Freixo Negro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_composto_longo_freixo_negro.nome": {
+    "en": "Black Ash Composite Longbow",
+    "pt": "Arco Composto Longo de Freixo Negro"
+  },
   "cat.item.arco_curto.desc": {
     "en": "Short Bow: 1d6 piercing damage, using Dexterity. Range: 6 squares in a straight line or 3 diagonally.",
     "pt": "Arco Curto: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal."
@@ -2467,6 +2706,30 @@ window.LANG_CATALOGO = {
     "en": "Short Bow",
     "pt": "Arco Curto"
   },
+  "cat.item.arco_curto_cedro_rubro.desc": {
+    "en": "Red Cedar Shortbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Arco Curto de Cedro Rubro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_curto_cedro_rubro.nome": {
+    "en": "Red Cedar Shortbow",
+    "pt": "Arco Curto de Cedro Rubro"
+  },
+  "cat.item.arco_curto_cerne_tita.desc": {
+    "en": "Titan Heartwood Shortbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Arco Curto de Cerne de Titã: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_curto_cerne_tita.nome": {
+    "en": "Titan Heartwood Shortbow",
+    "pt": "Arco Curto de Cerne de Titã"
+  },
+  "cat.item.arco_curto_freixo_negro.desc": {
+    "en": "Black Ash Shortbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Arco Curto de Freixo Negro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.arco_curto_freixo_negro.nome": {
+    "en": "Black Ash Shortbow",
+    "pt": "Arco Curto de Freixo Negro"
+  },
   "cat.item.armadura_pesada_gigante.desc": {
     "en": "Heavy armor of gigantic proportions.",
     "pt": "Armadura pesada de proporções gigantescas."
@@ -2474,6 +2737,22 @@ window.LANG_CATALOGO = {
   "cat.item.armadura_pesada_gigante.nome": {
     "en": "Giant's Heavy Armor",
     "pt": "Armadura Pesada de Gigante"
+  },
+  "cat.item.armadura_placas_grotao.desc": {
+    "en": "Light monster leather and thick plate armor. Grants +3 AC, reduces each instance of physical damage by 2 and acid damage by 5. Immune to acid corrosion, but remains vulnerable to the Organic and Metal Devourers. Corrosion levels 1–2 have no penalty; levels 3–5 impose −2 AC; level 6 destroys it.",
+    "pt": "Armadura leve de couro de monstro e placas espessas. Concede +3 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
+  },
+  "cat.item.armadura_placas_grotao.nome": {
+    "en": "Grotão Plate Armor",
+    "pt": "Armadura de Placas de Grotão"
+  },
+  "cat.item.armadura_placas_grotao_superior.desc": {
+    "en": "Heavy armor crafted from thick Grotão carapace plates. Grants +7 AC, reduces each instance of physical damage by 2 and acid damage by 5. Immune to acid corrosion, but remains vulnerable to the Organic and Metal Devourers. Corrosion levels 1–2 have no penalty; levels 3–5 impose −2 AC; level 6 destroys it.",
+    "pt": "Armadura pesada construída com placas grossas da carapaça do Grotão. Concede +7 CA, reduz em 2 cada instância de dano físico e em 5 cada dano de ácido. É imune à corrosão por ácido, mas continua vulnerável à corrosão dos Devoradores Orgânico e Metálico: os níveis 1–2 não penalizam, os níveis 3–5 reduzem a CA em 2 e o nível 6 a destrói."
+  },
+  "cat.item.armadura_placas_grotao_superior.nome": {
+    "en": "Superior Grotão Plate Armor",
+    "pt": "Armadura de Placas de Grotão Superior"
   },
   "cat.item.armadura_runica.desc": {
     "en": "Heavy plate armor with +7 AC. Warriors and Paladins can cast Arcane Barrier or Protection from Energy for exactly 5 rounds without spending a spell slot. Shared cooldown: 30 rounds.",
@@ -2511,9 +2790,33 @@ window.LANG_CATALOGO = {
     "en": "Bastard Sword",
     "pt": "Espada Bastarda"
   },
+  "cat.item.bastsword_aco_damasco.desc": {
+    "en": "Damascus Steel Bastard Sword: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Espada Bastarda de Aço Damasco: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.bastsword_aco_damasco.nome": {
+    "en": "Damascus Steel Bastard Sword",
+    "pt": "Espada Bastarda de Aço Damasco"
+  },
+  "cat.item.bastsword_liga_titanio.desc": {
+    "en": "Titanium Alloy Bastard Sword: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Espada Bastarda de Liga de Titânio: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.bastsword_liga_titanio.nome": {
+    "en": "Titanium Alloy Bastard Sword",
+    "pt": "Espada Bastarda de Liga de Titânio"
+  },
+  "cat.item.bastsword_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Bastard Sword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Espada Bastarda de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.bastsword_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Bastard Sword",
+    "pt": "Espada Bastarda de Obsidiana de Ferro"
+  },
   "cat.item.bastsword_prata.desc": {
-    "en": "Silver Bastard Sword: 1d10 slashing damage, using Strength. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Bastard Sword: 1d10 slashing damage, using Strength. Natural critical on 19–20. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.bastsword_prata.nome": {
     "en": "Silver Bastard Sword",
@@ -2526,6 +2829,158 @@ window.LANG_CATALOGO = {
   "cat.item.besta.nome": {
     "en": "Crossbow",
     "pt": "Besta"
+  },
+  "cat.item.besta_cedro_rubro.desc": {
+    "en": "Red Cedar Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Besta de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_cedro_rubro.nome": {
+    "en": "Red Cedar Crossbow",
+    "pt": "Besta de Cedro Rubro"
+  },
+  "cat.item.besta_cerne_tita.desc": {
+    "en": "Titan Heartwood Crossbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Besta de Cerne de Titã: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_cerne_tita.nome": {
+    "en": "Titan Heartwood Crossbow",
+    "pt": "Besta de Cerne de Titã"
+  },
+  "cat.item.besta_duelista.desc": {
+    "en": "Duelist's Crossbow: a one-handed weapon dealing 1d6 piercing damage using Dexterity, with a range of 4 squares in a straight orthogonal line. Accepts all bolt types and can be used by characters of any class. It works with the existing Double Shot specialization when paired with another Hand Crossbow or Duelist's Crossbow.",
+    "pt": "Besta do Duelista: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista."
+  },
+  "cat.item.besta_duelista.nome": {
+    "en": "Duelist's Crossbow",
+    "pt": "Besta do Duelista"
+  },
+  "cat.item.besta_duelista_cedro_rubro.desc": {
+    "en": "Red Cedar Duelist Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Besta do Duelista de Cedro Rubro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_duelista_cedro_rubro.nome": {
+    "en": "Red Cedar Duelist Crossbow",
+    "pt": "Besta do Duelista de Cedro Rubro"
+  },
+  "cat.item.besta_duelista_cerne_tita.desc": {
+    "en": "Titan Heartwood Duelist Crossbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Besta do Duelista de Cerne de Titã: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_duelista_cerne_tita.nome": {
+    "en": "Titan Heartwood Duelist Crossbow",
+    "pt": "Besta do Duelista de Cerne de Titã"
+  },
+  "cat.item.besta_duelista_freixo_negro.desc": {
+    "en": "Black Ash Duelist Crossbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Besta do Duelista de Freixo Negro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_duelista_freixo_negro.nome": {
+    "en": "Black Ash Duelist Crossbow",
+    "pt": "Besta do Duelista de Freixo Negro"
+  },
+  "cat.item.besta_freixo_negro.desc": {
+    "en": "Black Ash Crossbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Besta de Freixo Negro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_freixo_negro.nome": {
+    "en": "Black Ash Crossbow",
+    "pt": "Besta de Freixo Negro"
+  },
+  "cat.item.besta_pesada.desc": {
+    "en": "Heavy Crossbow: a nonmagical weapon dealing 1d10 piercing damage using Dexterity, with a range of 12 squares in a straight orthogonal line. Requires two hands, accepts all bolt types, and is exclusive to Warriors, Paladins, Clerics, and Rogues.",
+    "pt": "Besta Pesada mundana: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino."
+  },
+  "cat.item.besta_pesada.nome": {
+    "en": "Heavy Crossbow",
+    "pt": "Besta Pesada"
+  },
+  "cat.item.besta_pesada_cedro_rubro.desc": {
+    "en": "Red Cedar Heavy Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Besta Pesada de Cedro Rubro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_pesada_cedro_rubro.nome": {
+    "en": "Red Cedar Heavy Crossbow",
+    "pt": "Besta Pesada de Cedro Rubro"
+  },
+  "cat.item.besta_pesada_cerne_tita.desc": {
+    "en": "Titan Heartwood Heavy Crossbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Besta Pesada de Cerne de Titã: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_pesada_cerne_tita.nome": {
+    "en": "Titan Heartwood Heavy Crossbow",
+    "pt": "Besta Pesada de Cerne de Titã"
+  },
+  "cat.item.besta_pesada_freixo_negro.desc": {
+    "en": "Black Ash Heavy Crossbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Besta Pesada de Freixo Negro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_pesada_freixo_negro.nome": {
+    "en": "Black Ash Heavy Crossbow",
+    "pt": "Besta Pesada de Freixo Negro"
+  },
+  "cat.item.besta_repetidora_guerra.desc": {
+    "en": "Mundane Repeating War Crossbow: deals 1d8 piercing damage using Dexterity, has a 8-square orthogonal straight-line range, requires two hands, and accepts all bolt types. Once every 10 rounds, as a main action, it can fire two separate attacks at the same target; requires two bolts available. Usable by Warrior, Paladin, Bard, and Rogue.",
+    "pt": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
+  },
+  "cat.item.besta_repetidora_guerra.nome": {
+    "en": "Repeating War Crossbow",
+    "pt": "Besta Repetidora de Guerra"
+  },
+  "cat.item.besta_repetidora_guerra_cedro_rubro.desc": {
+    "en": "Red Cedar War Repeating Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Besta Repetidora de Guerra de Cedro Rubro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_repetidora_guerra_cedro_rubro.nome": {
+    "en": "Red Cedar War Repeating Crossbow",
+    "pt": "Besta Repetidora de Guerra de Cedro Rubro"
+  },
+  "cat.item.besta_repetidora_guerra_cerne_tita.desc": {
+    "en": "Titan Heartwood War Repeating Crossbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Besta Repetidora de Guerra de Cerne de Titã: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_repetidora_guerra_cerne_tita.nome": {
+    "en": "Titan Heartwood War Repeating Crossbow",
+    "pt": "Besta Repetidora de Guerra de Cerne de Titã"
+  },
+  "cat.item.besta_repetidora_guerra_freixo_negro.desc": {
+    "en": "Black Ash War Repeating Crossbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Besta Repetidora de Guerra de Freixo Negro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_repetidora_guerra_freixo_negro.nome": {
+    "en": "Black Ash War Repeating Crossbow",
+    "pt": "Besta Repetidora de Guerra de Freixo Negro"
+  },
+  "cat.item.besta_repetidora_patrulha.desc": {
+    "en": "Mundane Repeating Patrol Crossbow: deals 1d6 piercing damage using Dexterity, has a 6-square orthogonal straight-line range, requires two hands, and accepts all bolt types. Once every 10 rounds, as a main action, it can fire two separate attacks at the same target; requires two bolts available. Usable by Warrior, Paladin, Bard, and Rogue.",
+    "pt": "Besta Repetidora de Patrulha mundana: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
+  },
+  "cat.item.besta_repetidora_patrulha.nome": {
+    "en": "Repeating Patrol Crossbow",
+    "pt": "Besta Repetidora de Patrulha"
+  },
+  "cat.item.besta_repetidora_patrulha_cedro_rubro.desc": {
+    "en": "Red Cedar Patrol Repeating Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Besta Repetidora de Patrulha de Cedro Rubro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_repetidora_patrulha_cedro_rubro.nome": {
+    "en": "Red Cedar Patrol Repeating Crossbow",
+    "pt": "Besta Repetidora de Patrulha de Cedro Rubro"
+  },
+  "cat.item.besta_repetidora_patrulha_cerne_tita.desc": {
+    "en": "Titan Heartwood Patrol Repeating Crossbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Besta Repetidora de Patrulha de Cerne de Titã: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_repetidora_patrulha_cerne_tita.nome": {
+    "en": "Titan Heartwood Patrol Repeating Crossbow",
+    "pt": "Besta Repetidora de Patrulha de Cerne de Titã"
+  },
+  "cat.item.besta_repetidora_patrulha_freixo_negro.desc": {
+    "en": "Black Ash Patrol Repeating Crossbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Besta Repetidora de Patrulha de Freixo Negro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.besta_repetidora_patrulha_freixo_negro.nome": {
+    "en": "Black Ash Patrol Repeating Crossbow",
+    "pt": "Besta Repetidora de Patrulha de Freixo Negro"
   },
   "cat.item.bless.nome": {
     "en": "Divine Blessing",
@@ -2546,6 +3001,14 @@ window.LANG_CATALOGO = {
   "cat.item.boina_batedor.nome": {
     "en": "Scout's Beret",
     "pt": "Boina do Batedor"
+  },
+  "cat.item.boina_gatuno.desc": {
+    "en": "+2 to the Rogue's Hide in the Shadows checks while equipped. Stacks with the specialization and Cloak of Shadows.",
+    "pt": "+2 nos testes de Esconder nas Sombras do Ladino enquanto equipada. Acumula com a especialização e com o Manto das Sombras."
+  },
+  "cat.item.boina_gatuno.nome": {
+    "en": "Rogue's Beret",
+    "pt": "Boina do Gatuno"
   },
   "cat.item.bola_cristal_clarividencia.desc": {
     "en": "Main action. Casts Clairvoyance without spending a spell slot. Cooldown: 10 rounds. Mage and Cleric use the normal level scaling; other classes reveal a fixed 4×4 area.",
@@ -2579,13 +3042,53 @@ window.LANG_CATALOGO = {
     "en": "Quarterstaff",
     "pt": "Bordão"
   },
+  "cat.item.bordao_horizonte_despedacado.desc": {
+    "en": "Legendary magical quarterstaff: +4 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the standard staff's natural-20 stun. Once every 10 rounds, as a main action, releases a straight rupture wave up to 4 squares; creatures in its path take 4d6 magical damage (Reflex DC 16 halves it) and those who fail are pushed back 3 squares. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_horizonte_despedacado.nome": {
+    "en": "Shattered Horizon Staff",
+    "pt": "Bordão do Horizonte Despedaçado"
+  },
+  "cat.item.bordao_horizonte_partido.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the standard staff's natural-20 stun. Once every 10 rounds, as a main action, releases a straight rupture wave up to 3 squares; creatures in its path take 2d6 magical damage (Reflex DC 13 halves it) and those who fail are pushed back 2 squares. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma onda de ruptura em linha reta de até 3 casas: criaturas no caminho sofrem 2d6 de dano mágico (Reflexos CD 13 reduz à metade). Quem falhar no teste é empurrado 2 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_horizonte_partido.nome": {
+    "en": "Fractured Horizon Staff",
+    "pt": "Bordão do Horizonte Partido"
+  },
   "cat.item.bordao_prata.desc": {
-    "en": "Silver Quarterstaff: 1d6 bludgeoning damage, using Strength or Dexterity. On a natural 20, the target makes a Fortitude save or is stunned. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Quarterstaff: 1d6 bludgeoning damage, using Strength or Dexterity. On a natural 20, the target makes a Fortitude save or is stunned. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.bordao_prata.nome": {
     "en": "Silver Quarterstaff",
     "pt": "Bordão de Prata"
+  },
+  "cat.item.bordao_punho_ferro.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage and 1d6 bludgeoning using Strength or Dexterity. On a natural 20, the iron fist forces Fortitude DC 15; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza. Em um crítico natural 20, o punho de ferro exige Fortitude CD 15; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_punho_ferro.nome": {
+    "en": "Iron Fist Staff",
+    "pt": "Bordão do Punho de Ferro"
+  },
+  "cat.item.bordao_punho_sismico.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and a natural critical range of 19–20. On either critical result, the seismic fist forces Fortitude DC 13; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e tem crítico natural com 19–20. Em um desses críticos, o punho sísmico exige Fortitude CD 13; falha deixa o alvo atordoado e sem agir no próximo turno. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_punho_sismico.nome": {
+    "en": "Seismic Fist Staff",
+    "pt": "Bordão do Punho Sísmico"
+  },
+  "cat.item.bordao_serpente_bronze.desc": {
+    "en": "Very rare magical quarterstaff: +1 to hit and damage, 1d6 bludgeoning using Strength or Dexterity, and retains the staff's natural-20 stun. Once every 10 rounds, on a hit, the bronze serpent head coils around the target: Fortitude DC 13 or the target loses its next turn, immobilized until that turn ends. Cleric, Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.bordao_serpente_bronze.nome": {
+    "en": "Bronze Serpent Staff",
+    "pt": "Bordão da Serpente de Bronze"
   },
   "cat.item.bota_alada.desc": {
     "en": "While equipped, grants Flight indefinitely, with a maximum altitude of 3.",
@@ -2615,9 +3118,49 @@ window.LANG_CATALOGO = {
     "en": "Serpent's Lunge",
     "pt": "Bote da Serpente"
   },
+  "cat.item.bracelete_guarda_reflexa.desc": {
+    "en": "While equipped in a ring slot, when an attack hits you, you may choose to reduce the damage by 1d8 (minimum 0). The choice is optional and the 8-round cooldown only starts if you activate it.",
+    "pt": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 1d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+  },
+  "cat.item.bracelete_guarda_reflexa.nome": {
+    "en": "Reflex Guard Bracer",
+    "pt": "Bracelete da Guarda Reflexa"
+  },
+  "cat.item.bracelete_guarda_reflexa_maior.desc": {
+    "en": "While equipped in a ring slot, when an attack hits you, you may choose to reduce the damage by 2d8 (minimum 0). The choice is optional and the 8-round cooldown only starts if you activate it.",
+    "pt": "Enquanto equipado no slot de anel, quando um ataque acertar você, pode escolher reduzir o dano em 2d8 (mínimo 0). A escolha é opcional e a recarga de 8 rodadas só começa se ativar."
+  },
+  "cat.item.bracelete_guarda_reflexa_maior.nome": {
+    "en": "Greater Reflex Guard Bracer",
+    "pt": "Bracelete Maior da Guarda Reflexa"
+  },
   "cat.item.bronze_armor.nome": {
     "en": "Bronze Armor",
     "pt": "Armadura de Bronze"
+  },
+  "cat.item.bronze_armor_aco_damasco.desc": {
+    "en": "Bronze Armor of Damascus Steel: nonmagical armor with AC +5. Damascus Steel grants 1 corrosion level without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Armadura de Bronze de Aço Damasco: armadura mundana com CA +5. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.bronze_armor_aco_damasco.nome": {
+    "en": "Bronze Armor of Damascus Steel",
+    "pt": "Armadura de Bronze de Aço Damasco"
+  },
+  "cat.item.bronze_armor_liga_titanio.desc": {
+    "en": "Bronze Armor of Titanium Alloy: nonmagical armor with AC +5. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it. It also reduces each instance of physical damage received by 1 while equipped, stacking with other damage reduction.",
+    "pt": "Armadura de Bronze de Liga de Titânio: armadura mundana com CA +5. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+  },
+  "cat.item.bronze_armor_liga_titanio.nome": {
+    "en": "Bronze Armor of Titanium Alloy",
+    "pt": "Armadura de Bronze de Liga de Titânio"
+  },
+  "cat.item.bronze_armor_obsidiana_ferro.desc": {
+    "en": "Bronze Armor of Iron Obsidian: nonmagical armor that grants AC +6. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Armadura de Bronze de Obsidiana de Ferro: armadura mundana que concede +6 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.bronze_armor_obsidiana_ferro.nome": {
+    "en": "Bronze Armor of Iron Obsidian",
+    "pt": "Armadura de Bronze de Obsidiana de Ferro"
   },
   "cat.item.cajado_madeira.desc": {
     "en": "Wooden Staff: 1d6 bludgeoning damage, using Strength or Dexterity. Range: any adjacent square.",
@@ -2626,6 +3169,14 @@ window.LANG_CATALOGO = {
   "cat.item.cajado_madeira.nome": {
     "en": "Wooden Staff",
     "pt": "Cajado de Madeira"
+  },
+  "cat.item.caldo_revigorante.desc": {
+    "en": "Portable nourishing broth. Restores 5 HP, 10 hunger, and 10 thirst.",
+    "pt": "Caldo portátil: restaura 5 PV, 10 de fome e 10 de sede."
+  },
+  "cat.item.caldo_revigorante.nome": {
+    "en": "Restorative Broth",
+    "pt": "Caldo Revigorante"
   },
   "cat.item.calice_eter.desc": {
     "en": "Bonus action. Restores one spent 1st-circle spell slot without exceeding the hero's maximum slots.",
@@ -2671,6 +3222,30 @@ window.LANG_CATALOGO = {
     "en": "Chainmail",
     "pt": "Cota de Malha"
   },
+  "cat.item.chainmail_aco_damasco.desc": {
+    "en": "Chainmail of Damascus Steel: nonmagical armor with AC +4. Damascus Steel grants 1 corrosion level without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Cota de Malha de Aço Damasco: armadura mundana com CA +4. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.chainmail_aco_damasco.nome": {
+    "en": "Chainmail of Damascus Steel",
+    "pt": "Cota de Malha de Aço Damasco"
+  },
+  "cat.item.chainmail_liga_titanio.desc": {
+    "en": "Chainmail of Titanium Alloy: nonmagical armor with AC +4. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it. It also reduces each instance of physical damage received by 1 while equipped, stacking with other damage reduction.",
+    "pt": "Cota de Malha de Liga de Titânio: armadura mundana com CA +4. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+  },
+  "cat.item.chainmail_liga_titanio.nome": {
+    "en": "Chainmail of Titanium Alloy",
+    "pt": "Cota de Malha de Liga de Titânio"
+  },
+  "cat.item.chainmail_obsidiana_ferro.desc": {
+    "en": "Chainmail of Iron Obsidian: nonmagical armor that grants AC +5. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Cota de Malha de Obsidiana de Ferro: armadura mundana que concede +5 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.chainmail_obsidiana_ferro.nome": {
+    "en": "Chainmail of Iron Obsidian",
+    "pt": "Cota de Malha de Obsidiana de Ferro"
+  },
   "cat.item.chapeu_arquimago.desc": {
     "en": "Grants one extra 1st-circle spell slot with its own 20-round recharge. Stacks with the Arcane Staff.",
     "pt": "Concede um slot extra de magia de 1º círculo com recarga de 20 rodadas. O slot tem recarga independente e acumula com o Cajado Arcano."
@@ -2703,6 +3278,14 @@ window.LANG_CATALOGO = {
     "en": "Warlock's Hat",
     "pt": "Chapéu do Bruxo"
   },
+  "cat.item.chapeu_cacador.desc": {
+    "en": "+2 damage per successful melee or ranged weapon hit while equipped.",
+    "pt": "+2 de dano por acerto com armas corpo a corpo ou à distância."
+  },
+  "cat.item.chapeu_cacador.nome": {
+    "en": "Hunter's Hat",
+    "pt": "Chapéu do Caçador"
+  },
   "cat.item.chapeu_conjurador.desc": {
     "en": "+2 to the saving throw DC of your spells while equipped. Usable by Mage and Cleric.",
     "pt": "+2 na CD dos testes de resistência das magias enquanto equipado. Usável por Mago e Clérigo."
@@ -2711,6 +3294,14 @@ window.LANG_CATALOGO = {
     "en": "Spellcaster's Hat",
     "pt": "Chapéu do Conjurador"
   },
+  "cat.item.chapeu_explorador.desc": {
+    "en": "+2 vision and +1 to attacks while equipped.",
+    "pt": "+2 de visão e +1 nos ataques enquanto equipado."
+  },
+  "cat.item.chapeu_explorador.nome": {
+    "en": "Explorer's Hat",
+    "pt": "Chapéu do Explorador"
+  },
   "cat.item.chicote.desc": {
     "en": "Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield.",
     "pt": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
@@ -2718,6 +3309,14 @@ window.LANG_CATALOGO = {
   "cat.item.chicote.nome": {
     "en": "Whip",
     "pt": "Chicote"
+  },
+  "cat.item.chicote_encore.desc": {
+    "en": "Very rare magical Bard-only whip: 1d4 slashing damage using Dexterity, range 2, and usable in the off hand. When equipped with Bagpipes, once every 10 rounds after the initial Improvisation roll, the Bard may replace any result with an Encore and roll its two extra results normally, or turn a natural 12 into a Great Encore. Either choice starts the same 10-round cooldown. No flat attack or damage bonus.",
+    "pt": "Raridade: Muito rara. Chicote mágico exclusivo do Bardo; causa 1d4 cortante usando Destreza, tem alcance 2 e pode ser usado na mão secundária. Enquanto estiver equipado junto com uma Gaita, uma vez a cada 10 rodadas após a rolagem inicial de Improviso, o Bardo pode substituir qualquer resultado por um Encore (rola os dois resultados extras normalmente) ou, se obtiver um 12 natural, transformá-lo em Grande Encore. A escolha gasta a mesma recarga de 10 rodadas. Não concede bônus numérico no acerto ou dano."
+  },
+  "cat.item.chicote_encore.nome": {
+    "en": "Encore Whip",
+    "pt": "Chicote do Encore"
   },
   "cat.item.chicote_fogo.desc": {
     "en": "Rare magical whip: 1d4 slashing damage, +1 to hit and damage. A critical hit deals +1d6 fire damage. Each successful hit sets the target on fire for 1d4 rounds; it takes 1 fire damage per round. Burning damage does not stack. New hits keep the longer duration. Water or spending an action extinguishes it. Bard, Rogue, Paladin, and Warrior only.",
@@ -2728,8 +3327,8 @@ window.LANG_CATALOGO = {
     "pt": "Chicote de Fogo"
   },
   "cat.item.chicote_prata.desc": {
-    "en": "Silver Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.chicote_prata.nome": {
     "en": "Silver Whip",
@@ -2742,6 +3341,14 @@ window.LANG_CATALOGO = {
   "cat.item.choque_do_trovao.nome": {
     "en": "Thunder Shock",
     "pt": "Choque do Trovão"
+  },
+  "cat.item.cinto_arsenal_encantado.desc": {
+    "en": "While equipped, provides 4 pockets for throwables, bottled effects, potions and poisons, each holding up to 8 identical units, plus 1 quiver slot for up to 40 arrows or bolts. Contents remain stored when unequipped.",
+    "pt": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos, cada um com até 8 unidades iguais, e 1 espaço de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
+  },
+  "cat.item.cinto_arsenal_encantado.nome": {
+    "en": "Enchanted Arsenal Belt",
+    "pt": "Cinto-Arsenal Encantado"
   },
   "cat.item.cinto_com_bolsos.desc": {
     "en": "While equipped, provides 2 pockets for throwables, bottled effects, potions and poisons. Each pocket holds up to 4 identical units. Items remain in the belt when it is unequipped and are inaccessible until it is equipped again.",
@@ -2758,6 +3365,30 @@ window.LANG_CATALOGO = {
   "cat.item.cinto_utilidades.nome": {
     "en": "Utility Belt",
     "pt": "Cinto de Utilidades"
+  },
+  "cat.item.cinto_utilidades_aprimorado.desc": {
+    "en": "While equipped, provides 4 pockets for throwables, bottled effects, potions and poisons. Each pocket holds up to 8 identical units. Items remain in the belt when it is unequipped and are inaccessible until it is equipped again.",
+    "pt": "Equipado, oferece 4 bolsos para arremessáveis, frascos de efeito, poções e venenos. Cada bolso guarda até 8 unidades iguais. Os itens permanecem no cinto quando ele é desequipado e ficam inacessíveis até ser equipado novamente."
+  },
+  "cat.item.cinto_utilidades_aprimorado.nome": {
+    "en": "Improved Utility Belt",
+    "pt": "Cinto de Utilidades Aprimorado"
+  },
+  "cat.item.cinzas_ardentes.desc": {
+    "en": "Rarity: Very rare. Magic longsword, +1 to hit and damage; each hit deals +1d4 fire and sets the target ablaze for 1d4 rounds, taking 1 fire damage per round. The duration does not stack: new hits keep the highest value. On a critical hit, deals an extra 1d6 fire. Keeps a natural 19–20 critical range. Usable by Bard, Rogue, Paladin and Warrior.",
+    "pt": "Raridade: Muito rara. Espada longa mágica +1 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 1d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.cinzas_ardentes.nome": {
+    "en": "Burning Ashes",
+    "pt": "Cinzas Ardentes"
+  },
+  "cat.item.cinzas_ardentes_mais_3.desc": {
+    "en": "Rarity: Legendary. Magic longsword, +3 to hit and damage; each hit deals +1d4 fire and sets the target ablaze for 1d4 rounds, taking 1 fire damage per round. The duration does not stack: new hits keep the highest value. On a critical hit, deals an extra 2d6 fire. Keeps a natural 19–20 critical range. Usable by Bard, Rogue, Paladin and Warrior.",
+    "pt": "Raridade: Lendária. Espada longa mágica +3 no acerto e no dano; cada acerto causa +1d4 de fogo e deixa o alvo queimando por 1d4 rodadas, sofrendo 1 de fogo por rodada. A duração não se soma: novos acertos mantêm o maior valor. Em crítico, causa mais 2d6 de fogo. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.cinzas_ardentes_mais_3.nome": {
+    "en": "Burning Ashes +3",
+    "pt": "Cinzas Ardentes +3"
   },
   "cat.item.circlet.desc": {
     "en": "+1 Armor Class and +2 maximum Hit Points while equipped.",
@@ -2791,9 +3422,33 @@ window.LANG_CATALOGO = {
     "en": "Dagger",
     "pt": "Adaga"
   },
+  "cat.item.dagger_aco_damasco.desc": {
+    "en": "Damascus Steel Dagger: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Adaga de Aço Damasco: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.dagger_aco_damasco.nome": {
+    "en": "Damascus Steel Dagger",
+    "pt": "Adaga de Aço Damasco"
+  },
+  "cat.item.dagger_liga_titanio.desc": {
+    "en": "Titanium Alloy Dagger: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Adaga de Liga de Titânio: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.dagger_liga_titanio.nome": {
+    "en": "Titanium Alloy Dagger",
+    "pt": "Adaga de Liga de Titânio"
+  },
+  "cat.item.dagger_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Dagger: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.dagger_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Dagger",
+    "pt": "Adaga de Obsidiana de Ferro"
+  },
   "cat.item.dagger_prata.desc": {
-    "en": "Silver Dagger: 1d4 piercing damage, using Strength or Dexterity. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Dagger: 1d4 piercing damage, using Strength or Dexterity. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.dagger_prata.nome": {
     "en": "Silver Dagger",
@@ -2843,6 +3498,46 @@ window.LANG_CATALOGO = {
     "en": "Large Shield",
     "pt": "Escudo Grande"
   },
+  "cat.item.escudo_g_aco_damasco.desc": {
+    "en": "Mundane shield. Grants +2 AC and reduces each incoming damage instance by 2. Tolerates 1 corrosion level without penalty; the next 2 levels apply normal penalties, and the shield breaks on level 4.",
+    "pt": "Escudo Grande de Aço Damasco: escudo mundano que mantém CA +2 e redução base 2. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+  },
+  "cat.item.escudo_g_aco_damasco.nome": {
+    "en": "Large Shield of Damascus Steel",
+    "pt": "Escudo Grande de Aço Damasco"
+  },
+  "cat.item.escudo_g_liga_titanio.desc": {
+    "en": "Mundane shield. Grants +2 AC and reduces each incoming damage instance by 2. Tolerates 2 corrosion levels without penalty; the next 3 levels apply normal penalties, and the shield breaks on level 6. Also reduces each instance of physical damage by 1; this stacks with other reductions.",
+    "pt": "Escudo Grande de Liga de Titânio: escudo mundano com CA +2 e redução base 2. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
+  },
+  "cat.item.escudo_g_liga_titanio.nome": {
+    "en": "Large Shield of Titanium Alloy",
+    "pt": "Escudo Grande de Liga de Titânio"
+  },
+  "cat.item.escudo_g_obsidiana_ferro.desc": {
+    "en": "Mundane shield. Grants +3 AC and reduces each incoming damage instance by 2. Its fragile structure means the first corrosive hit destroys it.",
+    "pt": "Escudo Grande de Obsidiana de Ferro: escudo mundano que concede CA +3. Obsidiana de Ferro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+  },
+  "cat.item.escudo_g_obsidiana_ferro.nome": {
+    "en": "Large Shield of Iron Obsidian",
+    "pt": "Escudo Grande de Obsidiana de Ferro"
+  },
+  "cat.item.escudo_g_retalhacao_trovejante.desc": {
+    "en": "Magical large metal shield: +3 AC and damage reduction 2. Manto de Raios (main action): for 5 rounds, every creature that hits you with an attack takes 1d6 lightning damage. 20-round cooldown; activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo Grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+  },
+  "cat.item.escudo_g_retalhacao_trovejante.nome": {
+    "en": "Large Shield of Thundering Retribution",
+    "pt": "Escudo Grande da Retaliação Trovejante"
+  },
+  "cat.item.escudo_grande_vinculo_espinhoso.desc": {
+    "en": "Magical large metal shield: +3 AC and damage reduction 2. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo grande metálico mágico: concede +3 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+  },
+  "cat.item.escudo_grande_vinculo_espinhoso.nome": {
+    "en": "Large Shield of the Thorned Bond",
+    "pt": "Escudo Grande do Vínculo Espinhoso"
+  },
   "cat.item.escudo_madeira_grande.desc": {
     "en": "Reinforced large wooden shield. Grants +2 AC and reduces each instance of incoming damage by 1. Usable by Cleric, Warrior and Paladin; can be corroded by the Organic Devourer.",
     "pt": "Escudo grande de madeira reforçado. Concede +2 CA e reduz em 1 cada instância de dano recebido. Pode ser usado por Clérigo, Guerreiro e Paladino; pode ser corroído pelo Devorador Orgânico."
@@ -2850,6 +3545,46 @@ window.LANG_CATALOGO = {
   "cat.item.escudo_madeira_grande.nome": {
     "en": "Reinforced Large Wooden Shield",
     "pt": "Escudo Grande de Madeira Reforçado"
+  },
+  "cat.item.escudo_madeira_grande_cedro_rubro.desc": {
+    "en": "Mundane shield. Grants +3 AC and reduces each incoming damage instance by 1. Its fragile structure means the first corrosive hit destroys it.",
+    "pt": "Escudo Grande de Madeira Reforçado de Cedro Rubro: escudo mundano que concede CA +3. Cedro Rubro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+  },
+  "cat.item.escudo_madeira_grande_cedro_rubro.nome": {
+    "en": "Reinforced Large Wooden Shield of Red Cedar",
+    "pt": "Escudo Grande de Madeira Reforçado de Cedro Rubro"
+  },
+  "cat.item.escudo_madeira_grande_cerne_tita.desc": {
+    "en": "Mundane shield. Grants +2 AC and reduces each incoming damage instance by 1. Tolerates 2 corrosion levels without penalty; the next 3 levels apply normal penalties, and the shield breaks on level 6. Also reduces each instance of physical damage by 1; this stacks with other reductions.",
+    "pt": "Escudo Grande de Madeira Reforçado de Cerne de Titã: escudo mundano com CA +2 e redução base 1. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
+  },
+  "cat.item.escudo_madeira_grande_cerne_tita.nome": {
+    "en": "Reinforced Large Wooden Shield of Titanheart Wood",
+    "pt": "Escudo Grande de Madeira Reforçado de Cerne de Titã"
+  },
+  "cat.item.escudo_madeira_grande_freixo_negro.desc": {
+    "en": "Mundane shield. Grants +2 AC and reduces each incoming damage instance by 1. Tolerates 1 corrosion level without penalty; the next 2 levels apply normal penalties, and the shield breaks on level 4.",
+    "pt": "Escudo Grande de Madeira Reforçado de Freixo Negro: escudo mundano que mantém CA +2 e redução base 1. Freixo Negro tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+  },
+  "cat.item.escudo_madeira_grande_freixo_negro.nome": {
+    "en": "Reinforced Large Wooden Shield of Black Ash",
+    "pt": "Escudo Grande de Madeira Reforçado de Freixo Negro"
+  },
+  "cat.item.escudo_madeira_retalhacao_trovejante.desc": {
+    "en": "Magical large wooden shield: +3 AC and damage reduction 1. Manto de Raios (main action): for 5 rounds, every creature that hits you with an attack takes 1d6 lightning damage. 20-round cooldown; activation costs 1 hunger and 1 thirst. Can be corroded by the Organic Devourer.",
+    "pt": "Escudo Grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar. Pode ser corroído pelo Devorador Orgânico."
+  },
+  "cat.item.escudo_madeira_retalhacao_trovejante.nome": {
+    "en": "Large Wooden Shield of Thundering Retribution",
+    "pt": "Escudo Grande de Madeira da Retaliação Trovejante"
+  },
+  "cat.item.escudo_madeira_vinculo_espinhoso.desc": {
+    "en": "Magical large wooden shield: +3 AC and damage reduction 1. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst. Can be corroded by the Organic Devourer.",
+    "pt": "Escudo grande de madeira mágico: concede +3 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador Orgânico."
+  },
+  "cat.item.escudo_madeira_vinculo_espinhoso.nome": {
+    "en": "Large Wooden Shield of the Thorned Bond",
+    "pt": "Escudo de Madeira do Vínculo Espinhoso"
   },
   "cat.item.escudo_p.desc": {
     "en": "AC bonus +1. Reduces the damage of every attack or damage effect you take by 1, with no cap per round. It also reduces spell and trap damage; when a successful Reflex save halves the damage, apply the halving first and this reduction after.",
@@ -2859,6 +3594,46 @@ window.LANG_CATALOGO = {
     "en": "Small Shield",
     "pt": "Escudo Pequeno"
   },
+  "cat.item.escudo_p_cedro_rubro.desc": {
+    "en": "Mundane shield. Grants +2 AC and reduces each incoming damage instance by 1. Its fragile structure means the first corrosive hit destroys it.",
+    "pt": "Escudo Pequeno de Cedro Rubro: escudo mundano que concede CA +2. Cedro Rubro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+  },
+  "cat.item.escudo_p_cedro_rubro.nome": {
+    "en": "Small Shield of Red Cedar",
+    "pt": "Escudo Pequeno de Cedro Rubro"
+  },
+  "cat.item.escudo_p_cerne_tita.desc": {
+    "en": "Mundane shield. Grants +1 AC and reduces each incoming damage instance by 1. Tolerates 2 corrosion levels without penalty; the next 3 levels apply normal penalties, and the shield breaks on level 6. The small shield gains no extra physical damage reduction.",
+    "pt": "Escudo Pequeno de Cerne de Titã: escudo mundano com CA +1 e redução base 1. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. O modelo pequeno não recebe redução física adicional."
+  },
+  "cat.item.escudo_p_cerne_tita.nome": {
+    "en": "Small Shield of Titanheart Wood",
+    "pt": "Escudo Pequeno de Cerne de Titã"
+  },
+  "cat.item.escudo_p_freixo_negro.desc": {
+    "en": "Mundane shield. Grants +1 AC and reduces each incoming damage instance by 1. Tolerates 1 corrosion level without penalty; the next 2 levels apply normal penalties, and the shield breaks on level 4.",
+    "pt": "Escudo Pequeno de Freixo Negro: escudo mundano que mantém CA +1 e redução base 1. Freixo Negro tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+  },
+  "cat.item.escudo_p_freixo_negro.nome": {
+    "en": "Small Shield of Black Ash",
+    "pt": "Escudo Pequeno de Freixo Negro"
+  },
+  "cat.item.escudo_p_retalhacao_trovejante.desc": {
+    "en": "Magical small shield: +2 AC and damage reduction 1. Manto de Raios (main action): for 5 rounds, every creature that hits you with an attack takes 1d6 lightning damage. 20-round cooldown; activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo Pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Manto de Raios (ação principal): por 5 rodadas, cada criatura que acertar um ataque contra você recebe 1d6 de dano elétrico. Recarga de 20 rodadas; custa 1 fome e 1 sede ao ativar."
+  },
+  "cat.item.escudo_p_retalhacao_trovejante.nome": {
+    "en": "Small Shield of Thundering Retribution",
+    "pt": "Escudo Pequeno da Retaliação Trovejante"
+  },
+  "cat.item.escudo_pequeno_vinculo_espinhoso.desc": {
+    "en": "Magical small shield: +2 AC and damage reduction 1. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst.",
+    "pt": "Escudo pequeno mágico: concede +2 CA e reduz em 1 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede."
+  },
+  "cat.item.escudo_pequeno_vinculo_espinhoso.nome": {
+    "en": "Small Shield of the Thorned Bond",
+    "pt": "Escudo Pequeno do Vínculo Espinhoso"
+  },
   "cat.item.escudo_torre.desc": {
     "en": "Paladin-only metal tower shield. Grants +3 AC and reduces each instance of incoming damage by 2. Can be corroded by the Metal Devourer.",
     "pt": "Escudo torre metálico, exclusivo do Paladino. Concede +3 CA e reduz em 2 cada instância de dano recebido. Pode ser corroído pelo Devorador de Metal."
@@ -2866,6 +3641,38 @@ window.LANG_CATALOGO = {
   "cat.item.escudo_torre.nome": {
     "en": "Roman Tower Shield",
     "pt": "Escudo Torre Romano"
+  },
+  "cat.item.escudo_torre_aco_damasco.desc": {
+    "en": "Mundane shield. Grants +3 AC and reduces each incoming damage instance by 2. Tolerates 1 corrosion level without penalty; the next 2 levels apply normal penalties, and the shield breaks on level 4.",
+    "pt": "Escudo Torre Romano de Aço Damasco: escudo mundano que mantém CA +3 e redução base 2. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+  },
+  "cat.item.escudo_torre_aco_damasco.nome": {
+    "en": "Roman Tower Shield of Damascus Steel",
+    "pt": "Escudo Torre Romano de Aço Damasco"
+  },
+  "cat.item.escudo_torre_liga_titanio.desc": {
+    "en": "Mundane shield. Grants +3 AC and reduces each incoming damage instance by 2. Tolerates 2 corrosion levels without penalty; the next 3 levels apply normal penalties, and the shield breaks on level 6. Also reduces each instance of physical damage by 1; this stacks with other reductions.",
+    "pt": "Escudo Torre Romano de Liga de Titânio: escudo mundano com CA +3 e redução base 2. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
+  },
+  "cat.item.escudo_torre_liga_titanio.nome": {
+    "en": "Roman Tower Shield of Titanium Alloy",
+    "pt": "Escudo Torre Romano de Liga de Titânio"
+  },
+  "cat.item.escudo_torre_obsidiana_ferro.desc": {
+    "en": "Mundane shield. Grants +4 AC and reduces each incoming damage instance by 2. Its fragile structure means the first corrosive hit destroys it.",
+    "pt": "Escudo Torre Romano de Obsidiana de Ferro: escudo mundano que concede CA +4. Obsidiana de Ferro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+  },
+  "cat.item.escudo_torre_obsidiana_ferro.nome": {
+    "en": "Roman Tower Shield of Iron Obsidian",
+    "pt": "Escudo Torre Romano de Obsidiana de Ferro"
+  },
+  "cat.item.escudo_torre_vinculo_espinhoso.desc": {
+    "en": "Magical metal tower shield, Paladin only: +4 AC and damage reduction 2. Grants the Cursed Bond of Pain without using a spell slot; it keeps the normal Will save, four-bond limit, and -1 penalty to the target's next attack. This shield's bond lasts 5 rounds; cooldown 25 rounds. Activation costs 1 hunger and 1 thirst. Can be corroded by the Metal Devourer.",
+    "pt": "Escudo torre metálico mágico, exclusivo do Paladino: concede +4 CA e reduz em 2 cada instância de dano recebido. Concede Vínculo Maldito da Dor sem consumir slot de magia; conserva o teste de Vontade, o limite de quatro vínculos e a penalidade de -1 no próximo ataque do alvo. Cada vínculo deste escudo dura 5 rodadas; recarga de 25 rodadas. Ativar custa 1 fome e 1 sede; pode ser corroído pelo Devorador de Metal."
+  },
+  "cat.item.escudo_torre_vinculo_espinhoso.nome": {
+    "en": "Tower Shield of the Thorned Bond",
+    "pt": "Escudo Torre do Vínculo Espinhoso"
   },
   "cat.item.espada2m.desc": {
     "en": "Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20.",
@@ -2875,13 +3682,101 @@ window.LANG_CATALOGO = {
     "en": "Two-Handed Sword",
     "pt": "Espada de 2 Mãos"
   },
+  "cat.item.espada2m_aco_damasco.desc": {
+    "en": "Damascus Steel Two-Handed Sword: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Espada de 2 Mãos de Aço Damasco: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.espada2m_aco_damasco.nome": {
+    "en": "Damascus Steel Two-Handed Sword",
+    "pt": "Espada de 2 Mãos de Aço Damasco"
+  },
+  "cat.item.espada2m_liga_titanio.desc": {
+    "en": "Titanium Alloy Two-Handed Sword: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Espada de 2 Mãos de Liga de Titânio: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.espada2m_liga_titanio.nome": {
+    "en": "Titanium Alloy Two-Handed Sword",
+    "pt": "Espada de 2 Mãos de Liga de Titânio"
+  },
+  "cat.item.espada2m_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Two-Handed Sword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.espada2m_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Two-Handed Sword",
+    "pt": "Espada de 2 Mãos de Obsidiana de Ferro"
+  },
   "cat.item.espada2m_prata.desc": {
-    "en": "Silver Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.espada2m_prata.nome": {
     "en": "Silver Two-Handed Sword",
     "pt": "Espada de 2 Mãos de Prata"
+  },
+  "cat.item.espada_bastarda_ruptura.desc": {
+    "en": "Rarity: Legendary. Magic bastard sword, +4 to hit and damage; deals 1d10 slashing + Strength, keeps a natural 19–20 critical range and ignores 2 points of physical damage reduction per hit. Usable by Paladin and Warrior.",
+    "pt": "Raridade: Lendária. Espada bastarda mágica +4 no acerto e no dano; causa 1d10 cortante + Força, mantém crítico natural com 19–20 e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.espada_bastarda_ruptura.nome": {
+    "en": "Bastard Sword of Rupture",
+    "pt": "Espada Bastarda da Ruptura"
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_1.desc": {
+    "en": "Radiant Verdict +1 Bastard Sword: magical Paladin-only bastard sword, 1d10 slashing + Strength, natural 19–20 critical ×2, +1 to hit and damage. On a hit, the Paladin may choose to add 2d8 holy damage; 10-round cooldown, started only when used.",
+    "pt": "Espada Bastarda do Veredito Radiante +1: arma mágica exclusiva do Paladino, 1d10 cortante + Força, crítico natural 19–20 ×2, +1 no acerto e dano. Ao acertar, o Paladino pode escolher acrescentar 2d8 de dano sagrado; recarga de 10 rodadas, iniciada somente quando usar."
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_1.nome": {
+    "en": "Radiant Verdict Bastard Sword +1",
+    "pt": "Espada Bastarda do Veredito Radiante +1"
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_3.desc": {
+    "en": "Radiant Verdict +3 Bastard Sword: magical Paladin-only bastard sword, 1d10 slashing + Strength, natural 19–20 critical ×2, +3 to hit and damage. On a hit, the Paladin may choose to add 2d8 holy damage once every 10 rounds. Every natural critical also adds 2d8 holy damage automatically; this damage is not multiplied by the critical and does not stack with a manual activation on the same hit.",
+    "pt": "Espada Bastarda do Veredito Radiante +3: arma mágica exclusiva do Paladino, 1d10 cortante + Força, crítico natural 19–20 ×2, +3 no acerto e dano. Ao acertar, o Paladino pode escolher acrescentar 2d8 de dano sagrado uma vez a cada 10 rodadas. Todo crítico natural também acrescenta 2d8 sagrado automaticamente; esse dano não é multiplicado pelo crítico nem se acumula com uma ativação manual no mesmo golpe."
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_3.nome": {
+    "en": "Radiant Verdict Bastard Sword +3",
+    "pt": "Espada Bastarda do Veredito Radiante +3"
+  },
+  "cat.item.espada_juramento_inquebrantavel.desc": {
+    "en": "Sword of the Unbroken Oath: magical longsword exclusive to the Paladin; 1d8 slashing + Strength, natural 19–20 critical ×2, with no fixed attack or damage bonus. Oath Protection: optional reaction when a living ally within 3 squares takes positive damage from an attack; reduce that damage by 1d6 before HP loss, once every 10 rounds.",
+    "pt": "Espada do Juramento Inquebrantável: arma mágica exclusiva do Paladino; 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação opcional quando aliado vivo a até 3 casas sofre dano positivo de ataque; reduz aquele dano em 1d6 antes da perda de PV, uma vez a cada 10 rodadas."
+  },
+  "cat.item.espada_juramento_inquebrantavel.nome": {
+    "en": "Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável"
+  },
+  "cat.item.espada_juramento_inquebrantavel_aco_damasco.desc": {
+    "en": "Damascus Steel Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; +1 to hit, N=1/M=2 corrosion.",
+    "pt": "Espada do Juramento Inquebrantável de Aço Damasco: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no acerto, N=1/M=2 contra corrosão."
+  },
+  "cat.item.espada_juramento_inquebrantavel_aco_damasco.nome": {
+    "en": "Damascus Steel Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Aço Damasco"
+  },
+  "cat.item.espada_juramento_inquebrantavel_liga_titanio.desc": {
+    "en": "Titanium Alloy Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; no offensive bonus, N=2/M=3 corrosion.",
+    "pt": "Espada do Juramento Inquebrantável de Liga de Titânio: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; sem bônus ofensivo, N=2/M=3 contra corrosão."
+  },
+  "cat.item.espada_juramento_inquebrantavel_liga_titanio.nome": {
+    "en": "Titanium Alloy Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Liga de Titânio"
+  },
+  "cat.item.espada_juramento_inquebrantavel_obsidiana_ferro.desc": {
+    "en": "Obsidian Iron Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; +1 damage, N=1/M=2 corrosion.",
+    "pt": "Espada do Juramento Inquebrantável de Obsidiana de Ferro: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no dano, N=1/M=2 contra corrosão."
+  },
+  "cat.item.espada_juramento_inquebrantavel_obsidiana_ferro.nome": {
+    "en": "Obsidian Iron Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Obsidiana de Ferro"
+  },
+  "cat.item.espada_juramento_inquebrantavel_prata.desc": {
+    "en": "Silver Sword of the Unbroken Oath: magical sword exclusive to the Paladin; 1d8 slashing + Strength, natural 19–20 critical ×2, no fixed attack or damage bonus. Oath Protection: reaction reducing attack damage to a living ally within 3 squares by 1d6, once every 10 rounds. Silver has no penalty at corrosion level 1 and is destroyed at level 2.",
+    "pt": "Espada do Juramento Inquebrantável de Prata: arma mágica exclusiva do Paladino; causa 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação para reduzir em 1d6 o dano de um ataque contra aliado vivo a até 3 casas, uma vez a cada 10 rodadas. A prata não penaliza no primeiro nível de corrosão e a arma é destruída no segundo."
+  },
+  "cat.item.espada_juramento_inquebrantavel_prata.nome": {
+    "en": "Silver Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Prata"
   },
   "cat.item.espada_longa_colossal.desc": {
     "en": "A weapon of gigantic proportions: 2d8+6, 2-square reach.",
@@ -2947,6 +3842,14 @@ window.LANG_CATALOGO = {
     "en": "Fata Morgana",
     "pt": "Fata Morgana"
   },
+  "cat.item.fermentado_raizes.desc": {
+    "en": "Fermented root drink. Restores 3 HP and 17 thirst.",
+    "pt": "Bebida fermentada de raízes: restaura 3 PV e 17 de sede."
+  },
+  "cat.item.fermentado_raizes.nome": {
+    "en": "Fermented Root Drink",
+    "pt": "Fermentado de Raízes"
+  },
   "cat.item.ferrao_do_brejo.nome": {
     "en": "Marsh Stinger",
     "pt": "Ferrão do Brejo"
@@ -2960,8 +3863,8 @@ window.LANG_CATALOGO = {
     "pt": "Ferroada"
   },
   "cat.item.flecha_incendiaria.nome": {
-    "en": "Incendiary Arrow",
-    "pt": "Flecha Incendiária"
+    "en": "Incendiary Arrows (×5)",
+    "pt": "Flechas Incendiárias (×5)"
   },
   "cat.item.flechas.nome": {
     "en": "Arrows (×10)",
@@ -3011,6 +3914,14 @@ window.LANG_CATALOGO = {
     "en": "Pitch Flask",
     "pt": "Frasco de Piche"
   },
+  "cat.item.fruto_de_lumen.desc": {
+    "en": "Mystical fruit. Restores 2 HP and 18 hunger.",
+    "pt": "Fruta mística: restaura 2 PV e 18 de fome."
+  },
+  "cat.item.fruto_de_lumen.nome": {
+    "en": "Lumen Fruit",
+    "pt": "Fruto de Lúmen"
+  },
   "cat.item.full_heal.nome": {
     "en": "Party Full Heal",
     "pt": "Cura Completa do Grupo"
@@ -3018,6 +3929,110 @@ window.LANG_CATALOGO = {
   "cat.item.fullplate.nome": {
     "en": "Full Plate Armor",
     "pt": "Armadura Completa"
+  },
+  "cat.item.fullplate_aco_damasco.desc": {
+    "en": "Full Plate Armor of Damascus Steel: nonmagical armor with AC +8. Damascus Steel grants 2 corrosion levels without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Armadura Completa de Aço Damasco: armadura mundana com CA +8. Aço Damasco tolera 2 níveis de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.fullplate_aco_damasco.nome": {
+    "en": "Full Plate Armor of Damascus Steel",
+    "pt": "Armadura Completa de Aço Damasco"
+  },
+  "cat.item.fullplate_liga_titanio.desc": {
+    "en": "Full Plate Armor of Titanium Alloy: nonmagical armor with AC +8. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it. It also reduces each instance of physical damage received by 1 while equipped, stacking with other damage reduction.",
+    "pt": "Armadura Completa de Liga de Titânio: armadura mundana com CA +8. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+  },
+  "cat.item.fullplate_liga_titanio.nome": {
+    "en": "Full Plate Armor of Titanium Alloy",
+    "pt": "Armadura Completa de Liga de Titânio"
+  },
+  "cat.item.fullplate_obsidiana_ferro.desc": {
+    "en": "Full Plate Armor of Iron Obsidian: nonmagical armor that grants AC +9. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Armadura Completa de Obsidiana de Ferro: armadura mundana que concede +9 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.fullplate_obsidiana_ferro.nome": {
+    "en": "Full Plate Armor of Iron Obsidian",
+    "pt": "Armadura Completa de Obsidiana de Ferro"
+  },
+  "cat.item.gancho_corrente.desc": {
+    "en": "Mundane one-handed hook: 1d6 piercing using Dexterity, 3-square straight-line reach with line of sight. Once every 10 rounds, a hit forces Fortitude DC 13; on a failure, pull the target up to 2 squares toward you. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall rules. Usable by Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Gancho de Corrente mundano: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.gancho_corrente.nome": {
+    "en": "Chain Hook",
+    "pt": "Gancho de Corrente"
+  },
+  "cat.item.gancho_corrente_aco_damasco.desc": {
+    "en": "",
+    "pt": "Gancho de Corrente de Aço Damasco: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.gancho_corrente_aco_damasco.nome": {
+    "en": "",
+    "pt": "Gancho de Corrente de Aço Damasco"
+  },
+  "cat.item.gancho_corrente_liga_titanio.desc": {
+    "en": "",
+    "pt": "Gancho de Corrente de Liga de Titânio: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.gancho_corrente_liga_titanio.nome": {
+    "en": "",
+    "pt": "Gancho de Corrente de Liga de Titânio"
+  },
+  "cat.item.gancho_corrente_obsidiana_ferro.desc": {
+    "en": "",
+    "pt": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.gancho_corrente_obsidiana_ferro.nome": {
+    "en": "",
+    "pt": "Gancho de Corrente de Obsidiana de Ferro"
+  },
+  "cat.item.gancho_corrente_prata.desc": {
+    "en": "Silver Chain Hook: 1d6 piercing damage, using Dexterity. Reach: 3 squares in a straight line. Silver: withstands 1 level of corrosion without penalty and is destroyed on the second, and can damage enemies resistant to ordinary weapons.",
+    "pt": "Gancho de Corrente de Prata: 1d6 de dano perfurante, usando Destreza. Alcance: 3 casas em linha reta. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+  },
+  "cat.item.gancho_corrente_prata.nome": {
+    "en": "Silver Chain Hook",
+    "pt": "Gancho de Corrente de Prata"
+  },
+  "cat.item.gancho_escorpiao_superior.desc": {
+    "en": "Superior mundane one-handed hook: 1d6 piercing using Dexterity, 5-square straight-line reach with line of sight. Once every 10 rounds, a hit forces Fortitude DC 13; on a failure, pull the target up to 3 squares toward you. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall rules. Usable by Bard, Rogue, Paladin, and Warrior.",
+    "pt": "Gancho do Escorpião Superior mundano: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.gancho_escorpiao_superior.nome": {
+    "en": "Superior Scorpion Hook",
+    "pt": "Gancho do Escorpião Superior"
+  },
+  "cat.item.gancho_escorpiao_superior_aco_damasco.desc": {
+    "en": "",
+    "pt": "Gancho do Escorpião Superior de Aço Damasco: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.gancho_escorpiao_superior_aco_damasco.nome": {
+    "en": "",
+    "pt": "Gancho do Escorpião Superior de Aço Damasco"
+  },
+  "cat.item.gancho_escorpiao_superior_liga_titanio.desc": {
+    "en": "",
+    "pt": "Gancho do Escorpião Superior de Liga de Titânio: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.gancho_escorpiao_superior_liga_titanio.nome": {
+    "en": "",
+    "pt": "Gancho do Escorpião Superior de Liga de Titânio"
+  },
+  "cat.item.gancho_escorpiao_superior_obsidiana_ferro.desc": {
+    "en": "",
+    "pt": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.gancho_escorpiao_superior_obsidiana_ferro.nome": {
+    "en": "",
+    "pt": "Gancho do Escorpião Superior de Obsidiana de Ferro"
+  },
+  "cat.item.gancho_escorpiao_superior_prata.desc": {
+    "en": "Silver Superior Scorpion Hook: 1d6 piercing damage, using Dexterity. Reach: 5 squares in a straight line. Silver: withstands 1 level of corrosion without penalty and is destroyed on the second, and can damage enemies resistant to ordinary weapons.",
+    "pt": "Gancho do Escorpião Superior de Prata: 1d6 de dano perfurante, usando Destreza. Alcance: 5 casas em linha reta. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+  },
+  "cat.item.gancho_escorpiao_superior_prata.nome": {
+    "en": "Silver Superior Scorpion Hook",
+    "pt": "Gancho do Escorpião Superior de Prata"
   },
   "cat.item.garrafa_agua.nome": {
     "en": "Water Bottle",
@@ -3147,6 +4162,30 @@ window.LANG_CATALOGO = {
     "en": "Hand Crossbow",
     "pt": "Besta de Mão"
   },
+  "cat.item.hand_crossbow_cedro_rubro.desc": {
+    "en": "Red Cedar Hand Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Besta de Mão de Cedro Rubro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.hand_crossbow_cedro_rubro.nome": {
+    "en": "Red Cedar Hand Crossbow",
+    "pt": "Besta de Mão de Cedro Rubro"
+  },
+  "cat.item.hand_crossbow_cerne_tita.desc": {
+    "en": "Titan Heartwood Hand Crossbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Besta de Mão de Cerne de Titã: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.hand_crossbow_cerne_tita.nome": {
+    "en": "Titan Heartwood Hand Crossbow",
+    "pt": "Besta de Mão de Cerne de Titã"
+  },
+  "cat.item.hand_crossbow_freixo_negro.desc": {
+    "en": "Black Ash Hand Crossbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Besta de Mão de Freixo Negro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.hand_crossbow_freixo_negro.nome": {
+    "en": "Black Ash Hand Crossbow",
+    "pt": "Besta de Mão de Freixo Negro"
+  },
   "cat.item.health_potion.nome": {
     "en": "Healing Potion",
     "pt": "Poção de Cura"
@@ -3166,6 +4205,14 @@ window.LANG_CATALOGO = {
   "cat.item.helm_iron.nome": {
     "en": "Iron Helm",
     "pt": "Elmo de Ferro"
+  },
+  "cat.item.hidromel.desc": {
+    "en": "Bottle with 2 doses. Each use restores 18 hunger and thirst and applies −1 Reflex and −1 AC for 10 rounds. Penalties stack; each dose expires 10 rounds after its own use.",
+    "pt": "Garrafa com 2 doses. Cada uso restaura 18 de fome e 18 de sede e aplica −1 em Reflexos e −1 na CA por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+  },
+  "cat.item.hidromel.nome": {
+    "en": "Mead",
+    "pt": "Hidromel"
   },
   "cat.item.ignus_fatus.desc": {
     "en": "Bonus action. Creates a ghostly, stationary image of the hero on a free, visible square within 6 squares. Automatic monsters that perceive it pursue it. Lasts 2 rounds; its first attack dissipates it without harming the hero. You can have only one active illusion at a time.",
@@ -3347,6 +4394,14 @@ window.LANG_CATALOGO = {
     "en": "Tear of the Last Light",
     "pt": "Lágrima da Última Luz"
   },
+  "cat.item.lamina_de_kriswoo.desc": {
+    "en": "Rarity: Legendary. Magical two-handed war axe: 1d12 slashing + Strength, +2 to hit and damage. Natural 19–20 is a critical hit with a ×3 damage multiplier. Grants Whirlwind Attack: a main action that attacks enemies in the four orthogonally adjacent squares, costs 4 Hunger and 4 Thirst, and recharges every 10 rounds. Warriors only.",
+    "pt": "Raridade: Lendária. Machado de guerra mágico de duas mãos: 1d12 cortante + Força, +2 no acerto e no dano. Crítico natural com 19–20, multiplicador ×3. Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede, uma varredura contra inimigos nos quatro quadrados ortogonais adjacentes; recarga de 10 rodadas. Uso exclusivo de Guerreiro."
+  },
+  "cat.item.lamina_de_kriswoo.nome": {
+    "en": "Kriswoo's Blade",
+    "pt": "Lâmina de Kriswoo"
+  },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
     "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
@@ -3354,6 +4409,22 @@ window.LANG_CATALOGO = {
   "cat.item.lamina_do_vento.nome": {
     "en": "Wind Blade",
     "pt": "Lamina do Vento"
+  },
+  "cat.item.lamina_trovejante.desc": {
+    "en": "Rarity: Rare. Magic longsword, +1 to hit and damage; deals 1d8 slashing + Strength and adds 1d4 lightning to the first hit made with it each turn. Keeps a natural 19–20 critical range. Usable by Bard, Rogue, Paladin and Warrior.",
+    "pt": "Raridade: Rara. Espada longa mágica +1 no acerto e no dano; causa 1d8 cortante + Força e acrescenta 1d4 elétrico ao primeiro acerto com ela a cada turno. Mantém crítico natural com 19–20. Uso de Bardo, Ladino, Paladino e Guerreiro."
+  },
+  "cat.item.lamina_trovejante.nome": {
+    "en": "Thunder Blade",
+    "pt": "Lâmina Trovejante"
+  },
+  "cat.item.laminas_riposta.desc": {
+    "en": "Rogue-only consumable. When a melee attack misses you and the enemy is adjacent, spend one blade to make a melee counterattack using Dexterity for 2 damage. Once per round. Stack limit: 10. A vial coats up to 10 blades.",
+    "pt": "Consumível do Ladino. Quando um ataque corpo a corpo errar contra você e o inimigo estiver adjacente, pode gastar uma lâmina para fazer um contra-ataque corpo a corpo de Destreza que causa 2 de dano. Uma vez por rodada. Pilha máxima: 10."
+  },
+  "cat.item.laminas_riposta.nome": {
+    "en": "Riposte Blades",
+    "pt": "Lâminas de Riposta"
   },
   "cat.item.lampada_vigilia_arcana.desc": {
     "en": "Bonus action. For 10 rounds, reveals shadow-hidden creatures to the party within a moving radius of 3 squares around any active hero. The reveal does not end concealment; creatures are hidden again when they leave the radius or the duration ends.",
@@ -3371,6 +4442,14 @@ window.LANG_CATALOGO = {
     "en": "Spear",
     "pt": "Lança"
   },
+  "cat.item.lanca_aco_damasco.desc": {
+    "en": "Damascus Steel Spear: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Lança de Aço Damasco: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_aco_damasco.nome": {
+    "en": "Damascus Steel Spear",
+    "pt": "Lança de Aço Damasco"
+  },
   "cat.item.lanca_curta.desc": {
     "en": "Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares.",
     "pt": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
@@ -3379,13 +4458,45 @@ window.LANG_CATALOGO = {
     "en": "Short Spear",
     "pt": "Lança Curta"
   },
+  "cat.item.lanca_curta_aco_damasco.desc": {
+    "en": "Damascus Steel Short Spear: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Lança Curta de Aço Damasco: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_curta_aco_damasco.nome": {
+    "en": "Damascus Steel Short Spear",
+    "pt": "Lança Curta de Aço Damasco"
+  },
+  "cat.item.lanca_curta_liga_titanio.desc": {
+    "en": "Titanium Alloy Short Spear: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Lança Curta de Liga de Titânio: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_curta_liga_titanio.nome": {
+    "en": "Titanium Alloy Short Spear",
+    "pt": "Lança Curta de Liga de Titânio"
+  },
+  "cat.item.lanca_curta_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Short Spear: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_curta_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Short Spear",
+    "pt": "Lança Curta de Obsidiana de Ferro"
+  },
   "cat.item.lanca_curta_prata.desc": {
-    "en": "Silver Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.lanca_curta_prata.nome": {
     "en": "Silver Short Spear",
     "pt": "Lança Curta de Prata"
+  },
+  "cat.item.lanca_liga_titanio.desc": {
+    "en": "Titanium Alloy Spear: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Lança de Liga de Titânio: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_liga_titanio.nome": {
+    "en": "Titanium Alloy Spear",
+    "pt": "Lança de Liga de Titânio"
   },
   "cat.item.lanca_longa_colossal.desc": {
     "en": "4-square reach in a straight line, 2 diagonally, and adjacent attacks; 2d8+6 damage.",
@@ -3395,9 +4506,17 @@ window.LANG_CATALOGO = {
     "en": "Colossal Long Spear",
     "pt": "Lança Longa Colossal"
   },
+  "cat.item.lanca_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Spear: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Spear",
+    "pt": "Lança de Obsidiana de Ferro"
+  },
   "cat.item.lanca_prata.desc": {
-    "en": "Silver Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Spear: 1d8 piercing damage, using Strength. Range: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 4 squares. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.lanca_prata.nome": {
     "en": "Silver Spear",
@@ -3411,9 +4530,57 @@ window.LANG_CATALOGO = {
     "en": "Leather Armor Reinforced with Chainmail",
     "pt": "Armadura de Couro Revestido com Malha"
   },
+  "cat.item.leather_mail_aco_damasco.desc": {
+    "en": "Leather Armor Reinforced with Chainmail of Damascus Steel: nonmagical armor with AC +6. Damascus Steel grants 1 corrosion level without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Armadura de Couro Revestido com Malha de Aço Damasco: armadura mundana com CA +6. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.leather_mail_aco_damasco.nome": {
+    "en": "Leather Armor Reinforced with Chainmail of Damascus Steel",
+    "pt": "Armadura de Couro Revestido com Malha de Aço Damasco"
+  },
+  "cat.item.leather_mail_liga_titanio.desc": {
+    "en": "Leather Armor Reinforced with Chainmail of Titanium Alloy: nonmagical armor with AC +6. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it. It also reduces each instance of physical damage received by 1 while equipped, stacking with other damage reduction.",
+    "pt": "Armadura de Couro Revestido com Malha de Liga de Titânio: armadura mundana com CA +6. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+  },
+  "cat.item.leather_mail_liga_titanio.nome": {
+    "en": "Leather Armor Reinforced with Chainmail of Titanium Alloy",
+    "pt": "Armadura de Couro Revestido com Malha de Liga de Titânio"
+  },
+  "cat.item.leather_mail_obsidiana_ferro.desc": {
+    "en": "Leather Armor Reinforced with Chainmail of Iron Obsidian: nonmagical armor that grants AC +7. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Armadura de Couro Revestido com Malha de Obsidiana de Ferro: armadura mundana que concede +7 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.leather_mail_obsidiana_ferro.nome": {
+    "en": "Leather Armor Reinforced with Chainmail of Iron Obsidian",
+    "pt": "Armadura de Couro Revestido com Malha de Obsidiana de Ferro"
+  },
   "cat.item.leather_plate.nome": {
     "en": "Leather and Plate Armor",
     "pt": "Armadura de Couro e Placas"
+  },
+  "cat.item.leather_plate_aco_damasco.desc": {
+    "en": "Leather and Plate Armor of Damascus Steel: nonmagical armor with AC +3. Damascus Steel grants 1 corrosion level without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Armadura de Couro e Placas de Aço Damasco: armadura mundana com CA +3. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.leather_plate_aco_damasco.nome": {
+    "en": "Leather and Plate Armor of Damascus Steel",
+    "pt": "Armadura de Couro e Placas de Aço Damasco"
+  },
+  "cat.item.leather_plate_liga_titanio.desc": {
+    "en": "Leather and Plate Armor of Titanium Alloy: nonmagical armor with AC +3. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it.",
+    "pt": "Armadura de Couro e Placas de Liga de Titânio: armadura mundana com CA +3. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça."
+  },
+  "cat.item.leather_plate_liga_titanio.nome": {
+    "en": "Leather and Plate Armor of Titanium Alloy",
+    "pt": "Armadura de Couro e Placas de Liga de Titânio"
+  },
+  "cat.item.leather_plate_obsidiana_ferro.desc": {
+    "en": "Leather and Plate Armor of Iron Obsidian: nonmagical armor that grants AC +4. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Armadura de Couro e Placas de Obsidiana de Ferro: armadura mundana que concede +4 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.leather_plate_obsidiana_ferro.nome": {
+    "en": "Leather and Plate Armor of Iron Obsidian",
+    "pt": "Armadura de Couro e Placas de Obsidiana de Ferro"
   },
   "cat.item.leite.desc": {
     "en": "+5 hunger and +5 thirst.",
@@ -3431,6 +4598,30 @@ window.LANG_CATALOGO = {
     "en": "Long Bow",
     "pt": "Arco Longo"
   },
+  "cat.item.longbow_cedro_rubro.desc": {
+    "en": "Red Cedar Longbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Arco Longo de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.longbow_cedro_rubro.nome": {
+    "en": "Red Cedar Longbow",
+    "pt": "Arco Longo de Cedro Rubro"
+  },
+  "cat.item.longbow_cerne_tita.desc": {
+    "en": "Titan Heartwood Longbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Arco Longo de Cerne de Titã: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.longbow_cerne_tita.nome": {
+    "en": "Titan Heartwood Longbow",
+    "pt": "Arco Longo de Cerne de Titã"
+  },
+  "cat.item.longbow_freixo_negro.desc": {
+    "en": "Black Ash Longbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Arco Longo de Freixo Negro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.longbow_freixo_negro.nome": {
+    "en": "Black Ash Longbow",
+    "pt": "Arco Longo de Freixo Negro"
+  },
   "cat.item.longsword.desc": {
     "en": "Long Sword: 1d8 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
@@ -3439,9 +4630,33 @@ window.LANG_CATALOGO = {
     "en": "Long Sword",
     "pt": "Espada Longa"
   },
+  "cat.item.longsword_aco_damasco.desc": {
+    "en": "Damascus Steel Longsword: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Espada Longa de Aço Damasco: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.longsword_aco_damasco.nome": {
+    "en": "Damascus Steel Longsword",
+    "pt": "Espada Longa de Aço Damasco"
+  },
+  "cat.item.longsword_liga_titanio.desc": {
+    "en": "Titanium Alloy Longsword: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Espada Longa de Liga de Titânio: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.longsword_liga_titanio.nome": {
+    "en": "Titanium Alloy Longsword",
+    "pt": "Espada Longa de Liga de Titânio"
+  },
+  "cat.item.longsword_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Longsword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.longsword_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Longsword",
+    "pt": "Espada Longa de Obsidiana de Ferro"
+  },
   "cat.item.longsword_prata.desc": {
-    "en": "Silver Long Sword: 1d8 slashing damage, using Strength. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Long Sword: 1d8 slashing damage, using Strength. Natural critical on 19–20. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.longsword_prata.nome": {
     "en": "Silver Long Sword",
@@ -3455,13 +4670,77 @@ window.LANG_CATALOGO = {
     "en": "Mace",
     "pt": "Maça"
   },
+  "cat.item.maca_aco_damasco.desc": {
+    "en": "Damascus Steel Mace: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Maça de Aço Damasco: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.maca_aco_damasco.nome": {
+    "en": "Damascus Steel Mace",
+    "pt": "Maça de Aço Damasco"
+  },
+  "cat.item.maca_liga_titanio.desc": {
+    "en": "Titanium Alloy Mace: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Maça de Liga de Titânio: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.maca_liga_titanio.nome": {
+    "en": "Titanium Alloy Mace",
+    "pt": "Maça de Liga de Titânio"
+  },
+  "cat.item.maca_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Mace: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.maca_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Mace",
+    "pt": "Maça de Obsidiana de Ferro"
+  },
   "cat.item.maca_prata.desc": {
-    "en": "Silver Mace: 1d6 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Mace: 1d6 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.maca_prata.nome": {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
+  },
+  "cat.item.maca_voto_guardiao.desc": {
+    "en": "Very rare magical mace exclusive to Clerics: 1d8 bludgeoning damage using Strength, natural 20 critical ×3, with no magical attack or damage bonus. Guardian Supplication: on a hit, once every 10 rounds, restore 1d6 HP to the Cleric or a living ally within 2 squares. Cannot revive characters.",
+    "pt": "Raridade: Muito rara. Arma mágica exclusiva do Clérigo: causa 1d8 contundente usando Força, com crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar um inimigo, uma vez a cada 10 rodadas o Clérigo pode restaurar 1d6 PV a si mesmo ou a um aliado vivo a até 2 casas; não ressuscita personagens."
+  },
+  "cat.item.maca_voto_guardiao.nome": {
+    "en": "Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião"
+  },
+  "cat.item.maca_voto_guardiao_aco_damasco.desc": {
+    "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Damascus Steel adds +1 to hit and tolerates 1 corrosion level without penalty, then 2 penalized levels.",
+    "pt": "Maça do Voto Guardião de Aço Damasco: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Aço Damasco: +1 no acerto, N=1/M=2 contra corrosão."
+  },
+  "cat.item.maca_voto_guardiao_aco_damasco.nome": {
+    "en": "Damascus Steel Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Aço Damasco"
+  },
+  "cat.item.maca_voto_guardiao_liga_titanio.desc": {
+    "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Titanium Alloy adds no offensive bonus and tolerates 2 corrosion levels without penalty, then 3 penalized levels.",
+    "pt": "Maça do Voto Guardião de Liga de Titânio: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Liga de Titânio: sem bônus ofensivo, N=2/M=3 contra corrosão."
+  },
+  "cat.item.maca_voto_guardiao_liga_titanio.nome": {
+    "en": "Titanium Alloy Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Liga de Titânio"
+  },
+  "cat.item.maca_voto_guardiao_obsidiana_ferro.desc": {
+    "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Obsidian Iron adds +1 damage and tolerates 1 corrosion level without penalty, then 2 penalized levels.",
+    "pt": "Maça do Voto Guardião de Obsidiana de Ferro: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Obsidiana de Ferro: +1 no dano, N=1/M=2 contra corrosão."
+  },
+  "cat.item.maca_voto_guardiao_obsidiana_ferro.nome": {
+    "en": "Obsidian Iron Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Obsidiana de Ferro"
+  },
+  "cat.item.maca_voto_guardiao_prata.desc": {
+    "en": "Magical Cleric-only Silver Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Silver can harm creatures resistant to normal weapons, has no penalty at corrosion level 1, and is destroyed at level 2.",
+    "pt": "Maça do Voto Guardião de Prata: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo."
+  },
+  "cat.item.maca_voto_guardiao_prata.nome": {
+    "en": "Silver Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Prata"
   },
   "cat.item.maca_zero_absoluto.desc": {
     "en": "Very rare magical mace: 1d6 bludgeoning damage + Strength, +1 to hit and damage, and +1d4 cold damage on each hit. Once per target per round, a critical hit traps the target in ice. At the start of each turn, it can make a free Strength check (DC 16) to escape; on a failure it remains frozen, for at most 2 rounds. Bard, Rogue, Paladin, and Warrior only.",
@@ -3473,7 +4752,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machadinha_ana_prata.desc": {
     "en": "Silver Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength. Silver: withstands 5 levels of corrosion, the first 2 without penalty, and can hurt enemies resistant to normal weapons.",
-    "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machadinha_ana_prata.nome": {
     "en": "Silver Dwarven Throwing Hatchet",
@@ -3487,6 +4766,22 @@ window.LANG_CATALOGO = {
     "en": "Dwarven Throwing Hatchet",
     "pt": "Machadinha de Arremesso Anã"
   },
+  "cat.item.machadinha_runica_vai_e_volta.desc": {
+    "en": "Rare magical Dwarven Throwing Hatchet: 1d6 slashing + Strength, +1 to hit and damage. Keeps the extra off-hand attack using Strength. Brute Throw range 5; automatically returns to the thrower's hand after the throw, even on a miss.",
+    "pt": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+  },
+  "cat.item.machadinha_runica_vai_e_volta.nome": {
+    "en": "Runic Boomerang Hatchet",
+    "pt": "Machadinha Rúnica Vai-e-Volta"
+  },
+  "cat.item.machadinha_runica_vai_e_volta_maior.desc": {
+    "en": "Very rare magical Dwarven Throwing Hatchet: 1d6 slashing + Strength, +2 to hit and damage. Keeps the extra off-hand attack using Strength. Brute Throw range 5; automatically returns to the thrower's hand after the throw, even on a miss.",
+    "pt": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+  },
+  "cat.item.machadinha_runica_vai_e_volta_maior.nome": {
+    "en": "Greater Runic Boomerang Hatchet",
+    "pt": "Machadinha Rúnica Vai-e-Volta Maior"
+  },
   "cat.item.machado_basico.desc": {
     "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",
     "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
@@ -3495,9 +4790,33 @@ window.LANG_CATALOGO = {
     "en": "Iron Axe",
     "pt": "Machado de Ferro"
   },
+  "cat.item.machado_basico_aco_damasco.desc": {
+    "en": "Damascus Steel Axe: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Machado de Aço Damasco: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_basico_aco_damasco.nome": {
+    "en": "Damascus Steel Axe",
+    "pt": "Machado de Aço Damasco"
+  },
+  "cat.item.machado_basico_liga_titanio.desc": {
+    "en": "Titanium Alloy Axe: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Machado de Liga de Titânio: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_basico_liga_titanio.nome": {
+    "en": "Titanium Alloy Axe",
+    "pt": "Machado de Liga de Titânio"
+  },
+  "cat.item.machado_basico_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_basico_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Axe",
+    "pt": "Machado de Obsidiana de Ferro"
+  },
   "cat.item.machado_basico_prata.desc": {
-    "en": "Silver Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_basico_prata.nome": {
     "en": "Silver Axe",
@@ -3511,9 +4830,33 @@ window.LANG_CATALOGO = {
     "en": "Double Axe",
     "pt": "Machado Duplo"
   },
+  "cat.item.machado_duplo_aco_damasco.desc": {
+    "en": "Damascus Steel Double-Headed Axe: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Machado Duplo de Aço Damasco: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_duplo_aco_damasco.nome": {
+    "en": "Damascus Steel Double-Headed Axe",
+    "pt": "Machado Duplo de Aço Damasco"
+  },
+  "cat.item.machado_duplo_liga_titanio.desc": {
+    "en": "Titanium Alloy Double-Headed Axe: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Machado Duplo de Liga de Titânio: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_duplo_liga_titanio.nome": {
+    "en": "Titanium Alloy Double-Headed Axe",
+    "pt": "Machado Duplo de Liga de Titânio"
+  },
+  "cat.item.machado_duplo_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Double-Headed Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_duplo_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Double-Headed Axe",
+    "pt": "Machado Duplo de Obsidiana de Ferro"
+  },
   "cat.item.machado_duplo_prata.desc": {
-    "en": "Silver Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_duplo_prata.nome": {
     "en": "Silver Double Axe",
@@ -3527,6 +4870,14 @@ window.LANG_CATALOGO = {
     "en": "Orcish War Axe",
     "pt": "Machado de Guerra Órquico"
   },
+  "cat.item.machado_orc_aco_damasco.desc": {
+    "en": "Damascus Steel Orc War Axe: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Machado de Guerra Órquico de Aço Damasco: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_orc_aco_damasco.nome": {
+    "en": "Damascus Steel Orc War Axe",
+    "pt": "Machado de Guerra Órquico de Aço Damasco"
+  },
   "cat.item.machado_orc_colossal.desc": {
     "en": "Two-handed weapon: 2d10+6, 2-square reach.",
     "pt": "Arma de duas mãos: 2d10+6, alcance de 2 quadrados."
@@ -3535,9 +4886,25 @@ window.LANG_CATALOGO = {
     "en": "Colossal Orc Axe",
     "pt": "Machado Orc Colossal"
   },
+  "cat.item.machado_orc_liga_titanio.desc": {
+    "en": "Titanium Alloy Orc War Axe: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Machado de Guerra Órquico de Liga de Titânio: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_orc_liga_titanio.nome": {
+    "en": "Titanium Alloy Orc War Axe",
+    "pt": "Machado de Guerra Órquico de Liga de Titânio"
+  },
+  "cat.item.machado_orc_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Orc War Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Machado de Guerra Órquico de Obsidiana de Ferro: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.machado_orc_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Orc War Axe",
+    "pt": "Machado de Guerra Órquico de Obsidiana de Ferro"
+  },
   "cat.item.machado_orc_prata.desc": {
-    "en": "Silver Orcish War Axe: 1d12 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Orcish War Axe: 1d12 slashing damage, using Strength. Requires both hands. Natural 20: damage multiplied by 3. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_orc_prata.nome": {
     "en": "Silver Orcish War Axe",
@@ -3559,13 +4926,53 @@ window.LANG_CATALOGO = {
     "en": "Flail",
     "pt": "Mangual"
   },
+  "cat.item.mangual_aco_damasco.desc": {
+    "en": "Damascus Steel Flail: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Mangual de Aço Damasco: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.mangual_aco_damasco.nome": {
+    "en": "Damascus Steel Flail",
+    "pt": "Mangual de Aço Damasco"
+  },
+  "cat.item.mangual_elo_astral.desc": {
+    "en": "Very rare magic flail, +2 to hit and damage; deals 1d8 bludgeoning + Strength, with a natural-20 critical multiplier of ×2.5. Its passive astral chain reaches up to 4 squares in a straight orthogonal or diagonal line with line of sight, striking only the chosen target before returning immediately. No cooldown. Usable by Cleric, Paladin and Warrior.",
+    "pt": "Raridade: Muito rara. Mangual mágico +2 no acerto e no dano; causa 1d8 contundente + Força e tem crítico natural ×2,5. Como poder passivo, a corrente astral alcança até 4 casas em linha reta ortogonal ou diagonal, desde que haja linha de visão; o ataque atinge apenas o alvo escolhido e a corrente retorna imediatamente. Sem recarga. Uso de Clérigo, Paladino e Guerreiro."
+  },
+  "cat.item.mangual_elo_astral.nome": {
+    "en": "Flail of the Astral Link",
+    "pt": "Mangual do Elo Astral"
+  },
+  "cat.item.mangual_liga_titanio.desc": {
+    "en": "Titanium Alloy Flail: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Mangual de Liga de Titânio: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.mangual_liga_titanio.nome": {
+    "en": "Titanium Alloy Flail",
+    "pt": "Mangual de Liga de Titânio"
+  },
+  "cat.item.mangual_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Flail: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Mangual de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.mangual_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Flail",
+    "pt": "Mangual de Obsidiana de Ferro"
+  },
   "cat.item.mangual_prata.desc": {
-    "en": "Silver Flail: 1d8 bludgeoning damage, using Strength. Range: any of the 8 adjacent squares, including diagonals. Natural 20: damage multiplied by 2.5. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Flail: 1d8 bludgeoning damage, using Strength. Range: any of the 8 adjacent squares, including diagonals. Natural 20: damage multiplied by 2.5. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.mangual_prata.nome": {
     "en": "Silver Flail",
     "pt": "Mangual de Prata"
+  },
+  "cat.item.mangual_sol_cativo.desc": {
+    "en": "Rarity: Very rare. Magic flail, +1 to hit and damage; deals 1d8 bludgeoning + Strength, has reach 2 and a natural critical multiplier of ×2.5. Each hit adds 1d4 radiant damage. As a main action, once every 10 rounds, it unleashes the Solar Flare: creatures in the eight adjacent squares, allies included but excluding the wielder, take 2d6 radiant damage (Reflex DC 13 halves it). Usable by Cleric, Paladin and Warrior.",
+    "pt": "Raridade: Muito rara. Mangual mágico +1 no acerto e no dano; causa 1d8 contundente + Força, tem alcance 2 e crítico natural ×2,5. Cada acerto acrescenta 1d4 de dano sagrado. Como ação principal, uma vez a cada 10 rodadas, libera o Clarão Solar: criaturas nas oito casas adjacentes, inclusive aliados mas exceto o portador, sofrem 2d6 sagrado (Reflexos CD 13 reduz à metade). Uso de Clérigo, Paladino e Guerreiro."
+  },
+  "cat.item.mangual_sol_cativo.nome": {
+    "en": "Flail of the Captive Sun",
+    "pt": "Mangual do Sol Cativo"
   },
   "cat.item.manto_das_sombras.desc": {
     "en": "Rogue only. Grants +2 total AC and +2 to Hide in Shadows. As a main action, casts Cloak of Darkness without spending a spell slot. Recharge: 20 rounds.",
@@ -3575,6 +4982,38 @@ window.LANG_CATALOGO = {
     "en": "Cloak of Shadows",
     "pt": "Manto das Sombras"
   },
+  "cat.item.manto_linho_engomado.desc": {
+    "en": "Mundane cloak made of thick, starched linen, with a hood and reinforced embroidery. Grants +2 total AC. Can be corroded by the Organic Devourer.",
+    "pt": "Manto mundano de linho espesso e engomado, com capuz e bordados reforçados. Concede +2 CA total. Pode ser corroído pelo Devorador Orgânico."
+  },
+  "cat.item.manto_linho_engomado.nome": {
+    "en": "Stiffened Linen Cloak",
+    "pt": "Manto de Linho Engomado"
+  },
+  "cat.item.manto_seda_aracne.desc": {
+    "en": "Mundane cloak woven from Aracne Silk. Grants +1 AC, +1 to Reflex saves, and reduces each instance of physical damage taken by 1 while equipped, stacking with other reductions. It is organic and tolerates 1 corrosion level without penalty; the next 2 levels apply normal penalties, and level 4 destroys it.",
+    "pt": "Manto mundano tecido com Seda de Aracne. Concede +1 CA, +1 nos testes de Reflexos e reduz em 1 cada instância de dano físico recebido, acumulando com outras reduções. Tolera 1 nível de corrosão orgânica sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o quarto nível destrói o manto."
+  },
+  "cat.item.manto_seda_aracne.nome": {
+    "en": "Aracne Silk Cloak",
+    "pt": "Manto de Seda de Aracne"
+  },
+  "cat.item.maravilha_aventureiro_maior.desc": {
+    "en": "While equipped, increases backpack capacity by 12 slots, provides 4 utility pockets holding up to 8 identical units each, and 2 quiver slots for up to 40 arrows or bolts each. Contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 12 espaços a capacidade da mochila, oferece 4 bolsos para até 8 unidades iguais cada e 2 slots de aljava para até 40 flechas ou virotes cada. Os conteúdos permanecem guardados ao desequipá-lo."
+  },
+  "cat.item.maravilha_aventureiro_maior.nome": {
+    "en": "Greater Adventurer's Wonder",
+    "pt": "Maravilha do Aventureiro Maior"
+  },
+  "cat.item.maravilha_aventureiro_menor.desc": {
+    "en": "While equipped, increases backpack capacity by 9 slots, provides 4 utility pockets holding up to 4 identical units each, and 1 quiver slot for up to 40 arrows or bolts. Contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 9 espaços a capacidade da mochila, oferece 4 bolsos para até 4 unidades iguais cada e 1 slot de aljava para até 40 flechas ou virotes. Os conteúdos permanecem guardados ao desequipá-lo."
+  },
+  "cat.item.maravilha_aventureiro_menor.nome": {
+    "en": "Lesser Adventurer's Wonder (Simple)",
+    "pt": "Maravilha do Aventureiro Menor Simples"
+  },
   "cat.item.marreta.desc": {
     "en": "Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit.",
     "pt": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
@@ -3583,13 +5022,45 @@ window.LANG_CATALOGO = {
     "en": "Sledgehammer",
     "pt": "Marreta"
   },
+  "cat.item.marreta_aco_damasco.desc": {
+    "en": "Damascus Steel Sledgehammer: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Marreta de Aço Damasco: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.marreta_aco_damasco.nome": {
+    "en": "Damascus Steel Sledgehammer",
+    "pt": "Marreta de Aço Damasco"
+  },
+  "cat.item.marreta_liga_titanio.desc": {
+    "en": "Titanium Alloy Sledgehammer: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Marreta de Liga de Titânio: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.marreta_liga_titanio.nome": {
+    "en": "Titanium Alloy Sledgehammer",
+    "pt": "Marreta de Liga de Titânio"
+  },
+  "cat.item.marreta_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Sledgehammer: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.marreta_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Sledgehammer",
+    "pt": "Marreta de Obsidiana de Ferro"
+  },
   "cat.item.marreta_prata.desc": {
-    "en": "Silver Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.marreta_prata.nome": {
     "en": "Silver Sledgehammer",
     "pt": "Marreta de Prata"
+  },
+  "cat.item.marreta_quebra_couracas.desc": {
+    "en": "Rarity: Rare. Magic two-handed maul that deals 2d8 bludgeoning damage using Strength, grants +1 to hit and damage and ignores 2 points of physical damage reduction per hit. Usable by Paladin and Warrior.",
+    "pt": "Raridade: Rara. Marreta mágica de duas mãos que causa 2d8 de dano contundente usando Força, concede +1 no acerto e no dano e ignora 2 pontos de redução de dano físico por golpe. Uso de Paladino e Guerreiro."
+  },
+  "cat.item.marreta_quebra_couracas.nome": {
+    "en": "Armor-Breaker Maul",
+    "pt": "Marreta Quebra-Couraças"
   },
   "cat.item.martelo_runico_colossal.desc": {
     "en": "Colossal hammer engraved with runes: 2d8+5 damage and 2-square reach.",
@@ -3615,6 +5086,14 @@ window.LANG_CATALOGO = {
     "en": "Hawk's Aim Elixir",
     "pt": "Elixir da Mira do Falcão"
   },
+  "cat.item.mochila_aljava_dimensional.desc": {
+    "en": "While equipped, increases backpack capacity by 9 slots and provides 1 quiver slot for up to 40 arrows or bolts. The quiver contents remain stored when unequipped.",
+    "pt": "Equipado, aumenta em 9 espaços a capacidade da mochila e oferece 1 espaço de aljava para até 40 flechas ou virotes. O conteúdo da aljava permanece guardado ao desequipá-la."
+  },
+  "cat.item.mochila_aljava_dimensional.nome": {
+    "en": "Dimensional Quiver Backpack",
+    "pt": "Mochila-Aljava Dimensional"
+  },
   "cat.item.mochila_carga.desc": {
     "en": "While equipped, increases backpack capacity by 6 slots.",
     "pt": "Equipado, aumenta em 6 espaços a capacidade da mochila."
@@ -3622,6 +5101,14 @@ window.LANG_CATALOGO = {
   "cat.item.mochila_carga.nome": {
     "en": "Cargo Backpack",
     "pt": "Mochila de Carga"
+  },
+  "cat.item.mochila_dimensional.desc": {
+    "en": "While equipped, increases backpack capacity by 9 slots.",
+    "pt": "Equipado, aumenta em 9 espaços a capacidade da mochila."
+  },
+  "cat.item.mochila_dimensional.nome": {
+    "en": "Dimensional Backpack",
+    "pt": "Mochila Dimensional"
   },
   "cat.item.moeda_da_sorte.desc": {
     "en": "Bonus action. Consumes the coin when activated. The hero rerolls their first failed attack or saving throw; the second result stands. Stays active until triggered.",
@@ -3635,6 +5122,30 @@ window.LANG_CATALOGO = {
     "en": "Monster Leather and Plate Armor",
     "pt": "Armadura de Couro de Monstro e Placas"
   },
+  "cat.item.monster_leather_plate_aco_damasco.desc": {
+    "en": "Monster Leather and Plate Armor of Damascus Steel: nonmagical armor with AC +7. Damascus Steel grants 2 corrosion levels without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Armadura de Couro de Monstro e Placas de Aço Damasco: armadura mundana com CA +7. Aço Damasco tolera 2 níveis de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.monster_leather_plate_aco_damasco.nome": {
+    "en": "Monster Leather and Plate Armor of Damascus Steel",
+    "pt": "Armadura de Couro de Monstro e Placas de Aço Damasco"
+  },
+  "cat.item.monster_leather_plate_liga_titanio.desc": {
+    "en": "Monster Leather and Plate Armor of Titanium Alloy: nonmagical armor with AC +7. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it. It also reduces each instance of physical damage received by 1 while equipped, stacking with other damage reduction.",
+    "pt": "Armadura de Couro de Monstro e Placas de Liga de Titânio: armadura mundana com CA +7. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+  },
+  "cat.item.monster_leather_plate_liga_titanio.nome": {
+    "en": "Monster Leather and Plate Armor of Titanium Alloy",
+    "pt": "Armadura de Couro de Monstro e Placas de Liga de Titânio"
+  },
+  "cat.item.monster_leather_plate_obsidiana_ferro.desc": {
+    "en": "Monster Leather and Plate Armor of Iron Obsidian: nonmagical armor that grants AC +8. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Armadura de Couro de Monstro e Placas de Obsidiana de Ferro: armadura mundana que concede +8 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.monster_leather_plate_obsidiana_ferro.nome": {
+    "en": "Monster Leather and Plate Armor of Iron Obsidian",
+    "pt": "Armadura de Couro de Monstro e Placas de Obsidiana de Ferro"
+  },
   "cat.item.oleo_dissolvente.desc": {
     "en": "Dissolves stone: cures petrification and protects for 1d4 rounds.",
     "pt": "Dissolve a pedra: cura petrificação e protege por 1d4 rodadas."
@@ -3647,6 +5158,14 @@ window.LANG_CATALOGO = {
     "en": "Bread",
     "pt": "Pão"
   },
+  "cat.item.pernil.desc": {
+    "en": "+35 hunger.",
+    "pt": "+35 de fome."
+  },
+  "cat.item.pernil.nome": {
+    "en": "Roast Pork Shank",
+    "pt": "Pernil"
+  },
   "cat.item.placas_da_besta.desc": {
     "en": "Reinforced leather and plate armor with glossy onyx plates. Grants +3 AC, reduces each instance of physical damage received by 1 while equipped, and ignores the first 4 corrosion levels. The next 2 levels penalize it normally; the following level destroys it.",
     "pt": "Armadura de couro e placas reforçada com ônix. Concede +3 CA, reduz em 1 cada instância de dano físico recebido enquanto equipada e suporta 4 níveis de corrosão sem penalidade. Depois sofre as penalidades normais por 2 níveis; no nível seguinte é destruída."
@@ -3658,6 +5177,30 @@ window.LANG_CATALOGO = {
   "cat.item.plate.nome": {
     "en": "Plate Armor",
     "pt": "Armadura de Placas"
+  },
+  "cat.item.plate_aco_damasco.desc": {
+    "en": "Plate Armor of Damascus Steel: nonmagical armor with AC +6. Damascus Steel grants 2 corrosion levels without penalty; the next two levels impose the normal penalties and the following level destroys the armor.",
+    "pt": "Armadura de Placas de Aço Damasco: armadura mundana com CA +6. Aço Damasco tolera 2 níveis de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+  },
+  "cat.item.plate_aco_damasco.nome": {
+    "en": "Plate Armor of Damascus Steel",
+    "pt": "Armadura de Placas de Aço Damasco"
+  },
+  "cat.item.plate_liga_titanio.desc": {
+    "en": "Plate Armor of Titanium Alloy: nonmagical armor with AC +6. It withstands 2 corrosion levels without penalty; the next three levels impose the normal penalties and level 6 destroys it. It also reduces each instance of physical damage received by 1 while equipped, stacking with other damage reduction.",
+    "pt": "Armadura de Placas de Liga de Titânio: armadura mundana com CA +6. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+  },
+  "cat.item.plate_liga_titanio.nome": {
+    "en": "Plate Armor of Titanium Alloy",
+    "pt": "Armadura de Placas de Liga de Titânio"
+  },
+  "cat.item.plate_obsidiana_ferro.desc": {
+    "en": "Plate Armor of Iron Obsidian: nonmagical armor that grants AC +7. Its brittle structure has only one total corrosion level; the first corrosive strike destroys it.",
+    "pt": "Armadura de Placas de Obsidiana de Ferro: armadura mundana que concede +7 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+  },
+  "cat.item.plate_obsidiana_ferro.nome": {
+    "en": "Plate Armor of Iron Obsidian",
+    "pt": "Armadura de Placas de Obsidiana de Ferro"
   },
   "cat.item.pocao_barreira_arcana.desc": {
     "en": "Bonus action. Reduces all damage received by 5 for 1d6+2 rounds. Can coexist with elemental protections.",
@@ -3747,6 +5290,22 @@ window.LANG_CATALOGO = {
     "en": "Flight Potion",
     "pt": "Poção de Voo"
   },
+  "cat.item.punhal_assassino.desc": {
+    "en": "Rarity: Rare. Magic dagger, +1 to hit and damage; deals 1d4 piercing using Strength or Dexterity, can be wielded in the off hand and thrown up to 3 squares. When a Rogue lands a Sneak Attack with it, adds +1d4 to the sneak damage.",
+    "pt": "Raridade: Rara. Adaga mágica +1 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +1d4 ao dano furtivo."
+  },
+  "cat.item.punhal_assassino.nome": {
+    "en": "Assassin's Dagger",
+    "pt": "Punhal do Assassino"
+  },
+  "cat.item.punhal_assassino_maior.desc": {
+    "en": "Rarity: Very rare. Magic dagger, +2 to hit and damage; deals 1d4 piercing using Strength or Dexterity, can be wielded in the off hand and thrown up to 3 squares. When a Rogue lands a Sneak Attack with it, adds +2d4 to the sneak damage.",
+    "pt": "Raridade: Muito rara. Adaga mágica +2 no acerto e no dano; causa 1d4 perfurante usando Força ou Destreza, pode ser usada na mão secundária e arremessada a até 3 casas. Quando um Ladino acerta um Ataque Furtivo com ela, acrescenta +2d4 ao dano furtivo."
+  },
+  "cat.item.punhal_assassino_maior.nome": {
+    "en": "Greater Assassin's Dagger",
+    "pt": "Punhal do Assassino Maior"
+  },
   "cat.item.racao_completa.nome": {
     "en": "Complete Rations",
     "pt": "Ração Completa"
@@ -3754,6 +5313,46 @@ window.LANG_CATALOGO = {
   "cat.item.racao_viagem.nome": {
     "en": "Travel Rations",
     "pt": "Ração de Viagem"
+  },
+  "cat.item.rapieira_do_dueto.desc": {
+    "en": "Mundane bard-exclusive one-handed rapier: 1d6 piercing using Dexterity. While a Lira is equipped off-hand and Martial Duet is active, the bard's first free counterattack each round deals +1d4 piercing damage.",
+    "pt": "Arma mundana exclusiva do Bardo: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."
+  },
+  "cat.item.rapieira_do_dueto.nome": {
+    "en": "Duet Rapier",
+    "pt": "Rapieira do Dueto"
+  },
+  "cat.item.rapieira_do_dueto_aco_damasco.desc": {
+    "en": "Mundane bard-exclusive rapier: 1d6 piercing using Dexterity. While a Lira is equipped off-hand and Martial Duet is active, the bard's first free counterattack each round deals +1d4 piercing damage. Damascus steel grants +1 attack and tolerates one corrosion level without penalty; the next two levels penalize it and the following level destroys it.",
+    "pt": "Rapieira do Dueto de Aço Damasco: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.rapieira_do_dueto_aco_damasco.nome": {
+    "en": "Damascus Steel Duet Rapier",
+    "pt": "Rapieira do Dueto de Aço Damasco"
+  },
+  "cat.item.rapieira_do_dueto_liga_titanio.desc": {
+    "en": "Mundane bard-exclusive rapier: 1d6 piercing using Dexterity. While a Lira is equipped off-hand and Martial Duet is active, the bard's first free counterattack each round deals +1d4 piercing damage. Titanium grants no attack or damage bonus; the first two corrosion levels have no penalty, the next three penalize it, and the sixth destroys it.",
+    "pt": "Rapieira do Dueto de Liga de Titânio: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.rapieira_do_dueto_liga_titanio.nome": {
+    "en": "Titanium Alloy Duet Rapier",
+    "pt": "Rapieira do Dueto de Liga de Titânio"
+  },
+  "cat.item.rapieira_do_dueto_obsidiana_ferro.desc": {
+    "en": "Mundane bard-exclusive rapier: 1d6 piercing using Dexterity. While a Lira is equipped off-hand and Martial Duet is active, the bard's first free counterattack each round deals +1d4 piercing damage. Iron Obsidian grants +1 damage and tolerates one corrosion level without penalty; the next two levels penalize it and the following level destroys it.",
+    "pt": "Rapieira do Dueto de Obsidiana de Ferro: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.rapieira_do_dueto_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Duet Rapier",
+    "pt": "Rapieira do Dueto de Obsidiana de Ferro"
+  },
+  "cat.item.rapieira_do_dueto_prata.desc": {
+    "en": "Mundane bard-exclusive silver rapier: 1d6 piercing using Dexterity. Silver can harm creatures resistant to ordinary weapons and the rapier is destroyed at corrosion level 2. While a Lira is equipped off-hand and Martial Duet is active, the bard's first free counterattack each round deals +1d4 piercing damage.",
+    "pt": "Rapieira do Dueto de Prata: arma mundana exclusiva do Bardo, 1d6 perfurante usando Destreza. Prata não mágica: fere criaturas resistentes a armas comuns e é destruída no segundo nível de corrosão. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."
+  },
+  "cat.item.rapieira_do_dueto_prata.nome": {
+    "en": "Silver Duet Rapier",
+    "pt": "Rapieira do Dueto de Prata"
   },
   "cat.item.rede_arremesso.nome": {
     "en": "Net",
@@ -3795,6 +5394,14 @@ window.LANG_CATALOGO = {
     "en": "Ring of Vitality",
     "pt": "Anel da Vitalidade"
   },
+  "cat.item.rum.desc": {
+    "en": "Bottle with 3 doses. Each use restores 15 hunger and thirst and adds −1 attack and Reflex for 10 rounds. Penalties stack; each dose expires 10 rounds after use.",
+    "pt": "Garrafa com 3 doses. Cada uso restaura 15 de fome e 15 de sede e aplica −1 no ataque e em Reflexos por 10 rodadas. As penalidades se acumulam; cada dose expira 10 rodadas após seu próprio uso."
+  },
+  "cat.item.rum.nome": {
+    "en": "Rum",
+    "pt": "Rum"
+  },
   "cat.item.runa_ancestral.desc": {
     "en": "Ancestral rune of magical power; special item for future use.",
     "pt": "Runa ancestral de poder mágico; item especial para uso futuro."
@@ -3819,13 +5426,77 @@ window.LANG_CATALOGO = {
     "en": "Short Sword",
     "pt": "Espada Curta"
   },
+  "cat.item.shortsword_aco_damasco.desc": {
+    "en": "Damascus Steel Shortsword: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Espada Curta de Aço Damasco: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.shortsword_aco_damasco.nome": {
+    "en": "Damascus Steel Shortsword",
+    "pt": "Espada Curta de Aço Damasco"
+  },
+  "cat.item.shortsword_liga_titanio.desc": {
+    "en": "Titanium Alloy Shortsword: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Espada Curta de Liga de Titânio: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.shortsword_liga_titanio.nome": {
+    "en": "Titanium Alloy Shortsword",
+    "pt": "Espada Curta de Liga de Titânio"
+  },
+  "cat.item.shortsword_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Shortsword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.shortsword_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Shortsword",
+    "pt": "Espada Curta de Obsidiana de Ferro"
+  },
   "cat.item.shortsword_prata.desc": {
-    "en": "Silver Short Sword: 1d6 slashing damage, using Strength. Natural critical on 19–20. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Short Sword: 1d6 slashing damage, using Strength. Natural critical on 19–20. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.shortsword_prata.nome": {
     "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
+  },
+  "cat.item.sword.desc": {
+    "en": "Serrated Iron Shortsword: 1d6 slashing damage using Strength, with +2 damage. Nonmagical; tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
+    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
+  },
+  "cat.item.sword.nome": {
+    "en": "Serrated Iron Shortsword",
+    "pt": "Espada Curta de Ferro Serrilhado"
+  },
+  "cat.item.sword_aco_damasco.desc": {
+    "en": "Damascus Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 to attack rolls. Tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
+    "pt": "Espada Curta Serrilhada de Aço Damasco: mantém os +2 de dano da arma-base e ganha +1 no acerto. Tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
+  },
+  "cat.item.sword_aco_damasco.nome": {
+    "en": "Damascus Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Aço Damasco"
+  },
+  "cat.item.sword_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 damage, for +3 total. The first corrosive strike destroys it.",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: mantém os +2 de dano da arma-base e recebe +1 adicional, totalizando +3. O primeiro golpe corrosivo a destrói."
+  },
+  "cat.item.sword_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro"
+  },
+  "cat.item.sword_liga_titanio.desc": {
+    "en": "Titanium Alloy Serrated Shortsword: keeps the base weapon's +2 damage, tolerates 2 corrosion levels without penalty, then suffers three normal penalty levels before breaking.",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio: mantém os +2 de dano da arma-base, tolera 2 níveis de corrosão sem penalidade e sofre três níveis de penalidade normal antes de quebrar."
+  },
+  "cat.item.sword_liga_titanio.nome": {
+    "en": "Titanium Alloy Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio"
+  },
+  "cat.item.sword_prata.desc": {
+    "en": "Silver Serrated Shortsword: keeps +2 damage, can harm enemies resistant to normal weapons, suffers no penalty at corrosion level 1, and is destroyed at level 2.",
+    "pt": "Espada Curta Serrilhada de Prata: mantém +2 de dano, fere inimigos resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo."
+  },
+  "cat.item.sword_prata.nome": {
+    "en": "Silver Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Prata"
   },
   "cat.item.solucao_mecanismo.desc": {
     "en": "Bonus action. Before confirming, shows a 3-square radius around the hero. Automatically disarms every active trap in the area, including hidden traps and traps inside chests or objects. Grants normal disarm XP, doubled for permanent traps; does not recover gold.",
@@ -4032,8 +5703,8 @@ window.LANG_CATALOGO = {
     "pt": "Vidro de Ácido Grande"
   },
   "cat.item.virote_incendiario.nome": {
-    "en": "Incendiary Bolt",
-    "pt": "Virote Incendiário"
+    "en": "Incendiary Bolts (×5)",
+    "pt": "Virotes Incendiários (×5)"
   },
   "cat.item.virotes.nome": {
     "en": "Bolts (×10)",
@@ -4075,9 +5746,33 @@ window.LANG_CATALOGO = {
     "en": "Warhammer",
     "pt": "Martelo de Guerra"
   },
+  "cat.item.warhammer_aco_damasco.desc": {
+    "en": "Damascus Steel Warhammer: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
+    "pt": "Martelo de Guerra de Aço Damasco: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.warhammer_aco_damasco.nome": {
+    "en": "Damascus Steel Warhammer",
+    "pt": "Martelo de Guerra de Aço Damasco"
+  },
+  "cat.item.warhammer_liga_titanio.desc": {
+    "en": "Titanium Alloy Warhammer: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
+    "pt": "Martelo de Guerra de Liga de Titânio: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.warhammer_liga_titanio.nome": {
+    "en": "Titanium Alloy Warhammer",
+    "pt": "Martelo de Guerra de Liga de Titânio"
+  },
+  "cat.item.warhammer_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Warhammer: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
+    "pt": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.warhammer_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Warhammer",
+    "pt": "Martelo de Guerra de Obsidiana de Ferro"
+  },
   "cat.item.warhammer_prata.desc": {
-    "en": "Silver Warhammer: 1d8 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: withstands 5 corrosion levels, the first 2 with no penalty, and can damage enemies resistant to normal weapons.",
-    "pt": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+    "en": "Silver Warhammer: 1d8 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
+    "pt": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.warhammer_prata.nome": {
     "en": "Silver Warhammer",

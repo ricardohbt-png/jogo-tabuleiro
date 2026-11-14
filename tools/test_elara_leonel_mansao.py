@@ -292,7 +292,15 @@ class SalaoFluxoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_sino_desliga_as_guilhotinas(self):
         r = self.preparar()
-        r.players["p0"]["pos"] = [41, 5]
+        # Uma casa livre ao lado do sino, onde quer que o autor o ponha no mapa.
+        sino = next(d for d in r.decorations if d.get("id") == "salao_sino")
+        casas = set(map(tuple, r._decor_tiles(sino)))
+        livre = next((x + dx, y + dy) for (x, y) in sorted(casas)
+                     for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                     if (x + dx, y + dy) not in casas
+                     and r.tiles[y + dy][x + dx] == S.FLOOR
+                     and not r._blocks_tile(x + dx, y + dy))
+        r.players["p0"]["pos"] = list(livre)
         await r.handle_activate_decor_mechanism("p0", "salao_sino")
         guil = [a for a in r.armadilhas if str(a.get("autoral_id", "")).startswith("salao_guilhotina")]
         self.assertEqual(len(guil), 3)

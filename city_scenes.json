@@ -25,6 +25,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -42,6 +43,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "pista2",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -59,6 +61,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -89,6 +92,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "pista1",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -119,6 +123,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -149,6 +154,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -179,6 +185,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -209,6 +216,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -239,6 +247,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -269,6 +278,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -286,6 +296,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "pista3",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -326,6 +337,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -386,7 +398,7 @@
           "id": "npc_exequiel",
           "name": "Exequiel",
           "image": "assets/cenas/personagens/exequiel_corpo_inteiro.png",
-          "x": 35.0,
+          "x": 15.7,
           "y": 30.3,
           "w": 30.0,
           "h": 69.7,
@@ -592,6 +604,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -755,6 +768,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -821,6 +835,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -999,6 +1014,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1030,6 +1046,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1061,6 +1078,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1092,6 +1110,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1123,6 +1142,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1214,6 +1234,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1280,6 +1301,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1328,6 +1350,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1359,6 +1382,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1390,6 +1414,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1421,6 +1446,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1452,6 +1478,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1483,6 +1510,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1515,6 +1543,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1563,6 +1592,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1621,6 +1651,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1638,6 +1669,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo1",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1655,6 +1687,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo2",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1704,6 +1737,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1735,6 +1769,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1766,6 +1801,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1797,6 +1833,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1828,6 +1865,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1859,6 +1897,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1890,6 +1929,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -1997,6 +2037,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -2014,6 +2055,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo3",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -2031,6 +2073,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo4",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -2048,6 +2091,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo5",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -2065,6 +2109,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo6",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -2082,6 +2127,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo7",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {
@@ -2099,6 +2145,7 @@
                 "nivel_grupo_min": 0,
                 "item_id": "",
                 "fato": "segredo8",
+                "sem_fato": "",
                 "aventura_id": ""
               },
               "efeito": {

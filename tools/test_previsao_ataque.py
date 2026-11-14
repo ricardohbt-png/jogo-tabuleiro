@@ -123,6 +123,26 @@ async def main():
     r.phase = "playing"; p["alive"] = False
     check("herói morto: sem resposta", await prever(r) is None)
 
+    print("\n[7b] Ladino escondido: furtivo na prévia, com e sem arma")
+    r, p, m = sala(classe="rogue")
+    p["invisivel_sombras"] = True
+    p["weapon"] = None
+    p.setdefault("gear", {})["weapon"] = None
+    prev = None
+    try:
+        prev = await prever(r)
+    except Exception as e:   # weapon None estourava ao ler o bônus do punhal
+        check(f"desarmado e escondido não quebra a prévia ({type(e).__name__}: {e})", False)
+    else:
+        check("desarmado e escondido: a prévia responde", prev is not None)
+    r, p, m = sala(classe="rogue")
+    p["invisivel_sombras"] = True
+    p["weapon"] = dict(S.WEAPONS["punhal_assassino_maior"])
+    prev = await prever(r)
+    base = r._dados_furtivo(p.get("level", 1))
+    check("Punhal do Assassino Maior soma +2d4 ao furtivo da prévia",
+          prev is not None and prev.get("furtivo_d4") == base + 2)
+
     print("\n[8] Fiação")
     fonte = open(S.__file__, encoding="utf-8").read()
     check("o despacho conhece prever_ataque", 'elif t == "prever_ataque":' in fonte)

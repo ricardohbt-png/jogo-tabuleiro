@@ -1992,7 +1992,11 @@ window._nomeMuncaoEnvenenada = _nomeMuncaoEnvenenada;
 // Nome mostrado de um item: munição e arma com veneno ganham o aviso no nome enquanto o veneno durar.
 // Só armas têm `poison_slots` (a fila de cargas); a munição guarda `poison_ids`.
 function _nomeItemExibido(it){
+  if(it?.id==='laminas_riposta')
+    return t(Array.isArray(it.poison_ids)&&it.poison_ids.length
+      ?'ui.item.laminas_riposta_envenenadas.nome':'cat.item.laminas_riposta.nome');
   if(Array.isArray(it?.poison_ids)&&it.poison_ids.length) return _nomeMuncaoEnvenenada(it);
+  if(it?.effect==='coat_poison'&&_partesVenenoId(it.veneno_id||it.id).melhorado) return _nomeVenenoPorId(it.veneno_id||it.id);
   const nome=it?.name||it?.nome||it?.id||'Item';
   if(Array.isArray(it?.poison_slots)&&it.poison_slots.length){
     const primeira=String(nome).trim().split(/\s+/)[0].toLowerCase();
@@ -2002,7 +2006,8 @@ function _nomeItemExibido(it){
 }
 window._nomeItemExibido=_nomeItemExibido;
 function _itemLabel(it){
-  return `${it?.emoji||'📦'} ${_nomeItemExibido(it)}${it?.ammo_count!=null?' ×'+it.ammo_count:''}`;
+  const stackCount=it?.ammo_count??(it?.effect==='counter_blades'?it.counter_blade_count:null);
+  return `${it?.emoji||'📦'} ${_nomeItemExibido(it)}${stackCount!=null?' ×'+stackCount:''}`;
 }
 function _renderBauSlots(container, items, limit, action){
   if(!container) return;
@@ -3068,7 +3073,7 @@ function openShop(pointId, type, sceneOverride){
   // A ORDEM das abas é índice de lógica (GS.shopTabIdx) — traduzir o rótulo é
   // seguro; trocar a ordem não seria.
   const shopTabs = (shopId==='ferreiro'
-    ? ['armas','armaduras','municao','reparar','vender']
+    ? ['armas','arcos_bestas','armaduras','escudos','municao','reparar','vender']
     : shopId==='mercador'
     ? ['equipamentos','consumiveis','instrumentos','arremessaveis','venenos','pergaminhos','vender']
     : shopId==='templo'
@@ -3245,8 +3250,11 @@ function itemIconHTML(item, fallbackEmoji){
   // vale para todas as qualidades E para o instrumento equipado (id genérico
   // "instrumento"). Sem isso, o jogo procuraria pelo id do SKU
   // (instrumento_harpa_velho.png) e o Alaúde inicial nunca acharia foto.
+  const itemId = String(item.id);
+  const baseItemId = itemId.split('__upgrade__', 1)[0];
   const fileId = item.effect === 'scroll' ? 'pergaminho'
     : (item.tipo_item === 'instrumento' && item.base) ? item.base
+    : (item.effect === 'coat_poison' || itemId.startsWith('veneno_')) ? baseItemId
     : item.id;
   const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon || ITEM_ICON_OVERRIDES[item.id];
   const src = _assetURL(icon || `assets/itens/${fileId}.png`);
@@ -3320,6 +3328,17 @@ function _restaurarSelecaoLoja(){
   });
 }
 
+const _FERREIRO_BOW_CROSSBOW_BASE_IDS = [
+  'arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo',
+  'arco_bruto_combatente', 'hand_crossbow', 'besta_duelista', 'besta',
+  'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra',
+];
+function _ferreiroIsBowOrCrossbow(item){
+  const id = String(item?.id || '');
+  return _FERREIRO_BOW_CROSSBOW_BASE_IDS.some(baseId =>
+    id === baseId || id.startsWith(baseId + '_'));
+}
+
 function _renderShopItems(){
   if(!GS.cityState||!GS.activeShop) return;
   // A cena em tela cheia vale só para a aba de conversas (e só quando ela tem
@@ -3331,10 +3350,10 @@ function _renderShopItems(){
   if(temCena && GS.shopTabIdx===0){ _renderCenaConversas(); return; }
   const aba = GS.shopTabIdx - (temCena ? 1 : 0);
   // Route sell tabs
-  if(GS.activeShop==='ferreiro'&&aba===3){ _renderRepairItems(); return; }
+  if(GS.activeShop==='ferreiro'&&aba===5){ _renderRepairItems(); return; }
   // Todas as abas de venda exibem o inventário completo: equipamento e bolsa.
   // A venda continua autoritativa no servidor, independentemente da loja.
-  if(GS.activeShop==='ferreiro'&&aba===4){ _renderSellItems('all'); return; }
+  if(GS.activeShop==='ferreiro'&&aba===6){ _renderSellItems('all'); return; }
   if(GS.activeShop==='mercador'&&aba===6){ _renderSellItems('all'); return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
@@ -3344,9 +3363,21 @@ function _renderShopItems(){
   const shops=GS.cityState.shops;
   let items=[], shopKey=GS.activeShop;
   if(GS.activeShop==='ferreiro'){
-    if(aba===0)      { items=shops.ferreiro.weapons; shopKey='ferreiro_weapon'; }
-    else if(aba===1) { items=shops.ferreiro.armors;  shopKey='ferreiro_armor';  }
-    else                       { items=shops.ferreiro.ammo;    shopKey='ferreiro_ammo';   }
+    if(aba===0) {
+      items=(shops.ferreiro.weapons||[]).filter(item=>!_ferreiroIsBowOrCrossbow(item));
+      shopKey='ferreiro_weapon';
+    } else if(aba===1) {
+      items=(shops.ferreiro.weapons||[]).filter(_ferreiroIsBowOrCrossbow);
+      shopKey='ferreiro_weapon';
+    } else if(aba===2) {
+      items=(shops.ferreiro.armors||[]).filter(item=>item.kind!=='shield');
+      shopKey='ferreiro_armor';
+    } else if(aba===3) {
+      items=(shops.ferreiro.armors||[]).filter(item=>item.kind==='shield');
+      shopKey='ferreiro_armor';
+    } else {
+      items=shops.ferreiro.ammo; shopKey='ferreiro_ammo';
+    }
   } else if(GS.activeShop==='mercador') {
     const mercadorItems=shops.mercador||[];
     if(aba===2) {
@@ -3583,15 +3614,17 @@ function _itemDesc(item){
   if(item.die){
     const range=item.reach==='lanca' ? ' • '+t('ui.item.desc.alcance_lanca')
               : item.reach==='cajado' ? ' • '+t('ui.item.desc.alcance_adjacentes')
+              : item.astral_chain_reach ? ' • '+t('ui.item.desc.alcance_mangual_astral', {n:item.astral_chain_reach})
               : item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_mangual')
-              : ['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : ['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista','gancho_corrente','gancho_escorpiao_superior'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : item.range_all_directions ? ' • '+t('ui.item.desc.alcance_todas_direcoes', {n: item.range})
               : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto_diag', {n: item.range, d: Math.ceil(item.range / 2)})
               : item.range ? ' • '+t('ui.item.desc.alcance', {n: item.range}) : '';
     const sub=item.categoria?' • '+_rotulo(item.categoria, 'ui.item.subtipo', item.categoria):'';
     const duas=item.two_handed?' • '+t('ui.item.desc.duas_maos'):'';
     const arr=item.throw_range?' • '+t('ui.item.desc.arremesso', {n: item.throw_range}):'';
-    const municao=['besta','hand_crossbow'].includes(item.id) ? ' • '+t('ui.item.desc.virotes')
-      : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.flechas') : '';
+    const municao=['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista'].includes(item.id) ? ' • '+t('ui.item.desc.virotes')
+      : ['arco_curto','longbow','arco_composto_curto','arco_composto_longo','arco_bruto_combatente'].includes(item.id) ? ' • '+t('ui.item.desc.flechas') : '';
     const ehAdaga=item.id==='dagger'||/adaga/i.test(item.name||'');
     const ehChicote=item.id==='chicote'||/chicote/i.test(item.name||'');
     const ehMarteloGuerra=item.id==='warhammer'||item.id==='martelo'||/martelo de guerra/i.test(item.name||'');
@@ -3765,6 +3798,14 @@ function _gamepadBackFromShop(){
   _gamepadSetUiFocus(null);
   return true;
 }
+
+// Esc fecha a loja/cena da cidade, passo a passo como o Cancelar do controle
+// (conversa → cena → cidade). Só age se nenhuma outra camada já tratou a tecla.
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape' || e.defaultPrevented) return;
+  if(_gamepadBackFromShop()) { e.preventDefault(); return; }
+  if($('guild-modal')?.classList.contains('open')) { e.preventDefault(); closeGuild(); }
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ■  GUILDA DOS HERÓIS (Fase 0) — compra de especializações e técnicas
@@ -4886,15 +4927,16 @@ function _iniciativaDeStatsHeroi(heroi){
 // `t` existir e abortaria o carregamento do game.js).
 function _iniciativaBox(valor){
   return `
-    <div style="margin-top:8px; padding:8px 12px; background:rgba(255,190,80,0.06); border:1px solid #ffbe5044; display:flex; justify-content:space-between;">
-      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.iniciativa')}</span>
-      <span style="color:#ffd27a; font-size:14px; font-weight:bold;">⚡ ${valor}</span>
+    <div class="fc-initiative-box" style="margin-top:8px; padding:8px 12px; background:rgba(255,190,80,0.06); border:1px solid #ffbe5044; display:flex; justify-content:space-between;">
+      <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.iniciativa')}</span>
+      <span class="fc-value-main" style="color:#ffd27a; font-size:14px; font-weight:bold;">⚡ ${valor}</span>
     </div>
   `
 }
 
 // Renderiza atributos usando dados do servidor quando disponíveis
-function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
+function renderConteudoAtributosFichaJogo(heroi, estadoServidor, opcoes = {}) {
+  const mostrarModificadores = opcoes.mostrarModificadores === true
   const ATRIBUTOS = [
     { key: 'forca',        serverKey: 'str_', icone: '⚔️' },
     { key: 'destreza',     serverKey: 'dex',  icone: '🏃' },
@@ -4922,38 +4964,38 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
   // o nome é a MESMA chave que o templo usa em _renderShopItems.
   const maldicoes = (estadoServidor.maldicoes||[]).map(m=>`<li>☠️ <b>${_rotulo(m.id,'ui.maldicao',m.id)}</b> — ${_rotulo(m.id+'.ef','ui.maldicao',t('ui.maldicao.ativa'))}${m.aventuras!=null&&['fome_eterna','sede_infinita','tocado_morte','licantropia','corrupcao_crescente'].includes(m.id)?` ${t('ui.maldicao.estagio',{n:Math.min(5,1+Math.floor(m.aventuras/2))})}`:''}</li>`).join('')
   const doenca = estadoServidor.doente ? `<li>🦠 <b>${t('ui.ficha.doenca',{tipo:estadoServidor.doenca_tipo||''})}</b> — ${((estadoServidor.doenca||{}).sintomas||[]).join(', ')}</li>` : ''
-  const modificadores = (maldicoes||doenca) ? `<div style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">${t('ui.ficha.modificadores_males')}</div><ul style="margin:0;padding-left:16px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
+  const modificadores = (maldicoes||doenca) ? `<div class="fc-maleficios" style="margin-top:14px;padding:10px;border:1px solid #a34a4a;background:rgba(120,20,25,.14)"><div class="fc-maleficios-title" style="color:#e8a0a0;font:10px Cinzel,serif;letter-spacing:1px;margin-bottom:5px">${t('ui.ficha.modificadores_males')}</div><ul class="fc-maleficios-list" style="margin:0;padding-left:18px;color:#e8d4d4;font-size:11px;line-height:1.5">${doenca}${maldicoes}</ul></div>` : ''
 
   return `
     <!-- VIDA -->
-    <div style="
+    <div class="fc-health" style="
       margin-bottom:14px; padding:10px 12px;
       background:rgba(255,65,54,0.08);
       border:1px solid #ff413644;
       display:flex; justify-content:space-between; align-items:center;
     ">
-      <span style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">
+      <span class="fc-stat-label" style="color:#8a7a5a; font-size:11px; letter-spacing:2px;">
         ❤️ ${t('ui.ficha.pontos_de_vida')}
       </span>
       <div>
-        <span style="color:#ff4136; font-size:18px; font-weight:bold;">
+        <span class="fc-value-main" style="color:#ff4136; font-size:18px; font-weight:bold;">
           ${hpAtual}
         </span>
-        <span style="color:#4a4a4a; font-size:13px;"> / ${hpMax}</span>
+        <span class="fc-value-sub" style="color:#4a4a4a; font-size:13px;"> / ${hpMax}</span>
       </div>
     </div>
 
     <!-- FOME E SEDE -->
     ${(fomeAtual !== undefined || sedeAtual !== undefined) ? `
-      <div style="
+      <div class="fc-survival-grid" style="
         display:flex; gap:8px; margin-bottom:14px;
       ">
-        <div style="
+        <div class="fc-survival-card" style="
           flex:1; padding:8px 10px;
           background:rgba(255,133,27,0.08);
           border:1px solid #ff851b44;
         ">
-          <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
+          <div class="fc-stat-label" style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
             🍖 ${t('ui.ficha.fome')}
           </div>
           <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
@@ -4962,16 +5004,16 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
               height:100%; background:#ff851b;
             "></div>
           </div>
-          <div style="color:#ff851b; font-size:10px; margin-top:3px;">
+          <div class="fc-small-value" style="color:#ff851b; font-size:10px; margin-top:3px;">
             ${fomeValor}/${fomeMax}
           </div>
         </div>
-        <div style="
+        <div class="fc-survival-card" style="
           flex:1; padding:8px 10px;
           background:rgba(68,136,255,0.08);
           border:1px solid #4488ff44;
         ">
-          <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
+          <div class="fc-stat-label" style="color:#8a7a5a; font-size:9px; letter-spacing:2px; margin-bottom:4px;">
             💧 ${t('ui.ficha.sede')}
           </div>
           <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
@@ -4980,7 +5022,7 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
               height:100%; background:#4488ff;
             "></div>
           </div>
-          <div style="color:#4488ff; font-size:10px; margin-top:3px;">
+          <div class="fc-small-value" style="color:#4488ff; font-size:10px; margin-top:3px;">
             ${sedeValor}/${sedeMax}
           </div>
         </div>
@@ -4988,27 +5030,23 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
     ` : ''}
 
     <!-- ATRIBUTOS -->
+    <div class="fc-attributes-grid">
     ${ATRIBUTOS.map(attr => {
       const valor = estadoServidor[attr.serverKey]
             || heroi.statsModificados?.[attr.key]
             || heroi.stats?.[attr.key]
             || 10
+      const modificador = _modAtributo(valor)
       const pct = (valor / 25) * 100
       return `
-        <div style="margin-bottom:12px;">
-          <div style="
-            display:flex; justify-content:space-between;
-            align-items:center; margin-bottom:4px;
-          ">
-            <span style="
-              color:#8a7a5a; font-family:'Cinzel',serif;
-              font-size:11px; letter-spacing:2px;
-            ">${attr.icone} ${_rotulo(attr.key, 'ui.atributo', attr.key)}</span>
-            <span style="color:#c8a951; font-size:13px; font-weight:bold;">
-              ${valor}
+        <div class="fc-attribute-card" style="margin-bottom:12px;">
+          <div class="fc-attribute-heading" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span class="fc-attribute-name" style="color:#8a7a5a; font-family:'Cinzel',serif; font-size:11px; letter-spacing:2px;">${attr.icone} ${_rotulo(attr.key, 'ui.atributo', attr.key)}</span>
+            <span class="fc-attribute-score" style="color:#c8a951;">
+              <b>${valor}</b>${mostrarModificadores ? `<small>(${modificador >= 0 ? '+' : ''}${modificador})</small>` : ''}
             </span>
           </div>
-          <div style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
+          <div class="fc-attribute-meter" style="height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
             <div style="
               width:${pct}%; height:100%; background:#c8a951;
               transition:width 0.5s ease;
@@ -5017,46 +5055,47 @@ function renderConteudoAtributosFichaJogo(heroi, estadoServidor) {
         </div>
       `
     }).join('')}
+    </div>
 
     <!-- CA e NÍVEL -->
-    <div style="
+    <div class="fc-summary-grid" style="
       display:flex; gap:8px; margin-top:14px;
     ">
-      <div style="
+      <div class="fc-summary-card" style="
         flex:1; padding:8px 12px;
         background:rgba(200,169,81,0.06);
         border:1px solid #c8a95133;
         display:flex; justify-content:space-between;
       ">
-        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.nivel')}</span>
-        <span style="color:#c8a951; font-size:14px; font-weight:bold;">${nivel}</span>
+        <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.nivel')}</span>
+        <span class="fc-value-main" style="color:#c8a951; font-size:14px; font-weight:bold;">${nivel}</span>
       </div>
       ${estadoServidor.ac ? `
-        <div style="
+        <div class="fc-summary-card" style="
           flex:1; padding:8px 12px;
           background:rgba(200,169,81,0.06);
           border:1px solid #c8a95133;
           display:flex; justify-content:space-between;
         ">
-          <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.bau.stat_ca')}</span>
-          <span style="color:#c8a951; font-size:14px; font-weight:bold;">
+          <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.bau.stat_ca')}</span>
+          <span class="fc-value-main" style="color:#c8a951; font-size:14px; font-weight:bold;">
             ${estadoServidor.ac}${(estadoServidor.buffs_cancao && estadoServidor.buffs_cancao.bonus_ca) ? ` <span style="color:#4db8ff;font-size:.78em;" title="${t('ui.hud.cancao_de_henrique')}">🎵+${estadoServidor.buffs_cancao.bonus_ca}</span>` : ''}
           </span>
         </div>
       ` : ''}
-      <div style="
+      <div class="fc-summary-card" style="
         flex:1; padding:8px 12px;
         background:rgba(100,180,255,0.06);
         border:1px solid #64b4ff44;
         display:flex; justify-content:space-between;
       ">
-        <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.raio_visao')}</span>
-        <span style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
+        <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.raio_visao')}</span>
+        <span class="fc-value-main" style="color:#8ed0ff; font-size:14px; font-weight:bold;">👁 ${raioVisao}</span>
       </div>
     </div>
-    <div style="margin-top:8px; padding:8px 12px; background:rgba(170,130,255,0.06); border:1px solid #aa82ff44; display:flex; justify-content:space-between;">
-      <span style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.percepcao')}</span>
-      <span style="color:#c4a7ff; font-size:14px; font-weight:bold;">👁‍🗨 ${percepcao}</span>
+    <div class="fc-perception-card" style="margin-top:8px; padding:8px 12px; background:rgba(170,130,255,0.06); border:1px solid #aa82ff44; display:flex; justify-content:space-between;">
+      <span class="fc-stat-label" style="color:#8a7a5a; font-size:10px; letter-spacing:2px;">${t('ui.ficha.percepcao')}</span>
+      <span class="fc-value-main" style="color:#c4a7ff; font-size:14px; font-weight:bold;">👁‍🗨 ${percepcao}</span>
     </div>
     ${_iniciativaBox(iniciativa)}
     ${modificadores}
@@ -5306,6 +5345,13 @@ function fecharLoja(){
 // aplicarTooltipAoItem(elemento, itemId). (DOM → vive em game.js.)
 // ═══════════════════════════════════════════════════════════════════════════
 let _itemTooltipReady = false;
+// Ampliação do quadro de item inteiro (texto, ícones e espaços). O quadro tem
+// dezenas de tamanhos de letra embutidos nos modelos; escalar o quadro todo
+// mantém as proporções. transform não mexe no left/top e o getBoundingClientRect
+// já devolve o tamanho ampliado, então o posicionamento continua certo.
+const ESCALA_TOOLTIP_ITEM = 1.5;
+// Tempo com o mouse parado sobre o item até a descrição completa aparecer.
+const ATRASO_DESCRICAO_ITEM_MS = 1000;
 // Elemento que abriu o quadro. Remover (ou ocultar) um elemento que está sob o
 // cursor NÃO dispara mouseleave — é o caso de pegar um item do baú, que
 // re-renderiza a lista e destrói a linha em hover. Sem esse registro o quadro
@@ -5352,9 +5398,9 @@ function _ligarTooltipItem(elemento, nome, renderDetalhes){
     tip.style.color = '#e8cf7e';
     tip.style.fontSize = '12px';
     tip.style.borderColor = '#c8a951';
-    tip.style.maxWidth = 'calc(100vw - 16px)';
+    tip.style.maxWidth = `calc((100vw - 16px) / ${ESCALA_TOOLTIP_ITEM})`;
     tip.style.boxSizing = 'border-box';
-    tip.style.maxHeight = 'calc(100vh - 16px)';
+    tip.style.maxHeight = `calc((100vh - 16px) / ${ESCALA_TOOLTIP_ITEM})`;
     tip.style.overflowY = 'auto';
     tip.style.overscrollBehavior = 'contain';
     tip.style.scrollbarWidth = 'thin';
@@ -5378,7 +5424,7 @@ function _ligarTooltipItem(elemento, nome, renderDetalhes){
       tip.style.pointerEvents = 'auto';
       tip.scrollTop = 0;
       _posicionarTooltipItem(tip, elemento);
-    }, 2000);
+    }, ATRASO_DESCRICAO_ITEM_MS);
   };
   elemento.addEventListener('mouseenter', abrir);
   elemento.addEventListener('mouseleave', () => {
@@ -5406,6 +5452,7 @@ function _initItemTooltip(){
       pointer-events: none; opacity: 0;
       transition: opacity 0.15s ease;
       box-shadow: 0 4px 24px rgba(0,0,0,0.8);
+      transform: scale(${ESCALA_TOOLTIP_ITEM}); transform-origin: 0 0;
     `;
     document.body.appendChild(tooltip);
   }
@@ -5527,11 +5574,9 @@ function gerarConteudoTooltip(item){
 
   if(Array.isArray(item.poison_ids)){
     for(const poisonId of item.poison_ids){
-      const baseId=String(poisonId||'').split('__upgrade__')[0];
-      const cat=(GS.CATALOGO_ITENS||{})[poisonId]||(GS.CATALOGO_ITENS||{})[baseId]||{};
-      const poisonName=cat.nome||t(`cat.item.${poisonId}.nome`);
-      const summary=cat.descricao||cat.description||t(`ui.item.${baseId}.desc`);
-      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),_esc(summary&&summary!==`ui.item.${baseId}.desc`?`${poisonName}: ${summary}`:poisonName)));
+      const poisonName=_nomeVenenoPorId(poisonId);
+      const summary=_descricaoVenenoPorId(poisonId);
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),_esc(summary?`${poisonName}: ${summary}`:poisonName)));
     }
   }
 
@@ -6715,13 +6760,9 @@ function atualizarMelhoriaVeneno(baseId){
   const dur={destilado:1.5,prolongado:2};
   const base=Number(row.dataset.poisonBasePrice||0);
   const price=Math.ceil(base*(dc[upgrades.cd]||1)*(pot[upgrades.potencia]||1)*(dur[upgrades.duracao]||1));
-  const names=[];
-  if(upgrades.cd!=='nenhum') names.push({aprimorado:'Aprimorado',avancado:'Avançado',mortal:'Mortal'}[upgrades.cd]);
-  if(upgrades.potencia!=='nenhum') names.push({fortalecido:'Fortalecido',concentrado:'Concentrado'}[upgrades.potencia]);
-  if(upgrades.duracao!=='nenhum') names.push({destilado:'Destilado',prolongado:'Prolongado'}[upgrades.duracao]);
   const baseName=row.querySelector('.poison-preview-name')?.dataset.baseName||'';
-  const max=upgrades.cd==='mortal'&&upgrades.potencia==='concentrado'&&upgrades.duracao==='prolongado';
-  const name=`${baseName}${names.length?' '+(max?'Fatal':names.join(' ')):''}`;
+  const sufixo=_sufixoMelhoriasVeneno(upgrades.cd,upgrades.potencia,upgrades.duracao);
+  const name=`${baseName}${sufixo?' '+sufixo:''}`;
   const nameEl=row.querySelector('.poison-preview-name'); if(nameEl) nameEl.textContent=name;
   const priceEl=row.querySelector('.poison-preview-price'); if(priceEl) priceEl.textContent=`💰 ${price}`;
   const btn=row.querySelector('.btn-buy'); if(btn) btn.disabled=Number($('shop-gold-val')?.textContent||0)<price;
@@ -9315,8 +9356,8 @@ function _computeWeaponRangeTiles(state, me) {
 // para o jogador — nenhum alvo ou dano é decidido aqui.
 function _armaDistanciaAtaqueGiratorio(me){
   const weapon = me?.weapon || {};
-  const weaponId = String(weapon.id || '').toLowerCase();
-  const rangedIds = new Set(['arco_curto', 'longbow', 'besta', 'hand_crossbow', 'besta_mao', 'besta_leve', 'arco_longo']);
+  const weaponId = GS.armaBaseId(String(weapon.id || '').toLowerCase());
+  const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo', 'gancho_corrente', 'gancho_escorpiao_superior']);
   return Boolean(rangedIds.has(weaponId) || weapon.projectile || weapon.ammo || weapon.ammo_type
     || weapon.tipo === 'armaDistancia' || weapon.tipo === 'ranged');
 }
@@ -12658,6 +12699,8 @@ function renderMap(state){
     _maldicaoDraw2D(ctx, state, _animMaldicao, performance.now());
   for(const _animRaioDivino of _raioDivinoAnims)
     _raioDivinoDraw2D(ctx, state, _animRaioDivino, performance.now());
+  for(const _animClarãoSolar of _solarFlareAnims)
+    _solarFlareDraw2D(ctx, state, _animClarãoSolar, performance.now());
   for(const _animProtecao of _protecaoEnergiaAnims)
     _protecaoEnergiaDraw2D(ctx, state, _animProtecao, performance.now());
 
@@ -14579,6 +14622,69 @@ function topoSuperficie3D(state, x, y, TH = 0.22){
   return topoTerreno3D(state, x, y, TH);
 }
 
+// Quanto a superfície da casa mais próxima de (x, z) está acima do chão de
+// nível 0 (platô e ponte), em unidades 3D. Zero em mapa plano.
+function elevacaoChao3D(state, x, z){
+  if(!state) return 0;
+  return topoSuperficie3D(state, Math.round(x), Math.round(z), 0);
+}
+
+// Efeitos de magia, armadilha e fumaça são montados como se o chão estivesse
+// sempre no nível 0: as animações (dezenas delas) escrevem y fixo a cada
+// quadro. Em vez de corrigir uma a uma, este passo roda por último no quadro
+// e soma a elevação da casa a cada peça posicionada em coordenada de mundo.
+// Grupos que já calculam a altura sozinhos (seguem o peão pela posição de
+// mundo, ou chamam topoSuperficie3D) ficam de fora, senão subiriam duas vezes.
+const _EFEITO_CHAO_RE = /(-animation|-fx|-swarm|-dome|-pulse|-faiscas|-impact)$|^(fumaca-|sombra-|trap-fx-|positive-|ladino-sombras|turbilhao-elemental)/;
+const _EFEITO_CHAO_FORA = new Set([
+  'protetor-animation', 'dueto-fantasma-reflexo', 'cancao-heroica-aura',
+  'ecos-dolorosos-aura', 'sneak-attack-impact', 'attack-feedback',
+]);
+function _efeitoChaoElegivel(nome){
+  return !!nome && !_EFEITO_CHAO_FORA.has(nome) && _EFEITO_CHAO_RE.test(nome);
+}
+// A animação reescreve `position.y` a cada quadro, ou só uma vez ao montar.
+// Guardamos o y que deixamos: se ele continua lá, a animação não mexeu e só
+// trocamos o deslocamento antigo pelo novo; se mudou, ela reescreveu e
+// somamos por cima. Assim nada acumula nem fica para trás.
+function _elevarNo3D(obj, state){
+  const ud = obj.userData;
+  const off = elevacaoChao3D(state, obj.position.x, obj.position.z);
+  const base = (ud._elevPos !== undefined && obj.position.y === ud._elevPos)
+    ? obj.position.y - (ud._elevOff || 0) : obj.position.y;
+  obj.position.y = base + off;
+  ud._elevOff = off;
+  ud._elevPos = obj.position.y;
+}
+function _naOrigem3D(obj){
+  return Math.abs(obj.position.x) < 1e-6 && Math.abs(obj.position.z) < 1e-6
+    && !obj.rotation.x && !obj.rotation.y && !obj.rotation.z;
+}
+function _elevarFilhos3D(grupo, state, prof = 0){
+  for(const c of grupo.children){
+    // Subgrupo na origem só organiza: as peças dentro dele é que estão no mundo.
+    if(c.isGroup && prof < 3 && _naOrigem3D(c) && c.children.length) _elevarFilhos3D(c, state, prof + 1);
+    else _elevarNo3D(c, state);
+  }
+}
+let _elevChaoCache = { state: null, tem: false };
+function _mapaTemElevacao(state){
+  if(_elevChaoCache.state === state) return _elevChaoCache.tem;
+  const tem = Object.values(state?.elevacoes || {}).some(v => Number(v))
+    || (state?.pontes || []).length > 0;
+  _elevChaoCache = { state, tem };
+  return tem;
+}
+function _elevarEfeitosChao3D(){
+  const state = GS.gameState;
+  if(!g3?.scene || !state || !_mapaTemElevacao(state)) return;
+  for(const g of g3.scene.children){
+    if(!g.isGroup || !_efeitoChaoElegivel(g.name)) continue;
+    if(_naOrigem3D(g)) _elevarFilhos3D(g, state);
+    else _elevarNo3D(g, state);
+  }
+}
+
 // Elevação da base visual de um peão (a raiz do grupo fica TH abaixo do topo
 // da superfície). A ponte é uma camada própria: quando o peão entra nela, a
 // altura visual precisa acompanhar o deck, mesmo que o piso abaixo seja lava,
@@ -15686,7 +15792,7 @@ function _spinAttackFxDispose3D(anim){
 
 function _spinAttackFxBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group();
+  const T = window.THREE, group = new T.Group(); group.name = 'spin-attack-fx';
   group.name = anim.abilityId === 'tecnica_redemoinho_morte'
     ? 'redemoinho-da-morte-fx' : 'ataque-giratorio-fx';
   const color = new T.Color(anim.color);
@@ -20181,6 +20287,110 @@ function renderImprovisoQuadro(msg){
   overlay.onclick = e => { if(e.target === overlay) fechar(); };
 }
 
+function renderImprovisoEncoreChoice(msg){
+  document.getElementById('improviso-encore-choice-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'improviso-encore-choice-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.76);display:flex;align-items:center;justify-content:center;';
+  const great = Number(msg.initial_roll) === 12 && msg.great_available;
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--bg2);border:2px solid var(--gold);border-radius:12px;padding:22px 26px;text-align:center;width:min(480px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.65);';
+  const choiceText = great ? t('ui.instrumento.chicote_encore_great_prompt') : t('ui.instrumento.chicote_encore_prompt');
+  panel.innerHTML = `<div style="color:var(--gold);font-size:1.15rem;font-weight:bold;margin-bottom:8px;">${t('ui.instrumento.chicote_encore_title')}</div>
+    <div style="margin:0 0 14px;color:var(--text2);">${t('ui.instrumento.chicote_encore_roll',{roll:msg.initial_roll})}<br>${choiceText}</div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn-primary" id="encore-choice-use">${great ? t('ui.instrumento.chicote_encore_great') : t('ui.instrumento.chicote_encore_force')}</button>
+      <button class="btn-cancel" id="encore-choice-keep">${t('ui.instrumento.chicote_encore_keep')}</button>
+    </div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2);">${t('ui.instrumento.chicote_encore_cooldown',{rounds:msg.cooldown || 10})}</div>`;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  let chosen = false;
+  const respond = choice => {
+    if(chosen) return;
+    chosen = true;
+    GS.improvisoEncoreChoice(msg.request_id, choice);
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = e => { if(e.key === 'Escape') respond('keep'); };
+  panel.querySelector('#encore-choice-use').onclick = () => respond(great ? 'great' : 'encore');
+  panel.querySelector('#encore-choice-keep').onclick = () => respond('keep');
+  overlay.onclick = e => { if(e.target === overlay) respond('keep'); };
+  document.addEventListener('keydown', onKey);
+}
+
+function renderVotoGuardiaoPrompt(msg){
+  document.getElementById('voto-guardiao-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'voto-guardiao-overlay';
+  overlay.dataset.owner = String(msg.owner_id ?? '');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.76);display:flex;align-items:center;justify-content:center;';
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--bg2);border:2px solid var(--gold);border-radius:12px;padding:22px 26px;text-align:center;width:min(480px,92vw);max-height:82vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.65);';
+  panel.innerHTML = `<div style="color:var(--gold);font-size:1.12rem;font-weight:bold;margin-bottom:8px;">${t('ui.item.voto_guardiao_title')}</div>
+    <div style="margin:0 0 12px;color:var(--text2);">${t('ui.item.voto_guardiao_prompt')}</div>
+    <div id="voto-guardiao-targets" style="display:grid;gap:8px;"></div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2);">${t('ui.item.voto_guardiao_cooldown',{rounds:msg.cooldown || 10})}</div>`;
+  const targetsEl = panel.querySelector('#voto-guardiao-targets');
+  let answered = false;
+  const respond = targetId => {
+    if(answered) return;
+    answered = true;
+    GS.votoGuardiaoChoice(msg.request_id, targetId);
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  for(const target of (msg.targets || [])){
+    const button = document.createElement('button');
+    button.className = 'btn-primary';
+    button.textContent = `${target.self ? t('ui.item.voto_guardiao_you') : target.name} — ${target.hp}/${target.max_hp} PV`;
+    button.onclick = () => respond(target.id);
+    targetsEl.appendChild(button);
+  }
+  const decline = document.createElement('button');
+  decline.className = 'btn-cancel';
+  decline.textContent = t('ui.item.voto_guardiao_decline');
+  decline.style.marginTop = '10px';
+  decline.onclick = () => respond(null);
+  panel.appendChild(decline);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  const onKey = e => { if(e.key === 'Escape') respond(null); };
+  document.addEventListener('keydown', onKey);
+}
+
+function renderVereditoRadiantePrompt(msg){
+  document.getElementById('veredito-radiante-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'veredito-radiante-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;';
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--bg2);border:2px solid #ffd56b;border-radius:12px;padding:22px 26px;text-align:center;width:min(460px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.7);';
+  panel.innerHTML = `<div style="color:#ffd56b;font-size:1.12rem;font-weight:bold;margin-bottom:8px;">${t('ui.item.veredito_radiante_title')}</div>
+    <div style="margin:0 0 14px;color:var(--text2);">${t('ui.item.veredito_radiante_prompt',{weapon:_esc(msg.weapon_name||''),target:_esc(msg.target_name||'')})}</div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn-primary" data-veredito-use>${t('ui.item.veredito_radiante_use')}</button>
+      <button class="btn-cancel" data-veredito-save>${t('ui.item.veredito_radiante_save')}</button>
+    </div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2);">${t('ui.item.veredito_radiante_cooldown',{rounds:msg.cooldown||10})}</div>`;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  let answered = false;
+  const respond = choice => {
+    if(answered) return;
+    answered = true;
+    GS.vereditoRadianteChoice(msg.request_id, choice);
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = e => { if(e.key === 'Escape') respond('save'); };
+  panel.querySelector('[data-veredito-use]').onclick = () => respond('use');
+  panel.querySelector('[data-veredito-save]').onclick = () => respond('save');
+  overlay.onclick = e => { if(e.target === overlay) respond('save'); };
+  document.addEventListener('keydown', onKey);
+}
+
 // Mira, em sequência, os passos pendentes da cascata do Improviso (FIFO —
 // mesma ordem de msg.pendentes, que é a ordem que o servidor consome da fila
 // `improviso_pendente`). Cancelar um passo (Cancelar do target-modal, ou Esc
@@ -20873,9 +21083,56 @@ function abrirPainelVenenoRapido(){
   abrirPainelEnvenenar({metodo:'veneno_rapido'});
 }
 
+// ── Venenos melhorados ──────────────────────────────────────────────────────
+// O frasco melhorado tem id `<base>__upgrade__<cd>_<potencia>_<duracao>` (ver
+// _preparar_item_veneno no servidor). Esse id não existe no catálogo do cliente,
+// então nome e descrição são montados a partir do veneno-base + as melhorias —
+// senão o painel Envenenar, o status e o tooltip mostravam o id cru.
+const _VENENO_MELHORIA_CD = {aprimorado:2, avancado:4, mortal:6};
+const _VENENO_MELHORIA_POTENCIA = {fortalecido:1.5, concentrado:2};
+const _VENENO_MELHORIA_DURACAO = {destilado:2, prolongado:4};
+function _partesVenenoId(id){
+  const bruto=String(id||'');
+  const [base,resto]=bruto.split('__upgrade__');
+  const [cd='nenhum',potencia='nenhum',duracao='nenhum']=(resto||'').split('_');
+  return {base,cd,potencia,duracao,melhorado:resto!==undefined};
+}
+function _sufixoMelhoriasVeneno(cd,potencia,duracao){
+  if(cd==='mortal'&&potencia==='concentrado'&&duracao==='prolongado') return t('ui.veneno.nome.fatal');
+  return [cd,potencia,duracao].filter(x=>x&&x!=='nenhum').map(x=>t('ui.veneno.nome.'+x)).join(' ');
+}
+// Nome de um veneno-base que o catálogo estático não conhece (veneno criado no editor):
+// usa o frasco que o jogador carrega, se houver.
+function _nomeVenenoBaseDesconhecido(base){
+  const me=window.GS&&GS.me;
+  const frascos=[...((me&&me.bag)||[])];
+  Object.values((me&&me.gear)||{}).forEach(g=>(g&&g.utility_belt_slots||[]).forEach(s=>s&&s.item&&frascos.push(s.item)));
+  const f=frascos.find(i=>i&&String(i.veneno_id||i.id||'').split('__upgrade__')[0]===base);
+  if(f){
+    const n=String(f.name||f.nome||''); const pf=_partesVenenoId(f.veneno_id||f.id);
+    const suf=pf.melhorado?_sufixoMelhoriasVeneno(pf.cd,pf.potencia,pf.duracao):'';
+    return suf&&n.endsWith(' '+suf)?n.slice(0,-(suf.length+1)):n;
+  }
+  return String(base).replace(/^veneno_/,'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
+}
 function _nomeVenenoPorId(id){
   const cat=(window.GS&&GS.CATALOGO_ITENS)?GS.CATALOGO_ITENS:{};
-  return cat[id]?.nome||id;
+  const {base,cd,potencia,duracao,melhorado}=_partesVenenoId(id);
+  if(!melhorado) return cat[id]?.nome||_nomeVenenoBaseDesconhecido(id);
+  const nomeBase=cat[base]?.nome||_nomeVenenoBaseDesconhecido(base);
+  const suf=_sufixoMelhoriasVeneno(cd,potencia,duracao);
+  return suf?`${nomeBase} ${suf}`:nomeBase;
+}
+function _descricaoVenenoPorId(id){
+  const cat=(window.GS&&GS.CATALOGO_ITENS)?GS.CATALOGO_ITENS:{};
+  const {base,cd,potencia,duracao,melhorado}=_partesVenenoId(id);
+  const desc=cat[id]?.descricao||cat[base]?.descricao||'';
+  if(!melhorado) return desc;
+  const partes=[];
+  if(cd!=='nenhum') partes.push(t('ui.veneno.parte_cd',{n:_VENENO_MELHORIA_CD[cd]}));
+  if(potencia!=='nenhum') partes.push(t('ui.veneno.parte_potencia',{n:String(_VENENO_MELHORIA_POTENCIA[potencia]).replace('.',',')}));
+  if(duracao!=='nenhum') partes.push(t('ui.veneno.parte_duracao',{n:_VENENO_MELHORIA_DURACAO[duracao]}));
+  return [desc,partes.length?t('ui.veneno.melhorias_resumo',{partes:partes.join(', ')}):''].filter(Boolean).join(' ');
 }
 
 function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=null}={}){
@@ -21008,7 +21265,21 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
           confirmed_partial:m.parcial})
       });
     }
-    if(!alvos.armas.length&&!alvos.municoes.length){
+    for(const m of (alvos.laminas||[])){
+      const bloqueio=bonusUsado?t('ui.veneno.bonus_usado'):semSedeMunicao?t('ui.ladino.sede_insuficiente')
+        :escolhidos.length!==1?t('ui.veneno.laminas_um_veneno'):'';
+      addCartao({
+        html:`<b>🗡️ ${_esc(m.item.name||t('cat.item.laminas_riposta.nome'))} ×${m.total}</b>
+          <div style="color:#a99a7c;font-size:10px">${_esc(nomesEscolhidos)}</div>`,
+        bloqueado:!!bloqueio,
+        motivo:bloqueio||t('ui.veneno.laminas_rende',{n:m.qtd}),
+        ao:()=>send({type:'envenenar_laminas',method:metodo,blade_index:m.index,quantity:m.qtd,
+          poison_id:escolhidos[0],item_id:metodo==='frasco'?escolhidos[0]:null,
+          ...(metodo==='frasco'&&vialSource?.source==='utility_belt'
+            ?{vial_item_id:vialSource.itemId,vial_source:GS.itemSourceFields(vialSource)}:{})})
+      });
+    }
+    if(!alvos.armas.length&&!alvos.municoes.length&&!(alvos.laminas||[]).length){
       lista.innerHTML=`<div style="color:#b8704a;font-size:11px;padding:6px 0">${t('ui.veneno.sem_alvo')}</div>`;
     }
   };
@@ -22005,6 +22276,17 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo, origemGr
   `;
 }
 
+let _tooltipMagiaHideTimer = null;
+
+function _prepararTooltipDetalhes(tooltip){
+  tooltip.classList.add('menu-detail-tooltip');
+  tooltip.setAttribute('role', 'tooltip');
+  if(tooltip.dataset.transferBound) return;
+  tooltip.dataset.transferBound = 'true';
+  tooltip.addEventListener('mouseenter', () => clearTimeout(_tooltipMagiaHideTimer));
+  tooltip.addEventListener('mouseleave', event => ocultarTooltipMagia(event));
+}
+
 // Tooltip da carta — aceita (magiaId, event) [novo] OU (event, magiaId) [chamadas
 // antigas de renderAbaMagiasPedro], detectando qual argumento é o id (string).
 function mostrarTooltipMagia(a, b) {
@@ -22017,23 +22299,24 @@ function mostrarTooltipMagia(a, b) {
   if (!tooltip) {
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
+  _prepararTooltipDetalhes(tooltip);
+  clearTimeout(_tooltipMagiaHideTimer);
 
   const corCirculo = _COR_CIRCULO[m.circulo];
   const labelCirculo = _labelCirculo(m.circulo);
   tooltip.innerHTML = `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid ${corCirculo}33;">
+    <div class="menu-detail-tooltip-head" style="border-color:${corCirculo}55;">
       <span style="font-size:24px;">${magiaIconHTML(m, 28)}</span>
       <div>
-        <div style="color:${corCirculo}; font-size:12px; font-weight:bold;">${m.nome}</div>
-        <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${labelCirculo}</div>
+        <div class="menu-detail-tooltip-title" style="color:${corCirculo};">${m.nome}</div>
+        <div class="menu-detail-tooltip-kind">${labelCirculo}</div>
       </div>
     </div>
-    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">${m.descricao}</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; font-size:9px;">${_magiaAcaoEtiquetaHTML(m)}</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; color:#ff851b; font-size:9px;">${m.custo}</div>
+    <div class="menu-detail-tooltip-body">${m.descricao}</div>
+    <div class="menu-detail-tooltip-meta" style="border-color:${corCirculo}33;color:#e0c6f3;">${_magiaAcaoEtiquetaHTML(m)}</div>
+    <div class="menu-detail-tooltip-meta" style="border-color:${corCirculo}33;">${m.custo}</div>
   `;
   tooltip.style.display = 'block';
   // Ancora o quadro ACIMA do ícone da magia (centralizado), sem seguir o cursor.
@@ -22046,7 +22329,7 @@ function mostrarTooltipMagia(a, b) {
 function _posicionarTooltipMagia(rect, event) {
   const t = document.getElementById('tooltip-magia');
   if (!t) return;
-  const tw = t.offsetWidth || 220;
+  const tw = t.offsetWidth || 360;
   const th = t.offsetHeight || 120;
   const M = 8;   // margem mínima da borda da tela
   let left, top;
@@ -22075,8 +22358,18 @@ function _moverTooltipMagia(e) {
   t.style.top  = y + 'px';
 }
 
-function ocultarTooltipMagia() {
+function ocultarTooltipMagia(event) {
   const t = document.getElementById('tooltip-magia');
+  const related = event?.relatedTarget;
+  if(event && related && (t?.contains(related) || related.closest?.('.mh-card, .mm-magia'))) return;
+  clearTimeout(_tooltipMagiaHideTimer);
+  if(event){
+    _tooltipMagiaHideTimer = setTimeout(() => {
+      const tooltip = document.getElementById('tooltip-magia');
+      if(tooltip) tooltip.style.display = 'none';
+    }, 140);
+    return;
+  }
   if (t) t.style.display = 'none';
   document.removeEventListener('mousemove', _moverTooltipMagia);
 }
@@ -22087,20 +22380,21 @@ function mostrarTooltipAnimarMortos(event) {
   if (!tooltip) {
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
+  _prepararTooltipDetalhes(tooltip);
+  clearTimeout(_tooltipMagiaHideTimer);
 
   tooltip.innerHTML = `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #9900cc33;">
+    <div class="menu-detail-tooltip-head" style="border-color:#9900cc66;">
       <img src="assets/habilidades/animar_mortos_vivos.png" alt="" style="width:28px; height:28px; object-fit:cover;">
       <div>
-        <div style="color:#d98cff; font-size:12px; font-weight:bold;" data-ability-id="animar_mortos">${t('ui.animar.nome_curto')}</div>
-        <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${t('ui.ficha.habilidade_classe_curta')}</div>
+        <div class="menu-detail-tooltip-title" style="color:#e4b8ff;" data-ability-id="animar_mortos">${t('ui.animar.nome_curto')}</div>
+        <div class="menu-detail-tooltip-kind">${t('ui.ficha.habilidade_classe_curta')}</div>
       </div>
     </div>
-    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">${t('ui.animar.tooltip_desc')}</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid #9900cc22; color:#ff851b; font-size:9px;">${t('ui.animar.tooltip_custo')}</div>
+    <div class="menu-detail-tooltip-body">${t('ui.animar.tooltip_desc')}</div>
+    <div class="menu-detail-tooltip-meta" style="border-color:#9900cc44;">${t('ui.animar.tooltip_custo')}</div>
   `;
   tooltip.style.display = 'block';
   const alvo = (event && event.currentTarget && event.currentTarget.getBoundingClientRect)
@@ -26231,6 +26525,25 @@ function _monsterOrthogonalAttackTilesClient(m, reach=1){
   return out;
 }
 
+function _isEnemyMonster2x2Client(m){
+  return !!(m?.type && _monsterIs2x2Client(m));
+}
+
+function _monster2x2MeleeAttackTilesClient(m, reach=1){
+  if(!_isEnemyMonster2x2Client(m)) return [];
+  const body = GS.monsterTiles(m) || [];
+  const bodyKeys = new Set(body.map(([x,y])=>`${x},${y}`));
+  const n = Math.max(1, Number(reach) || 1), out = new Map();
+  for(const [tx,ty] of body){
+    for(let dx=-n; dx<=n; dx++) for(let dy=-n; dy<=n; dy++){
+      if(dx===0 && dy===0) continue;
+      const x=tx+dx, y=ty+dy, key=`${x},${y}`;
+      if(!bodyKeys.has(key)) out.set(key,[x,y]);
+    }
+  }
+  return [...out.values()];
+}
+
 function _monsterRearAttackTilesClient(m, reach=1){
   if(!_monsterHasFrontRowClient(m)) return [];
   const f = Array.isArray(m.facing) &&
@@ -26271,6 +26584,11 @@ function _monsterAttackInRangeClient(m, targetPos, atkDef={}){
       });
     }
     return tiles.some(([x,y])=>Math.max(Math.abs(targetPos[0]-x),Math.abs(targetPos[1]-y)) <= lim);
+  }
+  if(_isEnemyMonster2x2Client(m)){
+    const reach = Math.max(1, Number(atkDef.reach) || 1);
+    return _monster2x2MeleeAttackTilesClient(m, reach)
+      .some(([x,y])=>x===targetPos[0]&&y===targetPos[1]);
   }
   if(_monsterIs2x2Client(m) && !m.oriented){
     const reach = Math.max(1, Number(atkDef.reach) || 1);
@@ -26327,7 +26645,9 @@ function _masterMonsterAttackPreviewClient(state, monster){
     }
 
     const reach = Math.max(1, Number(atk?.reach) || 1);
-    const front = (_monsterIs2x2Client(monster) && !monster.oriented)
+    const front = _isEnemyMonster2x2Client(monster)
+      ? _monster2x2MeleeAttackTilesClient(monster, reach)
+      : (_monsterIs2x2Client(monster) && !monster.oriented)
       ? _monsterOrthogonalAttackTilesClient(monster, reach)
       : _monsterHasFrontRowClient(monster)
         ? _monsterFrontAttackTilesClient(monster, reach)
@@ -26603,6 +26923,8 @@ function _iniciarMiraMestre(spec){
   window._modoMestreMira=Object.assign({},spec,{range, rawRange});
   const alcance=spec.rearAttack
     ? new Set(_monsterRearAttackTilesClient(spec.caster, 1))
+    : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _isEnemyMonster2x2Client(spec.caster))
+    ? new Set(_monster2x2MeleeAttackTilesClient(spec.caster, spec.attackDef.reach || 1))
     : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster))
     ? new Set(_monsterFrontAttackTilesClient(spec.caster, spec.attackDef.reach || 1))
     : spec.lineRange
@@ -26619,8 +26941,8 @@ function _iniciarMiraMestre(spec){
           || (spec.cone && spec.showConeRange && range>0))) _addCheb(x,y,range,alcance);
   if(footprintRangedAbility && GS.gameState?.tiles){
     // Ataques de uma criatura 2×2 partem de qualquer casa do footprint (à
-    // distância) ou das faces ortogonais do bloco (corpo a corpo). A prévia
-    // precisa refletir isso, em vez de medir apenas pela âncora visual.
+    // distância) ou de todo o perímetro (corpo a corpo). A prévia precisa
+    // refletir isso, em vez de medir apenas pela âncora visual.
     alcance.clear();
     const body = new Set((GS.monsterTiles(spec.caster) || [])
       .map(([bx, by]) => `${bx},${by}`));
@@ -27369,6 +27691,9 @@ function _itemAcaoMeta(item){
   // As poções portáteis já usam a ação bônus na regra do servidor.
   if(['heal','regeneration'].includes(item.effect)) return _acaoEconomiaMeta('acao_bonus');
   if(item.effect === 'veil_shadow') return _acaoEconomiaMeta('acao_bonus');
+  // Mesmos efeitos que o servidor cobra como ação bônus (BONUS_ACTION_EFFECTS);
+  // frasco de veneno, antídoto e poções apareciam como "ação principal".
+  if(BONUS_ACTION_EFFECTS.has(item.effect)) return _acaoEconomiaMeta('acao_bonus');
   if(item.item_slot === 'bag' || item.tipo === 'consumivel' || item.arremessavel || item.effect === 'scroll')
     return _acaoEconomiaMeta('acao_principal');
   return null;
@@ -28038,6 +28363,8 @@ function renderMyPanel(state){
     else if(sk.granted_origem === 'crystal_ball') sl.appendChild(_crystalBallSkillBtn(me, sk));
     else if(sk.granted_origem === 'shadow_cloak') sl.appendChild(_shadowCloakSkillBtn(me, sk));
     else if(sk.granted_origem === 'runic_armor') sl.appendChild(_runicArmorSkillBtn(me, sk));
+    else if(sk.granted_origem === 'thundering_shield') sl.appendChild(_thunderingShieldSkillBtn(me, sk));
+    else if(sk.granted_origem === 'thorn_bond_shield') sl.appendChild(_thornBondShieldSkillBtn(me, sk));
   }
 
   // ── Técnica(s) da Guilda equipada(s) (Fase 0) — 4º slot com recarga em rodadas ──
@@ -29082,16 +29409,18 @@ function _showSmokeReaction(msg){
   panel.style.cssText = 'box-sizing:border-box;width:min(440px,100%);max-height:90vh;overflow:auto;padding:24px;border:2px solid #b6bec9;border-radius:14px;background:linear-gradient(145deg,#232833,#12151d);color:#f3f0e8;box-shadow:0 12px 70px #000;font-family:inherit;';
   const title = document.createElement('h2');
   title.id = 'smoke-reaction-title';
-  title.textContent = '⚡ ' + t('ui.reacao_fumaca.titulo');
+  const riposte=msg.candidates.some(c=>c.item_id==='laminas_riposta');
+  title.textContent = (riposte?'🗡️ ':'⚡ ') + (riposte?t('ui.reacao_laminas.titulo'):t('ui.reacao_fumaca.titulo'));
   title.style.cssText = 'margin:0 0 14px;color:#e1d4ac;font-size:1.3rem;';
   const text = document.createElement('p');
-  text.textContent = t('ui.reacao_fumaca.ataque',{inimigo:msg.attacker.name,alvo:msg.target.name});
+  text.textContent = riposte?t('ui.reacao_laminas.ataque',{inimigo:msg.attacker.name})
+    :t('ui.reacao_fumaca.ataque',{inimigo:msg.attacker.name,alvo:msg.target.name});
   const hint = document.createElement('p');
   const hasSmoke=msg.candidates.some(c=>(c.item_id||'bomba_fumaca')==='bomba_fumaca');
   const hasFlash=msg.candidates.some(c=>c.item_id==='bomba_flash');
   const effectKey=hasSmoke&&hasFlash?'ui.reacao_fumaca.efeito_ambos'
     :hasFlash?'ui.reacao_fumaca.efeito_flash':'ui.reacao_fumaca.efeito_fumaca';
-  hint.textContent = t(effectKey);
+  hint.textContent = riposte?t('ui.reacao_laminas.efeito'):t(effectKey);
   hint.style.cssText = 'color:#bcc4d2;font-size:.9rem;line-height:1.5;';
   const countdown = document.createElement('p');
   countdown.setAttribute('role','status');
@@ -29120,7 +29449,8 @@ function _showSmokeReaction(msg){
   for(const candidate of msg.candidates){
     const itemId=candidate.item_id||'bomba_fumaca';
     const itemName=t('cat.item.'+itemId+'.nome');
-    buttonFor(t('ui.reacao_fumaca.lancar',{heroi:candidate.name,item:itemName,n:candidate.quantity}),
+    buttonFor(riposte?t('ui.reacao_laminas.usar',{heroi:candidate.name,item:itemName,n:candidate.quantity})
+      :t('ui.reacao_fumaca.lancar',{heroi:candidate.name,item:itemName,n:candidate.quantity}),
       candidate.hero_id,true,itemId);
   }
   buttonFor(t('ui.reacao_fumaca.recusar'),null,false);
@@ -30357,27 +30687,28 @@ function renderFichaCidadeBody(panel, player, editable){
 
   // Atributos (reuso)
   const attr = document.createElement('div');
-  attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player);
+  attr.className = 'fc-attributes-content';
+  attr.innerHTML = renderConteudoAtributosFichaJogo(heroiStatic, player, {mostrarModificadores:true});
   body.appendChild(attr);
 
   // Botão pra abrir o inventário (equipamento+bolsa) deste jogador — o
   // InventoryModal cuida disso agora; este painel só mostra atributos+guilda.
   const invBtn = document.createElement('button');
-  invBtn.className = 'section-title';
+  invBtn.className = 'section-title fc-section-button';
   invBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);';
   invBtn.innerHTML = `<img class="menu-inventario-icone" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_inventario')}`;
   invBtn.onclick = () => InventoryModal.open(player.id, { readOnly: !editable });
   body.appendChild(invBtn);
 
   const statusBtn = document.createElement('button');
-  statusBtn.className = 'section-title';
+  statusBtn.className = 'section-title fc-section-button';
   statusBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
   statusBtn.textContent = t('ui.ficha.status_botao');
   statusBtn.onclick = () => abrirMenuStatus(player.id);
   body.appendChild(statusBtn);
 
   const abilityBtn = document.createElement('button');
-  abilityBtn.className = 'section-title';
+  abilityBtn.className = 'section-title fc-section-button';
   abilityBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
   abilityBtn.innerHTML = `<img class="menu-habilidades-icone" src="assets/habilidades.png" alt="" aria-hidden="true"> ${t('ui.ficha.habilidades_botao')}`;
   abilityBtn.dataset.guia = 'botao:habilidades';
@@ -30389,7 +30720,7 @@ function renderFichaCidadeBody(panel, player, editable){
   // Grimório/Metamagia: disponível para as classes que lançam magias.
   if(player.class_id === 'mage' || player.class_id === 'cleric'){
     const magicBtn = document.createElement('button');
-    magicBtn.className = 'section-title';
+    magicBtn.className = 'section-title fc-section-button';
     magicBtn.style.cssText = 'width:100%;text-align:left;cursor:pointer;background:none;border:none;color:var(--gold);margin-top:5px;';
     magicBtn.innerHTML = `<img class="menu-magias-icone" src="assets/magias.png" alt="" aria-hidden="true"> ${t('ui.ficha.ver_magias')}`;
     magicBtn.dataset.guia = 'botao:magias';
@@ -30614,7 +30945,7 @@ function _modificadoresTemporariosStatus(p){
   // Venenos aplicados à arma também são efeitos ativos, embora não sejam uma
   // penalidade do próprio personagem.
   // Uma linha por arma (e por pilha de munição equipada) com o veneno, o número de usos e o efeito.
-  const _efeitoVeneno = ids => [...new Set(ids)].map(id => GS.CATALOGO_ITENS?.[id]?.descricao).filter(Boolean).join(' · ');
+  const _efeitoVeneno = ids => [...new Set(ids)].map(id => _descricaoVenenoPorId(id)).filter(Boolean).join(' · ');
   [{rot: t('ui.ladino.arma_principal'), it: Object.assign({}, p.weapon || {}, p.gear?.weapon || {})},
    {rot: t('ui.ladino.mao_secundaria'), it: p.gear?.off_hand}].forEach(({rot, it}) => {
     const fila = Array.isArray(it?.poison_slots) && it.poison_slots.length ? it.poison_slots
@@ -30726,7 +31057,7 @@ function _menuStatusMarkup(p, opts = {}){
   // Mão secundária: espelha o golpe extra do servidor (atributo da 2ª arma, bônus de nível
   // e modificadores situacionais; dano = dado + atributo + sobrevivência).
   const off = p.gear?.off_hand;
-  const offEhArma = !!(off && off.die && off.id !== 'hand_crossbow' && off.effect !== 'shield'
+  const offEhArma = !!(off && off.die && !['hand_crossbow','besta_duelista'].includes(GS.armaBaseId(off.id)) && off.effect !== 'shield'
     && off.tipo_item !== 'instrumento' && off.effect !== 'quiver');
   let linhasOff = '';
   if(offEhArma){
@@ -31070,11 +31401,11 @@ function abrirMenuMagias(pid){
   const slots = _slotsMenuMagias(player);
   const renderMagia = m => {
     const acionavel = (podeAgir || testePodeAgir) && slots[m.circulo]?.livres > 0;
-    const gamepadAction = acionavel ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(m.nome)}"` : '';
+    const gamepadAction = acionavel ? 'data-gamepad-action="activate" role="button"' : '';
     const click = testePodeAgir ? `onclick="_ativarMagiaTesteDoMenu('${m.id}')"` : `onclick="ativarMagiaDoMenu('${m.id}')"`;
     return `
-    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${(podeAgir || testePodeAgir) && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? click : ''} ${gamepadAction} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
-      onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
+    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${(podeAgir || testePodeAgir) && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? click : ''} ${gamepadAction} tabindex="0" aria-label="${_esc(m.nome)}" draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
+      onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia(event)" onfocus="this.setAttribute('aria-describedby','tooltip-magia');mostrarTooltipMagia('${m.id}', event)" onblur="this.removeAttribute('aria-describedby');ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
       <span><b>${m.nome}</b><small>${_magiaAcaoEtiquetaHTML(m)} · ${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${(podeAgir || testePodeAgir) && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
     </div>`;
@@ -31343,9 +31674,10 @@ function mostrarTooltipMenuHabilidade(event, habilidadeId){
   if(!tooltip){
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
+  _prepararTooltipDetalhes(tooltip);
+  clearTimeout(_tooltipMagiaHideTimer);
   const nome = h.name || h.nome || habilidadeId;
   const descricao = h.description || h.desc || t('ui.habilidade.sem_descricao');
   const tipo = (h.tipo || h.categoria || 'habilidade').replaceAll('_', ' ').toUpperCase();
@@ -31354,12 +31686,12 @@ function mostrarTooltipMenuHabilidade(event, habilidadeId){
   if(h.sede_cost || h.custo_sede) custos.push(`💧 ${h.sede_cost || h.custo_sede}`);
   if(h.recarga_rodadas) custos.push(`⏳ ${h.recarga_rodadas} rodadas`);
   tooltip.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #c8a95133;">
+    <div class="menu-detail-tooltip-head">
       <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:3px;">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
-      <div><div style="color:#e5cd83;font-size:12px;font-weight:bold;">${nome}</div><div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">${tipo}</div></div>
+      <div><div class="menu-detail-tooltip-title">${nome}</div><div class="menu-detail-tooltip-kind">${tipo}</div></div>
     </div>
-    <div style="color:#c8b89a;font-size:10px;line-height:1.7;">${descricao}</div>
-    ${custos.length ? `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #c8a95122;color:#ffae55;font-size:9px;">${custos.join(' · ')}</div>` : ''}`;
+    <div class="menu-detail-tooltip-body">${descricao}</div>
+    ${custos.length ? `<div class="menu-detail-tooltip-meta">${custos.join(' · ')}</div>` : ''}`;
   tooltip.style.display = 'block';
   const alvo = event?.currentTarget?.getBoundingClientRect ? event.currentTarget.getBoundingClientRect() : null;
   _posicionarTooltipMagia(alvo, event);
@@ -31407,6 +31739,41 @@ function ativarHabilidadeDoMenu(skillId){
     send({type:'use_shadow_cloak'});
     return;
   }
+  if(skillId === 'usar_manto_raios'){
+    const item = me.gear?.off_hand;
+    if(!item?.thunder_reaction){ toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return; }
+    const prontaEm = Number(item.thunder_reaction_ready_round || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.item.manto_raios.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    send({type:'use_thundering_shield'});
+    return;
+  }
+  if(skillId === 'usar_vinculo_escudo_espinhoso'){
+    const item = me.gear?.off_hand;
+    if(!item?.thorn_bond_shield){ toast(t('ui.atalhos.item_indisponivel'), 'var(--orange)'); return; }
+    const prontaEm = Number(item.thorn_bond_ready_round || 0) || 0;
+    const rodada = Number(state.round ?? state.round_num ?? 1) || 1;
+    if(prontaEm > rodada){
+      toast(t('erro.tecnica_em_recarga', {tecnica:t('cat.magia.vinculo_maldito_da_dor.nome'), rodadas:prontaEm-rodada}), 'var(--orange)'); return;
+    }
+    const pos = me.pos || [0,0];
+    // Escondido nas sombras não entra na lista: além de o servidor recusar,
+    // a lista revelaria onde ele está.
+    const alvos = (state.monsters || []).filter(m => m && m.hp > 0 && m.pos
+      && !_monstroOcultadoParaJogador(m)
+      && GS.hasLineOfSight(state, pos[0], pos[1], m.pos[0], m.pos[1]));
+    if(!alvos.length){ toast(t('erro.escolha_inimigo_vivo_como_alvo'), 'var(--orange)'); return; }
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    const usar = targetId => send({type:'use_thorn_bond_shield', target_id:targetId});
+    if(alvos.length === 1) usar(alvos[0].id);
+    else openTargetModal(t('cat.magia.vinculo_maldito_da_dor.nome'), alvos, 'monster', usar);
+    return;
+  }
   if(skillId === 'usar_armadura_runica_barreira_arcana'
       || skillId === 'usar_armadura_runica_protecao_energia'){
     const item = me.gear?.armor;
@@ -31426,6 +31793,26 @@ function ativarHabilidadeDoMenu(skillId){
   }
   const weaponThrowSlot = _weaponThrowSlotFromSkillId(skillId);
   const lightningSlot = /^relampago_de_mao_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  const windLineSlot = /^alabarda_vendaval_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  if(windLineSlot){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginWindLineWeapon(windLineSlot);
+    return;
+  }
+  const horizonShockSlot = /^bordao_horizonte_(weapon|off_hand)$/.exec(String(skillId || ''))?.[1];
+  if(horizonShockSlot){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginHorizonShockWeapon(horizonShockSlot);
+    return;
+  }
+  if(skillId === 'besta_repetidora_disparo_duplo'){
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    beginRepeatingCrossbowWeapon();
+    return;
+  }
   if(lightningSlot){
     fecharMenuHabilidades();
     fecharMenuMagias();
@@ -31665,6 +32052,11 @@ function abrirMenuHabilidades(pid){
   const owned = GS.guildOwnedOf(pid);
   const equip = GS.guildEquipOf(pid);
   const catalog = GS.guildCatalogFor(player.class_id) || [];
+  const armaEquipada = player.gear?.weapon;
+  const habilidadeConcedidaPelaArma = armaEquipada?.granted_ability
+    || GS.CATALOGO_ITENS[armaEquipada?.id]?.granted_ability;
+  const armaConcedeAtaqueGiratorio = habilidadeConcedidaPelaArma
+    === 'guild_tecnica_ataque_giratorio';
   const base = [...(player.skills || [])];
   // Arremessos são habilidades temporárias fornecidas pelas armas equipadas.
   // A lista normalmente vem do servidor em `granted_hero_skills`; o helper
@@ -31707,6 +32099,15 @@ function abrirMenuHabilidades(pid){
   }
   const especializacoes = catalog.filter(i => (owned.especializacoes || []).includes(i.id));
   const tecnicas = catalog.filter(i => (owned.tecnicas || []).includes(i.id));
+  if(armaConcedeAtaqueGiratorio){
+    const giro = catalog.find(i => i.id === 'tecnica_ataque_giratorio');
+    if(giro){
+      const concedida = {...giro, recarga_rodadas:10};
+      const index = tecnicas.findIndex(i => i.id === giro.id);
+      if(index >= 0) tecnicas[index] = concedida;
+      else tecnicas.push(concedida);
+    }
+  }
   // Progressões II/III substituem a habilidade-base exibida, mas preservam o
   // id original para que o clique continue acionando a regra autoritativa.
   const basePorLinha = {
@@ -31750,7 +32151,8 @@ function abrirMenuHabilidades(pid){
   const card = (h, guilda=false) => {
     const nome = h.name || h.nome || h.id;
     const desc = h.description || h.desc || '';
-    const equipada = guilda && (equip.tecnicas || []).includes(h.id);
+    const equipada = guilda && ((equip.tecnicas || []).includes(h.id)
+      || (h.id === 'tecnica_ataque_giratorio' && armaConcedeAtaqueGiratorio));
     const restante = h.categoria === 'tecnica' ? (GS.tecnicaRestante(player, h.id) || 0) : 0;
     const pendente = h.categoria === 'tecnica' && !!GS.tecnicaPendente?.(player, h.id);
     const tecnicaAtivavel = guilda && h.categoria === 'tecnica' && equipada && !h.automatica && restante === 0 && !pendente;
@@ -31769,11 +32171,11 @@ function abrirMenuHabilidades(pid){
       : comboGuilda && podeAgir ? `onclick="iniciarComboGuerreiroMenu(${h.id === 'guerreiro_mestre_combate' ? 3 : 2})"`
       : tecelagemGuilda && podeAgir ? `onclick="iniciarTecelagemArcanaMenu(${h.id === 'mago_tecelagem_3' ? 3 : 2})"`
       : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
-    const gamepadAction = onclick ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(nome)}"` : '';
+    const gamepadAction = onclick ? 'data-gamepad-action="activate" role="button"' : '';
     const shortcutSource = guilda && h.categoria === 'tecnica' ? 'technique' : 'skill';
     const dragShortcut = ` draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(h.id)}" data-guia="hud:atalho_habilidade_${_esc(h.id)}"`;
-    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick} ${gamepadAction}${dragShortcut}
-      onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
+    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick} ${gamepadAction} tabindex="0" aria-label="${_esc(nome)}"${dragShortcut}
+      onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia(event)" onfocus="this.setAttribute('aria-describedby','tooltip-magia');mostrarTooltipMenuHabilidade(event,'${h.id}')" onblur="this.removeAttribute('aria-describedby');ocultarTooltipMagia()">
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
       <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
       <span class="mh-info"><b>${nome}</b><small>${desc}</small><span class="mh-meta">${_acaoEtiquetaHTML(ehPassiva(h) ? 'passiva' : h)}${custo(h) ? `<em class="mh-cost">${custo(h)}</em>` : ''}</span></span>
@@ -31929,7 +32331,7 @@ function _weaponThrowSkillEntries(player){
     ['off_hand', player.gear?.off_hand],
   ];
   for(const [slot, item] of slots){
-    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse)) continue;
+    if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse && !item.solar_flare && !item.wind_line && !item.horizon_shock && !item.repeating_crossbow)) continue;
     const nome = item.name || item.id || 'arma';
     const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
       ? t('ui.arremesso.forca')
@@ -31965,6 +32367,49 @@ function _weaponThrowSkillEntries(player){
         granted_origem:'weapon',
       });
     }
+    if(item.solar_flare){
+      add({
+        id:'mangual_sol_cativo_clarao', source:'arma',
+        name:t('ui.item.mangual_sol_cativo_clarao'), icon:'☀️',
+        tipo:'acao_principal', target:'self', weapon_id:item.id,
+        description:t('ui.item.mangual_sol_cativo_clarao_desc'),
+        granted_origem:'weapon',
+      });
+    }
+    if(item.wind_line){
+      add({
+        id:`alabarda_vendaval_${slot}`, source:'arma', name:t('ui.item.alabarda_vendaval_habilidade'),
+        icon:'🌬️', tipo:'acao_principal', target:'enemy', throw_slot:slot,
+        weapon_id:item.id,
+        description:t('ui.item.alabarda_vendaval_desc'),
+        granted_origem:'weapon',
+      });
+    }
+    if(item.horizon_shock && slot === 'weapon'){
+      add({
+        id:`bordao_horizonte_${slot}`, source:'arma', name:t('ui.item.horizonte_ruptura_habilidade'),
+        icon:'🌅', tipo:'acao_principal', target:'enemy', throw_slot:slot,
+        weapon_id:item.id,
+        description:t('ui.item.horizonte_ruptura_desc', {
+          alcance:Number(item.horizon_shock_power || 2) >= 4 ? 4 : 3,
+          dano:Number(item.horizon_shock_power || 2) >= 4 ? '4d6' : '2d6',
+          cd:Number(item.horizon_shock_power || 2) >= 4 ? 16 : 13,
+          empurrao:Number(item.horizon_shock_power || 2) >= 4 ? 3 : 2,
+        }),
+        granted_origem:'weapon',
+      });
+    }
+    if(item.repeating_crossbow && slot === 'weapon'){
+      add({
+        id:'besta_repetidora_disparo_duplo', source:'arma',
+        name:t('ui.item.besta_repetidora_disparo_duplo'), icon:'🏹',
+        tipo:'acao_principal', target:'enemy', weapon_id:item.id,
+        description:t('ui.item.besta_repetidora_disparo_duplo_desc', {
+          dano:item.die || '1d6', alcance:item.range || 6,
+          recarga:item.repeating_crossbow_cooldown || 10,
+        }), granted_origem:'weapon',
+      });
+    }
   }
   return result;
 }
@@ -31977,10 +32422,18 @@ function _weaponThrowStatLabel(item){
 }
 
 function _weaponThrowSkillBtn(me, skill){
+  if(skill?.id === 'besta_repetidora_disparo_duplo')
+    return _repeatingCrossbowWeaponSkillBtn(me, skill);
+  if(String(skill?.id || '').startsWith('alabarda_vendaval_'))
+    return _windLineWeaponSkillBtn(me, skill);
+  if(String(skill?.id || '').startsWith('bordao_horizonte_'))
+    return _horizonShockWeaponSkillBtn(me, skill);
   if(String(skill?.id || '').startsWith('relampago_de_mao_'))
     return _lightningLineWeaponSkillBtn(me, skill);
   if(skill?.id === 'choque_do_trovao_pulso')
     return _thunderPulseWeaponSkillBtn(me, skill);
+  if(skill?.id === 'mangual_sol_cativo_clarao')
+    return _solarFlareWeaponSkillBtn(me, skill);
   const state = GS.gameState;
   const slot = skill.throw_slot || _weaponThrowSlotFromSkillId(skill.id);
   const item = slot === 'off_hand' ? me.gear?.off_hand : me.weapon;
@@ -32026,6 +32479,29 @@ function _thunderPulseWeaponSkillBtn(me, skill){
     fecharMenuHabilidades();
     fecharMenuMagias();
     GS.useThunderPulseWeapon();
+  };
+  return btn;
+}
+
+function _solarFlareWeaponSkillBtn(me, skill){
+  const item = me?.gear?.weapon || me?.weapon;
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.solar_flare_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.id === 'mangual_sol_cativo' && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '☀️')} ${skill.name}${recarga}</div>
+    <div class="skill-desc">${skill.description || t('ui.item.mangual_sol_cativo_clarao_desc')}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '☀️'}</div>`;
+  btn.onclick = () => {
+    fecharMenuHabilidades();
+    fecharMenuMagias();
+    GS.useSolarFlareWeapon();
   };
   return btn;
 }
@@ -32077,6 +32553,183 @@ function beginLightningLineWeapon(slot='weapon'){
     instruction:t('ui.item.relampago_de_mao_mira'),
     color:'#7edfff', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
     cancelText:t('ui.relampago_mao.cancelada'), cleanup:()=>{window._modoRelampagoDeMao=null;}});
+}
+
+function _windLineWeaponSkillBtn(me, skill){
+  const slot = skill.throw_slot || String(skill.id).replace('alabarda_vendaval_', '');
+  const item = slot === 'off_hand' ? me.gear?.off_hand : (me.gear?.weapon || me.weapon);
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.wind_line_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const targets = (GS.gameState?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx = x - me.pos[0], dy = y - me.pos[1];
+      const d = Math.max(Math.abs(dx), Math.abs(dy));
+      return d >= 1 && d <= 4 && (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))
+        && GS.hasLineOfSight(GS.gameState, me.pos[0], me.pos[1], x, y);
+    }));
+  const podeUsar = !!(item?.id === 'alabarda_vendaval' && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0 && targets);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '🌬️')} ${t('ui.item.alabarda_vendaval_habilidade')}${recarga}</div>
+    <div class="skill-desc">${skill.description || ''}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🌬️'}</div>`;
+  btn.onclick = () => beginWindLineWeapon(slot);
+  return btn;
+}
+
+function _horizonShockWeaponSkillBtn(me, skill){
+  const slot = skill.throw_slot || String(skill.id).replace('bordao_horizonte_', '');
+  const item = slot === 'off_hand' ? me.gear?.off_hand : (me.gear?.weapon || me.weapon);
+  const round = Number(GS.gameState?.round ?? GS.gameState?.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.horizon_shock_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const alcance = Number(item?.horizon_shock_power || 2) >= 4 ? 4 : 3;
+  const targets = (GS.gameState?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx = x - me.pos[0], dy = y - me.pos[1];
+      const d = Math.max(Math.abs(dx), Math.abs(dy));
+      return d >= 1 && d <= alcance && (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy))
+        && GS.hasLineOfSight(GS.gameState, me.pos[0], me.pos[1], x, y);
+    }));
+  const podeUsar = !!(item?.horizon_shock && GS.isMyTurn && me.alive
+    && GS.gameState?.phase === 'playing' && !me.action_done && restante === 0 && targets);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '🌅')} ${skill.name}${recarga}</div>
+    <div class="skill-desc">${skill.description || ''}</div></div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '🌅'}</div>`;
+  btn.onclick = () => beginHorizonShockWeapon(slot);
+  return btn;
+}
+
+function beginHorizonShockWeapon(slot='weapon'){
+  getAudioContext();
+  const state = GS.gameState, me = GS.me;
+  const item = slot === 'off_hand' ? me?.gear?.off_hand : (me?.gear?.weapon || me?.weapon);
+  if(!state || !me || !item?.horizon_shock) return;
+  const alcance = Number(item.horizon_shock_power || 2) >= 4 ? 4 : 3;
+  const range = new Set(), targets = new Set(), origin = me.pos || [0,0];
+  for(let y=0; y<state.map_h; y++) for(let x=0; x<state.map_w; x++){
+    const dx=x-origin[0], dy=y-origin[1], d=Math.max(Math.abs(dx),Math.abs(dy));
+    if(d<1 || d>alcance || (dx!==0 && dy!==0 && Math.abs(dx)!==Math.abs(dy))) continue;
+    if(!GS.hasLineOfSight(state, origin[0], origin[1], x, y)) continue;
+    range.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0 && GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y)))
+      targets.add(`${x},${y}`);
+  }
+  if(!targets.size){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:alcance})); return; }
+  window._modoBordaoHorizonte = {range, targets, alcance};
+  _aimStart({kind:'bordao_horizonte', title:`🌅 ${t('ui.item.horizonte_ruptura_habilidade')}`,
+    instruction:t('ui.item.horizonte_ruptura_mira', {alcance}),
+    color:'#ffd36b', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
+    cancelText:t('ui.item.horizonte_ruptura_cancelada'), cleanup:()=>{window._modoBordaoHorizonte=null;}});
+}
+
+function _clickTileHorizonShockWeapon(tx, ty){
+  const mode=window._modoBordaoHorizonte, state=GS.gameState;
+  if(!mode || !state) return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0 && GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster || !mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus(t('ui.item.horizonte_ruptura_mira', {alcance:mode.alcance}), '#ffb168'); return;
+  }
+  GS.useHorizonShockWeapon(monster.id, [tx,ty]);
+  _aimEnd({silent:true, reason:'resolved'});
+}
+
+function _repeatingCrossbowWeaponSkillBtn(me, skill){
+  const item = me.gear?.weapon || me.weapon || {};
+  const state = GS.gameState;
+  const round = Number(state?.round ?? state?.round_num ?? 1) || 1;
+  const readyRound = Number(item.repeating_crossbow_ready_round || 0) || 0;
+  const remaining = Math.max(0, readyRound - round);
+  const range = Number(item.range || (GS.armaBaseId(item.id) === 'besta_repetidora_guerra' ? 8 : 6));
+  const hasTargets = (state?.monsters || []).some(monster => monster?.hp > 0
+    && GS.monsterTiles(monster).some(([x,y]) => {
+      const dx=x-me.pos[0], dy=y-me.pos[1];
+      return ((dx === 0) !== (dy === 0)) && Math.abs(dx+dy) <= range
+        && GS.hasLineOfSight(state, me.pos[0], me.pos[1], x, y);
+    }));
+  const enabled = !!(item.repeating_crossbow && GS.isMyTurn && me.alive
+    && state?.phase === 'playing' && !me.action_done && remaining === 0 && hasTargets);
+  const btn=document.createElement('button');
+  btn.className='skill-btn'+(remaining>0?' skill-cooldown':'');
+  btn.disabled=!enabled;
+  const cooldown=remaining>0?` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em',{n:remaining})}</small>`:'';
+  btn.innerHTML=`<div class="skill-info"><div class="skill-name">🏹 ${skill.name}${cooldown}</div><div class="skill-desc">${skill.description||''}</div></div><div class="skill-cost">${remaining>0?`${remaining}r`:'🏹'}</div>`;
+  btn.onclick=beginRepeatingCrossbowWeapon;
+  return btn;
+}
+
+function beginRepeatingCrossbowWeapon(){
+  getAudioContext();
+  const state=GS.gameState, me=GS.me, item=me?.gear?.weapon||me?.weapon;
+  if(!state||!me||!item?.repeating_crossbow) return;
+  const range=Number(item.range||6), origin=me.pos||[0,0], tiles=new Set(), targets=new Set();
+  for(let y=0;y<state.map_h;y++) for(let x=0;x<state.map_w;x++){
+    const dx=x-origin[0], dy=y-origin[1];
+    if((dx===0)===(dy===0) || Math.abs(dx+dy)>range) continue;
+    if(!GS.hasLineOfSight(state,origin[0],origin[1],x,y)) continue;
+    tiles.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0&&GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y))) targets.add(`${x},${y}`);
+  }
+  if(!targets.size){toast(t('ui.arremesso.sem_inimigo_a_vista',{n:range}));return;}
+  window._modoBestaRepetidora={range,tiles,targets};
+  _aimStart({kind:'besta_repetidora',title:`🏹 ${t('ui.item.besta_repetidora_disparo_duplo')}`,
+    instruction:t('ui.item.besta_repetidora_mira',{alcance:range}),color:'#d6bd91',
+    targetLabel:t('ui.instrumento.inimigo'),range:tiles,area:targets,
+    cancelText:t('ui.item.besta_repetidora_cancelada'),cleanup:()=>{window._modoBestaRepetidora=null;}});
+}
+
+function _clickTileRepeatingCrossbow(tx,ty){
+  const mode=window._modoBestaRepetidora,state=GS.gameState;
+  if(!mode||!state)return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0&&GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster||!mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus(t('ui.item.besta_repetidora_mira',{alcance:mode.range}),'#ffb168');return;
+  }
+  GS.useRepeatingCrossbow(monster.id,[tx,ty]);
+  _aimEnd({silent:true,reason:'resolved'});
+}
+
+function beginWindLineWeapon(slot='weapon'){
+  getAudioContext();
+  const state = GS.gameState, me = GS.me;
+  const item = slot === 'off_hand' ? me?.gear?.off_hand : (me?.gear?.weapon || me?.weapon);
+  if(!state || !me || item?.id !== 'alabarda_vendaval') return;
+  const range = new Set(), targets = new Set(), origin = me.pos || [0,0];
+  for(let y=0; y<state.map_h; y++) for(let x=0; x<state.map_w; x++){
+    const dx=x-origin[0], dy=y-origin[1], d=Math.max(Math.abs(dx),Math.abs(dy));
+    if(d<1 || d>4 || (dx!==0 && dy!==0 && Math.abs(dx)!==Math.abs(dy))) continue;
+    if(!GS.hasLineOfSight(state, origin[0], origin[1], x, y)) continue;
+    range.add(`${x},${y}`);
+    if((state.monsters||[]).some(m=>m?.hp>0 && GS.monsterTiles(m).some(([mx,my])=>mx===x&&my===y)))
+      targets.add(`${x},${y}`);
+  }
+  if(!targets.size){ toast(t('ui.arremesso.sem_inimigo_a_vista', {n:4})); return; }
+  window._modoAlabardaVendaval = {slot, range, targets};
+  _aimStart({kind:'alabarda_vendaval', title:`🌬️ ${t('ui.item.alabarda_vendaval_habilidade')}`,
+    instruction:t('ui.item.alabarda_vendaval_mira'),
+    color:'#9edcff', targetLabel:t('ui.instrumento.inimigo'), range, area:targets,
+    cancelText:t('ui.item.alabarda_vendaval_cancelada'), cleanup:()=>{window._modoAlabardaVendaval=null;}});
+}
+
+function _clickTileWindLineWeapon(tx, ty){
+  const mode=window._modoAlabardaVendaval, state=GS.gameState;
+  if(!mode || !state) return;
+  const monster=(state.monsters||[]).find(m=>m?.hp>0 && GS.monsterTiles(m).some(([x,y])=>x===tx&&y===ty));
+  if(!monster || !mode.targets.has(`${tx},${ty}`)){
+    _aimSetStatus(t('ui.item.alabarda_vendaval_mira'), '#ffb168'); return;
+  }
+  GS.useWindLineWeapon(mode.slot, monster.id, [tx,ty]);
+  _aimEnd({silent:true, reason:'resolved'});
 }
 
 function _clickTileLightningLineWeapon(tx, ty){
@@ -32161,6 +32814,55 @@ function _runicArmorSkillBtn(me, skill){
     </div>
     <div class="skill-cost">${restante > 0 ? `${restante}r` : '🛡️'}</div>`;
   btn.onclick = () => ativarHabilidadeDoMenu(skill.id);
+  return btn;
+}
+
+function _thunderingShieldSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.off_hand;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.thunder_reaction_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const ativoAte = Number(item?.thunder_reaction_active_until || 0) || 0;
+  const ativoRestante = Math.max(0, ativoAte - round);
+  const podeUsar = !!(item?.thunder_reaction && GS.isMyTurn && me.alive
+    && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const estado = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>`
+    : ativoRestante > 0 ? ` <small style="color:#62c9ff;font-size:.65rem;">⚡ ${t('ui.tecnica.ativa_por', {n:ativoRestante})}</small>` : '';
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '⚡')} ${t('cat.item.manto_raios.nome')}${estado}</div>
+      <div class="skill-desc">${skill?.description || t('cat.item.manto_raios.desc')}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : ativoRestante > 0 ? `${ativoRestante}r` : '⚡'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu('usar_manto_raios');
+  return btn;
+}
+
+function _thornBondShieldSkillBtn(me, skill){
+  const state = GS.gameState || {};
+  const item = me?.gear?.off_hand;
+  const round = Number(state.round ?? state.round_num ?? 1) || 1;
+  const prontaEm = Number(item?.thorn_bond_ready_round || 0) || 0;
+  const restante = Math.max(0, prontaEm - round);
+  const podeUsar = !!(item?.thorn_bond_shield && GS.isMyTurn && me.alive
+    && state.phase === 'playing' && !me.action_done && restante === 0);
+  const btn = document.createElement('button');
+  btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
+  btn.disabled = !podeUsar;
+  const recarga = restante > 0
+    ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
+  btn.innerHTML = `
+    <div class="skill-info">
+      <div class="skill-name">${abilityIconHtml(skill, '⛓️')} ${t('cat.magia.vinculo_maldito_da_dor.nome')}${recarga}</div>
+      <div class="skill-desc">${t('cat.item.vinculo_espinhoso_habilidade.desc')}</div>
+    </div>
+    <div class="skill-cost">${restante > 0 ? `${restante}r` : '⛓️'}</div>`;
+  btn.onclick = () => ativarHabilidadeDoMenu('usar_vinculo_escudo_espinhoso');
   return btn;
 }
 
@@ -37410,7 +38112,7 @@ function _senhorAguasSetLine(line, points, T){
 
 function _senhorAguasBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group();
+  const T = window.THREE, group = new T.Group(); group.name = 'senhor-aguas-animation';
   group.name = anim.whirlpools ? 'senhor-das-aguas-redemoinhos'
     : (anim.cold ? 'chamado-do-inverno-animation' : 'senhor-das-aguas-animation');
   const deep = anim.material === 'agua_profunda' || anim.material === 'rodamoinho_profundo';
@@ -37876,7 +38578,7 @@ function _iraRochaVisible(anim, state){
 
 function _iraRochaBuild3D(anim){
   if(!g3 || !g3.scene || !window.THREE) return false;
-  const T = window.THREE, group = new T.Group();
+  const T = window.THREE, group = new T.Group(); group.name = 'ira-rocha-animation';
   group.name = anim.isFlames ? 'ira-rocha-chamas-vivas' : 'ira-rocha-ardente';
   const { hot, orange, bright } = IRA_ROCHA_CORES;
   const glowMat = new T.MeshBasicMaterial({color:hot, transparent:true, opacity:0,
@@ -42367,6 +43069,106 @@ function _raioDivinoDraw2D(ctx,state,anim,now){
 function _raioDivinoDrawForeground2D(ctx,state,anim,now){const p=_raioDivinoTarget(anim,state),pos=p?.pos||anim.target;if(!pos)return;const q=_raioDivinoProgress(anim,now);if(!q.impacting)return;const[tx,ty]=pos,cx=tx*CELL+CELL/2,cy=ty*CELL+CELL/2,e=Math.sin(Math.PI*Math.min(1,q.impact));ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';if(anim.holyTarget){ctx.fillStyle=`rgba(28,14,42,${(.55*e).toFixed(3)})`;ctx.beginPath();ctx.arc(cx,cy-CELL*.30,CELL*.20,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(255,242,158,${(.90*e).toFixed(3)})`;ctx.font=`bold ${Math.round(CELL*.20)}px serif`;ctx.fillText('✦',cx+CELL*.30,cy-CELL*.32);}ctx.restore();}
 function _tickRaioDivino(now){let active=false;for(let i=_raioDivinoAnims.length-1;i>=0;i--){const anim=_raioDivinoAnims[i],p=_raioDivinoProgress(anim,now);if(p.impacting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomRaioDivinoImpacto(anim.holyTarget);if(!anim.visualOnly)_liberarDadosMagia();}if(p.finished&&now-anim.start>anim.travelMs+anim.impactMs+520){_pararSomRaioDivino(anim);_raioDivinoDispose3D(anim);_raioDivinoAnims.splice(i,1);continue;}active=true;if(mode3D&&g3)_raioDivinoUpdate3D(anim,now);}if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);_raioDivinoRaf=active?_scheduleVisualFrame(_tickRaioDivino):null;}
 function _receberAnimacaoRaioDivino(msg){if(!msg||msg.spell_id!=='raio_divino')return;const id=msg.animation_id==null?null:String(msg.animation_id);if(msg.phase==='resolve'){const anim=_raioDivinoAnims.find(a=>a.animationId===id);if(anim){anim.holyTarget=!!msg.holy_target;anim.saveOk=!!msg.save_ok;anim.damage=Number(msg.damage)||0;anim.targetDead=!!msg.target_dead;}return;}const anim=_raioDivinoAnimFromMessage(msg);_raioDivinoAnims.push(anim);_tocarSomRaioDivino(anim);if(!_raioDivinoRaf)_raioDivinoRaf=_scheduleVisualFrame(_tickRaioDivino);}
+
+// ☀️ CLARÃO SOLAR — o Mangual do Sol Cativo carrega a esfera e expande uma
+// onda dourada radial; a mesma sequência é desenhada no mapa 2D e no tabuleiro 3D.
+const _solarFlareAnims = [];
+let _solarFlareRaf = null;
+function _solarFlareAnimFromMessage(msg){
+  const origin = Array.isArray(msg.origin) ? msg.origin.map(Number) : [0,0];
+  return {
+    animationId: msg.animation_id == null ? null : String(msg.animation_id),
+    casterId: msg.caster_id == null ? null : String(msg.caster_id),
+    origin, tiles: Array.isArray(msg.tiles) ? msg.tiles : [],
+    start: performance.now(), chargeMs: Math.max(120, Number(msg.charge_ms) || 300),
+    impactMs: Math.max(450, Number(msg.impact_ms) || 900),
+    targetIds: [], impactPlayed: false, group: null, orb: null, core: null,
+    rings: [], rays: [], motes: [], seed: (origin[0]*73856093) ^ (origin[1]*19349663) ^ Date.now(),
+  };
+}
+function _solarFlareProgress(anim, now){
+  const elapsed = Math.max(0, now - anim.start);
+  const burst = Math.max(0, Math.min(1, (elapsed - anim.chargeMs) / anim.impactMs));
+  return {charge: Math.min(1, elapsed / anim.chargeMs), burst,
+    bursting: elapsed >= anim.chargeMs, finished: elapsed >= anim.chargeMs + anim.impactMs};
+}
+function _solarFlareBuild3D(anim){
+  if(!g3?.scene || !window.THREE) return false;
+  const T = window.THREE, group = new T.Group(); group.name = 'solar-flare-weapon-animation';
+  const mat = (color, opacity=0) => new T.MeshBasicMaterial({color, transparent:true, opacity,
+    depthWrite:false, depthTest:false, blending:T.AdditiveBlending, side:T.DoubleSide});
+  const orb = new T.Mesh(new T.SphereGeometry(.30,14,10), mat(0xffc83d)); orb.renderOrder=96; group.add(orb); anim.orb=orb;
+  const core = new T.Mesh(new T.SphereGeometry(.17,12,8), mat(0xffffff)); core.renderOrder=97; group.add(core); anim.core=core;
+  for(let i=0;i<3;i++){
+    const ring = new T.Mesh(new T.TorusGeometry(.56+i*.18,.022-i*.003,7,44),mat(i===1?0xffffff:0xffd54f));
+    ring.rotation.x=Math.PI/2; ring.position.y=.10+i*.012; ring.renderOrder=95+i; group.add(ring); anim.rings.push(ring);
+  }
+  for(let i=0;i<8;i++){
+    const ray = new T.Mesh(new T.CylinderGeometry(.035,.13,1.08,7,1,true),mat(i%2?0xffdc62:0xffffff));
+    const a=i*Math.PI/4; ray.rotation.set(0,-a,Math.PI/2); ray.position.set(Math.cos(a)*.47,.58,Math.sin(a)*.47);
+    ray.renderOrder=94; group.add(ray); anim.rays.push(ray);
+  }
+  for(let i=0;i<18;i++){
+    const mote=new T.Mesh(new T.SphereGeometry(.018+(i%3)*.006,6,4),mat(i%3?0xffe58a:0xffffff));
+    mote.userData={a:i*Math.PI*2/18,r:.28+((i*37)%11)/20,p:i*.73}; group.add(mote); anim.motes.push(mote);
+  }
+  g3.scene.add(group); anim.group=group; return true;
+}
+function _solarFlareDispose3D(anim){
+  if(!anim.group)return;
+  if(anim.group.parent)anim.group.parent.remove(anim.group);
+  anim.group.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.dispose());});
+  anim.group=null;
+}
+function _solarFlareUpdate3D(anim,now){
+  if(!g3||!window.THREE)return;
+  if(!anim.group||anim.group.parent!==g3.scene){_solarFlareDispose3D(anim);if(!_solarFlareBuild3D(anim))return;}
+  const p=_solarFlareProgress(anim,now),pulse=.5+.5*Math.sin(now/95+anim.seed),fade=1-p.burst*.82;
+  anim.group.position.set(anim.origin[0],0,anim.origin[1]);
+  anim.orb.scale.setScalar(.25+.55*p.charge+.16*pulse*p.charge); anim.orb.material.opacity=.18+.48*p.charge;
+  anim.core.scale.setScalar(.18+.30*p.charge); anim.core.material.opacity=.25+.72*p.charge;
+  for(let i=0;i<anim.rings.length;i++){const ring=anim.rings[i],q=Math.max(0,p.burst-i*.09);ring.scale.setScalar(.12+q*(1.75+i*.28));ring.material.opacity=p.bursting?(.72-i*.12)*Math.max(0,1-q*.74):0;}
+  for(let i=0;i<anim.rays.length;i++){const ray=anim.rays[i];ray.scale.y=.08+p.burst*1.38;ray.material.opacity=p.bursting?(.68+.2*pulse)*fade:0;}
+  for(const mote of anim.motes){const u=mote.userData,a=u.a+now/680,r=u.r*(.25+p.burst*2.1);mote.position.set(Math.cos(a)*r,.22+.95*((u.p%1)),Math.sin(a)*r);mote.material.opacity=p.bursting?(.45+.4*pulse)*fade:0;}
+}
+function _solarFlareDraw2D(ctx,state,anim,now){
+  const [tx,ty]=anim.origin,key=`${tx},${ty}`;
+  const explored=new Set([...(state.explored||[]),...(state.revealed||[])].map(([x,y])=>`${x},${y}`));
+  if(!explored.has(key)&&!GS.isMaster()&&!state.test_mode)return;
+  const p=_solarFlareProgress(anim,now),cx=tx*CELL+CELL/2,cy=ty*CELL+CELL/2,pulse=.5+.5*Math.sin(now/90+anim.seed);
+  ctx.save();ctx.globalCompositeOperation='lighter';
+  if(!p.bursting){
+    const r=CELL*(.20+.22*p.charge),g=ctx.createRadialGradient(cx,cy,0,cx,cy,r*2.1);
+    g.addColorStop(0,`rgba(255,255,235,${(.82*p.charge).toFixed(3)})`);g.addColorStop(.35,`rgba(255,220,91,${(.38*p.charge).toFixed(3)})`);g.addColorStop(1,'rgba(255,190,35,0)');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,r*2.1,0,Math.PI*2);ctx.fill();
+  }else{
+    const e=Math.sin(Math.PI*p.burst),radius=CELL*(.25+1.65*p.burst);
+    const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);
+    glow.addColorStop(0,`rgba(255,255,246,${(.62*e).toFixed(3)})`);glow.addColorStop(.28,`rgba(255,233,142,${(.30*e).toFixed(3)})`);glow.addColorStop(1,'rgba(255,190,45,0)');
+    ctx.fillStyle=glow;ctx.beginPath();ctx.arc(cx,cy,radius,0,Math.PI*2);ctx.fill();
+    for(let i=0;i<12;i++){const a=i*Math.PI/6+anim.seed%100/100,inner=CELL*(.22+.10*pulse),outer=radius*(.78+.15*((i%3)/3));ctx.strokeStyle=`rgba(255,246,186,${(.72*e).toFixed(3)})`;ctx.lineWidth=Math.max(1.5,CELL*.035);ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*inner,cy+Math.sin(a)*inner);ctx.lineTo(cx+Math.cos(a)*outer,cy+Math.sin(a)*outer);ctx.stroke();}
+    for(let i=0;i<3;i++){const q=Math.max(0,p.burst-i*.10),rr=CELL*(.35+1.35*q);ctx.strokeStyle=`rgba(${i===1?'255,255,238':'255,214,75'},${(.68*(1-q*.72)).toFixed(3)})`;ctx.lineWidth=Math.max(1,CELL*(.022-i*.004));ctx.beginPath();ctx.arc(cx,cy,rr,0,Math.PI*2);ctx.stroke();}
+  }
+  ctx.restore();
+}
+function _tickSolarFlare(now){
+  let active=false;
+  for(let i=_solarFlareAnims.length-1;i>=0;i--){const anim=_solarFlareAnims[i],p=_solarFlareProgress(anim,now);
+    if(p.bursting&&!anim.impactPlayed){anim.impactPlayed=true;_tocarSomRaioDivinoImpacto(true);}
+    if(p.finished&&now-anim.start>anim.chargeMs+anim.impactMs+320){_solarFlareDispose3D(anim);_solarFlareAnims.splice(i,1);continue;}
+    active=true;if(mode3D&&g3)_solarFlareUpdate3D(anim,now);
+  }
+  if(!mode3D&&GS.gameState&&active)renderMap(GS.gameState);
+  _solarFlareRaf=active?_scheduleVisualFrame(_tickSolarFlare):null;
+}
+function _receberAnimacaoSolarFlare(msg){
+  if(!msg||msg.spell_id!=='solar_flare')return;
+  const id=msg.animation_id==null?null:String(msg.animation_id);
+  if(msg.phase==='resolve'){const anim=_solarFlareAnims.find(a=>a.animationId===id);if(anim){anim.targetIds=(msg.target_ids||[]).map(String);anim.resolved=true;}return;}
+  if(msg.phase!=='start'||_solarFlareAnims.some(a=>a.animationId===id))return;
+  const anim=_solarFlareAnimFromMessage(msg);_solarFlareAnims.push(anim);
+  if(!_solarFlareRaf)_solarFlareRaf=_scheduleVisualFrame(_tickSolarFlare);
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // NOTA CORTANTE — lâmina de vento e clave dissonante no impacto
@@ -47147,7 +47949,7 @@ function init3D(state){
   const spellFireFx = _mkOverlayPool((key) => {
     const [fx, fy] = _xyDaChave(key);
     if(!_ehChao(fx, fy)) return null;
-    const fireGroup = new T.Group(); fireGroup.position.set(fx, 0, fy);
+    const fireGroup = new T.Group(); fireGroup.position.set(fx, elevacaoChao3D(state, fx, fy), fy);
     const fireGlowMat = new T.MeshBasicMaterial({ color:0xff4a00, transparent:true, opacity:0.52, depthWrite:false, side:T.DoubleSide, blending:T.AdditiveBlending });
     // Plano quase do tamanho total da casa: a brasa persistente ocupa o tile
     // inteiro, e não apenas um círculo no centro.
@@ -47192,7 +47994,7 @@ function init3D(state){
     if(!_ehChao(fx, fy)) return null;
     const fireGroup = new T.Group();
     fireGroup.name = 'prisao-chamas-viva';
-    fireGroup.position.set(fx, 0, fy);
+    fireGroup.position.set(fx, elevacaoChao3D(state, fx, fy), fy);
     fireGroup.visible = false;
     scene.add(fireGroup);
     const embers = [];
@@ -49262,6 +50064,10 @@ function startLoop3D(){
 
     // Portrait is HTML-only (class selection screen). Never meshes on the board.
 
+    // Por último: os efeitos montados na altura zero sobem até o topo do
+    // terreno da casa (platôs e pontes), depois que todos já se atualizaram.
+    _elevarEfeitosChao3D();
+
     g3.renderer.render(g3.scene, g3.camera);
   }
   tick();
@@ -49883,6 +50689,7 @@ const _GROUND_ITEM_GLB_MODELS = Object.freeze({
   espada_longa_colossal: {path: 'assets/itens/espada.glb', layFlat: true, footprint: 0.78},
   besta_mao: {path: 'assets/itens/besta.glb', footprint: 0.78},
   hand_crossbow: {path: 'assets/itens/besta.glb', footprint: 0.78},
+  besta_duelista: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta_leve: {path: 'assets/itens/besta.glb', footprint: 0.78},
   besta_pesada: {path: 'assets/itens/besta.glb', footprint: 0.78},
@@ -52490,12 +53297,12 @@ function renderMap3D(state){
       const dec = obterFig(`arm:${arm.id}`,
         JSON.stringify([arm.image, arm.ativada]),
         () => _armadilhaDecal3D(arm, ax, ay));
-      dec.position.set(ax, 0.232, ay);   // logo acima do piso (TH=0.22)
+      dec.position.set(ax, topoSuperficie3D(state, ax, ay, 0.232), ay);   // logo acima do piso (TH=0.22)
     } else {
       const sp = obterFig(`arm:${arm.id}`,
         JSON.stringify([arm.icone, arm.ativada, arm.so_luccas]),
         () => _armadilhaSprite3D(arm, ax, ay));
-      sp.position.set(ax, 0.34, ay);   // sprite não tem hover-lift — y fixo
+      sp.position.set(ax, topoSuperficie3D(state, ax, ay, 0.34), ay);   // sprite não tem hover-lift
     }
   }
   // Descarta as figuras que saíram de cena (morte, fora da visão, consumidas).
@@ -53467,6 +54274,7 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : monsterType === 'minotauro' ? 1.10
       : monsterType === 'minotauro_elite' ? 1.20
       : monsterType === 'garaloux_jovem' ? 0.80
+      : monsterType === 'lobo_cinzento_customizado' ? 1.10
       : monsterType === 'garaloux_alfa' ? 1.105
       : 1;
     wrap.scale.setScalar(scale * monsterVisualScale);
@@ -57468,6 +58276,9 @@ function handleTileClick(tx, ty, opts){
   if(window._modoAtaqueMira){ _clickTileAtaque(tx, ty); return; }
   if(window._modoInstrumentoAlvo){ _clickTileInstrumentoAlvo(tx, ty); return; }
   if(window._modoArremessoArma){ _clickTileArremessoArma(tx, ty); return; }
+  if(window._modoAlabardaVendaval){ _clickTileWindLineWeapon(tx, ty); return; }
+  if(window._modoBordaoHorizonte){ _clickTileHorizonShockWeapon(tx, ty); return; }
+  if(window._modoBestaRepetidora){ _clickTileRepeatingCrossbow(tx, ty); return; }
   if(window._modoRelampagoDeMao){ _clickTileLightningLineWeapon(tx, ty); return; }
   if(window._modoInstrumento){ _clickTileInstrumento(tx, ty); return; }
   if(window._modoSenhorDasAguas){ _clickTileSenhorDasAguas(tx, ty); return; }
@@ -58442,6 +59253,10 @@ function _atualizarFichaFab(){
 if(_fpsMostrar) _setFpsMostrar(true);
 
 GS.on('gameState', msg => {
+  const _votoPrompt = document.getElementById('voto-guardiao-overlay');
+  if(_votoPrompt && msg?.current_turn != null
+      && String(msg.current_turn) !== _votoPrompt.dataset.owner)
+    _votoPrompt.remove();
   _autoTurnSchedule(msg);
   if(msg && msg.phase === 'playing') _intencoesPedirAgora();   // agrupado em 250 ms
   if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
@@ -61374,6 +62189,7 @@ const _spellAnimationReceivers = [
   _receberAnimacaoBolaFogo,
   _receberAnimacaoRaioGelo,
   _receberAnimacaoRaioDivino,
+  _receberAnimacaoSolarFlare,
   _receberAnimacaoJatoAr,
   _receberAnimacaoNotaCortante,
   _receberAnimacaoEcosDolorosos,
@@ -61744,6 +62560,9 @@ GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
 // dos passos pendentes (ver renderImprovisoQuadro, definida perto de
 // escolherDirecaoInstrumento).
 GS.on('improvisoResultado', renderImprovisoQuadro);
+GS.on('improvisoEncoreChoice', renderImprovisoEncoreChoice);
+GS.on('votoGuardiaoPrompt', renderVotoGuardiaoPrompt);
+GS.on('vereditoRadiantePrompt', renderVereditoRadiantePrompt);
 
 // ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
 GS.on('decor_loot', msg => {

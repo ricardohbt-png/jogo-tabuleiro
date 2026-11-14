@@ -283,9 +283,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   }
 
   function _ammoCountBadgeHTML(item){
-    if(!item || item.effect !== 'ammo') return '';
-    const count = Math.max(0, Number(item.ammo_count) || 0);
-    return `<span class="inv-ammo-count" aria-label="${t('ui.inv.municao_aria', {n:count})}">${count}</span>`;
+    if(!item || (item.effect !== 'ammo' && item.effect !== 'counter_blades')) return '';
+    const count = Math.max(0, Number(item.effect === 'counter_blades'
+      ? item.counter_blade_count : item.ammo_count) || 0);
+    return `<span class="inv-ammo-count" aria-label="${t(item.effect === 'counter_blades' ? 'ui.inv.pilha_aria' : 'ui.inv.municao_aria', {n:count})}">${count}</span>`;
   }
 
   function _injectStyles(){
@@ -449,6 +450,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const isCarta = _isCarta(item);
     const isScroll = !!item && item.effect === 'scroll';
     const isConsumable = !!item && !isCarta && !item.die
+      && item.effect !== 'counter_blades'
       && (item.item_slot === 'bag' || item.effect === 'heal' || item.effect === 'atk_bonus');
     const ehCaster = player?.class_id === 'mage' || player?.class_id === 'cleric';
     const gsNow = (typeof GS !== 'undefined') ? GS.gameState : null;
@@ -689,8 +691,9 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     host.appendChild(panel);
   }
 
-  const BELT_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:2 };
-  const QUIVER_CAPACITIES = { mini_aljava:1, aljava_pequena:2, aljava_grande:3 };
+  const BELT_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:2, cinto_utilidades_aprimorado:4, cinto_arsenal_encantado:4, alforge_explorador:1, alforge_explorador_aprimorado:2, alforge_explorador_superior:3, maravilha_aventureiro_menor:4, maravilha_aventureiro_maior:4 };
+  const BELT_STACK_CAPACITIES = { cinto_utilidades:4, cinto_com_bolsos:4, cinto_utilidades_aprimorado:8, cinto_arsenal_encantado:8, alforge_explorador:4, alforge_explorador_aprimorado:4, alforge_explorador_superior:4, maravilha_aventureiro_menor:4, maravilha_aventureiro_maior:8 };
+  const QUIVER_CAPACITIES = { mini_aljava:1, aljava_pequena:2, aljava_grande:3, cinto_arsenal_encantado:1, mochila_aljava_dimensional:1, maravilha_aventureiro_menor:1, maravilha_aventureiro_maior:2 };
 
   function _onQuiverSlotClick(gearSlot, pocketIndex){
     if(_readOnly) return;
@@ -746,7 +749,8 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const belt = player?.gear?.[gearSlot];
     if(!BELT_CAPACITIES[belt?.id] || pocketIndex < 0 || pocketIndex >= BELT_CAPACITIES[belt.id]) return null;
     const entry = belt.utility_belt_slots?.[pocketIndex];
-    return entry?.item && Number.isInteger(entry.quantity) && entry.quantity >= 1 && entry.quantity <= 4 ? entry : null;
+    return entry?.item && Number.isInteger(entry.quantity) && entry.quantity >= 1
+      && entry.quantity <= BELT_STACK_CAPACITIES[belt.id] ? entry : null;
   }
 
   function _activateBeltItem(gearSlot, pocketIndex){
@@ -1196,7 +1200,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     if(sel.kind === 'bag'){
       if(sel.index === toIndex){ refresh(); return; }
       // Pilha de munição solta sobre outra igual: junta (até o limite da pilha).
-      if(GS.mesmaPilhaMunicao(player && player.bag ? player.bag[sel.index] : null, alvo)){
+      if(GS.mesmaPilhaLaminas?.(player && player.bag ? player.bag[sel.index] : null, alvo)){
+        _selected = null;
+        GS.juntarLaminas({ bolsa: sel.index }, { bolsa: toIndex });
+      } else if(GS.mesmaPilhaMunicao(player && player.bag ? player.bag[sel.index] : null, alvo)){
         _selected = null;
         GS.juntarMunicao({ bolsa: sel.index }, { bolsa: toIndex });
       } else GS.reorderBag(sel.index, toIndex);
@@ -1252,15 +1259,15 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const tooltipEl = document.getElementById('item-tooltip');
     if(!tooltipEl) return;
     // O catálogo do cliente não guarda o número de doses da instância na
-    // mochila. Para poções de cura, o quadro usa a cópia enviada pelo servidor.
+    // mochila. Para itens multiuso, o quadro usa a cópia enviada pelo servidor.
     const atual = itemInstance || item;
+    const maxUses = Number(atual.max_uses || 1);
+    const usesLeft = Number(atual.uses_left == null ? maxUses : atual.uses_left);
+    const doses = maxUses > 1
+      ? renderLinhaTooltip(atual.effect === 'rum' ? '🍾' : (atual.effect === 'hidromel' ? '🍯' : (atual.effect === 'absinto' ? '🍸' : '🧪')), t('ui.inv.doses_restantes'), `${usesLeft}/${maxUses}`)
+      : '';
     let html;
     if(atual.effect === 'heal' || atual.effect === 'regeneration'){
-      const maxUses = Number(atual.max_uses || 1);
-      const usesLeft = Number(atual.uses_left == null ? maxUses : atual.uses_left);
-      const doses = maxUses > 1
-        ? renderLinhaTooltip('🧪', t('ui.inv.doses_restantes'), `${usesLeft}/${maxUses}`)
-        : '';
       const regeneracao = atual.effect === 'regeneration';
       html = `
         <div style="padding:10px 14px 8px; border-bottom:1px solid #c8a95133;">
@@ -1271,11 +1278,18 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
           ${regeneracao
             ? renderLinhaTooltip('🌿', 'Reserva', `${atual.value || 0} HP; +1 HP por rodada`)
             : renderLinhaTooltip('❤️', t('ui.tooltip.cura_por_uso'), `+${atual.value ?? atual.valor ?? 0} HP`)}
+          ${Number(atual.fome || 0)
+            ? renderLinhaTooltip('🍖', t('ui.tooltip.fome'), `+${Number(atual.fome || 0)}`)
+            : ''}
+          ${Number(atual.sede || 0)
+            ? renderLinhaTooltip('💧', t('ui.tooltip.sede'), `+${Number(atual.sede || 0)}`)
+            : ''}
           ${renderLinhaTooltip('⚡', t('ui.acoes.uso'), t('ui.acoes.tipo_bonus'))}
           ${doses}
         </div>`;
     } else {
       html = gerarConteudoTooltip(item);
+      if(doses) html += `<div style="padding:0 14px 10px;">${doses}</div>`;
     }
     const equipped = comparisonItemId ? GS.CATALOGO_ITENS[comparisonItemId] : null;
     if(equipped){

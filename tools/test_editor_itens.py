@@ -1071,6 +1071,8 @@ def _item_com_habilidade(aid, **over):
 def test_habilidade_concedida_helper():
     print("\n[I1] _habilidades_concedidas varre o gear equipado")
     p = S.make_player("p1", "Victor", "warrior", 0)
+    # O machado inicial do guerreiro já concede Arremesso Bruto: começa sem nada.
+    p["gear"] = {k: None for k in p["gear"]}
     check("sem itens: conjunto vazio", S._habilidades_concedidas(p) == set())
     p["gear"]["weapon"] = _item_com_habilidade("guild_brutalidade")
     check("coleta da arma", S._habilidades_concedidas(p) == {"guild_brutalidade"})

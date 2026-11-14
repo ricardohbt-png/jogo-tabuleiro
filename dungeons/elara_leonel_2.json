@@ -1661,6 +1661,9 @@
     }
   ],
   "door_conditions": {},
+  "door_styles": {
+    "41,29": "portao_levadico"
+  },
   "entrance": {
     "x": 2,
     "y": 7
@@ -3727,7 +3730,7 @@
         2
       ],
       "facing": [
-        1,
+        -1,
         0
       ],
       "loot": null,
@@ -3747,7 +3750,7 @@
         9
       ],
       "facing": [
-        1,
+        -1,
         0
       ],
       "loot": null,
@@ -3767,7 +3770,7 @@
         2
       ],
       "facing": [
-        1,
+        -1,
         0
       ],
       "loot": null,
@@ -3787,7 +3790,7 @@
         9
       ],
       "facing": [
-        1,
+        -1,
         0
       ],
       "loot": null,
@@ -3807,7 +3810,7 @@
         2
       ],
       "facing": [
-        1,
+        -1,
         0
       ],
       "loot": null,
@@ -3827,7 +3830,7 @@
         9
       ],
       "facing": [
-        1,
+        -1,
         0
       ],
       "loot": null,
@@ -3843,11 +3846,11 @@
       "id": "salao_trono",
       "type": "trono",
       "pos": [
-        41,
+        43,
         6
       ],
       "facing": [
-        -1,
+        1,
         0
       ],
       "loot": null,
@@ -3857,8 +3860,8 @@
       "id": "salao_sino",
       "type": "sino_anuncio",
       "pos": [
-        41,
-        4
+        43,
+        3
       ],
       "facing": [
         0,
@@ -3866,19 +3869,19 @@
       ],
       "loot": null,
       "key_objective": false,
-      "image": "sino_anuncio.png",
       "disable_trap_ids": [
         "salao_guilhotina_0",
         "salao_guilhotina_1",
         "salao_guilhotina_2"
-      ]
+      ],
+      "image": "sino_anuncio.png"
     },
     {
       "id": "salao_poste_0",
       "type": "poste_iluminacao",
       "pos": [
         37,
-        3
+        2
       ],
       "facing": [
         0,
@@ -3893,7 +3896,7 @@
       "type": "poste_iluminacao",
       "pos": [
         37,
-        10
+        11
       ],
       "facing": [
         0,
@@ -3908,7 +3911,7 @@
       "type": "poste_iluminacao",
       "pos": [
         42,
-        3
+        2
       ],
       "facing": [
         0,
@@ -3923,7 +3926,7 @@
       "type": "poste_iluminacao",
       "pos": [
         42,
-        10
+        11
       ],
       "facing": [
         0,
@@ -4271,8 +4274,8 @@
         17
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4286,8 +4289,8 @@
         18
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4301,8 +4304,8 @@
         19
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4316,8 +4319,8 @@
         20
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4331,8 +4334,8 @@
         21
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4346,8 +4349,8 @@
         17
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4361,8 +4364,8 @@
         18
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4376,8 +4379,8 @@
         19
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4391,8 +4394,8 @@
         20
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4406,8 +4409,8 @@
         21
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4421,8 +4424,8 @@
         17
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4436,8 +4439,8 @@
         18
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4451,8 +4454,8 @@
         19
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4466,8 +4469,8 @@
         20
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4481,8 +4484,8 @@
         21
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4496,8 +4499,8 @@
         17
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4511,8 +4514,8 @@
         18
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4526,8 +4529,8 @@
         19
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4541,8 +4544,8 @@
         20
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4556,8 +4559,8 @@
         21
       ],
       "facing": [
-        0,
-        1
+        1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -4575,7 +4578,8 @@
         1
       ],
       "loot": null,
-      "key_objective": false
+      "key_objective": false,
+      "image": "balde_agua_chao.png"
     },
     {
       "id": "salao_cama",
@@ -4668,7 +4672,8 @@
         1
       ],
       "loot": null,
-      "key_objective": false
+      "key_objective": false,
+      "image": "bola_corrente.png"
     },
     {
       "id": "salao_gaiola_1",
@@ -6455,18 +6460,8 @@
         "elara_elara_salva"
       ],
       "se_falhar": {
-        "renome": 0,
         "fato": "elara_morta"
       }
-    },
-    "alternativo": {
-      "type": "kill_target",
-      "xp": 150,
-      "reward": {
-        "gold": 150,
-        "items": []
-      },
-      "fato": "elara_leonel_vencido"
     },
     "secondary": [
       {
@@ -6478,6 +6473,15 @@
         }
       }
     ],
+    "alternativo": {
+      "type": "kill_target",
+      "xp": 150,
+      "reward": {
+        "gold": 150,
+        "items": []
+      },
+      "fato": "elara_leonel_vencido"
+    },
     "steps": [
       {
         "id": "mansao_leonel",
@@ -6500,8 +6504,5 @@
         }
       }
     ]
-  },
-  "door_styles": {
-    "41,29": "portao_levadico"
   }
 }

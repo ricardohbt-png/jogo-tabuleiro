@@ -312,6 +312,9 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{heroi}** prepares poisoned ammunition for **{quantidade} projectile(s)** with **{venenos}** ({frascos} vial(s) consumed).",
     "pt": "☠️ **{heroi}** prepara munição envenenada para **{quantidade} projétil(is)** com **{venenos}** ({frascos} frasco(s) consumido(s))."
   },
+  "narracao.riposta_falha_critica": {"en":"Critical failure on the riposte: {heroi} cuts themselves with their own blade and takes 2 damage.","pt":"Falha crítica na riposta: {heroi} se fere com a própria lâmina e sofre 2 de dano."},
+  "narracao.riposta_acerto": {"en":"{heroi} lands the riposte and deals 2 damage to {alvo}.","pt":"{heroi} acerta a riposta e causa 2 de dano em {alvo}."},
+  "narracao.riposta_erro": {"en":"{heroi} attempts a riposte but misses {alvo}.","pt":"{heroi} tenta uma riposta, mas erra {alvo}."},
   "narracao.aprendeu": {
     "en": "📖 **{heroi}** learned **{m_nome}**!",
     "pt": "📖 **{heroi}** aprendeu **{m_nome}**!"
@@ -1315,6 +1318,38 @@ window.LANG_NARRACAO = {
   "narracao.choque_trovao_pulso": {
     "en": "⚡ **{heroi}** releases a Thunder Pulse from the warhammer! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 lightning damage; success halves it.",
     "pt": "⚡ **{heroi}** libera um Pulso do Trovão pelo martelo! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de eletricidade; sucesso reduz à metade."
+  },
+  "narracao.mangual_sol_cativo_clarao": {
+    "en": "☀️ **{heroi}** swings the sun chained to the flail and releases a Solar Flash! Creatures in the eight adjacent squares, including allies, make Reflex saves (DC 13) against 2d6 holy damage; success halves it.",
+    "pt": "☀️ **{heroi}** gira o sol preso à corrente e libera um Clarão Solar! Criaturas nas oito casas adjacentes, inclusive aliados, fazem Reflexos CD 13 contra 2d6 de dano sagrado; sucesso reduz à metade."
+  },
+  "narracao.horizonte_ruptura_empurrao": {
+    "en": "🌅 **{alvo}** is hurled {casas} squares by the shattered horizon!",
+    "pt": "🌅 **{alvo}** é arremessado {casas} casas pela ruptura do horizonte!"
+  },
+  "narracao.gancho_corrente_resiste": {
+    "en": "💪 **{alvo}** resists the chain hook's pull (Fortitude DC {dc}).",
+    "pt": "💪 **{alvo}** resiste ao puxão do gancho (Fortitude CD {dc})."
+  },
+  "narracao.gancho_corrente_puxa": {
+    "en": "⛓️ **{heroi}** reels **{alvo}** in {casas} square(s) with the chain hook!",
+    "pt": "⛓️ **{heroi}** puxa **{alvo}** {casas} casa(s) com o gancho de corrente!"
+  },
+  "narracao.gancho_corrente_bloqueado": {
+    "en": "⛓️ **{alvo}** fails Fortitude, but an obstacle or creature blocks the chain hook.",
+    "pt": "⛓️ **{alvo}** falha em Fortitude, mas um obstáculo ou criatura bloqueia o gancho."
+  },
+  "narracao.horizonte_ruptura_inicio": {
+    "en": "🌅 **{heroi}** strikes the ground and tears open a horizon-wide rupture reaching {alcance} squares!",
+    "pt": "🌅 **{heroi}** golpeia o chão e rasga o horizonte numa onda de ruptura que alcança {alcance} casas!"
+  },
+  "narracao.bordao_serpente_resiste": {
+    "en": "🐍 **{alvo}** resists the bronze serpent's binding (Fortitude {total} vs. DC {dc})!",
+    "pt": "🐍 **{alvo}** resiste ao laço da serpente de bronze (Fortitude {total} vs. CD {dc})!"
+  },
+  "narracao.bordao_serpente_prende": {
+    "en": "🐍 **{heroi}**'s Bronze Serpent Staff coils around **{alvo}** (Fortitude {total} vs. DC {dc})! The target is immobilized through the end of its next turn.",
+    "pt": "🐍 A serpente do bordão de **{heroi}** se enrola em **{alvo}** (Fortitude {total} vs. CD {dc})! O alvo fica imobilizado até o fim do próximo turno."
   },
   "narracao.escapa_do_rodamoinho_profundo_e_pode_agi": {
     "en": "🌊 **{nome_criatura_criatura}** escapes the deep whirlpool and can act normally.",
@@ -2797,6 +2832,66 @@ window.LANG_NARRACAO = {
     "en": "🍷 **{heroi}** recovers from the drunkenness (the wine penalty wore off).",
     "pt": "🍷 **{heroi}** se recupera da embriaguez (penalidade do vinho acabou)."
   },
+  "narracao.usa_rum": {
+    "en": "🍾 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining another drunkenness stack: **−1 attack / −1 Reflex** for 10 rounds. {doses_msg}",
+    "pt": "🍾 **{heroi}** bebe o **{item}** (+{val} fome/sede) e fica mais embriagado: **−1 ataque / −1 Reflexos** por 10 rodadas. {doses_msg}"
+  },
+  "narracao.doses.garrafa_vazia": {
+    "en": " The bottle is empty.",
+    "pt": " A garrafa se esvazia."
+  },
+  "narracao.doses.restantes": {
+    "en": " {n}/{max} doses left.",
+    "pt": " {n}/{max} doses restantes."
+  },
+  "narracao.doses.restantes_destaque": {
+    "en": " **{n}/{max}** doses left.",
+    "pt": " **{n}/{max}** doses restantes."
+  },
+  "narracao.manto_raios_ativa": {
+    "en": "⚡ **{heroi}** activates the **Lightning Mantle** for {n} rounds!",
+    "pt": "⚡ **{heroi}** ativa o **Manto de Raios** por {n} rodadas!"
+  },
+  "narracao.rum_penalidade_expirou": {
+    "en": "🍾 **{heroi}** sobers up from {cargas} Rum penalty stack(s).",
+    "pt": "🍾 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Rum."
+  },
+  "narracao.usa_hidromel": {
+    "en": "🍯 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining −1 Reflex and −1 AC for 10 rounds. {doses_msg}",
+    "pt": "🍯 **{heroi}** bebe o **{item}** (+{val} fome/sede) e recebe −1 em Reflexos e −1 na CA por 10 rodadas. {doses_msg}"
+  },
+  "narracao.hidromel_penalidade_expirou": {
+    "en": "🍯 **{heroi}** recovers from {cargas} Hydromel penalty stack(s).",
+    "pt": "🍯 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Hidromel."
+  },
+  "narracao.usa_absinto": {
+    "en": "🍸 **{heroi}** drinks the **{item}** (+{val} hunger/thirst), gaining −1 attack and −1 AC for 10 rounds. {cargas} dose(s) active. {movimento_msg} {doses_msg}",
+    "pt": "🍸 **{heroi}** bebe o **{item}** (+{val} fome/sede) e recebe −1 no ataque e −1 na CA por 10 rodadas. {cargas} dose(s) ativa(s). {movimento_msg} {doses_msg}"
+  },
+  "narracao.usa_caldo_revigorante": {
+    "en": "🥣 **{heroi}** eats the **{item}** and restores **{val} HP**, **{fome} hunger**, and **{sede} thirst**!",
+    "pt": "🥣 **{heroi}** toma o **{item}** e recupera **{val} PV**, **{fome} de fome** e **{sede} de sede**!"
+  },
+  "narracao.usa_fermentado_raizes": {
+    "en": "🍶 **{heroi}** drinks the **{item}** and restores **{val} HP** and **{sede} thirst**!",
+    "pt": "🍶 **{heroi}** bebe o **{item}** e recupera **{val} PV** e **{sede} de sede**!"
+  },
+  "narracao.usa_fruto_de_lumen": {
+    "en": "🫐 **{heroi}** eats the **{item}** and restores **{val} HP** and **{fome} hunger**!",
+    "pt": "🫐 **{heroi}** come o **{item}** e recupera **{val} PV** e **{fome} de fome**!"
+  },
+  "narracao.absinto_movimento_atual": {
+    "en": "Movement is reduced by {movimento}.",
+    "pt": "O movimento está reduzido em {movimento}."
+  },
+  "narracao.absinto_movimento_sem_penalidade": {
+    "en": "Movement is not reduced.",
+    "pt": "O movimento ainda não foi reduzido."
+  },
+  "narracao.absinto_penalidade_expirou": {
+    "en": "🍸 **{heroi}** recovers from {cargas} Absinthe penalty stack(s).",
+    "pt": "🍸 **{heroi}** se recupera de {cargas} carga(s) de penalidade do Absinto."
+  },
   "narracao.se_solta_da_rede": {
     "en": "🕸️ **{monstro}** breaks free of the net!",
     "pt": "🕸️ **{monstro}** se solta da rede!"
@@ -3432,6 +3527,8 @@ window.LANG_NARRACAO = {
   "narracao.refem_chegou_a_salvo": {"en":"🏁 {refem} reached safety.","pt":"🏁 {refem} chegou a salvo."},
   "narracao.refem_nome_padrao": {"en":"Prisoner","pt":"Prisioneiro"},
   "narracao.refem_morreu": {"en":"💀 {refem} was killed.","pt":"💀 {refem} morreu."},
-  "narracao.arma_retorna_a_mao": {"en":"{arma} returns to {heroi}'s hand.","pt":"{arma} retorna à mão de {heroi}."}
+  "narracao.arma_retorna_a_mao": {"en":"{arma} returns to {heroi}'s hand.","pt":"{arma} retorna à mão de {heroi}."},
+  "narracao.suplicia_vital_cura": {"en":"🙏 **{cleric}** calls on the Guardian Vow: {target} recovers {cura} HP.","pt":"🙏 **{cleric}** invoca a Súplica Vital: {target} recupera {cura} PV."},
+  "narracao.espada_juramento_reduz": {"en":"🛡️ **{paladino}** invokes the Unbroken Oath and reduces the damage to **{aliado}** by **{reducao}**.","pt":"🛡️ **{paladino}** invoca o Juramento Inquebrantável e reduz em **{reducao}** o dano sofrido por **{aliado}**."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

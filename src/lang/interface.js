@@ -25,6 +25,11 @@ window.LANG_INTERFACE = {
   "ui.reacao_fumaca.recusar": {"pt": "Não reagir", "en": "Do not react"},
   "ui.reacao_fumaca.tempo": {"pt": "Tempo para reagir: {n}s", "en": "Time to react: {n}s"},
   "ui.reacao_fumaca.aguardando": {"pt": "Aguardando a resolução da reação…", "en": "Waiting for the reaction to resolve…"},
+  "ui.reacao_laminas.titulo": {"pt": "Reação: Lâminas de Riposta", "en": "Reaction: Riposte Blades"},
+  "ui.reacao_laminas.ataque": {"pt": "{inimigo} errou um ataque corpo a corpo contra você. Quer contra-atacar?", "en": "{inimigo} missed a melee attack against you. Counterattack?"},
+  "ui.reacao_laminas.efeito": {"pt": "Gasta 1 lâmina para fazer um ataque corpo a corpo usando Destreza, causando 2 de dano. Alcance: 1 quadrado; uma vez por rodada.", "en": "Spend 1 blade to make a melee attack using Dexterity for 2 damage. Range: 1 square; once per round."},
+  "ui.reacao_laminas.usar": {"pt": "{heroi}: ripostar com {item} (estoque: {n})", "en": "{heroi}: counterattack with {item} ({n} available)"},
+  "ui.inv.pilha_aria": {"pt": "{n} unidades", "en": "{n} units"},
   "ui.amaldicoar_xama.titulo": {"pt": "Amaldiçoado pelo xamã!", "en": "Cursed by the shaman!"},
   "ui.amaldicoar_xama.descricao": {"pt": "A magia de {monstro} enfraquece você temporariamente.", "en": "The magic of {monstro} temporarily weakens you."},
   "ui.amaldicoar_xama.penalidades": {"pt": "{ataque} em ataques, {dano} no dano, {ca} na CA e {resistencia} nos testes de resistência.", "en": "{ataque} to attack rolls, {dano} to damage, {ca} to AC and {resistencia} to saving throws."},
@@ -169,6 +174,7 @@ window.LANG_INTERFACE = {
     "en": "Poisoned Magic Bolts +2",
     "pt": "Virotes Mágicos +2 Envenenados"
   },
+  "dado.ataque": {"en":"Attack","pt":"Ataque"},
   "dado.ataque_da_lanca": {"en":"Spear attack","pt":"Ataque da lança"},
   "dado.dano_perfurante": {"en":"Piercing damage","pt":"Dano perfurante"},
   "dado.dano_eletrico": {"en":"Lightning damage","pt":"Dano elétrico"},
@@ -207,6 +213,10 @@ window.LANG_INTERFACE = {
   "dado.ataque_furtivo": {
     "en": "Sneak Attack",
     "pt": "Ataque Furtivo"
+  },
+  "dado.manto_de_raios": {
+    "en": "Lightning Mantle",
+    "pt": "Manto de Raios"
   },
   "dado.ataque_furtivo_reacao": {
     "en": "Sneak Attack (reaction)",
@@ -1283,6 +1293,34 @@ window.LANG_INTERFACE = {
   "ui.item.choque_trovao_pulso_desc": {
     "en": "Main action: all creatures in the eight adjacent squares, including allies but not you, take 2d6 lightning damage (Reflex DC 13 halves). Recharge: 10 rounds.",
     "pt": "Ação principal: todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você, sofrem 2d6 de eletricidade (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
+  },
+  "ui.item.mangual_sol_cativo_clarao": {
+    "en": "Solar Flash",
+    "pt": "Clarão Solar"
+  },
+  "ui.item.mangual_sol_cativo_clarao_desc": {
+    "en": "Main action: release a sacred flash that deals 2d6 holy damage to all creatures in the eight adjacent squares, including allies but not you (Reflex DC 13 halves). Recharge: 10 rounds.",
+    "pt": "Ação principal: libere um clarão sagrado que causa 2d6 de dano sagrado a todas as criaturas nas oito casas adjacentes, inclusive aliados, mas não você (Reflexos CD 13 reduz à metade). Recarga: 10 rodadas."
+  },
+  "ui.item.besta_repetidora_disparo_duplo": {
+    "en": "Double Shot",
+    "pt": "Disparo Duplo"
+  },
+  "ui.item.besta_repetidora_disparo_duplo_desc": {
+    "en": "Main action: make two separate attacks against the same target, each dealing {dano} and consuming one bolt. Requires two bolts. Recharge: {recarga} rounds.",
+    "pt": "Ação principal: faça dois ataques separados contra o mesmo alvo, cada um causando {dano} e consumindo um virote. Requer dois virotes. Recarga: {recarga} rodadas."
+  },
+  "ui.item.besta_repetidora_dois_virotes": {
+    "en": "Double Shot requires two bolts available.",
+    "pt": "O Disparo Duplo requer dois virotes disponíveis."
+  },
+  "ui.item.besta_repetidora_mira": {
+    "en": "Choose an enemy in a straight line, up to {alcance} squares away.",
+    "pt": "Escolha um inimigo em linha reta, a até {alcance} quadrados."
+  },
+  "ui.item.besta_repetidora_cancelada": {
+    "en": "Double Shot cancelled.",
+    "pt": "Disparo Duplo cancelado."
   },
   "ui.arremesso.destreza": {
     "en": "Dexterity",
@@ -4808,6 +4846,90 @@ window.LANG_INTERFACE = {
     "en": "Runic Bagpipes only: the third 12 grants allies under the Heroic Song zero Hunger/Thirst and spell costs for 1d4 rounds.",
     "pt": "Só com a Gaita Rúnica: o terceiro 12 faz os aliados sob a Canção Heroica não pagarem Fome, Sede nem custo de magia por 1d4 rodadas."
   },
+  "ui.instrumento.chicote_encore_title": {
+    "en": "The Encore Whip answers the melody",
+    "pt": "O Chicote do Encore responde à melodia"
+  },
+  "ui.instrumento.chicote_encore_roll": {
+    "en": "Initial Improvisation roll: {roll}.",
+    "pt": "Resultado inicial do Improviso: {roll}."
+  },
+  "ui.instrumento.chicote_encore_prompt": {
+    "en": "Replace this result with an Encore, or keep it?",
+    "pt": "Substituir este resultado por um Encore ou mantê-lo?"
+  },
+  "ui.instrumento.chicote_encore_great_prompt": {
+    "en": "Turn this natural Encore into a Great Encore, or keep the normal Encore?",
+    "pt": "Transformar este Encore natural em Grande Encore ou manter o Encore normal?"
+  },
+  "ui.instrumento.chicote_encore_force": {
+    "en": "Force Encore",
+    "pt": "Forçar Encore"
+  },
+  "ui.instrumento.chicote_encore_great": {
+    "en": "Make it Great Encore",
+    "pt": "Transformar em Grande Encore"
+  },
+  "ui.instrumento.chicote_encore_keep": {
+    "en": "Keep result",
+    "pt": "Manter resultado"
+  },
+  "ui.instrumento.chicote_encore_cooldown": {
+    "en": "Using this choice starts a {rounds}-round cooldown.",
+    "pt": "Usar esta escolha inicia uma recarga de {rounds} rodadas."
+  },
+  "ui.item.voto_guardiao_title": {
+    "en": "Guardian Vow",
+    "pt": "Voto Guardião"
+  },
+  "ui.item.voto_guardiao_prompt": {
+    "en": "The mace can restore 1d6 HP to you or a nearby ally. Choose a living hero within 2 squares.",
+    "pt": "A maça pode restaurar 1d6 PV seus ou de um aliado próximo. Escolha um herói vivo a até 2 casas."
+  },
+  "ui.item.voto_guardiao_you": {
+    "en": "You",
+    "pt": "Você"
+  },
+  "ui.item.voto_guardiao_decline": {
+    "en": "Save the healing",
+    "pt": "Guardar a cura"
+  },
+  "ui.item.voto_guardiao_cooldown": {
+    "en": "The power recharges in {rounds} rounds.",
+    "pt": "O poder recarrega em {rounds} rodadas."
+  },
+  "ui.item.veredito_radiante_title": {
+    "en": "Radiant Verdict",
+    "pt": "Veredito Radiante"
+  },
+  "ui.item.veredito_radiante_prompt": {
+    "en": "Use {weapon} to unleash 2d8 holy damage on {target}?",
+    "pt": "Usar {weapon} para liberar 2d8 de dano sagrado contra {target}?"
+  },
+  "ui.item.veredito_radiante_use": {
+    "en": "Unleash the verdict",
+    "pt": "Liberar o veredito"
+  },
+  "ui.item.veredito_radiante_save": {
+    "en": "Save the power",
+    "pt": "Guardar o poder"
+  },
+  "ui.item.veredito_radiante_cooldown": {
+    "en": "Choosing this power starts a {rounds}-round cooldown.",
+    "pt": "Escolher este poder inicia uma recarga de {rounds} rodadas."
+  },
+  "ui.item.veredito_radiante_die": {
+    "en": "Radiant Verdict",
+    "pt": "Veredito Radiante"
+  },
+  "ui.item.espada_juramento_prompt": {
+    "en": "{atacante} would deal {dano} damage to {aliado}, who is within 3 squares. Use the Unbroken Oath to reduce the damage by 1d6?",
+    "pt": "{atacante} causaria {dano} de dano a {aliado}, que está a até 3 casas. Usar a Proteção do Juramento para reduzir esse dano em 1d6?"
+  },
+  "ui.item.espada_juramento_die": {
+    "en": "Unbroken Oath protection",
+    "pt": "Proteção do Juramento"
+  },
   "ui.instrumento.encore_menor_desc": {
     "en": "The second 12 grants you and living allies within 5 squares, for this round, 1 less Hunger and Thirst per cost. Mages and Clerics also get one free spell.",
     "pt": "O segundo 12 concede a você e aos aliados vivos em até 5 casas, nesta rodada, -1 de Fome e Sede por custo. Magos e Clérigos também recebem uma magia grátis."
@@ -5324,6 +5446,14 @@ window.LANG_INTERFACE = {
     "en": "Range: 1 square — any of the 8 adjacent squares, including diagonals",
     "pt": "Alcance: 1 quadrado — qualquer uma das 8 casas adjacentes, incluindo diagonais"
   },
+  "ui.item.desc.alcance_mangual_astral": {
+    "en": "Astral chain: up to {n} squares in a straight orthogonal or diagonal line, with line of sight",
+    "pt": "Corrente astral: até {n} casas em linha reta ortogonal ou diagonal, com linha de visão"
+  },
+  "ui.item.desc.alcance_todas_direcoes": {
+    "en": "Range: {n} squares in any direction, including diagonals",
+    "pt": "Alcance: {n} casas em qualquer direção, inclusive diagonais"
+  },
   "ui.item.desc.alcance_quad": {
     "en": "Range: {n} sq.",
     "pt": "Alcance: {n} quad."
@@ -5489,8 +5619,8 @@ window.LANG_INTERFACE = {
     "pt": "Prata"
   },
   "ui.item.desc.prata_arma": {
-    "en": "Silver: withstands 5 corrosion levels (the first 2 without penalties) and can damage enemies resistant to normal weapons",
-    "pt": "Prata: resiste a 5 níveis de corrosão (os 2 primeiros sem penalidade) e pode causar dano em inimigos resistentes a armas normais"
+    "en": "Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons",
+    "pt": "Prata: não sofre penalidades no nível 1 de corrosão e é destruída no nível 2; pode causar dano em inimigos resistentes a armas normais"
   },
   "ui.item.desc.racao": {
     "en": "+{n} hunger and thirst",
@@ -5847,13 +5977,25 @@ window.LANG_INTERFACE = {
   "ui.veneno.aria_potencia": {"en": "Potency upgrade", "pt": "Melhoria de potência"},
   "ui.veneno.aria_duracao": {"en": "Duration upgrade", "pt": "Melhoria de duração"},
   "ui.veneno.sem_melhoria": {"en": "No upgrade", "pt": "Sem melhoria"},
-  "ui.veneno.aprimorado": {"en": "Aprimorado (+2)", "pt": "Aprimorado (+2)"},
-  "ui.veneno.avancado": {"en": "Avançado (+4)", "pt": "Avançado (+4)"},
-  "ui.veneno.mortal": {"en": "Mortal (+6)", "pt": "Mortal (+6)"},
-  "ui.veneno.fortalecido": {"en": "Fortalecido (×1.5)", "pt": "Fortalecido (×1,5)"},
-  "ui.veneno.concentrado": {"en": "Concentrado (×2)", "pt": "Concentrado (×2)"},
-  "ui.veneno.destilado": {"en": "Destilado (+2)", "pt": "Destilado (+2)"},
-  "ui.veneno.prolongado": {"en": "Prolongado (+4)", "pt": "Prolongado (+4)"},
+  "ui.veneno.aprimorado": {"en": "Improved (+2)", "pt": "Aprimorado (+2)"},
+  "ui.veneno.avancado": {"en": "Advanced (+4)", "pt": "Avançado (+4)"},
+  "ui.veneno.mortal": {"en": "Deadly (+6)", "pt": "Mortal (+6)"},
+  "ui.veneno.fortalecido": {"en": "Strengthened (×1.5)", "pt": "Fortalecido (×1,5)"},
+  "ui.veneno.concentrado": {"en": "Concentrated (×2)", "pt": "Concentrado (×2)"},
+  "ui.veneno.destilado": {"en": "Distilled (+2)", "pt": "Destilado (+2)"},
+  "ui.veneno.prolongado": {"en": "Prolonged (+4)", "pt": "Prolongado (+4)"},
+  "ui.veneno.nome.aprimorado": {"en": "Improved", "pt": "Aprimorado"},
+  "ui.veneno.nome.avancado": {"en": "Advanced", "pt": "Avançado"},
+  "ui.veneno.nome.mortal": {"en": "Deadly", "pt": "Mortal"},
+  "ui.veneno.nome.fortalecido": {"en": "Strengthened", "pt": "Fortalecido"},
+  "ui.veneno.nome.concentrado": {"en": "Concentrated", "pt": "Concentrado"},
+  "ui.veneno.nome.destilado": {"en": "Distilled", "pt": "Destilado"},
+  "ui.veneno.nome.prolongado": {"en": "Prolonged", "pt": "Prolongado"},
+  "ui.veneno.nome.fatal": {"en": "Fatal", "pt": "Fatal"},
+  "ui.veneno.parte_cd": {"en": "DC +{n}", "pt": "CD +{n}"},
+  "ui.veneno.parte_potencia": {"en": "effect ×{n}", "pt": "efeito ×{n}"},
+  "ui.veneno.parte_duracao": {"en": "duration +{n} rounds", "pt": "duração +{n} rodadas"},
+  "ui.veneno.melhorias_resumo": {"en": "Upgrades: {partes}.", "pt": "Melhorias: {partes}."},
   "ui.item.vidro_acido_grande.desc": {
     "en": "Throw (4 sq., DEX attack). 2d6 acid + half on the next round. Corrodes the target's defence (−2 AC per hit).",
     "pt": "Arremesse (4 quad., ataque por DES). 2d6 de ácido + metade na rodada seguinte. Corrói a defesa do alvo (−2 CA por acerto)."
@@ -6100,9 +6242,17 @@ window.LANG_INTERFACE = {
     "en": "🛡 Armour",
     "pt": "🛡 Armaduras"
   },
+  "ui.loja.aba.escudos": {
+    "en": "🛡 Shields",
+    "pt": "🛡 Escudos"
+  },
   "ui.loja.aba.armas": {
     "en": "⚔ Weapons",
     "pt": "⚔ Armas"
+  },
+  "ui.loja.aba.arcos_bestas": {
+    "en": "🏹 Bows & Crossbows",
+    "pt": "🏹 Arcos e Bestas"
   },
   "ui.loja.aba.arremessaveis": {
     "en": "🎯 Throwables",
@@ -10729,6 +10879,22 @@ window.LANG_INTERFACE = {
     "en": "{icone} {nome} — choose the partner",
     "pt": "{icone} {nome} — escolha o par"
   },
+  "cat.item.manto_raios.desc": {
+    "en": "For 5 rounds, each creature that hits you with an attack takes 1d6 lightning damage. Cooldown: 20 rounds.",
+    "pt": "Por 5 rodadas, cada criatura que acertar você com um ataque sofre 1d6 de dano elétrico. Recarga: 20 rodadas."
+  },
+  "cat.item.manto_raios.nome": {
+    "en": "Lightning Mantle",
+    "pt": "Manto de Raios"
+  },
+  "cat.item.vinculo_espinhoso_habilidade.desc": {
+    "en": "Choose one living enemy in line of sight. Will negates. The bond lasts exactly 5 rounds, transfers 25% of the damage you take, and gives the enemy -1 on its next attack. Up to 4 bonds may coexist. Shield cooldown: 25 rounds. Costs 1 hunger and 1 thirst; uses no spell slot.",
+    "pt": "Escolha um inimigo vivo em linha de visão. Vontade nega. O vínculo dura exatamente 5 rodadas, transfere 25% do dano que você sofre e impõe -1 no próximo ataque do inimigo. Até 4 vínculos podem coexistir. Recarga do escudo: 25 rodadas. Custa 1 fome e 1 sede; não gasta slot de magia."
+  },
+  "ui.tecnica.ativa_por": {
+    "en": "{n}r active",
+    "pt": "{n}r ativa"
+  },
   "ui.tecnica.inimigo_adjacente": {
     "en": "{icone} {nome} — adjacent enemy",
     "pt": "{icone} {nome} — inimigo adjacente"
@@ -11610,6 +11776,10 @@ window.LANG_INTERFACE = {
   "ui.veneno.dica_dois": {"en":"You can combine up to 2 poisons on arrows and bolts.","pt":"Você pode combinar até 2 venenos em flechas e virotes."},
   "ui.veneno.custo_frasco": {"en":"Cost: bonus action (the vial is used up)","pt":"Custo: ação bônus (o frasco é consumido)"},
   "ui.veneno.custo_rapido": {"en":"Quick Poison: free action, 💧1 thirst per vial","pt":"Veneno Rápido: ação livre, 💧1 de sede por frasco"},
+  "ui.item.laminas_riposta_envenenadas.nome": {"en":"Poisoned Riposte Blades","pt":"Lâminas de Riposta Envenenadas"},
+  "ui.veneno.laminas_um_veneno": {"en":"Apply one poison per stack of blades.","pt":"Aplique um veneno por pilha de lâminas."},
+  "ui.veneno.laminas_rende": {"en":"Poisons up to {n} blades with one vial.","pt":"Envenena até {n} lâminas com um frasco."},
+  "dado.riposta_lamina": {"en":"Riposte — Riposte Blade","pt":"Riposta — Lâmina de Riposta"},
   "ui.veneno.bonus_usado": {"en":"Bonus action already used this turn.","pt":"Ação bônus já usada neste turno."},
   "ui.veneno.arma_limpa": {"en":"no poison","pt":"sem veneno"},
   "ui.veneno.arma_com": {"en":"☠ {nomes} — {n} left","pt":"☠ {nomes} — {n} restantes"},

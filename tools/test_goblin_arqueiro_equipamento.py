@@ -4,6 +4,10 @@ from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import server as S
+# O sorteio de material (variantes) e coberto em outro teste; aqui o equipamento-base e fixo.
+S._sortear_material_arma_monstro = lambda i: i
+S._sortear_material_armadura_monstro = lambda i: i
+
 
 def spawn(bow=.5, ammo=.5, ring=.5, selected='ring_str'):
     definition = next(d for d in S.MONSTER_DEFS if d['type']=='goblin_arqueiro')

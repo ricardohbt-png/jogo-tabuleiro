@@ -9,6 +9,10 @@ except Exception:
     pass
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server
+
+# O sorteio de material (variantes) e coberto em outro teste; aqui o equipamento-base e fixo.
+server._sortear_material_arma_monstro = lambda i: i
+server._sortear_material_armadura_monstro = lambda i: i
 from server import GameRoom, make_player, make_monster, MONSTER_DEFS
 
 def dev_def():

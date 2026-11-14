@@ -79,6 +79,8 @@ class MonsterIntent:
             return False
         if self._intent_perde_turno(m):
             return False
+        if m.get("foge_se_nd_zero"):   # formas animais ND 0 só fogem, nunca atacam
+            return False
         return True
 
     def _intent_perde_turno(self, m):
@@ -178,7 +180,7 @@ class MonsterIntent:
         alcanca = False
         if em_alcance is not None:
             alcanca, casa = True, list(m["pos"])
-        elif m.get("ai_type"):
+        elif m.get("ai_type") or "atk_bonus" not in m:   # mesma regra da gm_phase
             # 2) alcança movendo? (mesma busca de casa da IA, com o BFS do
             # movimento). Só a IA modular anda E ataca no mesmo turno: a ficha
             # sem ai_type (caminho legado da gm_phase) ataca só se já estiver

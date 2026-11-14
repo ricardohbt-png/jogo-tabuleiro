@@ -1,0 +1,30 @@
+name: CodeQL
+
+# Análise estática de segurança e padrões de bug (Python e JavaScript).
+# Só informa: os alertas aparecem na aba Security do repositório.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: "17 4 * * 1"      # toda segunda-feira
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python, javascript-typescript]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - uses: github/codeql-action/analyze@v3

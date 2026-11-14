@@ -1,0 +1,3 @@
+# Testes que o executor (tools/rodar_testes.py) NAO roda, um por linha: "arquivo  # motivo".
+# Cada um aparece no resumo da bateria; nao ha ignorado em silencio.
+test_tutorial_servidor.py  # conecta em ws://localhost:8765: precisa de um servidor ja ligado (python server.py)

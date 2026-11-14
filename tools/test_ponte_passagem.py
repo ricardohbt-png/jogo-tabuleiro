@@ -164,11 +164,16 @@ chamadas = [m.start() for m in re.finditer(r"await self\._aplicar_queda_terreno"
 corpo_empurrar = inspect.getsource(S.GameRoom._empurrar)
 # A rajada da fumarola também é involuntária: lança quem começa a vez sobre ela.
 corpo_fumarola = inspect.getsource(S.GameRoom._processar_fumarola_inicio_turno)
-check("sobraram exatamente 3 chamadas de queda", len(chamadas) == 3)
+corpo_gancho = inspect.getsource(S.GameRoom._puxar_monstro_pelo_gancho)
+# O puxão do Gancho de Corrente é involuntário para quem é puxado (o monstro
+# alvo), então também pode aplicar a queda do terreno.
+check("sobraram exatamente 4 chamadas de queda", len(chamadas) == 4)
 check("2 estão dentro de _empurrar",
       corpo_empurrar.count("await self._aplicar_queda_terreno") == 2)
 check("1 está na rajada da fumarola (involuntária)",
       corpo_fumarola.count("await self._aplicar_queda_terreno") == 1)
+check("1 está no puxão do gancho (involuntário para o alvo)",
+      corpo_gancho.count("await self._aplicar_queda_terreno") == 1)
 
 print("\n" + "=" * 62)
 print(f"  {PASS} passaram, {FAIL} falharam")

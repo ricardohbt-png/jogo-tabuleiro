@@ -7,6 +7,10 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import server as S
+# O sorteio de material (variantes) e coberto em outro teste; aqui o equipamento-base e fixo.
+S._sortear_material_arma_monstro = lambda i: i
+S._sortear_material_armadura_monstro = lambda i: i
+
 
 
 WEAPONS = (
