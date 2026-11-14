@@ -26467,6 +26467,25 @@ function _monsterOrthogonalAttackTilesClient(m, reach=1){
   return out;
 }
 
+function _isEnemyMonster2x2Client(m){
+  return !!(m?.type && _monsterIs2x2Client(m));
+}
+
+function _monster2x2MeleeAttackTilesClient(m, reach=1){
+  if(!_isEnemyMonster2x2Client(m)) return [];
+  const body = GS.monsterTiles(m) || [];
+  const bodyKeys = new Set(body.map(([x,y])=>`${x},${y}`));
+  const n = Math.max(1, Number(reach) || 1), out = new Map();
+  for(const [tx,ty] of body){
+    for(let dx=-n; dx<=n; dx++) for(let dy=-n; dy<=n; dy++){
+      if(dx===0 && dy===0) continue;
+      const x=tx+dx, y=ty+dy, key=`${x},${y}`;
+      if(!bodyKeys.has(key)) out.set(key,[x,y]);
+    }
+  }
+  return [...out.values()];
+}
+
 function _monsterRearAttackTilesClient(m, reach=1){
   if(!_monsterHasFrontRowClient(m)) return [];
   const f = Array.isArray(m.facing) &&
@@ -26507,6 +26526,11 @@ function _monsterAttackInRangeClient(m, targetPos, atkDef={}){
       });
     }
     return tiles.some(([x,y])=>Math.max(Math.abs(targetPos[0]-x),Math.abs(targetPos[1]-y)) <= lim);
+  }
+  if(_isEnemyMonster2x2Client(m)){
+    const reach = Math.max(1, Number(atkDef.reach) || 1);
+    return _monster2x2MeleeAttackTilesClient(m, reach)
+      .some(([x,y])=>x===targetPos[0]&&y===targetPos[1]);
   }
   if(_monsterIs2x2Client(m) && !m.oriented){
     const reach = Math.max(1, Number(atkDef.reach) || 1);
@@ -26563,7 +26587,9 @@ function _masterMonsterAttackPreviewClient(state, monster){
     }
 
     const reach = Math.max(1, Number(atk?.reach) || 1);
-    const front = (_monsterIs2x2Client(monster) && !monster.oriented)
+    const front = _isEnemyMonster2x2Client(monster)
+      ? _monster2x2MeleeAttackTilesClient(monster, reach)
+      : (_monsterIs2x2Client(monster) && !monster.oriented)
       ? _monsterOrthogonalAttackTilesClient(monster, reach)
       : _monsterHasFrontRowClient(monster)
         ? _monsterFrontAttackTilesClient(monster, reach)
@@ -26839,6 +26865,8 @@ function _iniciarMiraMestre(spec){
   window._modoMestreMira=Object.assign({},spec,{range, rawRange});
   const alcance=spec.rearAttack
     ? new Set(_monsterRearAttackTilesClient(spec.caster, 1))
+    : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _isEnemyMonster2x2Client(spec.caster))
+    ? new Set(_monster2x2MeleeAttackTilesClient(spec.caster, spec.attackDef.reach || 1))
     : (spec.kind==='attack' && spec.attackDef && !spec.attackDef.range && _monsterHasFrontRowClient(spec.caster))
     ? new Set(_monsterFrontAttackTilesClient(spec.caster, spec.attackDef.reach || 1))
     : spec.lineRange
@@ -26855,8 +26883,8 @@ function _iniciarMiraMestre(spec){
           || (spec.cone && spec.showConeRange && range>0))) _addCheb(x,y,range,alcance);
   if(footprintRangedAbility && GS.gameState?.tiles){
     // Ataques de uma criatura 2×2 partem de qualquer casa do footprint (à
-    // distância) ou das faces ortogonais do bloco (corpo a corpo). A prévia
-    // precisa refletir isso, em vez de medir apenas pela âncora visual.
+    // distância) ou de todo o perímetro (corpo a corpo). A prévia precisa
+    // refletir isso, em vez de medir apenas pela âncora visual.
     alcance.clear();
     const body = new Set((GS.monsterTiles(spec.caster) || [])
       .map(([bx, by]) => `${bx},${by}`));
