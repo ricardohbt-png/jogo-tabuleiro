@@ -5458,6 +5458,46 @@ window.LANG_CATALOGO = {
     "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
   },
+  "cat.item.sword.desc": {
+    "en": "Serrated Iron Shortsword: 1d6 slashing damage using Strength, with +2 damage. Nonmagical; tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
+    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
+  },
+  "cat.item.sword.nome": {
+    "en": "Serrated Iron Shortsword",
+    "pt": "Espada Curta de Ferro Serrilhado"
+  },
+  "cat.item.sword_aco_damasco.desc": {
+    "en": "Damascus Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 to attack rolls. Tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
+    "pt": "Espada Curta Serrilhada de Aço Damasco: mantém os +2 de dano da arma-base e ganha +1 no acerto. Tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
+  },
+  "cat.item.sword_aco_damasco.nome": {
+    "en": "Damascus Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Aço Damasco"
+  },
+  "cat.item.sword_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 damage, for +3 total. The first corrosive strike destroys it.",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: mantém os +2 de dano da arma-base e recebe +1 adicional, totalizando +3. O primeiro golpe corrosivo a destrói."
+  },
+  "cat.item.sword_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro"
+  },
+  "cat.item.sword_liga_titanio.desc": {
+    "en": "Titanium Alloy Serrated Shortsword: keeps the base weapon's +2 damage, tolerates 2 corrosion levels without penalty, then suffers three normal penalty levels before breaking.",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio: mantém os +2 de dano da arma-base, tolera 2 níveis de corrosão sem penalidade e sofre três níveis de penalidade normal antes de quebrar."
+  },
+  "cat.item.sword_liga_titanio.nome": {
+    "en": "Titanium Alloy Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio"
+  },
+  "cat.item.sword_prata.desc": {
+    "en": "Silver Serrated Shortsword: keeps +2 damage, can harm enemies resistant to normal weapons, suffers no penalty at corrosion level 1, and is destroyed at level 2.",
+    "pt": "Espada Curta Serrilhada de Prata: mantém +2 de dano, fere inimigos resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo."
+  },
+  "cat.item.sword_prata.nome": {
+    "en": "Silver Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Prata"
+  },
   "cat.item.solucao_mecanismo.desc": {
     "en": "Bonus action. Before confirming, shows a 3-square radius around the hero. Automatically disarms every active trap in the area, including hidden traps and traps inside chests or objects. Grants normal disarm XP, doubled for permanent traps; does not recover gold.",
     "pt": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."

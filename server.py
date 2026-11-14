@@ -1687,6 +1687,7 @@ WEAPONS = {
                       "staff_spell_damage_bonus": 2, "staff_area_dimension_bonus": 1,
                       "staff_extra_spell_circle": "primeiro", "staff_extra_spell_cooldown": 20},
     "shortsword":    {"id": "shortsword",    "name": "Espada Curta",         "die": "1d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
+    "sword":         {"id": "sword",         "name": "Espada Curta de Ferro Serrilhado", "die": "1d6", "stat": "str_", "dmg_bonus": 2, "corrosao_resistente": 1, "categoria": "cortante"},
     "rapieira_do_dueto": {"id": "rapieira_do_dueto", "name": "Rapieira do Dueto", "die": "1d6", "stat": "dex", "categoria": "perfurante", "bardo_lira_counter_d4": True, "icon": "assets/itens/rapieira_duelista.png", "allowed_classes": ["bard"]},
     "espada_magica": {"id": "espada_magica", "name": "Espada Mágica",        "die": "1d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/espada_magica.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "espada_magica_mais_2": {"id": "espada_magica_mais_2", "name": "Espada Mágica +2", "die": "1d6", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 2, "damage_bonus": 2, "icon": "assets/itens magicos/espada_magica.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
@@ -7711,6 +7712,7 @@ SHOP_WEAPONS = [
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    {"id": "sword", "name": "Espada Curta de Ferro Serrilhado", "emoji": "⚔️", "icon": "assets/itens/sword.png", "die": "1d6", "stat": "str_", "dmg_bonus": 2, "corrosao_resistente": 1, "price": 32, "categoria": "cortante", "descricao": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."},
     {"id": "rapieira_do_dueto", "name": "Rapieira do Dueto", "emoji": "🗡️", "icon": "assets/itens/rapieira_duelista.png", "die": "1d6", "stat": "dex", "price": 140, "categoria": "perfurante", "bardo_lira_counter_d4": True, "allowed_classes": ["bard"], "descricao": "Arma mundana exclusiva do Bardo: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."},
     {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante",
      "allowed_classes": ["warrior", "rogue", "cleric", "ranger", "paladin"]},
@@ -7829,6 +7831,15 @@ for _weapon in list(SHOP_WEAPONS):
         _silver["icon"] = "assets/itens/machadinha_ana_prata.png"
     _silver["descricao"] = _descricao_arma_catalogo(_silver)
     SHOP_WEAPONS.append(_silver)
+
+# A versão de prata mantém o bônus de dano da espada serrilhada, sem alterar
+# as regras gerais de corrosão e o multiplicador de preço da prata.
+_sword_prata = next(_weapon for _weapon in SHOP_WEAPONS if _weapon["id"] == "sword_prata")
+_sword_prata.update({
+    "name": "Espada Curta Serrilhada de Prata",
+    "icon": "assets/itens/sword_prata.png",
+    "descricao": "Espada Curta Serrilhada de Prata: 1d6 cortante usando Força, com +2 de dano. Prata mundana: fere criaturas resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo.",
+})
 
 # As variantes de prata dos ganchos usam arte própria, mantendo os demais
 # metadados e o preço da regra geral de prata.
@@ -8185,6 +8196,7 @@ WEAPONS[_espada_juramento_prata["id"]] = _espada_juramento_prata_combate
 _MATERIAL_WEAPON_VARIANTS = [
     ("dagger", "dagger_aco_damasco", "Adaga de Aço Damasco", "assets/itens/adaga_aco_damasco.png", "metal"),
     ("shortsword", "shortsword_aco_damasco", "Espada Curta de Aço Damasco", "assets/itens/espada_curta_aco_damasco.png", "metal"),
+    ("sword", "sword_aco_damasco", "Espada Curta Serrilhada de Aço Damasco", "assets/itens/sword_aco_damasco.png", "metal"),
     ("longsword", "longsword_aco_damasco", "Espada Longa de Aço Damasco", "assets/itens/espada_longa_aco_damasco.png", "metal"),
     ("bastsword", "bastsword_aco_damasco", "Espada Bastarda de Aço Damasco", "assets/itens/espada_bastarda_aco_damasco.png", "metal"),
     ("espada2m", "espada2m_aco_damasco", "Espada de 2 Mãos de Aço Damasco", "assets/itens/espada_2m_aco_damasco.png", "metal"),
@@ -8264,6 +8276,7 @@ HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
 _MATERIAL_WEAPON_DAMAGE_VARIANTS = [
     ("dagger", "dagger_obsidiana_ferro", "Adaga de Obsidiana de Ferro", "assets/itens/adaga_obsidiana_ferro.png", "metal"),
     ("shortsword", "shortsword_obsidiana_ferro", "Espada Curta de Obsidiana de Ferro", "assets/itens/espada_curta_obsidiana_ferro.png", "metal"),
+    ("sword", "sword_obsidiana_ferro", "Espada Curta Serrilhada de Obsidiana de Ferro", "assets/itens/sword_obsidiana_ferro.png", "metal"),
     ("longsword", "longsword_obsidiana_ferro", "Espada Longa de Obsidiana de Ferro", "assets/itens/espada_longa_obsidiana_ferro.png", "metal"),
     ("bastsword", "bastsword_obsidiana_ferro", "Espada Bastarda de Obsidiana de Ferro", "assets/itens/espada_bastarda_obsidiana_ferro.png", "metal"),
     ("espada2m", "espada2m_obsidiana_ferro", "Espada de 2 Mãos de Obsidiana de Ferro", "assets/itens/espada_2m_obsidiana_ferro.png", "metal"),
@@ -8339,6 +8352,7 @@ HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
 _MATERIAL_WEAPON_CORROSION_VARIANTS = [
     ("dagger", "dagger_liga_titanio", "Adaga de Liga de Titânio", "assets/itens/adaga_liga_titanio.png", "metal"),
     ("shortsword", "shortsword_liga_titanio", "Espada Curta de Liga de Titânio", "assets/itens/espada_curta_liga_titanio.png", "metal"),
+    ("sword", "sword_liga_titanio", "Espada Curta Serrilhada de Liga de Titânio", "assets/itens/sword_liga_titanio.png", "metal"),
     ("longsword", "longsword_liga_titanio", "Espada Longa de Liga de Titânio", "assets/itens/espada_longa_liga_titanio.png", "metal"),
     ("bastsword", "bastsword_liga_titanio", "Espada Bastarda de Liga de Titânio", "assets/itens/espada_bastarda_liga_titanio.png", "metal"),
     ("espada2m", "espada2m_liga_titanio", "Espada de 2 Mãos de Liga de Titânio", "assets/itens/espada_2m_liga_titanio.png", "metal"),
