@@ -16859,12 +16859,12 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "virote_incendiario",
-      "name": "Virote Incendiário",
+      "name": "Virotes Incendiários (×5)",
       "emoji": "🔥",
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "virotes_incendiarios",
-      "ammo_count": 1,
+      "ammo_count": 5,
       "extra_damage": "1d4",
       "extra_damage_types": [
         "fire"
@@ -16872,12 +16872,12 @@ window.EDITOR_CATALOG = {
     },
     {
       "id": "flecha_incendiaria",
-      "name": "Flecha Incendiária",
+      "name": "Flechas Incendiárias (×5)",
       "emoji": "🔥",
       "item_slot": "ammo",
       "effect": "ammo",
       "ammo_type": "flechas_incendiarias",
-      "ammo_count": 1,
+      "ammo_count": 5,
       "extra_damage": "1d4",
       "extra_damage_types": [
         "fire"

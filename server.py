@@ -8989,7 +8989,7 @@ SHOP_MERCHANT = [
 ]
 
 # MuniÃ§Ã£o â€” vendida no FERREIRO (item_slot "ammo", vai pro off_hand; 10 projÃ©teis
-# por pacote nas bÃ¡sicas, vendidas individualmente nas incendiÃ¡rias).
+# por pacote nas bÃ¡sicas e nas muniÃ§Ãµes incendiÃ¡rias).
 SHOP_AMMO = [
     {"id": "aljava_pequena", "name": "Aljava Pequena", "emoji": "🏹", "icon": "assets/itens/aljava.png", "price": 30,
      "item_slot": "off_hand", "effect": "quiver", "quiver_slots_capacity": 2,
@@ -9032,11 +9032,11 @@ SHOP_AMMO = [
      "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes_magicos_mais_2", "ammo_count": 10,
      "atk_bonus": 2, "damage_bonus": 2, "magical": True,
      "descricao": "Pacote com 10 virotes mágicos. Cada disparo concede +2 no acerto e no dano."},
-    {"id": "virote_incendiario", "name": "Virote Incendiário", "emoji": "🔥", "price": 4,
-     "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes_incendiarios", "ammo_count": 1,
+    {"id": "virote_incendiario", "name": "Virotes Incendiários (×5)", "emoji": "🔥", "price": 20,
+     "item_slot": "ammo", "effect": "ammo", "ammo_type": "virotes_incendiarios", "ammo_count": 5,
      "extra_damage": "1d4", "extra_damage_types": ["fire"]},
-    {"id": "flecha_incendiaria", "name": "Flecha Incendiária", "emoji": "🔥", "price": 4,
-     "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas_incendiarias", "ammo_count": 1,
+    {"id": "flecha_incendiaria", "name": "Flechas Incendiárias (×5)", "emoji": "🔥", "price": 20,
+     "item_slot": "ammo", "effect": "ammo", "ammo_type": "flechas_incendiarias", "ammo_count": 5,
      "extra_damage": "1d4", "extra_damage_types": ["fire"]},
     {"id": "flechas_explosivas", "name": "Flechas Explosivas", "emoji": "💥",
      "icon": "assets/itens magicos/municao_explosiva.png", "price": 60,
