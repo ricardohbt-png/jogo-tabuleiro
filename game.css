@@ -1578,8 +1578,8 @@ input:focus { outline: none; border-color: var(--gold); }
 #ficha-cidade-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.5);
   z-index:299; opacity:0; pointer-events:none; transition:opacity .26s ease; }
 #ficha-cidade-backdrop.open{ opacity:1; pointer-events:auto; }
-#ficha-cidade-panel{ position:fixed; left:0; top:0; height:100vh; width:300px;
-  max-width:90vw; background:rgba(10,8,5,.98); border-right:1px solid #c8a951;
+#ficha-cidade-panel{ position:fixed; left:0; top:0; height:100vh; width:390px;
+  max-width:94vw; box-sizing:border-box; background:rgba(10,8,5,.98); border-right:1px solid #c8a951;
   z-index:300; transform:translateX(-100%); transition:transform .26s ease;
   display:flex; flex-direction:column; }
 #ficha-cidade-panel.open{ transform:translateX(0); }
@@ -1590,15 +1590,41 @@ input:focus { outline: none; border-color: var(--gold); }
   display:flex; gap:12px; align-items:center; }
 .fc-head-photo{ width:54px; aspect-ratio:3/4; object-fit:cover;
   object-position:top center; border:1px solid #c8a95166; flex-shrink:0; }
-.fc-head-name{ font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:14px; }
-.fc-head-class{ color:#8a7a5a; font-size:10px; letter-spacing:2px; margin-top:2px; }
-.fc-head-lvl{ color:#c8b89a; font-size:10px; margin-top:3px; }
+.fc-head-name{ font-family:'Cinzel Decorative',serif; color:#c8a951; font-size:17px; line-height:1.25; }
+.fc-head-class{ color:#b8a98d; font-size:12px; letter-spacing:1px; margin-top:3px; }
+.fc-head-lvl{ color:#d4c6ad; font-size:12px; margin-top:4px; }
 .fc-xp-display{ display:flex; align-items:center; justify-content:space-between;
   margin:10px 16px 0; padding:7px 9px; border:1px solid rgba(200,169,81,.32);
   border-radius:3px; background:rgba(200,169,81,.08); font-family:'Cinzel',serif; }
-.fc-xp-display span{ color:#8a7a5a; font-size:9px; letter-spacing:1.5px; }
-.fc-xp-display b{ color:#f0d98a; font-size:12px; }
-.fc-body{ padding:14px 16px; overflow-y:auto; flex:1; }
+.fc-xp-display span{ color:#b8a98d; font-size:12px; letter-spacing:.8px; }
+.fc-xp-display b{ color:#f0d98a; font-size:15px; }
+.fc-body{ padding:14px 16px 20px; overflow-y:auto; flex:1; line-height:1.45; }
+.fc-attributes-content{ font-size:14px; }
+#ficha-cidade-panel .fc-stat-label{ color:#c2b49a !important; font-size:13px !important; letter-spacing:.6px !important; line-height:1.35; }
+#ficha-cidade-panel .fc-value-main{ font-size:19px !important; font-weight:800; }
+#ficha-cidade-panel .fc-value-sub{ color:#c8b89a !important; font-size:15px !important; }
+#ficha-cidade-panel .fc-survival-grid{ gap:10px !important; }
+#ficha-cidade-panel .fc-survival-card{ padding:10px 11px !important; border-radius:4px; }
+#ficha-cidade-panel .fc-small-value{ font-size:13px !important; font-weight:700; }
+#ficha-cidade-panel .fc-attributes-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0 0 12px; }
+#ficha-cidade-panel .fc-attribute-card{ min-width:0; margin:0 !important; padding:10px; border:1px solid rgba(200,169,81,.24); border-radius:4px; background:rgba(255,255,255,.035); }
+#ficha-cidade-panel .fc-attribute-heading{ display:flex; align-items:center; justify-content:space-between; gap:5px; margin-bottom:8px !important; }
+#ficha-cidade-panel .fc-attribute-name{ color:#d0c2a8 !important; font-size:13px !important; letter-spacing:.3px !important; }
+#ficha-cidade-panel .fc-attribute-score{ display:flex; align-items:baseline; gap:4px; color:#f0d98a; white-space:nowrap; }
+#ficha-cidade-panel .fc-attribute-score b{ color:inherit; font-size:19px; line-height:1; }
+#ficha-cidade-panel .fc-attribute-score small{ color:#c7b991; font-size:12px; }
+#ficha-cidade-panel .fc-attribute-meter{ height:8px !important; border-radius:5px; overflow:hidden; }
+#ficha-cidade-panel .fc-summary-grid{ display:grid !important; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px !important; margin-top:12px !important; }
+#ficha-cidade-panel .fc-summary-card{ min-width:0; gap:8px; align-items:center; padding:10px 11px !important; border-radius:4px; }
+#ficha-cidade-panel .fc-summary-card .fc-stat-label{ letter-spacing:.3px !important; }
+#ficha-cidade-panel .fc-summary-card .fc-value-main{ font-size:18px !important; }
+#ficha-cidade-panel .fc-perception-card{ margin-top:8px !important; padding:10px 11px !important; border-radius:4px; }
+#ficha-cidade-panel .fc-initiative-box{ margin-top:8px !important; padding:10px 11px !important; border-radius:4px; }
+#ficha-cidade-panel .fc-maleficios{ padding:11px !important; border-radius:4px; }
+#ficha-cidade-panel .fc-maleficios-title{ color:#f0b7b7 !important; font-size:13px !important; }
+#ficha-cidade-panel .fc-maleficios-list{ color:#f0e3e3 !important; font-size:13px !important; line-height:1.55 !important; }
+#ficha-cidade-panel .fc-section-button{ min-height:42px; padding:9px 0 !important; font-size:14px !important; }
+@media(max-width:420px){#ficha-cidade-panel .fc-attributes-grid{grid-template-columns:1fr;}}
 #ficha-cidade-panel .bag-slot.drop-target{ outline:2px dashed #c8a951;
   outline-offset:-2px; }
 #ficha-cidade-panel [draggable="true"]{ cursor:grab; }
