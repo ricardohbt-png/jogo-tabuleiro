@@ -53,7 +53,7 @@ print("[1] Fichas Clava/Lança")
 # A ficha declara movement 5, mas a REGRA GLOBAL de deslocamento (logo após
 # MONSTER_DEFS) normaliza todo monstro para 6 salvo `movement_exception`.
 check(CLAVA["hp"]==41 and CLAVA["ac"]==14 and CLAVA["size"]==[1,1] and CLAVA["movement"]==6, "Clava: 41/CA14/1x1/mov 6 pela regra global")
-check(LANCA["ac"]==16 and LANCA.get("reach_lanca") is True, "Lança: CA16 + alcance estendido")
+check(LANCA["ac"]==14 and LANCA.get("reach_lanca") is True, "Lança: CA base 14 (+2 do escudo) + alcance estendido")
 check(CLAVA["attacks"][0]["damage"]=="1d12+4", "Clava 1d12+4")
 check(LANCA["attacks"][0]["damage"]=="1d10+4", "Lança 1d10+4")
 # A ficha declara a penalidade na forma PLURAL (`saves: [...]`) desde a unificação
@@ -114,7 +114,12 @@ check(not ogro.get("lento_previsivel_ativo"), "flag limpa no início do turno se
 
 # ── 6) Loot de comida (mix) ──────────────────────────────────────────────────
 print("[6] Loot de comida (mix)")
-check(CLAVA["loot_table"]["91-100"]=={"tipo":"comida"}, "loot 91-100 = comida")
+check(CLAVA["gold_range"]==[4,10] and CLAVA["loot_table"]=={"1-100":None}, "clava: 4-10 moedas garantidas, sem sorteio de moedas")
+check(LANCA["gold_range"]==[2,4] and LANCA["loot_table"]=={"1-100":None}, "lança: 2-4 moedas garantidas, sem sorteio de moedas")
+_n_clava = [len(S._comidas_do_ogro({"type":"ogro_clava"})) for _ in range(300)]
+_n_lanca = [len(S._comidas_do_ogro({"type":"ogro_lanca"})) for _ in range(300)]
+check(max(_n_clava) <= 4 and max(_n_lanca) <= 3, "comida: clava até 4 rolagens, lança até 3")
+check(S._comidas_do_ogro({"type":"goblin"}) == [], "só ogros usam as rolagens de comida")
 g = S.GameRoom("T")
 ids = set()
 for _ in range(40):

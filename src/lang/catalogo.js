@@ -2424,7 +2424,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.alabarda_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Halberd: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Alabarda de Obsidiana de Ferro: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Alabarda de Obsidiana de Ferro: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.alabarda_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Halberd",
@@ -2612,7 +2612,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_cedro_rubro.desc": {
     "en": "Red Cedar Combatant Bow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_bruto_combatente_cedro_rubro.nome": {
     "en": "Red Cedar Combatant Bow",
@@ -2644,7 +2644,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_curto_cedro_rubro.desc": {
     "en": "Red Cedar Composite Shortbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_composto_curto_cedro_rubro.nome": {
     "en": "Red Cedar Composite Shortbow",
@@ -2676,7 +2676,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_longo_cedro_rubro.desc": {
     "en": "Red Cedar Composite Longbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_composto_longo_cedro_rubro.nome": {
     "en": "Red Cedar Composite Longbow",
@@ -2708,7 +2708,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_curto_cedro_rubro.desc": {
     "en": "Red Cedar Shortbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Curto de Cedro Rubro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Curto de Cedro Rubro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_curto_cedro_rubro.nome": {
     "en": "Red Cedar Shortbow",
@@ -2808,7 +2808,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.bastsword_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Bastard Sword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Espada Bastarda de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Espada Bastarda de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.bastsword_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Bastard Sword",
@@ -2832,7 +2832,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.besta_cedro_rubro.desc": {
     "en": "Red Cedar Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Besta de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Besta de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.besta_cedro_rubro.nome": {
     "en": "Red Cedar Crossbow",
@@ -2856,7 +2856,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.besta_duelista_cedro_rubro.desc": {
     "en": "Red Cedar Duelist Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Besta do Duelista de Cedro Rubro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Besta do Duelista de Cedro Rubro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.besta_duelista_cedro_rubro.nome": {
     "en": "Red Cedar Duelist Crossbow",
@@ -2896,7 +2896,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.besta_pesada_cedro_rubro.desc": {
     "en": "Red Cedar Heavy Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Besta Pesada de Cedro Rubro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Besta Pesada de Cedro Rubro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.besta_pesada_cedro_rubro.nome": {
     "en": "Red Cedar Heavy Crossbow",
@@ -2928,7 +2928,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.besta_repetidora_guerra_cedro_rubro.desc": {
     "en": "Red Cedar War Repeating Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Besta Repetidora de Guerra de Cedro Rubro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Besta Repetidora de Guerra de Cedro Rubro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.besta_repetidora_guerra_cedro_rubro.nome": {
     "en": "Red Cedar War Repeating Crossbow",
@@ -2960,7 +2960,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.besta_repetidora_patrulha_cedro_rubro.desc": {
     "en": "Red Cedar Patrol Repeating Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Besta Repetidora de Patrulha de Cedro Rubro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Besta Repetidora de Patrulha de Cedro Rubro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.besta_repetidora_patrulha_cedro_rubro.nome": {
     "en": "Red Cedar Patrol Repeating Crossbow",
@@ -3440,7 +3440,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.dagger_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Dagger: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.dagger_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Dagger",
@@ -3700,7 +3700,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada2m_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Two-Handed Sword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.espada2m_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Two-Handed Sword",
@@ -3724,7 +3724,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_bastarda_veredito_radiante_mais_1.desc": {
     "en": "Radiant Verdict +1 Bastard Sword: magical Paladin-only bastard sword, 1d10 slashing + Strength, natural 19–20 critical ×2, +1 to hit and damage. On a hit, the Paladin may choose to add 2d8 holy damage; 10-round cooldown, started only when used.",
-    "pt": "Espada Bastarda do Veredito Radiante +1: arma mágica exclusiva do Paladino, 1d10 cortante + Força, crítico natural 19–20 ×2, +1 no acerto e dano. Ao acertar, o Paladino pode escolher acrescentar 2d8 de dano sagrado; recarga de 10 rodadas, iniciada somente quando usar."
+    "pt": "Raridade: Muito rara. Espada bastarda mágica exclusiva do Paladino: 1d10 cortante + Força, crítico natural 19–20 ×2, +1 no acerto e dano. Veredito Radiante: ao acertar, o Paladino pode escolher causar +2d8 de dano sagrado; recarga de 10 rodadas, iniciada apenas quando escolhe usar o poder."
   },
   "cat.item.espada_bastarda_veredito_radiante_mais_1.nome": {
     "en": "Radiant Verdict Bastard Sword +1",
@@ -3732,7 +3732,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_bastarda_veredito_radiante_mais_3.desc": {
     "en": "Radiant Verdict +3 Bastard Sword: magical Paladin-only bastard sword, 1d10 slashing + Strength, natural 19–20 critical ×2, +3 to hit and damage. On a hit, the Paladin may choose to add 2d8 holy damage once every 10 rounds. Every natural critical also adds 2d8 holy damage automatically; this damage is not multiplied by the critical and does not stack with a manual activation on the same hit.",
-    "pt": "Espada Bastarda do Veredito Radiante +3: arma mágica exclusiva do Paladino, 1d10 cortante + Força, crítico natural 19–20 ×2, +3 no acerto e dano. Ao acertar, o Paladino pode escolher acrescentar 2d8 de dano sagrado uma vez a cada 10 rodadas. Todo crítico natural também acrescenta 2d8 sagrado automaticamente; esse dano não é multiplicado pelo crítico nem se acumula com uma ativação manual no mesmo golpe."
+    "pt": "Raridade: Lendária. Espada bastarda mágica exclusiva do Paladino: 1d10 cortante + Força, crítico natural 19–20 ×2, +3 no acerto e dano. Veredito Radiante: ao acertar, o Paladino pode escolher causar +2d8 de dano sagrado uma vez a cada 10 rodadas. Além disso, todo crítico natural causa +2d8 sagrado automaticamente; esse dano não é multiplicado pelo crítico nem acumulado com a escolha manual no mesmo golpe."
   },
   "cat.item.espada_bastarda_veredito_radiante_mais_3.nome": {
     "en": "Radiant Verdict Bastard Sword +3",
@@ -3764,7 +3764,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.espada_juramento_inquebrantavel_obsidiana_ferro.desc": {
     "en": "Obsidian Iron Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; +1 damage, N=1/M=2 corrosion.",
-    "pt": "Espada do Juramento Inquebrantável de Obsidiana de Ferro: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no dano, N=1/M=2 contra corrosão."
+    "pt": "Espada do Juramento Inquebrantável de Obsidiana de Ferro: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no dano; o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.espada_juramento_inquebrantavel_obsidiana_ferro.nome": {
     "en": "Obsidian Iron Sword of the Unbroken Oath",
@@ -3980,7 +3980,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.gancho_corrente_obsidiana_ferro.desc": {
     "en": "",
-    "pt": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.gancho_corrente_obsidiana_ferro.nome": {
     "en": "",
@@ -4020,7 +4020,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.gancho_escorpiao_superior_obsidiana_ferro.desc": {
     "en": "",
-    "pt": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.gancho_escorpiao_superior_obsidiana_ferro.nome": {
     "en": "",
@@ -4164,7 +4164,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.hand_crossbow_cedro_rubro.desc": {
     "en": "Red Cedar Hand Crossbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Besta de Mão de Cedro Rubro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Besta de Mão de Cedro Rubro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.hand_crossbow_cedro_rubro.nome": {
     "en": "Red Cedar Hand Crossbow",
@@ -4476,7 +4476,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lanca_curta_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Short Spear: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.lanca_curta_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Short Spear",
@@ -4489,6 +4489,86 @@ window.LANG_CATALOGO = {
   "cat.item.lanca_curta_prata.nome": {
     "en": "Silver Short Spear",
     "pt": "Lança Curta de Prata"
+  },
+  "cat.item.lanca_enorme.desc": {
+    "en": "",
+    "pt": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão."
+  },
+  "cat.item.lanca_enorme.nome": {
+    "en": "",
+    "pt": "Lança Enorme"
+  },
+  "cat.item.lanca_enorme_aco_damasco.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Aço Damasco: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_enorme_aco_damasco.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Aço Damasco"
+  },
+  "cat.item.lanca_enorme_aco_damasco_magica.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Aço Damasco: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
+  },
+  "cat.item.lanca_enorme_aco_damasco_magica.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Aço Damasco Mágica +1"
+  },
+  "cat.item.lanca_enorme_liga_titanio.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Liga de Titânio: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.lanca_enorme_liga_titanio.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Liga de Titânio"
+  },
+  "cat.item.lanca_enorme_liga_titanio_magica.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Liga de Titânio: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
+  },
+  "cat.item.lanca_enorme_liga_titanio_magica.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Liga de Titânio Mágica +1"
+  },
+  "cat.item.lanca_enorme_magica.desc": {
+    "en": "",
+    "pt": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Recebe um encantamento raro +1 no acerto e no dano."
+  },
+  "cat.item.lanca_enorme_magica.nome": {
+    "en": "",
+    "pt": "Lança Enorme Mágica +1"
+  },
+  "cat.item.lanca_enorme_obsidiana_ferro.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Obsidiana de Ferro: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+  },
+  "cat.item.lanca_enorme_obsidiana_ferro.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Obsidiana de Ferro"
+  },
+  "cat.item.lanca_enorme_obsidiana_ferro_magica.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Obsidiana de Ferro: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
+  },
+  "cat.item.lanca_enorme_obsidiana_ferro_magica.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Obsidiana de Ferro Mágica +1"
+  },
+  "cat.item.lanca_enorme_prata.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Prata: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 na diagonal e exige duas mãos de heróis. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo. Ogros conseguem empunhá-la com uma mão."
+  },
+  "cat.item.lanca_enorme_prata.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Prata"
+  },
+  "cat.item.lanca_enorme_prata_magica.desc": {
+    "en": "",
+    "pt": "Lança Enorme de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 3 casas. Requer as duas mãos. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Recebe um encantamento raro +1 no acerto e no dano."
+  },
+  "cat.item.lanca_enorme_prata_magica.nome": {
+    "en": "",
+    "pt": "Lança Enorme de Prata Mágica +1"
   },
   "cat.item.lanca_liga_titanio.desc": {
     "en": "Titanium Alloy Spear: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
@@ -4508,7 +4588,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lanca_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Spear: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.lanca_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Spear",
@@ -4600,7 +4680,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.longbow_cedro_rubro.desc": {
     "en": "Red Cedar Longbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Longo de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Longo de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.longbow_cedro_rubro.nome": {
     "en": "Red Cedar Longbow",
@@ -4648,7 +4728,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.longsword_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Longsword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.longsword_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Longsword",
@@ -4688,7 +4768,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.maca_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Mace: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.maca_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Mace",
@@ -4728,7 +4808,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.maca_voto_guardiao_obsidiana_ferro.desc": {
     "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Obsidian Iron adds +1 damage and tolerates 1 corrosion level without penalty, then 2 penalized levels.",
-    "pt": "Maça do Voto Guardião de Obsidiana de Ferro: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Obsidiana de Ferro: +1 no dano, N=1/M=2 contra corrosão."
+    "pt": "Maça do Voto Guardião de Obsidiana de Ferro: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Obsidiana de Ferro: +1 no dano; o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.maca_voto_guardiao_obsidiana_ferro.nome": {
     "en": "Obsidian Iron Mace of the Guardian Vow",
@@ -4808,7 +4888,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_basico_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.machado_basico_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Axe",
@@ -4848,7 +4928,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_duplo_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Double-Headed Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.machado_duplo_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Double-Headed Axe",
@@ -4896,7 +4976,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_orc_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Orc War Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Machado de Guerra Órquico de Obsidiana de Ferro: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Machado de Guerra Órquico de Obsidiana de Ferro: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.machado_orc_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Orc War Axe",
@@ -4952,7 +5032,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.mangual_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Flail: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Mangual de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Mangual de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.mangual_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Flail",
@@ -5040,7 +5120,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.marreta_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Sledgehammer: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.marreta_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Sledgehammer",
@@ -5340,7 +5420,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.rapieira_do_dueto_obsidiana_ferro.desc": {
     "en": "Mundane bard-exclusive rapier: 1d6 piercing using Dexterity. While a Lira is equipped off-hand and Martial Duet is active, the bard's first free counterattack each round deals +1d4 piercing damage. Iron Obsidian grants +1 damage and tolerates one corrosion level without penalty; the next two levels penalize it and the following level destroys it.",
-    "pt": "Rapieira do Dueto de Obsidiana de Ferro: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Rapieira do Dueto de Obsidiana de Ferro: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.rapieira_do_dueto_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Duet Rapier",
@@ -5444,7 +5524,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.shortsword_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Shortsword: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.shortsword_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Shortsword",
@@ -5457,46 +5537,6 @@ window.LANG_CATALOGO = {
   "cat.item.shortsword_prata.nome": {
     "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
-  },
-  "cat.item.sword.desc": {
-    "en": "Serrated Iron Shortsword: 1d6 slashing damage using Strength, with +2 damage. Nonmagical; tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
-    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
-  },
-  "cat.item.sword.nome": {
-    "en": "Serrated Iron Shortsword",
-    "pt": "Espada Curta de Ferro Serrilhado"
-  },
-  "cat.item.sword_aco_damasco.desc": {
-    "en": "Damascus Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 to attack rolls. Tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
-    "pt": "Espada Curta Serrilhada de Aço Damasco: mantém os +2 de dano da arma-base e ganha +1 no acerto. Tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
-  },
-  "cat.item.sword_aco_damasco.nome": {
-    "en": "Damascus Serrated Shortsword",
-    "pt": "Espada Curta Serrilhada de Aço Damasco"
-  },
-  "cat.item.sword_obsidiana_ferro.desc": {
-    "en": "Iron Obsidian Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 damage, for +3 total. The first corrosive strike destroys it.",
-    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: mantém os +2 de dano da arma-base e recebe +1 adicional, totalizando +3. O primeiro golpe corrosivo a destrói."
-  },
-  "cat.item.sword_obsidiana_ferro.nome": {
-    "en": "Iron Obsidian Serrated Shortsword",
-    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro"
-  },
-  "cat.item.sword_liga_titanio.desc": {
-    "en": "Titanium Alloy Serrated Shortsword: keeps the base weapon's +2 damage, tolerates 2 corrosion levels without penalty, then suffers three normal penalty levels before breaking.",
-    "pt": "Espada Curta Serrilhada de Liga de Titânio: mantém os +2 de dano da arma-base, tolera 2 níveis de corrosão sem penalidade e sofre três níveis de penalidade normal antes de quebrar."
-  },
-  "cat.item.sword_liga_titanio.nome": {
-    "en": "Titanium Alloy Serrated Shortsword",
-    "pt": "Espada Curta Serrilhada de Liga de Titânio"
-  },
-  "cat.item.sword_prata.desc": {
-    "en": "Silver Serrated Shortsword: keeps +2 damage, can harm enemies resistant to normal weapons, suffers no penalty at corrosion level 1, and is destroyed at level 2.",
-    "pt": "Espada Curta Serrilhada de Prata: mantém +2 de dano, fere inimigos resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo."
-  },
-  "cat.item.sword_prata.nome": {
-    "en": "Silver Serrated Shortsword",
-    "pt": "Espada Curta Serrilhada de Prata"
   },
   "cat.item.solucao_mecanismo.desc": {
     "en": "Bonus action. Before confirming, shows a 3-square radius around the hero. Automatically disarms every active trap in the area, including hidden traps and traps inside chests or objects. Grants normal disarm XP, doubled for permanent traps; does not recover gold.",
@@ -5518,9 +5558,45 @@ window.LANG_CATALOGO = {
     "en": "Fruit Juice",
     "pt": "Suco de Fruta"
   },
+  "cat.item.sword.desc": {
+    "en": "Serrated Iron Shortsword: 1d6 slashing damage using Strength, with +2 damage. Nonmagical; tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
+    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
+  },
   "cat.item.sword.nome": {
     "en": "Serrated Iron Shortsword",
     "pt": "Espada Curta de Ferro Serrilhado"
+  },
+  "cat.item.sword_aco_damasco.desc": {
+    "en": "Damascus Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 to attack rolls. Tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
+    "pt": "Espada Curta Serrilhada de Aço Damasco: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.sword_aco_damasco.nome": {
+    "en": "Damascus Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Aço Damasco"
+  },
+  "cat.item.sword_liga_titanio.desc": {
+    "en": "Titanium Alloy Serrated Shortsword: keeps the base weapon's +2 damage, tolerates 2 corrosion levels without penalty, then suffers three normal penalty levels before breaking.",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+  },
+  "cat.item.sword_liga_titanio.nome": {
+    "en": "Titanium Alloy Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio"
+  },
+  "cat.item.sword_obsidiana_ferro.desc": {
+    "en": "Iron Obsidian Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 damage, for +3 total. The first corrosive strike destroys it.",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+  },
+  "cat.item.sword_obsidiana_ferro.nome": {
+    "en": "Iron Obsidian Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro"
+  },
+  "cat.item.sword_prata.desc": {
+    "en": "Silver Serrated Shortsword: keeps +2 damage, can harm enemies resistant to normal weapons, suffers no penalty at corrosion level 1, and is destroyed at level 2.",
+    "pt": "Espada Curta Serrilhada de Prata: 1d6 cortante usando Força, com +2 de dano. Prata mundana: fere criaturas resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo."
+  },
+  "cat.item.sword_prata.nome": {
+    "en": "Silver Serrated Shortsword",
+    "pt": "Espada Curta Serrilhada de Prata"
   },
   "cat.item.talisma_ascensao_constituicao.desc": {
     "en": "+2 Constitution while equipped.",
@@ -5764,7 +5840,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.warhammer_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Warhammer: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.warhammer_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Warhammer",

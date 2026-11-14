@@ -1678,6 +1678,7 @@ WEAPONS = {
     # LanÃ§a: arma de ALCANCE corpo-a-corpo (reach="lanca" â†’ 2 retos / 1 diagonal,
     # ver _lanca_no_alcance). NÃƒO Ã© arma de duas mÃ£os â€” pode usar escudo.
     "lanca":         {"id": "lanca",         "name": "Lança",                "die": "1d8",  "stat": "str_", "reach": "lanca", "throw_range": 4, "categoria": "perfurante"},
+    "lanca_enorme": {"id": "lanca_enorme", "name": "Lança Enorme", "die": "1d10", "stat": "str_", "reach": "lanca", "throw_range": 3, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/lanca_enorme.png"},
     "maca":          {"id": "maca",          "name": "Maça",                 "die": "1d6",  "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente"},
     "maca_voto_guardiao": {"id": "maca_voto_guardiao", "name": "Maça do Voto Guardião", "die": "1d8", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente", "magical": True, "voto_guardiao": True, "voto_guardiao_cooldown": 10, "icon": "assets/itens/maca_voto_guardiao.png", "allowed_classes": ["cleric"]},
     "espada_juramento_inquebrantavel": {"id": "espada_juramento_inquebrantavel", "name": "Espada do Juramento Inquebrantável", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "crit_nat20_multiplier": 2, "categoria": "cortante", "magical": True, "protecao_juramento": True, "protecao_juramento_die": "1d6", "protecao_juramento_cooldown": 10, "icon": "assets/itens/espada_juramento_inquebrantavel.png", "allowed_classes": ["paladin"]},
@@ -1744,11 +1745,12 @@ _ARMA_BASE_ESPECIAL = {"machadinha_ana_prata": "machadinha_arremesso_ana"}
 
 
 def _arma_base_id(weapon_id):
-    """Id da arma-base de uma variante de material (`besta_pesada_freixo_negro` ->
-    `besta_pesada`). Id sem sufixo de material volta igual."""
+    """Retorna a arma-base de variantes de material e encantamentos +1."""
     wid = str(weapon_id or "")
     if wid in _ARMA_BASE_ESPECIAL:
         return _ARMA_BASE_ESPECIAL[wid]
+    if wid.endswith("_magica"):
+        wid = wid[:-len("_magica")]
     for sufixo in _MATERIAL_SUFIXOS_ARMA:
         if wid.endswith(sufixo) and len(wid) > len(sufixo):
             return wid[:-len(sufixo)]
@@ -5270,7 +5272,7 @@ CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "l
 CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machadinha_arremesso_ana", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
                        "bastsword", "espada2m", "warhammer", "mangual", "maca", "maca_voto_guardiao", "rapieira_do_dueto",
-                       "marreta", "lanca", "lanca_curta", "alabarda", "gancho_corrente", "gancho_escorpiao_superior"}
+                       "marreta", "lanca", "lanca_enorme", "lanca_curta", "alabarda", "gancho_corrente", "gancho_escorpiao_superior"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
 
 MONSTER_DEFS = [
@@ -6605,12 +6607,8 @@ MONSTER_DEFS = [
             {"type": "save_penalty", "saves": ["vontade"], "bonus_flat": -2,
              "vulnerabilidade": True, "descricao": "Vulnerabilidade: -2 em testes de Vontade"},
         ],
-        "loot_table": {
-            "1-40":   None,
-            "41-70":  {"tipo": "gold", "valor": 2},
-            "71-90":  {"tipo": "gold", "valor": 4},
-            "91-100": {"tipo": "comida"},   # comida aleatÃ³ria (RaÃ§Ã£o/taverna)
-        },
+        "gold_range": [4, 10],
+        "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1,
         "ai_type": "ogro",
         "porte": "grande",
@@ -6621,7 +6619,7 @@ MONSTER_DEFS = [
     {
         "type": "ogro_lanca", "name": "Ogro de Lança", "emoji": "🧌",
         "tier": 2, "cr": 2,
-        "hp": 38, "ac": 16, "size": [1, 1], "movement": 5,   # CA 16 (com escudo)
+        "hp": 38, "ac": 14, "size": [1, 1], "movement": 5,   # CA 14 base + 2 do escudo
         "str_": 19, "dex": 8, "con_": 17, "int_": 6,
         "fort": 5, "ref_": 1, "will": 0,
         "reach_lanca": True,   # alcance 2 Ã  frente / 1 diagonal (ver _lanca_no_alcance)
@@ -6644,17 +6642,12 @@ MONSTER_DEFS = [
              "descricao": "Se errar um ataque: -2 de CA até o próximo turno"},
         ],
         "immunities": [],
-        "resistances": [{"type": "physical", "reduction": 2}],
         "weaknesses": [
             {"type": "save_penalty", "saves": ["vontade"], "bonus_flat": -2,
              "vulnerabilidade": True, "descricao": "Vulnerabilidade: -2 em testes de Vontade"},
         ],
-        "loot_table": {
-            "1-40":   None,
-            "41-70":  {"tipo": "gold", "valor": 2},
-            "71-90":  {"tipo": "gold", "valor": 4},
-            "91-100": {"tipo": "comida"},
-        },
+        "gold_range": [2, 4],
+        "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1,
         "ai_type": "ogro",
         "porte": "grande",
@@ -7751,6 +7744,7 @@ SHOP_WEAPONS = [
     # â”€â”€â”€ Pesadas (1d8) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "lanca",         "name": "Lança",              "emoji": "🔱",  "die": "1d8",  "stat": "str_", "price": 14, "reach": "lanca", "throw_range": 4, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
+    {"id": "lanca_enorme", "name": "Lança Enorme", "emoji": "🔱", "icon": "assets/itens/lanca_enorme.png", "die": "1d10", "stat": "str_", "price": 30, "reach": "lanca", "throw_range": 3, "two_handed": True, "categoria": "perfurante", "descricao": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão."},
     {"id": "longsword",     "name": "Espada Longa",       "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 16, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
@@ -8238,6 +8232,7 @@ _MATERIAL_WEAPON_VARIANTS = [
     ("marreta", "marreta_aco_damasco", "Marreta de Aço Damasco", "assets/itens/marreta_aco_damasco.png", "metal"),
     ("lanca_curta", "lanca_curta_aco_damasco", "Lança Curta de Aço Damasco", "assets/itens/lanca_curta_aco_damasco.png", "metal"),
     ("lanca", "lanca_aco_damasco", "Lança de Aço Damasco", "assets/itens/lanca_aco_damasco.png", "metal"),
+    ("lanca_enorme", "lanca_enorme_aco_damasco", "Lança Enorme de Aço Damasco", "assets/itens/lanca_enorme_aco_damasco.png", "metal"),
     ("alabarda", "alabarda_aco_damasco", "Alabarda de Aço Damasco", "assets/itens/alabarda_aco_damasco.png", "metal"),
     ("rapieira_do_dueto", "rapieira_do_dueto_aco_damasco", "Rapieira do Dueto de Aço Damasco", "assets/itens/rapieira_duelista_aco_damasco.png", "metal"),
     ("gancho_corrente", "gancho_corrente_aco_damasco", "Gancho de Corrente de Aço Damasco", "assets/itens/gancho_corrente_aco_damasco.png", "metal"),
@@ -8318,6 +8313,7 @@ _MATERIAL_WEAPON_DAMAGE_VARIANTS = [
     ("marreta", "marreta_obsidiana_ferro", "Marreta de Obsidiana de Ferro", "assets/itens/marreta_obsidiana_ferro.png", "metal"),
     ("lanca_curta", "lanca_curta_obsidiana_ferro", "Lança Curta de Obsidiana de Ferro", "assets/itens/lanca_curta_obsidiana_ferro.png", "metal"),
     ("lanca", "lanca_obsidiana_ferro", "Lança de Obsidiana de Ferro", "assets/itens/lanca_obsidiana_ferro.png", "metal"),
+    ("lanca_enorme", "lanca_enorme_obsidiana_ferro", "Lança Enorme de Obsidiana de Ferro", "assets/itens/lanca_enorme_obsidiana_ferro.png", "metal"),
     ("alabarda", "alabarda_obsidiana_ferro", "Alabarda de Obsidiana de Ferro", "assets/itens/alabarda_obsidiana_ferro.png", "metal"),
     ("rapieira_do_dueto", "rapieira_do_dueto_obsidiana_ferro", "Rapieira do Dueto de Obsidiana de Ferro", "assets/itens/rapieira_duelista_obsidiana_ferro.png", "metal"),
     ("gancho_corrente", "gancho_corrente_obsidiana_ferro", "Gancho de Corrente de Obsidiana de Ferro", "assets/itens/gancho_corrente_obsidiana_ferro.png", "metal"),
@@ -8394,6 +8390,7 @@ _MATERIAL_WEAPON_CORROSION_VARIANTS = [
     ("marreta", "marreta_liga_titanio", "Marreta de Liga de Titânio", "assets/itens/marreta_liga_titanio.png", "metal"),
     ("lanca_curta", "lanca_curta_liga_titanio", "Lança Curta de Liga de Titânio", "assets/itens/lanca_curta_liga_titanio.png", "metal"),
     ("lanca", "lanca_liga_titanio", "Lança de Liga de Titânio", "assets/itens/lanca_liga_titanio.png", "metal"),
+    ("lanca_enorme", "lanca_enorme_liga_titanio", "Lança Enorme de Liga de Titânio", "assets/itens/lanca_enorme_liga_titanio.png", "metal"),
     ("alabarda", "alabarda_liga_titanio", "Alabarda de Liga de Titânio", "assets/itens/alabarda_liga_titanio.png", "metal"),
     ("rapieira_do_dueto", "rapieira_do_dueto_liga_titanio", "Rapieira do Dueto de Liga de Titânio", "assets/itens/rapieira_duelista_liga_titanio.png", "metal"),
     ("gancho_corrente", "gancho_corrente_liga_titanio", "Gancho de Corrente de Liga de Titânio", "assets/itens/gancho_corrente_liga_titanio.png", "metal"),
@@ -8488,6 +8485,46 @@ _maca_voto_prata_combate = deepcopy(WEAPONS["maca_voto_guardiao"])
 _maca_voto_prata_combate.update({k: _maca_voto_prata[k] for k in (
     "id", "name", "icon", "silver", "corrosion_max", "corrosion_free_levels", "descricao")})
 WEAPONS[_maca_voto_prata["id"]] = _maca_voto_prata_combate
+
+# Variante de prata da Lança Enorme: propriedade contra resistência a armas comuns.
+_lanca_enorme_prata = deepcopy(next(item for item in SHOP_WEAPONS if item["id"] == "lanca_enorme"))
+_lanca_enorme_prata.update({
+    "id": "lanca_enorme_prata", "name": "Lança Enorme de Prata",
+    "icon": "assets/itens/lanca_enorme_prata.png", "price": 300,
+    "material": "metal", "silver": True, "corrosion_max": 2, "corrosion_free_levels": 1,
+    "descricao": "Lança Enorme de Prata: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 na diagonal e exige duas mãos de heróis. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo. Ogros conseguem empunhá-la com uma mão."
+})
+SHOP_WEAPONS.append(_lanca_enorme_prata)
+_lanca_enorme_prata_combate = deepcopy(WEAPONS["lanca_enorme"])
+_lanca_enorme_prata_combate.update({k: _lanca_enorme_prata[k] for k in (
+    "id", "name", "icon", "material", "silver", "corrosion_max", "corrosion_free_levels", "descricao")})
+WEAPONS[_lanca_enorme_prata["id"]] = _lanca_enorme_prata_combate
+CORROSAO_ARMA_METAL.add("lanca_enorme_prata")
+
+# Versões mágicas raríssimas (+1/+1), com rolagem independente do material.
+_LANCAS_ENORMES_BASES_MAGICAS = (
+    "lanca_enorme", "lanca_enorme_aco_damasco", "lanca_enorme_obsidiana_ferro",
+    "lanca_enorme_liga_titanio", "lanca_enorme_prata",
+)
+for _lanca_base_id in _LANCAS_ENORMES_BASES_MAGICAS:
+    _lanca_base_item = next(item for item in SHOP_WEAPONS if item["id"] == _lanca_base_id)
+    _lanca_magica = deepcopy(_lanca_base_item)
+    _lanca_magica.update({
+        "id": f"{_lanca_base_id}_magica",
+        "name": f"{_lanca_base_item['name']} Mágica +1",
+        "price": int(_lanca_base_item.get("price", 30) or 30) + 500,
+        "magical": True,
+        "atk_bonus": int(_lanca_base_item.get("atk_bonus", 0) or 0) + 1,
+        "damage_bonus": int(_lanca_base_item.get("damage_bonus", 0) or 0) + 1,
+        "descricao": (_lanca_base_item.get("descricao", "") +
+                      " Recebe um encantamento raro +1 no acerto e no dano."),
+    })
+    SHOP_WEAPONS.append(_lanca_magica)
+    _lanca_magica_combate = deepcopy(WEAPONS[_lanca_base_id])
+    _lanca_magica_combate.update({k: _lanca_magica[k] for k in (
+        "id", "name", "price", "magical", "atk_bonus", "damage_bonus", "descricao")})
+    WEAPONS[_lanca_magica["id"]] = _lanca_magica_combate
+    CORROSAO_ARMA_METAL.add(_lanca_magica["id"])
 
 SHOP_ARMORS = [
     # â”€â”€ ProteÃ§Ãµes / Escudos (slot acessÃ³rio â€” somam com armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -12199,8 +12236,20 @@ def _sortear_comida_monstro():
     return item
 
 
+def _comidas_do_ogro(m):
+    """Três rolagens independentes de comida (20% cada), mais uma 4ª no clava (10%)."""
+    if m.get("type") not in {"ogro_clava", "ogro_lanca"}:
+        return []
+    comidas = [_sortear_comida_monstro() for _ in range(3) if random.random() < 0.20]
+    if m.get("type") == "ogro_clava" and random.random() < 0.10:
+        comidas.append(_sortear_comida_monstro())
+    return comidas
+
+
 def _comida_extra_do_monstro(m):
-    """Item de comida a somar ao saque do monstro (ou None): só o grupo, e só com 10% de sorte."""
+    """Item adicional para outros monstros do grupo, com 10% de chance."""
+    if m.get("type") in {"ogro_clava", "ogro_lanca"}:
+        return None
     if _monstro_deixa_comida(m) and random.random() < CHANCE_COMIDA_MONSTRO:
         return _sortear_comida_monstro()
     return None
@@ -13750,6 +13799,8 @@ def _aplicar_equipamentos_monstro(m):
             "categoria": weapon.get("categoria"),
             "equipment_weapon_id": weapon.get("id"),
             "silver": bool(weapon.get("silver")),
+            "magical": bool(weapon.get("magical")),
+            "ignora_reducao_dano": int(weapon.get("ignora_reducao_dano", 0) or 0),
             "on_hit": configured_attack.get("on_hit"),
             "on_hit_effect": configured_attack.get("on_hit_effect"),
             "poison_dc": configured_attack.get("poison_dc"),
@@ -13817,7 +13868,7 @@ def _aplicar_equipamentos_monstro(m):
 
 _MONSTROS_COM_ARMA_SORTEADA = frozenset({
     "goblin_arqueiro", "goblin_combatente", "orc", "kobold_lanceiro",
-    "bandido", "capanga", "bardo", "bardo_da_caravana",
+    "bandido", "capanga", "bardo", "bardo_da_caravana", "ogro_lanca",
 })
 
 
@@ -13883,6 +13934,13 @@ def _aplicar_material_aleatorio_monstro(monster):
         if item_id not in sorteados_por_id:
             sorteados_por_id[item_id] = _sortear_material_arma_monstro(item_id)
         item_ids[index] = sorteados_por_id[item_id]
+    if monster.get("type") == "ogro_lanca":
+        for index, item_id in enumerate(item_ids):
+            if not item_id.startswith("lanca_enorme") or random.random() >= 0.01:
+                continue
+            magical_id = f"{item_id}_magica"
+            if magical_id in _DUNGEON_ITEM_CATALOG:
+                item_ids[index] = magical_id
     monster["equipped_items"] = item_ids
 
 
@@ -13928,6 +13986,14 @@ def _configurar_soldado_spawn(monster):
     item_ids[indice_armadura] = armadura
     monster["equipped_items"] = item_ids
     monster["equipment"] = item_ids[:]
+
+
+def _configurar_ogro_lanca_spawn(monster):
+    """O Ogro de Lança usa Lança Enorme com uma mão e Escudo Grande."""
+    monster["equipment_enabled"] = True
+    monster["base_attack_bonus"] = 2  # FOR +4 completa o bônus atual de +6.
+    monster["equipped_items"] = ["lanca_enorme", "escudo_g"]
+    monster["loot_table"] = {"1-100": None}
 
 
 def _configurar_capanga_spawn(m):
@@ -14368,6 +14434,8 @@ def make_monster(mdef, room):
         _configurar_mago_trevas_spawn(m)
     elif m.get("type") == "soldado":
         _configurar_soldado_spawn(m)
+    elif m.get("type") == "ogro_lanca":
+        _configurar_ogro_lanca_spawn(m)
     elif _eh_bardo(m):
         _configurar_bardo_spawn(m)
     _aplicar_material_aleatorio_monstro(m)
@@ -50007,6 +50075,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             total += 1
         min_dmg = target.get("min_damage", 0)
         adjusted = max(min_dmg, total)
+        if (not self._eh_jogador(target)
+                and target.get("type") in {"ogro_lanca"}
+                and adjusted > 0):
+            shield = next((item for item in target.get("equipment_items", []) or []
+                           if (item.get("kind") == "shield" or item.get("item_slot") == "shield")
+                           and not item.get("corrosion_destroyed")), None)
+            if shield:
+                shield_reduction = max(0, int(shield.get("damage_reduction", 0) or 0))
+                if DMG_PHYSICAL in damage_types:
+                    shield_reduction += sum(
+                        max(0, int(bonus.get("value", 0) or 0))
+                        for bonus in (shield.get("bonuses") or [])
+                        if isinstance(bonus, dict)
+                        and bonus.get("effect") == "resist"
+                        and bonus.get("type") == "physical"
+                    )
+                before_shield = adjusted
+                adjusted = max(0, adjusted - shield_reduction)
+                resistance_applied = resistance_applied or adjusted < before_shield
         if target.get("type") == "troll" and DMG_ACID in damage_types and adjusted > 0:
             # `_dano_em_alvo` também é usado por efeitos legados que recebem
             # o valor já rolado. A marca impede uma segunda aplicação do x2.
@@ -59382,6 +59469,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             sc = gerar_pergaminho(1)
                         if sc:
                             loot_items.append(sc)
+            if m.get("type") in {"ogro_clava", "ogro_lanca"}:
+                low, high = m.get("gold_range", [0, 0])
+                gold = random.randint(int(low), int(high))
             # Drops do editor: cada linha Ã© uma rolagem prÃ³pria, portanto um
             # monstro pode deixar mais de um item no mesmo baÃº.
             if m.get("type") == "goblin_arqueiro":
@@ -59449,9 +59539,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if m.get("type") in {"goblin_combatente", "dark_mage"}:
                 # A bolsa restante preserva só os consumíveis não utilizados.
                 loot_items.extend(deepcopy(m.get("equipment_consumables", [])))
-            comida = _comida_extra_do_monstro(m)
-            if comida:
-                loot_items.append(comida)
+            if m.get("type") in {"ogro_clava", "ogro_lanca"}:
+                loot_items.extend(_comidas_do_ogro(m))
+            else:
+                comida = _comida_extra_do_monstro(m)
+                if comida:
+                    loot_items.append(comida)
             delivery = self._spawn_monster_loot(list(m["pos"]), gold, loot_items)
             chest_msg = " Um **baú de saque** apareceu!" if delivery == "chest" else ""
             await self.gm_say(T("narracao.foi_derrotado_xp_2", monstro=nome_criatura(m), share_xp=share_xp, chest_msg=chest_msg))
