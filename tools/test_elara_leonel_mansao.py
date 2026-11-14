@@ -336,7 +336,7 @@ class SalaoFluxoTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_elara_morta_ainda_permite_encerrar_com_o_leonel_morto(self):
         r = self.preparar()
-        await r._prisioneiro_morre()
+        await r._prisioneiro_morre(r.prisoner)
         await r._check_objectives()
         self.assertFalse(r._objetivo_concluido, "falta o Leonel")
         self.leonel["hp"] = 0

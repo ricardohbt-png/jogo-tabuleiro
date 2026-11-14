@@ -39,7 +39,7 @@ class DadosGravados(unittest.TestCase):
         self.assertTrue(d["ocultar_apos_concluir"])
         self.assertTrue(d["oculto_ate_liberar"])
         self.assertFalse(d["revisitavel"])
-        self.assertEqual(d["renome_recompensa"], 5)
+        self.assertEqual(d["renome_recompensa"], 0, "o renome do resgate vem das faixas da Aldeia")
         self.assertEqual(d["requisito"]["fato"], G.FATO_GANCHO)
 
     def test_o_aviso_de_emenda_abre_a_primeira_etapa(self):

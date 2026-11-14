@@ -404,7 +404,7 @@ document.body.innerHTML = `
         </div>
         <span id="cooperative-marker-prompt" role="status" aria-live="polite" hidden></span>
       </div>
-      <button id="btn-libertar" style="display:none" onclick="GS.libertarPrisioneiro()" data-i18n="ui.hud.libertar_prisioneiro">🔓 Libertar prisioneiro</button>
+      <button id="btn-libertar" style="display:none" onclick="libertarRefem()" data-i18n="ui.hud.libertar_prisioneiro">🔓 Libertar prisioneiro</button>
     </div>
     <canvas id="dice-canvas"></canvas>
     <div id="initiative-track" role="group" hidden>
@@ -5958,13 +5958,13 @@ function _atualizarBotaoEncerrarTurno(state){
   const naFila = state?.animados_turn === GS.myPid && atual !== null;
   if(naFila){
     const ordem = state.animados_order || [];
-    const total = ordem.length + (_temPrisioneiroNaFila(state) ? 1 : 0);
-    // A posição é o índice do servo da vez na ordem de iniciativa. O prisioneiro
-    // não está em `animados_order`: ele é sempre o último da fila.
+    const total = ordem.length + _refensGuiadosNaFila(state);
+    // A posição é o índice do servo da vez na ordem de iniciativa. Os reféns
+    // não estão em `animados_order`: vêm depois dos servos.
     const idx = ordem.indexOf(atual);
     const pos = (idx >= 0) ? idx + 1 : total;
     span.removeAttribute('data-i18n');
-    span.textContent = atual === 'prisoner'
+    span.textContent = GS.ehRefemId(atual)
       ? t('ui.hud.encerrar_prisioneiro')
       : t('ui.hud.encerrar_servo', {pos, total});
   } else if(!span.hasAttribute('data-i18n')){
@@ -5973,11 +5973,67 @@ function _atualizarBotaoEncerrarTurno(state){
   }
 }
 
-// O prisioneiro liberto ocupa a última posição da fila da janela pós-turno.
-function _temPrisioneiroNaFila(state){
-  const pr = state?.prisoner;
-  return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === GS.myPid);
+// Os reféns que eu guio ocupam o fim da fila da janela pós-turno.
+function _refensGuiadosNaFila(state){
+  return GS.refensNoMapa(state).filter(pr => pr.freed && pr.rescuer_pid === GS.myPid
+    && (pr.modo || 'guiar') === 'guiar').length;
 }
+
+// Meu refém liberto pelo id (ou null): só ele pode ser selecionado e movido.
+function _meuRefemLiberto(state, id){
+  if(id == null) return null;
+  return GS.refensNoMapa(state).find(pr => String(pr.id) === String(id)
+    && pr.freed && pr.rescuer_pid === GS.myPid) || null;
+}
+
+// Rótulo de um refém: nome próprio, ou "Prisioneiro" traduzido. Os repetidos
+// ganham número pela ordem no mapa (o mesmo em toda tela), para o jogador saber
+// qual escolhe.
+function _rotuloRefem(pr, state = GS.gameState){
+  const rotulos = GS.rotulosRefens(GS.refensNoMapa(state), t('ui.hud.prisioneiro'),
+    (nome, n) => t('ui.hud.refem_numerado', {nome, n}));
+  return rotulos.get(String(pr.id)) || GS.nomeProprioRefem(pr) || t('ui.hud.prisioneiro');
+}
+
+// Linha de contagem do resgate no HUD de objetivos: "3/6 salvas, meta 4, 1 perdida".
+function _textoResgate(r){
+  let txt = t('ui.refem.contador', {salvos:r.salvos, total:r.total, meta:r.meta});
+  if(r.mortos > 0) txt += t('ui.refem.contador_mortos', {mortos:r.mortos});
+  return txt;
+}
+
+// Seção "Prisioneiros resgatados" do painel do herói: um cartão por refém que o
+// herói em foco libertou, com PV e o botão que troca Guiar/Seguir. Vazio sem refém.
+function _refensMeusHTML(state){
+  const meus = GS.refensMeus();
+  if(!meus.length) return '';
+  const linhas = meus.map(pr => {
+    const guiando = pr.modo !== 'seguir';
+    const novo = guiando ? 'seguir' : 'guiar';
+    // O refém do treino só anda guiado (a lição é guiá-lo): sem botão de modo.
+    if(pr.training_refem)
+      return `<div class="refem-row"><span class="refem-nome">${_esc(_rotuloRefem(pr, state))}</span>`
+        + ` <span class="refem-pv">❤️ ${pr.hp}/${pr.max_hp}</span></div>`;
+    return `<div class="refem-row"><span class="refem-nome">${_esc(_rotuloRefem(pr, state))}</span>`
+      + ` <span class="refem-pv">❤️ ${pr.hp}/${pr.max_hp}</span>`
+      + ` <span class="refem-modo">${_esc(t(guiando ? 'ui.refem.modo_guiar' : 'ui.refem.modo_seguir'))}</span>`
+      + ` <button type="button" class="skill-btn refem-btn" data-refem-modo data-refem-id="${_esc(pr.id)}"`
+      + ` data-modo-novo="${novo}">${_esc(t(guiando ? 'ui.refem.btn_seguir' : 'ui.refem.btn_guiar'))}</button></div>`;
+  }).join('');
+  return `<div class="refens-meus"><div class="obj-sec-label">${_esc(t('ui.refem.titulo'))}</div>${linhas}</div>`;
+}
+
+// Botão "Libertar": um cativo ao lado é libertado direto; com mais de um, o
+// jogador escolhe quem pelo nome.
+function libertarRefem(){
+  const cativos = GS.refensLibertaveis();
+  if(!cativos.length) return;
+  if(cativos.length === 1){ GS.libertarPrisioneiro(cativos[0].id); return; }
+  const alvos = cativos.map(pr => ({id:pr.id, name:_rotuloRefem(pr),
+    emoji:'⛓️', hp:pr.hp, max_hp:pr.max_hp}));
+  openTargetModal(t('ui.hud.libertar_qual'), alvos, 'ally', id => GS.libertarPrisioneiro(id));
+}
+window.libertarRefem = libertarRefem;
 
 function handleGameState(msg){
   // GS._handle already updated GS.gameState, GS.isMyTurn, GS.pendingSkill
@@ -6194,14 +6250,14 @@ function _posicionarBotaoLibertar(){
   const btn = $('btn-libertar');
   const wrap = $('map-wrap');
   const state = GS.gameState;
-  const prisoner = state?.prisoner;
-  if(!btn || !GS.prisioneiroLibertavel || !wrap || !prisoner?.pos){ return; }
+  const prisoner = GS.refensLibertaveis()[0];
+  if(!btn || !wrap || !prisoner?.pos){ return; }
 
   let x, topoMiniatura, baseMiniatura;
   const [px, py] = prisoner.pos;
   if(mode3D && g3?.camera && g3?.renderer && g3?.T){
     const canvasRect = g3.renderer.domElement.getBoundingClientRect();
-    const mesh = typeof getPrisonerMesh === 'function' ? getPrisonerMesh() : null;
+    const mesh = typeof getPrisonerMesh === 'function' ? getPrisonerMesh(prisoner.id) : null;
     const worldBase = mesh
       ? mesh.getWorldPosition(new g3.T.Vector3())
       : new g3.T.Vector3(px + .5, 0, py + .5);
@@ -6599,6 +6655,8 @@ function renderObjectivesHUD(msg){
       html += `<div class="obj-row"><span class="obj-ic">${icon}</span><span class="obj-lbl" style="${style}">${_esc(copy)}</span></div>`;
     }
   }
+  const resgate = GS.resgate;
+  if(resgate) html += `<div class="obj-row obj-resgate"><span class="obj-ic">⛓️</span><span class="obj-lbl">${_esc(_textoResgate(resgate))}</span></div>`;
   const secs = obj.secondary || [];
   if(secs.length){
     html += `<div class="obj-sec-label">${t('ui.objetivo.secundarios')}</div>`;
@@ -8660,8 +8718,7 @@ function _flightFallFigure(targetId){
   const wanted = String(targetId);
   return g3.entityGroup.children.find(fig => {
     const u = fig.userData || {};
-    return [u.pid, u.monId, u.animadoId].some(id => id != null && String(id) === wanted)
-      || (u.prisoner && wanted === 'prisoner');
+    return [u.pid, u.monId, u.animadoId, u.prisonerId].some(id => id != null && String(id) === wanted);
   }) || null;
 }
 
@@ -12014,8 +12071,8 @@ let _protetorVisualRaf = null;
 const PROTETOR_FX_FADE_MS = 900;
 
 function _protetorFind(state, id){
-  if(String(id) === '__prisioneiro__') return state?.prisoner || null;
-  return (state?.players || []).find(p => String(p.id) === String(id)) || null;
+  return (state?.players || []).find(p => String(p.id) === String(id))
+    || GS.refensNoMapa(state).find(pr => String(pr.id) === String(id)) || null;
 }
 
 function _protetorVisible2D(state, p, visionSet){
@@ -12043,14 +12100,13 @@ function _syncProtetorVisualState(state){
     if(!richard.alive || !richard.protetor_ativo || richard.protetor_alvo == null) continue;
     const target = _protetorFind(state, richard.protetor_alvo);
     if(!target || !target.alive) continue;
-    const targetKey = target === state.prisoner ? '__prisioneiro__' : target.id;
+    const targetKey = target.id;
     const key = `${richard.id}:${targetKey}`;
     seen.add(key);
     let fx = _protetorVisuals.get(key);
     if(!fx){
       fx = {
-        // Use a chave especial também no efeito visual: o prisioneiro não é
-        // um peão comum e precisa ser resolvido por getPrisonerMesh() no 3D.
+        // O refém não é um peão comum: no 3D é resolvido por getPrisonerMesh(id).
         key, richardId:String(richard.id), targetId:String(targetKey),
         startedAt:now, endingAt:null, seed:Math.random()*Math.PI*2,
         group:null, shield:null, core:null, rings:[], sourceCore:null,
@@ -12361,7 +12417,7 @@ function _atualizarProtetor3D(now){
     if(fx.group && fx.group.parent!==g3.protetorEffectGroup) _disposeProtetor3D(fx);
     if(!fx.group && !_buildProtetor3D(fx)) continue;
     const richard=getPeaoMesh(fx.richardId);
-    const target=String(fx.targetId)==='__prisioneiro__' ? getPrisonerMesh() : getPeaoMesh(fx.targetId);
+    const target=getPrisonerMesh(fx.targetId) || getPeaoMesh(fx.targetId);
     if(!richard || !target){fx.group.visible=false;continue;}
     fx.group.visible=true;
     const a=new T.Vector3(), b=new T.Vector3(); richard.getWorldPosition(a); target.getWorldPosition(b);
@@ -12518,9 +12574,7 @@ function renderMap(state){
   const meAnimados2D = (state.players.find(p=>p.id===GS.myPid)?.animados||[]).filter(a=>a.vida_atual>0);
   const selAnimado2D = isAnimadosTurn2D && _animadoSel
     ? meAnimados2D.find(a=>a.id===_animadoSel) : null;
-  const meuPris2D = state.prisoner && state.prisoner.alive && state.prisoner.freed
-    && state.prisoner.rescuer_pid === GS.myPid;
-  const selPris2D = isAnimadosTurn2D && _prisSel && meuPris2D ? state.prisoner : null;
+  const selPris2D = isAnimadosTurn2D ? _meuRefemLiberto(state, _prisSel) : null;
 
   const reachable=new Set();
   if(selAnimado2D && selAnimado2D.moves_left>0)
@@ -13234,15 +13288,18 @@ function renderMap(state){
     ctx.restore();
   }
 
-  // ── Prisioneiro (Fase 3): cativo (acorrentado) vs. seguindo; barra de HP ──────
-  const _pris = GS.prisoner;
-  if(_pris && _pris.alive){
+  // ── Reféns (Fase 3): cativo (acorrentado) vs. seguindo; barra de HP ──────
+  for(const _pris of GS.refensNoMapa(state)){
     const [pxr,pyr]=_pris.pos;
     // Interpola a posição visual durante a animação de passo (igual aos minions):
-    // desliza casa a casa pelo caminho enquanto _mininoAnimState['prisoner'] existir.
+    // o caminho guiado pelo clique (_mininoAnimState) ou o passo do servidor
+    // quando ele segue o herói (entity_step).
     let drawX = pxr, drawY = pyr;
-    const _pVis = _mininoAnimState.get('prisoner');
-    if(_pVis && _pVis.pathPts){
+    const _pVis = _mininoAnimState.get(_chaveAnimRefem(_pris.id));
+    const _pStepR = _serverStepPos(_pris.id);
+    if(_pStepR){
+      drawX = _pStepR.x; drawY = _pStepR.y;
+    } else if(_pVis && _pVis.pathPts){
       const segs = Math.max(1, _pVis.pathPts.length - 1);
       const tAll = Math.min((performance.now() - _pVis.startTime) / _pVis.dur, 1);
       const f  = tAll * segs;
@@ -13257,11 +13314,11 @@ function renderMap(state){
       ? _pVis.pathPts.some(([px,py]) => visionSet.has(`${px},${py}`) || exploredSet.has(`${px},${py}`))
       : false;
     if(visionSet.has(`${pxr},${pyr}`) || exploredSet.has(`${pxr},${pyr}`) || _visPathP){
-      const [hitX, hitY] = _hitReaction2D('pr:singleton');
+      const [hitX, hitY] = _hitReaction2D(`pr:${_pris.id}`);
       const cx=drawX*CELL+CELL/2+hitX, cy=drawY*CELL+CELL/2+hitY;
       const _prisVortexPreso = !!(_pris.rodamoinho_preso || _pris.rodamoinho_profundo_preso);
       // Anel de seleção quando o controlador o selecionou (janela pós-turno).
-      if(_prisSel && _pris.freed && _pris.rescuer_pid===GS.myPid && state.animados_turn===GS.myPid){
+      if(selPris2D === _pris){
         ctx.save();
         ctx.strokeStyle='#ffffff'; ctx.lineWidth=3;
         ctx.beginPath(); ctx.arc(cx, cy, CELL*0.42, 0, Math.PI*2); ctx.stroke();
@@ -16648,7 +16705,7 @@ function _entityKeyById(id){
   if((st.monsters || []).some(m => String(m.id) === sid)) return `m:${id}`;
   for(const p of (st.players || []))
     if((p.animados || []).some(a => String(a.id) === sid)) return `a:${id}`;
-  if(st.prisoner && st.prisoner.id != null && String(st.prisoner.id) === sid) return 'pr:singleton';
+  if((st.prisoners || []).some(pr => pr && String(pr.id) === sid)) return `pr:${id}`;
   return null;
 }
 
@@ -17162,7 +17219,7 @@ function _spawnCombatFeedback(entry, text, kind, startAt, damageType, options={}
 }
 
 // Reação visual de impacto. A chave é a mesma usada pelo snapshot de HP
-// (p:id, m:id, a:id, pr:singleton), permitindo que 2D e 3D reajam ao mesmo
+// (p:id, m:id, a:id, pr:id), permitindo que 2D e 3D reajam ao mesmo
 // dano sem tocar na posição autoritativa recebida do servidor.
 const _hitReactions = new Map();
 
@@ -17237,8 +17294,12 @@ function _gatherHpEntries(st){
   (st.players  || []).forEach(p => (p && p.animados || []).forEach(a => {
     if(a && a.id != null) out.push({key:`a:${a.id}`, hp:(a.vida_atual != null ? a.vida_atual : a.hp), isMine:false, pos:a.pos, size:a.size, kind:'animado'});
   }));
-  const pr = st.prisoner;                       // singleton — sem id próprio
-  if(pr && pr.hp != null) out.push({key:'pr:singleton', hp:pr.hp, isMine:false, pos:pr.pos, size:[1,1], kind:'prisoner'});
+  // Inclui o refém morto (o golpe final ainda mostra o número); quem chegou a
+  // salvo saiu do mapa e não leva dano.
+  (st.prisoners || []).forEach(pr => {
+    if(pr && pr.id != null && pr.hp != null && !pr.salvo)
+      out.push({key:`pr:${pr.id}`, hp:pr.hp, isMine:false, pos:pr.pos, size:[1,1], kind:'prisoner'});
+  });
   return out;
 }
 
@@ -19123,7 +19184,7 @@ const HERO_PORTRAIT_PATHS = {
 let _painelAbaPedro = 'atributos';
 let _animadoSel = null;
 let _lastAnimadosAtual = null;   // último `animados_atual` visto (espelha a fila do servidor)
-let _prisSel = false;            // prisioneiro liberto selecionado (janela pós-turno do resgatador)
+let _prisSel = null;             // id do refém liberto selecionado (janela pós-turno do resgatador)
 let _lastAnimadosTurn = null;
 function trocarAbaPainel(aba){ _painelAbaPedro = aba; if(GS.gameState) renderMyPanel(GS.gameState); }
 window.trocarAbaPainel = trocarAbaPainel;
@@ -20629,11 +20690,9 @@ function _aliadosNoRaioPaladin(me, raio){
   const pp = me.pos || [0,0];
   const alvos = (st.players || []).filter(a => a && a.alive && a.id !== me.id && a.pos &&
     Math.max(Math.abs(pp[0]-a.pos[0]), Math.abs(pp[1]-a.pos[1])) <= _alcanceComAlturaCli(me, raio, a));
-  const pr = st.prisoner;
-  if(pr && pr.alive && pr.freed && pr.pos &&
-      Math.max(Math.abs(pp[0]-pr.pos[0]), Math.abs(pp[1]-pr.pos[1])) <= _alcanceComAlturaCli(me, raio, pr)){
-    alvos.push({...pr, id:'__prisioneiro__', name:pr.nome || t('ui.hud.prisioneiro'), emoji:'🔗'});
-  }
+  const refens = GS.refensNoMapa(st).filter(pr => pr.freed
+    && Math.max(Math.abs(pp[0]-pr.pos[0]), Math.abs(pp[1]-pr.pos[1])) <= _alcanceComAlturaCli(me, raio, pr));
+  for(const pr of refens) alvos.push({...pr, name:_rotuloRefem(pr, st), emoji:'🔗'});
   return alvos;
 }
 
@@ -20797,9 +20856,10 @@ function _paladinSkillBtn(me, sk){
     const _nivelDef = GS.paladinDefensorNivel ? GS.paladinDefensorNivel() : 1;
     const _splitDef = _nivelDef === 3 ? '50/50' : t('ui.paladino.split_defensor', {split: _nivelDef === 2 ? '65/35' : '75/25'});
     if(me.protetor_ativo){
+      const refemProtegido = GS.refensNoMapa(GS.gameState)
+        .find(pr => String(pr.id) === String(me.protetor_alvo));
       const alvo = (GS.gameState?.players || []).find(p => String(p.id) === String(me.protetor_alvo))
-        || (GS.gameState?.prisoner && String(me.protetor_alvo) === '__prisioneiro__'
-          ? {name:GS.gameState.prisoner.nome || t('ui.paladino.prisioneiro')} : null);
+        || (refemProtegido ? {name:_rotuloRefem(refemProtegido)} : null);
       setBtn(`🛡️ ${sk.name} <small style="color:var(--gold);font-size:.65rem;">● ${t('ui.hud.ativo')}</small>`,
              alvo ? `protegendo ${alvo.name} (${_splitDef})` : '—',
              `manut. 🍖1<br><small style="font-size:.6rem;">${t('ui.hud.parar')}</small>`,
@@ -22515,7 +22575,7 @@ function _chamadoInvernoCandidatos(zona, state = GS.gameState) {
   const add = (kind, entity, positions) => {
     if (!entity || entity.alive === false || Number(entity.hp ?? entity.vida_atual ?? 1) <= 0
         || entity.fosso_oculto || !positions.some(dentro)) return;
-    lista.push({kind, id:String(entity.id ?? (kind === 'prisoner' ? '__prisoner__' : '')), name:entity.name || entity.nome || entity.tipo || kind,
+    lista.push({kind, id:String(entity.id ?? ''), name:entity.name || entity.nome || entity.tipo || kind,
       pos:entity.pos || positions[0], tiles:positions.filter(dentro)});
   };
   (state.players || []).forEach(e => add('player', e, [e.pos]));
@@ -22525,7 +22585,7 @@ function _chamadoInvernoCandidatos(zona, state = GS.gameState) {
     add('monster', e, positions);
   });
   (state.players || []).forEach(p => (p.animados || []).forEach(e => add('animado', e, [e.pos])));
-  if (state.prisoner) add('prisoner', state.prisoner, [state.prisoner.pos]);
+  GS.refensNoMapa(state).forEach(e => add('prisoner', e, [e.pos]));
   return lista;
 }
 
@@ -28144,6 +28204,15 @@ function renderMyPanel(state){
   `;
 
   const sl = $('skills-list'); sl.innerHTML = '';
+  const _refensHtml = _refensMeusHTML(state);
+  if(_refensHtml){
+    const rf = document.createElement('div');
+    rf.innerHTML = _refensHtml;
+    rf.querySelectorAll('[data-refem-modo]').forEach(b => {
+      b.onclick = () => GS.setModoRefem(b.dataset.refemId, b.dataset.modoNovo);
+    });
+    sl.appendChild(rf);
+  }
   const _montaria = (state.monsters || []).find(m => String(m.id) === String(me.cavalo_montado_id)
     && m.type === 'cavalo_sela' && m.hp > 0);
   if(_montaria){
@@ -29567,14 +29636,14 @@ function _somDisparoArmadilha(msg){
   const tipoId=String(msg.tipo_id || ''), eFossoEstacas=tipoId==='fosso_estacas'||tipoId==='fosso_envenenado';
   const impacto = msg.tick || eFossoEstacas ? 0 : ATRASO_IMPACTO_ARMADILHA_MS;
   for(const id of (msg.alvos || [])){
-    const k = id === '__prisioneiro__' ? 'pr:singleton' : _entityKeyById(id);
+    const k = _entityKeyById(id);
     const dorApos=eFossoEstacas?480+ATRASO_DOR_ELEMENTAL_MS:impacto+ATRASO_DOR_ELEMENTAL_MS;
     if(k) _dorArmadilha.set(k, { ate: agora + DOR_ARMADILHA_VALIDADE_MS, apos: agora + dorApos });
   }
   const ev = !msg.tick && SOM_DISPARO_ARMADILHA[String(msg.tipo_id || '')];
   if(!ev) return;
   if(ev === 'acido') for(const id of (msg.alvos || [])){
-    const k = id === '__prisioneiro__' ? 'pr:singleton' : _entityKeyById(id);
+    const k = _entityKeyById(id);
     if(k) _acidoArmadilhaAte.set(k, agora + DOR_ARMADILHA_VALIDADE_MS);
   }
   const pos = Array.isArray(msg.pos) ? msg.pos : undefined;
@@ -30004,7 +30073,7 @@ function endTurn(){
   // Na janela pós-turno do mago, este botão encerra a vez de UMA peça e o
   // servidor seleciona a próxima. Só a última fecha a janela. A decisão mora em
   // gameState.js; aqui só passamos a seleção visual atual.
-  const peca = GS.animadoPendenteParaEncerrar(_prisSel ? 'prisoner' : _animadoSel);
+  const peca = GS.animadoPendenteParaEncerrar(_prisSel ?? _animadoSel);
   const ok = (peca != null) ? GS.encerrarAnimado(peca) : GS.endTurn();
   if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
 }
@@ -33284,7 +33353,7 @@ function _clearGamepadEndTurnConfirm(){ _gamepadEndTurnConfirmUntil = 0; }
 function _gamepadRequestEndTurn(now){
   // Encerrar a vez de UM servo nao e destrutivo — so passa a peca adiante. Pedir
   // dupla-pressao aqui dobraria os apertos de uma fila de 3 servos para 6.
-  if(GS.animadoPendenteParaEncerrar(_prisSel ? 'prisoner' : _animadoSel) != null){
+  if(GS.animadoPendenteParaEncerrar(_prisSel ?? _animadoSel) != null){
     _clearGamepadEndTurnConfirm();
     _gamepadRumble('endTurn');
     endTurn();
@@ -45642,8 +45711,7 @@ function _sonoFindTarget(state, id){
     const a = (p.animados || []).find(x => x && String(x.id) === sid);
     if(a) return a;
   }
-  if(state.prisoner && String(state.prisoner.id) === sid) return state.prisoner;
-  return null;
+  return GS.refensNoMapa(state).find(pr => String(pr.id) === sid) || null;
 }
 
 function _sonoTargetPos(anim, target){
@@ -45656,9 +45724,7 @@ function _sonoTargetMesh(target){
   const sid = String(target.id);
   return g3.entityGroup.children.find(fig => {
     const u = fig && fig.userData;
-    return u && ([u.monId, u.pid, u.animadoId].some(id => id != null && String(id) === sid)
-      || (u.prisoner && GS.gameState?.prisoner?.id != null
-        && String(GS.gameState.prisoner.id) === sid));
+    return u && [u.monId, u.pid, u.animadoId, u.prisonerId].some(id => id != null && String(id) === sid);
   }) || null;
 }
 
@@ -49528,7 +49594,7 @@ function _figSceneKey(fig){
   return u.pid != null ? `p:${u.pid}`
     : u.monId != null ? `m:${u.monId}`
     : u.animadoId != null ? `a:${u.animadoId}`
-    : u.prisoner ? 'pr:singleton' : null;
+    : u.prisonerId != null ? `pr:${u.prisonerId}` : null;
 }
 function _materiaisCena(fig){
   const u = fig.userData;
@@ -50859,10 +50925,11 @@ function getMonsterMesh(monId){
   return g3.entityGroup.children.find(c => c.userData && c.userData.monId === monId) || null;
 }
 
-// Mesh (Group) do prisioneiro no entityGroup 3D (taggeado por userData.prisoner).
-function getPrisonerMesh(){
-  if(!g3 || !g3.entityGroup) return null;
-  return g3.entityGroup.children.find(c => c.userData && c.userData.prisoner) || null;
+// Mesh (Group) de um refém no entityGroup 3D (taggeado por userData.prisonerId).
+function getPrisonerMesh(id){
+  if(!g3 || !g3.entityGroup || id == null) return null;
+  return g3.entityGroup.children.find(c => c.userData && c.userData.prisoner
+    && String(c.userData.prisonerId) === String(id)) || null;
 }
 
 // ── Deslize fiel passo-a-passo de inimigos / servos auto-comandados ──────────
@@ -50999,7 +51066,7 @@ function _tickServerStep(){
     const f = (performance.now() - ent.startTime) / ent.segDur;
     if(f >= segs){
       // Concluiu todos os waypoints recebidos: restaura o y do peão 3D e descarta.
-      const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id);
+      const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id) || getPrisonerMesh(id);
       if(mesh && mesh.userData._stepBaseY !== undefined){
         mesh.position.y = mesh.userData._stepBaseY;
         delete mesh.userData._stepBaseY;
@@ -51010,6 +51077,9 @@ function _tickServerStep(){
   if(GS.gameState) renderMap(GS.gameState);
   _serverStepRaf = any ? _scheduleVisualFrame(_tickServerStep) : null;
 }
+
+// Chave do refém em _mininoAnimState (separada dos ids de servo).
+function _chaveAnimRefem(id){ return `pr:${id}`; }
 
 // ── Animação 2D de minion ao longo de um caminho (lerp contínuo) ────────────
 // Anima 2D contínuo ao longo de um caminho (pts = tiles absolutos, com origem).
@@ -51104,7 +51174,7 @@ function _animarEEnviarMoverPrisioneiroCaminho(pris, passos){
   let cx = pris.pos[0], cy = pris.pos[1];
   for(const [dx,dy] of passos){ cx+=dx; cy+=dy; pts.push([cx,cy]); }
 
-  GS.moverPrisioneiroCaminho(passos);
+  GS.moverPrisioneiroCaminho(passos, pris.id);
 
   const onDone = () => {
     estadoMininoMov.emMovimento = false;
@@ -51113,7 +51183,7 @@ function _animarEEnviarMoverPrisioneiroCaminho(pris, passos){
   };
 
   if(mode3D && g3){
-    const peao = getPrisonerMesh();
+    const peao = getPrisonerMesh(pris.id);
     if(peao){
       estadoMininoMov.peaoAtivo = peao;
       _animarCaminhoPeao3D(peao, pts.slice(1), onDone);   // anima casa a casa (+ som)
@@ -51123,7 +51193,7 @@ function _animarEEnviarMoverPrisioneiroCaminho(pris, passos){
     return;
   }
   // Modo 2D — interpola contínuo ao longo do caminho.
-  _startMininoAnimCaminho2D('prisoner', pts, onDone);
+  _startMininoAnimCaminho2D(_chaveAnimRefem(pris.id), pts, onDone);
 }
 
 // Sequência 3D: anima o peão casa a casa pelo caminho (tiles absolutos).
@@ -52355,9 +52425,7 @@ function renderMap3D(state){
   const meAnimados3D = (state.players.find(p=>p.id===GS.myPid)?.animados||[]).filter(a=>a.vida_atual>0);
   const selAnimado3D = isAnimadosTurn3D && _animadoSel
     ? meAnimados3D.find(a=>a.id===_animadoSel) : null;
-  const meuPris3D = state.prisoner && state.prisoner.alive && state.prisoner.freed
-    && state.prisoner.rescuer_pid === GS.myPid;
-  const selPris3D = isAnimadosTurn3D && _prisSel && meuPris3D ? state.prisoner : null;
+  const selPris3D = isAnimadosTurn3D ? _meuRefemLiberto(state, _prisSel) : null;
 
   const reachable = new Set();
   if(selAnimado3D && selAnimado3D.moves_left > 0)
@@ -52936,7 +53004,7 @@ function renderMap3D(state){
     state.monsters.map(m => [m.type, m.pos, m.hp, m.image, !!m.metamorfose_ativa, m.metamorfose_forma_type, m.vscale, m.size, !!m.oriented, !!m.fill_footprint_3d, m.facing, _queimando(m), _estaParalisado(m),
     m.acido_residual > 0, (m.efeitos_veneno||[]).length > 0, !!m.petrificado, m.altura,
     !!(m.provocado && Number(m.provocado_turnos) > 0), !!m.procurando]),
-    state.prisoner ? [state.prisoner.pos, state.prisoner.alive, state.prisoner.freed, state.prisoner.image, state.prisoner.model3d, _prisSel] : null,
+    GS.refensNoMapa(state).map(pr => [pr.id, pr.pos, pr.freed, pr.image, pr.model3d]), _prisSel,
     state.corpses || [],
     state.hero_corpses || [],
     (state.armadilhas||[]).map(a => [a.id, a.pos, a.ativada, a.so_luccas, a.icone, a.visivel, a.aliada, a.image]),
@@ -53081,18 +53149,17 @@ function renderMap3D(state){
   // Como a lista vem do estado recebido, expira e desaparece junto com a regra.
   _syncEfeitosAtivos3D(state, visionSet);
 
-  // Prisioneiro (Fase 3): peão com imagem editável; só quando visível/explorado.
-  const _pris3D = state.prisoner;
-  if(_pris3D && _pris3D.alive){
+  // Reféns (Fase 3): um peão por refém, com imagem editável; só quando visível/explorado.
+  for(const _pris3D of GS.refensNoMapa(state)){
     const [prx,pry] = _pris3D.pos;
     if(visionSet.has(`${prx},${pry}`) || exploredSet.has(`${prx},${pry}`)){
-      const prisSelNow = !!(_prisSel && isAnimadosTurn3D && _pris3D.freed
-        && _pris3D.rescuer_pid === GS.myPid);
-      const _prisFig3D = obterFig('prisoner',
+      const prisSelNow = selPris3D === _pris3D;
+      const _prisFig3D = obterFig('prisoner:'+_pris3D.id,
         JSON.stringify([_pris3D.freed, _pris3D.image, _pris3D.model3d, _pris3D.facing, prisSelNow]),
         () => {
           const f = build3DPrisoner(g3.T, _pris3D, prisSelNow);
-          f.userData.prisoner = true;   // permite getPrisonerMesh() p/ animação
+          f.userData.prisoner = true;            // permite getPrisonerMesh(id) p/ animação
+          f.userData.prisonerId = _pris3D.id;
           return f;
         },
         prx, pry);
@@ -53263,7 +53330,7 @@ function renderMap3D(state){
     for(const [id] of _serverStepAnim){
       const step = _serverStepPos(id);
       if(!step) continue;
-      const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id);
+      const mesh = getMonsterMesh(id) || getAnimadoMesh(id) || getPeaoMesh(id) || getPrisonerMesh(id);
       if(!mesh) continue;
       if(window.CombatScene && CombatScene.poseFor(_figSceneKey(mesh), performance.now())) continue;
       if(mesh.userData._stepBaseY === undefined){
@@ -53278,6 +53345,7 @@ function renderMap3D(state){
       const stepFacing = _serverStepFacing(id);
       // Herói gira pela raiz (como _makeCharacterPawn3D); monstro pelo corpo.
       if(stepFacing && mesh.userData.giraRaiz) _girarRaizPeao3D(mesh, _facingToRotY(stepFacing));
+      else if(stepFacing && mesh.userData.prisoner) _setPrisonerMeshFacing3D(mesh, stepFacing);
       else if(stepFacing) _setMonsterMeshFacing3D(mesh, stepFacing);
       // Saltinho do peão (efeito de movimentação) — a entidade em deslize não
       // está sob o cursor, então não conflita com o hover-lift.
@@ -58320,16 +58388,17 @@ function handleTileClick(tx, ty, opts){
   // monstro adjacente = ataca; clique em casa adjacente livre = move 1 passo.
   // Só disponível durante o turno dos servos (animados_turn === myPid).
   if(_st && GS.isMyTurn && _st.animados_turn === GS.myPid){
-    // ── Prisioneiro liberto: o resgatador o controla (só movimento) ───────────
-    const _prisC = _st.prisoner;
-    const meuPrisClk = _prisC && _prisC.alive && _prisC.freed && _prisC.rescuer_pid === GS.myPid;
+    // ── Reféns libertos: o resgatador os controla (só movimento) ───────────
     // Ordem estrita: só a peça da vez (GS.animadoAtual) pode ser escolhida.
     const _pecaVez = GS.animadoAtual();
-    if(meuPrisClk && _prisC.pos[0]===tx && _prisC.pos[1]===ty){
-      if(_pecaVez !== 'prisoner'){ toast(t('ui.animar.nao_e_a_vez')); return; }
-      _prisSel = true; _animadoSel = null; renderMap(_st); return;
+    const _prisClicado = GS.refensNoMapa(_st).find(pr => pr.freed && pr.rescuer_pid === GS.myPid
+      && pr.pos[0]===tx && pr.pos[1]===ty);
+    if(_prisClicado){
+      if(String(_pecaVez) !== String(_prisClicado.id)){ toast(t('ui.animar.nao_e_a_vez')); return; }
+      _prisSel = _prisClicado.id; _animadoSel = null; renderMap(_st); return;
     }
-    if(meuPrisClk && _prisSel){
+    const _prisC = _meuRefemLiberto(_st, _prisSel);
+    if(_prisC){
       const expSetP = new Set(_st.explored.map(([x,y])=>`${x},${y}`));
       for(const [rx,ry] of (_st.revealed||[])) expSetP.add(`${rx},${ry}`);
       const passosP = GS.findPath(_st.tiles, expSetP, _prisC.pos[0], _prisC.pos[1], tx, ty,
@@ -58350,7 +58419,7 @@ function handleTileClick(tx, ty, opts){
           window._animadoAbilityPending = null;
         }
         if(String(sobre.id) !== String(_pecaVez)){ toast(t('ui.animar.nao_e_a_vez')); return; }
-        _animadoSel = sobre.id; _prisSel = false;
+        _animadoSel = sobre.id; _prisSel = null;
         renderMap(_st);
         renderMyPanel(_st);
         return;
@@ -59241,16 +59310,16 @@ GS.on('gameState', msg => {
   // numa peca ja gasta -- o botao passaria a levar recusa e, no joystick, o
   // clique agiria com a peca errada. Entao tambem resincroniza quando a selecao
   // deixa de ser uma peca que pode agir.
-  const _selAtualCliente = _prisSel ? 'prisoner' : _animadoSel;
+  const _selAtualCliente = _prisSel ?? _animadoSel;
   const _selObsoleta = (_atualServo != null) && !GS.animadoSelecaoValida(_selAtualCliente);
   if (_atualServo !== _lastAnimadosAtual || _entrouNaJanela || _selObsoleta) {
-    if (_atualServo === 'prisoner') {
+    if (GS.ehRefemId(_atualServo)) {
       _animadoSel = null;
-      _prisSel = true;
+      _prisSel = _atualServo;
       toast(t('ui.hud.mova_prisioneiro'));
     } else if (_atualServo != null) {
       _animadoSel = _atualServo;
-      _prisSel = false;
+      _prisSel = null;
       const nome = (msg.players.find(p => p.id === GS.myPid)?.animados || [])
         .find(a => a.id === _atualServo)?.nome || '';
       toast(t('ui.animar.turno_servos') + ' ' + t('ui.animar.servo_selecionado', {nome}));
@@ -59258,8 +59327,8 @@ GS.on('gameState', msg => {
     if (mode3D && g3) renderMap3D(msg); else renderMap(msg);
     // A câmera vai até o servo (ou refém) da vez, como faz com o herói da vez.
     if (_atualServo != null && (_atualServo !== _lastAnimadosAtual || _entrouNaJanela)) {
-      const _posVez = _atualServo === 'prisoner'
-        ? msg.prisoner?.pos
+      const _posVez = GS.ehRefemId(_atualServo)
+        ? GS.refensNoMapa(msg).find(pr => String(pr.id) === String(_atualServo))?.pos
         : (meNow?.animados || []).find(a => a.id === _atualServo)?.pos;
       if (mode3D && Array.isArray(_posVez) && _posVez[0] >= 0) centralizarCamera3DNoPeao(_posVez);
     }
@@ -59268,7 +59337,7 @@ GS.on('gameState', msg => {
   // Janela de controle encerrou → limpa seleções.
   if (_lastAnimadosTurn === GS.myPid && msg.animados_turn !== GS.myPid) {
     _animadoSel = null;
-    _prisSel = false;
+    _prisSel = null;
     _lastAnimadosAtual = null;
   }
   _lastAnimadosTurn = msg.animados_turn || null;
@@ -61494,7 +61563,7 @@ function _tempestadeReconciliarAlvosPresos(anim,state){
     for(const a of (p.animados||[])) entidades.push({kind:'animado',obj:a});
   }
   for(const m of (state.monsters||[])) entidades.push({kind:'monster',obj:m});
-  if(state.prisoner) entidades.push({kind:'prisoner',obj:state.prisoner});
+  for(const pr of GS.refensNoMapa(state)) entidades.push({kind:'prisoner',obj:pr});
   const desejados=new Map();
   for(const {kind,obj} of entidades){
     if(!obj || obj.alive===false || Number(obj.hp ?? obj.vida_atual ?? 1)<=0
@@ -61510,7 +61579,7 @@ function _tempestadeReconciliarAlvosPresos(anim,state){
       : anim.ciclones.find(c=>_tempestadeAlvoCicloneContem(c,obj,kind));
     if(!cyclone) continue;
     if(!cyclone) continue;
-    const id=obj.id ?? (kind==='prisoner'?'prisoner':null);
+    const id=obj.id ?? null;
     if(id==null) continue;
     desejados.set(_tempestadeTargetKey(kind,id),{
       id:String(id),kind,cycloneId:Number(cyclone.id),
@@ -61547,11 +61616,11 @@ function _tempestadeEntity(state, rec){
   if(kind==='player') return (state.players||[]).find(x=>String(x.id)===id) || null;
   if(kind==='monster') return (state.monsters||[]).find(x=>String(x.id)===id) || null;
   if(kind==='animado') return (state.players||[]).flatMap(x=>x.animados||[]).find(x=>String(x.id)===id) || null;
-  if(kind==='prisoner') return state.prisoner && String(state.prisoner.id)===id ? state.prisoner : null;
+  if(kind==='prisoner') return GS.refensNoMapa(state).find(x=>String(x.id)===id) || null;
   return (state.players||[]).find(x=>String(x.id)===id)
     || (state.monsters||[]).find(x=>String(x.id)===id)
     || (state.players||[]).flatMap(x=>x.animados||[]).find(x=>String(x.id)===id)
-    || (state.prisoner && String(state.prisoner.id)===id ? state.prisoner : null);
+    || GS.refensNoMapa(state).find(x=>String(x.id)===id) || null;
 }
 function _tempestadeTargetPos(state, rec){
   const ent=_tempestadeEntity(state,rec);
@@ -61609,11 +61678,9 @@ function _tempestadeSyncTargetSpins(state){
     const key=u.pid!=null ? _tempestadeTargetKey('player',u.pid)
       : u.monId!=null ? _tempestadeTargetKey('monster',u.monId)
       : u.animadoId!=null ? _tempestadeTargetKey('animado',u.animadoId)
-      : u.prisoner ? _tempestadeTargetKey('prisoner','prisoner') : null;
+      : u.prisonerId!=null ? _tempestadeTargetKey('prisoner',u.prisonerId) : null;
     if(!key) return;
-    const rec=u.prisoner
-      ? [...desired.values()].find(x=>String(x.kind)==='prisoner')
-      : desired.get(key);
+    const rec=desired.get(key);
     if(rec) u.tempestadeCicloneSpin={speedMs:Number(rec.spinMs)||520};
     else if(u.tempestadeCicloneSpin) delete u.tempestadeCicloneSpin;
   });

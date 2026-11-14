@@ -1157,9 +1157,9 @@ const GS = (() => {
           ocupaAliado(a.pos[0], a.pos[1]);
       }
     }
-    // O prisioneiro também ocupa a casa; só o liberto é aliado atravessável.
-    const pr = gameState.prisoner;
-    if (pr && pr.alive && Array.isArray(pr.pos) && pr !== actor) {
+    // Cada refém também ocupa a casa; só o liberto é aliado atravessável.
+    for (const pr of refensNoMapa(gameState)) {
+      if (pr === actor || (actor?.id != null && pr.id === actor.id)) continue;
       if (pr.freed) ocupaAliado(pr.pos[0], pr.pos[1]);
       else occ.add(`${pr.pos[0]},${pr.pos[1]}`);
     }
@@ -2547,7 +2547,7 @@ const GS = (() => {
   }
   // ── Janela pós-turno do mago: a fila de servos ─────────────────────────────
   // O servidor é quem manda: `animados_atual` no game_state diz quem eu controlo
-  // agora (id do servo, "prisoner", ou null). Estes dois helpers são a única
+  // agora (id do servo, id do refém `refem_N`, ou null). Estes dois helpers são a única
   // fonte da decisão "encerrar servo vs. encerrar turno" no cliente.
   function encerrarAnimado(animadoId) {
     return send({ type: 'encerrar_animado', animado_id: animadoId });
@@ -2583,9 +2583,9 @@ const GS = (() => {
     if (animadoJaEncerrou(selId)) return false;
     // Ordem estrita: só a peça da vez é seleção válida.
     if (String(selId) !== String(animadoAtual())) return false;
-    if (selId === 'prisoner') {
-      const pr = gameState.prisoner;
-      return !!(pr && pr.alive && pr.freed && pr.rescuer_pid === myPid);
+    if (ehRefemId(selId)) {
+      const pr = refemPorId(selId);
+      return !!(pr && pr.freed && pr.rescuer_pid === myPid);
     }
     const me = (gameState.players || []).find(p => p.id === myPid);
     return (me?.animados || []).some(
@@ -2600,10 +2600,10 @@ const GS = (() => {
     const me = (gameState.players || []).find(p => p.id === myPid && p.alive);
     if (gameState.animados_turn === myPid) {
       const atual = animadoAtual();
-      if (atual === 'prisoner') {
-        const pr = gameState.prisoner;
-        if (!pr || !pr.alive) return null;
-        return { kind: 'prisoner', id: 'prisoner', pos: pr.pos,
+      if (ehRefemId(atual)) {
+        const pr = refemPorId(atual);
+        if (!pr) return null;
+        return { kind: 'prisoner', id: pr.id, pos: pr.pos,
                  moves_left: pr.moves_left || 0, ref: pr };
       }
       const a = (me?.animados || []).find(x => x && x.id === atual);
@@ -2866,7 +2866,9 @@ const GS = (() => {
   // Caminho inteiro do servo/prisioneiro numa mensagem (como o movePath do
   // herói): é o que permite atravessar aliados sem parar em cima deles.
   function moverAnimadoCaminho(animadoId, path) { send({ type: 'mover_animado_caminho', animado_id: animadoId, path }); }
-  function moverPrisioneiroCaminho(path) { send({ type: 'mover_prisioneiro_caminho', path }); }
+  function moverPrisioneiroCaminho(path, refemId) {
+    send(_comRefem({ type: 'mover_prisioneiro_caminho', path }, refemId));
+  }
   function atacarAnimado(animadoId, targetId, targetPos) {
     const msg = { type: 'atacar_animado', animado_id: animadoId, target_id: targetId };
     if (Array.isArray(targetPos)) msg.target_pos = targetPos.slice(0, 2);
@@ -2875,8 +2877,10 @@ const GS = (() => {
   function usarHabilidadeAnimado(animadoId, abilityId, targetId) {
     send({ type: 'usar_habilidade_animado', animado_id: animadoId, ability_id: abilityId, target_id: targetId });
   }
-  // Controle manual do prisioneiro liberto (janela pós-turno do resgatador) — 1 passo.
-  function moverPrisioneiro(dx, dy) { send({ type: 'mover_prisioneiro', dx, dy }); }
+  // Controle manual do refém liberto (janela pós-turno do resgatador) — 1 passo.
+  function moverPrisioneiro(dx, dy, refemId) {
+    send(_comRefem({ type: 'mover_prisioneiro', dx, dy }, refemId));
+  }
   // ── Armadilhas (Passo 2) — Luccas cria/desarma armadilhas colocáveis ───────
   // tipo: id em ARMADILHAS (servidor). tx/ty opcionais (default = casa do Luccas).
   // venenoId só para 'fosso_envenenado' (consome 1 frasco da bolsa).
@@ -3405,19 +3409,80 @@ const GS = (() => {
   function getRouteExitProgress() { return (gameState && gameState.route_exit_progress) || null; }
   function getStartMode()  { return (gameState && gameState.start_mode) || 'entrance'; }
   function getHeroSpawns() { return (gameState && gameState.hero_spawns) || []; }
-  function getPrisoner()   { return (gameState && gameState.prisoner) || null; }
-  // Decisor puro: há prisioneiro cativo (vivo, não libertado) adjacente (Chebyshev ≤1)
-  // ao herói local, e é o turno dele? Usado pelo renderer para habilitar o botão.
-  function prisioneiroLibertavel() {
-    const pr = getPrisoner();
-    if (!pr || pr.freed || !pr.alive) return false;
-    if (!gameState || gameState.current_turn !== myPid) return false;
-    const me = (gameState.players || []).find(p => p.id === myPid && p.alive);
-    if (!me) return false;
-    return Math.max(Math.abs(me.pos[0] - pr.pos[0]), Math.abs(me.pos[1] - pr.pos[1])) <= 1;
+  // Reféns do mapa: vivos, ainda não salvos e com casa no tabuleiro. Quem chegou
+  // à saída (`salvo`), morreu ou saiu do tabuleiro ([-1,-1]) não aparece.
+  function refensNoMapa(state) {
+    return ((state && state.prisoners) || []).filter(pr => pr && pr.alive && !pr.salvo
+      && Array.isArray(pr.pos) && pr.pos[0] >= 0 && pr.pos[1] >= 0);
   }
-  // Sender: herói adjacente liberta o prisioneiro (ação principal no servidor).
-  function libertarPrisioneiro() { send({ type: 'libertar_prisioneiro' }); }
+  function getPrisoners()  { return refensNoMapa(gameState); }
+  function getPrisoner()   { return getPrisoners()[0] || null; }
+  // O id é de um refém deste mapa (salvo ou não)? Separa refém de servo nas peças
+  // da janela pós-turno, que chegam como id simples.
+  function ehRefemId(id) {
+    if (id == null) return false;
+    return ((gameState && gameState.prisoners) || []).some(pr => pr && String(pr.id) === String(id));
+  }
+  function refemPorId(id) {
+    return getPrisoners().find(pr => String(pr.id) === String(id)) || null;
+  }
+  // Nome que o servidor dá a refém sem nome: é marcador, não nome (o servidor o
+  // troca por T("narracao.refem_nome_padrao") na narração). Valor de dado, não
+  // texto de interface: a interface mostra o rótulo traduzido no lugar.
+  const REFEM_NOME_PADRAO = 'Prisioneiro';
+  function nomeProprioRefem(pr) {
+    const nome = pr && typeof pr.nome === 'string' ? pr.nome.trim() : '';
+    return nome && nome !== REFEM_NOME_PADRAO ? nome : null;
+  }
+  // Rótulo de cada refém da lista (Map id -> texto). Sem nome próprio vale
+  // `padrao` (já traduzido por quem chama); rótulos repetidos ganham número
+  // por `numerar(nome, n)` para o jogador saber qual escolhe.
+  function rotulosRefens(refens, padrao, numerar) {
+    const base = (refens || []).map(pr => nomeProprioRefem(pr) || padrao);
+    const total = new Map();
+    for (const b of base) total.set(b, (total.get(b) || 0) + 1);
+    const vistos = new Map();
+    const out = new Map();
+    (refens || []).forEach((pr, i) => {
+      const b = base[i];
+      if (total.get(b) > 1) {
+        const n = (vistos.get(b) || 0) + 1;
+        vistos.set(b, n);
+        out.set(String(pr.id), numerar(b, n));
+      } else out.set(String(pr.id), b);
+    });
+    return out;
+  }
+  function _comRefem(msg, refemId) {
+    if (refemId != null) msg.refem_id = refemId;
+    return msg;
+  }
+  // Decisor puro: reféns cativos (vivos, não libertados) adjacentes (Chebyshev ≤1)
+  // ao herói local, na vez dele. O renderer mostra o botão e escolhe entre eles.
+  function refensLibertaveis() {
+    if (!gameState || gameState.current_turn !== myPid) return [];
+    const me = (gameState.players || []).find(p => p.id === myPid && p.alive);
+    if (!me || !Array.isArray(me.pos)) return [];
+    return getPrisoners().filter(pr => !pr.freed
+      && Math.max(Math.abs(me.pos[0] - pr.pos[0]), Math.abs(me.pos[1] - pr.pos[1])) <= 1);
+  }
+  function prisioneiroLibertavel() { return refensLibertaveis().length > 0; }
+  // Reféns que o herói em foco libertou e ainda estão no mapa (os que ele guia ou
+  // faz seguir). Com Solo com grupo, `myPid` é o herói em foco.
+  function refensMeus() {
+    return getPrisoners().filter(pr => pr.freed && pr.rescuer_pid === myPid);
+  }
+  // Sender: troca o modo do refém ("guiar" | "seguir"). Só quem o libertou pode.
+  function setModoRefem(refemId, modo) {
+    send({ type: 'set_modo_refem', refem_id: refemId, modo });
+  }
+  // Contagem de resgate da missão ({salvos, mortos, total, meta, destino}) ou null.
+  function getResgate() { return (gameState && gameState.resgate) || null; }
+  // Sender: herói adjacente liberta um refém (ação principal no servidor).
+  // Sem id, o servidor escolhe o primeiro adjacente.
+  function libertarPrisioneiro(refemId) {
+    send(_comRefem({ type: 'libertar_prisioneiro' }, refemId));
+  }
 
   // Há objetivo principal cumprido aguardando o encerramento manual da fase?
   function missionCompletePending() { return !!(gameState && gameState.mission_complete_pending); }
@@ -4362,6 +4427,15 @@ const GS = (() => {
     get startMode()             { return getStartMode(); },
     get heroSpawns()            { return getHeroSpawns(); },
     get prisoner()              { return getPrisoner(); },
+    get prisoners()             { return getPrisoners(); },
+    refensNoMapa,
+    refensLibertaveis,
+    refensMeus,
+    get resgate()               { return getResgate(); },
+    ehRefemId,
+    refemPorId,
+    nomeProprioRefem,
+    rotulosRefens,
     get prisioneiroLibertavel() { return prisioneiroLibertavel(); },
     get missionCompletePending() { return missionCompletePending(); },
     // Fase 4a: campanha em curso (property getter — acessado sem parênteses).
@@ -4641,6 +4715,7 @@ const GS = (() => {
     pendingStory,          // Fase 4b: beat de história pendente (ou null)
     marcarStoryVista,      // Fase 4b: marca um beat como já exibido (de-dup por key)
     libertarPrisioneiro,   // Fase 3: sender (chamado com parênteses)
+    setModoRefem,          // sender: Guiar/Seguir de um refém (chamado com parênteses)
     encerrarMissao,        // encerramento manual da missão (chamado com parênteses)
 
     // ── Saída individual pela escada ──

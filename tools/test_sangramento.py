@@ -56,7 +56,7 @@ async def main():
     await room._processar_sangramento_turno(pr)
     assert pr["hp"] < hp_antes, "o tick precisa ferir o prisioneiro"
     mortes = []
-    async def _morte_pr():
+    async def _morte_pr(_pr):
         mortes.append("prisioneiro")
     async def _morte_monstro(m, k=None):
         mortes.append("monstro")

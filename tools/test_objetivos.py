@@ -202,7 +202,8 @@ async def test_serializacao():
     await entrar_na_masmorra(r, "p1")
     await GameRoom.push_state(r)   # usa o push_state real (não o stub do setup)
     check("game_state traz exit_pos", capturado.get("exit_pos") == [14, 4])
-    check("game_state traz prisoner", capturado.get("prisoner") is not None)
+    check("game_state traz a lista de reféns", len(capturado.get("prisoners") or []) == 1)
+    check("game_state não traz mais o refém único", "prisoner" not in capturado)
     check("game_state traz objectives", capturado.get("objectives") is not None)
 
 async def test_etapas_missao():
@@ -355,7 +356,7 @@ async def test_prisioneiro_armadilha_progressiva():
     hp_imediato = pr["hp"]
     check("dano imediato da incendiária", hp_imediato < 30)
     check("dano progressivo agendado p/ o prisioneiro",
-          any(e.get("alvo_id") == "__prisioneiro__"
+          any(e.get("alvo_id") == pr["id"]
               for a in r.armadilhas for e in a.get("efeitos_ativos", [])))
     await r._processar_efeitos_armadilha_turno()   # tica a(s) rodada(s) seguinte(s)
     check("dano progressivo atinge o prisioneiro", pr["hp"] < hp_imediato)

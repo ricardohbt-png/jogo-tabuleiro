@@ -4234,6 +4234,42 @@ window.LANG_INTERFACE = {
     "en": "🔓 Free the prisoner",
     "pt": "🔓 Libertar prisioneiro"
   },
+  "ui.hud.refem_numerado": {
+    "en": "{nome} {n}",
+    "pt": "{nome} {n}"
+  },
+  "ui.refem.titulo": {
+    "en": "⛓️ Prisoners you rescued",
+    "pt": "⛓️ Prisioneiros resgatados"
+  },
+  "ui.refem.modo_guiar": {
+    "en": "Guiding (you move them)",
+    "pt": "Guiando (você os move)"
+  },
+  "ui.refem.modo_seguir": {
+    "en": "Following you",
+    "pt": "Seguindo você"
+  },
+  "ui.refem.btn_guiar": {
+    "en": "Guide",
+    "pt": "Guiar"
+  },
+  "ui.refem.btn_seguir": {
+    "en": "Follow",
+    "pt": "Seguir"
+  },
+  "ui.refem.contador": {
+    "en": "{salvos}/{total} saved, goal {meta}",
+    "pt": "{salvos}/{total} salvas, meta {meta}"
+  },
+  "ui.refem.contador_mortos": {
+    "en": ", {mortos} lost",
+    "pt": ", {mortos} perdidas"
+  },
+  "ui.hud.libertar_qual": {
+    "en": "🔓 Which prisoner to free?",
+    "pt": "🔓 Libertar qual prisioneiro?"
+  },
   "ui.hud.limite_habilidades": {
     "en": "You can only ready {n} abilities per turn.",
     "pt": "Você só pode armar {n} habilidades por turno."

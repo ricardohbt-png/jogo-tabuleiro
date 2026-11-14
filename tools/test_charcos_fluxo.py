@@ -21,7 +21,7 @@ ALDEIA = G.masmorras()["charcos_4b_aldeia.json"]
 def run(coro): return asyncio.run(coro)
 
 
-def sala():
+def sala(defn=None):
     random.seed(2024)
     r = S.GameRoom("CHARCOS")
     p = S.make_player("p1", "Ana", "warrior", 0)
@@ -33,7 +33,7 @@ def sala():
 
     async def send(pid, m, *a, **k): r.msgs.append(m)
     r.gm_say = noop; r.broadcast = noop; r.send_to = send; r.push_state = noop
-    r.load_authored_dungeon(deepcopy(ALDEIA))
+    r.load_authored_dungeon(deepcopy(defn or ALDEIA))
     r.phase = "playing"
     for rm in r.rooms:
         rm["locked"] = False
@@ -105,71 +105,96 @@ class FerraoTests(unittest.TestCase):
         self.assertTrue(r._monster_hostility_matches(xama, ferrao(r)))
 
 
+# Tabela do spec: salvas -> (renome, xp, ouro, fato)
+TABELA = {6: (8, 225, 90, "charcos_criancas_todas"), 5: (5, 150, 60, "charcos_criancas_salvas"),
+          4: (5, 150, 60, "charcos_criancas_salvas"), 3: (0, 90, 36, "charcos_criancas_perdidas"),
+          2: (-2, 60, 24, "charcos_criancas_perdidas"), 1: (-4, 30, 12, "charcos_criancas_perdidas"),
+          0: (-8, 0, 0, "charcos_criancas_mortas")}
+
+
+def salvar(r, n):
+    """As primeiras n crianças chegam à saída; as outras morrem."""
+    for pr in r.prisoners[:n]:
+        pr.update(freed=True, salvo=True, pos=[-1, -1])
+    for pr in r.prisoners[n:]:
+        pr["alive"] = False
+
+
+def encerrar(n, renome=10):
+    r, p = sala(); r.renome = renome
+    r.world_adventure_progress = {}
+    salvar(r, n)
+    run(r._check_objectives())
+    assert r.mission_complete_pending, f"{n} salvas: o botão Encerrar missão não abriu"
+    xp, ouro = p["xp"], p["gold"]
+    run(r.handle_encerrar_missao("p1"))
+    return r, p["xp"] - xp, p["gold"] - ouro
+
+
 class CriancasTests(unittest.TestCase):
-    def libertar(self, r):
-        r.prisoner["freed"] = True
-        r.prisoner["alive"] = True
-        r.prisoner["pos"] = [r.exit_pos[0] + 1, r.exit_pos[1]]
+    def test_seis_criancas_no_motor(self):
+        r, _ = sala()
+        self.assertEqual(len(r.prisoners), 6)
+        self.assertEqual({pr["nome"] for pr in r.prisoners}, {"Tico", "Bento", "Davi", "Lina", "Maia", "Rosa"})
 
-    def test_criancas_mortas_aplica_a_consequencia_e_a_missao_segue(self):
+    def test_cada_quantidade_paga_a_faixa_certa(self):
+        for n, (renome, xp, ouro, fato) in TABELA.items():
+            with self.subTest(salvas=n):
+                r, dxp, dgold = encerrar(n)
+                self.assertEqual((dxp, dgold), (xp, ouro))
+                self.assertEqual(r.renome, max(0, 10 + renome))
+                self.assertIn(fato, r.fatos)
+
+    def test_vila_hostil_so_com_zero(self):
+        for n in range(7):
+            with self.subTest(salvas=n):
+                r, _, _ = encerrar(n)
+                self.assertEqual(G.FATO_MORTE in r.fatos, n == 0, r.fatos)
+                self.assertEqual("charcos_criancas_perdidas" in r.fatos, n in (1, 2, 3))
+
+    def test_preco_sobe_so_com_o_marcador_de_zero(self):
+        orig = {k: list(v) for k, v in S.CITY_PRICE_MODS.items()}
+        S.CITY_PRICE_MODS.clear(); S.CITY_PRICE_MODS.update(G.modificadores())
+        try:
+            precos = {}
+            for n in (0, 3, 6):
+                fatos = encerrar(n)[0].fatos
+                c = S.GameRoom("VILA"); c.fatos = set(fatos); c.world_location = G.CIDADE
+                precos[n] = next(i["price"] for i in c._itens_da_loja("taverna") if i["id"] == "banquete_viagem")
+            self.assertEqual(precos[0], round(precos[3] * 1.5))
+            self.assertEqual(precos[3], precos[6])
+        finally:
+            S.CITY_PRICE_MODS.clear(); S.CITY_PRICE_MODS.update(orig)
+
+    def test_morte_de_crianca_nao_falha_o_resgate(self):
         r, p = sala(); r.renome = 12
-        run(r._prisioneiro_morre()); run(r._prisioneiro_morre())
-        self.assertEqual(r.renome, 7)
-        self.assertIn(G.FATO_MORTE, r.fatos)
+        run(r._prisioneiro_morre(r.prisoners[0])); run(r._prisioneiro_morre(r.prisoners[1]))
+        self.assertEqual(r.renome, 12, "a consequência só vem da faixa")
+        self.assertFalse(r.rescue_failed)
+        self.assertNotIn(G.FATO_MORTE, r.fatos)
         self.assertEqual(r.phase, "playing")
-        run(r._check_objectives())
-        self.assertEqual(r.objective_status["primary"]["status"], "failed")
-        self.assertEqual(r.objective_status["alternativo"]["status"], "pending")
-        self.assertFalse(r.mission_complete_pending)
 
-    def test_matar_o_ferrao_com_criancas_vivas_paga_o_secundario(self):
-        r, p = sala(); xp0 = p["xp"]
-        self.libertar(r)
+    def test_matar_o_ferrao_paga_o_secundario_na_hora(self):
+        r, p = sala(); xp0, ouro0 = p["xp"], p["gold"]
         ferrao(r)["hp"] = 0
         run(r._check_objectives())
-        self.assertTrue(r.mission_complete_pending)
-        self.assertEqual(p["xp"] - xp0, 150 + 600)
-        self.assertEqual(p["gold"], 60 + 250)
+        self.assertEqual(p["xp"] - xp0, 600)
+        self.assertEqual(p["gold"] - ouro0, 250)
         self.assertIn(G.FATO_FERRAO, r.fatos)
         self.assertEqual(r.renome, 3)
         self.assertTrue(any(i.get("id") == G.ITEM_TROFEU for c in r.chests.values() for i in c["items"]))
+        self.assertFalse(r.mission_complete_pending, "o principal é o resgate: faltam as crianças")
 
-    def test_matar_com_criancas_mortas_so_xp_reduzido(self):
-        r, p = sala(); r.renome = 10; xp0 = p["xp"]; ouro0 = p["gold"]
-        run(r._prisioneiro_morre())
+    def test_ferrao_depois_da_meta_soma_com_a_faixa(self):
+        r, p = sala(); r.renome = 0
+        salvar(r, 4)
+        run(r._check_objectives())
         ferrao(r)["hp"] = 0
         run(r._check_objectives())
-        self.assertTrue(r.mission_complete_pending)
+        xp0 = p["xp"]
+        run(r.handle_encerrar_missao("p1"))
         self.assertEqual(p["xp"] - xp0, 150)
-        self.assertEqual(p["gold"], ouro0)
-        self.assertIn(G.FATO_FERRAO, r.fatos)
-        self.assertEqual(r.renome, 5, "só a perda das crianças; nada da recompensa do Ferrão")
-        self.assertFalse(any(i.get("id") == G.ITEM_TROFEU for c in r.chests.values() for i in c["items"]))
-
-    def test_fugir_pela_escada_com_criancas_mortas_nao_conclui(self):
-        r, p = sala()
-        run(r._prisioneiro_morre())
-        run(r._check_objectives())
-        self.assertFalse(r._objetivo_concluido)
-        self.assertEqual(r.world_adventure_progress.get(G.AVENTURA, 0), 0)
-        self.assertIn(G.FATO_MORTE, r.fatos)
-
-    def test_nova_tentativa_restaura_as_criancas_mas_nao_o_renome(self):
-        r, p = sala(); r.renome = 10
-        run(r._prisioneiro_morre())
-        r.load_authored_dungeon(deepcopy(ALDEIA))
-        self.assertFalse(r.rescue_failed)
-        self.assertTrue(r.prisoner["alive"] if "alive" in r.prisoner else True)
-        self.assertEqual(r.renome, 5)
-        self.assertIn(G.FATO_MORTE, r.fatos)
-
-    def test_criancas_mortas_com_o_ferrao_ja_morto_conclui_na_hora(self):
-        r, p = sala()
-        ferrao(r)["hp"] = 0
-        run(r._check_objectives())
-        run(r._prisioneiro_morre())
-        run(r._check_objectives())
-        self.assertTrue(r.mission_complete_pending)
+        self.assertEqual(r.renome, 3 + 5)
 
 
 class VilaTests(unittest.TestCase):
@@ -229,6 +254,56 @@ class DiscoTests(unittest.TestCase):
             ok, msg = S.validar_dungeon(gravada)
             self.assertTrue(ok, f"{arq}: {msg}")
 
+    def test_aldeia_gravada_tem_as_seis_criancas_alcancaveis(self):
+        """Uma criança que ninguém alcança trava o fim da missão (a Aldeia não tem saída pela escada)."""
+        gravada = self.ler("dungeons/charcos_4b_aldeia.json")
+        self.assertNotIn("prisoner", gravada)
+        prs = gravada["prisoners"]
+        self.assertEqual([p["nome"] for p in prs], ["Tico", "Bento", "Davi", "Lina", "Maia", "Rosa"])
+        self.assertEqual([p["image"] for p in prs], [a + ".png" for a in (
+            "garoto_loiro", "garoto_medieval", "garoto_pele_escura", "menina_cabelos_castanhos",
+            "menina_pele_escura", "menina_ruiva")])
+        self.assertEqual([p.get("model3d") for p in prs], [a + ".glb" for a in (
+            "garoto_loiro", "garoto_medieval", "garoto_pele_escura", "menina_cabelos_castanhos",
+            "menina_pele_escura")] + [None])
+        r, p = sala(gravada)
+        self.assertEqual(len(r.prisoners), 6)
+        ocupadas = {tuple(t) for d in r.decorations for t in r._decor_tiles(d)}
+        ocupadas |= {tuple(m["pos"]) for m in r.monsters.values()}
+        casas = [tuple(pr["pos"]) for pr in prs]
+        self.assertEqual(len(set(casas)), 6)
+        for pr in prs:
+            x, y = pr["pos"]
+            self.assertEqual(pr["room_id"], 2)
+            self.assertTrue(42 <= x <= 52 and 12 <= y <= 23, pr)
+            self.assertFalse(r._blocks_tile(x, y), pr)
+            self.assertNotIn((x, y), ocupadas, pr)
+        # abre toda passagem/porta que a cela tem (mecanismos) e confere a viagem da entrada até cada uma
+        chaves = {k for sp in r.secret_passages for k in sp.get("key_decor_ids", [])}
+        for cond in (gravada.get("door_conditions") or {}).values():
+            chaves |= set(cond.get("key_decor_ids", []))
+        self.assertTrue(chaves, "a cela se abre por mecanismo")
+        for did in sorted(chaves):
+            d = next(d for d in r.decorations if d["id"] == did)
+            perto = next((d["pos"][0] + dx, d["pos"][1] + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)
+                         if (dx or dy) and not r._blocks_tile(d["pos"][0] + dx, d["pos"][1] + dy))
+            p["pos"] = list(perto)
+            run(r.handle_activate_decor_mechanism("p1", did))
+        from collections import deque
+        ent = (gravada["entrance"]["x"], gravada["entrance"]["y"])
+        visto, fila = {ent}, deque([ent])
+        while fila:
+            x, y = fila.popleft()
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = (x + dx, y + dy)
+                if n in visto or not (0 <= n[0] < r.map_w and 0 <= n[1] < r.map_h) or r._blocks_tile(*n):
+                    continue
+                visto.add(n); fila.append(n)
+        for c in casas:
+            self.assertIn(c, visto, f"a criança em {c} não é alcançável da entrada")
+        # e alguma passagem que a gente abriu de fato deixou de ser parede
+        self.assertTrue(any(not r._blocks_tile(*sp["pos"]) for sp in r.secret_passages))
+
     def test_destinos_gravados_e_carregados(self):
         gravados = self.ler("world_adventures.json")
         sem_vazios = lambda v: json.loads(json.dumps(v))
@@ -241,7 +316,8 @@ class DiscoTests(unittest.TestCase):
         self.assertEqual(S.CITY_PRICE_MODS.get(G.CIDADE), G.modificadores()[G.CIDADE], "carregado no boot")
         slots = self.ler("city_scenes.json")[G.CIDADE]["taverna"]["slots"]
         ids = {c["id"] for s in slots for c in s["conversations"]}
-        self.assertTrue({"charcos_gancho", "charcos_gratidao", "charcos_hostil_ysa"} <= ids)
+        self.assertTrue({"charcos_gancho", "charcos_gratidao", "charcos_gratidao_parcial",
+                         "charcos_luto_ysa", "charcos_hostil_ysa"} <= ids)
         self.assertEqual({s["name"] for s in slots}, {"Ysa", "Bento", "Velho Quim"})
         self.assertTrue(any(i["id"] == G.ITEM_TROFEU for i in self.ler("itens_personalizados.json")))
 

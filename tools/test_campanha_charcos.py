@@ -50,10 +50,29 @@ class DadosTests(unittest.TestCase):
             self.assertEqual(c["requisito"]["fato"], G.FATO_MORTE)
             self.assertFalse(c["uma_vez"], "a raiva se repete")
 
-    def test_conversa_calorosa_so_sem_tragedia_e_com_rota(self):
-        c = next(c for c in G.conversas_taverna()["npc_ms42peq8"] if c["id"] == "charcos_gratidao")
-        self.assertEqual(c["requisito"]["sem_fato"], G.FATO_MORTE)
-        self.assertEqual(c["requisito"]["aventura_id"], G.AVENTURA)
+    def test_conversa_calorosa_so_com_vila_agradecida(self):
+        conv = {c["id"]: c for c in G.conversas_taverna()["npc_ms42peq8"]}
+        self.assertEqual(conv["charcos_gratidao"]["requisito"], {"fato": "charcos_criancas_todas"})
+        self.assertEqual(conv["charcos_gratidao_parcial"]["requisito"], {"fato": "charcos_criancas_salvas"})
+
+    def test_luto_na_taverna(self):
+        conv = G.conversas_taverna()["npc_ms42peq8"]
+        luto = next(c for c in conv if c["id"] == "charcos_luto_ysa")
+        self.assertEqual(luto["requisito"], {"fato": "charcos_criancas_perdidas"})
+        self.assertTrue(luto["texto"].strip())
+        r = S.GameRoom("LUTO")
+        visiveis = lambda fatos: [c["id"] for c in conv
+                                  if (setattr(r, "fatos", set(fatos)) or True) and r._avaliar_requisito(c["requisito"])[0]]
+        self.assertIn("charcos_luto_ysa", visiveis({"charcos_criancas_perdidas"}))
+        for fatos in (set(), {"charcos_criancas_todas"}, {"charcos_criancas_salvas"}, {G.FATO_MORTE}):
+            self.assertNotIn("charcos_luto_ysa", visiveis(fatos), fatos)
+        for fatos in ({"charcos_criancas_perdidas"}, {G.FATO_MORTE}, {"charcos_criancas_salvas"}):
+            self.assertNotIn("charcos_gratidao", visiveis(fatos), fatos)
+        self.assertIn("charcos_gratidao", visiveis({"charcos_criancas_todas"}))
+        self.assertIn("charcos_gratidao_parcial", visiveis({"charcos_criancas_salvas"}))
+
+    def test_rota_sem_renome_proprio(self):
+        self.assertEqual(self.dst[G.AVENTURA]["renome_recompensa"], 0)
 
     def test_modificador_da_vila_so_para_o_marcador_da_morte(self):
         self.assertEqual(G.modificadores(), {"vila_dos_charcos": [{"fato": G.FATO_MORTE, "preco_mult": 1.5}]})
@@ -66,25 +85,45 @@ class DadosTests(unittest.TestCase):
         self.assertTrue(item["finesse"])
         self.assertFalse(item["disponibilidade"]["loja"])
 
-    def test_final_tem_slides_condicionais_por_marcador(self):
-        slides = self.dst[G.AVENTURA]["outro_rota"]["slides"]
-        reqs = [(s.get("requisito") or {}, bool(s.get("negar"))) for s in slides]
+    def texto_do_fim(self, fatos):
+        r = S.GameRoom("FIM"); r.fatos = set(fatos)
+        beat = S._story_beat("fim:x", [self.dst[G.AVENTURA]["outro_rota"]], r._requisito_do_slide)
+        return [s["text"] for s in beat["slides"]]
 
-        def texto(fatos):
-            r = S.GameRoom("FIM"); r.fatos = set(fatos)
-            beat = S._story_beat("fim:x", [self.dst[G.AVENTURA]["outro_rota"]], r._requisito_do_slide)
-            return " ".join(s["text"] for s in beat["slides"])
+    def test_final_por_faixa(self):
+        casos = {
+            "todas": ({"charcos_criancas_todas"}, "seis pequenos"),
+            "salvas": ({"charcos_criancas_salvas"}, "a maioria"),
+            "perdidas": ({"charcos_criancas_perdidas"}, "nem todos"),
+            "mortas": ({G.FATO_MORTE}, "não vão voltar"),
+        }
+        textos = {}
+        for nome, (fatos, marca) in casos.items():
+            with self.subTest(faixa=nome):
+                slides = self.texto_do_fim(fatos)
+                junto = " ".join(slides).lower()
+                self.assertIn(marca, junto)
+                for outro, (_, m2) in casos.items():
+                    if outro != nome:
+                        self.assertNotIn(m2, junto, f"{nome} não mostra o slide de {outro}")
+                textos[nome] = slides
+        self.assertEqual(len({tuple(v) for v in textos.values()}), 4)
+        # o amargo só com zero salvas; a vila agradecida/de luto nunca vê o amargo
+        for nome in ("todas", "salvas", "perdidas"):
+            self.assertNotIn("não vão voltar", " ".join(textos[nome]).lower())
+        # "Mais fundo no charco..." fecha o final de todo mundo, menos do amargo
+        for nome in ("todas", "salvas", "perdidas"):
+            self.assertIn("mais fundo", " ".join(textos[nome]).lower())
+        self.assertNotIn("mais fundo", " ".join(textos["mortas"]).lower())
 
-        vitoria = texto({G.FATO_FERRAO})
-        fuga = texto(set())
-        amargo = texto({G.FATO_FERRAO, G.FATO_MORTE})
-        self.assertNotEqual(vitoria, fuga)
-        self.assertNotEqual(vitoria, amargo)
-        self.assertIn("tomba", vitoria.lower())
-        self.assertNotIn("tomba", fuga.lower())
-        self.assertIn("não vão voltar", amargo.lower())
-        self.assertNotIn("não vão voltar", vitoria.lower())
-        self.assertTrue(any(r.get("sem_fato") for r, _ in reqs))
+    def test_ferrao_morto_mantem_o_slide_proprio(self):
+        com = " ".join(self.texto_do_fim({"charcos_criancas_salvas", G.FATO_FERRAO})).lower()
+        sem = " ".join(self.texto_do_fim({"charcos_criancas_salvas"})).lower()
+        amargo = " ".join(self.texto_do_fim({G.FATO_MORTE, G.FATO_FERRAO})).lower()
+        self.assertIn("o ferrão tomba entre as chamas", com)
+        self.assertNotIn("o ferrão tomba entre as chamas", sem)
+        self.assertNotIn("o ferrão tomba entre as chamas", amargo)
+        self.assertIn("não vão voltar", amargo)
 
     def test_conflito_se_masmorra_foi_editada(self):
         with tempfile.TemporaryDirectory() as d:

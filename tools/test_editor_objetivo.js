@@ -9,7 +9,7 @@ function pega(nome) {
   let d = 0, j = src.indexOf('{', i);
   for (let k = j; k < src.length; k++) { if (src[k] === '{') d++; else if (src[k] === '}' && --d === 0) return src.slice(i, k + 1); }
 }
-const corpo = ['objDefaults', 'normalizeObjective', 'objExtras', 'objSerializar', 'seFalharSerializar'].map(pega).join('\n');
+const corpo = ['objDefaults', 'normalizeObjective', 'objExtras', 'faixaSerializar', 'resgateExtras', 'objSerializar', 'seFalharSerializar'].map(pega).join('\n');
 const f = new Function(corpo + '; return {normalizeObjective, objSerializar, seFalharSerializar};')();
 const o = f.normalizeObjective({ type: 'kill_target', renome: 4, fato: ' m ' }, true);
 const s = f.objSerializar(o);

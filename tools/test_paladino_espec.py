@@ -174,9 +174,9 @@ async def main():
     check("protetor II → outro dano 6/4", (dano_alvo, transfer[1]) == (6, 4))
     check("Richard reduz 3 do dano recebido", r._reduzir_dano_protetor(p, 10) == 7)
     # prisioneiro liberto é um alvo válido e usa o mesmo vínculo especial.
-    r = setup(); p = paladin(); p["protetor_ativo"]=True; p["protetor_alvo"]="__prisioneiro__"; r.players["r"]=p
+    r = setup(); p = paladin(); p["protetor_ativo"]=True; p["protetor_alvo"]="refem_0"; r.players["r"]=p
     r.prisoner = {"alive": True, "freed": True, "pos": [0, 1], "hp": 7, "max_hp": 7, "ac": 10}
-    dano_alvo, transfer = await r._processar_dano_protetor("__prisioneiro__", 10, is_attack=False)
+    dano_alvo, transfer = await r._processar_dano_protetor("refem_0", 10, is_attack=False)
     check("protetor aceita prisioneiro", (dano_alvo, transfer[1]) == (7, 3))
     # integração: raio 5 permite proteger a distância 5, raio 4 (base) não
     r = setup(); p = paladin(esp=["paladino_defensor_2"]); p["pos"]=[0,0]

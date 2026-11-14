@@ -17,8 +17,48 @@ from gerar_campanha_sombras import Mapa, monstro, decor, fala, masmorra  # noqa:
 WALL, FLOOR, DOOR = S.WALL, S.FLOOR, S.DOOR
 FATO_MORTE = "charcos_criancas_mortas"
 FATO_FERRAO = "charcos_ferrao_morto"
+FATO_TODAS = "charcos_criancas_todas"
+FATO_SALVAS = "charcos_criancas_salvas"
+FATO_PERDIDAS = "charcos_criancas_perdidas"
 ITEM_TROFEU = "ferrao_do_brejo"
 FERRAO = "ferrao_charcos_adulto"
+
+# As seis crianças do cercado (nome, arte). `image` é `<arte>.png` em assets/pawns/prisioneiros/ e `model3d`
+# é `<arte>.glb` em assets/models3d/prisioneiros/; Rosa só tem a imagem 2D. Os nomes são provisórios.
+CRIANCAS = (("Tico", "garoto_loiro", True), ("Bento", "garoto_medieval", True), ("Davi", "garoto_pele_escura", True),
+            ("Lina", "menina_cabelos_castanhos", True), ("Maia", "menina_pele_escura", True),
+            ("Rosa", "menina_ruiva", False))
+# Casas das crianças no cercado (sala 2), relativas ao canto da sala: duas fileiras de três no meio do piso.
+CASAS_CRIANCAS = ((4, 6), (5, 6), (6, 6), (4, 7), (5, 7), (6, 7))
+# Resgate por faixas: salvas -> renome, XP, ouro e fato (tabela do spec dos vários prisioneiros).
+FAIXAS_ALDEIA = (
+    {"de": 6, "ate": 6, "renome": 8, "xp": 225, "gold": 90, "fato": FATO_TODAS},
+    {"de": 4, "ate": 5, "renome": 5, "xp": 150, "gold": 60, "fato": FATO_SALVAS},
+    {"de": 3, "ate": 3, "renome": 0, "xp": 90, "gold": 36, "fato": FATO_PERDIDAS},
+    {"de": 2, "ate": 2, "renome": -2, "xp": 60, "gold": 24, "fato": FATO_PERDIDAS},
+    {"de": 1, "ate": 1, "renome": -4, "xp": 30, "gold": 12, "fato": FATO_PERDIDAS},
+    {"de": 0, "ate": 0, "renome": -8, "xp": 0, "gold": 0, "fato": FATO_MORTE},
+)
+META_ALDEIA = 4
+
+
+def criancas(casas):
+    """Os seis reféns do cercado, nas `casas` dadas (uma por criança, na ordem de CRIANCAS)."""
+    out = []
+    for (nome, arte, tem_3d), pos in zip(CRIANCAS, casas):
+        pr = {"pos": list(pos), "room_id": 2, "image": arte + ".png"}
+        if tem_3d:
+            pr["model3d"] = arte + ".glb"
+        pr["nome"] = nome
+        out.append(pr)
+    return out
+
+
+def objetivo_resgate_aldeia():
+    """Objetivo principal da Aldeia: as crianças até a saída; a consequência vem só da faixa."""
+    return obj("rescue_prisoner", 0, 0, destino="saida", meta=META_ALDEIA,
+               faixas=[dict(f) for f in FAIXAS_ALDEIA])
+
 
 _TAM = {d["type"]: tuple(d.get("size") or (1, 1)) for d in S.MONSTER_DEFS}
 
@@ -396,10 +436,10 @@ def masmorra_aldeia():
     sino = c.deco("sino_ritualistico", 1, 34 - 11, 9 - 2, did="aldeia_sino", key_objective=True)
     c.espalha("caldeirao", 1, 2); c.espalha("monte_ossos", 1, 4); c.espalha("cerca_reta", 1, 6)
     c.espalha("lapide", 1, 2); c.espalha("pira_chamas", 1, 2)
-    # Cercado das crianças
+    # Cercado das crianças: o piso das seis fica livre de decoração (3×3 em volta do centro).
+    casas_criancas = [m.em(2, dx, dy) for dx, dy in CASAS_CRIANCAS]
+    c.proteger(m.em(2, 5, 6))
     c.espalha("grades_prisao", 2, 3); c.espalha("monte_feno", 2, 2)
-    prisioneiro = m.em(2, 5, 6)
-    c.proteger(prisioneiro)
     c.fala("aldeia_corrente", m.em(1, 14, 19), "Narrador", "⛓️",
            "Uma corrente grossa desce até a base da cova de pedra. Se for puxada, a parede cede — e o que está lá dentro sai.", 3)
     c.fala("aldeia_sino", m.em(1, 21, 6), "Narrador", "🔔",
@@ -407,11 +447,10 @@ def masmorra_aldeia():
     c.fala("aldeia_criancas", m.em(2, 3, 6), "Criança", "🧒",
            "Moço! Moça! Tirem a gente daqui! Aquele bicho… ele é maior que a casa!", 4)
     d = c.finalizar("charcos_4b_aldeia", "A Aldeia dos Bruxos", "ar_livre", 4, {
-        "primary": obj("rescue_prisoner", 150, 60, se_falhar={"renome": -5, "fato": FATO_MORTE}),
+        "primary": objetivo_resgate_aldeia(),
         "secondary": [obj("kill_target", 600, 250, [ITEM_TROFEU], renome=3, fato=FATO_FERRAO)],
-        "alternativo": obj("kill_target", 150, 0, fato=FATO_FERRAO),
     }, ent, sai)
-    d["prisoner"] = {"pos": prisioneiro, "room_id": 2}
+    d["prisoners"] = criancas(casas_criancas)
     d["door_conditions"] = {"41,18": {"type": "decor", "key_decor_ids": [sino["id"]], "keys_mode": "any"}}
     d["secret_passages"] = [{"id": f"passage_cova_{i}", "type": "mechanism", "pos": list(pos),
                              "wall_material": "pedra_normal", "key_decor_ids": [corrente["id"]], "keys_mode": "any"}

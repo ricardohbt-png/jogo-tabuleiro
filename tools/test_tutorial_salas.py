@@ -89,7 +89,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p['licao_atual'],'treino_protetor')
         await r._training_end_turn(p)
         self.assertEqual(r.prisoner['hp'],7)
-        await r.handle_protetor(p['id'],{'target_id':'__prisioneiro__'})
+        await r.handle_protetor(p['id'],{'target_id':'refem_0'})
         hp=p['hp'];await r._training_end_turn(p)
         self.assertEqual(r.prisoner['hp'],3)
         self.assertEqual(p['hp'],hp-1)
@@ -98,7 +98,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         p['action_done']=False
         await r.handle_imposicao_maos(p['id'],{'target_id':p['id']})
         self.assertEqual(p['licao_atual'],'treino_maos')
-        await r.handle_imposicao_maos(p['id'],{'target_id':'__prisioneiro__'})
+        await r.handle_imposicao_maos(p['id'],{'target_id':'refem_0'})
         self.assertGreater(r.prisoner['hp'],3)
         self.assertEqual(p['licao_atual'],'treino_guiar_refem')
         self.assertFalse(r.mission_complete_pending)
@@ -129,7 +129,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
                          'assets/tela de transição/tutorial/mestre_aula_protetor_refem.png')
         self.assertTrue((Path(__file__).resolve().parents[1] /
                          protetor['falante']['cena']).is_file())
-        await r.handle_protetor(p['id'],{'target_id':'__prisioneiro__'})
+        await r.handle_protetor(p['id'],{'target_id':'refem_0'})
         pv_antes=r.prisoner['hp']
         await r._training_end_turn(p)
 
@@ -152,7 +152,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
         await r._training_event(p,'curar',r.prisoner,amount=0)
         self.assertNotIn('narracao.refem_treino_agradece',fala_keys(r))
         p['action_done']=False
-        await r.handle_imposicao_maos(p['id'],{'target_id':'__prisioneiro__'})
+        await r.handle_imposicao_maos(p['id'],{'target_id':'refem_0'})
         self.assertGreater(r.prisoner['hp'],3)
         self.assertIn('narracao.refem_treino_agradece',fala_keys(r))
         self.assertEqual(p['licao_atual'],'treino_guiar_refem')
@@ -160,7 +160,7 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
     async def test_heal_before_protection_does_not_complete(self):
         r,p=room('paladin');await lesson(r,p,'treino_maos',[34,25])
         r.prisoner.update(freed=True,hp=3)
-        await r.handle_imposicao_maos(p['id'],{'target_id':'__prisioneiro__'})
+        await r.handle_imposicao_maos(p['id'],{'target_id':'refem_0'})
         self.assertEqual(p['licao_atual'],'treino_maos')
 
     async def test_lewis_four_real_skills_in_solo(self):
@@ -217,19 +217,19 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
     async def test_snapshot_roundtrip_retains_the_exercise(self):
         r,p=room('paladin');await lesson(r,p,'treino_refem',[34,25])
         await r.handle_libertar_prisioneiro(p['id'])
-        await r.handle_protetor(p['id'],{'target_id':'__prisioneiro__'})
+        await r.handle_protetor(p['id'],{'target_id':'refem_0'})
         await r._training_end_turn(p)
         packed=S.foto_empacotar(r._montar_foto(),onde='masmorra')
         body=S.foto_desempacotar(packed)
         self.assertTrue(body['sala']['training_mode'])
-        self.assertEqual(body['sala']['prisoner']['hp'],3)
+        self.assertEqual(body['sala']['prisoners'][0]['hp'],3)
         self.assertEqual(body['herois']['paladin']['licao_atual'],'treino_maos')
         fresh,q=room('paladin')
         restored=fresh._foto_aplicar_sala(body,{'paladin':'new_connection'},D)
         fresh.players={'new_connection':restored['herois']['paladin']}
         q=fresh.players['new_connection'];q['id']='new_connection'
         q['action_done']=False
-        await fresh.handle_imposicao_maos(q['id'],{'target_id':'__prisioneiro__'})
+        await fresh.handle_imposicao_maos(q['id'],{'target_id':'refem_0'})
         self.assertEqual(q['licao_atual'],'treino_guiar_refem')
         self.assertEqual(set(fresh.training_allies),{'__treino_cleric_1','__treino_cleric_2','__treino_bard_1'})
 

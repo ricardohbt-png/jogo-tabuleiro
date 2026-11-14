@@ -314,7 +314,8 @@ def secao_gancho():
     src = open(S.__file__, encoding="utf-8").read()
     check("exclusões declaradas",
           S._MENSAGENS_SEM_ALERTA_DE_DANO == frozenset(
-              {"end_turn", "comandar_animados", "mover_animado", "atacar_animado"}))
+              {"end_turn", "comandar_animados", "mover_animado", "atacar_animado",
+               "set_modo_refem"}))
     check("foto do HP antes do despacho", "_hp_watch = room._hp_monstros()" in src)
     check("alerta depois do despacho", "await room._alertar_monstros_feridos(pid, _hp_watch)" in src)
 

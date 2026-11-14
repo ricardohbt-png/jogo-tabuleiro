@@ -19,7 +19,7 @@ function extract(name){
 
 const bridge = { id: 'ponte_0', inicio: [0, 0], fim: [1, 0], largura: 1 };
 const S = {
-  tiles: [[1, 1]], entrance: null, exit: null, prisoner: null,
+  tiles: [[1, 1]], entrance: null, exit: null, prisoner: null, prisoners: [],
   heroSpawns: [], routeExits: [], monsters: [], chests: [], traps: [],
   decorations: [], secretPassages: [], falas: [], pontes: [bridge],
   materiais: {}, elevacoes: {}, alturasParede: {}, sel: null,

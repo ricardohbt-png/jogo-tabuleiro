@@ -42,6 +42,9 @@ ARQUIVOS = ("charcos_1_bordas.json", "charcos_2_palafitas.json", "charcos_3_trav
 FATO_GANCHO = "charcos_criancas_sumidas"
 FATO_MORTE = "charcos_criancas_mortas"
 FATO_FERRAO = "charcos_ferrao_morto"
+FATO_TODAS = "charcos_criancas_todas"
+FATO_SALVAS = "charcos_criancas_salvas"
+FATO_PERDIDAS = "charcos_criancas_perdidas"
 AVENTURA = "charcos_mare"      # a cadeia inteira: 5 etapas emendadas, sem descanso entre elas
 ANTIGAS = ("charcos_bordas", "charcos_palafitas", "charcos_travessia", "charcos_aldeia")   # ids de antes da cadeia
 ITEM_TROFEU = "ferrao_do_brejo"
@@ -133,10 +136,18 @@ def destinos():
         ("O último passo é a fuga — ou o último golpe.", "portão da aldeia visto de dentro"),
     ])
     fim_rota = historia("aldeia.fim", [
-        ("Os pequenos voltam para os braços das mães, sujos, assustados e vivos. A Vila dos Charcos "
+        ("Os seis pequenos voltam para os braços das mães, sujos, assustados e vivos. A Vila dos Charcos "
          "acende todas as lamparinas da praça naquela noite.",
-         "mães abraçando crianças na praça de uma vila de pescadores",
-         {"requisito": _req(sem_fato=FATO_MORTE)}),
+         "mães abraçando seis crianças na praça de uma vila de pescadores",
+         {"requisito": _req(fato=FATO_TODAS)}),
+        ("A maioria dos pequenos volta para os braços das mães, sujos, assustados e vivos. Os lugares "
+         "vazios pesam, mas a vila acende as lamparinas da praça e agradece a quem trouxe os seus de volta.",
+         "mães abraçando crianças na praça, algumas olhando para a estrada vazia",
+         {"requisito": _req(fato=FATO_SALVAS)}),
+        ("Nem todos os pequenos voltam. Poucos braços se enchem na praça, e a vila apaga as lamparinas "
+         "uma a uma, em luto. Ninguém lhes vira o rosto, mas ninguém lhes sorri.",
+         "poucas mães abraçando crianças, a praça de uma vila de pescadores às escuras",
+         {"requisito": _req(fato=FATO_PERDIDAS)}),
         ("O Ferrão tomba entre as chamas do piche, e com ele cai o poder dos bruxos. O nome do grupo "
          "vai de boca em boca, e o ferrão da fera passa a ser troféu de quem o venceu.",
          "o Ferrão caído em meio ao fogo, bruxos fugindo",
@@ -163,7 +174,8 @@ def destinos():
                    "dungeons": etapas, "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                    "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
                    "outro_rota": fim_rota, "requisito": S._clean_requirement({"fato": FATO_GANCHO}),
-                   "renome_recompensa": 5},
+                   # O renome do resgate vem das faixas da Aldeia: somar o da rota o contaria duas vezes.
+                   "renome_recompensa": 0},
     }
 
 
@@ -184,7 +196,15 @@ def conversas_taverna():
                       {"sem_fato": FATO_MORTE}, {"renome": 0, "fato": FATO_GANCHO, "item_id": ""}),
             _conversa("charcos_gratidao",
                       "Minha Lia dorme em casa de novo. Não sei como agradecer. A vila inteira fala de vocês.",
-                      {"sem_fato": FATO_MORTE, "aventura_id": AVENTURA}),
+                      {"fato": FATO_TODAS}),
+            _conversa("charcos_gratidao_parcial",
+                      "A maioria dos pequenos voltou para casa. Os que ficaram pelo caminho, a vila chora "
+                      "em silêncio, mas ninguém esquece o que vocês fizeram.",
+                      {"fato": FATO_SALVAS}),
+            _conversa("charcos_luto_ysa",
+                      "Nem todos voltaram. Há casas aqui onde ninguém acende o fogo desde aquela noite. "
+                      "Vocês tentaram, eu sei. Só não me peçam para sorrir agora.",
+                      {"fato": FATO_PERDIDAS}, uma_vez=False),
             _conversa("charcos_hostil_ysa",
                       "Saiam da minha frente. Prometeram trazê-las de volta. Prometeram.",
                       {"fato": FATO_MORTE}, uma_vez=False),
@@ -342,12 +362,7 @@ def aplicar(artefatos, caminhos=None, forcar=False, regen_editor=True):
         aventuras[did] = dest
     _gravar_json(c["adventures"], aventuras)
 
-    for sid, convs in artefatos["conversas"].items():
-        slot = por_id[sid]
-        if slot.get("name") in (None, "", "Novo NPC") and sid in NOMES_NPC:
-            slot["name"] = NOMES_NPC[sid]
-        manter = [cv for cv in (slot.get("conversations") or []) if not str(cv.get("id", "")).startswith("charcos_")]
-        slot["conversations"] = manter + convs
+    mesclar_conversas(por_id, artefatos["conversas"])
     _gravar_json(c["scenes"], cenas)
 
     mods = _ler_json(c["mods"], {})
@@ -369,6 +384,17 @@ def aplicar(artefatos, caminhos=None, forcar=False, regen_editor=True):
         S._regen_dungeons_index()
 
 
+def mesclar_conversas(por_id, conversas):
+    """Põe as conversas `charcos_*` nos slots da taverna (`por_id`: slot -> dict). As conversas
+    do autor ficam; as `charcos_*` de antes são trocadas pelas de agora."""
+    for sid, convs in conversas.items():
+        slot = por_id[sid]
+        if slot.get("name") in (None, "", "Novo NPC") and sid in NOMES_NPC:
+            slot["name"] = NOMES_NPC[sid]
+        manter = [cv for cv in (slot.get("conversations") or []) if not str(cv.get("id", "")).startswith("charcos_")]
+        slot["conversations"] = manter + convs
+
+
 def xp_por_heroi(defn, herois=4):
     """XP que cada herói leva de uma masmorra se vencer TUDO: monstros (fórmula de `_calc_monster_xp`,
     com o nível esperado do grupo) + objetivos (total dividido pelos heróis). Devolve (monstros, objetivos)."""
@@ -379,7 +405,10 @@ def xp_por_heroi(defn, herois=4):
         cr = S.monster_cr(defs[m["type"]])
         monstros += S.XP_MONSTRO_POR_ND * cr * max(0.0, 1.0 + 0.10 * (cr - nivel))
     o = defn["objectives"]
-    objetivos = o["primary"]["xp"] + sum(s["xp"] for s in o.get("secondary", []))
+    prim = o["primary"]
+    # Com faixas, o principal paga a faixa da quantidade salva: na vitória total, a maior.
+    xp_resgate = max((f.get("xp", 0) for f in prim["faixas"]), default=0) if prim.get("faixas") else prim["xp"]
+    objetivos = xp_resgate + sum(s["xp"] for s in o.get("secondary", []))
     return monstros / herois, objetivos / herois
 
 

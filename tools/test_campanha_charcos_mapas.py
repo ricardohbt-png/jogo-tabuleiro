@@ -143,7 +143,7 @@ class MapasTests(unittest.TestCase):
         chefe = [m for m in d["monsters"] if m["type"] == "necromante" and
                  max(abs(m["pos"][0] - sino["pos"][0]), abs(m["pos"][1] - sino["pos"][1])) <= 2]
         self.assertTrue(chefe)
-        self.assertEqual(d["prisoner"]["room_id"], 2)
+        self.assertEqual({pr["room_id"] for pr in d["prisoners"]}, {2})
 
     def test_ha_piche_e_feno_perto_da_cova(self):
         d = self.aldeia()
@@ -156,14 +156,62 @@ class MapasTests(unittest.TestCase):
     def test_objetivos_e_recompensas(self):
         o = self.aldeia()["objectives"]
         self.assertEqual(o["primary"]["type"], "rescue_prisoner")
-        self.assertEqual(o["primary"]["se_falhar"], {"renome": -5, "fato": G.FATO_MORTE})
+        self.assertNotIn("se_falhar", o["primary"], "a consequência vem só da faixa")
         sec = o["secondary"][0]
         self.assertEqual((sec["type"], sec["xp"], sec["renome"], sec["fato"]), ("kill_target", 600, 3, G.FATO_FERRAO))
         self.assertEqual(sec["reward"]["gold"], 250)
         self.assertEqual(sec["reward"]["items"], [{"id": G.ITEM_TROFEU}])
-        alt = o["alternativo"]
-        self.assertEqual((alt["type"], alt["xp"], alt["fato"]), ("kill_target", 150, G.FATO_FERRAO))
-        self.assertEqual(alt["reward"]["gold"], 0)
+        self.assertNotIn("alternativo", o)
+
+    def test_seis_criancas_na_cela(self):
+        d = self.aldeia()
+        self.assertNotIn("prisoner", d)
+        prs = d["prisoners"]
+        self.assertEqual([(p["nome"], p["image"], p.get("model3d")) for p in prs], [
+            ("Tico", "garoto_loiro.png", "garoto_loiro.glb"),
+            ("Bento", "garoto_medieval.png", "garoto_medieval.glb"),
+            ("Davi", "garoto_pele_escura.png", "garoto_pele_escura.glb"),
+            ("Lina", "menina_cabelos_castanhos.png", "menina_cabelos_castanhos.glb"),
+            ("Maia", "menina_pele_escura.png", "menina_pele_escura.glb"),
+            ("Rosa", "menina_ruiva.png", None)])
+        self.assertNotIn("model3d", prs[5], "Rosa só tem arte 2D")
+        sala = next(r for r in d["rooms"] if r["id"] == 2)
+        self.assertEqual((sala["x"], sala["y"], sala["w"], sala["h"]), (42, 12, 11, 12))
+        casas = [tuple(p["pos"]) for p in prs]
+        self.assertEqual(len(set(casas)), 6)
+        raiz = Path(__file__).resolve().parents[1]
+        ocupadas = set()
+        for de in d["decorations"]:
+            ocupadas.add(tuple(de["pos"]))
+        ocupadas |= {tuple(m["pos"]) for m in d["monsters"]} | {tuple(b["pos"]) for b in d["chests"]}
+        for p in prs:
+            x, y = p["pos"]
+            self.assertEqual(p["room_id"], 2)
+            self.assertTrue(42 <= x <= 52 and 12 <= y <= 23, p)
+            self.assertEqual(d["tiles"][y][x], S.FLOOR, p)
+            self.assertNotIn((x, y), ocupadas, p)
+            for arq in (p["image"],) + ((p["model3d"],) if p.get("model3d") else ()):
+                pasta = "pawns" if arq.endswith(".png") else "models3d"
+                self.assertTrue((raiz / "assets" / pasta / "prisioneiros" / arq).exists(), arq)
+
+    def test_tabela_da_aldeia(self):
+        prim = self.aldeia()["objectives"]["primary"]
+        self.assertEqual((prim["type"], prim["meta"], prim["destino"]), ("rescue_prisoner", 4, "saida"))
+        self.assertEqual([(f["de"], f["ate"], f["renome"], f["xp"], f["gold"], f["fato"]) for f in prim["faixas"]], [
+            (6, 6, 8, 225, 90, "charcos_criancas_todas"),
+            (4, 5, 5, 150, 60, "charcos_criancas_salvas"),
+            (3, 3, 0, 90, 36, "charcos_criancas_perdidas"),
+            (2, 2, -2, 60, 24, "charcos_criancas_perdidas"),
+            (1, 1, -4, 30, 12, "charcos_criancas_perdidas"),
+            (0, 0, -8, 0, 0, "charcos_criancas_mortas")])
+        self.assertNotIn("alternativo", self.aldeia()["objectives"])
+
+    def test_ferrao_continua_opcional(self):
+        sec = self.aldeia()["objectives"]["secondary"]
+        self.assertEqual(len(sec), 1)
+        self.assertEqual((sec[0]["type"], sec[0]["xp"], sec[0]["renome"], sec[0]["fato"]),
+                         ("kill_target", 600, 3, G.FATO_FERRAO))
+        self.assertEqual(sec[0]["reward"], {"gold": 250, "items": [{"id": G.ITEM_TROFEU}]})
 
     def test_alcancavel_com_passagem_aberta(self):
         self.assertEqual(G.salas_alcancaveis(self.aldeia(), passagens_abertas=True), {0, 1, 2})
@@ -202,7 +250,8 @@ class CalibracaoTests(unittest.TestCase):
 
     def test_fugir_rende_o_xp_do_resgate_mas_nao_o_do_ferrao(self):
         d = self.mm["charcos_4b_aldeia.json"]
-        self.assertEqual(d["objectives"]["primary"]["xp"], 150)
+        faixas = d["objectives"]["primary"]["faixas"]
+        self.assertEqual(max(f["xp"] for f in faixas), 225)
         self.assertEqual(d["objectives"]["secondary"][0]["xp"], 600)
 
     def test_relatorio_mostra_o_xp(self):

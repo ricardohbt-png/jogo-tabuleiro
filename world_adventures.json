@@ -806,14 +806,38 @@
     "outro_rota": {
       "slides": [
         {
-          "text": "Os pequenos voltam para os braços das mães, sujos, assustados e vivos. A Vila dos Charcos acende todas as lamparinas da praça naquela noite.",
+          "text": "Os seis pequenos voltam para os braços das mães, sujos, assustados e vivos. A Vila dos Charcos acende todas as lamparinas da praça naquela noite.",
           "fit": "contain",
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
             "item_id": "",
-            "fato": "",
-            "sem_fato": "charcos_criancas_mortas",
+            "fato": "charcos_criancas_todas",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "A maioria dos pequenos volta para os braços das mães, sujos, assustados e vivos. Os lugares vazios pesam, mas a vila acende as lamparinas da praça e agradece a quem trouxe os seus de volta.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "charcos_criancas_salvas",
+            "sem_fato": "",
+            "aventura_id": ""
+          }
+        },
+        {
+          "text": "Nem todos os pequenos voltam. Poucos braços se enchem na praça, e a vila apaga as lamparinas uma a uma, em luto. Ninguém lhes vira o rosto, mas ninguém lhes sorri.",
+          "fit": "contain",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "charcos_criancas_perdidas",
+            "sem_fato": "",
             "aventura_id": ""
           }
         },
@@ -863,7 +887,7 @@
       "sem_fato": "",
       "aventura_id": ""
     },
-    "renome_recompensa": 5
+    "renome_recompensa": 0
   },
   "elara_parte1": {
     "id": "elara_parte1",

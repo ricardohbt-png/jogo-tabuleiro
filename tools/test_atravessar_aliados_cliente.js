@@ -38,8 +38,8 @@ function carregar({ ligada, ocupante }) {
                atravessar_aliados: ligada };
   if (ocupante === "heroi") st.players.push({ id: "b", pos: [1, 0], alive: true });
   if (ocupante === "servo") heroi.animados = [{ id: "a", pos: [1, 0], vida_atual: 5 }];
-  if (ocupante === "prisioneiro") st.prisoner = { pos: [1, 0], alive: true, freed: true };
-  if (ocupante === "preso") st.prisoner = { pos: [1, 0], alive: true, freed: false };
+  if (ocupante === "prisioneiro") st.prisoners = [{ id: "refem_0", pos: [1, 0], alive: true, freed: true }];
+  if (ocupante === "preso") st.prisoners = [{ id: "refem_0", pos: [1, 0], alive: true, freed: false }];
   if (ocupante === "monstro") st.monsters.push({ id: "m", pos: [1, 0], hp: 5 });
   sock.onmessage({ data: JSON.stringify(st) });
 }
@@ -84,7 +84,7 @@ check("anfitrião liga a opção", enviados.some(e => e.type === "set_atravessar
 console.log("\n[5] game.js usa as mensagens de caminho e tem o botão do anfitrião");
 const gj = fs.readFileSync(path.join(raiz, "game.js"), "utf8");
 check("clique do servo usa moverAnimadoCaminho", gj.includes("GS.moverAnimadoCaminho(animado.id, passos)"));
-check("clique do prisioneiro usa moverPrisioneiroCaminho", gj.includes("GS.moverPrisioneiroCaminho(passos)"));
+check("clique do prisioneiro usa moverPrisioneiroCaminho", gj.includes("GS.moverPrisioneiroCaminho(passos, pris.id)"));
 check("não sobra envio passo a passo do servo", !/for\(const \[dx,dy\] of passos\) GS\.moverAnimado\(/.test(gj));
 check("painel ⚙️ tem o botão", gj.includes("cfg-atravessar-btn") && gj.includes("function _refreshAtravessarOption"));
 check("o painel se atualiza junto da visão compartilhada",
