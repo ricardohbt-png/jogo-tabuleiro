@@ -3259,17 +3259,28 @@ const GS = (() => {
     return (guildOwnedOf(myPid).especializacoes || []).includes('disparo_duplo');
   }
 
+  // Variantes de material (Aço Damasco, Freixo Negro, Prata...) seguem as regras da
+  // arma-base: espelho de `_arma_base_id` do servidor.
+  const MATERIAL_SUFIXOS_ARMA = ['_aco_damasco', '_obsidiana_ferro', '_liga_titanio', '_freixo_negro', '_cedro_rubro', '_cerne_tita', '_prata'];
+  function armaBaseId(id){
+    const wid = String(id || '');
+    if(wid === 'machadinha_ana_prata') return 'machadinha_arremesso_ana';
+    for(const suf of MATERIAL_SUFIXOS_ARMA){
+      if(wid.endsWith(suf) && wid.length > suf.length) return wid.slice(0, -suf.length);
+    }
+    return wid;
+  }
+  const BESTAS_BASE_IDS = ['besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista'];
+  const ARCOS_DIAGONAL_REDUZIDA_IDS = ['arco_curto', 'longbow', 'arco_composto_curto', 'arco_composto_longo', 'arco_bruto_combatente'];
+  const BESTAS_DE_MAO_IDS = ['hand_crossbow', 'besta_duelista'];
+
   function isOffhandWeapon(item, gearSnapshot){
     if(!item || !(item.die || item.dano)) return false;
     const iid = (item.id || '').toLowerCase();
     const nm = (item.name || '').toLowerCase();
-    if(iid === 'hand_crossbow'){
+    if(BESTAS_DE_MAO_IDS.includes(armaBaseId(iid))){
       const gear = gearSnapshot || GS.me?.gear || {};
-      return hasDisparoDuplo() && ['hand_crossbow','besta_duelista'].includes(gear.weapon?.id);
-    }
-    if(iid === 'besta_duelista'){
-      const gear = gearSnapshot || GS.me?.gear || {};
-      return hasDisparoDuplo() && ['hand_crossbow','besta_duelista'].includes(gear.weapon?.id);
+      return hasDisparoDuplo() && BESTAS_DE_MAO_IDS.includes(armaBaseId(gear.weapon?.id));
     }
     return !!item.off_hand_weapon || isDagger(item) || iid === 'chicote' || nm.includes('chicote');
   }
@@ -3293,8 +3304,8 @@ const GS = (() => {
     const gear = gearSnapshot || {};
     if(slotKey === 'weapon'){
       if(cat !== 'weapon') return false;
-      if(['hand_crossbow','besta_duelista'].includes(gear.off_hand?.id)
-          && !['hand_crossbow','besta_duelista'].includes(item.id)) return false;
+      if(BESTAS_DE_MAO_IDS.includes(armaBaseId(gear.off_hand?.id))
+          && !BESTAS_DE_MAO_IDS.includes(armaBaseId(item.id))) return false;
       if(item.two_handed){
         const off = gear.off_hand;
         const offOcupaMao = !!off && (off.kind === 'shield' || off.item_slot === 'shield' || !!off.die);
@@ -3548,11 +3559,11 @@ const GS = (() => {
       const alcanceTotal = alcance + vento;
       if (alcanceTotal < 1) return false;
       const distancia = Math.max(dx, dy);
-      if (weapon.id === 'besta' || weapon.id === 'besta_pesada' || weapon.id === 'besta_repetidora_patrulha' || weapon.id === 'besta_repetidora_guerra' || weapon.id === 'hand_crossbow' || weapon.id === 'besta_duelista')
+      if (BESTAS_BASE_IDS.includes(armaBaseId(weapon.id)))
         return (dx === 0 || dy === 0) && distancia <= alcanceTotal;
       if (weapon.chain_hook_range)
         return (dx === 0 || dy === 0 || dx === dy) && distancia <= alcanceTotal;
-      if ((weapon.id === 'arco_curto' || weapon.id === 'longbow' || weapon.id === 'arco_composto_curto' || weapon.id === 'arco_composto_longo' || weapon.id === 'arco_bruto_combatente') && !weapon.range_all_directions) {
+      if (ARCOS_DIAGONAL_REDUZIDA_IDS.includes(armaBaseId(weapon.id)) && !weapon.range_all_directions) {
         const limite = (dx === 0 || dy === 0) ? alcanceTotal : Math.ceil(alcanceTotal / 2);
         return distancia <= limite;
       }
@@ -3564,7 +3575,7 @@ const GS = (() => {
     if (degraus) return degraus <= 1 && weapon.reach === 'lanca' && Math.max(dx, dy) === 1;
     if (weapon.reach === 'lanca')
       return Math.max(dx, dy) === 1 || (dx === 0 && dy === 2) || (dx === 2 && dy === 0);
-    if (weapon.id === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
+    if (armaBaseId(weapon.id) === 'lanca_curta' || weapon.reach === 'mangual' || weapon.reach === 'cajado')
       return Math.max(dx, dy) === 1;
     return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
   }
@@ -3590,7 +3601,7 @@ const GS = (() => {
   }
 
   function weaponRangePotionBonus(myP, weapon = myP?.weapon || {}) {
-    const hasProjectile = ['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista'].includes(weapon?.id)
+    const hasProjectile = [...ARCOS_DIAGONAL_REDUZIDA_IDS, ...BESTAS_BASE_IDS].includes(armaBaseId(weapon?.id))
       || ['arrow', 'bolt'].includes(weapon?.projectile)
       || ['flechas', 'virotes'].includes(weapon?.ammo);
     return hasProjectile && Number(myP?.essencia_vento_rodadas || 0) > 0 ? 2 : 0;
@@ -3891,6 +3902,8 @@ const GS = (() => {
       arco_bruto_combatente: ['flechas', 'flechas_incendiarias', 'flechas_prata', 'flechas_explosivas', 'flechas_magicas', 'flechas_magicas_mais_2'],
       besta: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
       besta_pesada: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_repetidora_patrulha: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
+      besta_repetidora_guerra: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
       hand_crossbow: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
       besta_duelista: ['virotes', 'virotes_incendiarios', 'virotes_prata', 'virotes_explosivos', 'virotes_magicos', 'virotes_magicos_mais_2'],
     };
@@ -3913,10 +3926,10 @@ const GS = (() => {
     const armas = [];
     for (const { slot, item } of slots) {
       if (!item || !item.die) continue;
-      const ranged = Object.prototype.hasOwnProperty.call(MUNICAO, item.id);
+      const ranged = Object.prototype.hasOwnProperty.call(MUNICAO, armaBaseId(item.id));
       // Arco e besta recebem veneno pela munição; só a besta de mão na mão secundária
       // aceita o veneno direto, e apenas pelo Veneno Rápido (o frasco exige munição).
-      if (ranged && !(slot === 'off_hand' && ['hand_crossbow','besta_duelista'].includes(item.id) && metodo === 'veneno_rapido')) continue;
+      if (ranged && !(slot === 'off_hand' && BESTAS_DE_MAO_IDS.includes(armaBaseId(item.id)) && metodo === 'veneno_rapido')) continue;
       const ativos = Array.isArray(item.poison_slots) ? item.poison_slots : [];
       const cabe = !opts.venenoId || ativos.includes(opts.venenoId) || new Set(ativos).size < limiteDistintos;
       armas.push({ tipo: 'arma', slot, item, ativos, cabe, limite: limiteDistintos, ranged });
@@ -3934,8 +3947,8 @@ const GS = (() => {
       });
     }
     for (const { slot, item } of slots) {
-      if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, item.id)) continue;
-      const validos = MUNICAO[item.id];
+      if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, armaBaseId(item.id))) continue;
+      const validos = MUNICAO[armaBaseId(item.id)];
       const legado = Array.isArray(item.poison_slots) && item.poison_slots.length > 0;
       const pilhas = [];
       const off = gear.off_hand;
@@ -4486,6 +4499,7 @@ const GS = (() => {
     compareItemStats,
     isDagger,
     isOffhandWeapon,
+    armaBaseId,
     setKnownSpells,
     focarHeroi,
     souAnfitriao,

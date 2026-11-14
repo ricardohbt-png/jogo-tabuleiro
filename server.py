@@ -1729,6 +1729,26 @@ RANGED_AMMO = {
     "besta_duelista": ["virotes", "virotes_incendiarios", "virotes_prata", "virotes_explosivos", "virotes_magicos", "virotes_magicos_mais_2"],
 }
 HAND_CROSSBOW_IDS = frozenset(("hand_crossbow", "besta_duelista"))
+# Regras por tipo de arma valem também para as variantes de material (Aço Damasco,
+# Obsidiana, Titânio, Freixo Negro, Cedro Rubro, Cerne de Titã e Prata): comparar o id
+# literal deixava a variante sem a regra da base (diagonal, munição da bolsa, veneno...).
+_BESTAS_BASE_IDS = frozenset(("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista"))
+_ARCOS_DIAGONAL_REDUZIDA_IDS = frozenset(("arco_curto", "longbow", "arco_composto_curto", "arco_composto_longo", "arco_bruto_combatente"))
+_MATERIAL_SUFIXOS_ARMA = ("_aco_damasco", "_obsidiana_ferro", "_liga_titanio", "_freixo_negro", "_cedro_rubro", "_cerne_tita", "_prata")
+_ARMA_BASE_ESPECIAL = {"machadinha_ana_prata": "machadinha_arremesso_ana"}
+
+
+def _arma_base_id(weapon_id):
+    """Id da arma-base de uma variante de material (`besta_pesada_freixo_negro` ->
+    `besta_pesada`). Id sem sufixo de material volta igual."""
+    wid = str(weapon_id or "")
+    if wid in _ARMA_BASE_ESPECIAL:
+        return _ARMA_BASE_ESPECIAL[wid]
+    for sufixo in _MATERIAL_SUFIXOS_ARMA:
+        if wid.endswith(sufixo) and len(wid) > len(sufixo):
+            return wid[:-len(sufixo)]
+    return wid
+
 
 # ── Projétil visual de um ataque (frente B — só afeta a animação do cliente) ──
 # Devolve {"kind": ...} ou None. Herói: pela arma (id nativo ou `ammo` do
@@ -5209,13 +5229,16 @@ _NORM_ELEMENTO = {
 # usam tambÃ©m os metadados `corrosion_materials` no catÃ¡logo abaixo.
 CORROSAO_ARMADURA_ORGANICA = {"leather", "cloak", "leather_plate", "leather_mail", "monster_leather_plate"}
 CORROSAO_ARMA_MADEIRA = {"cajado_madeira", "bordao", "staff", "instrumento",
-                         "arco_curto", "longbow", "besta", "hand_crossbow", "besta_duelista"}
+                         "arco_curto", "longbow", "besta", "hand_crossbow", "besta_duelista",
+                         "arco_composto_curto", "arco_composto_longo", "arco_bruto_combatente",
+                         "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra"}
 # Devorador de Metal: corrÃ³i metal (madeira/couro/ossos sÃ£o imunes).
 CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "leather_plate", "leather_mail", "monster_leather_plate",
                            "escudo_p", "escudo_g"}
 CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machadinha_arremesso_ana", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
-                       "bastsword", "espada2m", "warhammer", "mangual", "maca", "rapieira_do_dueto"}
+                       "bastsword", "espada2m", "warhammer", "mangual", "maca", "rapieira_do_dueto",
+                       "marreta", "lanca", "lanca_curta", "alabarda", "gancho_corrente", "gancho_escorpiao_superior"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
 
 MONSTER_DEFS = [
@@ -8162,7 +8185,8 @@ HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
 })
 
 # Materiais de dano: Obsidiana de Ferro para armas metálicas e Cedro Rubro
-# para arcos/bestas. Mantêm o perfil de combate da base, com +1 dano e N=1/M=2.
+# para arcos/bestas. Mantêm o perfil de combate da base, com +1 dano; o primeiro
+# golpe corrosivo destrói a arma (como a Obsidiana/Cedro de armaduras e escudos).
 _MATERIAL_WEAPON_DAMAGE_VARIANTS = [
     ("dagger", "dagger_obsidiana_ferro", "Adaga de Obsidiana de Ferro", "assets/itens/adaga_obsidiana_ferro.png", "metal"),
     ("shortsword", "shortsword_obsidiana_ferro", "Espada Curta de Obsidiana de Ferro", "assets/itens/espada_curta_obsidiana_ferro.png", "metal"),
@@ -8204,12 +8228,12 @@ for _base_id, _variant_id, _variant_name, _variant_icon, _material in _MATERIAL_
     _variant.update({
         "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
         "price": int(_base_shop.get("price", 0) or 0) + 20,
-        "damage_bonus": 1, "corrosao_resistente": 1,
-        "corrosao_niveis_penalidade": 2, "material": _material,
+        "damage_bonus": 1, "corrosao_resistente": 0,
+        "corrosion_max": 1, "corrosao_niveis_penalidade": 1, "material": _material,
         "descricao": (
             f"{_variant_name}: {_profile} Variante não mágica de {_material_name}; "
-            "+1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois "
-            "níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+            "+1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo "
+            "destrói a arma."
         ),
     })
     SHOP_WEAPONS.append(_variant)
@@ -8217,8 +8241,8 @@ for _base_id, _variant_id, _variant_name, _variant_icon, _material in _MATERIAL_
     _combat_variant = deepcopy(_base_combat)
     _combat_variant.update({
         "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
-        "damage_bonus": 1, "corrosao_resistente": 1,
-        "corrosao_niveis_penalidade": 2, "material": _material,
+        "damage_bonus": 1, "corrosao_resistente": 0,
+        "corrosion_max": 1, "corrosao_niveis_penalidade": 1, "material": _material,
         "descricao": _variant["descricao"],
     })
     WEAPONS[_variant_id] = _combat_variant
@@ -9137,6 +9161,7 @@ def _veneno_com_melhorias(veneno_id):
     potencia, _ = _VENENO_MELHORIAS_POTENCIA.get(potencia_key, (1, 1))
     duracao_bonus = _VENENO_MELHORIAS_DURACAO.get(duracao_key, (0, 1))[0]
     veneno["dificuldade"] = int(veneno.get("dificuldade", 10)) + cd_bonus
+    veneno["_melhoria_cd"] = cd_bonus
     veneno["_potencia"] = 1.5 if potencia_key == "fortalecido" else 1
     veneno["_melhoria_potencia"] = potencia_key
     veneno["_duracao_bonus"] = duracao_bonus
@@ -9239,23 +9264,102 @@ def _preparar_item_veneno(item, upgrades):
     result["name"] = defn["nome"]
     result["price"] = math.ceil(int(item.get("price", 0)) * mult)
     result["dificuldade"] = defn.get("dificuldade", 10)
-    result["descricao"] = _descricao_veneno_melhorado(defn)
+    # Sem melhorias o frasco é o item da loja; a descrição escrita pelo autor
+    # (detalhes de visão, reteste etc.) é mais completa que a gerada.
+    if variant_id == base_item_id and item.get("descricao"):
+        result["descricao"] = item["descricao"]
+    else:
+        result["descricao"] = _descricao_veneno_melhorado(defn)
     return result
 
+_VENENO_ATRIBUTOS_TEXTO = {
+    "forca": "Força", "constituicao": "Constituição", "destreza": "Destreza",
+    "inteligencia": "Inteligência", "ataque": "ataque", "movimento": "movimento",
+    "dano": "dano", "ca": "CA", "percepcao": "percepção",
+}
+
+
+def _somar_bonus_duracao(duracao, bonus):
+    """Texto da duração final: o dado/valor da ficha mais o bônus da melhoria."""
+    bonus = int(bonus or 0)
+    if not bonus:
+        return str(duracao)
+    if isinstance(duracao, (int, float)) and not isinstance(duracao, bool):
+        return str(int(duracao) + bonus)
+    m = re.fullmatch(r"\s*(\d+d\d+)([+-]\d+)?\s*", str(duracao))
+    if not m:
+        return f"{duracao}+{bonus}"
+    soma = int(m.group(2) or 0) + bonus
+    return f"{m.group(1)}{soma:+d}" if soma else m.group(1)
+
+
 def _descricao_veneno_melhorado(veneno):
+    """Descrição do frasco com os números FINAIS (CD, duração, dano/efeito), não
+    os da ficha base: é o que o jogador lê na loja, na bolsa e no tooltip."""
     op = veneno.get("operacao")
-    dur = veneno.get("duracao", "-")
-    partes = [f"Fortitude CD {veneno.get('dificuldade', 10)}."]
-    if op == "dano": partes.append(f"{veneno.get('dano', '1d4')} de dano por rodada por {dur} rodadas.")
-    elif op == "reduzir": partes.append(f"Reduz {veneno.get('atributo', 'atributo')} em {veneno.get('valor', 0)} por {dur} rodadas.")
-    elif op == "penalidade": partes.append(f"Penalidades: {', '.join(f'{v:+d} {a}' for a, v in veneno.get('atributos', []))}; duração {dur} rodadas.")
-    elif op == "petrificar": partes.append(f"Falha: petrificado por {dur} rodada(s). Sucesso: {veneno.get('penalidade_falha', [])}.")
-    elif op == "cegar": partes.append(f"Falha: cego por {dur} rodada(s), ataques {veneno.get('penalidade_ataque', -4)}. Sucesso: penalidade parcial; duração {veneno.get('duracao_falha', '1d4')}.")
-    else: partes.append(f"Efeito: {op}; duração {dur}.")
-    if veneno.get("_duracao_bonus"):
-        partes.append(f"Duração adicional: +{veneno['_duracao_bonus']} rodadas.")
-    if veneno.get("_melhoria_potencia") == "fortalecido": partes.append("Efeito ×1,5 (arredondado para cima).")
-    elif veneno.get("_melhoria_potencia") == "concentrado": partes.append("Efeito dobrado; dados de dano em quantidade dobrada.")
+    pot = float(veneno.get("_potencia", 1) or 1)
+    bonus = int(veneno.get("_duracao_bonus", 0) or 0)
+    cd = veneno.get("dificuldade", 10)
+    escala = lambda v: math.ceil(abs(v) * pot) * (1 if v >= 0 else -1)
+    pot_txt = f" (×{str(pot).rstrip('0').rstrip('.').replace('.', ',')}, arredondado para cima)" if pot != 1 else ""
+    nome_attr = lambda a: _VENENO_ATRIBUTOS_TEXTO.get(a, a)
+    pares = lambda lista: ", ".join(f"{escala(v):+d} {nome_attr(a)}" for a, v in (lista or []))
+    dur = _somar_bonus_duracao(veneno.get("duracao", 1), bonus)
+
+    if op == "dano":
+        dano = veneno.get("dano", "1d4")
+        if veneno.get("save_neutraliza_por_rodada"):
+            partes = [f"Fortitude CD {cd} a cada rodada neutraliza.",
+                      f"{dano} de dano por rodada{pot_txt} por {dur} rodadas."]
+        else:
+            partes = [f"Fortitude CD {cd} anula." if veneno.get("anula") else f"Fortitude CD {cd}.",
+                      f"Se falhar: {dano} de dano por rodada{pot_txt} durante {dur} rodadas."]
+    elif op == "reduzir":
+        partes = [f"Fortitude CD {cd} anula." if veneno.get("anula") else f"Fortitude CD {cd}.",
+                  f"Reduz {nome_attr(veneno.get('atributo', 'atributo'))} em {veneno.get('valor', 0)}"
+                  f"{pot_txt} por {dur} rodadas."]
+    elif op == "penalidade":
+        partes = [f"Fortitude CD {cd} anula." if veneno.get("anula") else f"Fortitude CD {cd}.",
+                  f"Penalidades: {pares(veneno.get('atributos'))} por {dur} rodadas."]
+    elif op == "petrificar":
+        dur_falha = _somar_bonus_duracao(veneno.get("duracao_falha", 1), bonus)
+        partes = [f"Fortitude CD {cd}.",
+                  f"Falha: petrificado por {dur} rodada(s). "
+                  f"Sucesso: {pares(veneno.get('penalidade_falha')) or 'sem efeito'} por {dur_falha} rodada(s)."]
+    elif op == "cegar":
+        dur_falha = _somar_bonus_duracao(veneno.get("duracao_falha", 1), bonus)
+        falha = [f"cego por {dur} rodada(s)"]
+        if veneno.get("vision_radius_override", 1):
+            falha.append(f"visão de {int(veneno.get('vision_radius_override', 1))} quadrado(s)")
+        falha.append(f"{-escala(abs(veneno.get('penalidade_ataque', -4))):+d} em ataques")
+        if veneno.get("percepcao_penalty", -5):
+            falha.append(f"{-escala(abs(int(veneno.get('percepcao_penalty', -5)))):+d} de percepção")
+        if veneno.get("bloqueia_distancia"):
+            falha.append("sem ataques à distância")
+        sucesso = [pares(veneno.get("penalidade_falha")) or "penalidade parcial",
+                   f"{dur_falha} rodada(s)"]
+        if veneno.get("vision_radius_partial_penalty"):
+            sucesso.insert(1, f"{-math.ceil(abs(veneno['vision_radius_partial_penalty']) * pot):+d} de visão")
+        partes = [f"Fortitude CD {cd}.", f"Falha: {', '.join(falha)}.",
+                  f"Sucesso: {', '.join(sucesso)}."]
+        reteste = veneno.get("retest_on_expire")
+        if isinstance(reteste, dict):
+            partes.append("Ao final, novo Fortitude CD "
+                          f"{int(reteste.get('dificuldade', cd) or cd) + int(veneno.get('_melhoria_cd', 0) or 0)}.")
+    else:
+        partes = [f"Fortitude CD {cd}.", f"Efeito: {op}; duração {dur} rodadas."]
+
+    melhorias = []
+    if veneno.get("_melhoria_cd"):
+        melhorias.append(f"CD +{veneno['_melhoria_cd']}")
+    if pot != 1:
+        melhorias.append(f"efeito ×{str(pot).rstrip('0').rstrip('.').replace('.', ',')}")
+    elif veneno.get("_melhoria_potencia") == "concentrado":
+        melhorias.append("dados e valores dobrados")
+    if bonus:
+        melhorias.append(f"duração +{bonus} rodadas")
+    if melhorias:
+        partes.append(f"Melhorias: {', '.join(melhorias)}.")
     return " ".join(partes)
 
 # â”€â”€â”€ MASMORRAS AUTORADAS (Fase 1 do editor) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -17588,7 +17692,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if ammo_types:
             off = (p.get("gear") or {}).get("off_hand") or {}
             off_type = off.get("ammo_type")
-            is_crossbow = (weapon or {}).get("id") in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")
+            is_crossbow = _arma_base_id((weapon or {}).get("id")) in _BESTAS_BASE_IDS
             has_quiver = bool(_quivers_equipped(p))
             if is_crossbow and off_type in ammo_types and int(off.get("ammo_count", 0) or 0) > 0:
                 ammo_preview = off
@@ -24995,7 +25099,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Bestas de mão e bestas aceitam dois venenos de três disparos com
         Veneno Rápido III; os demais ataques à distância mantêm três cargas."""
         if weapon_id in RANGED_AMMO:
-            if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista") and tem_espec(p, "ladino_veneno_3"):
+            if _arma_base_id(weapon_id) in _BESTAS_BASE_IDS and tem_espec(p, "ladino_veneno_3"):
                 return VENENO_CARGAS * 2
             return VENENO_CARGAS
         return self._capacidade_poison_melee(p)
@@ -25010,7 +25114,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         weapon_id = item.get("id", "")
         allows_two = (tem_espec(p, "ladino_veneno_3")
                       and (weapon_id not in RANGED_AMMO
-                           or weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")))
+                           or _arma_base_id(weapon_id) in _BESTAS_BASE_IDS))
         distinct_limit = 2 if allows_two else 1
         active = self._poison_slots_do_item(p, slot)
         # Reaplicar o veneno presente renova apenas essa dose. Um novo veneno
@@ -25037,7 +25141,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         is_ranged = weapon_id in RANGED_AMMO
         if is_ranged:
             cargas = VENENO_CARGAS
-            if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista") and tem_espec(p, "ladino_veneno_3"):
+            if _arma_base_id(weapon_id) in _BESTAS_BASE_IDS and tem_espec(p, "ladino_veneno_3"):
                 # Reaplicar o mesmo veneno recarrega suas três cargas e o move
                 # para o fim; um segundo veneno mantém as cargas restantes do
                 # primeiro e é consumido depois, um disparo por vez.
@@ -25217,7 +25321,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return self._mangual_astral_no_alcance_jogador(
                     p["pos"], target, w.get("astral_chain_reach"))
             return self._mangual_no_alcance_jogador(p["pos"], target)
-        if w.get("id") == "lanca_curta":
+        if _arma_base_id(w.get("id")) == "lanca_curta":
             return self._lanca_curta_no_alcance_jogador(p["pos"], target)
         return self._is_adjacent_to_monster(p["pos"], target)
 
@@ -25251,9 +25355,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         dy = abs(p["pos"][1] - tile[1])
         weapon_id = (p.get("weapon") or {}).get("id")
         distancia = max(dx, dy)
-        if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista"):
+        if _arma_base_id(weapon_id) in _BESTAS_BASE_IDS:
             return (dx == 0 or dy == 0) and distancia <= alcance_restante
-        if weapon_id in ("arco_curto", "longbow", "arco_composto_curto", "arco_composto_longo", "arco_bruto_combatente") and not (p.get("weapon") or {}).get("range_all_directions"):
+        if _arma_base_id(weapon_id) in _ARCOS_DIAGONAL_REDUZIDA_IDS and not (p.get("weapon") or {}).get("range_all_directions"):
             limite = (alcance_restante if (dx == 0 or dy == 0)
                       else (alcance_restante + 1) // 2)
             return distancia <= limite
@@ -25690,7 +25794,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
             return
         weapon = {**(p.get("weapon") or {}), **gear_item}
-        if not weapon.get("repeating_crossbow") or weapon.get("id") not in {
+        if not weapon.get("repeating_crossbow") or _arma_base_id(weapon.get("id")) not in {
                 "besta_repetidora_patrulha", "besta_repetidora_guerra"}:
             await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
             return
@@ -25837,7 +25941,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if _valid_ammo:
                 _off = p.get("gear", {}).get("off_hand")
                 _off_type = (_off or {}).get("ammo_type")
-                _is_crossbow = (weapon_here or {}).get("id") in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")
+                _is_crossbow = _arma_base_id((weapon_here or {}).get("id")) in _BESTAS_BASE_IDS
                 _quiver_equipped = bool(_quivers_equipped(p))
                 if _is_crossbow:
                     # Bestas recarregam diretamente dos virotes da bolsa e deixam
@@ -25910,8 +26014,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if not in_range:
                     extra = T("erro._extra_escuridao_limita_alcance") if eff_range < w_range else ""
                     weapon_id = (weapon_here or {}).get("id")
-                    regra = (T("erro._regra_em_linha_reta") if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista", "gancho_corrente", "gancho_escorpiao_superior")
-                              else T("erro._regra_diagonal_ate", diagonal=(eff_range + 1) // 2) if weapon_id in ("arco_curto", "longbow")
+                    regra = (T("erro._regra_em_linha_reta") if _arma_base_id(weapon_id) in (_BESTAS_BASE_IDS | {"gancho_corrente", "gancho_escorpiao_superior"})
+                              else T("erro._regra_diagonal_ate", diagonal=(eff_range + 1) // 2) if _arma_base_id(weapon_id) in ("arco_curto", "longbow")
                               else "")
                     await self.send_to(pid, {
                         "type": "error",
@@ -25961,7 +26065,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
                     })
                     return
-            elif (weapon_here or {}).get("id") == "lanca_curta":
+            elif _arma_base_id((weapon_here or {}).get("id")) == "lanca_curta":
                 if not self._lanca_curta_no_alcance_jogador(p["pos"], target):
                     await self.send_to(pid, {"type": "error",
                         "msg": T("erro.alvo_fora_de_alcance_aproxime_diagonal", alvo=target["name"])
@@ -43629,11 +43733,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 efeito_parcial = {
                     "veneno_id": veneno_id, "nome": nome, "operacao": "penalidade",
                     "atributos": falha_atribs, "duracao": dur_falha}
-                vision_pen = ajustar(int(veneno.get("vision_radius_partial_penalty", 0) or 0))
+                _vision_base = int(veneno.get("vision_radius_partial_penalty", 0) or 0)
+                vision_pen = ajustar(abs(_vision_base)) * (1 if _vision_base >= 0 else -1)
                 if vision_pen:
                     efeito_parcial["vision_radius_penalty"] = vision_pen
                 if isinstance(veneno.get("retest_on_expire"), dict):
                     efeito_parcial["retest_on_expire"] = dict(veneno["retest_on_expire"])
+                    # O CD melhorado vale também para o reteste final do efeito parcial.
+                    efeito_parcial["retest_on_expire"]["dificuldade"] = (
+                        int(efeito_parcial["retest_on_expire"].get("dificuldade", veneno.get("dificuldade", 14)) or 14)
+                        + int(veneno.get("_melhoria_cd", 0) or 0))
                 alvo["efeitos_veneno"].append(efeito_parcial)
                 await self.gm_say(T("narracao.save_parcial_percepcao_de_reduzida_por_r", nome=nome_cat("item", veneno_id, nome), alvo_nome=nome_criatura(alvo), dur_falha=dur_falha))
             else:
@@ -48645,6 +48754,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not piece:
             return False
         if piece.get("id") in ids_slot:
+            return True
+        # Prata é metal: só o Devorador de Metal corrói as variantes de prata.
+        if piece.get("silver") and "metal" in materiais_devorador:
             return True
         return bool(set(piece.get("corrosion_materials", [])) & materiais_devorador)
 

@@ -1996,6 +1996,7 @@ function _nomeItemExibido(it){
     return t(Array.isArray(it.poison_ids)&&it.poison_ids.length
       ?'ui.item.laminas_riposta_envenenadas.nome':'cat.item.laminas_riposta.nome');
   if(Array.isArray(it?.poison_ids)&&it.poison_ids.length) return _nomeMuncaoEnvenenada(it);
+  if(it?.effect==='coat_poison'&&_partesVenenoId(it.veneno_id||it.id).melhorado) return _nomeVenenoPorId(it.veneno_id||it.id);
   const nome=it?.name||it?.nome||it?.id||'Item';
   if(Array.isArray(it?.poison_slots)&&it.poison_slots.length){
     const primeira=String(nome).trim().split(/\s+/)[0].toLowerCase();
@@ -5552,11 +5553,9 @@ function gerarConteudoTooltip(item){
 
   if(Array.isArray(item.poison_ids)){
     for(const poisonId of item.poison_ids){
-      const baseId=String(poisonId||'').split('__upgrade__')[0];
-      const cat=(GS.CATALOGO_ITENS||{})[poisonId]||(GS.CATALOGO_ITENS||{})[baseId]||{};
-      const poisonName=cat.nome||t(`cat.item.${poisonId}.nome`);
-      const summary=cat.descricao||cat.description||t(`ui.item.${baseId}.desc`);
-      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),_esc(summary&&summary!==`ui.item.${baseId}.desc`?`${poisonName}: ${summary}`:poisonName)));
+      const poisonName=_nomeVenenoPorId(poisonId);
+      const summary=_descricaoVenenoPorId(poisonId);
+      linhas.push(renderLinhaTooltip('☠️',t('ui.tooltip.efeito'),_esc(summary?`${poisonName}: ${summary}`:poisonName)));
     }
   }
 
@@ -6682,13 +6681,9 @@ function atualizarMelhoriaVeneno(baseId){
   const dur={destilado:1.5,prolongado:2};
   const base=Number(row.dataset.poisonBasePrice||0);
   const price=Math.ceil(base*(dc[upgrades.cd]||1)*(pot[upgrades.potencia]||1)*(dur[upgrades.duracao]||1));
-  const names=[];
-  if(upgrades.cd!=='nenhum') names.push({aprimorado:'Aprimorado',avancado:'Avançado',mortal:'Mortal'}[upgrades.cd]);
-  if(upgrades.potencia!=='nenhum') names.push({fortalecido:'Fortalecido',concentrado:'Concentrado'}[upgrades.potencia]);
-  if(upgrades.duracao!=='nenhum') names.push({destilado:'Destilado',prolongado:'Prolongado'}[upgrades.duracao]);
   const baseName=row.querySelector('.poison-preview-name')?.dataset.baseName||'';
-  const max=upgrades.cd==='mortal'&&upgrades.potencia==='concentrado'&&upgrades.duracao==='prolongado';
-  const name=`${baseName}${names.length?' '+(max?'Fatal':names.join(' ')):''}`;
+  const sufixo=_sufixoMelhoriasVeneno(upgrades.cd,upgrades.potencia,upgrades.duracao);
+  const name=`${baseName}${sufixo?' '+sufixo:''}`;
   const nameEl=row.querySelector('.poison-preview-name'); if(nameEl) nameEl.textContent=name;
   const priceEl=row.querySelector('.poison-preview-price'); if(priceEl) priceEl.textContent=`💰 ${price}`;
   const btn=row.querySelector('.btn-buy'); if(btn) btn.disabled=Number($('shop-gold-val')?.textContent||0)<price;
@@ -9283,7 +9278,7 @@ function _computeWeaponRangeTiles(state, me) {
 // para o jogador — nenhum alvo ou dano é decidido aqui.
 function _armaDistanciaAtaqueGiratorio(me){
   const weapon = me?.weapon || {};
-  const weaponId = String(weapon.id || '').toLowerCase();
+  const weaponId = GS.armaBaseId(String(weapon.id || '').toLowerCase());
   const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo', 'gancho_corrente', 'gancho_escorpiao_superior']);
   return Boolean(rangedIds.has(weaponId) || weapon.projectile || weapon.ammo || weapon.ammo_type
     || weapon.tipo === 'armaDistancia' || weapon.tipo === 'ranged');
@@ -20936,9 +20931,56 @@ function abrirPainelVenenoRapido(){
   abrirPainelEnvenenar({metodo:'veneno_rapido'});
 }
 
+// ── Venenos melhorados ──────────────────────────────────────────────────────
+// O frasco melhorado tem id `<base>__upgrade__<cd>_<potencia>_<duracao>` (ver
+// _preparar_item_veneno no servidor). Esse id não existe no catálogo do cliente,
+// então nome e descrição são montados a partir do veneno-base + as melhorias —
+// senão o painel Envenenar, o status e o tooltip mostravam o id cru.
+const _VENENO_MELHORIA_CD = {aprimorado:2, avancado:4, mortal:6};
+const _VENENO_MELHORIA_POTENCIA = {fortalecido:1.5, concentrado:2};
+const _VENENO_MELHORIA_DURACAO = {destilado:2, prolongado:4};
+function _partesVenenoId(id){
+  const bruto=String(id||'');
+  const [base,resto]=bruto.split('__upgrade__');
+  const [cd='nenhum',potencia='nenhum',duracao='nenhum']=(resto||'').split('_');
+  return {base,cd,potencia,duracao,melhorado:resto!==undefined};
+}
+function _sufixoMelhoriasVeneno(cd,potencia,duracao){
+  if(cd==='mortal'&&potencia==='concentrado'&&duracao==='prolongado') return t('ui.veneno.nome.fatal');
+  return [cd,potencia,duracao].filter(x=>x&&x!=='nenhum').map(x=>t('ui.veneno.nome.'+x)).join(' ');
+}
+// Nome de um veneno-base que o catálogo estático não conhece (veneno criado no editor):
+// usa o frasco que o jogador carrega, se houver.
+function _nomeVenenoBaseDesconhecido(base){
+  const me=window.GS&&GS.me;
+  const frascos=[...((me&&me.bag)||[])];
+  Object.values((me&&me.gear)||{}).forEach(g=>(g&&g.utility_belt_slots||[]).forEach(s=>s&&s.item&&frascos.push(s.item)));
+  const f=frascos.find(i=>i&&String(i.veneno_id||i.id||'').split('__upgrade__')[0]===base);
+  if(f){
+    const n=String(f.name||f.nome||''); const pf=_partesVenenoId(f.veneno_id||f.id);
+    const suf=pf.melhorado?_sufixoMelhoriasVeneno(pf.cd,pf.potencia,pf.duracao):'';
+    return suf&&n.endsWith(' '+suf)?n.slice(0,-(suf.length+1)):n;
+  }
+  return String(base).replace(/^veneno_/,'').replace(/_/g,' ').replace(/^./,c=>c.toUpperCase());
+}
 function _nomeVenenoPorId(id){
   const cat=(window.GS&&GS.CATALOGO_ITENS)?GS.CATALOGO_ITENS:{};
-  return cat[id]?.nome||id;
+  const {base,cd,potencia,duracao,melhorado}=_partesVenenoId(id);
+  if(!melhorado) return cat[id]?.nome||_nomeVenenoBaseDesconhecido(id);
+  const nomeBase=cat[base]?.nome||_nomeVenenoBaseDesconhecido(base);
+  const suf=_sufixoMelhoriasVeneno(cd,potencia,duracao);
+  return suf?`${nomeBase} ${suf}`:nomeBase;
+}
+function _descricaoVenenoPorId(id){
+  const cat=(window.GS&&GS.CATALOGO_ITENS)?GS.CATALOGO_ITENS:{};
+  const {base,cd,potencia,duracao,melhorado}=_partesVenenoId(id);
+  const desc=cat[id]?.descricao||cat[base]?.descricao||'';
+  if(!melhorado) return desc;
+  const partes=[];
+  if(cd!=='nenhum') partes.push(t('ui.veneno.parte_cd',{n:_VENENO_MELHORIA_CD[cd]}));
+  if(potencia!=='nenhum') partes.push(t('ui.veneno.parte_potencia',{n:String(_VENENO_MELHORIA_POTENCIA[potencia]).replace('.',',')}));
+  if(duracao!=='nenhum') partes.push(t('ui.veneno.parte_duracao',{n:_VENENO_MELHORIA_DURACAO[duracao]}));
+  return [desc,partes.length?t('ui.veneno.melhorias_resumo',{partes:partes.join(', ')}):''].filter(Boolean).join(' ');
 }
 
 function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=null}={}){
@@ -27446,6 +27488,9 @@ function _itemAcaoMeta(item){
   // As poções portáteis já usam a ação bônus na regra do servidor.
   if(['heal','regeneration'].includes(item.effect)) return _acaoEconomiaMeta('acao_bonus');
   if(item.effect === 'veil_shadow') return _acaoEconomiaMeta('acao_bonus');
+  // Mesmos efeitos que o servidor cobra como ação bônus (BONUS_ACTION_EFFECTS);
+  // frasco de veneno, antídoto e poções apareciam como "ação principal".
+  if(BONUS_ACTION_EFFECTS.has(item.effect)) return _acaoEconomiaMeta('acao_bonus');
   if(item.item_slot === 'bag' || item.tipo === 'consumivel' || item.arremessavel || item.effect === 'scroll')
     return _acaoEconomiaMeta('acao_principal');
   return null;
@@ -30687,7 +30732,7 @@ function _modificadoresTemporariosStatus(p){
   // Venenos aplicados à arma também são efeitos ativos, embora não sejam uma
   // penalidade do próprio personagem.
   // Uma linha por arma (e por pilha de munição equipada) com o veneno, o número de usos e o efeito.
-  const _efeitoVeneno = ids => [...new Set(ids)].map(id => GS.CATALOGO_ITENS?.[id]?.descricao).filter(Boolean).join(' · ');
+  const _efeitoVeneno = ids => [...new Set(ids)].map(id => _descricaoVenenoPorId(id)).filter(Boolean).join(' · ');
   [{rot: t('ui.ladino.arma_principal'), it: Object.assign({}, p.weapon || {}, p.gear?.weapon || {})},
    {rot: t('ui.ladino.mao_secundaria'), it: p.gear?.off_hand}].forEach(({rot, it}) => {
     const fila = Array.isArray(it?.poison_slots) && it.poison_slots.length ? it.poison_slots
@@ -30799,7 +30844,7 @@ function _menuStatusMarkup(p, opts = {}){
   // Mão secundária: espelha o golpe extra do servidor (atributo da 2ª arma, bônus de nível
   // e modificadores situacionais; dano = dado + atributo + sobrevivência).
   const off = p.gear?.off_hand;
-  const offEhArma = !!(off && off.die && !['hand_crossbow','besta_duelista'].includes(off.id) && off.effect !== 'shield'
+  const offEhArma = !!(off && off.die && !['hand_crossbow','besta_duelista'].includes(GS.armaBaseId(off.id)) && off.effect !== 'shield'
     && off.tipo_item !== 'instrumento' && off.effect !== 'quiver');
   let linhasOff = '';
   if(offEhArma){
@@ -32391,7 +32436,7 @@ function _repeatingCrossbowWeaponSkillBtn(me, skill){
   const round = Number(state?.round ?? state?.round_num ?? 1) || 1;
   const readyRound = Number(item.repeating_crossbow_ready_round || 0) || 0;
   const remaining = Math.max(0, readyRound - round);
-  const range = Number(item.range || (item.id === 'besta_repetidora_guerra' ? 8 : 6));
+  const range = Number(item.range || (GS.armaBaseId(item.id) === 'besta_repetidora_guerra' ? 8 : 6));
   const hasTargets = (state?.monsters || []).some(monster => monster?.hp > 0
     && GS.monsterTiles(monster).some(([x,y]) => {
       const dx=x-me.pos[0], dy=y-me.pos[1];
