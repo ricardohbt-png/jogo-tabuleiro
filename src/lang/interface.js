@@ -5494,8 +5494,8 @@ window.LANG_INTERFACE = {
     "pt": "Prata"
   },
   "ui.item.desc.prata_arma": {
-    "en": "Silver: withstands 5 corrosion levels (the first 2 without penalties) and can damage enemies resistant to normal weapons",
-    "pt": "Prata: resiste a 5 níveis de corrosão (os 2 primeiros sem penalidade) e pode causar dano em inimigos resistentes a armas normais"
+    "en": "Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons",
+    "pt": "Prata: não sofre penalidades no nível 1 de corrosão e é destruída no nível 2; pode causar dano em inimigos resistentes a armas normais"
   },
   "ui.item.desc.racao": {
     "en": "+{n} hunger and thirst",

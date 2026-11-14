@@ -3588,7 +3588,7 @@ function _itemDesc(item){
               : item.reach==='cajado' ? ' • '+t('ui.item.desc.alcance_adjacentes')
               : item.astral_chain_reach ? ' • '+t('ui.item.desc.alcance_mangual_astral', {n:item.astral_chain_reach})
               : item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_mangual')
-              : ['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : ['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista','gancho_corrente','gancho_escorpiao_superior'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
               : item.range_all_directions ? ' • '+t('ui.item.desc.alcance_todas_direcoes', {n: item.range})
               : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto_diag', {n: item.range, d: Math.ceil(item.range / 2)})
               : item.range ? ' • '+t('ui.item.desc.alcance', {n: item.range}) : '';
@@ -9280,7 +9280,7 @@ function _computeWeaponRangeTiles(state, me) {
 function _armaDistanciaAtaqueGiratorio(me){
   const weapon = me?.weapon || {};
   const weaponId = String(weapon.id || '').toLowerCase();
-  const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo']);
+  const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo', 'gancho_corrente', 'gancho_escorpiao_superior']);
   return Boolean(rangedIds.has(weaponId) || weapon.projectile || weapon.ammo || weapon.ammo_type
     || weapon.tipo === 'armaDistancia' || weapon.tipo === 'ranged');
 }

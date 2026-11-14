@@ -1324,6 +1324,18 @@ window.LANG_NARRACAO = {
     "en": "🌅 **{alvo}** is hurled {casas} squares by the shattered horizon!",
     "pt": "🌅 **{alvo}** é arremessado {casas} casas pela ruptura do horizonte!"
   },
+  "narracao.gancho_corrente_resiste": {
+    "en": "💪 **{alvo}** resists the chain hook's pull (Fortitude DC {dc}).",
+    "pt": "💪 **{alvo}** resiste ao puxão do gancho (Fortitude CD {dc})."
+  },
+  "narracao.gancho_corrente_puxa": {
+    "en": "⛓️ **{heroi}** reels **{alvo}** in {casas} square(s) with the chain hook!",
+    "pt": "⛓️ **{heroi}** puxa **{alvo}** {casas} casa(s) com o gancho de corrente!"
+  },
+  "narracao.gancho_corrente_bloqueado": {
+    "en": "⛓️ **{alvo}** fails Fortitude, but an obstacle or creature blocks the chain hook.",
+    "pt": "⛓️ **{alvo}** falha em Fortitude, mas um obstáculo ou criatura bloqueia o gancho."
+  },
   "narracao.horizonte_ruptura_inicio": {
     "en": "🌅 **{heroi}** strikes the ground and tears open a horizon-wide rupture reaching {alcance} squares!",
     "pt": "🌅 **{heroi}** golpeia o chão e rasga o horizonte numa onda de ruptura que alcança {alcance} casas!"

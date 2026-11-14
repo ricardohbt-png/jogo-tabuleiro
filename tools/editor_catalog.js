@@ -11971,6 +11971,20 @@ window.EDITOR_CATALOG = {
       "descricao": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
     },
     {
+      "id": "rapieira_do_dueto",
+      "name": "Rapieira do Dueto",
+      "emoji": "🗡️",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/rapieira_duelista.png",
+      "allowed_classes": [
+        "bard"
+      ],
+      "categoria": "perfurante",
+      "bardo_lira_counter_d4": true,
+      "descricao": "Arma mundana exclusiva do Bardo: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."
+    },
+    {
       "id": "machado_basico",
       "name": "Machado de Ferro",
       "emoji": "🪓",
@@ -12212,6 +12226,48 @@ window.EDITOR_CATALOG = {
       "descricao": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."
     },
     {
+      "id": "gancho_corrente",
+      "name": "Gancho de Corrente",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/get_over_here.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 3,
+      "chain_hook_range": 3,
+      "chain_pull_distance": 2,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "descricao": "Gancho de Corrente mundano: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "gancho_escorpiao_superior",
+      "name": "Gancho do Escorpião Superior",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/get_over_here.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "range": 5,
+      "chain_hook_range": 5,
+      "chain_pull_distance": 3,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "descricao": "Gancho do Escorpião Superior mundano: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
       "id": "mangual",
       "name": "Mangual",
       "emoji": "⚔️",
@@ -12323,10 +12379,10 @@ window.EDITOR_CATALOG = {
       "stat": "str_",
       "finesse": true,
       "off_hand_weapon": true,
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "throw_range": 3,
       "categoria": "perfurante",
-      "descricao": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "chicote_prata",
@@ -12341,10 +12397,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "range": 2,
       "categoria": "cortante",
-      "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_curta_prata",
@@ -12358,10 +12414,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "throw_range": 4,
       "categoria": "perfurante",
-      "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "bordao_prata",
@@ -12377,9 +12433,9 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "categoria": "contundente",
-      "descricao": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "maca_prata",
@@ -12393,10 +12449,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
-      "descricao": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "shortsword_prata",
@@ -12410,10 +12466,25 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
-      "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "rapieira_do_dueto_prata",
+      "name": "Rapieira do Dueto de Prata",
+      "emoji": "🗡️",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/rapieira_duelista_prata.png",
+      "allowed_classes": [
+        "bard"
+      ],
+      "corrosion_max": 2,
+      "categoria": "perfurante",
+      "bardo_lira_counter_d4": true,
+      "descricao": "Rapieira do Dueto de Prata: arma mundana exclusiva do Bardo, 1d6 perfurante usando Destreza. Prata não mágica: fere criaturas resistentes a armas comuns e é destruída no segundo nível de corrosão. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."
     },
     {
       "id": "machado_basico_prata",
@@ -12428,11 +12499,11 @@ window.EDITOR_CATALOG = {
         "ranger",
         "paladin"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machadinha_ana_prata",
@@ -12448,11 +12519,11 @@ window.EDITOR_CATALOG = {
       "off_hand_forca": true,
       "off_hand_stat": "str_",
       "throw_nat1_damage_levels": 2,
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "throw_range": 3,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_prata",
@@ -12464,11 +12535,11 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "reach": "lanca",
       "throw_range": 4,
       "categoria": "perfurante",
-      "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "longsword_prata",
@@ -12480,10 +12551,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
-      "descricao": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "warhammer_prata",
@@ -12496,10 +12567,54 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
-      "descricao": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "gancho_corrente_prata",
+      "name": "Gancho de Corrente de Prata",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_corrente_prata.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "range": 3,
+      "chain_hook_range": 3,
+      "chain_pull_distance": 2,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "descricao": "Gancho de Corrente de Prata: 1d6 de dano perfurante, usando Destreza. Alcance: 3 casas em linha reta. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "gancho_escorpiao_superior_prata",
+      "name": "Gancho do Escorpião Superior de Prata",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_escorpiao_superior_prata.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "range": 5,
+      "chain_hook_range": 5,
+      "chain_pull_distance": 3,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "descricao": "Gancho do Escorpião Superior de Prata: 1d6 de dano perfurante, usando Destreza. Alcance: 5 casas em linha reta. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "mangual_prata",
@@ -12512,11 +12627,11 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
       "categoria": "contundente",
-      "descricao": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machado_duplo_prata",
@@ -12528,10 +12643,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
-      "descricao": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "bastsword_prata",
@@ -12543,10 +12658,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
-      "descricao": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machado_orc_prata",
@@ -12559,10 +12674,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
-      "descricao": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "alabarda_prata",
@@ -12575,10 +12690,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "range": 2,
       "categoria": "perfurante",
-      "descricao": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "espada2m_prata",
@@ -12591,10 +12706,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
-      "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "marreta_prata",
@@ -12607,10 +12722,10 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosion_max": 5,
+      "corrosion_max": 2,
       "categoria": "contundente",
       "ignora_reducao_dano": 1,
-      "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 5 níveis de corrosão, com os 2 primeiros sem penalidade, e pode causar dano a inimigos resistentes a armas normais."
+      "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machadinha_runica_vai_e_volta",
@@ -13258,13 +13373,1779 @@ window.EDITOR_CATALOG = {
       "descricao": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
     },
     {
-      "id": "escudo_p",
-      "name": "Escudo Pequeno",
-      "emoji": "🛡️",
+      "id": "dagger_aco_damasco",
+      "name": "Adaga de Aço Damasco",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens/adaga_aco_damasco.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Adaga de Aço Damasco: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "shortsword_aco_damasco",
+      "name": "Espada Curta de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/espada_curta_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Espada Curta de Aço Damasco: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longsword_aco_damasco",
+      "name": "Espada Longa de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_longa_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Espada Longa de Aço Damasco: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "bastsword_aco_damasco",
+      "name": "Espada Bastarda de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/espada_bastarda_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Espada Bastarda de Aço Damasco: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "espada2m_aco_damasco",
+      "name": "Espada de 2 Mãos de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/espada_2m_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Espada de 2 Mãos de Aço Damasco: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_basico_aco_damasco",
+      "name": "Machado de Aço Damasco",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/machado_ferro_aco_damasco.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 2,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "atk_bonus": 1,
+      "descricao": "Machado de Aço Damasco: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_duplo_aco_damasco",
+      "name": "Machado Duplo de Aço Damasco",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/machado_duplo_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Machado Duplo de Aço Damasco: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_orc_aco_damasco",
+      "name": "Machado de Guerra Órquico de Aço Damasco",
+      "emoji": "🪓",
+      "die": "1d12",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/machado_orc_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Machado de Guerra Órquico de Aço Damasco: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "maca_aco_damasco",
+      "name": "Maça de Aço Damasco",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/maca_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "descricao": "Maça de Aço Damasco: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "warhammer_aco_damasco",
+      "name": "Martelo de Guerra de Aço Damasco",
+      "emoji": "🔨",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/martelo_guerra_aco_damasco.png",
       "allowed_classes": [
         "cleric",
         "paladin",
         "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "descricao": "Martelo de Guerra de Aço Damasco: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "mangual_aco_damasco",
+      "name": "Mangual de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/mangual_aco_damasco.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "descricao": "Mangual de Aço Damasco: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "marreta_aco_damasco",
+      "name": "Marreta de Aço Damasco",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/marreta_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta de Aço Damasco: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_curta_aco_damasco",
+      "name": "Lança Curta de Aço Damasco",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_curta_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Lança Curta de Aço Damasco: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_aco_damasco",
+      "name": "Lança de Aço Damasco",
+      "emoji": "🔱",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Lança de Aço Damasco: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "alabarda_aco_damasco",
+      "name": "Alabarda de Aço Damasco",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/alabarda_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "range": 2,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Alabarda de Aço Damasco: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "rapieira_do_dueto_aco_damasco",
+      "name": "Rapieira do Dueto de Aço Damasco",
+      "emoji": "🗡️",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/rapieira_duelista_aco_damasco.png",
+      "allowed_classes": [
+        "bard"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "bardo_lira_counter_d4": true,
+      "descricao": "Rapieira do Dueto de Aço Damasco: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "gancho_corrente_aco_damasco",
+      "name": "Gancho de Corrente de Aço Damasco",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_corrente_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "range": 3,
+      "chain_hook_range": 3,
+      "chain_pull_distance": 2,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Gancho de Corrente de Aço Damasco: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "gancho_escorpiao_superior_aco_damasco",
+      "name": "Gancho do Escorpião Superior de Aço Damasco",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_escorpiao_superior_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "range": 5,
+      "chain_hook_range": 5,
+      "chain_pull_distance": 3,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Gancho do Escorpião Superior de Aço Damasco: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_curto_freixo_negro",
+      "name": "Arco Curto de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/arco_curto_freixo_negro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 6,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Arco Curto de Freixo Negro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_composto_curto_freixo_negro",
+      "name": "Arco Composto Curto de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_curto_freixo_negro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 6,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Arco Composto Curto de Freixo Negro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longbow_freixo_negro",
+      "name": "Arco Longo de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "icon": "assets/itens/arco_longo_freixo_negro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 10,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Arco Longo de Freixo Negro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_composto_longo_freixo_negro",
+      "name": "Arco Composto Longo de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_longo_freixo_negro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 10,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Arco Composto Longo de Freixo Negro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_bruto_combatente_freixo_negro",
+      "name": "Arco Bruto do Combatente de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_bruto_combatente_freixo_negro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 10,
+      "range_all_directions": true,
+      "add_strength_to_damage": true,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "hand_crossbow_freixo_negro",
+      "name": "Besta de Mão de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d4",
+      "stat": "dex",
+      "icon": "assets/itens/besta_mao_freixo_negro.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Besta de Mão de Freixo Negro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_duelista_freixo_negro",
+      "name": "Besta do Duelista de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/besta_duelista_freixo_negro.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Besta do Duelista de Freixo Negro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_freixo_negro",
+      "name": "Besta de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "icon": "assets/itens/besta_freixo_negro.png",
+      "allowed_classes": [
+        "cleric",
+        "rogue",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 8,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Besta de Freixo Negro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_pesada_freixo_negro",
+      "name": "Besta Pesada de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_pesada_freixo_negro.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "cleric",
+        "rogue"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 12,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Besta Pesada de Freixo Negro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_repetidora_patrulha_freixo_negro",
+      "name": "Besta Repetidora de Patrulha de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_patrulha_freixo_negro.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 6,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Besta Repetidora de Patrulha de Freixo Negro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_repetidora_guerra_freixo_negro",
+      "name": "Besta Repetidora de Guerra de Freixo Negro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_guerra_freixo_negro.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 8,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Besta Repetidora de Guerra de Freixo Negro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "dagger_obsidiana_ferro",
+      "name": "Adaga de Obsidiana de Ferro",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens/adaga_obsidiana_ferro.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "shortsword_obsidiana_ferro",
+      "name": "Espada Curta de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/espada_curta_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longsword_obsidiana_ferro",
+      "name": "Espada Longa de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_longa_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "bastsword_obsidiana_ferro",
+      "name": "Espada Bastarda de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/espada_bastarda_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Espada Bastarda de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "espada2m_obsidiana_ferro",
+      "name": "Espada de 2 Mãos de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/espada_2m_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_basico_obsidiana_ferro",
+      "name": "Machado de Obsidiana de Ferro",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/machado_obsidiana_ferro.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 2,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "damage_bonus": 1,
+      "descricao": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_duplo_obsidiana_ferro",
+      "name": "Machado Duplo de Obsidiana de Ferro",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/machado_duplo_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_orc_obsidiana_ferro",
+      "name": "Machado de Guerra Órquico de Obsidiana de Ferro",
+      "emoji": "🪓",
+      "die": "1d12",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/machado_orc_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Machado de Guerra Órquico de Obsidiana de Ferro: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "maca_obsidiana_ferro",
+      "name": "Maça de Obsidiana de Ferro",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/maca_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "damage_bonus": 1,
+      "descricao": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "warhammer_obsidiana_ferro",
+      "name": "Martelo de Guerra de Obsidiana de Ferro",
+      "emoji": "🔨",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/martelo_guerra_obsidiana_ferro.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "damage_bonus": 1,
+      "descricao": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "mangual_obsidiana_ferro",
+      "name": "Mangual de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/mangual_obsidiana_ferro.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "categoria": "contundente",
+      "damage_bonus": 1,
+      "descricao": "Mangual de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "marreta_obsidiana_ferro",
+      "name": "Marreta de Obsidiana de Ferro",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/marreta_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "categoria": "contundente",
+      "damage_bonus": 1,
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_curta_obsidiana_ferro",
+      "name": "Lança Curta de Obsidiana de Ferro",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_curta_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_obsidiana_ferro",
+      "name": "Lança de Obsidiana de Ferro",
+      "emoji": "🔱",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "alabarda_obsidiana_ferro",
+      "name": "Alabarda de Obsidiana de Ferro",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/alabarda_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "range": 2,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Alabarda de Obsidiana de Ferro: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "rapieira_do_dueto_obsidiana_ferro",
+      "name": "Rapieira do Dueto de Obsidiana de Ferro",
+      "emoji": "🗡️",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/rapieira_duelista_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "bardo_lira_counter_d4": true,
+      "descricao": "Rapieira do Dueto de Obsidiana de Ferro: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "gancho_corrente_obsidiana_ferro",
+      "name": "Gancho de Corrente de Obsidiana de Ferro",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_corrente_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "range": 3,
+      "chain_hook_range": 3,
+      "chain_pull_distance": 2,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "gancho_escorpiao_superior_obsidiana_ferro",
+      "name": "Gancho do Escorpião Superior de Obsidiana de Ferro",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_escorpiao_superior_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "range": 5,
+      "chain_hook_range": 5,
+      "chain_pull_distance": 3,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_curto_cedro_rubro",
+      "name": "Arco Curto de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/arco_curto_cedro_rubro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 6,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Arco Curto de Cedro Rubro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_composto_curto_cedro_rubro",
+      "name": "Arco Composto Curto de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_curto_cedro_rubro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 6,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longbow_cedro_rubro",
+      "name": "Arco Longo de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "icon": "assets/itens/arco_longo_cedro_rubro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 10,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Arco Longo de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_composto_longo_cedro_rubro",
+      "name": "Arco Composto Longo de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_longo_cedro_rubro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 10,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_bruto_combatente_cedro_rubro",
+      "name": "Arco Bruto do Combatente de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_bruto_combatente_cedro_rubro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 10,
+      "range_all_directions": true,
+      "add_strength_to_damage": true,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "hand_crossbow_cedro_rubro",
+      "name": "Besta de Mão de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d4",
+      "stat": "dex",
+      "icon": "assets/itens/besta_mao_cedro_rubro.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 4,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Besta de Mão de Cedro Rubro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_duelista_cedro_rubro",
+      "name": "Besta do Duelista de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/besta_duelista_cedro_rubro.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 4,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Besta do Duelista de Cedro Rubro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_cedro_rubro",
+      "name": "Besta de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "icon": "assets/itens/besta_cedro_rubro.png",
+      "allowed_classes": [
+        "cleric",
+        "rogue",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 8,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Besta de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_pesada_cedro_rubro",
+      "name": "Besta Pesada de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_pesada_cedro_rubro.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "cleric",
+        "rogue"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 12,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Besta Pesada de Cedro Rubro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_repetidora_patrulha_cedro_rubro",
+      "name": "Besta Repetidora de Patrulha de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_patrulha_cedro_rubro.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 6,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Besta Repetidora de Patrulha de Cedro Rubro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_repetidora_guerra_cedro_rubro",
+      "name": "Besta Repetidora de Guerra de Cedro Rubro",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_guerra_cedro_rubro.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "madeira",
+      "range": 8,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Besta Repetidora de Guerra de Cedro Rubro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "dagger_liga_titanio",
+      "name": "Adaga de Liga de Titânio",
+      "emoji": "🗡️",
+      "die": "1d4",
+      "stat": "str_",
+      "finesse": true,
+      "off_hand_weapon": true,
+      "icon": "assets/itens/adaga_liga_titanio.png",
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "descricao": "Adaga de Liga de Titânio: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "shortsword_liga_titanio",
+      "name": "Espada Curta de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/espada_curta_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "descricao": "Espada Curta de Liga de Titânio: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longsword_liga_titanio",
+      "name": "Espada Longa de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_longa_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "descricao": "Espada Longa de Liga de Titânio: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "bastsword_liga_titanio",
+      "name": "Espada Bastarda de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/espada_bastarda_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "descricao": "Espada Bastarda de Liga de Titânio: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "espada2m_liga_titanio",
+      "name": "Espada de 2 Mãos de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/espada_2m_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "descricao": "Espada de 2 Mãos de Liga de Titânio: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_basico_liga_titanio",
+      "name": "Machado de Liga de Titânio",
+      "emoji": "🪓",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/machado_liga_titanio.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "cleric",
+        "ranger",
+        "paladin"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "throw_range": 2,
+      "categoria": "cortante",
+      "granted_ability": "arremesso_bruto",
+      "descricao": "Machado de Liga de Titânio: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_duplo_liga_titanio",
+      "name": "Machado Duplo de Liga de Titânio",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/machado_duplo_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "descricao": "Machado Duplo de Liga de Titânio: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_orc_liga_titanio",
+      "name": "Machado de Guerra Órquico de Liga de Titânio",
+      "emoji": "🪓",
+      "die": "1d12",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/machado_orc_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "cortante",
+      "descricao": "Machado de Guerra Órquico de Liga de Titânio: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "maca_liga_titanio",
+      "name": "Maça de Liga de Titânio",
+      "emoji": "🔨",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/maca_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "descricao": "Maça de Liga de Titânio: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "warhammer_liga_titanio",
+      "name": "Martelo de Guerra de Liga de Titânio",
+      "emoji": "🔨",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/martelo_guerra_liga_titanio.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "descricao": "Martelo de Guerra de Liga de Titânio: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "mangual_liga_titanio",
+      "name": "Mangual de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/mangual_liga_titanio.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_nat20_multiplier": 2.5,
+      "reach": "mangual",
+      "categoria": "contundente",
+      "descricao": "Mangual de Liga de Titânio: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "marreta_liga_titanio",
+      "name": "Marreta de Liga de Titânio",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/marreta_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "categoria": "contundente",
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta de Liga de Titânio: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_curta_liga_titanio",
+      "name": "Lança Curta de Liga de Titânio",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_curta_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "descricao": "Lança Curta de Liga de Titânio: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_liga_titanio",
+      "name": "Lança de Liga de Titânio",
+      "emoji": "🔱",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "descricao": "Lança de Liga de Titânio: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "alabarda_liga_titanio",
+      "name": "Alabarda de Liga de Titânio",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/alabarda_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "range": 2,
+      "categoria": "perfurante",
+      "descricao": "Alabarda de Liga de Titânio: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "rapieira_do_dueto_liga_titanio",
+      "name": "Rapieira do Dueto de Liga de Titânio",
+      "emoji": "🗡️",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/rapieira_duelista_liga_titanio.png",
+      "allowed_classes": [
+        "bard"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "categoria": "perfurante",
+      "bardo_lira_counter_d4": true,
+      "descricao": "Rapieira do Dueto de Liga de Titânio: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "gancho_corrente_liga_titanio",
+      "name": "Gancho de Corrente de Liga de Titânio",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_corrente_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "range": 3,
+      "chain_hook_range": 3,
+      "chain_pull_distance": 2,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "descricao": "Gancho de Corrente de Liga de Titânio: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "gancho_escorpiao_superior_liga_titanio",
+      "name": "Gancho do Escorpião Superior de Liga de Titânio",
+      "emoji": "🪝",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/gancho_escorpiao_superior_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "range": 5,
+      "chain_hook_range": 5,
+      "chain_pull_distance": 3,
+      "chain_pull_cooldown": 10,
+      "chain_pull_save_dc": 13,
+      "categoria": "perfurante",
+      "descricao": "Gancho do Escorpião Superior de Liga de Titânio: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_curto_cerne_tita",
+      "name": "Arco Curto de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/arco_curto_cerne_tita.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 6,
+      "categoria": "perfurante",
+      "descricao": "Arco Curto de Cerne de Titã: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_composto_curto_cerne_tita",
+      "name": "Arco Composto Curto de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_curto_cerne_tita.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 6,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "descricao": "Arco Composto Curto de Cerne de Titã: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longbow_cerne_tita",
+      "name": "Arco Longo de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "icon": "assets/itens/arco_longo_cerne_tita.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 10,
+      "categoria": "perfurante",
+      "descricao": "Arco Longo de Cerne de Titã: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_composto_longo_cerne_tita",
+      "name": "Arco Composto Longo de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_composto_longo_cerne_tita.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 10,
+      "range_all_directions": true,
+      "categoria": "perfurante",
+      "descricao": "Arco Composto Longo de Cerne de Titã: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "arco_bruto_combatente_cerne_tita",
+      "name": "Arco Bruto do Combatente de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/arco_bruto_combatente_cerne_tita.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 10,
+      "range_all_directions": true,
+      "add_strength_to_damage": true,
+      "categoria": "perfurante",
+      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "hand_crossbow_cerne_tita",
+      "name": "Besta de Mão de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d4",
+      "stat": "dex",
+      "icon": "assets/itens/besta_mao_cerne_tita.png",
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 4,
+      "categoria": "perfurante",
+      "descricao": "Besta de Mão de Cerne de Titã: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_duelista_cerne_tita",
+      "name": "Besta do Duelista de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "icon": "assets/itens/besta_duelista_cerne_tita.png",
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 4,
+      "categoria": "perfurante",
+      "descricao": "Besta do Duelista de Cerne de Titã: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_cerne_tita",
+      "name": "Besta de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "icon": "assets/itens/besta_cerne_tita.png",
+      "allowed_classes": [
+        "cleric",
+        "rogue",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 8,
+      "categoria": "perfurante",
+      "descricao": "Besta de Cerne de Titã: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_pesada_cerne_tita",
+      "name": "Besta Pesada de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d10",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_pesada_cerne_tita.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "cleric",
+        "rogue"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 12,
+      "categoria": "perfurante",
+      "descricao": "Besta Pesada de Cerne de Titã: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_repetidora_patrulha_cerne_tita",
+      "name": "Besta Repetidora de Patrulha de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d6",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_patrulha_cerne_tita.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 6,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "descricao": "Besta Repetidora de Patrulha de Cerne de Titã: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "besta_repetidora_guerra_cerne_tita",
+      "name": "Besta Repetidora de Guerra de Cerne de Titã",
+      "emoji": "🏹",
+      "die": "1d8",
+      "stat": "dex",
+      "two_handed": true,
+      "icon": "assets/itens/besta_repetidora_guerra_cerne_tita.png",
+      "allowed_classes": [
+        "warrior",
+        "paladin",
+        "bard",
+        "rogue"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "madeira",
+      "range": 8,
+      "repeating_crossbow": true,
+      "repeating_crossbow_cooldown": 10,
+      "categoria": "perfurante",
+      "descricao": "Besta Repetidora de Guerra de Cerne de Titã: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "escudo_p",
+      "name": "Escudo Pequeno",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_p.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic"
       ],
       "kind": "shield",
       "ac_bonus": 1,
@@ -13275,9 +15156,13 @@ window.EDITOR_CATALOG = {
       "id": "escudo_g",
       "name": "Escudo Grande",
       "emoji": "🛡️",
+      "icon": "assets/itens/escudo_g.png",
       "allowed_classes": [
         "paladin",
         "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
       ],
       "kind": "shield",
       "ac_bonus": 2,
@@ -13468,6 +15353,40 @@ window.EDITOR_CATALOG = {
       ],
       "kind": "armor",
       "ac_bonus": 1
+    },
+    {
+      "id": "manto_linho_engomado",
+      "name": "Manto de Linho Engomado",
+      "emoji": "🧣",
+      "icon": "assets/itens/manto_linho_engomado.png",
+      "corrosion_materials": [
+        "organic"
+      ],
+      "kind": "armor",
+      "ac_bonus": 2,
+      "descricao": "Manto mundano de linho espesso e engomado, com capuz e bordados reforçados. Concede +2 CA total. Pode ser corroído pelo Devorador Orgânico."
+    },
+    {
+      "id": "manto_seda_aracne",
+      "name": "Manto de Seda de Aracne",
+      "emoji": "🧣",
+      "icon": "assets/itens/manto_seda_aracne.png",
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 1,
+      "reflex_save_bonus": 1,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Manto mundano tecido com Seda de Aracne. Concede +1 CA, +1 nos testes de Reflexos e reduz em 1 cada instância de dano físico recebido, acumulando com outras reduções. Tolera 1 nível de corrosão orgânica sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o quarto nível destrói o manto."
     },
     {
       "id": "manto_das_sombras",
@@ -13747,6 +15666,718 @@ window.EDITOR_CATALOG = {
       ],
       "kind": "armor",
       "ac_bonus": 8
+    },
+    {
+      "id": "leather_plate_aco_damasco",
+      "name": "Armadura de Couro e Placas de Aço Damasco",
+      "emoji": "🥋",
+      "icon": "assets/itens/leather_plate_aco_damasco.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 3,
+      "descricao": "Armadura de Couro e Placas de Aço Damasco: armadura mundana com CA +3. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "leather_plate_obsidiana_ferro",
+      "name": "Armadura de Couro e Placas de Obsidiana de Ferro",
+      "emoji": "🥋",
+      "icon": "assets/itens/leather_plate_obsidiana_ferro.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 4,
+      "descricao": "Armadura de Couro e Placas de Obsidiana de Ferro: armadura mundana que concede +4 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "leather_plate_liga_titanio",
+      "name": "Armadura de Couro e Placas de Liga de Titânio",
+      "emoji": "🥋",
+      "icon": "assets/itens/leather_plate_liga_titanio.png",
+      "allowed_classes": [
+        "warrior",
+        "rogue",
+        "bard",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 3,
+      "bonuses": [],
+      "descricao": "Armadura de Couro e Placas de Liga de Titânio: armadura mundana com CA +3. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça."
+    },
+    {
+      "id": "chainmail_aco_damasco",
+      "name": "Cota de Malha de Aço Damasco",
+      "emoji": "🪖",
+      "icon": "assets/itens/chainmail_aco_damasco.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 4,
+      "descricao": "Cota de Malha de Aço Damasco: armadura mundana com CA +4. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "chainmail_obsidiana_ferro",
+      "name": "Cota de Malha de Obsidiana de Ferro",
+      "emoji": "🪖",
+      "icon": "assets/itens/chainmail_obsidiana_ferro.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 5,
+      "descricao": "Cota de Malha de Obsidiana de Ferro: armadura mundana que concede +5 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "chainmail_liga_titanio",
+      "name": "Cota de Malha de Liga de Titânio",
+      "emoji": "🪖",
+      "icon": "assets/itens/chainmail_liga_titanio.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 4,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Cota de Malha de Liga de Titânio: armadura mundana com CA +4. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+    },
+    {
+      "id": "bronze_armor_aco_damasco",
+      "name": "Armadura de Bronze de Aço Damasco",
+      "emoji": "🪖",
+      "icon": "assets/itens/bronze_armor_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 5,
+      "descricao": "Armadura de Bronze de Aço Damasco: armadura mundana com CA +5. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "bronze_armor_obsidiana_ferro",
+      "name": "Armadura de Bronze de Obsidiana de Ferro",
+      "emoji": "🪖",
+      "icon": "assets/itens/bronze_armor_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 6,
+      "descricao": "Armadura de Bronze de Obsidiana de Ferro: armadura mundana que concede +6 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "bronze_armor_liga_titanio",
+      "name": "Armadura de Bronze de Liga de Titânio",
+      "emoji": "🪖",
+      "icon": "assets/itens/bronze_armor_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 5,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura de Bronze de Liga de Titânio: armadura mundana com CA +5. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+    },
+    {
+      "id": "leather_mail_aco_damasco",
+      "name": "Armadura de Couro Revestido com Malha de Aço Damasco",
+      "emoji": "🪖",
+      "icon": "assets/itens/leather_mail_aco_damasco.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 6,
+      "descricao": "Armadura de Couro Revestido com Malha de Aço Damasco: armadura mundana com CA +6. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "leather_mail_obsidiana_ferro",
+      "name": "Armadura de Couro Revestido com Malha de Obsidiana de Ferro",
+      "emoji": "🪖",
+      "icon": "assets/itens/leather_mail_obsidiana_ferro.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 7,
+      "descricao": "Armadura de Couro Revestido com Malha de Obsidiana de Ferro: armadura mundana que concede +7 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "leather_mail_liga_titanio",
+      "name": "Armadura de Couro Revestido com Malha de Liga de Titânio",
+      "emoji": "🪖",
+      "icon": "assets/itens/leather_mail_liga_titanio.png",
+      "allowed_classes": [
+        "cleric",
+        "bard",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 6,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura de Couro Revestido com Malha de Liga de Titânio: armadura mundana com CA +6. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+    },
+    {
+      "id": "plate_aco_damasco",
+      "name": "Armadura de Placas de Aço Damasco",
+      "emoji": "🛡️",
+      "icon": "assets/itens/plate_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 6,
+      "descricao": "Armadura de Placas de Aço Damasco: armadura mundana com CA +6. Aço Damasco tolera 2 níveis de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "plate_obsidiana_ferro",
+      "name": "Armadura de Placas de Obsidiana de Ferro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/plate_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 7,
+      "descricao": "Armadura de Placas de Obsidiana de Ferro: armadura mundana que concede +7 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "plate_liga_titanio",
+      "name": "Armadura de Placas de Liga de Titânio",
+      "emoji": "🛡️",
+      "icon": "assets/itens/plate_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 6,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura de Placas de Liga de Titânio: armadura mundana com CA +6. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+    },
+    {
+      "id": "fullplate_aco_damasco",
+      "name": "Armadura Completa de Aço Damasco",
+      "emoji": "🛡️",
+      "icon": "assets/itens/fullplate_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 8,
+      "descricao": "Armadura Completa de Aço Damasco: armadura mundana com CA +8. Aço Damasco tolera 2 níveis de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "fullplate_obsidiana_ferro",
+      "name": "Armadura Completa de Obsidiana de Ferro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/fullplate_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 9,
+      "descricao": "Armadura Completa de Obsidiana de Ferro: armadura mundana que concede +9 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "fullplate_liga_titanio",
+      "name": "Armadura Completa de Liga de Titânio",
+      "emoji": "🛡️",
+      "icon": "assets/itens/fullplate_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 8,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura Completa de Liga de Titânio: armadura mundana com CA +8. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+    },
+    {
+      "id": "monster_leather_plate_aco_damasco",
+      "name": "Armadura de Couro de Monstro e Placas de Aço Damasco",
+      "emoji": "🛡️",
+      "icon": "assets/itens/monster_leather_plate_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "armor",
+      "ac_bonus": 7,
+      "descricao": "Armadura de Couro de Monstro e Placas de Aço Damasco: armadura mundana com CA +7. Aço Damasco tolera 2 níveis de corrosão sem penalidade; depois sofre as duas penalidades normais e é destruída no nível seguinte."
+    },
+    {
+      "id": "monster_leather_plate_obsidiana_ferro",
+      "name": "Armadura de Couro de Monstro e Placas de Obsidiana de Ferro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/monster_leather_plate_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "armor",
+      "ac_bonus": 8,
+      "descricao": "Armadura de Couro de Monstro e Placas de Obsidiana de Ferro: armadura mundana que concede +8 CA. Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+    },
+    {
+      "id": "monster_leather_plate_liga_titanio",
+      "name": "Armadura de Couro de Monstro e Placas de Liga de Titânio",
+      "emoji": "🛡️",
+      "icon": "assets/itens/monster_leather_plate_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic",
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "armor",
+      "ac_bonus": 7,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Armadura de Couro de Monstro e Placas de Liga de Titânio: armadura mundana com CA +7. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o sexto destrói a peça. Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+    },
+    {
+      "id": "escudo_p_freixo_negro",
+      "name": "Escudo Pequeno de Freixo Negro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_p_freixo_negro.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "shield",
+      "ac_bonus": 1,
+      "damage_reduction": 1,
+      "descricao": "Escudo Pequeno de Freixo Negro: escudo mundano que mantém CA +1 e redução base 1. Freixo Negro tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+    },
+    {
+      "id": "escudo_p_cedro_rubro",
+      "name": "Escudo Pequeno de Cedro Rubro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_p_cedro_rubro.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 1,
+      "descricao": "Escudo Pequeno de Cedro Rubro: escudo mundano que concede CA +2. Cedro Rubro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+    },
+    {
+      "id": "escudo_p_cerne_tita",
+      "name": "Escudo Pequeno de Cerne de Titã",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_p_cerne_tita.png",
+      "allowed_classes": [
+        "cleric",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "shield",
+      "ac_bonus": 1,
+      "damage_reduction": 1,
+      "bonuses": [],
+      "descricao": "Escudo Pequeno de Cerne de Titã: escudo mundano com CA +1 e redução base 1. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. O modelo pequeno não recebe redução física adicional."
+    },
+    {
+      "id": "escudo_g_aco_damasco",
+      "name": "Escudo Grande de Aço Damasco",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_g_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 2,
+      "descricao": "Escudo Grande de Aço Damasco: escudo mundano que mantém CA +2 e redução base 2. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+    },
+    {
+      "id": "escudo_g_obsidiana_ferro",
+      "name": "Escudo Grande de Obsidiana de Ferro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_g_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "shield",
+      "ac_bonus": 3,
+      "damage_reduction": 2,
+      "descricao": "Escudo Grande de Obsidiana de Ferro: escudo mundano que concede CA +3. Obsidiana de Ferro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+    },
+    {
+      "id": "escudo_g_liga_titanio",
+      "name": "Escudo Grande de Liga de Titânio",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_g_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 2,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Escudo Grande de Liga de Titânio: escudo mundano com CA +2 e redução base 2. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
+    },
+    {
+      "id": "escudo_torre_aco_damasco",
+      "name": "Escudo Torre Romano de Aço Damasco",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre_aco_damasco.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "shield",
+      "ac_bonus": 3,
+      "damage_reduction": 2,
+      "descricao": "Escudo Torre Romano de Aço Damasco: escudo mundano que mantém CA +3 e redução base 2. Aço Damasco tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+    },
+    {
+      "id": "escudo_torre_obsidiana_ferro",
+      "name": "Escudo Torre Romano de Obsidiana de Ferro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "shield",
+      "ac_bonus": 4,
+      "damage_reduction": 2,
+      "descricao": "Escudo Torre Romano de Obsidiana de Ferro: escudo mundano que concede CA +4. Obsidiana de Ferro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+    },
+    {
+      "id": "escudo_torre_liga_titanio",
+      "name": "Escudo Torre Romano de Liga de Titânio",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_torre_liga_titanio.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "metal"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "shield",
+      "ac_bonus": 3,
+      "damage_reduction": 2,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Escudo Torre Romano de Liga de Titânio: escudo mundano com CA +3 e redução base 2. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
+    },
+    {
+      "id": "escudo_madeira_grande_freixo_negro",
+      "name": "Escudo Grande de Madeira Reforçado de Freixo Negro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_grande_freixo_negro.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 1,
+      "descricao": "Escudo Grande de Madeira Reforçado de Freixo Negro: escudo mundano que mantém CA +2 e redução base 1. Freixo Negro tolera 1 nível de corrosão sem penalidade; depois sofre os dois níveis penalizados normais e quebra no seguinte."
+    },
+    {
+      "id": "escudo_madeira_grande_cedro_rubro",
+      "name": "Escudo Grande de Madeira Reforçado de Cedro Rubro",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_grande_cedro_rubro.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_max": 1,
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "kind": "shield",
+      "ac_bonus": 3,
+      "damage_reduction": 1,
+      "descricao": "Escudo Grande de Madeira Reforçado de Cedro Rubro: escudo mundano que concede CA +3. Cedro Rubro é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+    },
+    {
+      "id": "escudo_madeira_grande_cerne_tita",
+      "name": "Escudo Grande de Madeira Reforçado de Cerne de Titã",
+      "emoji": "🛡️",
+      "icon": "assets/itens/escudo_madeira_grande_cerne_tita.png",
+      "allowed_classes": [
+        "cleric",
+        "warrior",
+        "paladin"
+      ],
+      "corrosion_materials": [
+        "organic"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "kind": "shield",
+      "ac_bonus": 2,
+      "damage_reduction": 1,
+      "bonuses": [
+        {
+          "effect": "resist",
+          "type": "physical",
+          "value": 1
+        }
+      ],
+      "descricao": "Escudo Grande de Madeira Reforçado de Cerne de Titã: escudo mundano com CA +2 e redução base 1. Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra. Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
     },
     {
       "id": "aljava_pequena",
@@ -14106,6 +16737,115 @@ window.EDITOR_CATALOG = {
       "item_slot": "ring",
       "effect": "maxhp",
       "value": 5
+    },
+    {
+      "id": "anel_touro_ferro",
+      "name": "Anel do Touro de Ferro",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_touro_ferro.png",
+      "item_slot": "ring",
+      "effect": "str_",
+      "value": 4,
+      "descricao": "+4 de Força enquanto estiver equipado."
+    },
+    {
+      "id": "anel_olho_esfinge",
+      "name": "Anel do Olho da Esfinge",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_olho_esfinge.png",
+      "magical": true,
+      "item_slot": "ring",
+      "effect": "int_",
+      "value": 4,
+      "descricao": "+4 de Inteligência enquanto estiver equipado."
+    },
+    {
+      "id": "anel_bastiao_basalto",
+      "name": "Anel do Bastião de Basalto",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_bastiao_basalto.png",
+      "item_slot": "ring",
+      "effect": "con_",
+      "value": 4,
+      "descricao": "+4 de Constituição enquanto estiver equipado."
+    },
+    {
+      "id": "anel_danca_vento",
+      "name": "Anel da Dança do Vento",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_danca_vento.png",
+      "item_slot": "ring",
+      "effect": "dex",
+      "value": 4,
+      "descricao": "+4 de Destreza enquanto estiver equipado."
+    },
+    {
+      "id": "anel_tigre",
+      "name": "Anel do Tigre",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_tigre.png",
+      "item_slot": "ring",
+      "effect": "dex",
+      "value": 2,
+      "bonuses": [
+        {
+          "effect": "str_",
+          "value": 2
+        }
+      ],
+      "descricao": "+2 de Destreza e +2 de Força enquanto estiver equipado."
+    },
+    {
+      "id": "anel_urso_cinzento",
+      "name": "Anel do Urso Cinzento",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_urso_cinzento.png",
+      "item_slot": "ring",
+      "effect": "str_",
+      "value": 3,
+      "bonuses": [
+        {
+          "effect": "con_",
+          "value": 2
+        }
+      ],
+      "descricao": "+3 de Força e +2 de Constituição enquanto estiver equipado."
+    },
+    {
+      "id": "anel_negro_corvo",
+      "name": "Anel Negro do Corvo",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_negro_corvo.png",
+      "item_slot": "ring",
+      "effect": "int_",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "dex",
+          "value": 1
+        },
+        {
+          "effect": "spd",
+          "value": 1
+        }
+      ],
+      "descricao": "+1 de Inteligência, +1 de Destreza e +1 de movimento enquanto estiver equipado."
+    },
+    {
+      "id": "anel_aguia",
+      "name": "Anel da Águia",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_aguia.png",
+      "item_slot": "ring",
+      "effect": "dex",
+      "value": 2,
+      "bonuses": [
+        {
+          "effect": "vision",
+          "value": 2
+        }
+      ],
+      "descricao": "+2 de Destreza e +2 de visão enquanto estiver equipado."
     },
     {
       "id": "anel_protecao",

@@ -1682,6 +1682,7 @@ WEAPONS = {
                       "staff_spell_damage_bonus": 2, "staff_area_dimension_bonus": 1,
                       "staff_extra_spell_circle": "primeiro", "staff_extra_spell_cooldown": 20},
     "shortsword":    {"id": "shortsword",    "name": "Espada Curta",         "die": "1d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante"},
+    "rapieira_do_dueto": {"id": "rapieira_do_dueto", "name": "Rapieira do Dueto", "die": "1d6", "stat": "dex", "categoria": "perfurante", "bardo_lira_counter_d4": True, "icon": "assets/itens/rapieira_duelista.png", "allowed_classes": ["bard"]},
     "espada_magica": {"id": "espada_magica", "name": "Espada Mágica",        "die": "1d6",  "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/espada_magica.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "espada_magica_mais_2": {"id": "espada_magica_mais_2", "name": "Espada Mágica +2", "die": "1d6", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 2, "damage_bonus": 2, "icon": "assets/itens magicos/espada_magica.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "espada_magica_mais_3": {"id": "espada_magica_mais_3", "name": "Espada Mágica +3", "die": "1d6", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 3, "damage_bonus": 3, "icon": "assets/itens magicos/espada_magica.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
@@ -1708,6 +1709,8 @@ WEAPONS = {
     "besta_pesada":  {"id": "besta_pesada",  "name": "Besta Pesada",         "die": "1d10", "stat": "dex",  "range": 12, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_pesada.png", "allowed_classes": ["warrior", "paladin", "cleric", "rogue"]},
     "besta_repetidora_patrulha": {"id": "besta_repetidora_patrulha", "name": "Besta Repetidora de Patrulha", "die": "1d6", "stat": "dex", "range": 6, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_repetidora_media.png", "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "allowed_classes": ["warrior", "paladin", "bard", "rogue"]},
     "besta_repetidora_guerra": {"id": "besta_repetidora_guerra", "name": "Besta Repetidora de Guerra", "die": "1d8", "stat": "dex", "range": 8, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_repetidora_poderosa.png", "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "allowed_classes": ["warrior", "paladin", "bard", "rogue"]},
+    "gancho_corrente": {"id": "gancho_corrente", "name": "Gancho de Corrente", "die": "1d6", "stat": "dex", "range": 3, "categoria": "perfurante", "icon": "assets/itens/get_over_here.png", "chain_hook_range": 3, "chain_pull_distance": 2, "chain_pull_cooldown": 10, "chain_pull_save_dc": 13, "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    "gancho_escorpiao_superior": {"id": "gancho_escorpiao_superior", "name": "Gancho do Escorpião Superior", "die": "1d6", "stat": "dex", "range": 5, "categoria": "perfurante", "icon": "assets/itens/get_over_here.png", "chain_hook_range": 5, "chain_pull_distance": 3, "chain_pull_cooldown": 10, "chain_pull_save_dc": 13, "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
 }
 
 # Armas de projÃ©til â†’ tipos de muniÃ§Ã£o aceitos (bÃ¡sica e especial)
@@ -5211,7 +5214,7 @@ CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "l
                            "escudo_p", "escudo_g"}
 CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machadinha_arremesso_ana", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
-                       "bastsword", "espada2m", "warhammer", "mangual", "maca"}
+                       "bastsword", "espada2m", "warhammer", "mangual", "maca", "rapieira_do_dueto"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
 
 MONSTER_DEFS = [
@@ -7680,6 +7683,7 @@ SHOP_WEAPONS = [
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     {"id": "shortsword",    "name": "Espada Curta",       "emoji": "⚔️",  "die": "1d6",  "stat": "str_", "price": 12, "crit_min_nat_roll": 19, "categoria": "cortante",
      "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
+    {"id": "rapieira_do_dueto", "name": "Rapieira do Dueto", "emoji": "🗡️", "icon": "assets/itens/rapieira_duelista.png", "die": "1d6", "stat": "dex", "price": 140, "categoria": "perfurante", "bardo_lira_counter_d4": True, "allowed_classes": ["bard"], "descricao": "Arma mundana exclusiva do Bardo: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."},
     {"id": "machado_basico","name": "Machado de Ferro",   "emoji": "🪓",  "die": "1d6",  "stat": "str_", "price": 12, "throw_range": 2, "granted_ability": "arremesso_bruto", "categoria": "cortante",
      "allowed_classes": ["warrior", "rogue", "cleric", "ranger", "paladin"]},
     {"id": "machadinha_arremesso_ana","name": "Machadinha de Arremesso Anã", "emoji": "🪓", "icon": "assets/itens/machadinha_arremesso_ana.png", "die": "1d6", "stat": "str_", "price": 35, "off_hand_weapon": True, "off_hand_forca": True, "off_hand_stat": "str_", "throw_range": 3, "throw_nat1_damage_levels": 2, "corrosion_max": 3, "granted_ability": "arremesso_bruto", "categoria": "cortante",
@@ -7703,6 +7707,8 @@ SHOP_WEAPONS = [
     {"id": "besta_pesada", "name": "Besta Pesada", "emoji": "🏹", "icon": "assets/itens/besta_pesada.png", "die": "1d10", "stat": "dex", "price": 100, "range": 12, "two_handed": True, "categoria": "perfurante", "allowed_classes": ["warrior", "paladin", "cleric", "rogue"], "descricao": "Besta Pesada mundana: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino."},
     {"id": "besta_repetidora_patrulha", "name": "Besta Repetidora de Patrulha", "emoji": "🏹", "icon": "assets/itens/besta_repetidora_media.png", "die": "1d6", "stat": "dex", "price": 70, "range": 6, "two_handed": True, "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "categoria": "perfurante", "allowed_classes": ["warrior", "paladin", "bard", "rogue"], "descricao": "Besta Repetidora de Patrulha mundana: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."},
     {"id": "besta_repetidora_guerra", "name": "Besta Repetidora de Guerra", "emoji": "🏹", "icon": "assets/itens/besta_repetidora_poderosa.png", "die": "1d8", "stat": "dex", "price": 120, "range": 8, "two_handed": True, "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "categoria": "perfurante", "allowed_classes": ["warrior", "paladin", "bard", "rogue"], "descricao": "Besta Repetidora de Guerra mundana: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino."},
+    {"id": "gancho_corrente", "name": "Gancho de Corrente", "emoji": "🪝", "icon": "assets/itens/get_over_here.png", "die": "1d6", "stat": "dex", "price": 80, "range": 3, "chain_hook_range": 3, "chain_pull_distance": 2, "chain_pull_cooldown": 10, "chain_pull_save_dc": 13, "categoria": "perfurante", "allowed_classes": ["bard", "rogue", "paladin", "warrior"], "descricao": "Gancho de Corrente mundano: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro."},
+    {"id": "gancho_escorpiao_superior", "name": "Gancho do Escorpião Superior", "emoji": "🪝", "icon": "assets/itens/get_over_here.png", "die": "1d6", "stat": "dex", "price": 180, "range": 5, "chain_hook_range": 5, "chain_pull_distance": 3, "chain_pull_cooldown": 10, "chain_pull_save_dc": 13, "categoria": "perfurante", "allowed_classes": ["bard", "rogue", "paladin", "warrior"], "descricao": "Gancho do Escorpião Superior mundano: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro."},
     {"id": "mangual",       "name": "Mangual",            "emoji": "⚔️",  "die": "1d8",  "stat": "str_", "price": 20, "reach": "mangual", "crit_nat20_multiplier": 2.5, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
     {"id": "machado_duplo", "name": "Machado Duplo",      "emoji": "🪓",  "die": "1d10", "stat": "str_", "price": 22, "extra_attack_on_crit_min_nat": 19, "categoria": "cortante",
@@ -7763,11 +7769,9 @@ def _descricao_arma_catalogo(arma):
     if arma.get("extra_attack_on_crit_min_nat"):
         partes.append(f"{arma['extra_attack_on_crit_min_nat']} natural: faz um ataque adicional.")
     if arma.get("silver"):
-        max_niveis = int(arma.get("corrosion_max", 5) or 5)
-        livres = int(arma.get("corrosion_free_levels", 2) or 2)
         partes.append(
-            f"Prata: suporta {max_niveis} níveis de corrosão, com os {livres} primeiros sem penalidade, "
-            "e pode causar dano a inimigos resistentes a armas normais."
+            "Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, "
+            "podendo causar dano a inimigos resistentes a armas normais."
         )
     return " ".join(partes)
 
@@ -7777,7 +7781,7 @@ for _weapon in WEAPONS.values():
     _weapon.setdefault("descricao", _descricao_arma_catalogo(_weapon))
 
 # allowed_classes ausente = TODAS as classes podem usar (sem restriÃ§ao).
-# Variantes de prata: preÃ§o Ã—10, 5 nÃ­veis atÃ© quebrar e os 2 primeiros sem penalidade.
+# Variantes de prata: mantêm os preços atuais, ficam sem penalidade no nível 1 e são destruídas no nível 2.
 # Armas de projÃ©til e cajados de madeira nÃ£o recebem revestimento de prata.
 SILVER_WEAPON_EXCLUSIONS = {
     "hand_crossbow", "besta_duelista", "besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra",  # bestas
@@ -7791,12 +7795,29 @@ for _weapon in list(SHOP_WEAPONS):
     _nome_base = _weapon["name"][:-len(" de Ferro")] if _weapon["name"].endswith(" de Ferro") else _weapon["name"]
     _silver.update({"id": f"{_weapon['id']}_prata", "name": f"{_nome_base} de Prata",
                     "price": int(_weapon.get("price", 0) or 0) * 10, "silver": True,
-                    "corrosion_max": 5, "corrosion_free_levels": 2})
+                    "corrosion_max": 2, "corrosion_free_levels": 1})
     if _weapon["id"] == "machadinha_arremesso_ana":
         _silver["id"] = "machadinha_ana_prata"  # preserva o ID da versão de prata já usada no jogo
         _silver["icon"] = "assets/itens/machadinha_ana_prata.png"
     _silver["descricao"] = _descricao_arma_catalogo(_silver)
     SHOP_WEAPONS.append(_silver)
+
+# As variantes de prata dos ganchos usam arte própria, mantendo os demais
+# metadados e o preço da regra geral de prata.
+for _weapon_id, _icon in (
+    ("gancho_corrente_prata", "assets/itens/gancho_corrente_prata.png"),
+    ("gancho_escorpiao_superior_prata", "assets/itens/gancho_escorpiao_superior_prata.png"),
+    ("rapieira_do_dueto_prata", "assets/itens/rapieira_duelista_prata.png"),
+):
+    _silver_weapon = next(_weapon for _weapon in SHOP_WEAPONS if _weapon["id"] == _weapon_id)
+    _silver_weapon["icon"] = _icon
+    if _weapon_id == "rapieira_do_dueto_prata":
+        _silver_weapon["descricao"] = (
+            "Rapieira do Dueto de Prata: arma mundana exclusiva do Bardo, 1d6 perfurante usando Destreza. "
+            "Prata não mágica: fere criaturas resistentes a armas comuns e é destruída no segundo nível de corrosão. "
+            "Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, "
+            "o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."
+        )
 
 # Armas mágicas autoradas depois das variantes de prata para não gerar versões
 # prateadas automaticamente. Mantêm o gatilho de Sangramento no próprio item.
@@ -8055,12 +8076,235 @@ for _weapon in SHOP_WEAPONS:
     if _weapon.get("descricao") and _weapon["id"] in WEAPONS:
         WEAPONS[_weapon["id"]]["descricao"] = _weapon["descricao"]
 
+# Variantes mundanas de materiais: mantêm o perfil e as restrições da arma-base.
+# Cada material concede +1 no acerto e um nível de corrosão sem penalidade; os
+# dois níveis penalizados e a quebra seguem o modelo padrão N/M das armas.
+_MATERIAL_WEAPON_VARIANTS = [
+    ("dagger", "dagger_aco_damasco", "Adaga de Aço Damasco", "assets/itens/adaga_aco_damasco.png", "metal"),
+    ("shortsword", "shortsword_aco_damasco", "Espada Curta de Aço Damasco", "assets/itens/espada_curta_aco_damasco.png", "metal"),
+    ("longsword", "longsword_aco_damasco", "Espada Longa de Aço Damasco", "assets/itens/espada_longa_aco_damasco.png", "metal"),
+    ("bastsword", "bastsword_aco_damasco", "Espada Bastarda de Aço Damasco", "assets/itens/espada_bastarda_aco_damasco.png", "metal"),
+    ("espada2m", "espada2m_aco_damasco", "Espada de 2 Mãos de Aço Damasco", "assets/itens/espada_2m_aco_damasco.png", "metal"),
+    ("machado_basico", "machado_basico_aco_damasco", "Machado de Aço Damasco", "assets/itens/machado_ferro_aco_damasco.png", "metal"),
+    ("machado_duplo", "machado_duplo_aco_damasco", "Machado Duplo de Aço Damasco", "assets/itens/machado_duplo_aco_damasco.png", "metal"),
+    ("machado_orc", "machado_orc_aco_damasco", "Machado de Guerra Órquico de Aço Damasco", "assets/itens/machado_orc_aco_damasco.png", "metal"),
+    ("maca", "maca_aco_damasco", "Maça de Aço Damasco", "assets/itens/maca_aco_damasco.png", "metal"),
+    ("warhammer", "warhammer_aco_damasco", "Martelo de Guerra de Aço Damasco", "assets/itens/martelo_guerra_aco_damasco.png", "metal"),
+    ("mangual", "mangual_aco_damasco", "Mangual de Aço Damasco", "assets/itens/mangual_aco_damasco.png", "metal"),
+    ("marreta", "marreta_aco_damasco", "Marreta de Aço Damasco", "assets/itens/marreta_aco_damasco.png", "metal"),
+    ("lanca_curta", "lanca_curta_aco_damasco", "Lança Curta de Aço Damasco", "assets/itens/lanca_curta_aco_damasco.png", "metal"),
+    ("lanca", "lanca_aco_damasco", "Lança de Aço Damasco", "assets/itens/lanca_aco_damasco.png", "metal"),
+    ("alabarda", "alabarda_aco_damasco", "Alabarda de Aço Damasco", "assets/itens/alabarda_aco_damasco.png", "metal"),
+    ("rapieira_do_dueto", "rapieira_do_dueto_aco_damasco", "Rapieira do Dueto de Aço Damasco", "assets/itens/rapieira_duelista_aco_damasco.png", "metal"),
+    ("gancho_corrente", "gancho_corrente_aco_damasco", "Gancho de Corrente de Aço Damasco", "assets/itens/gancho_corrente_aco_damasco.png", "metal"),
+    ("gancho_escorpiao_superior", "gancho_escorpiao_superior_aco_damasco", "Gancho do Escorpião Superior de Aço Damasco", "assets/itens/gancho_escorpiao_superior_aco_damasco.png", "metal"),
+    ("arco_curto", "arco_curto_freixo_negro", "Arco Curto de Freixo Negro", "assets/itens/arco_curto_freixo_negro.png", "madeira"),
+    ("arco_composto_curto", "arco_composto_curto_freixo_negro", "Arco Composto Curto de Freixo Negro", "assets/itens/arco_composto_curto_freixo_negro.png", "madeira"),
+    ("longbow", "longbow_freixo_negro", "Arco Longo de Freixo Negro", "assets/itens/arco_longo_freixo_negro.png", "madeira"),
+    ("arco_composto_longo", "arco_composto_longo_freixo_negro", "Arco Composto Longo de Freixo Negro", "assets/itens/arco_composto_longo_freixo_negro.png", "madeira"),
+    ("arco_bruto_combatente", "arco_bruto_combatente_freixo_negro", "Arco Bruto do Combatente de Freixo Negro", "assets/itens/arco_bruto_combatente_freixo_negro.png", "madeira"),
+    ("hand_crossbow", "hand_crossbow_freixo_negro", "Besta de Mão de Freixo Negro", "assets/itens/besta_mao_freixo_negro.png", "madeira"),
+    ("besta_duelista", "besta_duelista_freixo_negro", "Besta do Duelista de Freixo Negro", "assets/itens/besta_duelista_freixo_negro.png", "madeira"),
+    ("besta", "besta_freixo_negro", "Besta de Freixo Negro", "assets/itens/besta_freixo_negro.png", "madeira"),
+    ("besta_pesada", "besta_pesada_freixo_negro", "Besta Pesada de Freixo Negro", "assets/itens/besta_pesada_freixo_negro.png", "madeira"),
+    ("besta_repetidora_patrulha", "besta_repetidora_patrulha_freixo_negro", "Besta Repetidora de Patrulha de Freixo Negro", "assets/itens/besta_repetidora_patrulha_freixo_negro.png", "madeira"),
+    ("besta_repetidora_guerra", "besta_repetidora_guerra_freixo_negro", "Besta Repetidora de Guerra de Freixo Negro", "assets/itens/besta_repetidora_guerra_freixo_negro.png", "madeira"),
+]
+_SHOP_WEAPONS_BY_ID = {w["id"]: w for w in SHOP_WEAPONS}
+for _base_id, _variant_id, _variant_name, _variant_icon, _material in _MATERIAL_WEAPON_VARIANTS:
+    _base_shop = _SHOP_WEAPONS_BY_ID[_base_id]
+    _base_combat = WEAPONS[_base_id]
+    _variant = deepcopy(_base_shop)
+    _base_description = (_base_shop.get("descricao") or _descricao_arma_catalogo(_base_shop))
+    _profile = _base_description.split(":", 1)[-1].strip()
+    _material_name = "Aço Damasco" if _material == "metal" else "Freixo Negro"
+    _variant.update({
+        "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
+        "price": int(_base_shop.get("price", 0) or 0) + 20,
+        "atk_bonus": 1, "corrosao_resistente": 1,
+        "corrosao_niveis_penalidade": 2, "material": _material,
+        "descricao": (
+            f"{_variant_name}: {_profile} Variante não mágica de {_material_name}; "
+            "+1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão "
+            "sem penalidade; os dois níveis seguintes aplicam as penalidades normais "
+            "e o próximo nível destrói a arma."
+        ),
+    })
+    SHOP_WEAPONS.append(_variant)
+
+    _combat_variant = deepcopy(_base_combat)
+    _combat_variant.update({
+        "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
+        "atk_bonus": 1, "corrosao_resistente": 1,
+        "corrosao_niveis_penalidade": 2, "material": _material,
+        "descricao": _variant["descricao"],
+    })
+    WEAPONS[_variant_id] = _combat_variant
+
+    if _material == "metal":
+        CORROSAO_ARMA_METAL.add(_variant_id)
+    else:
+        CORROSAO_ARMA_MADEIRA.add(_variant_id)
+    if _base_id in RANGED_AMMO:
+        RANGED_AMMO[_variant_id] = list(RANGED_AMMO[_base_id])
+
+# Variantes de besta de mão mantêm as regras de Disparo Duplo da arma-base.
+HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
+    "hand_crossbow_freixo_negro", "besta_duelista_freixo_negro",
+})
+
+# Materiais de dano: Obsidiana de Ferro para armas metálicas e Cedro Rubro
+# para arcos/bestas. Mantêm o perfil de combate da base, com +1 dano e N=1/M=2.
+_MATERIAL_WEAPON_DAMAGE_VARIANTS = [
+    ("dagger", "dagger_obsidiana_ferro", "Adaga de Obsidiana de Ferro", "assets/itens/adaga_obsidiana_ferro.png", "metal"),
+    ("shortsword", "shortsword_obsidiana_ferro", "Espada Curta de Obsidiana de Ferro", "assets/itens/espada_curta_obsidiana_ferro.png", "metal"),
+    ("longsword", "longsword_obsidiana_ferro", "Espada Longa de Obsidiana de Ferro", "assets/itens/espada_longa_obsidiana_ferro.png", "metal"),
+    ("bastsword", "bastsword_obsidiana_ferro", "Espada Bastarda de Obsidiana de Ferro", "assets/itens/espada_bastarda_obsidiana_ferro.png", "metal"),
+    ("espada2m", "espada2m_obsidiana_ferro", "Espada de 2 Mãos de Obsidiana de Ferro", "assets/itens/espada_2m_obsidiana_ferro.png", "metal"),
+    ("machado_basico", "machado_basico_obsidiana_ferro", "Machado de Obsidiana de Ferro", "assets/itens/machado_obsidiana_ferro.png", "metal"),
+    ("machado_duplo", "machado_duplo_obsidiana_ferro", "Machado Duplo de Obsidiana de Ferro", "assets/itens/machado_duplo_obsidiana_ferro.png", "metal"),
+    ("machado_orc", "machado_orc_obsidiana_ferro", "Machado de Guerra Órquico de Obsidiana de Ferro", "assets/itens/machado_orc_obsidiana_ferro.png", "metal"),
+    ("maca", "maca_obsidiana_ferro", "Maça de Obsidiana de Ferro", "assets/itens/maca_obsidiana_ferro.png", "metal"),
+    ("warhammer", "warhammer_obsidiana_ferro", "Martelo de Guerra de Obsidiana de Ferro", "assets/itens/martelo_guerra_obsidiana_ferro.png", "metal"),
+    ("mangual", "mangual_obsidiana_ferro", "Mangual de Obsidiana de Ferro", "assets/itens/mangual_obsidiana_ferro.png", "metal"),
+    ("marreta", "marreta_obsidiana_ferro", "Marreta de Obsidiana de Ferro", "assets/itens/marreta_obsidiana_ferro.png", "metal"),
+    ("lanca_curta", "lanca_curta_obsidiana_ferro", "Lança Curta de Obsidiana de Ferro", "assets/itens/lanca_curta_obsidiana_ferro.png", "metal"),
+    ("lanca", "lanca_obsidiana_ferro", "Lança de Obsidiana de Ferro", "assets/itens/lanca_obsidiana_ferro.png", "metal"),
+    ("alabarda", "alabarda_obsidiana_ferro", "Alabarda de Obsidiana de Ferro", "assets/itens/alabarda_obsidiana_ferro.png", "metal"),
+    ("rapieira_do_dueto", "rapieira_do_dueto_obsidiana_ferro", "Rapieira do Dueto de Obsidiana de Ferro", "assets/itens/rapieira_duelista_obsidiana_ferro.png", "metal"),
+    ("gancho_corrente", "gancho_corrente_obsidiana_ferro", "Gancho de Corrente de Obsidiana de Ferro", "assets/itens/gancho_corrente_obsidiana_ferro.png", "metal"),
+    ("gancho_escorpiao_superior", "gancho_escorpiao_superior_obsidiana_ferro", "Gancho do Escorpião Superior de Obsidiana de Ferro", "assets/itens/gancho_escorpiao_superior_obsidiana_ferro.png", "metal"),
+    ("arco_curto", "arco_curto_cedro_rubro", "Arco Curto de Cedro Rubro", "assets/itens/arco_curto_cedro_rubro.png", "madeira"),
+    ("arco_composto_curto", "arco_composto_curto_cedro_rubro", "Arco Composto Curto de Cedro Rubro", "assets/itens/arco_composto_curto_cedro_rubro.png", "madeira"),
+    ("longbow", "longbow_cedro_rubro", "Arco Longo de Cedro Rubro", "assets/itens/arco_longo_cedro_rubro.png", "madeira"),
+    ("arco_composto_longo", "arco_composto_longo_cedro_rubro", "Arco Composto Longo de Cedro Rubro", "assets/itens/arco_composto_longo_cedro_rubro.png", "madeira"),
+    ("arco_bruto_combatente", "arco_bruto_combatente_cedro_rubro", "Arco Bruto do Combatente de Cedro Rubro", "assets/itens/arco_bruto_combatente_cedro_rubro.png", "madeira"),
+    ("hand_crossbow", "hand_crossbow_cedro_rubro", "Besta de Mão de Cedro Rubro", "assets/itens/besta_mao_cedro_rubro.png", "madeira"),
+    ("besta_duelista", "besta_duelista_cedro_rubro", "Besta do Duelista de Cedro Rubro", "assets/itens/besta_duelista_cedro_rubro.png", "madeira"),
+    ("besta", "besta_cedro_rubro", "Besta de Cedro Rubro", "assets/itens/besta_cedro_rubro.png", "madeira"),
+    ("besta_pesada", "besta_pesada_cedro_rubro", "Besta Pesada de Cedro Rubro", "assets/itens/besta_pesada_cedro_rubro.png", "madeira"),
+    ("besta_repetidora_patrulha", "besta_repetidora_patrulha_cedro_rubro", "Besta Repetidora de Patrulha de Cedro Rubro", "assets/itens/besta_repetidora_patrulha_cedro_rubro.png", "madeira"),
+    ("besta_repetidora_guerra", "besta_repetidora_guerra_cedro_rubro", "Besta Repetidora de Guerra de Cedro Rubro", "assets/itens/besta_repetidora_guerra_cedro_rubro.png", "madeira"),
+]
+for _base_id, _variant_id, _variant_name, _variant_icon, _material in _MATERIAL_WEAPON_DAMAGE_VARIANTS:
+    _base_shop = _SHOP_WEAPONS_BY_ID[_base_id]
+    _base_combat = WEAPONS[_base_id]
+    _variant = deepcopy(_base_shop)
+    _base_description = (_base_shop.get("descricao") or _descricao_arma_catalogo(_base_shop))
+    _profile = _base_description.split(":", 1)[-1].strip()
+    _material_name = "Obsidiana de Ferro" if _material == "metal" else "Cedro Rubro"
+    _variant.update({
+        "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
+        "price": int(_base_shop.get("price", 0) or 0) + 20,
+        "damage_bonus": 1, "corrosao_resistente": 1,
+        "corrosao_niveis_penalidade": 2, "material": _material,
+        "descricao": (
+            f"{_variant_name}: {_profile} Variante não mágica de {_material_name}; "
+            "+1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois "
+            "níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+        ),
+    })
+    SHOP_WEAPONS.append(_variant)
+
+    _combat_variant = deepcopy(_base_combat)
+    _combat_variant.update({
+        "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
+        "damage_bonus": 1, "corrosao_resistente": 1,
+        "corrosao_niveis_penalidade": 2, "material": _material,
+        "descricao": _variant["descricao"],
+    })
+    WEAPONS[_variant_id] = _combat_variant
+
+    if _material == "metal":
+        CORROSAO_ARMA_METAL.add(_variant_id)
+    else:
+        CORROSAO_ARMA_MADEIRA.add(_variant_id)
+    if _base_id in RANGED_AMMO:
+        RANGED_AMMO[_variant_id] = list(RANGED_AMMO[_base_id])
+
+HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
+    "hand_crossbow_cedro_rubro", "besta_duelista_cedro_rubro",
+})
+
+# Ligas de alta resistência à corrosão: mesma trilha N/M da prata, sem a
+# propriedade da prata contra resistências a dano. Mantêm o perfil da arma-base.
+_MATERIAL_WEAPON_CORROSION_VARIANTS = [
+    ("dagger", "dagger_liga_titanio", "Adaga de Liga de Titânio", "assets/itens/adaga_liga_titanio.png", "metal"),
+    ("shortsword", "shortsword_liga_titanio", "Espada Curta de Liga de Titânio", "assets/itens/espada_curta_liga_titanio.png", "metal"),
+    ("longsword", "longsword_liga_titanio", "Espada Longa de Liga de Titânio", "assets/itens/espada_longa_liga_titanio.png", "metal"),
+    ("bastsword", "bastsword_liga_titanio", "Espada Bastarda de Liga de Titânio", "assets/itens/espada_bastarda_liga_titanio.png", "metal"),
+    ("espada2m", "espada2m_liga_titanio", "Espada de 2 Mãos de Liga de Titânio", "assets/itens/espada_2m_liga_titanio.png", "metal"),
+    ("machado_basico", "machado_basico_liga_titanio", "Machado de Liga de Titânio", "assets/itens/machado_liga_titanio.png", "metal"),
+    ("machado_duplo", "machado_duplo_liga_titanio", "Machado Duplo de Liga de Titânio", "assets/itens/machado_duplo_liga_titanio.png", "metal"),
+    ("machado_orc", "machado_orc_liga_titanio", "Machado de Guerra Órquico de Liga de Titânio", "assets/itens/machado_orc_liga_titanio.png", "metal"),
+    ("maca", "maca_liga_titanio", "Maça de Liga de Titânio", "assets/itens/maca_liga_titanio.png", "metal"),
+    ("warhammer", "warhammer_liga_titanio", "Martelo de Guerra de Liga de Titânio", "assets/itens/martelo_guerra_liga_titanio.png", "metal"),
+    ("mangual", "mangual_liga_titanio", "Mangual de Liga de Titânio", "assets/itens/mangual_liga_titanio.png", "metal"),
+    ("marreta", "marreta_liga_titanio", "Marreta de Liga de Titânio", "assets/itens/marreta_liga_titanio.png", "metal"),
+    ("lanca_curta", "lanca_curta_liga_titanio", "Lança Curta de Liga de Titânio", "assets/itens/lanca_curta_liga_titanio.png", "metal"),
+    ("lanca", "lanca_liga_titanio", "Lança de Liga de Titânio", "assets/itens/lanca_liga_titanio.png", "metal"),
+    ("alabarda", "alabarda_liga_titanio", "Alabarda de Liga de Titânio", "assets/itens/alabarda_liga_titanio.png", "metal"),
+    ("rapieira_do_dueto", "rapieira_do_dueto_liga_titanio", "Rapieira do Dueto de Liga de Titânio", "assets/itens/rapieira_duelista_liga_titanio.png", "metal"),
+    ("gancho_corrente", "gancho_corrente_liga_titanio", "Gancho de Corrente de Liga de Titânio", "assets/itens/gancho_corrente_liga_titanio.png", "metal"),
+    ("gancho_escorpiao_superior", "gancho_escorpiao_superior_liga_titanio", "Gancho do Escorpião Superior de Liga de Titânio", "assets/itens/gancho_escorpiao_superior_liga_titanio.png", "metal"),
+    ("arco_curto", "arco_curto_cerne_tita", "Arco Curto de Cerne de Titã", "assets/itens/arco_curto_cerne_tita.png", "madeira"),
+    ("arco_composto_curto", "arco_composto_curto_cerne_tita", "Arco Composto Curto de Cerne de Titã", "assets/itens/arco_composto_curto_cerne_tita.png", "madeira"),
+    ("longbow", "longbow_cerne_tita", "Arco Longo de Cerne de Titã", "assets/itens/arco_longo_cerne_tita.png", "madeira"),
+    ("arco_composto_longo", "arco_composto_longo_cerne_tita", "Arco Composto Longo de Cerne de Titã", "assets/itens/arco_composto_longo_cerne_tita.png", "madeira"),
+    ("arco_bruto_combatente", "arco_bruto_combatente_cerne_tita", "Arco Bruto do Combatente de Cerne de Titã", "assets/itens/arco_bruto_combatente_cerne_tita.png", "madeira"),
+    ("hand_crossbow", "hand_crossbow_cerne_tita", "Besta de Mão de Cerne de Titã", "assets/itens/besta_mao_cerne_tita.png", "madeira"),
+    ("besta_duelista", "besta_duelista_cerne_tita", "Besta do Duelista de Cerne de Titã", "assets/itens/besta_duelista_cerne_tita.png", "madeira"),
+    ("besta", "besta_cerne_tita", "Besta de Cerne de Titã", "assets/itens/besta_cerne_tita.png", "madeira"),
+    ("besta_pesada", "besta_pesada_cerne_tita", "Besta Pesada de Cerne de Titã", "assets/itens/besta_pesada_cerne_tita.png", "madeira"),
+    ("besta_repetidora_patrulha", "besta_repetidora_patrulha_cerne_tita", "Besta Repetidora de Patrulha de Cerne de Titã", "assets/itens/besta_repetidora_patrulha_cerne_tita.png", "madeira"),
+    ("besta_repetidora_guerra", "besta_repetidora_guerra_cerne_tita", "Besta Repetidora de Guerra de Cerne de Titã", "assets/itens/besta_repetidora_guerra_cerne_tita.png", "madeira"),
+]
+for _base_id, _variant_id, _variant_name, _variant_icon, _material in _MATERIAL_WEAPON_CORROSION_VARIANTS:
+    _base_shop = _SHOP_WEAPONS_BY_ID[_base_id]
+    _base_combat = WEAPONS[_base_id]
+    _variant = deepcopy(_base_shop)
+    _base_description = (_base_shop.get("descricao") or _descricao_arma_catalogo(_base_shop))
+    _profile = _base_description.split(":", 1)[-1].strip()
+    _material_name = "Liga de Titânio" if _material == "metal" else "Cerne de Titã"
+    _variant.update({
+        "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
+        "price": int(_base_shop.get("price", 0) or 0) + 30,
+        "corrosao_resistente": 2, "corrosao_niveis_penalidade": 3,
+        "material": _material,
+        "descricao": (
+            f"{_variant_name}: {_profile} Variante mundana de {_material_name}, sem bônus adicional de ataque ou dano. "
+            "Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais "
+            "e o próximo nível destrói a arma."
+        ),
+    })
+    SHOP_WEAPONS.append(_variant)
+
+    _combat_variant = deepcopy(_base_combat)
+    _combat_variant.update({
+        "id": _variant_id, "name": _variant_name, "icon": _variant_icon,
+        "corrosao_resistente": 2, "corrosao_niveis_penalidade": 3,
+        "material": _material, "descricao": _variant["descricao"],
+    })
+    WEAPONS[_variant_id] = _combat_variant
+
+    if _material == "metal":
+        CORROSAO_ARMA_METAL.add(_variant_id)
+    else:
+        CORROSAO_ARMA_MADEIRA.add(_variant_id)
+    if _base_id in RANGED_AMMO:
+        RANGED_AMMO[_variant_id] = list(RANGED_AMMO[_base_id])
+
+HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
+    "hand_crossbow_liga_titanio", "besta_duelista_liga_titanio",
+    "hand_crossbow_cerne_tita", "besta_duelista_cerne_tita",
+})
+
 SHOP_ARMORS = [
     # â”€â”€ ProteÃ§Ãµes / Escudos (slot acessÃ³rio â€” somam com armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    {"id": "escudo_p",     "name": "Escudo Pequeno",     "emoji": "🛡️", "ac_bonus": 1, "damage_reduction": 1, "price": 20, "kind": "shield",
+    {"id": "escudo_p",     "name": "Escudo Pequeno",     "emoji": "🛡️", "icon": "assets/itens/escudo_p.png", "ac_bonus": 1, "damage_reduction": 1, "price": 20, "kind": "shield", "corrosion_materials": ["organic"],
      "descricao": "Bônus de CA +1. Reduz em 1 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução.",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
-    {"id": "escudo_g",     "name": "Escudo Grande",      "emoji": "🛡️", "ac_bonus": 2, "damage_reduction": 2, "price": 50, "kind": "shield",
+    {"id": "escudo_g",     "name": "Escudo Grande",      "emoji": "🛡️", "icon": "assets/itens/escudo_g.png", "ac_bonus": 2, "damage_reduction": 2, "price": 50, "kind": "shield", "corrosion_materials": ["metal"],
      "descricao": "Bônus de CA +2. Reduz em 2 o dano de cada ataque ou efeito de dano recebido, sem limite por rodada. Também reduz dano de magias e armadilhas; quando um sucesso em Reflexos reduzir o dano à metade, aplique primeiro a metade e depois esta redução.",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "escudo_torre", "name": "Escudo Torre Romano", "emoji": "🛡️",
@@ -8125,6 +8369,17 @@ SHOP_ARMORS = [
     # hÃ­bridos sofrem tanto corrosÃ£o orgÃ¢nica quanto corrosÃ£o de metal.
     {"id": "cloak",        "name": "Manto",              "emoji": "🧣",  "ac_bonus": 1, "price": 15, "kind": "armor",
      "armor_category": "leve", "corrosion_materials": ["organic"]},
+    {"id": "manto_linho_engomado", "name": "Manto de Linho Engomado", "emoji": "🧣",
+     "icon": "assets/itens/manto_linho_engomado.png", "ac_bonus": 2, "price": 40,
+     "kind": "armor", "armor_category": "leve", "corrosion_materials": ["organic"],
+     "descricao": "Manto mundano de linho espesso e engomado, com capuz e bordados reforçados. Concede +2 CA total. Pode ser corroído pelo Devorador Orgânico."},
+    {"id": "manto_seda_aracne", "name": "Manto de Seda de Aracne", "emoji": "🧣",
+     "icon": "assets/itens/manto_seda_aracne.png", "ac_bonus": 1, "price": 250,
+     "kind": "armor", "armor_category": "leve", "corrosion_materials": ["organic"],
+     "corrosao_resistente": 1, "corrosao_niveis_penalidade": 2,
+     "reflex_save_bonus": 1,
+     "bonuses": [{"effect": "resist", "type": "physical", "value": 1}],
+     "descricao": "Manto mundano tecido com Seda de Aracne. Concede +1 CA, +1 nos testes de Reflexos e reduz em 1 cada instância de dano físico recebido, acumulando com outras reduções. Tolera 1 nível de corrosão orgânica sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o quarto nível destrói o manto."},
     {"id": "manto_das_sombras", "name": "Manto das Sombras", "emoji": "🌑",
      "icon": "assets/itens/manto_das_sombras.png", "ac_bonus": 2, "price": 1500, "kind": "armor",
      "armor_category": "leve", "corrosion_materials": ["organic"],
@@ -8195,6 +8450,139 @@ SHOP_ARMORS = [
      "allowed_classes": ["paladin", "warrior"]},
 ]
 
+# Variantes mundanas de materiais para armaduras comuns. Peças especiais,
+# mantos, couro simples e escudos permanecem fora desta família.
+_ARMOR_MATERIAL_BASE_IDS = (
+    "leather_plate", "chainmail", "bronze_armor", "leather_mail",
+    "plate", "fullplate", "monster_leather_plate",
+)
+_ARMOR_MATERIALS = (
+    ("aco_damasco", "Aço Damasco"),
+    ("obsidiana_ferro", "Obsidiana de Ferro"),
+    ("liga_titanio", "Liga de Titânio"),
+)
+_SHOP_ARMORS_BY_ID = {item["id"]: item for item in SHOP_ARMORS}
+for _base_id in _ARMOR_MATERIAL_BASE_IDS:
+    _armor_base = _SHOP_ARMORS_BY_ID[_base_id]
+    _category = _armor_base.get("armor_category")
+    for _material_id, _material_name in _ARMOR_MATERIALS:
+        _armor = deepcopy(_armor_base)
+        _armor["id"] = f"{_base_id}_{_material_id}"
+        _armor["name"] = f"{_armor_base['name']} de {_material_name}"
+        _armor["icon"] = f"assets/itens/{_base_id}_{_material_id}.png"
+        _armor["kind"] = "armor"
+        _base_price = int(_armor_base.get("price", 0) or 0)
+        _armor["price"] = _base_price * 2 if _material_id == "liga_titanio" else _base_price * 3 // 2
+
+        if _material_id == "aco_damasco":
+            _niveis_livres = 2 if _category == "pesada" else 1
+            _texto_niveis = "nível" if _niveis_livres == 1 else "níveis"
+            _armor.update({
+                "corrosao_resistente": _niveis_livres,
+                "corrosao_niveis_penalidade": 2,
+                "descricao": (
+                    f"{_armor['name']}: armadura mundana com CA +{_armor_base['ac_bonus']}. "
+                    f"Aço Damasco tolera {_niveis_livres} {_texto_niveis} de corrosão sem penalidade; "
+                    "depois sofre as duas penalidades normais e é destruída no nível seguinte."
+                ),
+            })
+        elif _material_id == "obsidiana_ferro":
+            _armor.update({
+                "ac_bonus": int(_armor_base.get("ac_bonus", 0) or 0) + 1,
+                "corrosion_max": 1,
+                "corrosao_resistente": 0,
+                "corrosao_niveis_penalidade": 1,
+                "descricao": (
+                    f"{_armor['name']}: armadura mundana que concede +{int(_armor_base.get('ac_bonus', 0) or 0) + 1} CA. "
+                    "Sua estrutura é frágil contra corrosão: o primeiro nível a destrói."
+                ),
+            })
+        else:
+            _resistencias = list(_armor_base.get("bonuses") or [])
+            if _category in {"media", "pesada"}:
+                _resistencias.append({"effect": "resist", "type": "physical", "value": 1})
+            _armor.update({
+                "corrosao_resistente": 2,
+                "corrosao_niveis_penalidade": 3,
+                "bonuses": _resistencias,
+                "descricao": (
+                    f"{_armor['name']}: armadura mundana com CA +{_armor_base['ac_bonus']}. "
+                    "Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes "
+                    "aplicam as penalidades normais e o sexto destrói a peça."
+                    + (" Reduz em 1 cada instância de dano físico recebido enquanto equipada."
+                       if _category in {"media", "pesada"} else "")
+                ),
+            })
+        SHOP_ARMORS.append(_armor)
+
+_SHIELD_MATERIALS_METAL = (
+    ("aco_damasco", "Aço Damasco", 3, 2),
+    ("obsidiana_ferro", "Obsidiana de Ferro", 2, 1),
+    ("liga_titanio", "Liga de Titânio", 3, 1),
+)
+_SHIELD_MATERIALS_WOOD = (
+    ("freixo_negro", "Freixo Negro", 3, 2),
+    ("cedro_rubro", "Cedro Rubro", 2, 1),
+    ("cerne_tita", "Cerne de Titã", 3, 1),
+)
+_SHIELD_VARIANT_BASES = (
+    ("escudo_p", _SHIELD_MATERIALS_WOOD),
+    ("escudo_g", _SHIELD_MATERIALS_METAL),
+    ("escudo_torre", _SHIELD_MATERIALS_METAL),
+    ("escudo_madeira_grande", _SHIELD_MATERIALS_WOOD),
+)
+for _shield_base_id, _shield_materials in _SHIELD_VARIANT_BASES:
+    _shield_base = _SHOP_ARMORS_BY_ID[_shield_base_id]
+    for _material_id, _material_name, _price_num, _price_den in _shield_materials:
+        _shield = deepcopy(_shield_base)
+        _shield["id"] = f"{_shield_base_id}_{_material_id}"
+        _shield["name"] = f"{_shield_base['name']} de {_material_name}"
+        _shield["icon"] = f"assets/itens/{_shield_base_id}_{_material_id}.png"
+        _shield["price"] = (
+            int(_shield_base.get("price", 0) or 0) * _price_num + _price_den - 1
+        ) // _price_den
+        if _material_id in {"aco_damasco", "freixo_negro"}:
+            _shield.update({
+                "corrosao_resistente": 1,
+                "corrosao_niveis_penalidade": 2,
+                "descricao": (
+                    f"{_shield['name']}: escudo mundano que mantém CA +{_shield_base['ac_bonus']} "
+                    f"e redução base {_shield_base.get('damage_reduction', 0)}. "
+                    f"{_material_name} tolera 1 nível de corrosão sem penalidade; depois sofre "
+                    "os dois níveis penalizados normais e quebra no seguinte."
+                ),
+            })
+        elif _material_id in {"obsidiana_ferro", "cedro_rubro"}:
+            _shield.update({
+                "ac_bonus": int(_shield_base.get("ac_bonus", 0) or 0) + 1,
+                "corrosion_max": 1,
+                "corrosao_resistente": 0,
+                "corrosao_niveis_penalidade": 1,
+                "descricao": (
+                    f"{_shield['name']}: escudo mundano que concede CA "
+                    f"+{int(_shield_base.get('ac_bonus', 0) or 0) + 1}. "
+                    f"{_material_name} é frágil contra corrosão: o primeiro golpe corrosivo destrói o escudo."
+                ),
+            })
+        else:
+            _defesa_fisica = 0 if _shield_base_id == "escudo_p" else 1
+            _bonus_material = list(_shield_base.get("bonuses") or [])
+            if _defesa_fisica:
+                _bonus_material.append({"effect": "resist", "type": "physical", "value": 1})
+            _shield.update({
+                "corrosao_resistente": 2,
+                "corrosao_niveis_penalidade": 3,
+                "bonuses": _bonus_material,
+                "descricao": (
+                    f"{_shield['name']}: escudo mundano com CA +{_shield_base['ac_bonus']} "
+                    f"e redução base {_shield_base.get('damage_reduction', 0)}. "
+                    "Tolera 2 níveis de corrosão sem penalidade; os três seguintes penalizam e o sexto quebra."
+                    + (" Também reduz em 1 cada instância de dano físico recebido; acumula com outras reduções."
+                       if _defesa_fisica else " O modelo pequeno não recebe redução física adicional.")
+                ),
+            })
+        SHOP_ARMORS.append(_shield)
+
 ARMOR_CATALOG = {item["id"]: item for item in SHOP_ARMORS if item.get("kind") == "armor"}
 
 CHAPEU_ARQUIMAGO_SLOT_DEFS = {
@@ -8244,6 +8632,26 @@ SHOP_MERCHANT = [
      "bonuses": [{"effect": "damage_bonus", "value": 1}],
      "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."},
     {"id": "ring_vita",     "name": "Anel da Vitalidade","emoji": "💍",  "price": 100, "item_slot": "ring",  "effect": "maxhp",     "value": 5},
+    {"id": "anel_touro_ferro", "name": "Anel do Touro de Ferro", "emoji": "💍", "icon": "assets/itens/anel_touro_ferro.png", "price": 1000, "item_slot": "ring", "effect": "str_", "value": 4,
+     "descricao": "+4 de Força enquanto estiver equipado."},
+    {"id": "anel_olho_esfinge", "name": "Anel do Olho da Esfinge", "emoji": "💍", "icon": "assets/itens/anel_olho_esfinge.png", "price": 1000, "item_slot": "ring", "effect": "int_", "value": 4,
+     "magical": True, "descricao": "+4 de Inteligência enquanto estiver equipado."},
+    {"id": "anel_bastiao_basalto", "name": "Anel do Bastião de Basalto", "emoji": "💍", "icon": "assets/itens/anel_bastiao_basalto.png", "price": 1000, "item_slot": "ring", "effect": "con_", "value": 4,
+     "descricao": "+4 de Constituição enquanto estiver equipado."},
+    {"id": "anel_danca_vento", "name": "Anel da Dança do Vento", "emoji": "💍", "icon": "assets/itens/anel_danca_vento.png", "price": 1000, "item_slot": "ring", "effect": "dex", "value": 4,
+     "descricao": "+4 de Destreza enquanto estiver equipado."},
+    {"id": "anel_tigre", "name": "Anel do Tigre", "emoji": "💍", "icon": "assets/itens/anel_tigre.png", "price": 1500, "item_slot": "ring", "effect": "dex", "value": 2,
+     "bonuses": [{"effect": "str_", "value": 2}],
+     "descricao": "+2 de Destreza e +2 de Força enquanto estiver equipado."},
+    {"id": "anel_urso_cinzento", "name": "Anel do Urso Cinzento", "emoji": "💍", "icon": "assets/itens/anel_urso_cinzento.png", "price": 2000, "item_slot": "ring", "effect": "str_", "value": 3,
+     "bonuses": [{"effect": "con_", "value": 2}],
+     "descricao": "+3 de Força e +2 de Constituição enquanto estiver equipado."},
+    {"id": "anel_negro_corvo", "name": "Anel Negro do Corvo", "emoji": "💍", "icon": "assets/itens/anel_negro_corvo.png", "price": 1500, "item_slot": "ring", "effect": "int_", "value": 1,
+     "bonuses": [{"effect": "dex", "value": 1}, {"effect": "spd", "value": 1}],
+     "descricao": "+1 de Inteligência, +1 de Destreza e +1 de movimento enquanto estiver equipado."},
+    {"id": "anel_aguia", "name": "Anel da Águia", "emoji": "💍", "icon": "assets/itens/anel_aguia.png", "price": 1200, "item_slot": "ring", "effect": "dex", "value": 2,
+     "bonuses": [{"effect": "vision", "value": 2}],
+     "descricao": "+2 de Destreza e +2 de visão enquanto estiver equipado."},
     {"id": "anel_protecao", "name": "Anel de Proteção", "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "def_", "value": 1,
      "descricao": "+1 de Classe de Armadura enquanto estiver equipado."},
     {"id": "anel_vigia",    "name": "Anel do Vigia",    "emoji": "💍", "icon": "assets/itens/ring.png", "price": 80, "item_slot": "ring", "effect": "vision", "value": 2,
@@ -12998,6 +13406,7 @@ def _aplicar_equipamentos_monstro(m):
             "range": weapon.get("range"), "reach": weapon.get("reach"),
             "categoria": weapon.get("categoria"),
             "equipment_weapon_id": weapon.get("id"),
+            "silver": bool(weapon.get("silver")),
             "on_hit": configured_attack.get("on_hit"),
             "on_hit_effect": configured_attack.get("on_hit_effect"),
             "poison_dc": configured_attack.get("poison_dc"),
@@ -13022,11 +13431,14 @@ def _aplicar_equipamentos_monstro(m):
         m["ac"] += ac_bonus
         m["equipment_ac_bonus"] = ac_bonus
     atk_bonus = sum(int(item.get("value", 0) or 0) for item in items if item.get("effect") == "atk")
+    atk_bonus += sum(int(item.get("atk_bonus", 0) or 0) for item in items if item.get("die"))
     if atk_bonus:
         m["equipment_attack_bonus"] = atk_bonus
     damage_bonus = sum(int(b.get("value", 0) or 0) for item in items
                        for b in [item, *(item.get("bonuses") or [])]
                        if b.get("effect") == "damage_bonus")
+    damage_bonus += sum(int(item.get("damage_bonus", 0) or 0)
+                        for item in items if item.get("die"))
     if damage_bonus:
         m["equipment_damage_bonus"] = damage_bonus
     vision_bonus = sum(int(b.get("value", 0) or 0) for item in items
@@ -13059,6 +13471,122 @@ def _aplicar_equipamentos_monstro(m):
         m["equipment_poison"] = poison
     m["equipment_consumables"] = [item for item in items if item.get("item_slot") == "bag"]
 
+
+_MONSTROS_COM_ARMA_SORTEADA = frozenset({
+    "goblin_arqueiro", "goblin_combatente", "orc", "kobold_lanceiro",
+    "bandido", "capanga", "bardo", "bardo_da_caravana",
+})
+
+
+def _sortear_material_arma_monstro(weapon_id):
+    """Sorteia material para uma arma gerada aleatoriamente, mantendo seu perfil-base.
+
+    Os percentuais são absolutos por arma elegível: 70% base; metal: 9% Aço
+    Damasco, 9% Obsidiana de Ferro, 10% Liga de Titânio, 2% prata; madeira:
+    10% cada entre Freixo Negro, Cedro Rubro e Cerne de Titã.
+    """
+    datasets = (
+        _MATERIAL_WEAPON_VARIANTS,
+        _MATERIAL_WEAPON_DAMAGE_VARIANTS,
+        _MATERIAL_WEAPON_CORROSION_VARIANTS,
+    )
+    referencia = next((row for rows in datasets for row in rows if row[0] == weapon_id), None)
+    if not referencia:
+        return weapon_id
+
+    material = referencia[-1]
+    roll = random.random() * 100
+    if roll < 70:
+        return weapon_id
+
+    if material == "metal":
+        if roll < 79:
+            rows = _MATERIAL_WEAPON_VARIANTS
+            variant_id = next((row[1] for row in rows if row[0] == weapon_id), None)
+        elif roll < 88:
+            rows = _MATERIAL_WEAPON_DAMAGE_VARIANTS
+            variant_id = next((row[1] for row in rows if row[0] == weapon_id), None)
+        elif roll < 98:
+            rows = _MATERIAL_WEAPON_CORROSION_VARIANTS
+            variant_id = next((row[1] for row in rows if row[0] == weapon_id), None)
+        else:
+            silver_id = "machadinha_ana_prata" if weapon_id == "machadinha_arremesso_ana" else f"{weapon_id}_prata"
+            silver = _DUNGEON_ITEM_CATALOG.get(silver_id)
+            return silver_id if silver and silver.get("silver") else weapon_id
+    else:
+        if roll < 80:
+            rows = _MATERIAL_WEAPON_VARIANTS
+        elif roll < 90:
+            rows = _MATERIAL_WEAPON_DAMAGE_VARIANTS
+        else:
+            rows = _MATERIAL_WEAPON_CORROSION_VARIANTS
+        variant_id = next((row[1] for row in rows if row[0] == weapon_id), None)
+
+    return variant_id if variant_id in _DUNGEON_ITEM_CATALOG else weapon_id
+
+
+def _aplicar_material_aleatorio_monstro(monster):
+    """Aplica os materiais às armas sorteadas, antes de equipá-las e calcular ataques."""
+    if monster.get("type") not in _MONSTROS_COM_ARMA_SORTEADA:
+        return
+    item_ids = monster.get("equipped_items") or []
+    sorteados_por_id = {}
+    for index, item_id in enumerate(item_ids):
+        item = _DUNGEON_ITEM_CATALOG.get(item_id)
+        if not item or not item.get("die"):
+            continue
+        # O catálogo deduplica IDs repetidos (ex.: duas adagas iguais); ambas
+        # as mãos recebem a mesma variante nesse caso.
+        if item_id not in sorteados_por_id:
+            sorteados_por_id[item_id] = _sortear_material_arma_monstro(item_id)
+        item_ids[index] = sorteados_por_id[item_id]
+    monster["equipped_items"] = item_ids
+
+
+def _sortear_material_armadura_monstro(armor_id):
+    """Sorteia material para uma armadura que tenha variantes cadastradas."""
+    if armor_id not in _ARMOR_MATERIAL_BASE_IDS:
+        return armor_id
+
+    roll = random.random() * 100
+    if roll < 70:
+        return armor_id
+    material_id = (
+        "aco_damasco" if roll < 82 else
+        "obsidiana_ferro" if roll < 94 else
+        "liga_titanio"
+    )
+    variant_id = f"{armor_id}_{material_id}"
+    return variant_id if variant_id in _DUNGEON_ITEM_CATALOG else armor_id
+
+
+def _aplicar_material_aleatorio_armadura_monstro(monster):
+    """Aplica materiais às armaduras compatíveis antes de equipar o monstro."""
+    item_ids = monster.get("equipped_items") or []
+    sorteados_por_id = {}
+    for index, item_id in enumerate(item_ids):
+        if item_id not in _ARMOR_MATERIAL_BASE_IDS:
+            continue
+        if item_id not in sorteados_por_id:
+            sorteados_por_id[item_id] = _sortear_material_armadura_monstro(item_id)
+        item_ids[index] = sorteados_por_id[item_id]
+    monster["equipped_items"] = item_ids
+
+
+def _configurar_soldado_spawn(monster):
+    """Escolhe a armadura base do Soldado, mantendo seus outros equipamentos."""
+    armaduras = ("leather_plate", "chainmail", "bronze_armor", "plate")
+    armadura = random.choices(armaduras, weights=(50, 30, 15, 5), k=1)[0]
+    item_ids = list(monster.get("equipped_items", monster.get("equipment", [])) or [])
+    indice_armadura = next((i for i, item_id in enumerate(item_ids)
+                            if item_id in armaduras), None)
+    if indice_armadura is None:
+        return
+    item_ids[indice_armadura] = armadura
+    monster["equipped_items"] = item_ids
+    monster["equipment"] = item_ids[:]
+
+
 def _configurar_capanga_spawn(m):
     armas = ("shortsword", "longsword", "machado_basico", "bordao", "maca", "warhammer", "besta", "longbow")
     arma = random.choice(armas)
@@ -13088,14 +13616,16 @@ def _configurar_capanga_spawn(m):
 
 
 def _configurar_bandido_spawn(m):
-    """Sorteia arma, munição especial, armadilha e venenos da instância."""
+    """Sorteia os equipamentos e suprimentos da instância do Bandido."""
     arma = "besta" if random.randint(1, 100) <= 30 else random.choice(("dagger", "bordao"))
+    armadura = random.choices((None, "cloak", "leather", "leather_plate"),
+                              weights=(40, 30, 20, 10), k=1)[0]
     segunda_adaga = arma == "dagger" and random.random() < 0.5
     m["bandido_arma_principal"] = arma
     m["bandido_segunda_adaga"] = segunda_adaga
     m["trap_type"] = random.choice(("lamina_escondida", "armadilha_incendiaria", "rede"))
     m["equipment_enabled"] = True
-    m["equipped_items"] = ["cloak", arma]
+    m["equipped_items"] = ([armadura] if armadura else []) + [arma]
     if segunda_adaga:
         m["equipped_items"].append("dagger")
     m["virotes"] = 10 if arma == "besta" else 0
@@ -13404,8 +13934,12 @@ def make_monster(mdef, room):
         _configurar_bandido_spawn(m)
     elif m.get("type") == "dark_mage":
         _configurar_mago_trevas_spawn(m)
+    elif m.get("type") == "soldado":
+        _configurar_soldado_spawn(m)
     elif _eh_bardo(m):
         _configurar_bardo_spawn(m)
+    _aplicar_material_aleatorio_monstro(m)
+    _aplicar_material_aleatorio_armadura_monstro(m)
     _aplicar_equipamentos_monstro(m)
     if m.get("type") == "gilo_dedos_sujos":
         _configurar_gilo_spawn(m)
@@ -18792,7 +19326,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                      "horizon_shock", "horizon_shock_cooldown", "horizon_shock_power",
                                      "bronze_serpent_bind", "bronze_serpent_cooldown",
                                      "stun_crit_min_nat", "stun_fort_dc",
-                                     "sneak_attack_extra_d4") if k in w},
+                                     "sneak_attack_extra_d4", "bardo_lira_counter_d4", "chain_hook_range", "chain_pull_distance", "chain_pull_cooldown", "chain_pull_save_dc", "chain_pull_ready_round") if k in w},
             }
             res = self._route_acquired_item(p, weapon_item)
             if res == "full":
@@ -18820,7 +19354,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for _k in ("corrosion_materials", "corrosion_immunities", "corrosion_max",
                        "corrosao_resistente", "corrosao_niveis_penalidade", "corrosao_penalidade_max",
                        "bonuses", "granted_ability", "maldicao_id", "maldicao_prende", "kind", "icon",
-                       "allowed_classes",
+                       "allowed_classes", "reflex_save_bonus",
                        "damage_reduction", "descricao", "magical",
                        "thunder_reaction", "thunder_reaction_damage",
                        "thunder_reaction_duration", "thunder_reaction_cooldown",
@@ -24448,10 +24982,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         die = w.get("die")
         base = roll_dice(die) if die else 1
+        off = (atacante.get("gear") or {}).get("off_hand") or {}
+        dueto_lira_d4 = bool(
+            feedback_animation_id
+            and atacante.get("class_id") == "bard"
+            and w.get("bardo_lira_counter_d4")
+            and off.get("tipo_item") == "instrumento"
+            and off.get("base") == "lira"
+            and atacante.get("dueto_marcial_ate", 0) >= self.round_num
+            and atacante.get("dueto_marcial_usos", 0) == 1
+        )
+        dueto_dano = roll_dice("1d4") if dueto_lira_d4 else 0
         dmg = max(1, base + self._bonus_atributo_dano_arma(atacante, w)
-                  + int(w.get("damage_bonus", 0) or 0))
+                  + int(w.get("damage_bonus", 0) or 0) + dueto_dano)
         if crit: dmg *= 2
         extra = ""
+        if dueto_dano:
+            extra = f" +🎼{dueto_dano} Dueto Marcial [1d4]"
         if atacante.get("class_id") == "rogue" and self._verificar_ataque_furtivo(atacante, alvo):
             nd4 = (self._dados_furtivo(atacante.get("level", 1))
                    + int(w.get("sneak_attack_extra_d4", 0) or 0))
@@ -24465,6 +25012,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 natural_critical=bool(roll == 20), natural_fumble=bool(roll == 1))
         await self.broadcast({"type": "dice_roll", "die": _tipo_dado(die),
                                "value": base, "label": T("dado.dano_reacao"), "damage_type": DMG_PHYSICAL})
+        if dueto_dano:
+            await self.broadcast({"type": "dice_roll", "die": "d4", "value": dueto_dano,
+                                  "label": T("dado.dano_reacao"), "damage_type": DMG_PHYSICAL})
         await self.gm_say(T("narracao.reage_e_atinge_de_dano_hp", atacante=nome_criatura(atacante), alvo=nome_criatura(alvo), dmg=dmg, extra=extra, alvo_hp=alvo['hp'], alvo_max_hp=alvo['max_hp']))
         if alvo["hp"] <= 0:
             await self._monster_dies(alvo, atacante.get("id"))
@@ -24480,6 +25030,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _alvo_no_alcance_arma(self, p, target):
         """True se `target` (monstro) está no alcance real da arma de `p`."""
         w = p.get("weapon") or {}
+        hook_range = w.get("chain_hook_range")
+        if hook_range:
+            alcance = self._alcance_escuridao(p, target, int(hook_range))
+            return any(self._tile_no_alcance_gancho(p, tile, alcance)
+                       for tile in self._monster_tiles(target))
         wr = w.get("range")
         if wr is not None:
             wr = int(wr) + self._bonus_alcance_arma_distancia(p)
@@ -25188,10 +25743,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 body = self._monster_tiles(target)
                 in_range = [t for t in body
                             if self._tile_no_alcance_arma_distancia(p, t, eff_range)]
+                if (weapon_here or {}).get("chain_hook_range"):
+                    in_range = [t for t in in_range
+                                if self._tile_no_alcance_gancho(p, t, eff_range)]
                 if not in_range:
                     extra = T("erro._extra_escuridao_limita_alcance") if eff_range < w_range else ""
                     weapon_id = (weapon_here or {}).get("id")
-                    regra = (T("erro._regra_em_linha_reta") if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista")
+                    regra = (T("erro._regra_em_linha_reta") if weapon_id in ("besta", "besta_pesada", "besta_repetidora_patrulha", "besta_repetidora_guerra", "hand_crossbow", "besta_duelista", "gancho_corrente", "gancho_escorpiao_superior")
                               else T("erro._regra_diagonal_ate", diagonal=(eff_range + 1) // 2) if weapon_id in ("arco_curto", "longbow")
                               else "")
                     await self.send_to(pid, {
@@ -25731,6 +26289,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             target, weapon_here, crit, p.get("id"))
                     if target.get("hp", 0) > 0:
                         await self._resolver_bordao_serpente_no_acerto(p, target, weapon_here)
+                    if target.get("hp", 0) > 0 and (weapon_here or {}).get("chain_hook_range"):
+                        await self._resolver_puxao_gancho_corrente(p, target, weapon_here, target_tile)
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
                 if _melee_poison_vid and not self._weapon_poison_slots(p):
                     await self.gm_say(T("narracao.o_veneno_da_arma_de_acabou", heroi=p['name']))
@@ -32012,6 +32572,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 self._apply_resistance(p, b, equipping)
             else:
                 self._apply_single_effect(p, b.get("effect"), int(b.get("value", 0) or 0), equipping)
+        reflex_save_bonus = int(item.get("reflex_save_bonus", 0) or 0)
+        if reflex_save_bonus:
+            p["gear_reflex_save_bonus"] = (
+                int(p.get("gear_reflex_save_bonus", 0) or 0)
+                + (reflex_save_bonus if equipping else -reflex_save_bonus)
+            )
         # A Bota Alada não é um bônus numérico: o estado de voo é derivado
         # do slot equipado para que trocar/desequipar a peça seja simétrico.
         if item.get("id") == "bota_alada" or item.get("effect") == "voo":
@@ -32487,7 +33053,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          "magical", "fire_on_hit", "fire_crit_damage", "freeze_on_crit",
                          "thunder_push_on_crit", "thunder_pulse", "thunder_pulse_cooldown",
                          "solar_flare", "solar_flare_cooldown",
-                         "sneak_attack_extra_d4")
+                         "sneak_attack_extra_d4", "bardo_lira_counter_d4", "chain_hook_range", "chain_pull_distance", "chain_pull_cooldown", "chain_pull_save_dc", "chain_pull_ready_round")
         base = item if (item.get("die") and item.get("stat")) else WEAPONS.get(item.get("id"))
         if not base: return
         p["weapon"] = {k: base[k] for k in combat_fields if k in base}
@@ -39859,6 +40425,93 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     tiles.add((tx, ty))
         return tiles
 
+    def _tile_no_alcance_gancho(self, atacante, tile, alcance):
+        """Gancho: alcance em linha reta ortogonal/diagonal, com linha de visão."""
+        try:
+            px, py = map(int, atacante.get("pos", []))
+            tx, ty = map(int, tile)
+            alcance = max(1, int(alcance))
+        except (TypeError, ValueError):
+            return False
+        dx, dy = abs(px - tx), abs(py - ty)
+        alinhado = dx == 0 or dy == 0 or dx == dy
+        return (alinhado
+                and self._tile_no_alcance_arma_distancia(atacante, [tx, ty], alcance)
+                and self._tem_linha_de_visao([px, py], [tx, ty]))
+
+    async def _resolver_puxao_gancho_corrente(self, atacante, alvo, arma, casa_atingida):
+        """Tenta puxar um alvo após acerto; a carga pertence à peça equipada."""
+        if not arma or not arma.get("chain_hook_range") or not alvo or alvo.get("hp", 0) <= 0:
+            return False
+        item = (atacante.get("gear") or {}).get("weapon")
+        if not isinstance(item, dict) or item.get("id") != arma.get("id"):
+            return False
+        rodada = int(self.round_num or 1)
+        pronta_em = int(item.get("chain_pull_ready_round", 0) or 0)
+        if pronta_em > rodada:
+            return False
+        recarga = int(arma.get("chain_pull_cooldown", 10) or 10)
+        cd = int(arma.get("chain_pull_save_dc", 13) or 13)
+        item["chain_pull_ready_round"] = rodada + max(1, recarga)
+        passou, _, _, _ = await self._save_mostrado(alvo, "fortitude", cd, fonte=atacante)
+        if passou:
+            await self.gm_say(T("narracao.gancho_corrente_resiste", alvo=nome_criatura(alvo), dc=cd))
+            return True
+
+        try:
+            tx, ty = map(int, casa_atingida)
+            px, py = map(int, atacante.get("pos", []))
+        except (TypeError, ValueError):
+            return True
+        dx, dy = px - tx, py - ty
+        sx = 0 if dx == 0 else (1 if dx > 0 else -1)
+        sy = 0 if dy == 0 else (1 if dy > 0 else -1)
+        if not (sx or sy) or (sx and sy and abs(dx) != abs(dy)):
+            return True
+        casas = await self._puxar_monstro_pelo_gancho(alvo, sx, sy,
+                    int(arma.get("chain_pull_distance", 1) or 1), atacante.get("id"))
+        if casas:
+            await self.gm_say(T("narracao.gancho_corrente_puxa", heroi=atacante.get("name", ""),
+                                alvo=nome_criatura(alvo), casas=casas))
+        else:
+            await self.gm_say(T("narracao.gancho_corrente_bloqueado", alvo=nome_criatura(alvo)))
+        return True
+
+    async def _puxar_monstro_pelo_gancho(self, alvo, dx, dy, dist, killer_pid=None):
+        """Move o footprint passo a passo; paredes e criaturas param o puxão."""
+        if not alvo or alvo.get("hp", 0) <= 0:
+            return 0
+        movidos = 0
+        for _ in range(max(0, int(dist or 0))):
+            ox, oy = alvo["pos"][:2]
+            nx, ny = ox + dx, oy + dy
+            footprint = self._monster_tiles_at(alvo, nx, ny)
+            if any(not (0 <= x < self.map_w and 0 <= y < self.map_h)
+                   for x, y in footprint):
+                break
+            if any(self._blocks_tile(x, y) and not self._casa_abismo(x, y)
+                   for x, y in footprint):
+                break
+            casas = {tuple(tile) for tile in footprint}
+            if any(outro is not alvo and outro.get("hp", 0) > 0
+                   and casas.intersection(tuple(tile) for tile in self._monster_tiles(outro))
+                   for outro in self.monsters.values()):
+                break
+            if any(jogador.get("alive") and tuple(jogador.get("pos", [])) in casas
+                   for jogador in self.players.values()):
+                break
+            if any(tuple(animado.get("pos", [])) in casas
+                   for animado in self._all_animados()
+                   if int(animado.get("vida_atual", 0) or 0) > 0):
+                break
+            origem = list(alvo["pos"])
+            alvo["pos"] = [nx, ny]
+            movidos += 1
+            await self._aplicar_queda_terreno(alvo, origem, alvo["pos"], killer_pid)
+            if alvo.get("hp", 0) <= 0:
+                break
+        return movidos
+
     async def _empurrar(self, alvo, dx, dy, dist, detalhes=False):
         """Empurra até `dist` casas; opcionalmente informa se bateu em parede."""
         def resultado(colidiu=False, parede=False):
@@ -42503,6 +43156,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                  + extra_mod + self._lenda_resist_bonus(alvo, fonte)
                  + self._resistencia_saves_bonus(alvo)
                  + int(alvo.get("gear_save_bonus", 0) or 0)
+                 + (int(alvo.get("gear_reflex_save_bonus", 0) or 0)
+                    if tipo_save == "reflexos" else 0)
                  + self._bonus_resistencia_magia(alvo, fonte)
                  + self._alaude_runico_resist(alvo, tipo_save)
                  + self._vulnerabilidade_save_pen(alvo, tipo_save))
@@ -47579,7 +48234,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # configurar quantos níveis penalizam antes de quebrar (escala -1 por nível).
         pen_niveis = int(weapon.get("corrosao_niveis_penalidade", 2) or 2)
         if weapon.get("silver"):
-            return min(max(0, c["arma_lvl"] - 2), pen_niveis)
+            return 0
         extra = weapon.get("corrosao_resistente", 0)
         return min(max(0, c["arma_lvl"] - extra), pen_niveis)   # danificado -1, quebrado -2, ...
 
@@ -47681,6 +48336,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     @staticmethod
     def _corrosao_nm_quebra(piece, lvl):
         """(quebrou?, nivel_penalidade) modelo N/M. Base sem N/M → N=0,M=2."""
+        if (piece or {}).get("silver"):
+            return (int(lvl or 0) >= 2), 0
+        # Obsidiana de Ferro em armadura tem somente um nível total de
+        # durabilidade: o primeiro golpe corrosivo a destrói.
+        if int((piece or {}).get("corrosion_max", 0) or 0) == 1:
+            return (int(lvl or 0) >= 1), 0
         extra = int((piece or {}).get("corrosao_resistente", 0) or 0)
         pen = int((piece or {}).get("corrosao_niveis_penalidade", 2) or 2)
         if lvl >= extra + pen + 1:
@@ -48233,6 +48894,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # ResistÃªncias: reduÃ§Ã£o fixa escalonÃ¡vel OU metade do dano. A reduÃ§Ã£o
         # acontece antes da vulnerabilidade, preservando a ordem previsÃ­vel.
         resistencias = list(target.get("resistances", []))
+        # A resistência de armaduras em monstros é derivada do equipamento
+        # ativo: destruí-lo pela corrosão remove o efeito sem estado duplicado.
+        for item in target.get("equipment_items", []) or []:
+            if item.get("kind") != "armor" or item.get("corrosion_destroyed"):
+                continue
+            for bonus in item.get("bonuses", []) or []:
+                if not isinstance(bonus, dict) or bonus.get("effect") != "resist":
+                    continue
+                if bonus.get("type") not in _RESIST_TYPES:
+                    continue
+                value = int(bonus.get("value", 0) or 0)
+                resistencias.append(
+                    {"type": bonus["type"], "mode": "half"} if value <= 0 else
+                    {"type": bonus["type"], "reduction": value}
+                )
         if DMG_FIRE in damage_types and self._agua_reduz_fogo(target):
             resistencias.append({"type": DMG_FIRE, "mode": "half"})
         for resistance in resistencias:
