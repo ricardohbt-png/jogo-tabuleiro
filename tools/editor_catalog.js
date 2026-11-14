@@ -11729,9 +11729,10 @@ window.EDITOR_CATALOG = {
       "emoji": "⚔️",
       "die": "1d6",
       "stat": "str_",
+      "icon": "assets/itens/sword.png",
       "corrosao_resistente": 1,
       "categoria": "cortante",
-      "item_slot": "weapon"
+      "descricao": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
     },
     {
       "id": "espada_longa_colossal",
@@ -12482,6 +12483,20 @@ window.EDITOR_CATALOG = {
       "corrosion_free_levels": 1,
       "silver": true,
       "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "sword_prata",
+      "name": "Espada Curta Serrilhada de Prata",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/sword_prata.png",
+      "corrosion_max": 2,
+      "corrosao_resistente": 1,
+      "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Espada Curta Serrilhada de Prata: 1d6 cortante usando Força, com +2 de dano. Prata mundana: fere criaturas resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo."
     },
     {
       "id": "rapieira_do_dueto_prata",
@@ -13572,6 +13587,20 @@ window.EDITOR_CATALOG = {
       "descricao": "Espada Curta de Aço Damasco: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
+      "id": "sword_aco_damasco",
+      "name": "Espada Curta Serrilhada de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/sword_aco_damasco.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "descricao": "Espada Curta Serrilhada de Aço Damasco: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
       "id": "longsword_aco_damasco",
       "name": "Espada Longa de Aço Damasco",
       "emoji": "⚔️",
@@ -14213,6 +14242,21 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante",
       "damage_bonus": 1,
       "descricao": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "sword_obsidiana_ferro",
+      "name": "Espada Curta Serrilhada de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/sword_obsidiana_ferro.png",
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "descricao": "Espada Curta Serrilhada de Obsidiana de Ferro: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "longsword_obsidiana_ferro",
@@ -14881,6 +14925,19 @@ window.EDITOR_CATALOG = {
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "descricao": "Espada Curta de Liga de Titânio: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "sword_liga_titanio",
+      "name": "Espada Curta Serrilhada de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/sword_liga_titanio.png",
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "categoria": "cortante",
+      "descricao": "Espada Curta Serrilhada de Liga de Titânio: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "longsword_liga_titanio",
