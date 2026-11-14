@@ -53810,7 +53810,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   // Formas animais da Metamorfose: casam pelo `type`, porque as fichas não
   // declaram `image` (não existe PNG destas — a arte é só o GLB).
   rato:               'assets/models3d/monstros/rato.glb',
-  gato:               'assets/models3d/monstros/gato.glb',
+  gato:               'assets/models3d/monstros/gato_aventureiro.glb',
   ovelha:             'assets/models3d/monstros/ovelha.glb',
   // Casa pelo `type` do monstro: a ficha do soldado usa sua miniatura própria.
   soldado:            'assets/models3d/monstros/soldado.glb',
@@ -54380,6 +54380,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'bandido', 'capanga', 'gilo_dedos_sujos', 'goblin_assassino', 'jacare',
     'ciclope',
     'harpia',
+    // O Assassino da Serra usa seu GLB próprio e precisa do quarto de volta
+    // para que a frente acompanhe a direção do movimento.
+    'assassino_da_serra',
     // O Goblin Arqueiro também precisa do giro de 90° para acompanhar a
     // direção indicada pelo movimento.
     'goblinArqueiro', 'goblin_arqueiro',
@@ -54389,6 +54392,9 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     // A Ovelha também precisa do giro de 90° para acompanhar a direção
     // indicada pelo movimento da forma animal.
     'ovelha',
+    // O Gato Aventureiro tem a frente 90° fora do eixo padrão; a orientação-base
+    // deixa a frente acompanhar o sentido do movimento.
+    'gato',
     // A Vaca foi exportada com a frente no eixo +X; usa a orientação-base
     // calibrada para animais cujo focinho acompanha a direção do movimento.
     'vaca',
