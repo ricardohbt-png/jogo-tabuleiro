@@ -4375,7 +4375,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "assassino_da_serra",
-    "portrait": "soldado",
+    "portrait": "assassino_da_serra",
     "model3d": "assets/models3d/monstros/assassino_da_serra.glb",
     "armor_description": null,
     "size": [
