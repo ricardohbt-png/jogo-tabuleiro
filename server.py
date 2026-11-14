@@ -51121,11 +51121,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return frente
 
     def _monster_orthogonal_attack_tiles(self, m, reach=1):
-        """Casas ortogonalmente atacáveis por uma criatura 2×2 sem orientação.
+        """Retorna as oito casas das faces ortogonais de uma criatura 2×2.
 
-        Uma criatura grande sem frente fixa pode atacar as duas casas de cada
-        uma das quatro faces do bloco: norte, sul, oeste e leste. Diagonais e
-        as próprias casas do monstro ficam fora da zona.
+        Mantido para entidades sem regra de inimigo 2×2 e consumidores legados;
+        a validação atual dos inimigos usa `_monster_2x2_melee_attack_tiles`.
         """
         if not (self._monster_is_2x2(m) and not m.get("oriented")):
             return []
@@ -51143,6 +51142,30 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 [ax + 1 + depth, ay], [ax + 1 + depth, ay + 1],
             ])
         return out
+
+    def _monster_2x2_melee_attack_tiles(self, m, reach=1):
+        """Casas no perímetro corpo a corpo de um inimigo com footprint 2×2.
+
+        Inclui laterais e cantos em todas as direções, sem depender da frente
+        visual. Cada ponto ocupa um anel Chebyshev até o alcance da arma.
+        """
+        if not self._monster_is_2x2(m):
+            return []
+        try:
+            alcance = max(1, int(reach or 1))
+        except (TypeError, ValueError):
+            alcance = 1
+        corpo = {tuple(tile) for tile in self._monster_tiles(m)}
+        casas = set()
+        for tx, ty in corpo:
+            for dx in range(-alcance, alcance + 1):
+                for dy in range(-alcance, alcance + 1):
+                    if dx == 0 and dy == 0:
+                        continue
+                    casa = (tx + dx, ty + dy)
+                    if casa not in corpo:
+                        casas.add(casa)
+        return [[x, y] for x, y in sorted(casas, key=lambda pos: (pos[1], pos[0]))]
 
     def _entidade_em_pos(self, target_pos):
         pos = list(target_pos or [])
@@ -51238,6 +51261,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 return False
             return any(max(abs(target_pos[0] - tx), abs(target_pos[1] - ty)) == 1
                        for tx, ty in self._monster_tiles(m))
+        if self._monster_is_2x2(m) and m.get("type"):
+            return list(target_pos) in self._monster_2x2_melee_attack_tiles(m, alcance)
         if self._monster_is_2x2(m) and not m.get("oriented"):
             return list(target_pos) in self._monster_orthogonal_attack_tiles(m, alcance)
         if self._monster_has_front_row(m):
