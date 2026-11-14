@@ -22124,6 +22124,17 @@ function criarCartaMagia(magiaId, selecionada, disponivel, usada, modo, origemGr
   `;
 }
 
+let _tooltipMagiaHideTimer = null;
+
+function _prepararTooltipDetalhes(tooltip){
+  tooltip.classList.add('menu-detail-tooltip');
+  tooltip.setAttribute('role', 'tooltip');
+  if(tooltip.dataset.transferBound) return;
+  tooltip.dataset.transferBound = 'true';
+  tooltip.addEventListener('mouseenter', () => clearTimeout(_tooltipMagiaHideTimer));
+  tooltip.addEventListener('mouseleave', event => ocultarTooltipMagia(event));
+}
+
 // Tooltip da carta — aceita (magiaId, event) [novo] OU (event, magiaId) [chamadas
 // antigas de renderAbaMagiasPedro], detectando qual argumento é o id (string).
 function mostrarTooltipMagia(a, b) {
@@ -22136,23 +22147,24 @@ function mostrarTooltipMagia(a, b) {
   if (!tooltip) {
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
+  _prepararTooltipDetalhes(tooltip);
+  clearTimeout(_tooltipMagiaHideTimer);
 
   const corCirculo = _COR_CIRCULO[m.circulo];
   const labelCirculo = _labelCirculo(m.circulo);
   tooltip.innerHTML = `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid ${corCirculo}33;">
+    <div class="menu-detail-tooltip-head" style="border-color:${corCirculo}55;">
       <span style="font-size:24px;">${magiaIconHTML(m, 28)}</span>
       <div>
-        <div style="color:${corCirculo}; font-size:12px; font-weight:bold;">${m.nome}</div>
-        <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${labelCirculo}</div>
+        <div class="menu-detail-tooltip-title" style="color:${corCirculo};">${m.nome}</div>
+        <div class="menu-detail-tooltip-kind">${labelCirculo}</div>
       </div>
     </div>
-    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">${m.descricao}</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; font-size:9px;">${_magiaAcaoEtiquetaHTML(m)}</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid ${corCirculo}22; color:#ff851b; font-size:9px;">${m.custo}</div>
+    <div class="menu-detail-tooltip-body">${m.descricao}</div>
+    <div class="menu-detail-tooltip-meta" style="border-color:${corCirculo}33;color:#e0c6f3;">${_magiaAcaoEtiquetaHTML(m)}</div>
+    <div class="menu-detail-tooltip-meta" style="border-color:${corCirculo}33;">${m.custo}</div>
   `;
   tooltip.style.display = 'block';
   // Ancora o quadro ACIMA do ícone da magia (centralizado), sem seguir o cursor.
@@ -22165,7 +22177,7 @@ function mostrarTooltipMagia(a, b) {
 function _posicionarTooltipMagia(rect, event) {
   const t = document.getElementById('tooltip-magia');
   if (!t) return;
-  const tw = t.offsetWidth || 220;
+  const tw = t.offsetWidth || 360;
   const th = t.offsetHeight || 120;
   const M = 8;   // margem mínima da borda da tela
   let left, top;
@@ -22194,8 +22206,18 @@ function _moverTooltipMagia(e) {
   t.style.top  = y + 'px';
 }
 
-function ocultarTooltipMagia() {
+function ocultarTooltipMagia(event) {
   const t = document.getElementById('tooltip-magia');
+  const related = event?.relatedTarget;
+  if(event && related && (t?.contains(related) || related.closest?.('.mh-card, .mm-magia'))) return;
+  clearTimeout(_tooltipMagiaHideTimer);
+  if(event){
+    _tooltipMagiaHideTimer = setTimeout(() => {
+      const tooltip = document.getElementById('tooltip-magia');
+      if(tooltip) tooltip.style.display = 'none';
+    }, 140);
+    return;
+  }
   if (t) t.style.display = 'none';
   document.removeEventListener('mousemove', _moverTooltipMagia);
 }
@@ -22206,20 +22228,21 @@ function mostrarTooltipAnimarMortos(event) {
   if (!tooltip) {
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
+  _prepararTooltipDetalhes(tooltip);
+  clearTimeout(_tooltipMagiaHideTimer);
 
   tooltip.innerHTML = `
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #9900cc33;">
+    <div class="menu-detail-tooltip-head" style="border-color:#9900cc66;">
       <img src="assets/habilidades/animar_mortos_vivos.png" alt="" style="width:28px; height:28px; object-fit:cover;">
       <div>
-        <div style="color:#d98cff; font-size:12px; font-weight:bold;" data-ability-id="animar_mortos">${t('ui.animar.nome_curto')}</div>
-        <div style="color:#8a7a5a; font-size:9px; letter-spacing:2px;">${t('ui.ficha.habilidade_classe_curta')}</div>
+        <div class="menu-detail-tooltip-title" style="color:#e4b8ff;" data-ability-id="animar_mortos">${t('ui.animar.nome_curto')}</div>
+        <div class="menu-detail-tooltip-kind">${t('ui.ficha.habilidade_classe_curta')}</div>
       </div>
     </div>
-    <div style="color:#c8b89a; font-size:10px; line-height:1.7;">${t('ui.animar.tooltip_desc')}</div>
-    <div style="margin-top:8px; padding-top:6px; border-top:1px solid #9900cc22; color:#ff851b; font-size:9px;">${t('ui.animar.tooltip_custo')}</div>
+    <div class="menu-detail-tooltip-body">${t('ui.animar.tooltip_desc')}</div>
+    <div class="menu-detail-tooltip-meta" style="border-color:#9900cc44;">${t('ui.animar.tooltip_custo')}</div>
   `;
   tooltip.style.display = 'block';
   const alvo = (event && event.currentTarget && event.currentTarget.getBoundingClientRect)
@@ -31188,11 +31211,11 @@ function abrirMenuMagias(pid){
   const slots = _slotsMenuMagias(player);
   const renderMagia = m => {
     const acionavel = (podeAgir || testePodeAgir) && slots[m.circulo]?.livres > 0;
-    const gamepadAction = acionavel ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(m.nome)}"` : '';
+    const gamepadAction = acionavel ? 'data-gamepad-action="activate" role="button"' : '';
     const click = testePodeAgir ? `onclick="_ativarMagiaTesteDoMenu('${m.id}')"` : `onclick="ativarMagiaDoMenu('${m.id}')"`;
     return `
-    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${(podeAgir || testePodeAgir) && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? click : ''} ${gamepadAction} draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
-      onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia()">
+    <div class="mm-magia${acionavel ? ' mm-acionavel' : ''}${(podeAgir || testePodeAgir) && !acionavel ? ' mm-sem-slot' : ''}" ${acionavel ? click : ''} ${gamepadAction} tabindex="0" aria-label="${_esc(m.nome)}" draggable="true" data-shortcut-kind="magic" data-shortcut-id="${_esc(m.id)}"
+      onmouseenter="mostrarTooltipMagia('${m.id}', event)" onmouseleave="ocultarTooltipMagia(event)" onfocus="this.setAttribute('aria-describedby','tooltip-magia');mostrarTooltipMagia('${m.id}', event)" onblur="this.removeAttribute('aria-describedby');ocultarTooltipMagia()">
       <span class="mm-magia-icon">${magiaIconHTML(m, 34)}</span>
       <span><b>${m.nome}</b><small>${_magiaAcaoEtiquetaHTML(m)} · ${_labelCirculo(m.circulo) || ''} · ${m.custo || ''}${(podeAgir || testePodeAgir) && !acionavel ? ' · '+t('ui.magia.sem_slot') : ''}</small></span>
     </div>`;
@@ -31461,9 +31484,10 @@ function mostrarTooltipMenuHabilidade(event, habilidadeId){
   if(!tooltip){
     tooltip = document.createElement('div');
     tooltip.id = 'tooltip-magia';
-    tooltip.style.cssText = `position:fixed; z-index:2147483647; pointer-events:none; background:rgba(10,8,5,0.98); border:1px solid #c8a951; width:220px; padding:12px 14px; font-family:'Cinzel',serif; box-shadow:0 6px 24px rgba(0,0,0,0.75);`;
     document.body.appendChild(tooltip);
   }
+  _prepararTooltipDetalhes(tooltip);
+  clearTimeout(_tooltipMagiaHideTimer);
   const nome = h.name || h.nome || habilidadeId;
   const descricao = h.description || h.desc || t('ui.habilidade.sem_descricao');
   const tipo = (h.tipo || h.categoria || 'habilidade').replaceAll('_', ' ').toUpperCase();
@@ -31472,12 +31496,12 @@ function mostrarTooltipMenuHabilidade(event, habilidadeId){
   if(h.sede_cost || h.custo_sede) custos.push(`💧 ${h.sede_cost || h.custo_sede}`);
   if(h.recarga_rodadas) custos.push(`⏳ ${h.recarga_rodadas} rodadas`);
   tooltip.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #c8a95133;">
+    <div class="menu-detail-tooltip-head">
       <span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:3px;">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
-      <div><div style="color:#e5cd83;font-size:12px;font-weight:bold;">${nome}</div><div style="color:#8a7a5a;font-size:9px;letter-spacing:2px;">${tipo}</div></div>
+      <div><div class="menu-detail-tooltip-title">${nome}</div><div class="menu-detail-tooltip-kind">${tipo}</div></div>
     </div>
-    <div style="color:#c8b89a;font-size:10px;line-height:1.7;">${descricao}</div>
-    ${custos.length ? `<div style="margin-top:8px;padding-top:6px;border-top:1px solid #c8a95122;color:#ffae55;font-size:9px;">${custos.join(' · ')}</div>` : ''}`;
+    <div class="menu-detail-tooltip-body">${descricao}</div>
+    ${custos.length ? `<div class="menu-detail-tooltip-meta">${custos.join(' · ')}</div>` : ''}`;
   tooltip.style.display = 'block';
   const alvo = event?.currentTarget?.getBoundingClientRect ? event.currentTarget.getBoundingClientRect() : null;
   _posicionarTooltipMagia(alvo, event);
@@ -31957,11 +31981,11 @@ function abrirMenuHabilidades(pid){
       : comboGuilda && podeAgir ? `onclick="iniciarComboGuerreiroMenu(${h.id === 'guerreiro_mestre_combate' ? 3 : 2})"`
       : tecelagemGuilda && podeAgir ? `onclick="iniciarTecelagemArcanaMenu(${h.id === 'mago_tecelagem_3' ? 3 : 2})"`
       : tecnicaAtivavel && podeAgir ? `onclick="ativarTecnicaGuildaDoMenu('${h.id}')"` : '';
-    const gamepadAction = onclick ? `data-gamepad-action="activate" tabindex="0" role="button" aria-label="${_esc(nome)}"` : '';
+    const gamepadAction = onclick ? 'data-gamepad-action="activate" role="button"' : '';
     const shortcutSource = guilda && h.categoria === 'tecnica' ? 'technique' : 'skill';
     const dragShortcut = ` draggable="true" data-shortcut-kind="skill" data-shortcut-source="${shortcutSource}" data-shortcut-id="${_esc(h.id)}" data-guia="hud:atalho_habilidade_${_esc(h.id)}"`;
-    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick} ${gamepadAction}${dragShortcut}
-      onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia()">
+    return `<div class="mh-card${guilda ? ' mh-guild' : ''}${onclick ? ' mh-acionavel' : ''}${selecionada || pendente ? ' mh-selected' : ''}${restante > 0 ? ' mh-cooldown' : ''}" data-skill-id="${h.id}" ${onclick} ${gamepadAction} tabindex="0" aria-label="${_esc(nome)}"${dragShortcut}
+      onmouseenter="mostrarTooltipMenuHabilidade(event,'${h.id}')" onmouseleave="ocultarTooltipMagia(event)" onfocus="this.setAttribute('aria-describedby','tooltip-magia');mostrarTooltipMenuHabilidade(event,'${h.id}')" onblur="this.removeAttribute('aria-describedby');ocultarTooltipMagia()">
       ${restante > 0 ? `<strong class="mh-cooldown-badge">⏳ ${restante} R</strong>` : ''}
       <span class="mh-icon">${abilityIconHtml(h, h.icon || h.icone || '⚔️')}</span>
       <span class="mh-info"><b>${nome}</b><small>${desc}</small><span class="mh-meta">${_acaoEtiquetaHTML(ehPassiva(h) ? 'passiva' : h)}${custo(h) ? `<em class="mh-cost">${custo(h)}</em>` : ''}</span></span>
