@@ -13298,6 +13298,49 @@ window.EDITOR_CATALOG = {
       "descricao": "Raridade: Muito rara. Bordão mágico +1 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o atordoamento em 20 natural. Uma vez a cada 10 rodadas, ao acertar, a cabeça de serpente de bronze se enrola no alvo: Fortitude CD 13 ou ele perde o próximo turno, ficando imobilizado até o fim dele. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
     },
     {
+      "id": "espada_bastarda_veredito_radiante_mais_1",
+      "name": "Espada Bastarda do Veredito Radiante +1",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/espada_bastarda_veredito_radiante_mais_1.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "veredito_radiante": true,
+      "veredito_radiante_dano": "2d8",
+      "veredito_radiante_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Espada bastarda mágica exclusiva do Paladino: 1d10 cortante + Força, crítico natural 19–20 ×2, +1 no acerto e dano. Veredito Radiante: ao acertar, o Paladino pode escolher causar +2d8 de dano sagrado; recarga de 10 rodadas, iniciada apenas quando escolhe usar o poder."
+    },
+    {
+      "id": "espada_bastarda_veredito_radiante_mais_3",
+      "name": "Espada Bastarda do Veredito Radiante +3",
+      "emoji": "⚔️",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/espada_bastarda_veredito_radiante_mais_3.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 3,
+      "damage_bonus": 3,
+      "magical": true,
+      "veredito_radiante": true,
+      "veredito_radiante_dano": "2d8",
+      "veredito_radiante_cooldown": 10,
+      "veredito_radiante_critico": true,
+      "descricao": "Raridade: Lendária. Espada bastarda mágica exclusiva do Paladino: 1d10 cortante + Força, crítico natural 19–20 ×2, +3 no acerto e dano. Veredito Radiante: ao acertar, o Paladino pode escolher causar +2d8 de dano sagrado uma vez a cada 10 rodadas. Além disso, todo crítico natural causa +2d8 sagrado automaticamente; esse dano não é multiplicado pelo crítico nem acumulado com a escolha manual no mesmo golpe."
+    },
+    {
       "id": "bordao_punho_sismico",
       "name": "Bordão do Punho Sísmico",
       "emoji": "✊",
@@ -13431,6 +13474,64 @@ window.EDITOR_CATALOG = {
       "horizon_shock_cooldown": 10,
       "horizon_shock_power": 4,
       "descricao": "Raridade: Lendária. Bordão mágico +4 no acerto e no dano; causa 1d6 contundente usando Força ou Destreza e mantém o efeito de atordoamento em 20 natural. Uma vez a cada 10 rodadas, como ação principal, libera uma ruptura em linha reta de até 4 casas: criaturas no caminho sofrem 4d6 de dano mágico (Reflexos CD 16 reduz à metade). Quem falhar no teste é empurrado 3 casas. Uso de Clérigo, Bardo, Ladino, Paladino e Guerreiro."
+    },
+    {
+      "id": "maca_voto_guardiao",
+      "name": "Maça do Voto Guardião",
+      "emoji": "🙏",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/maca_voto_guardiao.png",
+      "allowed_classes": [
+        "cleric"
+      ],
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "magical": true,
+      "voto_guardiao": true,
+      "voto_guardiao_cooldown": 10,
+      "descricao": "Raridade: Muito rara. Arma mágica exclusiva do Clérigo: causa 1d8 contundente usando Força, com crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar um inimigo, uma vez a cada 10 rodadas o Clérigo pode restaurar 1d6 PV a si mesmo ou a um aliado vivo a até 2 casas; não ressuscita personagens."
+    },
+    {
+      "id": "espada_juramento_inquebrantavel",
+      "name": "Espada do Juramento Inquebrantável",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_juramento_inquebrantavel.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "magical": true,
+      "protecao_juramento": true,
+      "protecao_juramento_die": "1d6",
+      "protecao_juramento_cooldown": 10,
+      "descricao": "Espada do Juramento Inquebrantável: arma mágica exclusiva do Paladino; 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação opcional quando aliado vivo a até 3 casas sofre dano positivo de ataque; reduz aquele dano em 1d6 antes da perda de PV, uma vez a cada 10 rodadas."
+    },
+    {
+      "id": "espada_juramento_inquebrantavel_prata",
+      "name": "Espada do Juramento Inquebrantável de Prata",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_juramento_inquebrantavel_prata.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_max": 2,
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "magical": true,
+      "protecao_juramento": true,
+      "protecao_juramento_die": "1d6",
+      "protecao_juramento_cooldown": 10,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Espada do Juramento Inquebrantável de Prata: arma mágica exclusiva do Paladino; causa 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação para reduzir em 1d6 o dano de um ataque contra aliado vivo a até 3 casas, uma vez a cada 10 rodadas. A prata não penaliza no primeiro nível de corrosão e a arma é destruída no segundo."
     },
     {
       "id": "dagger_aco_damasco",
@@ -13610,6 +13711,50 @@ window.EDITOR_CATALOG = {
       "categoria": "contundente",
       "atk_bonus": 1,
       "descricao": "Maça de Aço Damasco: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "maca_voto_guardiao_aco_damasco",
+      "name": "Maça do Voto Guardião de Aço Damasco",
+      "emoji": "🙏",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/maca_voto_guardiao_aco_damasco.png",
+      "allowed_classes": [
+        "cleric"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "magical": true,
+      "voto_guardiao": true,
+      "voto_guardiao_cooldown": 10,
+      "descricao": "Maça do Voto Guardião de Aço Damasco: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Aço Damasco: +1 no acerto, N=1/M=2 contra corrosão."
+    },
+    {
+      "id": "espada_juramento_inquebrantavel_aco_damasco",
+      "name": "Espada do Juramento Inquebrantável de Aço Damasco",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_juramento_inquebrantavel_aco_damasco.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "magical": true,
+      "protecao_juramento": true,
+      "protecao_juramento_die": "1d6",
+      "protecao_juramento_cooldown": 10,
+      "descricao": "Espada do Juramento Inquebrantável de Aço Damasco: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no acerto, N=1/M=2 contra corrosão."
     },
     {
       "id": "warhammer_aco_damasco",
@@ -14216,6 +14361,52 @@ window.EDITOR_CATALOG = {
       "categoria": "contundente",
       "damage_bonus": 1,
       "descricao": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "maca_voto_guardiao_obsidiana_ferro",
+      "name": "Maça do Voto Guardião de Obsidiana de Ferro",
+      "emoji": "🙏",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/maca_voto_guardiao_obsidiana_ferro.png",
+      "allowed_classes": [
+        "cleric"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "damage_bonus": 1,
+      "magical": true,
+      "voto_guardiao": true,
+      "voto_guardiao_cooldown": 10,
+      "descricao": "Maça do Voto Guardião de Obsidiana de Ferro: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Obsidiana de Ferro: +1 no dano; o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "espada_juramento_inquebrantavel_obsidiana_ferro",
+      "name": "Espada do Juramento Inquebrantável de Obsidiana de Ferro",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_juramento_inquebrantavel_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "damage_bonus": 1,
+      "magical": true,
+      "protecao_juramento": true,
+      "protecao_juramento_die": "1d6",
+      "protecao_juramento_cooldown": 10,
+      "descricao": "Espada do Juramento Inquebrantável de Obsidiana de Ferro: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no dano; o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "warhammer_obsidiana_ferro",
@@ -14826,6 +15017,48 @@ window.EDITOR_CATALOG = {
       "descricao": "Maça de Liga de Titânio: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
+      "id": "maca_voto_guardiao_liga_titanio",
+      "name": "Maça do Voto Guardião de Liga de Titânio",
+      "emoji": "🙏",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/maca_voto_guardiao_liga_titanio.png",
+      "allowed_classes": [
+        "cleric"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "magical": true,
+      "voto_guardiao": true,
+      "voto_guardiao_cooldown": 10,
+      "descricao": "Maça do Voto Guardião de Liga de Titânio: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Liga de Titânio: sem bônus ofensivo, N=2/M=3 contra corrosão."
+    },
+    {
+      "id": "espada_juramento_inquebrantavel_liga_titanio",
+      "name": "Espada do Juramento Inquebrantável de Liga de Titânio",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_juramento_inquebrantavel_liga_titanio.png",
+      "allowed_classes": [
+        "paladin"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_nat20_multiplier": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "magical": true,
+      "protecao_juramento": true,
+      "protecao_juramento_die": "1d6",
+      "protecao_juramento_cooldown": 10,
+      "descricao": "Espada do Juramento Inquebrantável de Liga de Titânio: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; sem bônus ofensivo, N=2/M=3 contra corrosão."
+    },
+    {
       "id": "warhammer_liga_titanio",
       "name": "Martelo de Guerra de Liga de Titânio",
       "emoji": "🔨",
@@ -15222,6 +15455,26 @@ window.EDITOR_CATALOG = {
       "repeating_crossbow_cooldown": 10,
       "categoria": "perfurante",
       "descricao": "Besta Repetidora de Guerra de Cerne de Titã: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "maca_voto_guardiao_prata",
+      "name": "Maça do Voto Guardião de Prata",
+      "emoji": "🙏",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/maca_voto_guardiao_prata.png",
+      "allowed_classes": [
+        "cleric"
+      ],
+      "corrosion_max": 2,
+      "crit_nat20_multiplier": 3,
+      "categoria": "contundente",
+      "magical": true,
+      "voto_guardiao": true,
+      "voto_guardiao_cooldown": 10,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Maça do Voto Guardião de Prata: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo."
     },
     {
       "id": "escudo_p",

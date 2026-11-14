@@ -3722,6 +3722,62 @@ window.LANG_CATALOGO = {
     "en": "Bastard Sword of Rupture",
     "pt": "Espada Bastarda da Ruptura"
   },
+  "cat.item.espada_bastarda_veredito_radiante_mais_1.desc": {
+    "en": "Radiant Verdict +1 Bastard Sword: magical Paladin-only bastard sword, 1d10 slashing + Strength, natural 19–20 critical ×2, +1 to hit and damage. On a hit, the Paladin may choose to add 2d8 holy damage; 10-round cooldown, started only when used.",
+    "pt": "Espada Bastarda do Veredito Radiante +1: arma mágica exclusiva do Paladino, 1d10 cortante + Força, crítico natural 19–20 ×2, +1 no acerto e dano. Ao acertar, o Paladino pode escolher acrescentar 2d8 de dano sagrado; recarga de 10 rodadas, iniciada somente quando usar."
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_1.nome": {
+    "en": "Radiant Verdict Bastard Sword +1",
+    "pt": "Espada Bastarda do Veredito Radiante +1"
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_3.desc": {
+    "en": "Radiant Verdict +3 Bastard Sword: magical Paladin-only bastard sword, 1d10 slashing + Strength, natural 19–20 critical ×2, +3 to hit and damage. On a hit, the Paladin may choose to add 2d8 holy damage once every 10 rounds. Every natural critical also adds 2d8 holy damage automatically; this damage is not multiplied by the critical and does not stack with a manual activation on the same hit.",
+    "pt": "Espada Bastarda do Veredito Radiante +3: arma mágica exclusiva do Paladino, 1d10 cortante + Força, crítico natural 19–20 ×2, +3 no acerto e dano. Ao acertar, o Paladino pode escolher acrescentar 2d8 de dano sagrado uma vez a cada 10 rodadas. Todo crítico natural também acrescenta 2d8 sagrado automaticamente; esse dano não é multiplicado pelo crítico nem se acumula com uma ativação manual no mesmo golpe."
+  },
+  "cat.item.espada_bastarda_veredito_radiante_mais_3.nome": {
+    "en": "Radiant Verdict Bastard Sword +3",
+    "pt": "Espada Bastarda do Veredito Radiante +3"
+  },
+  "cat.item.espada_juramento_inquebrantavel.desc": {
+    "en": "Sword of the Unbroken Oath: magical longsword exclusive to the Paladin; 1d8 slashing + Strength, natural 19–20 critical ×2, with no fixed attack or damage bonus. Oath Protection: optional reaction when a living ally within 3 squares takes positive damage from an attack; reduce that damage by 1d6 before HP loss, once every 10 rounds.",
+    "pt": "Espada do Juramento Inquebrantável: arma mágica exclusiva do Paladino; 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação opcional quando aliado vivo a até 3 casas sofre dano positivo de ataque; reduz aquele dano em 1d6 antes da perda de PV, uma vez a cada 10 rodadas."
+  },
+  "cat.item.espada_juramento_inquebrantavel.nome": {
+    "en": "Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável"
+  },
+  "cat.item.espada_juramento_inquebrantavel_aco_damasco.desc": {
+    "en": "Damascus Steel Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; +1 to hit, N=1/M=2 corrosion.",
+    "pt": "Espada do Juramento Inquebrantável de Aço Damasco: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no acerto, N=1/M=2 contra corrosão."
+  },
+  "cat.item.espada_juramento_inquebrantavel_aco_damasco.nome": {
+    "en": "Damascus Steel Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Aço Damasco"
+  },
+  "cat.item.espada_juramento_inquebrantavel_liga_titanio.desc": {
+    "en": "Titanium Alloy Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; no offensive bonus, N=2/M=3 corrosion.",
+    "pt": "Espada do Juramento Inquebrantável de Liga de Titânio: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; sem bônus ofensivo, N=2/M=3 contra corrosão."
+  },
+  "cat.item.espada_juramento_inquebrantavel_liga_titanio.nome": {
+    "en": "Titanium Alloy Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Liga de Titânio"
+  },
+  "cat.item.espada_juramento_inquebrantavel_obsidiana_ferro.desc": {
+    "en": "Obsidian Iron Sword of the Unbroken Oath: retains 1d8 slashing + Strength, natural 19–20 critical ×2, and Oath Protection (reaction reducing attack damage to a living ally within 3 squares by 1d6; 10-round cooldown). Paladin only; +1 damage, N=1/M=2 corrosion.",
+    "pt": "Espada do Juramento Inquebrantável de Obsidiana de Ferro: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no dano, N=1/M=2 contra corrosão."
+  },
+  "cat.item.espada_juramento_inquebrantavel_obsidiana_ferro.nome": {
+    "en": "Obsidian Iron Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Obsidiana de Ferro"
+  },
+  "cat.item.espada_juramento_inquebrantavel_prata.desc": {
+    "en": "Silver Sword of the Unbroken Oath: magical sword exclusive to the Paladin; 1d8 slashing + Strength, natural 19–20 critical ×2, no fixed attack or damage bonus. Oath Protection: reaction reducing attack damage to a living ally within 3 squares by 1d6, once every 10 rounds. Silver has no penalty at corrosion level 1 and is destroyed at level 2.",
+    "pt": "Espada do Juramento Inquebrantável de Prata: arma mágica exclusiva do Paladino; causa 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação para reduzir em 1d6 o dano de um ataque contra aliado vivo a até 3 casas, uma vez a cada 10 rodadas. A prata não penaliza no primeiro nível de corrosão e a arma é destruída no segundo."
+  },
+  "cat.item.espada_juramento_inquebrantavel_prata.nome": {
+    "en": "Silver Sword of the Unbroken Oath",
+    "pt": "Espada do Juramento Inquebrantável de Prata"
+  },
   "cat.item.espada_longa_colossal.desc": {
     "en": "A weapon of gigantic proportions: 2d8+6, 2-square reach.",
     "pt": "Arma de proporções gigantescas: 2d8+6, alcance de 2 quadrados."
@@ -3807,8 +3863,8 @@ window.LANG_CATALOGO = {
     "pt": "Ferroada"
   },
   "cat.item.flecha_incendiaria.nome": {
-    "en": "Incendiary Arrow",
-    "pt": "Flecha Incendiária"
+    "en": "Incendiary Arrows (×5)",
+    "pt": "Flechas Incendiárias (×5)"
   },
   "cat.item.flechas.nome": {
     "en": "Arrows (×10)",
@@ -4645,6 +4701,46 @@ window.LANG_CATALOGO = {
   "cat.item.maca_prata.nome": {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
+  },
+  "cat.item.maca_voto_guardiao.desc": {
+    "en": "Very rare magical mace exclusive to Clerics: 1d8 bludgeoning damage using Strength, natural 20 critical ×3, with no magical attack or damage bonus. Guardian Supplication: on a hit, once every 10 rounds, restore 1d6 HP to the Cleric or a living ally within 2 squares. Cannot revive characters.",
+    "pt": "Raridade: Muito rara. Arma mágica exclusiva do Clérigo: causa 1d8 contundente usando Força, com crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar um inimigo, uma vez a cada 10 rodadas o Clérigo pode restaurar 1d6 PV a si mesmo ou a um aliado vivo a até 2 casas; não ressuscita personagens."
+  },
+  "cat.item.maca_voto_guardiao.nome": {
+    "en": "Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião"
+  },
+  "cat.item.maca_voto_guardiao_aco_damasco.desc": {
+    "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Damascus Steel adds +1 to hit and tolerates 1 corrosion level without penalty, then 2 penalized levels.",
+    "pt": "Maça do Voto Guardião de Aço Damasco: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Aço Damasco: +1 no acerto, N=1/M=2 contra corrosão."
+  },
+  "cat.item.maca_voto_guardiao_aco_damasco.nome": {
+    "en": "Damascus Steel Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Aço Damasco"
+  },
+  "cat.item.maca_voto_guardiao_liga_titanio.desc": {
+    "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Titanium Alloy adds no offensive bonus and tolerates 2 corrosion levels without penalty, then 3 penalized levels.",
+    "pt": "Maça do Voto Guardião de Liga de Titânio: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Liga de Titânio: sem bônus ofensivo, N=2/M=3 contra corrosão."
+  },
+  "cat.item.maca_voto_guardiao_liga_titanio.nome": {
+    "en": "Titanium Alloy Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Liga de Titânio"
+  },
+  "cat.item.maca_voto_guardiao_obsidiana_ferro.desc": {
+    "en": "Magical Cleric-only Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Obsidian Iron adds +1 damage and tolerates 1 corrosion level without penalty, then 2 penalized levels.",
+    "pt": "Maça do Voto Guardião de Obsidiana de Ferro: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. Obsidiana de Ferro: +1 no dano, N=1/M=2 contra corrosão."
+  },
+  "cat.item.maca_voto_guardiao_obsidiana_ferro.nome": {
+    "en": "Obsidian Iron Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Obsidiana de Ferro"
+  },
+  "cat.item.maca_voto_guardiao_prata.desc": {
+    "en": "Magical Cleric-only Silver Mace of the Guardian Vow: 1d8 bludgeoning + Strength, natural 20 critical ×3, no magical attack or damage bonus. Guardian Supplication heals 1d6 HP on a hit, once every 10 rounds, to the Cleric or a living ally within 2 squares; it cannot revive. Silver can harm creatures resistant to normal weapons, has no penalty at corrosion level 1, and is destroyed at level 2.",
+    "pt": "Maça do Voto Guardião de Prata: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo."
+  },
+  "cat.item.maca_voto_guardiao_prata.nome": {
+    "en": "Silver Mace of the Guardian Vow",
+    "pt": "Maça do Voto Guardião de Prata"
   },
   "cat.item.maca_zero_absoluto.desc": {
     "en": "Very rare magical mace: 1d6 bludgeoning damage + Strength, +1 to hit and damage, and +1d4 cold damage on each hit. Once per target per round, a critical hit traps the target in ice. At the start of each turn, it can make a free Strength check (DC 16) to escape; on a failure it remains frozen, for at most 2 rounds. Bard, Rogue, Paladin, and Warrior only.",
@@ -5567,8 +5663,8 @@ window.LANG_CATALOGO = {
     "pt": "Vidro de Ácido Grande"
   },
   "cat.item.virote_incendiario.nome": {
-    "en": "Incendiary Bolt",
-    "pt": "Virote Incendiário"
+    "en": "Incendiary Bolts (×5)",
+    "pt": "Virotes Incendiários (×5)"
   },
   "cat.item.virotes.nome": {
     "en": "Bolts (×10)",

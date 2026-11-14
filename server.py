@@ -1670,6 +1670,8 @@ WEAPONS = {
     "cinzas_ardentes": {"id": "cinzas_ardentes", "name": "Cinzas Ardentes", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "extra_damages": [{"die": "1d4", "type": "fire"}], "fire_on_hit": True, "fire_crit_damage": "1d6", "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "cinzas_ardentes_mais_3": {"id": "cinzas_ardentes_mais_3", "name": "Cinzas Ardentes +3", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 3, "damage_bonus": 3, "extra_damages": [{"die": "1d4", "type": "fire"}], "fire_on_hit": True, "fire_crit_damage": "2d6", "icon": "assets/itens magicos/espada_maligna_das_chamas.png", "allowed_classes": ["bard", "rogue", "paladin", "warrior"]},
     "espada_bastarda_ruptura": {"id": "espada_bastarda_ruptura", "name": "Espada Bastarda da Ruptura", "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 4, "damage_bonus": 4, "ignora_reducao_dano": 2, "icon": "assets/itens magicos/espada_ruptura.png", "allowed_classes": ["paladin", "warrior"]},
+    "espada_bastarda_veredito_radiante_mais_1": {"id": "espada_bastarda_veredito_radiante_mais_1", "name": "Espada Bastarda do Veredito Radiante +1", "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 1, "damage_bonus": 1, "veredito_radiante": True, "veredito_radiante_dano": "2d8", "veredito_radiante_cooldown": 10, "icon": "assets/itens/espada_bastarda_veredito_radiante_mais_1.png", "allowed_classes": ["paladin"]},
+    "espada_bastarda_veredito_radiante_mais_3": {"id": "espada_bastarda_veredito_radiante_mais_3", "name": "Espada Bastarda do Veredito Radiante +3", "die": "1d10", "stat": "str_", "crit_min_nat_roll": 19, "categoria": "cortante", "magical": True, "atk_bonus": 3, "damage_bonus": 3, "veredito_radiante": True, "veredito_radiante_dano": "2d8", "veredito_radiante_cooldown": 10, "veredito_radiante_critico": True, "icon": "assets/itens/espada_bastarda_veredito_radiante_mais_3.png", "allowed_classes": ["paladin"]},
     "alabarda_vendaval": {"id": "alabarda_vendaval", "name": "Alabarda do Vendaval", "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True, "magical": True, "atk_bonus": 1, "damage_bonus": 1, "wind_line": True, "wind_line_cooldown": 10, "icon": "assets/itens magicos/alabarda_do_vendaval.png", "allowed_classes": ["paladin", "warrior"]},
     "alabarda_do_eclipse": {"id": "alabarda_do_eclipse", "name": "Alabarda do Eclipse", "die": "1d10", "stat": "str_", "range": 2, "categoria": "perfurante", "two_handed": True, "magical": True, "atk_bonus": 2, "damage_bonus": 2, "crit_min_nat_roll": 19, "icon": "assets/itens magicos/alabarda_do_eclipse.png", "allowed_classes": ["paladin", "warrior"]},
     "marreta_quebra_couracas": {"id": "marreta_quebra_couracas", "name": "Marreta Quebra-Couraças", "die": "2d8", "stat": "str_", "categoria": "contundente", "two_handed": True, "ignora_reducao_dano": 2, "magical": True, "atk_bonus": 1, "damage_bonus": 1, "icon": "assets/itens magicos/marreta_quebra_couracas.png", "allowed_classes": ["paladin", "warrior"]},
@@ -1677,6 +1679,8 @@ WEAPONS = {
     # ver _lanca_no_alcance). NÃƒO Ã© arma de duas mÃ£os â€” pode usar escudo.
     "lanca":         {"id": "lanca",         "name": "Lança",                "die": "1d8",  "stat": "str_", "reach": "lanca", "throw_range": 4, "categoria": "perfurante"},
     "maca":          {"id": "maca",          "name": "Maça",                 "die": "1d6",  "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente"},
+    "maca_voto_guardiao": {"id": "maca_voto_guardiao", "name": "Maça do Voto Guardião", "die": "1d8", "stat": "str_", "crit_nat20_multiplier": 3, "categoria": "contundente", "magical": True, "voto_guardiao": True, "voto_guardiao_cooldown": 10, "icon": "assets/itens/maca_voto_guardiao.png", "allowed_classes": ["cleric"]},
+    "espada_juramento_inquebrantavel": {"id": "espada_juramento_inquebrantavel", "name": "Espada do Juramento Inquebrantável", "die": "1d8", "stat": "str_", "crit_min_nat_roll": 19, "crit_nat20_multiplier": 2, "categoria": "cortante", "magical": True, "protecao_juramento": True, "protecao_juramento_die": "1d6", "protecao_juramento_cooldown": 10, "icon": "assets/itens/espada_juramento_inquebrantavel.png", "allowed_classes": ["paladin"]},
     "chicote":       {"id": "chicote",       "name": "Chicote",              "die": "1d4",  "stat": "dex",  "range": 2, "off_hand_weapon": True, "categoria": "cortante"},
     "chicote_encore": {"id": "chicote_encore", "name": "Chicote do Encore", "die": "1d4", "stat": "dex", "range": 2, "off_hand_weapon": True, "categoria": "cortante", "magical": True, "chicote_encore": True, "chicote_encore_cooldown": 10, "icon": "assets/itens/chicote_do_encore.png", "allowed_classes": ["bard"]},
     "staff":         {"id": "staff",         "name": "Cajado Arcano",        "die": "1d6",  "stat": "str_", "finesse": True, "reach": "cajado", "categoria": "contundente",
@@ -5237,7 +5241,7 @@ CORROSAO_ARMADURA_METAL = {"chainmail", "bronze_armor", "plate", "fullplate", "l
                            "escudo_p", "escudo_g"}
 CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machadinha_arremesso_ana", "machado_duplo", "machado_orc",
                        "sword", "magic_sword", "shortsword", "longsword",
-                       "bastsword", "espada2m", "warhammer", "mangual", "maca", "rapieira_do_dueto",
+                       "bastsword", "espada2m", "warhammer", "mangual", "maca", "maca_voto_guardiao", "rapieira_do_dueto",
                        "marreta", "lanca", "lanca_curta", "alabarda", "gancho_corrente", "gancho_escorpiao_superior"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
 
@@ -8040,6 +8044,31 @@ SHOP_WEAPONS.append({
 })
 
 SHOP_WEAPONS.extend([
+    {"id": "espada_bastarda_veredito_radiante_mais_1",
+     "name": "Espada Bastarda do Veredito Radiante +1",
+     "emoji": "⚔️", "icon": "assets/itens/espada_bastarda_veredito_radiante_mais_1.png",
+     "die": "1d10", "stat": "str_", "price": 3000,
+     "crit_min_nat_roll": 19, "crit_nat20_multiplier": 2,
+     "categoria": "cortante", "magical": True,
+     "atk_bonus": 1, "damage_bonus": 1,
+     "veredito_radiante": True, "veredito_radiante_dano": "2d8",
+     "veredito_radiante_cooldown": 10,
+     "allowed_classes": ["paladin"],
+     "descricao": "Raridade: Muito rara. Espada bastarda mágica exclusiva do Paladino: 1d10 cortante + Força, crítico natural 19–20 ×2, +1 no acerto e dano. Veredito Radiante: ao acertar, o Paladino pode escolher causar +2d8 de dano sagrado; recarga de 10 rodadas, iniciada apenas quando escolhe usar o poder."},
+    {"id": "espada_bastarda_veredito_radiante_mais_3",
+     "name": "Espada Bastarda do Veredito Radiante +3",
+     "emoji": "⚔️", "icon": "assets/itens/espada_bastarda_veredito_radiante_mais_3.png",
+     "die": "1d10", "stat": "str_", "price": 8000,
+     "crit_min_nat_roll": 19, "crit_nat20_multiplier": 2,
+     "categoria": "cortante", "magical": True,
+     "atk_bonus": 3, "damage_bonus": 3,
+     "veredito_radiante": True, "veredito_radiante_dano": "2d8",
+     "veredito_radiante_cooldown": 10, "veredito_radiante_critico": True,
+     "allowed_classes": ["paladin"],
+     "descricao": "Raridade: Lendária. Espada bastarda mágica exclusiva do Paladino: 1d10 cortante + Força, crítico natural 19–20 ×2, +3 no acerto e dano. Veredito Radiante: ao acertar, o Paladino pode escolher causar +2d8 de dano sagrado uma vez a cada 10 rodadas. Além disso, todo crítico natural causa +2d8 sagrado automaticamente; esse dano não é multiplicado pelo crítico nem acumulado com a escolha manual no mesmo golpe."}
+])
+
+SHOP_WEAPONS.extend([
     {"id": "bordao_punho_sismico", "name": "Bordão do Punho Sísmico",
      "emoji": "✊", "icon": "assets/itens magicos/bordao_punho_sismico.png",
      "die": "1d6", "stat": "str_", "finesse": True,
@@ -8107,6 +8136,49 @@ for _weapon in SHOP_WEAPONS:
     if _weapon.get("descricao") and _weapon["id"] in WEAPONS:
         WEAPONS[_weapon["id"]]["descricao"] = _weapon["descricao"]
 
+SHOP_WEAPONS.append({
+    "id": "maca_voto_guardiao", "name": "Maça do Voto Guardião",
+    "emoji": "🙏", "icon": "assets/itens/maca_voto_guardiao.png",
+    "die": "1d8", "stat": "str_", "price": 1600,
+    "crit_nat20_multiplier": 3, "categoria": "contundente", "magical": True,
+    "voto_guardiao": True, "voto_guardiao_cooldown": 10,
+    "allowed_classes": ["cleric"],
+    "descricao": "Raridade: Muito rara. Arma mágica exclusiva do Clérigo: causa 1d8 contundente usando Força, com crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar um inimigo, uma vez a cada 10 rodadas o Clérigo pode restaurar 1d6 PV a si mesmo ou a um aliado vivo a até 2 casas; não ressuscita personagens."
+})
+WEAPONS["maca_voto_guardiao"]["descricao"] = next(
+    item["descricao"] for item in SHOP_WEAPONS if item["id"] == "maca_voto_guardiao")
+
+_espada_juramento = {
+    "id": "espada_juramento_inquebrantavel",
+    "name": "Espada do Juramento Inquebrantável",
+    "emoji": "⚔️", "icon": "assets/itens/espada_juramento_inquebrantavel.png",
+    "die": "1d8", "stat": "str_", "price": 2000,
+    "crit_min_nat_roll": 19, "crit_nat20_multiplier": 2,
+    "categoria": "cortante", "magical": True,
+    "protecao_juramento": True, "protecao_juramento_die": "1d6",
+    "protecao_juramento_cooldown": 10, "allowed_classes": ["paladin"],
+    "descricao": "Espada do Juramento Inquebrantável: espada longa mágica exclusiva do Paladino; causa 1d8 cortante + Força, com crítico natural 19–20 e multiplicador ×2, sem bônus fixo no acerto ou no dano. Proteção do Juramento: quando um aliado vivo a até 3 casas sofre dano positivo de um ataque, o Paladino pode usar uma ação reflexa para reduzir aquele dano em 1d6 antes da perda de PV. A recarga de 10 rodadas só começa se a proteção for usada."
+}
+SHOP_WEAPONS.append(_espada_juramento)
+WEAPONS[_espada_juramento["id"]]["descricao"] = _espada_juramento["descricao"]
+
+# A espada é registrada depois da geração geral de prata; aplicar a variante
+# manualmente para preservar sua arte própria, habilidade e restrição de classe.
+_espada_juramento_prata = deepcopy(_espada_juramento)
+_espada_juramento_prata.update({
+    "id": "espada_juramento_inquebrantavel_prata",
+    "name": "Espada do Juramento Inquebrantável de Prata",
+    "icon": "assets/itens/espada_juramento_inquebrantavel_prata.png",
+    "price": 20000, "silver": True, "corrosion_max": 2,
+    "corrosion_free_levels": 1,
+    "descricao": "Espada do Juramento Inquebrantável de Prata: arma mágica exclusiva do Paladino; causa 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação para reduzir em 1d6 o dano de um ataque contra aliado vivo a até 3 casas, uma vez a cada 10 rodadas. A prata não penaliza no primeiro nível de corrosão e a arma é destruída no segundo."
+})
+SHOP_WEAPONS.append(_espada_juramento_prata)
+_espada_juramento_prata_combate = deepcopy(WEAPONS[_espada_juramento["id"]])
+_espada_juramento_prata_combate.update({k: _espada_juramento_prata[k] for k in (
+    "id", "name", "icon", "silver", "corrosion_max", "corrosion_free_levels", "descricao")})
+WEAPONS[_espada_juramento_prata["id"]] = _espada_juramento_prata_combate
+
 # Variantes mundanas de materiais: mantêm o perfil e as restrições da arma-base.
 # Cada material concede +1 no acerto e um nível de corrosão sem penalidade; os
 # dois níveis penalizados e a quebra seguem o modelo padrão N/M das armas.
@@ -8120,6 +8192,8 @@ _MATERIAL_WEAPON_VARIANTS = [
     ("machado_duplo", "machado_duplo_aco_damasco", "Machado Duplo de Aço Damasco", "assets/itens/machado_duplo_aco_damasco.png", "metal"),
     ("machado_orc", "machado_orc_aco_damasco", "Machado de Guerra Órquico de Aço Damasco", "assets/itens/machado_orc_aco_damasco.png", "metal"),
     ("maca", "maca_aco_damasco", "Maça de Aço Damasco", "assets/itens/maca_aco_damasco.png", "metal"),
+    ("maca_voto_guardiao", "maca_voto_guardiao_aco_damasco", "Maça do Voto Guardião de Aço Damasco", "assets/itens/maca_voto_guardiao_aco_damasco.png", "metal"),
+    ("espada_juramento_inquebrantavel", "espada_juramento_inquebrantavel_aco_damasco", "Espada do Juramento Inquebrantável de Aço Damasco", "assets/itens/espada_juramento_inquebrantavel_aco_damasco.png", "metal"),
     ("warhammer", "warhammer_aco_damasco", "Martelo de Guerra de Aço Damasco", "assets/itens/martelo_guerra_aco_damasco.png", "metal"),
     ("mangual", "mangual_aco_damasco", "Mangual de Aço Damasco", "assets/itens/mangual_aco_damasco.png", "metal"),
     ("marreta", "marreta_aco_damasco", "Marreta de Aço Damasco", "assets/itens/marreta_aco_damasco.png", "metal"),
@@ -8197,6 +8271,8 @@ _MATERIAL_WEAPON_DAMAGE_VARIANTS = [
     ("machado_duplo", "machado_duplo_obsidiana_ferro", "Machado Duplo de Obsidiana de Ferro", "assets/itens/machado_duplo_obsidiana_ferro.png", "metal"),
     ("machado_orc", "machado_orc_obsidiana_ferro", "Machado de Guerra Órquico de Obsidiana de Ferro", "assets/itens/machado_orc_obsidiana_ferro.png", "metal"),
     ("maca", "maca_obsidiana_ferro", "Maça de Obsidiana de Ferro", "assets/itens/maca_obsidiana_ferro.png", "metal"),
+    ("maca_voto_guardiao", "maca_voto_guardiao_obsidiana_ferro", "Maça do Voto Guardião de Obsidiana de Ferro", "assets/itens/maca_voto_guardiao_obsidiana_ferro.png", "metal"),
+    ("espada_juramento_inquebrantavel", "espada_juramento_inquebrantavel_obsidiana_ferro", "Espada do Juramento Inquebrantável de Obsidiana de Ferro", "assets/itens/espada_juramento_inquebrantavel_obsidiana_ferro.png", "metal"),
     ("warhammer", "warhammer_obsidiana_ferro", "Martelo de Guerra de Obsidiana de Ferro", "assets/itens/martelo_guerra_obsidiana_ferro.png", "metal"),
     ("mangual", "mangual_obsidiana_ferro", "Mangual de Obsidiana de Ferro", "assets/itens/mangual_obsidiana_ferro.png", "metal"),
     ("marreta", "marreta_obsidiana_ferro", "Marreta de Obsidiana de Ferro", "assets/itens/marreta_obsidiana_ferro.png", "metal"),
@@ -8270,6 +8346,8 @@ _MATERIAL_WEAPON_CORROSION_VARIANTS = [
     ("machado_duplo", "machado_duplo_liga_titanio", "Machado Duplo de Liga de Titânio", "assets/itens/machado_duplo_liga_titanio.png", "metal"),
     ("machado_orc", "machado_orc_liga_titanio", "Machado de Guerra Órquico de Liga de Titânio", "assets/itens/machado_orc_liga_titanio.png", "metal"),
     ("maca", "maca_liga_titanio", "Maça de Liga de Titânio", "assets/itens/maca_liga_titanio.png", "metal"),
+    ("maca_voto_guardiao", "maca_voto_guardiao_liga_titanio", "Maça do Voto Guardião de Liga de Titânio", "assets/itens/maca_voto_guardiao_liga_titanio.png", "metal"),
+    ("espada_juramento_inquebrantavel", "espada_juramento_inquebrantavel_liga_titanio", "Espada do Juramento Inquebrantável de Liga de Titânio", "assets/itens/espada_juramento_inquebrantavel_liga_titanio.png", "metal"),
     ("warhammer", "warhammer_liga_titanio", "Martelo de Guerra de Liga de Titânio", "assets/itens/martelo_guerra_liga_titanio.png", "metal"),
     ("mangual", "mangual_liga_titanio", "Mangual de Liga de Titânio", "assets/itens/mangual_liga_titanio.png", "metal"),
     ("marreta", "marreta_liga_titanio", "Marreta de Liga de Titânio", "assets/itens/marreta_liga_titanio.png", "metal"),
@@ -8330,6 +8408,45 @@ HAND_CROSSBOW_IDS = frozenset(HAND_CROSSBOW_IDS | {
     "hand_crossbow_liga_titanio", "besta_duelista_liga_titanio",
     "hand_crossbow_cerne_tita", "besta_duelista_cerne_tita",
 })
+
+# Variantes de material da arma mágica clerical conservam Súplica Vital; o
+# acabamento do material acrescenta apenas as propriedades mundanas definidas.
+for _item_id, _material_text in (
+    ("maca_voto_guardiao_aco_damasco", "Aço Damasco: +1 no acerto, N=1/M=2 contra corrosão."),
+    ("maca_voto_guardiao_obsidiana_ferro", "Obsidiana de Ferro: +1 no dano; o primeiro golpe corrosivo destrói a arma."),
+    ("maca_voto_guardiao_liga_titanio", "Liga de Titânio: sem bônus ofensivo, N=2/M=3 contra corrosão."),
+):
+    _shop_variant = next(item for item in SHOP_WEAPONS if item["id"] == _item_id)
+    _ability_text = "1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou no dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita."
+    _shop_variant["descricao"] = (
+        f"{_shop_variant['name']}: arma mágica exclusiva do Clérigo; {_ability_text} "
+        f"{_material_text}"
+    )
+    WEAPONS[_item_id]["descricao"] = _shop_variant["descricao"]
+
+_espada_juramento_textos_material = {
+    "espada_juramento_inquebrantavel": "Espada do Juramento Inquebrantável: arma mágica exclusiva do Paladino; 1d8 cortante + Força, crítico natural 19–20 ×2, sem bônus fixo no acerto ou dano. Proteção do Juramento: reação opcional quando aliado vivo a até 3 casas sofre dano positivo de ataque; reduz aquele dano em 1d6 antes da perda de PV, uma vez a cada 10 rodadas.",
+    "espada_juramento_inquebrantavel_aco_damasco": "Espada do Juramento Inquebrantável de Aço Damasco: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no acerto, N=1/M=2 contra corrosão.",
+    "espada_juramento_inquebrantavel_obsidiana_ferro": "Espada do Juramento Inquebrantável de Obsidiana de Ferro: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; +1 no dano; o primeiro golpe corrosivo destrói a arma.",
+    "espada_juramento_inquebrantavel_liga_titanio": "Espada do Juramento Inquebrantável de Liga de Titânio: conserva 1d8 cortante + Força, crítico natural 19–20 ×2 e Proteção do Juramento (reação, reduz 1d6 do dano de ataque contra aliado vivo a até 3 casas; recarga 10 rodadas). Exclusiva do Paladino; sem bônus ofensivo, N=2/M=3 contra corrosão.",
+}
+for _id_espada_juramento, _texto_espada_juramento in _espada_juramento_textos_material.items():
+    next(item for item in SHOP_WEAPONS if item["id"] == _id_espada_juramento)["descricao"] = _texto_espada_juramento
+    WEAPONS[_id_espada_juramento]["descricao"] = _texto_espada_juramento
+
+_maca_voto_prata = deepcopy(next(item for item in SHOP_WEAPONS if item["id"] == "maca_voto_guardiao"))
+_maca_voto_prata.update({
+    "id": "maca_voto_guardiao_prata", "name": "Maça do Voto Guardião de Prata",
+    "icon": "assets/itens/maca_voto_guardiao_prata.png",
+    "price": int(_maca_voto_prata.get("price", 0) or 0) * 10,
+    "silver": True, "corrosion_max": 2, "corrosion_free_levels": 1,
+    "descricao": "Maça do Voto Guardião de Prata: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo."
+})
+SHOP_WEAPONS.append(_maca_voto_prata)
+_maca_voto_prata_combate = deepcopy(WEAPONS["maca_voto_guardiao"])
+_maca_voto_prata_combate.update({k: _maca_voto_prata[k] for k in (
+    "id", "name", "icon", "silver", "corrosion_max", "corrosion_free_levels", "descricao")})
+WEAPONS[_maca_voto_prata["id"]] = _maca_voto_prata_combate
 
 SHOP_ARMORS = [
     # â”€â”€ ProteÃ§Ãµes / Escudos (slot acessÃ³rio â€” somam com armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -18328,11 +18445,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self._smoke_hold = None
             hold["event"].set()
 
-    async def _run_smoke_capable_command(self, coroutine, label):
+    async def _run_smoke_capable_command(self, coroutine, label, allow_veredito=False):
         # Commands without possible reactions retain their synchronous behavior.
-        if not any(self._ativo(p) and any(self._smoke_reaction_item(p, iid)[0]
-                   for iid in ("bomba_fumaca", "bomba_flash"))
-                   for p in self.players.values()):
+        smoke_possible = any(self._ativo(p) and any(self._smoke_reaction_item(p, iid)[0]
+                              for iid in ("bomba_fumaca", "bomba_flash"))
+                             for p in self.players.values())
+        veredito_possible = bool(allow_veredito and any(
+            self._ativo(p) and p.get("class_id") == "paladin"
+            and (weapon := ((p.get("gear") or {}).get("weapon") or {})).get("veredito_radiante")
+            and int(weapon.get("veredito_radiante_ready_round", 0) or 0) <= int(self.round_num or 0)
+            for p in self.players.values()))
+        if not (smoke_possible or veredito_possible):
             await coroutine
             return None
         async def run():
@@ -18418,6 +18541,79 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             rodada + int(bracelete.get("bracelet_reaction_cooldown", 8) or 8))
         await self.broadcast({"type": "dice_roll", "die": bracelete["bracelet_reaction_die"],
                               "value": reducao, "label": bracelete.get("name", "Guarda Reflexa")})
+        return max(0, dano - reducao)
+
+    async def _oferecer_protecao_juramento(self, alvo, dano, atacante_id):
+        """Permite ao Paladino reduzir por reação dano de ataque contra um aliado."""
+        if (not self._eh_jogador(alvo) or not alvo.get("alive")
+                or not alvo.get("connected", False) or dano <= 0 or self.sorte_reacao):
+            return dano
+        pos_alvo = alvo.get("pos")
+        if not isinstance(pos_alvo, (list, tuple)) or len(pos_alvo) != 2:
+            return dano
+        paladino = next((hero for hero in self.players.values()
+                         if str(hero.get("id")) != str(alvo.get("id"))
+                         and hero.get("class_id") == "paladin"
+                         and self._ativo(hero)
+                         and self._conexao_de(hero["id"]) in self.connections
+                         and isinstance(hero.get("pos"), (list, tuple))
+                         and len(hero["pos"]) == 2
+                         and _distancia_chebyshev(hero["pos"], pos_alvo) <= 3
+                         and isinstance((hero.get("gear") or {}).get("weapon"), dict)
+                         and (hero["gear"]["weapon"].get("protecao_juramento")
+                              or hero["gear"]["weapon"].get("protecao_juramento_die"))
+                         and int(hero["gear"]["weapon"].get(
+                             "protecao_juramento_ready_round", 0) or 0) <= int(self.round_num or 0)),
+                         None)
+        if not paladino:
+            return dano
+        item = paladino["gear"]["weapon"]
+        attacker = (self.players.get(atacante_id) or self.monsters.get(atacante_id)
+                    or {"name": "um inimigo"})
+        pending = {"pid": paladino["id"], "event": asyncio.Event(), "usar": False,
+                   "tipo": "protecao_juramento", "item_id": item.get("id"),
+                   "alvo_id": alvo.get("id"), "round": int(self.round_num or 0)}
+        self.sorte_reacao = pending
+        await self.send_to(paladino["id"], {
+            "type": "sorte_reacao",
+            "texto": T("ui.item.espada_juramento_prompt",
+                        paladino=paladino.get("name", "Paladino"),
+                        aliado=alvo.get("name", "aliado"),
+                        atacante=nome_criatura(attacker), dano=dano),
+        })
+        try:
+            await asyncio.wait_for(pending["event"].wait(), timeout=12)
+        except asyncio.TimeoutError:
+            pass
+        finally:
+            if self.sorte_reacao is pending:
+                self.sorte_reacao = None
+        if not pending.get("usar"):
+            return dano
+        paladino = self.players.get(pending["pid"])
+        item = ((paladino.get("gear") or {}).get("weapon") or {}) if paladino else {}
+        if (not paladino or not self._ativo(paladino)
+                or int(self.round_num or 0) != pending["round"]
+                or str(alvo.get("id")) != str(pending["alvo_id"])
+                or not alvo.get("alive") or alvo.get("hp", 0) <= 0
+                or not isinstance(paladino.get("pos"), (list, tuple))
+                or _distancia_chebyshev(paladino["pos"], alvo.get("pos", [-1, -1])) > 3
+                or item.get("id") != pending["item_id"]
+                or not (item.get("protecao_juramento") or item.get("protecao_juramento_die"))
+                or int(item.get("protecao_juramento_ready_round", 0) or 0) > int(self.round_num or 0)):
+            return dano
+        expressao = item.get("protecao_juramento_die", "1d6")
+        reducao = roll_dice(expressao)
+        pronta_em = int(self.round_num or 0) + int(
+            item.get("protecao_juramento_cooldown", 10) or 10)
+        item["protecao_juramento_ready_round"] = pronta_em
+        if isinstance(paladino.get("weapon"), dict):
+            paladino["weapon"]["protecao_juramento_ready_round"] = pronta_em
+        await self.broadcast({"type": "dice_roll", "die": expressao, "value": reducao,
+                              "label": T("ui.item.espada_juramento_die")})
+        await self.gm_say(T("narracao.espada_juramento_reduz",
+                            paladino=paladino.get("name", "Paladino"),
+                            aliado=alvo.get("name", "aliado"), reducao=reducao))
         return max(0, dano - reducao)
 
     async def handle_sorte_reacao(self, pid, usar):
@@ -19584,6 +19780,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                      "granted_ability", "maldicao_id", "maldicao_prende",
                                      "magical", "causa_sangramento", "fire_on_hit", "fire_crit_damage",
                                      "chicote_encore", "chicote_encore_cooldown", "chicote_encore_ready_round",
+                                     "voto_guardiao", "voto_guardiao_cooldown", "voto_guardiao_ready_round",
+                                     "protecao_juramento", "protecao_juramento_die", "protecao_juramento_cooldown", "protecao_juramento_ready_round",
+                                     "veredito_radiante", "veredito_radiante_dano", "veredito_radiante_cooldown", "veredito_radiante_ready_round", "veredito_radiante_critico",
                                      "freeze_on_crit", "return_on_throw", "lightning_line",
                                      "lightning_line_cooldown", "thunder_push_on_crit", "thunder_pulse",
                                      "thunder_pulse_cooldown", "solar_flare", "solar_flare_cooldown",
@@ -25845,6 +26044,157 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self._consumir_recursos(p, "apenas_acao")
         await self.push_state()
 
+    def _voto_guardiao_alvos_validos(self, cleric):
+        origem = cleric.get("pos")
+        if not isinstance(origem, (list, tuple)) or len(origem) != 2:
+            return []
+        return [hero for hero in self.players.values()
+                if hero.get("alive") and hero.get("hp", 0) < hero.get("max_hp", 0)
+                and isinstance(hero.get("pos"), (list, tuple))
+                and _distancia_chebyshev(origem, hero["pos"]) <= 2]
+
+    async def _oferecer_voto_guardiao_apos_acerto(self, cleric, weapon):
+        if (cleric.get("class_id") != "cleric" or not (weapon or {}).get("voto_guardiao")
+                or cleric.get("voto_guardiao_pending")):
+            return
+        equipped = (cleric.get("gear") or {}).get("weapon") or {}
+        if equipped.get("id") != (weapon or {}).get("id"):
+            return
+        rodada = int(self.round_num or 0)
+        pronta_em = int(equipped.get("voto_guardiao_ready_round", 0) or 0)
+        if pronta_em > rodada:
+            return
+        targets = self._voto_guardiao_alvos_validos(cleric)
+        if not targets:
+            return
+        request_id = f"voto_{cleric['id']}_{rodada}_{new_id()}"
+        cleric["voto_guardiao_pending"] = {
+            "request_id": request_id, "round": rodada,
+            "weapon_id": equipped.get("id"),
+            "target_ids": [str(hero["id"]) for hero in targets],
+        }
+        await self.send_to(cleric["id"], {
+            "type": "voto_guardiao_prompt", "request_id": request_id,
+            "owner_id": cleric["id"],
+            "targets": [{"id": hero["id"], "name": hero.get("name", "Clérigo"),
+                         "hp": hero.get("hp", 0), "max_hp": hero.get("max_hp", 0),
+                         "self": hero["id"] == cleric["id"]} for hero in targets],
+            "cooldown": int(equipped.get("voto_guardiao_cooldown", 10) or 10),
+        })
+
+    async def handle_voto_guardiao_choice(self, pid, data=None):
+        cleric = self.players.get(pid)
+        pending = cleric.get("voto_guardiao_pending") if cleric else None
+        data = data or {}
+        if (self.phase != "playing" or not cleric or not cleric.get("alive")
+                or not self._is_turn(pid) or not pending
+                or data.get("request_id") != pending.get("request_id")
+                or int(self.round_num or 0) != int(pending.get("round", -1))):
+            return
+        target_id = data.get("target_id")
+        if target_id is None:
+            cleric.pop("voto_guardiao_pending", None)
+            await self.push_state()
+            return
+        equipped = (cleric.get("gear") or {}).get("weapon") or {}
+        if (equipped.get("id") != pending.get("weapon_id")
+                or not equipped.get("voto_guardiao")
+                or int(equipped.get("voto_guardiao_ready_round", 0) or 0) > int(self.round_num or 0)):
+            cleric.pop("voto_guardiao_pending", None)
+            await self.push_state()
+            return
+        target = next((hero for hero in self.players.values()
+                       if str(hero.get("id")) == str(target_id)), None)
+        if (not target or str(target.get("id")) not in pending.get("target_ids", [])
+                or not target.get("alive")
+                or _distancia_chebyshev(cleric.get("pos", [0, 0]), target.get("pos", [99, 99])) > 2
+                or target.get("hp", 0) >= target.get("max_hp", 0)):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.alvo_invalido")})
+            return
+        cleric.pop("voto_guardiao_pending", None)
+        rolled = roll_dice("1d6")
+        cura = min(rolled, int(target.get("max_hp", 0)) - int(target.get("hp", 0)))
+        target["hp"] += cura
+        pronta_em = int(self.round_num or 0) + int(equipped.get("voto_guardiao_cooldown", 10) or 10)
+        equipped["voto_guardiao_ready_round"] = pronta_em
+        combat_weapon = cleric.get("weapon")
+        if isinstance(combat_weapon, dict):
+            combat_weapon["voto_guardiao_ready_round"] = pronta_em
+        await self.broadcast({"type": "dice_roll", "die": "d6", "value": rolled,
+                              "label": T("dado.cura"), "healing": True,
+                              "target_id": target.get("id"), "effective": cura})
+        await self.gm_say(T("narracao.suplicia_vital_cura", cleric=cleric.get("name", "Clérigo"),
+                            target=target.get("name", "aliado"), cura=cura))
+        await self.push_state()
+
+    async def _oferecer_veredito_radiante_apos_acerto(self, paladino, target, weapon, crit):
+        """Rola o dano sagrado automático no crítico ou pede ativação opcional."""
+        if (paladino.get("class_id") != "paladin" or not (weapon or {}).get("veredito_radiante")
+                or not target or target.get("hp", 0) <= 0):
+            return 0
+        gear_weapon = (paladino.get("gear") or {}).get("weapon") or {}
+        if gear_weapon.get("id") != (weapon or {}).get("id"):
+            return 0
+        rodada = int(self.round_num or 0)
+        cooldown = int(gear_weapon.get("veredito_radiante_cooldown", 10) or 10)
+        pronta_em = int(gear_weapon.get("veredito_radiante_ready_round", 0) or 0)
+        automatico = bool(crit and gear_weapon.get("veredito_radiante_critico"))
+        if not automatico:
+            if pronta_em > rodada or paladino.get("veredito_radiante_pending"):
+                return 0
+            request_id = f"veredito_{paladino['id']}_{rodada}_{new_id()}"
+            pending = {"request_id": request_id, "round": rodada,
+                       "weapon_id": gear_weapon.get("id"), "target_id": str(target.get("id")),
+                       "event": asyncio.Event(), "usar": False}
+            paladino["veredito_radiante_pending"] = pending
+            await self.send_to(paladino["id"], {
+                "type": "veredito_radiante_prompt", "heroi": paladino["id"],
+                "request_id": request_id,
+                "weapon_name": gear_weapon.get("name", "Veredito Radiante"),
+                "target_name": nome_criatura(target), "cooldown": cooldown,
+            })
+            try:
+                await asyncio.wait_for(pending["event"].wait(), timeout=12)
+            except asyncio.TimeoutError:
+                pass
+            finally:
+                if paladino.get("veredito_radiante_pending") is pending:
+                    paladino.pop("veredito_radiante_pending", None)
+            if not pending.get("usar"):
+                return 0
+            gear_weapon = (paladino.get("gear") or {}).get("weapon") or {}
+            if (self.phase != "playing" or not self._ativo(paladino)
+                    or int(self.round_num or 0) != rodada
+                    or str(target.get("id")) != pending["target_id"]
+                    or gear_weapon.get("id") != pending["weapon_id"]
+                    or not gear_weapon.get("veredito_radiante")
+                    or int(gear_weapon.get("veredito_radiante_ready_round", 0) or 0) > rodada):
+                return 0
+            gear_weapon["veredito_radiante_ready_round"] = rodada + cooldown
+            if isinstance(paladino.get("weapon"), dict):
+                paladino["weapon"]["veredito_radiante_ready_round"] = rodada + cooldown
+
+        die = gear_weapon.get("veredito_radiante_dano", "2d8")
+        raw = roll_dice(die)
+        dano = self._apply_damage_types(raw, [DMG_HOLY], target)
+        await self.broadcast({"type": "dice_roll", "die": _tipo_dado(die), "value": raw,
+                              "label": T("ui.item.veredito_radiante_die"),
+                              "modifier": dano - raw, "total": dano,
+                              "expression": die, "damage_type": DMG_HOLY})
+        return dano
+
+    async def handle_veredito_radiante_choice(self, pid, data=None):
+        paladino = self.players.get(pid)
+        pending = paladino.get("veredito_radiante_pending") if paladino else None
+        data = data or {}
+        if (self.phase != "playing" or not paladino or not paladino.get("alive")
+                or not self._is_turn(pid) or not pending
+                or data.get("request_id") != pending.get("request_id")
+                or int(self.round_num or 0) != int(pending.get("round", -1))):
+            return
+        pending["usar"] = data.get("choice") == "use"
+        pending["event"].set()
+
     async def handle_attack(self, pid, target_id, buffs=None, target_pos=None,
                             furia_attacks=None):
         async with self.evento_elemental({"tipo": "arma", "caster_id": pid}):
@@ -26433,6 +26783,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if p.get("golpe_sagrado_ativo"):
                     golpe_bonus, golpe_detail, golpe_types = await self._rolar_dano_golpe_sagrado(p, target)
                     dmg += golpe_bonus
+                veredito_dano = await self._oferecer_veredito_radiante_apos_acerto(
+                    p, target, weapon_here, crit)
+                if veredito_dano:
+                    dmg += veredito_dano
+                    golpe_types.append(DMG_HOLY)
+                    detalhe_veredito = f" +☀️{veredito_dano} sagrado [Veredito Radiante]"
+                    golpe_detail = f"{golpe_detail}{detalhe_veredito}".strip()
                 # O Ataque Furtivo (Luccas, passiva) foi resolvido acima, junto
                 # do dano da arma, para que resistências e reduções incidam
                 # sobre o golpe inteiro. `furtivo_detail` já está preenchido.
@@ -26556,6 +26913,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         await self._resolver_bordao_serpente_no_acerto(p, target, weapon_here)
                     if target.get("hp", 0) > 0 and (weapon_here or {}).get("chain_hook_range"):
                         await self._resolver_puxao_gancho_corrente(p, target, weapon_here, target_tile)
+                await self._oferecer_voto_guardiao_apos_acerto(p, weapon_here)
                 await self._reacoes_instrumento_apos_ataque(p, target, dmg)
                 if _melee_poison_vid and not self._weapon_poison_slots(p):
                     await self.gm_say(T("narracao.o_veneno_da_arma_de_acabou", heroi=p['name']))
@@ -33337,6 +33695,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          "thunder_push_on_crit", "thunder_pulse", "thunder_pulse_cooldown",
                          "solar_flare", "solar_flare_cooldown",
                          "chicote_encore", "chicote_encore_cooldown", "chicote_encore_ready_round",
+                         "voto_guardiao", "voto_guardiao_cooldown", "voto_guardiao_ready_round",
+                         "protecao_juramento", "protecao_juramento_die", "protecao_juramento_cooldown", "protecao_juramento_ready_round",
+                         "veredito_radiante", "veredito_radiante_dano", "veredito_radiante_cooldown", "veredito_radiante_ready_round", "veredito_radiante_critico",
                          "sneak_attack_extra_d4", "bardo_lira_counter_d4", "chain_hook_range", "chain_pull_distance", "chain_pull_cooldown", "chain_pull_save_dc", "chain_pull_ready_round")
         base = item if (item.get("die") and item.get("stat")) else WEAPONS.get(item.get("id"))
         if not base: return
@@ -37863,6 +38224,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             dano = self._reduzir_dano_escudo(alvo, dano)
             dano = self._reduzir_dano_barreira_arcana(alvo, dano)
             dano = self._reduzir_dano_protetor(alvo, dano)
+            if is_attack and dano > 0:
+                dano = await self._oferecer_protecao_juramento(alvo, dano, killer_pid)
+                if dano <= 0:
+                    return
             if not _vinculo_bypass:
                 dano = await self._aplicar_vinculo_maldito_da_dor(
                     alvo, dano, elemento, killer_pid, is_attack=is_attack)
@@ -47585,6 +47950,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["bonus_action_used"] = False
         p["instrumento_usado"] = False   # bardo: 1 instrumento tocado por turno
         self._limpar_improviso_pendente(p)   # Gaita: passos sem-alvo nÃ£o usados expiram
+        p.pop("voto_guardiao_pending", None)
         # buffs de turno do warrior expiram ao fim do turno (flags planas)
         p["skill_bonus_acerto"] = 0
         p["skill_bonus_dano"]   = 0
@@ -61238,7 +61604,7 @@ async def handler(ws):
             # Habilidades dos heróis que devem produzir o feedback visual no
             # peão. O snapshot evita animar tentativas recusadas pelo handler.
             _ability_types = {
-                "usar_tecnica", "usar_instrumento", "improviso_alvo", "improviso_encore_choice", "guild_equip",
+                "usar_tecnica", "usar_instrumento", "improviso_alvo", "improviso_encore_choice", "voto_guardiao_choice", "guild_equip",
                 "aprimorar_magia", "estender_magia", "fortalecer_magia",
                 "ativar_cancao", "provocacao", "cura", "cura_area",
                 "purificacao", "ressurreicao", "imposicao_maos", "golpe_sagrado",
@@ -61856,6 +62222,12 @@ async def handler(ws):
                 elif t == "improviso_encore_choice":
                     if room: await room.handle_improviso_encore_choice(pid, msg)
 
+                elif t == "voto_guardiao_choice":
+                    if room: await room.handle_voto_guardiao_choice(pid, msg)
+
+                elif t == "veredito_radiante_choice":
+                    if room: await room.handle_veredito_radiante_choice(pid, msg)
+
                 elif t == "usar_oportunidade_movimento":
                     if room: await room.handle_usar_oportunidade_movimento(pid)
 
@@ -61922,8 +62294,10 @@ async def handler(ws):
                     if room: await room.handle_encerrar_missao(pid)
 
                 elif t == "attack":
-                    if room: await room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"),
-                                                       msg.get("target_pos"), msg.get("furia_attacks"))
+                    if room: await room._run_smoke_capable_command(
+                        room.handle_attack(pid, _key(msg.get("target_id")), msg.get("buffs"),
+                                           msg.get("target_pos"), msg.get("furia_attacks")),
+                        "ataque com opção do Veredito Radiante", allow_veredito=True)
 
                 elif t == "prever_intencoes":
                     if room: await room.handle_prever_intencoes(pid)

@@ -4842,6 +4842,58 @@ window.LANG_INTERFACE = {
     "en": "Using this choice starts a {rounds}-round cooldown.",
     "pt": "Usar esta escolha inicia uma recarga de {rounds} rodadas."
   },
+  "ui.item.voto_guardiao_title": {
+    "en": "Guardian Vow",
+    "pt": "Voto Guardião"
+  },
+  "ui.item.voto_guardiao_prompt": {
+    "en": "The mace can restore 1d6 HP to you or a nearby ally. Choose a living hero within 2 squares.",
+    "pt": "A maça pode restaurar 1d6 PV seus ou de um aliado próximo. Escolha um herói vivo a até 2 casas."
+  },
+  "ui.item.voto_guardiao_you": {
+    "en": "You",
+    "pt": "Você"
+  },
+  "ui.item.voto_guardiao_decline": {
+    "en": "Save the healing",
+    "pt": "Guardar a cura"
+  },
+  "ui.item.voto_guardiao_cooldown": {
+    "en": "The power recharges in {rounds} rounds.",
+    "pt": "O poder recarrega em {rounds} rodadas."
+  },
+  "ui.item.veredito_radiante_title": {
+    "en": "Radiant Verdict",
+    "pt": "Veredito Radiante"
+  },
+  "ui.item.veredito_radiante_prompt": {
+    "en": "Use {weapon} to unleash 2d8 holy damage on {target}?",
+    "pt": "Usar {weapon} para liberar 2d8 de dano sagrado contra {target}?"
+  },
+  "ui.item.veredito_radiante_use": {
+    "en": "Unleash the verdict",
+    "pt": "Liberar o veredito"
+  },
+  "ui.item.veredito_radiante_save": {
+    "en": "Save the power",
+    "pt": "Guardar o poder"
+  },
+  "ui.item.veredito_radiante_cooldown": {
+    "en": "Choosing this power starts a {rounds}-round cooldown.",
+    "pt": "Escolher este poder inicia uma recarga de {rounds} rodadas."
+  },
+  "ui.item.veredito_radiante_die": {
+    "en": "Radiant Verdict",
+    "pt": "Veredito Radiante"
+  },
+  "ui.item.espada_juramento_prompt": {
+    "en": "{atacante} would deal {dano} damage to {aliado}, who is within 3 squares. Use the Unbroken Oath to reduce the damage by 1d6?",
+    "pt": "{atacante} causaria {dano} de dano a {aliado}, que está a até 3 casas. Usar a Proteção do Juramento para reduzir esse dano em 1d6?"
+  },
+  "ui.item.espada_juramento_die": {
+    "en": "Unbroken Oath protection",
+    "pt": "Proteção do Juramento"
+  },
   "ui.instrumento.encore_menor_desc": {
     "en": "The second 12 grants you and living allies within 5 squares, for this round, 1 less Hunger and Thirst per cost. Mages and Clerics also get one free spell.",
     "pt": "O segundo 12 concede a você e aos aliados vivos em até 5 casas, nesta rodada, -1 de Fome e Sede por custo. Magos e Clérigos também recebem uma magia grátis."

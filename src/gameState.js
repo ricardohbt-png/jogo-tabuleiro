@@ -1943,12 +1943,13 @@ const GS = (() => {
     'metamorfose_save_prompt',      // consentir/resistir à metamorfose
     'tempestade_ciclones_prompt',   // posicionar ciclones
     'ira_rocha_ardente_prompt',     // posicionar a Ira da Rocha Ardente
+    'veredito_radiante_prompt',     // ativar o dano sagrado da espada bastarda
   ]);
   // As mensagens que RESPONDEM a esses avisos (enviá-las marca a volta do foco).
   const _RESPOSTAS_DE_AVISO = new Set([
     'escolher_magia_nivel', 'sorte_reacao', 'fire_choice', 'teleporte_destino',
     'teleporte_consent', 'metamorfose_consent', 'tempestade_ciclones_posicoes',
-    'ira_rocha_ardente_chamas',
+    'ira_rocha_ardente_chamas', 'veredito_radiante_choice',
   ]);
   function souAnfitriao(host) {
     return host != null && host === (connPid || myPid);
@@ -2444,6 +2445,14 @@ const GS = (() => {
 
       case 'improviso_encore_choice':
         _emit('improvisoEncoreChoice', msg);
+        break;
+
+      case 'voto_guardiao_prompt':
+        _emit('votoGuardiaoPrompt', msg);
+        break;
+
+      case 'veredito_radiante_prompt':
+        _emit('vereditoRadiantePrompt', msg);
         break;
 
       case 'login_result':
@@ -3183,6 +3192,12 @@ const GS = (() => {
   }
   function improvisoEncoreChoice(requestId, choice) {
     send({ type: 'improviso_encore_choice', request_id: requestId, choice });
+  }
+  function votoGuardiaoChoice(requestId, targetId) {
+    send({ type: 'voto_guardiao_choice', request_id: requestId, target_id: targetId ?? null });
+  }
+  function vereditoRadianteChoice(requestId, choice) {
+    send({ type: 'veredito_radiante_choice', request_id: requestId, choice });
   }
 
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
@@ -4618,6 +4633,8 @@ const GS = (() => {
     instrumentoDisponivel,
     improvisoAlvo,          // Fase 5 (Gaita/Improviso) — sender (chamado com parênteses)
     improvisoEncoreChoice,
+    votoGuardiaoChoice,
+    vereditoRadianteChoice,
 
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)

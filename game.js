@@ -20238,6 +20238,77 @@ function renderImprovisoEncoreChoice(msg){
   document.addEventListener('keydown', onKey);
 }
 
+function renderVotoGuardiaoPrompt(msg){
+  document.getElementById('voto-guardiao-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'voto-guardiao-overlay';
+  overlay.dataset.owner = String(msg.owner_id ?? '');
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,.76);display:flex;align-items:center;justify-content:center;';
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--bg2);border:2px solid var(--gold);border-radius:12px;padding:22px 26px;text-align:center;width:min(480px,92vw);max-height:82vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.65);';
+  panel.innerHTML = `<div style="color:var(--gold);font-size:1.12rem;font-weight:bold;margin-bottom:8px;">${t('ui.item.voto_guardiao_title')}</div>
+    <div style="margin:0 0 12px;color:var(--text2);">${t('ui.item.voto_guardiao_prompt')}</div>
+    <div id="voto-guardiao-targets" style="display:grid;gap:8px;"></div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2);">${t('ui.item.voto_guardiao_cooldown',{rounds:msg.cooldown || 10})}</div>`;
+  const targetsEl = panel.querySelector('#voto-guardiao-targets');
+  let answered = false;
+  const respond = targetId => {
+    if(answered) return;
+    answered = true;
+    GS.votoGuardiaoChoice(msg.request_id, targetId);
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  for(const target of (msg.targets || [])){
+    const button = document.createElement('button');
+    button.className = 'btn-primary';
+    button.textContent = `${target.self ? t('ui.item.voto_guardiao_you') : target.name} — ${target.hp}/${target.max_hp} PV`;
+    button.onclick = () => respond(target.id);
+    targetsEl.appendChild(button);
+  }
+  const decline = document.createElement('button');
+  decline.className = 'btn-cancel';
+  decline.textContent = t('ui.item.voto_guardiao_decline');
+  decline.style.marginTop = '10px';
+  decline.onclick = () => respond(null);
+  panel.appendChild(decline);
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  const onKey = e => { if(e.key === 'Escape') respond(null); };
+  document.addEventListener('keydown', onKey);
+}
+
+function renderVereditoRadiantePrompt(msg){
+  document.getElementById('veredito-radiante-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'veredito-radiante-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;';
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--bg2);border:2px solid #ffd56b;border-radius:12px;padding:22px 26px;text-align:center;width:min(460px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.7);';
+  panel.innerHTML = `<div style="color:#ffd56b;font-size:1.12rem;font-weight:bold;margin-bottom:8px;">${t('ui.item.veredito_radiante_title')}</div>
+    <div style="margin:0 0 14px;color:var(--text2);">${t('ui.item.veredito_radiante_prompt',{weapon:_esc(msg.weapon_name||''),target:_esc(msg.target_name||'')})}</div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn-primary" data-veredito-use>${t('ui.item.veredito_radiante_use')}</button>
+      <button class="btn-cancel" data-veredito-save>${t('ui.item.veredito_radiante_save')}</button>
+    </div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2);">${t('ui.item.veredito_radiante_cooldown',{rounds:msg.cooldown||10})}</div>`;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  let answered = false;
+  const respond = choice => {
+    if(answered) return;
+    answered = true;
+    GS.vereditoRadianteChoice(msg.request_id, choice);
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = e => { if(e.key === 'Escape') respond('save'); };
+  panel.querySelector('[data-veredito-use]').onclick = () => respond('use');
+  panel.querySelector('[data-veredito-save]').onclick = () => respond('save');
+  overlay.onclick = e => { if(e.target === overlay) respond('save'); };
+  document.addEventListener('keydown', onKey);
+}
+
 // Mira, em sequência, os passos pendentes da cascata do Improviso (FIFO —
 // mesma ordem de msg.pendentes, que é a ordem que o servidor consome da fila
 // `improviso_pendente`). Cancelar um passo (Cancelar do target-modal, ou Esc
@@ -59038,6 +59109,10 @@ function _atualizarFichaFab(){
 if(_fpsMostrar) _setFpsMostrar(true);
 
 GS.on('gameState', msg => {
+  const _votoPrompt = document.getElementById('voto-guardiao-overlay');
+  if(_votoPrompt && msg?.current_turn != null
+      && String(msg.current_turn) !== _votoPrompt.dataset.owner)
+    _votoPrompt.remove();
   _autoTurnSchedule(msg);
   if(msg && msg.phase === 'playing') _intencoesPedirAgora();   // agrupado em 250 ms
   if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
@@ -62344,6 +62419,8 @@ GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
 // escolherDirecaoInstrumento).
 GS.on('improvisoResultado', renderImprovisoQuadro);
 GS.on('improvisoEncoreChoice', renderImprovisoEncoreChoice);
+GS.on('votoGuardiaoPrompt', renderVotoGuardiaoPrompt);
+GS.on('vereditoRadiantePrompt', renderVereditoRadiantePrompt);
 
 // ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
 GS.on('decor_loot', msg => {
