@@ -64,6 +64,9 @@ class Ambiente:
             with open(os.path.join(self.tmp, arquivo), "w", encoding="utf-8") as f:
                 json.dump(defn, f, ensure_ascii=False)
         self.dir_antigo = S.DUNGEONS_DIR
+        # A emboscada de viagem e sorteada; sem fixa-la o teste cai na estrada ao acaso.
+        self.chance_antiga = S.chance_encontro
+        S.chance_encontro = lambda fome, sede: 0
         self.aventuras_antigas = deepcopy(S.WORLD_ADVENTURES)
         self.cena_antiga = deepcopy(S.CITY_SCENES["alva_e_luz"]["taverna"])
         S.DUNGEONS_DIR = self.tmp
@@ -76,6 +79,7 @@ class Ambiente:
         return self
 
     def __exit__(self, *exc):
+        S.chance_encontro = self.chance_antiga
         S.DUNGEONS_DIR = self.dir_antigo
         S.WORLD_ADVENTURES.clear()
         S.WORLD_ADVENTURES.update(self.aventuras_antigas)
