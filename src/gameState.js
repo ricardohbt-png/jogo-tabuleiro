@@ -577,6 +577,8 @@ const GS = (() => {
     lanca:           { id:'lanca',           nome:'Lança',                tipo:'arma', loja:'ferreiro', preco:14, dano:'1d8', atributo:'forca', escudo:true,  arremesso:true,  alcanceArremesso:4, duasMaos:false, alcanceEspecial:{ descricao:'2 casas adjacentes + 1 diagonal adjacente' }, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     besta_mao:       { id:'besta_mao',       nome:'Besta de Mão',         tipo:'armaDistancia', loja:'ferreiro', preco:20, dano:'1d4', atributo:'destreza', bonusDano:'destreza', alcance:4, linhaVisao:true, slotSecundario:'livre',   duasMaos:false, permitidoPara:['todos'] },
     besta_duelista:  { id:'besta_duelista',  nome:'Besta do Duelista',    emoji:'🏹', icon:'assets/itens/besta_do_duelista.png', tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:4, range:4, linhaVisao:true, slotSecundario:'livre', duasMaos:false, two_handed:false, permitidoPara:['todos'] },
+    gancho_corrente: { id:'gancho_corrente', nome:'Gancho de Corrente', emoji:'🪝', icon:'assets/itens/get_over_here.png', tipo:'armaDistancia', loja:'ferreiro', preco:80, dano:'1d6', atributo:'destreza', alcance:3, range:3, chain_hook_range:3, chain_pull_distance:2, chain_pull_cooldown:10, chain_pull_save_dc:13, linhaVisao:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['todos'] },
+    gancho_escorpiao_superior: { id:'gancho_escorpiao_superior', nome:'Gancho do Escorpião Superior', emoji:'🪝', icon:'assets/itens/get_over_here.png', tipo:'armaDistancia', loja:'ferreiro', preco:180, dano:'1d6', atributo:'destreza', alcance:5, range:5, chain_hook_range:5, chain_pull_distance:3, chain_pull_cooldown:10, chain_pull_save_dc:13, linhaVisao:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['todos'] },
     espada_longa:    { id:'espada_longa',    nome:'Espada Longa',         tipo:'arma', loja:'ferreiro', preco:25, dano:'1d8', atributo:'forca', escudo:true,  arremesso:false, duasMaos:false, permitidoPara:['victorCoiceBravo','richardCavaleiro'] },
     arco_curto:      { id:'arco_curto',      nome:'Arco Curto',           tipo:'armaDistancia', loja:'ferreiro', preco:30, dano:'1d6', atributo:'destreza', bonusDano:'destreza', alcance:6, linhaVisao:true, slotSecundario:'flechas', duasMaos:true,  permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
     arco_composto_curto: { id:'arco_composto_curto', nome:'Arco Composto Curto', emoji:'🏹', icon:'assets/itens/arco_composto_curto.png', tipo:'armaDistancia', loja:'ferreiro', preco:35, dano:'1d8', atributo:'destreza', bonusDano:'destreza', alcance:6, range:6, range_all_directions:true, linhaVisao:true, slotSecundario:'flechas', duasMaos:true, allowed_classes:['bard','rogue','paladin','warrior'], permitidoPara:['victorCoiceBravo','richardCavaleiro','luccas'] },
@@ -2440,6 +2442,10 @@ const GS = (() => {
         _emit('improvisoResultado', msg);
         break;
 
+      case 'improviso_encore_choice':
+        _emit('improvisoEncoreChoice', msg);
+        break;
+
       case 'login_result':
         if (msg.ok) {
           account = msg.username;
@@ -2764,6 +2770,13 @@ const GS = (() => {
                     Math.abs(player.pos[1] - gi.pos[1])) <= 1;
   }
   function reorderBag(fromIndex, toIndex) { send({ type: 'reorder_bag', from_index: fromIndex, to_index: toIndex }); }
+  function juntarLaminas(origem, destino) { send({type:'juntar_laminas', origem, destino}); }
+  function mesmaPilhaLaminas(a, b) {
+    if (!a || !b || a.id !== 'laminas_riposta' || b.id !== 'laminas_riposta'
+        || a.effect !== 'counter_blades' || b.effect !== 'counter_blades') return false;
+    const venom = it => JSON.stringify([...new Set(it.poison_ids || [])].sort());
+    return venom(a) === venom(b);
+  }
   // Juntar pilhas de munição: origem/destino = {bolsa: i} ou {equip: 'off_hand'}.
   function juntarMunicao(origem, destino) { send({ type: 'juntar_municao', origem, destino }); }
   // Espelho de `_ammo_stack_key` do servidor: mesmo item, tipo, propriedades do
@@ -3168,6 +3181,9 @@ const GS = (() => {
            target_id: targetId != null ? targetId : null,
            dir: dir || null });
   }
+  function improvisoEncoreChoice(requestId, choice) {
+    send({ type: 'improviso_encore_choice', request_id: requestId, choice });
+  }
 
   // ── Editor de masmorras — seleção de dungeon ─────────────────────────────────
   // file: nome do arquivo da masmorra autoral, ou null para modo procedural.
@@ -3534,6 +3550,8 @@ const GS = (() => {
       const distancia = Math.max(dx, dy);
       if (weapon.id === 'besta' || weapon.id === 'besta_pesada' || weapon.id === 'besta_repetidora_patrulha' || weapon.id === 'besta_repetidora_guerra' || weapon.id === 'hand_crossbow' || weapon.id === 'besta_duelista')
         return (dx === 0 || dy === 0) && distancia <= alcanceTotal;
+      if (weapon.chain_hook_range)
+        return (dx === 0 || dy === 0 || dx === dy) && distancia <= alcanceTotal;
       if ((weapon.id === 'arco_curto' || weapon.id === 'longbow' || weapon.id === 'arco_composto_curto' || weapon.id === 'arco_composto_longo' || weapon.id === 'arco_bruto_combatente') && !weapon.range_all_directions) {
         const limite = (dx === 0 || dy === 0) ? alcanceTotal : Math.ceil(alcanceTotal / 2);
         return distancia <= limite;
@@ -3905,6 +3923,16 @@ const GS = (() => {
     }
 
     const municoes = [];
+    const laminas = [];
+    if (me?.class_id === 'rogue') {
+      ((me && me.bag) || []).forEach((it, index) => {
+        if (it?.id === 'laminas_riposta' && it.effect === 'counter_blades'
+            && (!Array.isArray(it.poison_ids) || it.poison_ids.length === 0)) {
+          laminas.push({tipo:'laminas',source:'bag',index,item:it,
+            total:Math.max(0,Number(it.counter_blade_count)||0),qtd:Math.min(10,Math.max(0,Number(it.counter_blade_count)||0))});
+        }
+      });
+    }
     for (const { slot, item } of slots) {
       if (!item || !Object.prototype.hasOwnProperty.call(MUNICAO, item.id)) continue;
       const validos = MUNICAO[item.id];
@@ -3936,7 +3964,7 @@ const GS = (() => {
         });
       }
     }
-    return { armas, municoes };
+    return { armas, municoes, laminas };
   }
   function ladinoEsconderBonus() {
     const e = (guildOwnedOf(myPid).especializacoes) || [];
@@ -4437,6 +4465,8 @@ const GS = (() => {
     unequip,
     repairItem,
     reorderBag,
+    juntarLaminas,
+    mesmaPilhaLaminas,
     juntarMunicao,         // sender: junta duas pilhas de munição iguais
     mesmaPilhaMunicao,     // puro: duas pilhas de munição podem se juntar?
     maxAmmoStackFor,       // puro: limite das pilhas comuns de munição
@@ -4573,6 +4603,7 @@ const GS = (() => {
     instrumentoStatsClient,
     instrumentoDisponivel,
     improvisoAlvo,          // Fase 5 (Gaita/Improviso) — sender (chamado com parênteses)
+    improvisoEncoreChoice,
 
     selectDungeon,
     selectCampaign,        // Fase 4a: sender (chamado com parênteses)

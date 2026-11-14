@@ -163812,6 +163812,7 @@ window.EDITOR_DUNGEONS = [
       "name": "Estrada",
       "ambiente": "ar_livre",
       "saida_permitida": false,
+      "marcador_entrada": "poste",
       "start_mode": "entrance",
       "grid": {
         "w": 26,
@@ -164296,20 +164297,6 @@ window.EDITOR_DUNGEONS = [
       "traps": [],
       "decorations": [
         {
-          "id": "forest_3_0",
-          "type": "arvore",
-          "pos": [
-            3,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
-        },
-        {
           "id": "forest_3_14",
           "type": "arvore",
           "pos": [
@@ -164321,21 +164308,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "forest_6_0",
-          "type": "arvore",
-          "pos": [
-            6,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.9,
+            1.9
+          ]
         },
         {
           "id": "forest_6_14",
@@ -164349,21 +164326,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "forest_9_0",
-          "type": "arvore",
-          "pos": [
-            9,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.5,
+            1.8
+          ]
         },
         {
           "id": "forest_9_14",
@@ -164377,21 +164344,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "forest_12_0",
-          "type": "arvore",
-          "pos": [
-            12,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.4
+          ]
         },
         {
           "id": "forest_12_14",
@@ -164405,21 +164362,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "forest_15_0",
-          "type": "arvore",
-          "pos": [
-            15,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.4
+          ]
         },
         {
           "id": "forest_15_14",
@@ -164433,21 +164380,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "forest_18_0",
-          "type": "arvore",
-          "pos": [
-            18,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.2,
+            1.9
+          ]
         },
         {
           "id": "forest_18_14",
@@ -164461,21 +164398,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
-        },
-        {
-          "id": "forest_21_0",
-          "type": "arvore",
-          "pos": [
-            21,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.5,
+            2
+          ]
         },
         {
           "id": "forest_21_14",
@@ -164489,7 +164416,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.9,
+            2.8
+          ]
         },
         {
           "id": "forest_w_2",
@@ -164503,7 +164434,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.8,
+            2.1
+          ]
         },
         {
           "id": "forest_e_2",
@@ -164517,7 +164452,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.8,
+            2.2
+          ]
         },
         {
           "id": "forest_w_5",
@@ -164531,7 +164470,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.4,
+            2.6
+          ]
         },
         {
           "id": "forest_e_5",
@@ -164545,7 +164488,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            2,
+            2.3
+          ]
         },
         {
           "id": "forest_w_11",
@@ -164559,7 +164506,11 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.6,
+            2.3
+          ]
         },
         {
           "id": "forest_e_11",
@@ -164573,31 +164524,17 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": null,
-          "key_objective": false
+          "key_objective": false,
+          "vscale": [
+            1.6,
+            2.5
+          ]
         },
         {
           "id": "decor_0",
           "type": "arvore",
           "pos": [
             7,
-            1
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
-          "id": "decor_1",
-          "type": "arvore",
-          "pos": [
-            19,
             1
           ],
           "facing": [
@@ -164630,42 +164567,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "decor_3",
-          "type": "arvore",
-          "pos": [
-            19,
-            2
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
-          "id": "decor_4",
-          "type": "arvore",
-          "pos": [
-            20,
-            2
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
           "id": "decor_5",
           "type": "arvore",
           "pos": [
@@ -164680,7 +164581,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            1.9
           ]
         },
         {
@@ -164696,9 +164597,13 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "size": [
+            2,
+            2
+          ],
           "vscale": [
-            1.3,
-            1.4
+            1.5,
+            2
           ]
         },
         {
@@ -164716,7 +164621,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.4
           ]
         },
         {
@@ -164733,8 +164638,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.7,
+            2.3
           ]
         },
         {
@@ -164742,7 +164647,7 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             17,
-            13
+            12
           ],
           "facing": [
             0,
@@ -164750,9 +164655,13 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "size": [
+            2,
+            2
+          ],
           "vscale": [
-            1.3,
-            1.4
+            1.4,
+            2.1
           ]
         },
         {
@@ -164769,8 +164678,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.4,
+            2.2
           ]
         },
         {
@@ -164788,7 +164697,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.1
           ]
         },
         {
@@ -164805,8 +164714,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.4,
-            1.8
+            1.5,
+            2.2
           ]
         },
         {
@@ -164823,8 +164732,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.5,
+            2.2
           ]
         },
         {
@@ -164842,7 +164751,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            1.9
           ]
         },
         {
@@ -164864,24 +164773,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "decor_16",
-          "type": "arvore",
-          "pos": [
-            1,
-            14
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
           "id": "decor_17",
           "type": "arvore",
           "pos": [
@@ -164896,7 +164787,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.1
           ]
         },
         {
@@ -164914,7 +164805,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2
           ]
         },
         {
@@ -164932,7 +164823,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.2
           ]
         },
         {
@@ -164950,25 +164841,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
-          ]
-        },
-        {
-          "id": "decor_21",
-          "type": "arvore",
-          "pos": [
-            10,
-            2
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
+            1.8
           ]
         },
         {
@@ -164985,8 +164858,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            2.1,
+            2.2
           ]
         },
         {
@@ -164994,24 +164867,6 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             11,
-            1
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
-          "id": "decor_24",
-          "type": "arvore",
-          "pos": [
-            4,
             1
           ],
           "facing": [
@@ -165058,7 +164913,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            1.8
           ]
         },
         {
@@ -165074,27 +164929,13 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
-          "id": "decor_28",
-          "type": "arvore",
-          "pos": [
-            1,
-            0
+          "size": [
+            2,
+            2
           ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.5,
+            2.2
           ]
         },
         {
@@ -165134,46 +164975,10 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "decor_31",
-          "type": "arvore",
-          "pos": [
-            2,
-            1
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
           "id": "decor_32",
           "type": "arvore",
           "pos": [
             23,
-            0
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
-          "id": "decor_33",
-          "type": "arvore",
-          "pos": [
-            24,
             0
           ],
           "facing": [
@@ -165237,8 +165042,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.5,
+            2.2
           ]
         },
         {
@@ -165292,7 +165097,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            3
           ]
         },
         {
@@ -165327,8 +165132,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.4,
+            2
           ]
         },
         {
@@ -165346,7 +165151,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.3
           ]
         },
         {
@@ -165364,7 +165169,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.2
           ]
         },
         {
@@ -165382,7 +165187,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.5
           ]
         },
         {
@@ -165454,7 +165259,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2
           ]
         },
         {
@@ -165490,7 +165295,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            1.7
           ]
         },
         {
@@ -165526,7 +165331,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            3.3
           ]
         },
         {
@@ -165566,24 +165371,6 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
-          "id": "decor_55",
-          "type": "arvore",
-          "pos": [
-            22,
-            2
-          ],
-          "facing": [
-            0,
-            1
-          ],
-          "loot": null,
-          "key_objective": false,
-          "vscale": [
-            1.3,
-            1.4
-          ]
-        },
-        {
           "id": "decor_56",
           "type": "arvore",
           "pos": [
@@ -165598,7 +165385,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2
           ]
         },
         {
@@ -165634,7 +165421,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.1
           ]
         },
         {
@@ -165652,7 +165439,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.7
           ]
         },
         {
@@ -165688,7 +165475,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.5
           ]
         },
         {
@@ -165714,7 +165501,7 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             12,
-            4
+            3
           ],
           "facing": [
             0,
@@ -165722,9 +165509,13 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "size": [
+            2,
+            2
+          ],
           "vscale": [
             1.3,
-            1.4
+            2.4
           ]
         },
         {
@@ -165742,7 +165533,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.5
           ]
         },
         {
@@ -165814,7 +165605,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.5
           ]
         },
         {
@@ -165832,7 +165623,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.2
           ]
         },
         {
@@ -165850,7 +165641,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.1
           ]
         },
         {
@@ -165867,8 +165658,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.5,
+            2.7
           ]
         },
         {
@@ -165904,7 +165695,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.1
           ]
         },
         {
@@ -165939,8 +165730,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.4,
+            2.3
           ]
         },
         {
@@ -165958,7 +165749,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            1.9
           ]
         },
         {
@@ -165966,7 +165757,7 @@ window.EDITOR_DUNGEONS = [
           "type": "arvore",
           "pos": [
             23,
-            4
+            3
           ],
           "facing": [
             0,
@@ -165974,9 +165765,13 @@ window.EDITOR_DUNGEONS = [
           ],
           "loot": null,
           "key_objective": false,
+          "size": [
+            2,
+            2
+          ],
           "vscale": [
-            1.3,
-            1.4
+            1.5,
+            1.8
           ]
         },
         {
@@ -165993,8 +165788,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.7
+            1.8,
+            2.1
           ]
         },
         {
@@ -166011,8 +165806,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.4,
+            2.3
           ]
         },
         {
@@ -166029,8 +165824,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.3,
-            1.4
+            1.9,
+            3.3
           ]
         },
         {
@@ -166047,8 +165842,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.4,
-            1.8
+            1.7,
+            2
           ]
         },
         {
@@ -166066,7 +165861,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.4
           ]
         },
         {
@@ -166102,7 +165897,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.1
           ]
         },
         {
@@ -166120,7 +165915,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.4
           ]
         },
         {
@@ -166137,8 +165932,8 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "vscale": [
-            1.4,
-            1.8
+            1.8,
+            2.3
           ]
         },
         {
@@ -166156,7 +165951,7 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "vscale": [
             1.3,
-            1.4
+            2.5
           ]
         },
         {
@@ -167163,6 +166958,312 @@ window.EDITOR_DUNGEONS = [
           "loot": null,
           "key_objective": false,
           "image": "capim_alto.png"
+        },
+        {
+          "id": "decor_155",
+          "type": "arvore",
+          "pos": [
+            6,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_156",
+          "type": "arvore",
+          "pos": [
+            9,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_157",
+          "type": "arvore",
+          "pos": [
+            12,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_158",
+          "type": "arvore",
+          "pos": [
+            15,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_159",
+          "type": "arvore",
+          "pos": [
+            18,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_160",
+          "type": "arvore",
+          "pos": [
+            21,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_161",
+          "type": "arvore",
+          "pos": [
+            24,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_162",
+          "type": "arvore",
+          "pos": [
+            1,
+            14
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.4
+          ]
+        },
+        {
+          "id": "decor_163",
+          "type": "arvore",
+          "pos": [
+            1,
+            0
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_164",
+          "type": "arvore",
+          "pos": [
+            1,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.5,
+            2.7
+          ]
+        },
+        {
+          "id": "decor_165",
+          "type": "arvore",
+          "pos": [
+            2,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.4,
+            2.6
+          ]
+        },
+        {
+          "id": "decor_166",
+          "type": "arvore",
+          "pos": [
+            10,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            3
+          ]
+        },
+        {
+          "id": "decor_167",
+          "type": "arvore",
+          "pos": [
+            10,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.4,
+            2.3
+          ]
+        },
+        {
+          "id": "decor_168",
+          "type": "arvore",
+          "pos": [
+            20,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.9,
+            2.8
+          ]
+        },
+        {
+          "id": "decor_169",
+          "type": "arvore",
+          "pos": [
+            19,
+            1
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            3.3
+          ]
+        },
+        {
+          "id": "decor_170",
+          "type": "arvore",
+          "pos": [
+            19,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            3
+          ]
+        },
+        {
+          "id": "decor_171",
+          "type": "arvore",
+          "pos": [
+            22,
+            2
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": null,
+          "key_objective": false,
+          "vscale": [
+            1.3,
+            3
+          ]
         }
       ],
       "secret_passages": [],

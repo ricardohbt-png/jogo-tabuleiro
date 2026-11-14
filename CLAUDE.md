@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Armas de Prata
+
+As variantes de prata mantêm seus preços atuais. O primeiro nível de corrosão não causa penalidade; ao atingir o segundo nível, a arma é destruída. A propriedade `silver` continua permitindo dano contra inimigos resistentes a armas normais.
+
 ### Besta do Duelista (2026-11-12)
 
 `besta_duelista` custa 30 moedas e causa 1d6 perfurante usando Destreza, com alcance de 4 quadrados em linha reta ortogonal. É de uma mão, aceita todos os tipos de virote e qualquer classe pode usá-la. Usa `assets/itens/besta_do_duelista.png`. A especialização existente Disparo Duplo permite pareá-la na mão secundária com uma Besta de Mão ou outra Besta do Duelista; não há poder ou recarga adicional. Está à venda nas cinco ferrarias.
@@ -8,8 +12,39 @@
 
 `besta_repetidora_patrulha` custa 70 moedas, causa 1d6 e alcança 6 quadrados em linha reta ortogonal; `besta_repetidora_guerra` custa 120 moedas, causa 1d8 e alcança 8. Ambas são armas mundanas de duas mãos, usam Destreza no ataque e dano, aceitam todos os virotes e podem ser usadas por Guerreiro, Paladino, Bardo e Ladino. A habilidade ativa **Disparo Duplo** usa a ação principal, exige dois virotes disponíveis e faz dois ataques separados contra o mesmo alvo; se o primeiro ataque o derrotar, o segundo não dispara. Recarga: 10 rodadas. As armas estão à venda nas cinco ferrarias e usam `assets/itens/besta_repetidora_media.png` e `assets/itens/besta_repetidora_poderosa.png`. Mensagem cliente-servidor: `repeating_crossbow_weapon`; resolução autoritativa em `handle_repeating_crossbow_weapon`.
 
+### Ganchos de Corrente (2026-11-13)
+
+`gancho_corrente` custa 80 moedas: 1d6 perfurante usando Destreza, alcance de 3 casas em linha reta, sem bônus mágico, e pode ser usado por Bardo, Ladino, Paladino e Guerreiro. `gancho_escorpiao_superior` custa 180 moedas e mantém o dano e as classes, alcançando 5 casas. Ambos usam `assets/itens/get_over_here.png`. Uma vez a cada 10 rodadas, um acerto tenta puxar o alvo: Fortitude CD 13 evita; a falha puxa até 2 casas (3 na versão superior) em direção ao portador. O caminho para em obstáculos, paredes e criaturas; ocupa casas respeitando footprints e terreno. Entrar em um abismo resolve a queda normal do jogo (morte instantânea de criatura no chão); voo evita a morte. O cooldown `chain_pull_ready_round` é guardado na instância equipada, e `chain_hook_range`, `chain_pull_distance`, `chain_pull_cooldown` e `chain_pull_save_dc` são preservados ao comprar e sincronizados para o combate. Os dois itens aparecem nas cinco listas `ferreiro_weapon` e no catálogo do editor; a arte compartilhada é `get_over_here.png`.
+
+Os dois ganchos também têm variantes mundanas de Aço Damasco (+1 no acerto, +20 moedas e N=1/M=2), Obsidiana de Ferro (+1 dano, +20 moedas e N=1/M=2), Liga de Titânio (sem bônus ofensivo, +30 moedas e N=2/M=3) e Prata (preço geral de prata, sem penalidade no primeiro nível de corrosão e destruição no segundo). Preservam alcance, puxão, recarga, CD e classes da base; todas aparecem nas cinco ferrarias e no catálogo. Cada variante usa seu PNG próprio em `assets/itens/gancho_*_<material>.png`.
+
+### Rapieira do Dueto (2026-11-13)
+
+`rapieira_do_dueto` custa 140 moedas, é mundana e exclusiva do Bardo; causa 1d6 perfurante usando Destreza. Enquanto uma Lira estiver equipada na mão secundária e o Dueto Marcial ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 perfurante. A recarga e a cota normal do Dueto continuam iguais; Lira Rúnica pode gerar seu segundo contra-ataque, sem o d4 adicional. Variantes: Aço Damasco (160, +1 acerto), Obsidiana de Ferro (160, +1 dano), Liga de Titânio (170, N=2/M=3) e Prata (1.400, regra de prata). Todas preservam a habilidade e a restrição de classe e estão nas cinco ferrarias. Usam as artes PNG existentes da Rapieira do Duelista, em `assets/itens/rapieira_duelista*.png`. O campo `bardo_lira_counter_d4` é preservado na compra, sincronização de combate e catálogo do editor.
+
+### Lâminas de Riposta (2026-11-13)
+
+Consumível mundano do Ladino, custa 5 moedas por lâmina e usa `assets/itens/laminas_de_riposta.png`. Pilhas de até 10; cópias com os mesmos `poison_ids` podem ser juntadas. Quando um ataque corpo a corpo errar o Ladino e o atacante estiver adjacente, ele pode gastar uma lâmina para um contra-ataque corpo a corpo usando Destreza, causando 2 de dano; limite de uma reação por rodada. Natural 1 no contra-ataque causa 2 de dano ao Ladino; se a lâmina estiver envenenada, ele também testa o veneno. Um frasco prepara até 10 lâminas com um veneno, preservado nos metadados `poison_ids`; nome envenenado e descrição do frasco ficam na pilha. O item está no `SHOP_MERCHANT` de todas as cidades. Mensagens: `envenenar_laminas`, `juntar_laminas`; a escolha reativa reutiliza `smoke_reaction_choice` com `item_id: "laminas_riposta"`.
+
 ### Variantes mundanas de materiais (2026-11-12)
 
+As 15 armas de Aço Damasco e 11 armas de Freixo Negro herdam perfil, munição, alcance, restrições de classe e propriedades especiais da arma-base. São mundanas: concedem +1 no acerto, nenhum bônus de dano e toleram um nível de corrosão sem penalidade (`corrosao_resistente: 1`), seguido dos dois níveis penalizados padrão. Cada variante custa 20 moedas a mais que a arma-base e usa seu PNG próprio em `assets/itens/*_aco_damasco.png` ou `assets/itens/*_freixo_negro.png`. Aço Damasco é corroído pelo Devorador de Metal; Freixo Negro, pelo Devorador Orgânico. As variantes estão nas cinco listas `ferreiro_weapon`; `material`, bônus e tolerância à corrosão persistem na compra. `tools/export_catalog.py` publica os metadados no catálogo do editor.
+
+Obsidiana de Ferro é a variante metálica das mesmas 15 armas corpo a corpo; Cedro Rubro é a variante de madeira dos mesmos 11 arcos e bestas. Ambos mantêm o perfil, munição, alcance, restrições de classe e poderes da arma-base, são mundanos, concedem +1 de dano e toleram um nível de corrosão sem penalidade (`corrosao_resistente: 1`), seguido dos dois níveis penalizados padrão. Cada uma custa 20 moedas acima da arma-base. Obsidiana de Ferro é corroída pelo Devorador de Metal; Cedro Rubro, pelo Devorador Orgânico. Seus PNGs são `assets/itens/*_obsidiana_ferro.png` e `assets/itens/*_cedro_rubro.png`; as 26 variantes estão nas cinco listas `ferreiro_weapon` e exportadas para o catálogo do editor.
+
+Liga de Titânio é a variante metálica das mesmas 15 armas corpo a corpo; Cerne de Titã é a variante de madeira dos mesmos 11 arcos e bestas. Ambos mantêm o perfil, munição, alcance, restrições de classe e poderes da arma-base, são mundanos e não acrescentam bônus de acerto ou dano. Usam N=2/M=3 (`corrosao_resistente: 2`, `corrosao_niveis_penalidade: 3`): os dois primeiros níveis de corrosão não penalizam; os três seguintes penalizam e o sexto destrói a arma, com resistência à corrosão superior à das variantes de prata, que são destruídas no segundo nível. Cada uma custa 30 moedas acima da arma-base. Liga de Titânio é corroída pelo Devorador de Metal; Cerne de Titã, pelo Devorador Orgânico. Seus PNGs são `assets/itens/*_liga_titanio.png` e `assets/itens/*_cerne_tita.png`; as 26 variantes estão nas cinco listas `ferreiro_weapon` e no catálogo do editor. Elas não herdam o efeito da prata contra inimigos resistentes a armas comuns.
+
+### Materiais sorteados nas armas de monstros
+
+Ao nascer, cada arma sorteada elegível de `goblin_arqueiro`, `goblin_combatente`, `orc`, `kobold_lanceiro`, `bandido`, `capanga`, `bardo` e `bardo_da_caravana` tem 70% de permanecer comum e 30% de receber variante de material. Nas armas metálicas corpo a corpo, as chances totais por arma são: 9% Aço Damasco (+1 acerto), 9% Obsidiana de Ferro (+1 dano), 10% Liga de Titânio (N=2/M=3) e 2% Prata (propriedade contra resistência a armas comuns; destrói no nível 2). Em arcos e bestas, são 10% Freixo Negro (+1 acerto), 10% Cedro Rubro (+1 dano) e 10% Cerne de Titã (N=2/M=3). O sorteio só troca IDs quando há variante para aquela arma; tipos não cobertos, como bordões, ficam comuns. Bônus da arma sorteada entram no ataque do monstro e o item correspondente é preservado no loot. IDs de arma duplicados no mesmo loadout compartilham a variante, conforme a deduplicação do equipamento.
+
+### Materiais sorteados nas armaduras de monstros
+
+Cada armadura equipada que tenha variantes cadastradas recebe seu próprio sorteio ao nascer: 70% permanece comum, 12% vira Aço Damasco, 12% Obsidiana de Ferro e 6% Liga de Titânio. O sorteio troca o ID-base pela variante correspondente antes de equipar o monstro, preservando CA, corrosão e redução de dano definidos pelo material; o item variante equipado também é preservado no loot. A redução física do Titânio é aplicada enquanto a armadura continuar ativa e deixa de valer quando ela é destruída. Atualmente, entre as armaduras usadas por monstros, Couro e Placas, Cota de Malha, Bronze e Placas podem receber materiais. Manto e Armadura de Couro simples não têm variantes nesta família e permanecem comuns. IDs-base repetidos no mesmo loadout compartilham a mesma variante.
+
+O Soldado (`soldado`) sorteia sua armadura-base independentemente dos demais equipamentos: Couro e Placas 50%, Cota de Malha 30%, Armadura de Bronze 15% e Armadura de Placas 5%. O bônus médio de CA da peça-base é +3,75, próximo à Cota de Malha fixa anterior (+4); considerando o sorteio de Obsidiana, a média fica em aproximadamente +3,87. Com os preços atuais e o sorteio de materiais, o valor médio estimado da peça é cerca de 130 moedas.
+
+O Bandido (`bandido`) sorteia a proteção independentemente da arma: sem armadura 40%, Manto 30%, Armadura de Couro 20% e Couro e Placas 10%. A CA média-base fica em +1, igual ao Manto fixo anterior; o sorteio de Obsidiana pode elevá-la ligeiramente. Com os preços atuais e materiais, o valor médio estimado da peça é aproximadamente 18 moedas. Sem armadura, nenhum item de armadura é adicionado ao equipamento ou ao loot.
 
 ### Braceletes da Guarda Reflexa (2026-11-09)
 
@@ -120,6 +155,10 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `manto_das_sombras` custa 1.500 moedas e é exclusivo do Ladino. Ocupa `armor`, concede +2 CA total e +2 a Esconder nas Sombras, cumulativo com a especialização do Ladino. Usa `assets/itens/manto_das_sombras.png` e está à venda nos cinco ferreiros. Como ação principal, concede a magia Manto da Escuridão sem gastar slot, com recarga de 20 rodadas guardada na instância do item; o uso paga 1 fome e 1 sede.
 
+`manto_seda_aracne` custa 250 moedas e está nos cinco ferreiros. Manto mundano leve, baseado no `cloak`: +1 CA, +1 nos testes de Reflexos e redução de 1 por instância de dano físico enquanto equipado, acumulável com outras reduções. É orgânico e tem corrosão N=1/M=2. Usa `assets/itens/manto_seda_aracne.png`. `reflex_save_bonus` é aplicado/removido no equipamento e somado somente a `_testar_save` para Reflexos; o bônus de redução usa a resistência física existente.
+
+`manto_linho_engomado` custa 40 moedas, concede +2 CA total, ocupa `armor` e mantém corrosão orgânica normal. É um manto mundano leve, com capuz e tecido de linho mais espesso; usa `assets/itens/manto_linho_engomado.png` e está nos cinco ferreiros.
+
 `boina_gatuno` custa 250 moedas, ocupa `head`, usa `assets/itens/chapeu1.png` e concede +2 nos testes de Esconder nas Sombras do Ladino. O bônus soma com a especialização de guilda e com o Manto das Sombras.
 
 ### Espadas do Sangramento (2026-10-30)
@@ -206,6 +245,10 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 
 `escudo_p` (Escudo Pequeno) custa 20 moedas e concede +1 CA/redução 1; `escudo_g` (Escudo Grande) custa 50 e concede +2 CA/redução 2. `escudo_torre` custa 70 moedas, ocupa a mão secundária, concede +3 CA e reduz em 2 cada instância de dano. É exclusivo do Paladino e tem `corrosion_materials: ["metal"]`, portanto o Devorador de Metal pode corroê-lo. `escudo_madeira_grande` custa 35 moedas, concede +2 CA e reduz em 1 cada instância de dano; pode ser usado por Clérigo, Guerreiro e Paladino e tem `corrosion_materials: ["organic"]`, portanto o Devorador Orgânico pode corroê-lo. Todos aproveitam a Guarda Máxima do Paladino, que dobra os bônus do escudo, e estão em `ferreiro_armor` nas cinco cidades. Ícones: `assets/itens/escudo_torre.png` e `assets/itens/escudo_madeira_grande.png`; nomes, regras e ícones são exportados para o catálogo do editor.
 
+### Variantes de materiais para escudos comuns (2026-11-12)
+
+O Escudo Pequeno é orgânico e recebe Freixo Negro, Cedro Rubro e Cerne de Titã. Escudo Grande metálico e Escudo Torre recebem Aço Damasco, Obsidiana de Ferro e Liga de Titânio. Escudo Grande de Madeira recebe as três ligas de madeira. Escudos mágicos ficam fora. Freixo/Aço Damasco custam 1,5× e têm N=1/M=2 sem bônus de CA/redução. Cedro/Obsidiana custam 2×, concedem +1 CA e quebram no primeiro golpe corrosivo. Cerne/Titânio custam 3× e têm N=2/M=3; acrescentam redução física 1 por instância nos três modelos grandes, acumulando com outras reduções, mas o escudo pequeno não ganha redução adicional. O preço fracionário do Escudo Grande de Madeira com Freixo Negro (52,5) é arredondado para cima a 53 moedas. Cada variante tem PNG próprio em `assets/itens/<id>.png` e está nos cinco ferreiros.
+
 `escudo_p_retalhacao_trovejante` custa 1.400 moedas e concede +2 CA/redução 1; `escudo_g_retalhacao_trovejante` custa 1.800 e concede +3 CA/redução 2; `escudo_madeira_retalhacao_trovejante` custa 1.650 e concede +3 CA/redução 1. Mantêm as classes permitidas dos escudos-base; o modelo de madeira também mantém a corrosão orgânica. Cada um concede a ação principal Manto de Raios: paga 1 fome e 1 sede, dura 5 rodadas e causa 1d6 elétrico ao atacante a cada ataque que acertar o portador; recarga de 20 rodadas desde a ativação. O efeito e a recarga pertencem à instância equipada em `off_hand`. Imagens: `assets/itens/escudo_pequeno_retalhacao_trovejante.png`, `assets/itens/escudo_grande_retalhacao_trovejante.png` e `assets/itens/escudo_madeira_retalhacao_trovejante.png`; os três estão nos cinco ferreiros.
 
 `escudo_pequeno_vinculo_espinhoso` custa 2.400 moedas (+2 CA/redução 1); `escudo_grande_vinculo_espinhoso` custa 2.800 (+3/redução 2); `escudo_torre_vinculo_espinhoso` custa 3.300 (+4/redução 2); `escudo_madeira_vinculo_espinhoso` custa 2.650 (+3/redução 1). Todos recebem +1 CA sobre o modelo-base, preservam classes e corrosão (torre: metal; madeira: orgânica) e estão nos cinco ferreiros. Cada um concede a ação principal Vínculo Maldito da Dor sem gastar slot, pagando 1 fome/1 sede, com teste de Vontade, limite normal de quatro vínculos e penalidade de −1 no próximo ataque do alvo; o vínculo criado pelo escudo dura exatamente 5 rodadas e a habilidade recarrega em 25 rodadas desde a ativação. Recarga fica na instância equipada em `off_hand`. Ícones transparentes: `assets/itens/escudo_pequeno_vinculo_espinhoso.png`, `assets/itens/escudo_grande_vinculo_espinhoso.png`, `assets/itens/escudo_torre_vinculo_espinhoso.png` e `assets/itens/escudo_madeira_vinculo_espinhoso.png`.
@@ -222,6 +265,12 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 
 `placas_da_besta` custa 250 moedas, ocupa `armor`, concede +3 CA e reduz em 1 cada instância de dano `physical` recebido enquanto equipada. Herda das `leather_plate` as classes permitidas (Guerreiro, Ladino, Bardo e Paladino) e os materiais de corrosão. `corrosao_resistente: 4` concede 4 níveis sem penalidade; depois há os 2 níveis normais com penalidade e o nível seguinte destrói a peça. Usa `assets/itens/placas_da_besta.png` (variante negra brilhante de `assets/itens/leather_plate.png`) e está nos cinco ferreiros. O bônus `resist` já é aplicado/removido em `_apply_gear_effect` e processado por `_apply_damage_types`.
 
+### Variantes de materiais para armaduras (2026-11-12)
+
+Sete armaduras comuns têm variantes de Aço Damasco, Obsidiana de Ferro e Liga de Titânio: `leather_plate`, `chainmail`, `bronze_armor`, `leather_mail`, `plate`, `fullplate` e `monster_leather_plate`. Mantêm categoria, materiais de corrosão e classes permitidas da base e estão nos cinco ferreiros. Aço Damasco custa 1,5× a base e acrescenta 1 nível sem penalidade em armaduras leves/médias ou 2 em pesadas; depois aplica os 2 níveis penalizados padrão. Obsidiana custa 1,5×, concede +1 CA e tem apenas um nível total de corrosão: o primeiro golpe corrosivo a destrói. Liga de Titânio custa 2×, tem N=2/M=3; versões médias/pesadas também reduzem em 1 cada instância de dano físico recebido, acumulando com outras reduções. A versão leve não reduz dano. `armadura_runica`, Placas da Besta, armaduras de Grotão, couro simples, mantos e escudos ficam fora desta família.
+
+Cada uma das 21 variantes usa PNG próprio em `assets/itens/<base>_<material>.png`, configurado no campo `icon` da armadura gerada; os cinco estoques de ferreiro listam os 21 IDs.
+
 `armadura_placas_grotao` custa 800 moedas, usa `assets/itens/leather_plate_onix.png` e está nos cinco ferreiros. Herda as propriedades de armadura leve de couro e placas (+3 CA, classes Guerreiro, Ladino, Bardo e Paladino), concede redução física 2 e redução de ácido 5. `corrosion_immunities: ["acid"]` a protege da corrosão de jatos de ácido, mas ela mantém os materiais `organic` e `metal`, então Devoradores Orgânicos e Metálicos ainda a corroem. Os níveis 1–2 não penalizam; 3–5 impõem −2 CA; 6 destrói. `corrosao_penalidade_max` limita a penalidade aplicada sem reduzir sua vitalidade total de seis níveis.
 
 `armadura_placas_grotao_superior` custa 2.000 moedas, compartilha a imagem e as propriedades especiais da versão leve, mas é baseada na Armadura de Couro de Monstro e Placas: +7 CA, categoria pesada e uso exclusivo de Guerreiro e Paladino. Mantém redução física 2, redução de ácido 5, imunidade à corrosão ácida e vulnerabilidade aos Devoradores Orgânico/Metálico; os níveis 1–2 não penalizam, 3–5 impõem −2 CA e o 6 destrói.
@@ -235,6 +284,38 @@ A Besta agora permite uso por Clérigo, Ladino, Bardo, Paladino e Guerreiro. A l
 ### Anéis de Precisão, Impacto e Supremacia (2026-10-25)
 
 `ring_str` permanece com o ID salvo existente, mas se chama Anel da Precisão: custa 50 moedas, usa `assets/itens/ring_str.png` e concede +1 de acerto. `anel_impacto` custa 80, usa `assets/itens/ring.png` e soma +1 ao dano de cada acerto com arma; `anel_supremacia` custa 200, usa `assets/itens/ring_vita.png` e concede os dois bônus. Os itens aparecem nos cinco mercadores de `city_shops.json` e no catálogo do editor. O efeito `damage_bonus` de equipamento é armazenado simetricamente em `gear_damage_bonus` e entra no cálculo compartilhado de dano armado, incluindo corpo a corpo, ataques à distância, mão secundária, arremesso de armas e prévia de ataque; não afeta magia, ataques desarmados nem consumíveis arremessados.
+
+### Anel do Touro de Ferro (2026-11-13)
+
+`anel_touro_ferro` custa 1.000 moedas, ocupa um slot de anel, concede +4 ao valor de Força enquanto equipado e usa `assets/itens/anel_touro_ferro.png`. Está à venda nos cinco mercadores. O efeito `str_` usa o fluxo reversível de atributos, atualizando derivados de combate.
+
+### Anel do Olho da Esfinge (2026-11-13)
+
+`anel_olho_esfinge` custa 1.000 moedas, ocupa um slot de anel, concede +4 ao valor de Inteligência enquanto equipado e usa `assets/itens/anel_olho_esfinge.png`. Está à venda nos cinco mercadores. O efeito `int_` usa o fluxo reversível de atributos, atualizando derivados de combate.
+
+### Anel do Bastião de Basalto (2026-11-13)
+
+`anel_bastiao_basalto` custa 1.000 moedas, ocupa um slot de anel, concede +4 ao valor de Constituição enquanto equipado e usa `assets/itens/anel_bastiao_basalto.png`. Está à venda nos cinco mercadores. O efeito `con_` usa o fluxo reversível de atributos, recalculando PV máximos e derivados de Constituição.
+
+### Anel da Dança do Vento (2026-11-13)
+
+`anel_danca_vento` custa 1.000 moedas, ocupa um slot de anel, concede +4 ao valor de Destreza enquanto equipado e usa `assets/itens/anel_danca_vento.png`. Está à venda nos cinco mercadores. O efeito `dex` usa o fluxo reversível de atributos, atualizando ataque, CA, iniciativa e demais derivados de Destreza. Nome e descrição estão localizados em `src/lang/catalogo.js`; o catálogo do editor é exportado de `SHOP_MERCHANT`.
+
+### Anel do Tigre (2026-11-13)
+
+`anel_tigre` custa 1.500 moedas, ocupa um slot de anel, concede +2 de Destreza e +2 de Força enquanto equipado e usa `assets/itens/anel_tigre.png`. Está à venda nos cinco mercadores. O efeito principal `dex` e o bônus adicional `str_` passam por `_apply_gear_effect`, portanto são removidos simetricamente ao desequipar e atualizam os derivados dos dois atributos. Nome e descrição estão localizados em `src/lang/catalogo.js`; o catálogo do editor é exportado de `SHOP_MERCHANT`.
+
+### Anel do Urso Cinzento (2026-11-13)
+
+`anel_urso_cinzento` custa 2.000 moedas, ocupa um slot de anel, concede +3 de Força e +2 de Constituição enquanto equipado e usa `assets/itens/anel_urso_cinzento.png`. Está à venda nos cinco mercadores. O efeito principal `str_` e o bônus adicional `con_` passam por `_apply_gear_effect`, portanto são removidos simetricamente ao desequipar e atualizam os derivados dos dois atributos. Nome e descrição estão localizados em `src/lang/catalogo.js`; o catálogo do editor é exportado de `SHOP_MERCHANT`.
+
+### Anel Negro do Corvo (2026-11-13)
+
+`anel_negro_corvo` custa 1.500 moedas, ocupa um slot de anel, concede +1 de Inteligência, +1 de Destreza e +1 de movimento enquanto equipado e usa `assets/itens/anel_negro_corvo.png`. Está à venda nos cinco mercadores. Os efeitos `int_`, `dex` e `spd` são aplicados e removidos simetricamente por `_apply_gear_effect`. Nome e descrição estão localizados em `src/lang/catalogo.js`; o catálogo do editor é exportado de `SHOP_MERCHANT`.
+
+### Anel da Águia (2026-11-13)
+
+`anel_aguia` custa 1.200 moedas, ocupa um slot de anel, concede +2 de Destreza e +2 de visão enquanto equipado e usa `assets/itens/anel_aguia.png`. Está à venda nos cinco mercadores. Os efeitos `dex` e `vision` são aplicados e removidos simetricamente por `_apply_gear_effect`. Nome e descrição estão localizados em `src/lang/catalogo.js`; o catálogo do editor é exportado de `SHOP_MERCHANT`.
 
 ### Talismãs de atributo (2026-10-25)
 
@@ -2432,6 +2513,10 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > Encore, expande uma onda dourada até os aliados sob a Canção. Efeitos em 2D/3D, sem alterar regras.
 > Spec/plano em `docs/superpowers/{specs,plans}/2026-07-12-instrumentos-bardo-fase5*`. Teste:
 > `tools/test_instrumentos_bardo.py`.
+
+### Chicote do Encore (2026-11-13)
+
+`chicote_encore` custa 2.800 moedas, causa 1d4 cortante com Destreza, alcance 2, pode ser usado na mão secundária e é exclusivo do Bardo. Usa `assets/itens/chicote_do_encore.png`. Quando equipado junto com uma Gaita, após a rolagem inicial do Improviso, o Bardo pode uma vez a cada 10 rodadas trocar qualquer resultado que não seja 12 por um Encore (iniciando a cascata normal de dois resultados extras) ou transformar um 12 natural em Grande Encore. Manter o resultado não gasta a recarga. A opção de Grande Encore só aparece quando a Canção Heroica tem aliados ativos. O chicote não dá bônus fixo de acerto ou dano. Estado pendente via `improviso_encore_choice`; recarga `chicote_encore_ready_round` guardada na arma equipada e sincronizada à cópia de combate. Está nas cinco listas `ferreiro_weapon`, no catálogo de itens/editor e usa o quadro de escolha do cliente.
 
 > **Modo Mestre Jogador (Fase A — núcleo de controle):** modo opcional em que um
 > humano assume o papel de **mestre** (7º participante, sem herói) e controla os

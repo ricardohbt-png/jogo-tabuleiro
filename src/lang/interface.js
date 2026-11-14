@@ -25,6 +25,11 @@ window.LANG_INTERFACE = {
   "ui.reacao_fumaca.recusar": {"pt": "Não reagir", "en": "Do not react"},
   "ui.reacao_fumaca.tempo": {"pt": "Tempo para reagir: {n}s", "en": "Time to react: {n}s"},
   "ui.reacao_fumaca.aguardando": {"pt": "Aguardando a resolução da reação…", "en": "Waiting for the reaction to resolve…"},
+  "ui.reacao_laminas.titulo": {"pt": "Reação: Lâminas de Riposta", "en": "Reaction: Riposte Blades"},
+  "ui.reacao_laminas.ataque": {"pt": "{inimigo} errou um ataque corpo a corpo contra você. Quer contra-atacar?", "en": "{inimigo} missed a melee attack against you. Counterattack?"},
+  "ui.reacao_laminas.efeito": {"pt": "Gasta 1 lâmina para fazer um ataque corpo a corpo usando Destreza, causando 2 de dano. Alcance: 1 quadrado; uma vez por rodada.", "en": "Spend 1 blade to make a melee attack using Dexterity for 2 damage. Range: 1 square; once per round."},
+  "ui.reacao_laminas.usar": {"pt": "{heroi}: ripostar com {item} (estoque: {n})", "en": "{heroi}: counterattack with {item} ({n} available)"},
+  "ui.inv.pilha_aria": {"pt": "{n} unidades", "en": "{n} units"},
   "ui.amaldicoar_xama.titulo": {"pt": "Amaldiçoado pelo xamã!", "en": "Cursed by the shaman!"},
   "ui.amaldicoar_xama.descricao": {"pt": "A magia de {monstro} enfraquece você temporariamente.", "en": "The magic of {monstro} temporarily weakens you."},
   "ui.amaldicoar_xama.penalidades": {"pt": "{ataque} em ataques, {dano} no dano, {ca} na CA e {resistencia} nos testes de resistência.", "en": "{ataque} to attack rolls, {dano} to damage, {ca} to AC and {resistencia} to saving throws."},
@@ -4805,6 +4810,38 @@ window.LANG_INTERFACE = {
     "en": "Runic Bagpipes only: the third 12 grants allies under the Heroic Song zero Hunger/Thirst and spell costs for 1d4 rounds.",
     "pt": "Só com a Gaita Rúnica: o terceiro 12 faz os aliados sob a Canção Heroica não pagarem Fome, Sede nem custo de magia por 1d4 rodadas."
   },
+  "ui.instrumento.chicote_encore_title": {
+    "en": "The Encore Whip answers the melody",
+    "pt": "O Chicote do Encore responde à melodia"
+  },
+  "ui.instrumento.chicote_encore_roll": {
+    "en": "Initial Improvisation roll: {roll}.",
+    "pt": "Resultado inicial do Improviso: {roll}."
+  },
+  "ui.instrumento.chicote_encore_prompt": {
+    "en": "Replace this result with an Encore, or keep it?",
+    "pt": "Substituir este resultado por um Encore ou mantê-lo?"
+  },
+  "ui.instrumento.chicote_encore_great_prompt": {
+    "en": "Turn this natural Encore into a Great Encore, or keep the normal Encore?",
+    "pt": "Transformar este Encore natural em Grande Encore ou manter o Encore normal?"
+  },
+  "ui.instrumento.chicote_encore_force": {
+    "en": "Force Encore",
+    "pt": "Forçar Encore"
+  },
+  "ui.instrumento.chicote_encore_great": {
+    "en": "Make it Great Encore",
+    "pt": "Transformar em Grande Encore"
+  },
+  "ui.instrumento.chicote_encore_keep": {
+    "en": "Keep result",
+    "pt": "Manter resultado"
+  },
+  "ui.instrumento.chicote_encore_cooldown": {
+    "en": "Using this choice starts a {rounds}-round cooldown.",
+    "pt": "Usar esta escolha inicia uma recarga de {rounds} rodadas."
+  },
   "ui.instrumento.encore_menor_desc": {
     "en": "The second 12 grants you and living allies within 5 squares, for this round, 1 less Hunger and Thirst per cost. Mages and Clerics also get one free spell.",
     "pt": "O segundo 12 concede a você e aos aliados vivos em até 5 casas, nesta rodada, -1 de Fome e Sede por custo. Magos e Clérigos também recebem uma magia grátis."
@@ -5494,8 +5531,8 @@ window.LANG_INTERFACE = {
     "pt": "Prata"
   },
   "ui.item.desc.prata_arma": {
-    "en": "Silver: withstands 5 corrosion levels (the first 2 without penalties) and can damage enemies resistant to normal weapons",
-    "pt": "Prata: resiste a 5 níveis de corrosão (os 2 primeiros sem penalidade) e pode causar dano em inimigos resistentes a armas normais"
+    "en": "Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons",
+    "pt": "Prata: não sofre penalidades no nível 1 de corrosão e é destruída no nível 2; pode causar dano em inimigos resistentes a armas normais"
   },
   "ui.item.desc.racao": {
     "en": "+{n} hunger and thirst",
@@ -11631,6 +11668,10 @@ window.LANG_INTERFACE = {
   "ui.veneno.dica_dois": {"en":"You can combine up to 2 poisons on arrows and bolts.","pt":"Você pode combinar até 2 venenos em flechas e virotes."},
   "ui.veneno.custo_frasco": {"en":"Cost: bonus action (the vial is used up)","pt":"Custo: ação bônus (o frasco é consumido)"},
   "ui.veneno.custo_rapido": {"en":"Quick Poison: free action, 💧1 thirst per vial","pt":"Veneno Rápido: ação livre, 💧1 de sede por frasco"},
+  "ui.item.laminas_riposta_envenenadas.nome": {"en":"Poisoned Riposte Blades","pt":"Lâminas de Riposta Envenenadas"},
+  "ui.veneno.laminas_um_veneno": {"en":"Apply one poison per stack of blades.","pt":"Aplique um veneno por pilha de lâminas."},
+  "ui.veneno.laminas_rende": {"en":"Poisons up to {n} blades with one vial.","pt":"Envenena até {n} lâminas com um frasco."},
+  "dado.riposta_lamina": {"en":"Riposte — Riposte Blade","pt":"Riposta — Lâmina de Riposta"},
   "ui.veneno.bonus_usado": {"en":"Bonus action already used this turn.","pt":"Ação bônus já usada neste turno."},
   "ui.veneno.arma_limpa": {"en":"no poison","pt":"sem veneno"},
   "ui.veneno.arma_com": {"en":"☠ {nomes} — {n} left","pt":"☠ {nomes} — {n} restantes"},

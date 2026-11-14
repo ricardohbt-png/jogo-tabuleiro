@@ -312,6 +312,9 @@ window.LANG_NARRACAO = {
     "en": "☠️ **{heroi}** prepares poisoned ammunition for **{quantidade} projectile(s)** with **{venenos}** ({frascos} vial(s) consumed).",
     "pt": "☠️ **{heroi}** prepara munição envenenada para **{quantidade} projétil(is)** com **{venenos}** ({frascos} frasco(s) consumido(s))."
   },
+  "narracao.riposta_falha_critica": {"en":"Critical failure on the riposte: {heroi} cuts themselves with their own blade and takes 2 damage.","pt":"Falha crítica na riposta: {heroi} se fere com a própria lâmina e sofre 2 de dano."},
+  "narracao.riposta_acerto": {"en":"{heroi} lands the riposte and deals 2 damage to {alvo}.","pt":"{heroi} acerta a riposta e causa 2 de dano em {alvo}."},
+  "narracao.riposta_erro": {"en":"{heroi} attempts a riposte but misses {alvo}.","pt":"{heroi} tenta uma riposta, mas erra {alvo}."},
   "narracao.aprendeu": {
     "en": "📖 **{heroi}** learned **{m_nome}**!",
     "pt": "📖 **{heroi}** aprendeu **{m_nome}**!"
@@ -1323,6 +1326,18 @@ window.LANG_NARRACAO = {
   "narracao.horizonte_ruptura_empurrao": {
     "en": "🌅 **{alvo}** is hurled {casas} squares by the shattered horizon!",
     "pt": "🌅 **{alvo}** é arremessado {casas} casas pela ruptura do horizonte!"
+  },
+  "narracao.gancho_corrente_resiste": {
+    "en": "💪 **{alvo}** resists the chain hook's pull (Fortitude DC {dc}).",
+    "pt": "💪 **{alvo}** resiste ao puxão do gancho (Fortitude CD {dc})."
+  },
+  "narracao.gancho_corrente_puxa": {
+    "en": "⛓️ **{heroi}** reels **{alvo}** in {casas} square(s) with the chain hook!",
+    "pt": "⛓️ **{heroi}** puxa **{alvo}** {casas} casa(s) com o gancho de corrente!"
+  },
+  "narracao.gancho_corrente_bloqueado": {
+    "en": "⛓️ **{alvo}** fails Fortitude, but an obstacle or creature blocks the chain hook.",
+    "pt": "⛓️ **{alvo}** falha em Fortitude, mas um obstáculo ou criatura bloqueia o gancho."
   },
   "narracao.horizonte_ruptura_inicio": {
     "en": "🌅 **{heroi}** strikes the ground and tears open a horizon-wide rupture reaching {alcance} squares!",

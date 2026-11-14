@@ -1992,6 +1992,9 @@ window._nomeMuncaoEnvenenada = _nomeMuncaoEnvenenada;
 // Nome mostrado de um item: munição e arma com veneno ganham o aviso no nome enquanto o veneno durar.
 // Só armas têm `poison_slots` (a fila de cargas); a munição guarda `poison_ids`.
 function _nomeItemExibido(it){
+  if(it?.id==='laminas_riposta')
+    return t(Array.isArray(it.poison_ids)&&it.poison_ids.length
+      ?'ui.item.laminas_riposta_envenenadas.nome':'cat.item.laminas_riposta.nome');
   if(Array.isArray(it?.poison_ids)&&it.poison_ids.length) return _nomeMuncaoEnvenenada(it);
   const nome=it?.name||it?.nome||it?.id||'Item';
   if(Array.isArray(it?.poison_slots)&&it.poison_slots.length){
@@ -2002,7 +2005,8 @@ function _nomeItemExibido(it){
 }
 window._nomeItemExibido=_nomeItemExibido;
 function _itemLabel(it){
-  return `${it?.emoji||'📦'} ${_nomeItemExibido(it)}${it?.ammo_count!=null?' ×'+it.ammo_count:''}`;
+  const stackCount=it?.ammo_count??(it?.effect==='counter_blades'?it.counter_blade_count:null);
+  return `${it?.emoji||'📦'} ${_nomeItemExibido(it)}${stackCount!=null?' ×'+stackCount:''}`;
 }
 function _renderBauSlots(container, items, limit, action){
   if(!container) return;
@@ -3588,7 +3592,7 @@ function _itemDesc(item){
               : item.reach==='cajado' ? ' • '+t('ui.item.desc.alcance_adjacentes')
               : item.astral_chain_reach ? ' • '+t('ui.item.desc.alcance_mangual_astral', {n:item.astral_chain_reach})
               : item.reach==='mangual' ? ' • '+t('ui.item.desc.alcance_mangual')
-              : ['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
+              : ['besta','besta_pesada','besta_repetidora_patrulha','besta_repetidora_guerra','hand_crossbow','besta_duelista','gancho_corrente','gancho_escorpiao_superior'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto', {n: item.range})
               : item.range_all_directions ? ' • '+t('ui.item.desc.alcance_todas_direcoes', {n: item.range})
               : ['arco_curto','longbow'].includes(item.id) ? ' • '+t('ui.item.desc.alcance_reto_diag', {n: item.range, d: Math.ceil(item.range / 2)})
               : item.range ? ' • '+t('ui.item.desc.alcance', {n: item.range}) : '';
@@ -9280,7 +9284,7 @@ function _computeWeaponRangeTiles(state, me) {
 function _armaDistanciaAtaqueGiratorio(me){
   const weapon = me?.weapon || {};
   const weaponId = String(weapon.id || '').toLowerCase();
-  const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo']);
+  const rangedIds = new Set(['arco_curto', 'arco_composto_curto', 'longbow', 'arco_composto_longo', 'arco_bruto_combatente', 'besta', 'besta_pesada', 'besta_repetidora_patrulha', 'besta_repetidora_guerra', 'hand_crossbow', 'besta_duelista', 'besta_mao', 'besta_leve', 'arco_longo', 'gancho_corrente', 'gancho_escorpiao_superior']);
   return Boolean(rangedIds.has(weaponId) || weapon.projectile || weapon.ammo || weapon.ammo_type
     || weapon.tipo === 'armaDistancia' || weapon.tipo === 'ranged');
 }
@@ -20206,6 +20210,39 @@ function renderImprovisoQuadro(msg){
   overlay.onclick = e => { if(e.target === overlay) fechar(); };
 }
 
+function renderImprovisoEncoreChoice(msg){
+  document.getElementById('improviso-encore-choice-overlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.id = 'improviso-encore-choice-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.76);display:flex;align-items:center;justify-content:center;';
+  const great = Number(msg.initial_roll) === 12 && msg.great_available;
+  const panel = document.createElement('div');
+  panel.style.cssText = 'background:var(--bg2);border:2px solid var(--gold);border-radius:12px;padding:22px 26px;text-align:center;width:min(480px,92vw);box-shadow:0 8px 32px rgba(0,0,0,.65);';
+  const choiceText = great ? t('ui.instrumento.chicote_encore_great_prompt') : t('ui.instrumento.chicote_encore_prompt');
+  panel.innerHTML = `<div style="color:var(--gold);font-size:1.15rem;font-weight:bold;margin-bottom:8px;">${t('ui.instrumento.chicote_encore_title')}</div>
+    <div style="margin:0 0 14px;color:var(--text2);">${t('ui.instrumento.chicote_encore_roll',{roll:msg.initial_roll})}<br>${choiceText}</div>
+    <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <button class="btn-primary" id="encore-choice-use">${great ? t('ui.instrumento.chicote_encore_great') : t('ui.instrumento.chicote_encore_force')}</button>
+      <button class="btn-cancel" id="encore-choice-keep">${t('ui.instrumento.chicote_encore_keep')}</button>
+    </div>
+    <div style="margin-top:12px;font-size:.76rem;color:var(--text2);">${t('ui.instrumento.chicote_encore_cooldown',{rounds:msg.cooldown || 10})}</div>`;
+  overlay.appendChild(panel);
+  document.body.appendChild(overlay);
+  let chosen = false;
+  const respond = choice => {
+    if(chosen) return;
+    chosen = true;
+    GS.improvisoEncoreChoice(msg.request_id, choice);
+    overlay.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = e => { if(e.key === 'Escape') respond('keep'); };
+  panel.querySelector('#encore-choice-use').onclick = () => respond(great ? 'great' : 'encore');
+  panel.querySelector('#encore-choice-keep').onclick = () => respond('keep');
+  overlay.onclick = e => { if(e.target === overlay) respond('keep'); };
+  document.addEventListener('keydown', onKey);
+}
+
 // Mira, em sequência, os passos pendentes da cascata do Improviso (FIFO —
 // mesma ordem de msg.pendentes, que é a ordem que o servidor consome da fila
 // `improviso_pendente`). Cancelar um passo (Cancelar do target-modal, ou Esc
@@ -21034,7 +21071,21 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
           confirmed_partial:m.parcial})
       });
     }
-    if(!alvos.armas.length&&!alvos.municoes.length){
+    for(const m of (alvos.laminas||[])){
+      const bloqueio=bonusUsado?t('ui.veneno.bonus_usado'):semSedeMunicao?t('ui.ladino.sede_insuficiente')
+        :escolhidos.length!==1?t('ui.veneno.laminas_um_veneno'):'';
+      addCartao({
+        html:`<b>🗡️ ${_esc(m.item.name||t('cat.item.laminas_riposta.nome'))} ×${m.total}</b>
+          <div style="color:#a99a7c;font-size:10px">${_esc(nomesEscolhidos)}</div>`,
+        bloqueado:!!bloqueio,
+        motivo:bloqueio||t('ui.veneno.laminas_rende',{n:m.qtd}),
+        ao:()=>send({type:'envenenar_laminas',method:metodo,blade_index:m.index,quantity:m.qtd,
+          poison_id:escolhidos[0],item_id:metodo==='frasco'?escolhidos[0]:null,
+          ...(metodo==='frasco'&&vialSource?.source==='utility_belt'
+            ?{vial_item_id:vialSource.itemId,vial_source:GS.itemSourceFields(vialSource)}:{})})
+      });
+    }
+    if(!alvos.armas.length&&!alvos.municoes.length&&!(alvos.laminas||[]).length){
       lista.innerHTML=`<div style="color:#b8704a;font-size:11px;padding:6px 0">${t('ui.veneno.sem_alvo')}</div>`;
     }
   };
@@ -29101,16 +29152,18 @@ function _showSmokeReaction(msg){
   panel.style.cssText = 'box-sizing:border-box;width:min(440px,100%);max-height:90vh;overflow:auto;padding:24px;border:2px solid #b6bec9;border-radius:14px;background:linear-gradient(145deg,#232833,#12151d);color:#f3f0e8;box-shadow:0 12px 70px #000;font-family:inherit;';
   const title = document.createElement('h2');
   title.id = 'smoke-reaction-title';
-  title.textContent = '⚡ ' + t('ui.reacao_fumaca.titulo');
+  const riposte=msg.candidates.some(c=>c.item_id==='laminas_riposta');
+  title.textContent = (riposte?'🗡️ ':'⚡ ') + (riposte?t('ui.reacao_laminas.titulo'):t('ui.reacao_fumaca.titulo'));
   title.style.cssText = 'margin:0 0 14px;color:#e1d4ac;font-size:1.3rem;';
   const text = document.createElement('p');
-  text.textContent = t('ui.reacao_fumaca.ataque',{inimigo:msg.attacker.name,alvo:msg.target.name});
+  text.textContent = riposte?t('ui.reacao_laminas.ataque',{inimigo:msg.attacker.name})
+    :t('ui.reacao_fumaca.ataque',{inimigo:msg.attacker.name,alvo:msg.target.name});
   const hint = document.createElement('p');
   const hasSmoke=msg.candidates.some(c=>(c.item_id||'bomba_fumaca')==='bomba_fumaca');
   const hasFlash=msg.candidates.some(c=>c.item_id==='bomba_flash');
   const effectKey=hasSmoke&&hasFlash?'ui.reacao_fumaca.efeito_ambos'
     :hasFlash?'ui.reacao_fumaca.efeito_flash':'ui.reacao_fumaca.efeito_fumaca';
-  hint.textContent = t(effectKey);
+  hint.textContent = riposte?t('ui.reacao_laminas.efeito'):t(effectKey);
   hint.style.cssText = 'color:#bcc4d2;font-size:.9rem;line-height:1.5;';
   const countdown = document.createElement('p');
   countdown.setAttribute('role','status');
@@ -29139,7 +29192,8 @@ function _showSmokeReaction(msg){
   for(const candidate of msg.candidates){
     const itemId=candidate.item_id||'bomba_fumaca';
     const itemName=t('cat.item.'+itemId+'.nome');
-    buttonFor(t('ui.reacao_fumaca.lancar',{heroi:candidate.name,item:itemName,n:candidate.quantity}),
+    buttonFor(riposte?t('ui.reacao_laminas.usar',{heroi:candidate.name,item:itemName,n:candidate.quantity})
+      :t('ui.reacao_fumaca.lancar',{heroi:candidate.name,item:itemName,n:candidate.quantity}),
       candidate.hero_id,true,itemId);
   }
   buttonFor(t('ui.reacao_fumaca.recusar'),null,false);
@@ -62244,6 +62298,7 @@ GS.on('spellPickPrompt', mostrarOverlayEscolhaMagia);
 // dos passos pendentes (ver renderImprovisoQuadro, definida perto de
 // escolherDirecaoInstrumento).
 GS.on('improvisoResultado', renderImprovisoQuadro);
+GS.on('improvisoEncoreChoice', renderImprovisoEncoreChoice);
 
 // ── Decoration loot panel — reuses chest overlay with generic callbacks ────────
 GS.on('decor_loot', msg => {
