@@ -6206,9 +6206,17 @@ window.LANG_INTERFACE = {
     "en": "🛡 Armour",
     "pt": "🛡 Armaduras"
   },
+  "ui.loja.aba.escudos": {
+    "en": "🛡 Shields",
+    "pt": "🛡 Escudos"
+  },
   "ui.loja.aba.armas": {
     "en": "⚔ Weapons",
     "pt": "⚔ Armas"
+  },
+  "ui.loja.aba.arcos_bestas": {
+    "en": "🏹 Bows & Crossbows",
+    "pt": "🏹 Arcos e Bestas"
   },
   "ui.loja.aba.arremessaveis": {
     "en": "🎯 Throwables",
