@@ -83,13 +83,27 @@ class DropTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_com_sorte_cada_monstro_do_grupo_deixa_uma_comida(self):
         for tipo in DO_GRUPO:
+            if tipo.startswith("ogro_"):
+                continue  # ogros têm rolagens próprias (ver test_ogros_...).
             with self.subTest(tipo=tipo):
                 self.assertEqual(len(await self._extras(tipo, 1.0)), 1)
 
     async def test_sem_sorte_nenhuma_comida_extra(self):
         for tipo in DO_GRUPO:
+            if tipo.startswith("ogro_"):
+                continue
             with self.subTest(tipo=tipo):
                 self.assertEqual(await self._extras(tipo, 0.0), [])
+
+    async def test_ogros_usam_rolagens_proprias_de_comida(self):
+        with patch.object(S.random, "random", return_value=0.0):
+            self.assertEqual(len(S._comidas_do_ogro({"type": "ogro_clava"})), 4)
+            self.assertEqual(len(S._comidas_do_ogro({"type": "ogro_lanca"})), 3)
+        with patch.object(S.random, "random", return_value=0.99):
+            self.assertEqual(S._comidas_do_ogro({"type": "ogro_clava"}), [])
+            self.assertEqual(S._comidas_do_ogro({"type": "ogro_lanca"}), [])
+        # A comida extra genérica do grupo não vale para eles.
+        self.assertIsNone(S._comida_extra_do_monstro({"type": "ogro_clava"}))
 
     async def test_monstro_fora_do_grupo_nunca_deixa(self):
         for tipo in ("lobo_cinzento", "urso_negro", "minotauro"):

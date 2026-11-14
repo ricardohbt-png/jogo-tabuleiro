@@ -3282,7 +3282,7 @@ const GS = (() => {
   // arma-base: espelho de `_arma_base_id` do servidor.
   const MATERIAL_SUFIXOS_ARMA = ['_aco_damasco', '_obsidiana_ferro', '_liga_titanio', '_freixo_negro', '_cedro_rubro', '_cerne_tita', '_prata'];
   function armaBaseId(id){
-    const wid = String(id || '');
+    let wid = String(id || '');
     if(wid === 'machadinha_ana_prata') return 'machadinha_arremesso_ana';
     for(const suf of MATERIAL_SUFIXOS_ARMA){
       if(wid.endsWith(suf) && wid.length > suf.length) return wid.slice(0, -suf.length);

@@ -21,7 +21,7 @@ LISTAS = (S._MATERIAL_WEAPON_VARIANTS, S._MATERIAL_WEAPON_DAMAGE_VARIANTS,
           S._MATERIAL_WEAPON_CORROSION_VARIANTS)
 VARIANTES = [(base, vid, mat) for lista in LISTAS for base, vid, _n, _i, mat in lista]
 VARIANTES_PRATA = [(w["id"][:-len("_prata")], w["id"]) for w in S.SHOP_WEAPONS
-                   if w.get("silver") and w["id"] != "machadinha_ana_prata"]
+                   if w.get("silver") and w["id"].endswith("_prata") and w["id"] != "machadinha_ana_prata"]
 A_DISTANCIA = [v for v in VARIANTES if v[0] in S.RANGED_AMMO]
 
 

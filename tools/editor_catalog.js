@@ -3219,19 +3219,12 @@ window.EDITOR_CATALOG = {
         }
       ],
       "loot_table": {
-        "1-40": null,
-        "41-70": {
-          "tipo": "gold",
-          "valor": 2
-        },
-        "71-90": {
-          "tipo": "gold",
-          "valor": 4
-        },
-        "91-100": {
-          "tipo": "comida"
-        }
+        "1-100": null
       },
+      "gold_range": [
+        4,
+        10
+      ],
       "ai_type": "ogro",
       "undead": false,
       "subtipo": "raca_padrao",
@@ -3245,7 +3238,7 @@ window.EDITOR_CATALOG = {
       "tier": 2,
       "cr": 2,
       "hp": 38,
-      "ac": 16,
+      "ac": 14,
       "movement": 6,
       "vision_base": 0,
       "size": [
@@ -3320,26 +3313,13 @@ window.EDITOR_CATALOG = {
           "descricao": "Vulnerabilidade: -2 em testes de Vontade"
         }
       ],
-      "resistances": [
-        {
-          "type": "physical",
-          "reduction": 2
-        }
-      ],
       "loot_table": {
-        "1-40": null,
-        "41-70": {
-          "tipo": "gold",
-          "valor": 2
-        },
-        "71-90": {
-          "tipo": "gold",
-          "valor": 4
-        },
-        "91-100": {
-          "tipo": "comida"
-        }
+        "1-100": null
       },
+      "gold_range": [
+        2,
+        4
+      ],
       "ai_type": "ogro",
       "undead": false,
       "subtipo": "raca_padrao",
@@ -12084,6 +12064,19 @@ window.EDITOR_CATALOG = {
       "descricao": "Lança: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas."
     },
     {
+      "id": "lanca_enorme",
+      "name": "Lança Enorme",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme.png",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "descricao": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão."
+    },
+    {
       "id": "longsword",
       "name": "Espada Longa",
       "emoji": "⚔️",
@@ -12585,6 +12578,23 @@ window.EDITOR_CATALOG = {
       "corrosion_free_levels": 1,
       "silver": true,
       "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "lanca_enorme_prata",
+      "name": "Lança Enorme de Prata",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_prata.png",
+      "corrosion_max": 2,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Lança Enorme de Prata: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 na diagonal e exige duas mãos de heróis. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo. Ogros conseguem empunhá-la com uma mão."
     },
     {
       "id": "longsword_prata",
@@ -13898,6 +13908,23 @@ window.EDITOR_CATALOG = {
       "descricao": "Lança de Aço Damasco: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
+      "id": "lanca_enorme_aco_damasco",
+      "name": "Lança Enorme de Aço Damasco",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_aco_damasco.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "descricao": "Lança Enorme de Aço Damasco: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
       "id": "alabarda_aco_damasco",
       "name": "Alabarda de Aço Damasco",
       "emoji": "🪓",
@@ -14570,6 +14597,24 @@ window.EDITOR_CATALOG = {
       "descricao": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
+      "id": "lanca_enorme_obsidiana_ferro",
+      "name": "Lança Enorme de Obsidiana de Ferro",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_obsidiana_ferro.png",
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "damage_bonus": 1,
+      "descricao": "Lança Enorme de Obsidiana de Ferro: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
       "id": "alabarda_obsidiana_ferro",
       "name": "Alabarda de Obsidiana de Ferro",
       "emoji": "🪓",
@@ -15223,6 +15268,22 @@ window.EDITOR_CATALOG = {
       "descricao": "Lança de Liga de Titânio: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
+      "id": "lanca_enorme_liga_titanio",
+      "name": "Lança Enorme de Liga de Titânio",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_liga_titanio.png",
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "descricao": "Lança Enorme de Liga de Titânio: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
       "id": "alabarda_liga_titanio",
       "name": "Alabarda de Liga de Titânio",
       "emoji": "🪓",
@@ -15542,6 +15603,99 @@ window.EDITOR_CATALOG = {
       "corrosion_free_levels": 1,
       "silver": true,
       "descricao": "Maça do Voto Guardião de Prata: arma mágica exclusiva do Clérigo; 1d8 contundente + Força, crítico natural ×3, sem bônus mágico no acerto ou dano. Súplica Vital: ao acertar, uma vez a cada 10 rodadas, cura 1d6 PV do Clérigo ou de um aliado vivo a até 2 casas; não ressuscita. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo."
+    },
+    {
+      "id": "lanca_enorme_magica",
+      "name": "Lança Enorme Mágica +1",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme.png",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Recebe um encantamento raro +1 no acerto e no dano."
+    },
+    {
+      "id": "lanca_enorme_aco_damasco_magica",
+      "name": "Lança Enorme de Aço Damasco Mágica +1",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_aco_damasco.png",
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Lança Enorme de Aço Damasco: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
+    },
+    {
+      "id": "lanca_enorme_obsidiana_ferro_magica",
+      "name": "Lança Enorme de Obsidiana de Ferro Mágica +1",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_obsidiana_ferro.png",
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Lança Enorme de Obsidiana de Ferro: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
+    },
+    {
+      "id": "lanca_enorme_liga_titanio_magica",
+      "name": "Lança Enorme de Liga de Titânio Mágica +1",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme_liga_titanio.png",
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Lança Enorme de Liga de Titânio: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
+    },
+    {
+      "id": "lanca_enorme_prata_magica",
+      "name": "Lança Enorme de Prata Mágica +1",
+      "emoji": "🔱",
+      "die": "1d10",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/lanca_enorme.png",
+      "corrosion_max": 2,
+      "reach": "lanca",
+      "throw_range": 3,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Lança Enorme de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 3 casas. Requer as duas mãos. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Recebe um encantamento raro +1 no acerto e no dano."
     },
     {
       "id": "escudo_p",
