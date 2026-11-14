@@ -12382,6 +12382,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "throw_range": 3,
       "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12400,6 +12402,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "range": 2,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12417,6 +12421,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "throw_range": 4,
       "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12435,6 +12441,8 @@ window.EDITOR_CATALOG = {
       ],
       "corrosion_max": 2,
       "categoria": "contundente",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12452,6 +12460,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12469,6 +12479,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12484,6 +12496,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "categoria": "perfurante",
       "bardo_lira_counter_d4": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Rapieira do Dueto de Prata: arma mundana exclusiva do Bardo, 1d6 perfurante usando Destreza. Prata não mágica: fere criaturas resistentes a armas comuns e é destruída no segundo nível de corrosão. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante."
     },
     {
@@ -12503,6 +12517,8 @@ window.EDITOR_CATALOG = {
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12523,6 +12539,8 @@ window.EDITOR_CATALOG = {
       "throw_range": 3,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12539,6 +12557,8 @@ window.EDITOR_CATALOG = {
       "reach": "lanca",
       "throw_range": 4,
       "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Lança de Prata: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12554,6 +12574,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12570,6 +12592,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12592,6 +12616,8 @@ window.EDITOR_CATALOG = {
       "chain_pull_cooldown": 10,
       "chain_pull_save_dc": 13,
       "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Gancho de Corrente de Prata: 1d6 de dano perfurante, usando Destreza. Alcance: 3 casas em linha reta. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12614,6 +12640,8 @@ window.EDITOR_CATALOG = {
       "chain_pull_cooldown": 10,
       "chain_pull_save_dc": 13,
       "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Gancho do Escorpião Superior de Prata: 1d6 de dano perfurante, usando Destreza. Alcance: 5 casas em linha reta. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12631,6 +12659,8 @@ window.EDITOR_CATALOG = {
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
       "categoria": "contundente",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Mangual de Prata: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12646,6 +12676,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12661,6 +12693,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Espada Bastarda de Prata: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12677,6 +12711,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Machado de Guerra Órquico de Prata: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12693,6 +12729,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "range": 2,
       "categoria": "perfurante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Alabarda de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12709,6 +12747,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -12725,6 +12765,8 @@ window.EDITOR_CATALOG = {
       "corrosion_max": 2,
       "categoria": "contundente",
       "ignora_reducao_dano": 1,
+      "corrosion_free_levels": 1,
+      "silver": true,
       "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
@@ -13996,13 +14038,14 @@ window.EDITOR_CATALOG = {
       "finesse": true,
       "off_hand_weapon": true,
       "icon": "assets/itens/adaga_obsidiana_ferro.png",
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "throw_range": 3,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "shortsword_obsidiana_ferro",
@@ -14017,13 +14060,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "damage_bonus": 1,
-      "descricao": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "longsword_obsidiana_ferro",
@@ -14036,13 +14080,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "damage_bonus": 1,
-      "descricao": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "bastsword_obsidiana_ferro",
@@ -14055,13 +14100,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "damage_bonus": 1,
-      "descricao": "Espada Bastarda de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Espada Bastarda de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "espada2m_obsidiana_ferro",
@@ -14075,13 +14121,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_min_nat_roll": 19,
       "categoria": "cortante",
       "damage_bonus": 1,
-      "descricao": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "machado_basico_obsidiana_ferro",
@@ -14097,14 +14144,15 @@ window.EDITOR_CATALOG = {
         "ranger",
         "paladin"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
       "damage_bonus": 1,
-      "descricao": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "machado_duplo_obsidiana_ferro",
@@ -14117,13 +14165,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "extra_attack_on_crit_min_nat": 19,
       "categoria": "cortante",
       "damage_bonus": 1,
-      "descricao": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "machado_orc_obsidiana_ferro",
@@ -14137,13 +14186,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_nat20_multiplier": 3,
       "categoria": "cortante",
       "damage_bonus": 1,
-      "descricao": "Machado de Guerra Órquico de Obsidiana de Ferro: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Machado de Guerra Órquico de Obsidiana de Ferro: 1d12 de dano cortante, usando Força. Requer as duas mãos. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "maca_obsidiana_ferro",
@@ -14158,13 +14208,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
       "damage_bonus": 1,
-      "descricao": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "warhammer_obsidiana_ferro",
@@ -14178,13 +14229,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_nat20_multiplier": 3,
       "categoria": "contundente",
       "damage_bonus": 1,
-      "descricao": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "mangual_obsidiana_ferro",
@@ -14198,14 +14250,15 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "crit_nat20_multiplier": 2.5,
       "reach": "mangual",
       "categoria": "contundente",
       "damage_bonus": 1,
-      "descricao": "Mangual de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Mangual de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. Alcance: qualquer uma das 8 casas adjacentes, incluindo diagonais. 20 natural: dano multiplicado por 2.5. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "marreta_obsidiana_ferro",
@@ -14219,13 +14272,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "categoria": "contundente",
       "damage_bonus": 1,
       "ignora_reducao_dano": 1,
-      "descricao": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "lanca_curta_obsidiana_ferro",
@@ -14240,13 +14294,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "throw_range": 4,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "lanca_obsidiana_ferro",
@@ -14259,14 +14314,15 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "reach": "lanca",
       "throw_range": 4,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Lança de Obsidiana de Ferro: 1d8 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "alabarda_obsidiana_ferro",
@@ -14280,13 +14336,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "range": 2,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Alabarda de Obsidiana de Ferro: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Alabarda de Obsidiana de Ferro: 1d10 de dano perfurante, usando Força. Alcance: 2 casas em linha reta. Requer as duas mãos. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "rapieira_do_dueto_obsidiana_ferro",
@@ -14298,13 +14355,14 @@ window.EDITOR_CATALOG = {
       "allowed_classes": [
         "bard"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "categoria": "perfurante",
       "damage_bonus": 1,
       "bardo_lira_counter_d4": true,
-      "descricao": "Rapieira do Dueto de Obsidiana de Ferro: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Rapieira do Dueto de Obsidiana de Ferro: rapieira de uma mão que causa 1d6 perfurante usando Destreza. Enquanto a Lira estiver equipada na mão secundária e o Dueto Marcial estiver ativo, o primeiro contra-ataque gratuito do Bardo em cada rodada causa +1d4 de dano perfurante. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "gancho_corrente_obsidiana_ferro",
@@ -14319,8 +14377,9 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "range": 3,
       "chain_hook_range": 3,
@@ -14329,7 +14388,7 @@ window.EDITOR_CATALOG = {
       "chain_pull_save_dc": 13,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "gancho_escorpiao_superior_obsidiana_ferro",
@@ -14344,8 +14403,9 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "metal",
       "range": 5,
       "chain_hook_range": 5,
@@ -14354,7 +14414,7 @@ window.EDITOR_CATALOG = {
       "chain_pull_save_dc": 13,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "arco_curto_cedro_rubro",
@@ -14369,13 +14429,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 6,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Curto de Cedro Rubro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Curto de Cedro Rubro: 1d6 de dano perfurante, usando Destreza. Alcance: 6 casas em linha reta ou 3 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "arco_composto_curto_cedro_rubro",
@@ -14391,14 +14452,15 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 6,
       "range_all_directions": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "longbow_cedro_rubro",
@@ -14411,13 +14473,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 10,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Longo de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Longo de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 10 casas em linha reta ou 5 na diagonal. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "arco_composto_longo_cedro_rubro",
@@ -14431,14 +14494,15 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "arco_bruto_combatente_cedro_rubro",
@@ -14452,15 +14516,16 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
       "add_strength_to_damage": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "hand_crossbow_cedro_rubro",
@@ -14469,13 +14534,14 @@ window.EDITOR_CATALOG = {
       "die": "1d4",
       "stat": "dex",
       "icon": "assets/itens/besta_mao_cedro_rubro.png",
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 4,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Besta de Mão de Cedro Rubro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Besta de Mão de Cedro Rubro: 1d4 de dano perfurante, usando Destreza. Alcance: 4 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "besta_duelista_cedro_rubro",
@@ -14484,13 +14550,14 @@ window.EDITOR_CATALOG = {
       "die": "1d6",
       "stat": "dex",
       "icon": "assets/itens/besta_duelista_cedro_rubro.png",
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 4,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Besta do Duelista de Cedro Rubro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Besta do Duelista de Cedro Rubro: arma de uma mão que causa 1d6 de dano perfurante usando Destreza, com alcance de 4 casas em linha reta ortogonal. Aceita todos os tipos de virote, pode ser usada por personagens de qualquer classe e é compatível com a especialização Disparo Duplo quando pareada com outra Besta de Mão ou Besta do Duelista. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "besta_cedro_rubro",
@@ -14506,13 +14573,14 @@ window.EDITOR_CATALOG = {
         "paladin",
         "warrior"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 8,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Besta de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Besta de Cedro Rubro: 1d8 de dano perfurante, usando Destreza. Alcance: 8 casas em linha reta. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "besta_pesada_cedro_rubro",
@@ -14528,13 +14596,14 @@ window.EDITOR_CATALOG = {
         "cleric",
         "rogue"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 12,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Besta Pesada de Cedro Rubro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Besta Pesada de Cedro Rubro: causa 1d10 perfurante usando Destreza, tem alcance de 12 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uso exclusivo de Guerreiro, Paladino, Clérigo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "besta_repetidora_patrulha_cedro_rubro",
@@ -14550,15 +14619,16 @@ window.EDITOR_CATALOG = {
         "bard",
         "rogue"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 6,
       "repeating_crossbow": true,
       "repeating_crossbow_cooldown": 10,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Besta Repetidora de Patrulha de Cedro Rubro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Besta Repetidora de Patrulha de Cedro Rubro: causa 1d6 perfurante usando Destreza, tem alcance de 6 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "besta_repetidora_guerra_cedro_rubro",
@@ -14574,15 +14644,16 @@ window.EDITOR_CATALOG = {
         "bard",
         "rogue"
       ],
-      "corrosao_resistente": 1,
-      "corrosao_niveis_penalidade": 2,
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
       "material": "madeira",
       "range": 8,
       "repeating_crossbow": true,
       "repeating_crossbow_cooldown": 10,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Besta Repetidora de Guerra de Cedro Rubro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano e +1 nível de tolerância à corrosão sem penalidade. Os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Besta Repetidora de Guerra de Cedro Rubro: causa 1d8 perfurante usando Destreza, tem alcance de 8 casas em linha reta ortogonal, exige duas mãos e aceita todos os tipos de virote. Uma vez a cada 10 rodadas, como ação principal, pode disparar dois virotes contra o mesmo alvo com ataques separados; requer dois virotes disponíveis. Uso de Guerreiro, Paladino, Bardo e Ladino. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "dagger_liga_titanio",
@@ -16462,6 +16533,7 @@ window.EDITOR_CATALOG = {
       "damage_bonus": 1,
       "item_slot": "ammo",
       "effect": "ammo",
+      "silver": true,
       "ammo_type": "flechas_prata",
       "ammo_count": 10
     },
@@ -16472,6 +16544,7 @@ window.EDITOR_CATALOG = {
       "damage_bonus": 1,
       "item_slot": "ammo",
       "effect": "ammo",
+      "silver": true,
       "ammo_type": "virotes_prata",
       "ammo_count": 10
     },
