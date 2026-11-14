@@ -19800,6 +19800,14 @@ window.EDITOR_DUNGEONS = [
               "texto": "ui.tutorial.guia.fala_hostilidade.parabens.texto",
               "titulo": "ui.tutorial.guia.fala_hostilidade.parabens.titulo"
             }
+          ],
+          "continua_sem": [
+            "fala_18",
+            "fala_19"
+          ],
+          "continua_sem_ativas": [
+            "fala_18",
+            "fala_19"
           ]
         },
         {
@@ -193288,7 +193296,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "dark_mage",
           "pos": [
-            33,
+            35,
             0
           ],
           "room_id": null,
@@ -193520,7 +193528,7 @@ window.EDITOR_DUNGEONS = [
           "type": "necromante",
           "pos": [
             35,
-            0
+            2
           ],
           "room_id": null,
           "boss": false,
@@ -193530,7 +193538,7 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "zumbi_infectado",
           "pos": [
-            31,
+            33,
             0
           ],
           "room_id": null,
@@ -193959,8 +193967,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "esqueleto_humano_customizado",
           "pos": [
-            26,
-            1
+            31,
+            0
           ],
           "room_id": null,
           "boss": false,
@@ -212661,4 +212669,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

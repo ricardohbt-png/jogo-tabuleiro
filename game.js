@@ -7924,7 +7924,7 @@ function _getHero2DImg(classId){
 const _mon2DImg = {};
 const _MONSTER_TYPE_DEFAULT_IMAGE = Object.freeze({
   goblin: 'goblinCombatente',
-  skeleton: 'esqueletoHumano',
+  skeleton: 'esqueletoArmadurado',
   orc: 'orcGuerreiro',
   dark_mage: 'necromante',
   troll: 'troll',
@@ -53642,7 +53642,7 @@ function _figureName(isMonster, classId, mType){
   if(!isMonster)
     // O nome do herói já é catálogo traduzido no servidor desde a etapa 2.
     return _rotulo(classId + '.nome', 'cat.classe', t('ui.tabuleiro.heroi'));
-  return ({goblin:'Goblin',skeleton:'Skeleton',orc:'Orc Warrior',
+  return ({goblin:'Goblin',skeleton:'Armored Skeleton',orc:'Orc Warrior',
            dark_mage:'Dark Mage',troll:'Troll',dragon:'Dragon'}[mType]) || 'Monster';
 }
 
@@ -53662,6 +53662,7 @@ const _heroGLBQueue  = {};   // classId -> [callbacks]
 // O PNG existente permanece como fallback na visão 3D e como miniatura da visão 2D.
 const _MONSTER_GLB_MODELS = Object.freeze({
   // Identificadores de `image` do bestiário.
+  skeleton:          'assets/models3d/monstros/esqueleto_armadurado.glb',
   cavalo_sela:       'assets/models3d/monstros/cavalo_sela.glb',
   vaca:              'assets/models3d/monstros/vaca.glb',
   goblin_assassino: 'assets/models3d/monstros/assassino_goblin.glb',
@@ -53689,6 +53690,7 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   xamaGoblin:        'assets/models3d/monstros/xama_goblin.glb',
   esqueletoHumano:   'assets/models3d/monstros/esqueletoHumano.glb',
   esqueletoAnimal:   'assets/models3d/monstros/esqueleto_animal.glb',
+  esqueleto_animal_grande: 'assets/models3d/monstros/esqueleto_animal_grande.glb',
   crocodiloJovem:    'assets/models3d/monstros/crocodilo.glb',
   jacare:            'assets/models3d/monstros/jacare.glb',
   cobraVenenosa:     'assets/models3d/monstros/cobra_venenosa_corrigida.glb',
@@ -53818,6 +53820,9 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   vela_de_fogo:       'assets/models3d/monstros/vela_fogo.glb',
 });
 function _monsterGLBPath(imageName, monsterType){
+  // Mapas legados usam o tipo `skeleton`, cuja ficha agora é a do Armadurado.
+  if (monsterType === 'skeleton')
+    return _MONSTER_GLB_MODELS.skeleton;
   // A variante da Caravana compartilha o identificador de imagem do Bardo,
   // mas usa material verde e ouro próprio.
   if (monsterType === 'bardo_da_caravana')
@@ -54383,6 +54388,13 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     // O Assassino da Serra usa seu GLB próprio e precisa do quarto de volta
     // para que a frente acompanhe a direção do movimento.
     'assassino_da_serra',
+    // O Esqueleto Armadurado precisa do quarto de volta para apontar na
+    // direção do movimento, tanto pelo tipo legado quanto pela imagem.
+    'skeleton', 'esqueletoArmadurado',
+    // O Grande Esqueleto Animal também recebe este ajuste pelo tipo e imagem.
+    'esqueleto_animal_customizado', 'esqueleto_animal_grande',
+    // O Esqueleto Besteiro usa o mesmo ajuste, identificado pelo tipo e pela imagem.
+    'esqueleto_humano_customizado', 'esqueletoBesteiro',
     // O Goblin Arqueiro também precisa do giro de 90° para acompanhar a
     // direção indicada pelo movimento.
     'goblinArqueiro', 'goblin_arqueiro',

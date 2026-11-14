@@ -424,7 +424,7 @@ async def main():
     check("tier desconhecido → fallback 1.0", S.monster_cr({"tier": 9}) == 1.0)
     _by = lambda t: next(d for d in S.MONSTER_DEFS if d["type"] == t)
     check("goblin legado cr 0.25", S.monster_cr(_by("goblin")) == 0.25)
-    check("skeleton legado cr 0.5", S.monster_cr(_by("skeleton")) == 0.5)
+    check("skeleton (Esqueleto Armadurado) cr 1", S.monster_cr(_by("skeleton")) == 1)
     check("orc legado cr 0.75", S.monster_cr(_by("orc")) == 0.75)
     check("dark_mage (Mago das Trevas redesenhado) cr 1", S.monster_cr(_by("dark_mage")) == 1)
     # O troll deixou de ser stub legado e ganhou ficha completa (tier 4, cr 4).

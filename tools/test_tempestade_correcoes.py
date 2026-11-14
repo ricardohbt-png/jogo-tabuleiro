@@ -105,12 +105,12 @@ async def main():
     check("turno 3: normal", resultados[2][0] is True and resultados[2][1] > 0)
     check("flag de movimento foi consumido pelo prólogo", "turbilhao_perde_movimento" not in m)
 
-    print("\n[2] Monstro sem ai_type (esqueleto) volta a andar depois do ciclone")
+    print("\n[2] Monstro sem ai_type (orc) volta a andar depois do ciclone")
     # O caminho legado de gm_phase nunca fazia `pop` do flag: um esqueleto
     # atingido uma vez ficava imóvel para sempre (só o Mestre em Manual soltava).
     r, p = setup()
-    m = add_monster(r, "skeleton", "s1", (7, 7))
-    check("o esqueleto realmente não tem ai_type", not m.get("ai_type"))
+    m = add_monster(r, "orc", "s1", (7, 7))
+    check("o orc realmente não tem ai_type", not m.get("ai_type"))
     await tempestade_com_ciclone_em(r, (7, 7), save_passa=True)   # só perde movimento
     m["pos"] = [0, 0]; p["pos"] = [1, 0]                           # fora da tempestade, herói visível
     movs = []
