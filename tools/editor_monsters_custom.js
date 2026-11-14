@@ -645,33 +645,33 @@ window.EDITOR_CUSTOM_MONSTERS = [
   },
   {
     "type": "esqueleto_animal_customizado",
-    "name": "Esqueleto Animal",
+    "name": "Grande Esqueleto Animal",
     "emoji": "🦴",
-    "tier": 1,
-    "cr": 0.5,
-    "base_hp": 8,
-    "hp": 8,
-    "natural_armor": 1,
-    "ac": 13,
+    "tier": 2,
+    "cr": 2,
+    "base_hp": 36,
+    "hp": 36,
+    "natural_armor": 3,
+    "ac": 14,
     "movement": 6,
     "vision_base": 0,
     "visao_escuro": true,
-    "base_attack_bonus": 3,
+    "base_attack_bonus": 2,
     "caster_level": 1,
-    "str_": 12,
-    "dex": 14,
-    "con_": 10,
+    "str_": 18,
+    "dex": 12,
+    "con_": 16,
     "int_": 2,
     "fort_base": 2,
     "ref_base": 2,
-    "will_base": 4,
-    "fort": 2,
-    "ref_": 4,
-    "will": 0,
+    "will_base": 2,
+    "fort": 5,
+    "ref_": 3,
+    "will": -2,
     "attacks": [
       {
         "name": "Mordida",
-        "damage": "1d6+2",
+        "damage": "1d8",
         "damage_types": [
           "physical"
         ],
@@ -679,15 +679,37 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "attack_attribute": "str_",
         "damage_attribute": "str_",
         "apply_attribute_damage": true,
-        "attribute_mod_base": 1,
-        "base_attack_bonus": 3,
-        "atk_bonus": 4,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
         "range": null,
         "on_hit": null,
         "on_hit_effect": null,
         "poison_dc": 10,
         "extra_damage": null,
-        "extra_damage_types": []
+        "extra_damage_types": [],
+        "categoria": "perfurante"
+      },
+      {
+        "name": "Garras",
+        "damage": "1d6",
+        "damage_types": [
+          "physical"
+        ],
+        "num_attacks": 2,
+        "attack_attribute": "str_",
+        "damage_attribute": "str_",
+        "apply_attribute_damage": true,
+        "attribute_mod_base": 4,
+        "base_attack_bonus": 2,
+        "atk_bonus": 6,
+        "range": null,
+        "on_hit": null,
+        "on_hit_effect": null,
+        "poison_dc": 10,
+        "extra_damage": null,
+        "extra_damage_types": [],
+        "categoria": "cortante"
       }
     ],
     "special_abilities": [
@@ -695,7 +717,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "id": "movimento_erratico",
         "name": "Movimento Errático",
         "action_type": "passiva",
-        "descricao": "Ignora terreno difícil — avança sem hesitar",
+        "descricao": "Ignora penalidades de movimento em água e água profunda.",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
@@ -704,10 +726,35 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "id": "sem_instinto",
         "name": "Sem Instinto",
         "action_type": "passiva",
-        "descricao": "Nunca foge nem recua — avança até ser destruído",
+        "descricao": "Nunca foge nem recua — avança até ser destruído.",
         "source": "monstro",
         "uses_per_day": 1,
         "cooldown_turns": 0
+      },
+      {
+        "id": "guild_brutalidade",
+        "name": "Brutalidade",
+        "icon": "🪓",
+        "action_type": "acao_livre",
+        "descricao": "Até o fim do turno, seus ataques causam +2 de dano. Recarga: 4 rodadas.",
+        "source": "guilda",
+        "source_id": "brutalidade",
+        "monster_effect": "brutalidade_todos_ataques",
+        "damage_bonus": 2,
+        "uses_per_day": null,
+        "cooldown_turns": 4
+      },
+      {
+        "id": "esqueleto_golpe_devastador",
+        "name": "Golpe Devastador",
+        "icon": "💥",
+        "action_type": "acao_livre",
+        "descricao": "O próximo acerto causa 1,25× o dano bruto. Recarga: 4 rodadas.",
+        "source": "guilda",
+        "monster_effect": "golpe_devastador_multiplicador",
+        "damage_multiplier": 1.25,
+        "uses_per_day": null,
+        "cooldown_turns": 4
       }
     ],
     "monster_abilities": [
@@ -720,35 +767,52 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "id": "sem_instinto",
         "uses_per_day": 1,
         "cooldown_turns": 0
+      },
+      {
+        "id": "guild_brutalidade",
+        "uses_per_day": null,
+        "cooldown_turns": 4,
+        "monster_effect": "brutalidade_todos_ataques",
+        "damage_bonus": 2
+      },
+      {
+        "id": "esqueleto_golpe_devastador",
+        "uses_per_day": null,
+        "cooldown_turns": 4
       }
     ],
     "monster_spells": [],
     "negative_ability_ids": [
       "fraqueza_magica"
     ],
-    "immunities": [],
+    "immunities": [
+      "veneno",
+      "controle_mental"
+    ],
     "resistances": [],
     "weaknesses": [
       {
         "type": "physical",
+        "categoria": "perfurante",
+        "bonus_flat": -2,
+        "descricao": "Resistência a perfurante (-2 dano)"
+      },
+      {
+        "type": "physical",
         "categoria": "cortante",
-        "name": "Cortante",
-        "bonus_flat": 1,
+        "bonus_flat": -1,
         "descricao": "Resistência a cortante (-1 dano)"
       },
       {
         "type": "physical",
         "categoria": "contundente",
-        "name": "Contundente",
         "bonus_flat": 2,
         "descricao": "Vulnerável a impacto (+2 dano)"
       },
       {
-        "type": "physical",
-        "categoria": "perfurante",
-        "name": "Perfurante",
-        "bonus_flat": 1,
-        "descricao": "Resistência a perfurante (-2 dano)"
+        "type": "sagrado",
+        "multiplier": 2,
+        "descricao": "Dano sagrado dobrado"
       },
       {
         "source_ability": "fraqueza_magica",
@@ -770,8 +834,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_type": "agressivo",
     "ai_profile": "agressivo",
     "ai_tactics": [],
-    "image": "esqueletoAnimal",
-    "portrait": "esqueletoanimal",
+    "image": "esqueleto_animal_grande",
+    "portrait": "esqueleto_animal_grande",
     "size": [
       1,
       1
@@ -786,11 +850,11 @@ window.EDITOR_CUSTOM_MONSTERS = [
   },
   {
     "type": "esqueleto_humano_customizado",
-    "name": "Esqueleto Humano",
+    "name": "Esqueleto Besteiro",
     "emoji": "💀",
     "overwrite_native": false,
     "tier": 1,
-    "cr": 0.5,
+    "cr": 1.0,
     "base_hp": 10,
     "hp": 10,
     "natural_armor": 1,
@@ -812,24 +876,21 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "will": 0,
     "attacks": [
       {
-        "name": "Espada Curta",
-        "damage": "1d6",
+        "name": "Besta",
+        "damage": "1d8",
         "damage_types": [
           "physical"
         ],
         "num_attacks": 1,
-        "attack_attribute": "str_",
-        "damage_attribute": "str_",
+        "attack_attribute": "dex",
+        "damage_attribute": "dex",
         "apply_attribute_damage": true,
-        "attribute_mod_base": 0,
+        "attribute_mod_base": 1,
         "base_attack_bonus": 2,
-        "atk_bonus": 2,
-        "range": null,
-        "on_hit": null,
-        "on_hit_effect": null,
-        "poison_dc": 10,
-        "extra_damage": null,
-        "extra_damage_types": []
+        "atk_bonus": 3,
+        "range": 8,
+        "projectile": "bolt",
+        "categoria": "perfurante"
       }
     ],
     "special_abilities": [
@@ -873,7 +934,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "type": "physical",
         "categoria": "cortante",
         "name": "Cortante",
-        "bonus_flat": 1,
+        "bonus_flat": -1,
         "descricao": "Resistência a cortante (-1 dano)"
       },
       {
@@ -887,7 +948,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "type": "physical",
         "categoria": "perfurante",
         "name": "Perfurante",
-        "bonus_flat": 1,
+        "bonus_flat": -2,
         "descricao": "Resistência a perfurante (-2 dano)"
       },
       {
@@ -899,7 +960,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "descricao": "Fraqueza mágica: -2 em Vontade contra controle de mortos-vivos"
       }
     ],
-    "equipment_enabled": false,
+    "equipment_enabled": true,
     "equipped_items": [],
     "equipment": [],
     "guaranteed_loot": [],
@@ -907,10 +968,10 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "loot_drops": [],
     "gold": 0,
     "xp": 0,
-    "ai_type": "agressivo",
+    "ai_type": "esqueleto_humano",
     "ai_profile": "agressivo",
     "ai_tactics": [],
-    "image": "esqueletoHumano",
+    "image": "esqueletoBesteiro",
     "portrait": "esqueletohumano_original",
     "size": [
       1,
@@ -922,7 +983,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "spawn_max": 0,
     "undead": true,
     "subtipo": "morto_vivo",
-    "boss": false
+    "boss": false,
+    "model3d": "assets/models3d/monstros/esqueleto_besta.glb"
   },
   {
     "type": "grotao",

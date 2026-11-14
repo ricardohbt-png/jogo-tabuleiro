@@ -5330,7 +5330,36 @@ MONSTER_DEFS = [
     # â”€â”€ Placeholders (sistema legado) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # TODO: Substituir por monstros reais com fichas completas
     {"type": "goblin",    "name": "Goblin",         "emoji": "👺", "hp": 8,  "ac": 12, "atk_bonus": 2,  "damage": "1d4", "xp": 10,  "gold": 5,   "tier": 1, "cr": 0.25, "vscale": [0.6, 0.6]},
-    {"type": "skeleton",  "name": "Esqueleto",      "emoji": "💀", "hp": 10, "ac": 13, "atk_bonus": 3,  "damage": "1d6", "xp": 15,  "gold": 8,   "tier": 1, "cr": 0.5, "undead": True},
+    {"type": "skeleton",  "name": "Esqueleto Armadurado", "emoji": "💀", "hp": 14,
+     "ac": 10, "natural_armor": 0, "armor_only_ac": True, "atk_bonus": 5,
+     "damage": "1d6", "xp": 30, "gold": 0, "tier": 2, "cr": 1,
+     "size": [1, 1], "movement": 6, "str_": 14, "dex": 12, "con_": 10,
+     "int_": 4, "fort": 2, "ref_": 3, "will": -1, "base_attack_bonus": 3,
+     "equipment_enabled": True, "equipped_items": [], "subtipo": "morto_vivo",
+     "darkvision_range": 4, "ai_type": "esqueleto_humano",
+     "image": "esqueletoArmadurado", "model3d": "assets/models3d/monstros/esqueleto_armadurado.glb",
+     "attacks": [{"name": "Espada Curta", "atk_bonus": 5, "damage": "1d6",
+                  "damage_types": ["physical"], "num_attacks": 1,
+                  "categoria": "cortante"}],
+     "special_abilities": [
+         {"id": "sem_dor", "name": "Sem Dor", "action_type": "passiva"},
+         {"id": "corpo_inerte", "name": "Corpo Inerte", "action_type": "passiva"},
+         {"id": "vulnerabilidade", "name": "Vulnerabilidade", "action_type": "passiva",
+          "saves": ["vontade"], "penalty": 2, "descricao": "-2 em testes de Vontade"},
+     ],
+     "immunities": ["veneno", "controle_mental"],
+     "min_damage": 1, "weaknesses": [
+         {"type": "physical", "categoria": "perfurante", "bonus_flat": -2,
+          "descricao": "Resistência a perfurante (-2 dano)"},
+         {"type": "physical", "categoria": "cortante", "bonus_flat": -1,
+          "descricao": "Resistência a cortante (-1 dano)"},
+         {"type": "physical", "categoria": "contundente", "bonus_flat": 2,
+          "descricao": "Vulnerável a impacto (+2 dano)"},
+         {"type": "sagrado", "multiplier": 2, "descricao": "Dano sagrado dobrado"},
+         {"type": "save_penalty", "saves": ["vontade"], "bonus_flat": -2,
+          "vulnerabilidade": True, "descricao": "Vulnerabilidade: -2 em testes de Vontade"},
+     ], "loot_table": {"1-100": None}, "spawn_min": 0, "spawn_max": 0,
+     "porte": "medio", "undead": True, "boss": False},
     {"type": "orc",       "name": "Orc",            "emoji": "👹", "hp": 16, "ac": 14, "atk_bonus": 5,  "damage": "1d8", "xp": 25,  "gold": 12,  "tier": 2, "cr": 0.75},
     {
         "type": "dark_mage", "name": "Mago das Trevas", "emoji": "🧟",
@@ -12421,6 +12450,41 @@ def _criar_catalogo_loot_masmorra():
 
 _DUNGEON_ITEM_CATALOG = _criar_catalogo_loot_masmorra()
 
+# Versões mágicas +1 usadas apenas pelo sorteio raro do Esqueleto Armadurado.
+# São adicionadas ao catálogo de equipamento/loot, sem entrar no estoque do ferreiro.
+_ESQUELETO_ARMADURADO_ARMAS_BASE = frozenset((
+    "shortsword", "lanca_curta", "longsword", "machado_duplo", "espada2m", "marreta",
+))
+_esqueleto_armas_material = set(_ESQUELETO_ARMADURADO_ARMAS_BASE)
+for _linhas_material in (_MATERIAL_WEAPON_VARIANTS,
+                         _MATERIAL_WEAPON_DAMAGE_VARIANTS,
+                         _MATERIAL_WEAPON_CORROSION_VARIANTS):
+    _esqueleto_armas_material.update(
+        linha[1] for linha in _linhas_material
+        if linha[0] in _ESQUELETO_ARMADURADO_ARMAS_BASE)
+for _arma_de_base in _ESQUELETO_ARMADURADO_ARMAS_BASE:
+    _prata_id = f"{_arma_de_base}_prata"
+    if (_DUNGEON_ITEM_CATALOG.get(_prata_id) or {}).get("silver"):
+        _esqueleto_armas_material.add(_prata_id)
+for _arma_id in sorted(_esqueleto_armas_material):
+    _arma_base = _DUNGEON_ITEM_CATALOG.get(_arma_id)
+    if not _arma_base or not _arma_base.get("die"):
+        continue
+    _arma_magica = deepcopy(_arma_base)
+    _arma_magica.update({
+        "id": f"{_arma_id}_magica",
+        "name": f"{_arma_base.get('name', 'Arma')} Mágica +1",
+        "magical": True,
+        "atk_bonus": int(_arma_base.get("atk_bonus", 0) or 0) + 1,
+        "damage_bonus": int(_arma_base.get("damage_bonus", 0) or 0) + 1,
+        "price": int(_arma_base.get("price", 0) or 0) + 500,
+    })
+    _DUNGEON_ITEM_CATALOG[_arma_magica["id"]] = _arma_magica
+    if _arma_id in WEAPONS:
+        _WEAPON_MAGIC = deepcopy(WEAPONS[_arma_id])
+        _WEAPON_MAGIC.update(_arma_magica)
+        WEAPONS[_arma_magica["id"]] = _WEAPON_MAGIC
+
 # â”€â”€â”€ GM NARRATION â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 GM = {
@@ -13867,12 +13931,13 @@ def _aplicar_equipamentos_monstro(m):
 
 
 _MONSTROS_COM_ARMA_SORTEADA = frozenset({
-    "goblin_arqueiro", "goblin_combatente", "orc", "kobold_lanceiro",
-    "bandido", "capanga", "bardo", "bardo_da_caravana", "ogro_lanca",
+    "goblin_arqueiro", "goblin_combatente", "orc", "kobold_lanceiro", "skeleton",
+    "esqueleto_humano_customizado", "bandido", "capanga", "bardo",
+    "bardo_da_caravana", "ogro_lanca",
 })
 
 
-def _sortear_material_arma_monstro(weapon_id):
+def _sortear_material_arma_monstro(weapon_id, material_chance=30):
     """Sorteia material para uma arma gerada aleatoriamente, mantendo seu perfil-base.
 
     Os percentuais são absolutos por arma elegível: 70% base; metal: 9% Aço
@@ -13889,6 +13954,39 @@ def _sortear_material_arma_monstro(weapon_id):
         return weapon_id
 
     material = referencia[-1]
+    if material_chance != 30:
+        if random.random() >= max(0, min(100, material_chance)) / 100:
+            return weapon_id
+        if material == "metal":
+            options = []
+            for material_id, rows, weight in (
+                ("aco_damasco", _MATERIAL_WEAPON_VARIANTS, 30),
+                ("obsidiana_ferro", _MATERIAL_WEAPON_DAMAGE_VARIANTS, 30),
+                ("liga_titanio", _MATERIAL_WEAPON_CORROSION_VARIANTS, 33.333),
+            ):
+                variant_id = next((row[1] for row in rows if row[0] == weapon_id), None)
+                if variant_id in _DUNGEON_ITEM_CATALOG:
+                    options.append((variant_id, weight))
+            silver_id = ("machadinha_ana_prata" if weapon_id == "machadinha_arremesso_ana"
+                         else f"{weapon_id}_prata")
+            silver = _DUNGEON_ITEM_CATALOG.get(silver_id)
+            if silver and silver.get("silver"):
+                options.append((silver_id, 6.667))
+        else:
+            options = []
+            for rows in (_MATERIAL_WEAPON_VARIANTS,
+                         _MATERIAL_WEAPON_DAMAGE_VARIANTS,
+                         _MATERIAL_WEAPON_CORROSION_VARIANTS):
+                variant_id = next((row[1] for row in rows if row[0] == weapon_id), None)
+                if variant_id in _DUNGEON_ITEM_CATALOG:
+                    options.append((variant_id, 1))
+        if not options:
+            return weapon_id
+        return random.choices(
+            [variant for variant, _weight in options],
+            weights=[weight for _variant, weight in options], k=1,
+        )[0]
+
     roll = random.random() * 100
     if roll < 70:
         return weapon_id
@@ -13932,7 +14030,9 @@ def _aplicar_material_aleatorio_monstro(monster):
         # O catálogo deduplica IDs repetidos (ex.: duas adagas iguais); ambas
         # as mãos recebem a mesma variante nesse caso.
         if item_id not in sorteados_por_id:
-            sorteados_por_id[item_id] = _sortear_material_arma_monstro(item_id)
+            chance = 15 if monster.get("type") in {"skeleton", "esqueleto_humano_customizado"} else 30
+            sorteados_por_id[item_id] = (_sortear_material_arma_monstro(item_id) if chance == 30
+                                     else _sortear_material_arma_monstro(item_id, chance))
         item_ids[index] = sorteados_por_id[item_id]
     if monster.get("type") == "ogro_lanca":
         for index, item_id in enumerate(item_ids):
@@ -13941,22 +14041,38 @@ def _aplicar_material_aleatorio_monstro(monster):
             magical_id = f"{item_id}_magica"
             if magical_id in _DUNGEON_ITEM_CATALOG:
                 item_ids[index] = magical_id
+    elif monster.get("type") == "skeleton":
+        for index, item_id in enumerate(item_ids):
+            item = _DUNGEON_ITEM_CATALOG.get(item_id)
+            if (item and item.get("die") and random.random() < 0.005
+                    and f"{item_id}_magica" in _DUNGEON_ITEM_CATALOG):
+                item_ids[index] = f"{item_id}_magica"
+                monster["esqueleto_arma_magica"] = True
+                break
     monster["equipped_items"] = item_ids
 
 
-def _sortear_material_armadura_monstro(armor_id):
+def _sortear_material_armadura_monstro(armor_id, material_chance=30):
     """Sorteia material para uma armadura que tenha variantes cadastradas."""
     if armor_id not in _ARMOR_MATERIAL_BASE_IDS:
         return armor_id
 
-    roll = random.random() * 100
-    if roll < 70:
-        return armor_id
-    material_id = (
-        "aco_damasco" if roll < 82 else
-        "obsidiana_ferro" if roll < 94 else
-        "liga_titanio"
-    )
+    if material_chance == 30:
+        roll = random.random() * 100
+        if roll < 70:
+            return armor_id
+        material_id = (
+            "aco_damasco" if roll < 82 else
+            "obsidiana_ferro" if roll < 94 else
+            "liga_titanio"
+        )
+    else:
+        if random.random() >= max(0, min(100, material_chance)) / 100:
+            return armor_id
+        material_id = random.choices(
+            ("aco_damasco", "obsidiana_ferro", "liga_titanio"),
+            weights=(40, 40, 20), k=1,
+        )[0]
     variant_id = f"{armor_id}_{material_id}"
     return variant_id if variant_id in _DUNGEON_ITEM_CATALOG else armor_id
 
@@ -13966,12 +14082,159 @@ def _aplicar_material_aleatorio_armadura_monstro(monster):
     item_ids = monster.get("equipped_items") or []
     sorteados_por_id = {}
     for index, item_id in enumerate(item_ids):
+        if monster.get("type") in {"skeleton", "esqueleto_humano_customizado"} and item_id in {
+            "escudo_p", "escudo_g", "escudo_madeira_grande",
+        }:
+            if random.random() < 0.15:
+                madeira = item_id in {"escudo_p", "escudo_madeira_grande"}
+                materiais = (("freixo_negro", "cedro_rubro", "cerne_tita") if madeira else
+                             ("aco_damasco", "obsidiana_ferro", "liga_titanio"))
+                material = random.choices(materiais, weights=(40, 40, 20), k=1)[0]
+                variante = f"{item_id}_{material}"
+                if variante in _DUNGEON_ITEM_CATALOG:
+                    item_ids[index] = variante
+            continue
+        if monster.get("type") == "ogro_lanca" and item_id == "escudo_g":
+            roll = random.random() * 100
+            if roll < 70:
+                continue
+            material = ("aco_damasco" if roll < 82 else
+                        "obsidiana_ferro" if roll < 94 else "liga_titanio")
+            variant_id = f"escudo_g_{material}"
+            item_ids[index] = variant_id if variant_id in _DUNGEON_ITEM_CATALOG else item_id
+            continue
         if item_id not in _ARMOR_MATERIAL_BASE_IDS:
             continue
         if item_id not in sorteados_por_id:
-            sorteados_por_id[item_id] = _sortear_material_armadura_monstro(item_id)
+            chance = 15 if monster.get("type") in {"skeleton", "esqueleto_humano_customizado"} else 30
+            sorteados_por_id[item_id] = (_sortear_material_armadura_monstro(item_id) if chance == 30
+                                     else _sortear_material_armadura_monstro(item_id, chance))
         item_ids[index] = sorteados_por_id[item_id]
     monster["equipped_items"] = item_ids
+    if (monster.get("type") == "esqueleto_humano_customizado"
+            and monster.get("esqueleto_besteiro_escudo_carregado_id")
+            and random.random() < 0.15):
+        material = random.choices(
+            ("freixo_negro", "cedro_rubro", "cerne_tita"), weights=(40, 40, 20), k=1,
+        )[0]
+        variante = f"escudo_p_{material}"
+        if variante in _DUNGEON_ITEM_CATALOG:
+            monster["esqueleto_besteiro_escudo_carregado_id"] = variante
+
+
+def _configurar_ogro_lanca_spawn(monster):
+    """O Ogro de Lança usa Lança Enorme com uma mão e Escudo Grande."""
+    monster["equipment_enabled"] = True
+    monster["base_attack_bonus"] = 2  # FOR +4 completa o bônus atual de +6.
+    monster["equipped_items"] = ["lanca_enorme", "escudo_g"]
+    monster["loot_table"] = {"1-100": None}
+
+
+def _configurar_esqueleto_armadurado_spawn(monster):
+    """Sorteia armas/escudos do Esqueleto Humano e a armadura do tipo blindado."""
+    monster.pop("esqueleto_escudo", None)
+    monster.pop("esqueleto_escudo_id", None)
+    roll = random.randint(1, 100)
+    if roll <= 28:
+        name, die, category, weapon_id, reach = "Espada Curta", "1d6", "cortante", "shortsword", None
+    elif roll <= 58:
+        name, die, category, weapon_id, reach = "Lança", "1d6", "perfurante", "lanca_curta", 2
+    elif roll <= 68:
+        name, die, category, weapon_id, reach = "Espada Longa", "1d8", "cortante", "longsword", None
+    elif roll <= 78:
+        name, die, category, weapon_id, reach = "Espada Curta", "1d6", "cortante", "shortsword", None
+        monster["esqueleto_escudo"] = True
+    elif roll <= 88:
+        name, die, category, weapon_id, reach = "Lança", "1d6", "perfurante", "lanca_curta", 2
+        monster["esqueleto_escudo"] = True
+    elif roll <= 93:
+        name, die, category, weapon_id, reach = "Machado Duplo", "1d10", "cortante", "machado_duplo", None
+    elif roll <= 98:
+        name, die, category, weapon_id, reach = "Espada 2 Mãos", "2d6", "cortante", "espada2m", None
+    else:
+        name, die, category, weapon_id, reach = "Marreta", "2d8", "contundente", "marreta", None
+
+    armor_id = random.choices(
+        ("bronze_armor", "leather_mail", "plate"), weights=(50, 30, 20), k=1,
+    )[0]
+    monster["esqueleto_arma_id"] = weapon_id
+    monster["esqueleto_armadura_id"] = armor_id
+    monster["equipment_enabled"] = True
+    monster["base_attack_bonus"] = 3  # FOR +2 completa o ataque-base +5.
+    monster["equipped_items"] = [weapon_id, armor_id]
+    if monster.get("esqueleto_escudo"):
+        shield_id = random.choices(
+            ("escudo_p", "escudo_g", "escudo_madeira_grande"),
+            weights=(60, 25, 15), k=1,
+        )[0]
+        monster["esqueleto_escudo_id"] = shield_id
+        monster["equipped_items"].append(shield_id)
+    if random.random() < 0.30:
+        monster["esqueleto_elmo_id"] = "helm_iron"
+        monster["equipped_items"].append("helm_iron")
+    attack = {
+        "name": name, "atk_bonus": 5, "damage": die,
+        "damage_types": [DMG_PHYSICAL], "num_attacks": 1,
+        "categoria": category,
+    }
+    if reach:
+        attack["range"] = reach
+    monster["attacks"] = [attack]
+
+
+def _configurar_esqueleto_besteiro_spawn(monster):
+    """Sorteia a besta, proteções, mochila e munição do Esqueleto Besteiro."""
+    bestas = (
+        "hand_crossbow", "besta", "besta_duelista", "besta_pesada",
+        "besta_repetidora_patrulha", "besta_repetidora_guerra",
+    )
+    weapon_id = random.choice(bestas)
+    weapon = _DUNGEON_ITEM_CATALOG.get(weapon_id) or _DUNGEON_ITEM_CATALOG["besta"]
+    equipment = [weapon_id]
+    monster["esqueleto_besteiro_escudo_carregado_id"] = None
+    if random.random() < 0.50:
+        if weapon.get("two_handed"):
+            monster["esqueleto_besteiro_escudo_carregado_id"] = "escudo_p"
+        else:
+            equipment.append("escudo_p")
+    if random.random() < 0.50:
+        equipment.append("helm_iron")
+    if random.random() < 0.10:
+        equipment.append("backpack")
+
+    monster["equipment_enabled"] = True
+    monster["equipped_items"] = equipment
+    monster["base_attack_bonus"] = 2  # DES +1 completa o bônus total de ataque +3.
+    monster["attacks"] = [{
+        "name": weapon.get("name", "Besta"),
+        "atk_bonus": 3,
+        "damage": weapon.get("die", "1d8"),
+        "damage_types": [DMG_PHYSICAL],
+        "num_attacks": 1,
+        "attack_attribute": "dex",
+        "damage_attribute": "dex",
+        "apply_attribute_damage": True,
+        "attribute_mod_base": mod(monster.get("dex", 10)),
+        "base_attack_bonus": 2,
+        "range": weapon.get("range", 8),
+        "categoria": weapon.get("categoria", "perfurante"),
+        "projectile": "bolt",
+    }]
+
+    monster["virotes"] = 20
+    special_ammo_id = random.choices(
+        ("virote_incendiario", "virotes_prata", "virotes_magicos", "virotes_explosivos"),
+        weights=(45, 35, 12, 8), k=1,
+    )[0]
+    monster["virotes_especiais_tipo"] = special_ammo_id
+    monster["virotes_especiais_count"] = 6
+
+    # Chance independente: a bolsa de ouro só é sorteada em 20% das aparições.
+    monster["loot_drops"] = []
+    if random.random() < 0.20:
+        monster["loot_drops"].append({
+            "kind": "gold", "amount": random.randint(4, 8), "chance": 100,
+        })
 
 
 def _configurar_soldado_spawn(monster):
@@ -13986,14 +14249,6 @@ def _configurar_soldado_spawn(monster):
     item_ids[indice_armadura] = armadura
     monster["equipped_items"] = item_ids
     monster["equipment"] = item_ids[:]
-
-
-def _configurar_ogro_lanca_spawn(monster):
-    """O Ogro de Lança usa Lança Enorme com uma mão e Escudo Grande."""
-    monster["equipment_enabled"] = True
-    monster["base_attack_bonus"] = 2  # FOR +4 completa o bônus atual de +6.
-    monster["equipped_items"] = ["lanca_enorme", "escudo_g"]
-    monster["loot_table"] = {"1-100": None}
 
 
 def _configurar_capanga_spawn(m):
@@ -14321,10 +14576,15 @@ def make_monster(mdef, room):
     m["caster_level"] = max(1, int(m.get("caster_level", 1)))
     m["level"] = max(1, int(m.get("level", 1)))
     # CA de monstros segue a mesma base D20: 10 + DES + Armadura Natural.
-    # Fichas legadas sem o novo campo preservam exatamente a CA que jÃ¡ tinham.
-    m["natural_armor"] = max(0, int(m.get("natural_armor",
-        int(m.get("ac", 10)) - 10 - mod(m.get("dex", 10)))))
-    m["ac"] = max(1, 10 + mod(m.get("dex", 10)) + m["natural_armor"])
+    # O Esqueleto Armadurado usa a regra explícita 10 + armadura, sem DES.
+    if m.get("armor_only_ac"):
+        m["natural_armor"] = 0
+        m["ac"] = 10
+    else:
+        # Fichas legadas sem o novo campo preservam exatamente a CA que já tinham.
+        m["natural_armor"] = max(0, int(m.get("natural_armor",
+            int(m.get("ac", 10)) - 10 - mod(m.get("dex", 10)))))
+        m["ac"] = max(1, 10 + mod(m.get("dex", 10)) + m["natural_armor"])
     # VisÃ£o: as fichas legadas que jÃ¡ possuÃ­am darkvision_range mantÃªm a
     # caracterÃ­stica VisÃ£o no Escuro, mas agora usam o mesmo raio calculado
     # por atributos de todos os monstros.
@@ -14436,11 +14696,19 @@ def make_monster(mdef, room):
         _configurar_soldado_spawn(m)
     elif m.get("type") == "ogro_lanca":
         _configurar_ogro_lanca_spawn(m)
+    elif m.get("type") == "skeleton":
+        _configurar_esqueleto_armadurado_spawn(m)
+    elif m.get("type") == "esqueleto_humano_customizado":
+        _configurar_esqueleto_besteiro_spawn(m)
     elif _eh_bardo(m):
         _configurar_bardo_spawn(m)
     _aplicar_material_aleatorio_monstro(m)
     _aplicar_material_aleatorio_armadura_monstro(m)
     _aplicar_equipamentos_monstro(m)
+    if m.get("type") == "skeleton" and m.get("esqueleto_arma_id") == "lanca_curta" and m.get("attacks"):
+        # O perfil da arma no catálogo descreve o arremesso; o esqueleto usa a
+        # lança curta com o alcance corpo a corpo de 2 casas da ficha legada.
+        m["attacks"][0]["range"] = 2
     if m.get("type") == "gilo_dedos_sujos":
         _configurar_gilo_spawn(m)
     elif m.get("type") == "assassino_da_caravana":
@@ -14586,18 +14854,16 @@ def make_monster(mdef, room):
         elif _roll <= 80:
             _nome, _die, _cat, _range = "Espada Curta",  "1d6",  "cortante",   None
             m["esqueleto_arma_id"] = "shortsword"
-            m["ac"] += 2   # escudo: CA 12 â†’ 14
             m["esqueleto_escudo"] = True
         elif _roll <= 90:
             _nome, _die, _cat, _range = "Lança",         "1d6",  "perfurante", 2
             m["esqueleto_arma_id"] = "lanca_curta"
-            m["ac"] += 2   # escudo: CA 12 â†’ 14
             m["esqueleto_escudo"] = True
         elif _roll <= 95:
-            _nome, _die, _cat, _range = "Machado",       "1d10", "cortante",   None
-            m["esqueleto_arma_id"] = "machado_basico"
+            _nome, _die, _cat, _range = "Machado Duplo", "1d10", "cortante",   None
+            m["esqueleto_arma_id"] = "machado_duplo"
         else:
-            _nome, _die, _cat, _range = "Espada 2 Mãos", "1d10", "cortante",   None
+            _nome, _die, _cat, _range = "Espada 2 Mãos", "2d6",  "cortante",   None
             m["esqueleto_arma_id"] = "espada2m"
         atk = {"name": _nome, "atk_bonus": 2, "damage": _die,
                "damage_types": ["physical"], "num_attacks": 1, "on_hit": None,
@@ -14605,6 +14871,17 @@ def make_monster(mdef, room):
         if _range:
             atk["range"] = _range
         m["attacks"] = [atk]
+        if m.get("esqueleto_escudo"):
+            shield_id = random.choices(
+                ("escudo_p", "escudo_g", "escudo_madeira_grande"),
+                weights=(60, 25, 15), k=1,
+            )[0]
+            shield = next((item for item in SHOP_ARMORS if item.get("id") == shield_id), None)
+            if shield:
+                shield_instance = deepcopy(shield)
+                m.setdefault("equipment_items", []).append(shield_instance)
+                m["esqueleto_escudo_id"] = shield_instance["id"]
+                m["ac"] += int(shield_instance.get("ac_bonus", 2) or 0)
     return m
 
 def spawn_monsters_for_room(room, player_count):
@@ -50076,7 +50353,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         min_dmg = target.get("min_damage", 0)
         adjusted = max(min_dmg, total)
         if (not self._eh_jogador(target)
-                and target.get("type") in {"ogro_lanca"}
+                and target.get("type") in {"ogro_lanca", "skeleton", "esqueleto_humano",
+                                            "esqueleto_humano_customizado"}
                 and adjusted > 0):
             shield = next((item for item in target.get("equipment_items", []) or []
                            if (item.get("kind") == "shield" or item.get("item_slot") == "shield")
@@ -52704,6 +52982,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                       + int(m.get("_monster_turn_damage_bonus", 0) or 0)
                       + int(m.get("_monster_next_attack_damage_bonus", 0) or 0)
                       + sombra_dano)                                 # Ataque das Sombras (+1d6)
+            if m.get("_monster_next_attack_multiplier"):
+                dmg = max(1, int(dmg * float(m.pop("_monster_next_attack_multiplier"))))
             damage_context = atk_def
             if self._tem_habilidade(m, "intensidade"):
                 damage_context = dict(atk_def, ignora_resistencia_leve_fogo=True)
@@ -53607,6 +53887,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         effect = ab.get("monster_effect")
         if effect == "brutalidade_todos_ataques":
             m["_monster_turn_damage_bonus"] = int(ab.get("damage_bonus", 2) or 2)
+            return True
+        if effect == "golpe_devastador_multiplicador":
+            m["_monster_next_attack_multiplier"] = float(ab.get("damage_multiplier", 1.25) or 1.25)
             return True
         if effect == "investida_heroica_minotauro":
             multiplier = max(1, int(ab.get("movement_multiplier", 2) or 2))
@@ -54637,15 +54920,30 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     # â”€â”€ Loot Esqueleto â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _esqueleto_loot(self, m):
-        """Sempre: arma equipada. Adicional: 70% nada / 20% 2 moedas / 10% 4 moedas."""
+        """Entrega o equipamento; o armadurado também pode deixar ouro raro."""
         from copy import deepcopy
         items = []
+        if m.get("type") == "skeleton":
+            items = [deepcopy(item) for item in (m.get("equipment_items") or [])
+                     if not item.get("corrosion_destroyed")]
+            gold = random.randint(4, 14) if random.random() < 0.30 else 0
+            delivery = self._spawn_monster_loot(list(m["pos"]), gold, items)
+            if delivery == "ground_gold":
+                await self.gm_say(T("narracao.deixou_moeda_s", monstro=nome_criatura(m), gold=gold))
+            elif delivery == "chest" and gold > 0:
+                await self.gm_say(T("narracao.um_bau_de_saque_apareceu"))
+            return
         # Arma sempre
         arma_id = m.get("esqueleto_arma_id")
         if arma_id:
             arma_item = next((w for w in SHOP_WEAPONS if w["id"] == arma_id), None)
             if arma_item:
                 items.append(deepcopy(arma_item))
+        shield = next((item for item in (m.get("equipment_items") or [])
+                       if (item.get("kind") == "shield" or item.get("item_slot") == "shield")
+                       and not item.get("corrosion_destroyed")), None)
+        if shield:
+            items.append(deepcopy(shield))
         # Gold adicional (tabela)
         gold_roll = random.randint(1, 100)
         gold = 0
@@ -54865,6 +55163,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     # â”€â”€ IA Esqueleto Humano â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _ai_esqueleto_humano(self, m, targets):
+        if m.get("type") == "esqueleto_humano_customizado":
+            await self._ai_esqueleto_besteiro(m, targets)
+            return
         target_obj = self._get_monster_primary_target(m, targets)
         if not target_obj:
             return
@@ -54889,6 +55190,61 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         if em_alcance():
             await self._execute_one_monster_attack(m, atk, target_obj)
+
+    async def _ai_esqueleto_besteiro(self, m, targets):
+        """Atira com a besta sorteada, consumindo munição especial antes da comum."""
+        target_obj = self._get_monster_primary_target(m, targets)
+        if not target_obj:
+            return
+        target = target_obj["obj"]
+        if int(m.get("virotes", 0) or 0) <= 0:
+            if not m.get("sem_municao_avisado"):
+                m["sem_municao_avisado"] = True
+                await self.gm_say(T("narracao.ficou_sem_virotes_e_tenta_fugir", monstro=nome_criatura(m)))
+            for _ in range(max(1, int(m.get("movement", 6) or 6))):
+                antes = list(m["pos"])
+                await self._passo_monstro(m, target["pos"][0], target["pos"][1], away=True)
+                if m["pos"] == antes:
+                    break
+            return
+
+        attack_base = m["attacks"][0]
+        attack_range = max(1, int(attack_base.get("range", 8) or 8))
+
+        def pode_atirar():
+            return (self._alcance_com_altura(m, target["pos"], attack_range, destino=target)
+                    and self._tem_linha_de_visao(m["pos"], target["pos"]))
+
+        if not pode_atirar() or self._is_adjacent_to_monster(target["pos"], m):
+            ranged_goal = self._monster_ranged_goal(m, target_obj, attack_base)
+            for _ in range(max(1, int(m.get("movement", 6) or 6))):
+                antes = list(m["pos"])
+                if ranged_goal:
+                    await self._monster_move_to_goal(m, ranged_goal)
+                else:
+                    await self._monster_move_step(m, target["pos"])
+                if m["pos"] == antes or pode_atirar():
+                    break
+        if not pode_atirar():
+            return
+
+        attack = dict(attack_base)
+        special_count = max(0, int(m.get("virotes_especiais_count", 0) or 0))
+        special_ammo_id = m.get("virotes_especiais_tipo") if special_count else None
+        ammo = _DUNGEON_ITEM_CATALOG.get(special_ammo_id) if special_ammo_id else None
+        if ammo:
+            attack["ammo_atk_bonus"] = int(ammo.get("atk_bonus", 0) or 0)
+            attack["damage_bonus"] = int(attack.get("damage_bonus", 0) or 0) + int(ammo.get("damage_bonus", 0) or 0)
+            for key in ("silver", "magical", "special_effect", "extra_damage", "extra_damage_types"):
+                if ammo.get(key):
+                    attack[key] = deepcopy(ammo[key])
+
+        hit = await self._execute_one_monster_attack(m, attack, target_obj)
+        m["virotes"] = max(0, int(m.get("virotes", 0) or 0) - 1)
+        if ammo:
+            m["virotes_especiais_count"] = max(0, special_count - 1)
+        if hit and attack.get("special_effect") == "explosive_ammo":
+            await self._explosao_municao_acertada(target, target["pos"], m.get("id"))
 
     # â”€â”€ IA Lobo Cinzento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     async def _ai_lobo_cinzento(self, m, targets):
@@ -59384,10 +59740,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         # â”€â”€ Loot especial: esqueletos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-        if m.get("type") in ("esqueleto_humano", "esqueleto_animal"):
+        if m.get("type") in ("skeleton", "esqueleto_humano", "esqueleto_animal"):
             await self.gm_say(
                 T("narracao.foi_destruido_xp_os_ossos_perdem_a_estru", monstro=nome_criatura(m), share_xp=share_xp))
-            if m.get("type") == "esqueleto_humano":
+            if m.get("type") in ("skeleton", "esqueleto_humano"):
                 await self._esqueleto_loot(m)
             return
 
@@ -59518,6 +59874,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     dropped["ammo_count"] = min(MAX_AMMO_STACK, remaining)
                     remaining -= dropped["ammo_count"]
                     loot_items.append(dropped)
+            if m.get("type") == "esqueleto_humano_customizado":
+                bolts_left = max(0, int(m.get("virotes", 0) or 0))
+                special_left = min(
+                    bolts_left, max(0, int(m.get("virotes_especiais_count", 0) or 0)))
+                normal_left = bolts_left - special_left
+                normal_bolts = _DUNGEON_ITEM_CATALOG.get("virotes")
+                if normal_left and normal_bolts:
+                    dropped = deepcopy(normal_bolts)
+                    dropped["ammo_count"] = normal_left
+                    loot_items.append(dropped)
+                special_bolts = _DUNGEON_ITEM_CATALOG.get(m.get("virotes_especiais_tipo"))
+                if special_left and special_bolts:
+                    dropped = deepcopy(special_bolts)
+                    dropped["ammo_count"] = special_left
+                    loot_items.append(dropped)
+                carried_shield_id = m.get("esqueleto_besteiro_escudo_carregado_id")
+                carried_shield = _DUNGEON_ITEM_CATALOG.get(carried_shield_id)
+                if carried_shield:
+                    loot_items.append(deepcopy(carried_shield))
             equipped_drop = m.get("equipped_items", []) if m.get("equipment_enabled") else []
             equipment_by_id = {
                 item.get("id"): item for item in (m.get("equipment_items") or [])
@@ -63520,6 +63895,13 @@ def _base_ability_library():
             "cooldown_turns": 4,
             "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga.",
         },
+        "esqueleto_golpe_devastador": {
+            "id": "esqueleto_golpe_devastador", "source": "guilda",
+            "name": "Golpe Devastador", "icon": "💥", "action_type": "acao_livre",
+            "monster_effect": "golpe_devastador_multiplicador", "damage_multiplier": 1.25,
+            "uses_per_day": None, "cooldown_turns": 4,
+            "descricao": "O próximo acerto causa 1,25× o dano bruto. Recarga: 4 rodadas.",
+        },
     }
     for monster in MONSTER_DEFS:
         for ability in monster.get("special_abilities", []):
@@ -63929,7 +64311,7 @@ def _validate_custom_monster(raw):
                    "guild_tecnica_ultimo_esforco"}:
             # A mesma técnica da Guilda pode ter uma adaptação própria na ficha
             # de monstro, sem alterar a versão comprável pelos heróis.
-            for key in ("monster_effect", "damage_bonus", "movement_multiplier",
+            for key in ("monster_effect", "damage_bonus", "damage_multiplier", "movement_multiplier",
                         "ca_penalty", "duration_rounds", "move_required", "damage",
                         "attack_bonus"):
                 if key in config:
@@ -64235,6 +64617,8 @@ def _validate_custom_monster(raw):
             entry.update({"dc": ability["dc"]})
         if aid == "causar_hemorragia":
             entry.update({"attack_index": ability["attack_index"], "cooldown_turns": ability["cooldown_turns"]})
+        if aid == "esqueleto_golpe_devastador":
+            entry["damage_multiplier"] = float(ability.get("damage_multiplier", 1.25) or 1.25)
         if aid == "veneno_lacralion":
             entry.update({"attack_index": ability["attack_index"],
                           "damage_dice": dice, "damage_faces": faces,
@@ -64443,6 +64827,9 @@ def _validate_custom_monster(raw):
             "aplica_hemorragia": bool(attack.get("aplica_hemorragia")),
             "extra_damage": str(attack.get("extra_damage") or "")[:24] or None,
             "extra_damage_types": extra_types,
+            "categoria": str(attack.get("categoria") or "")
+                         if str(attack.get("categoria") or "") in {"cortante", "contundente", "perfurante"}
+                         else None,
         })
     for ability in abilities:
         if ability.get("id") == "envenenar":

@@ -272,21 +272,118 @@ window.EDITOR_CATALOG = {
     },
     {
       "type": "skeleton",
-      "name": "Esqueleto",
+      "name": "Esqueleto Armadurado",
       "emoji": "💀",
-      "tier": 1,
-      "cr": 0.5,
-      "hp": 10,
-      "ac": 13,
+      "boss": false,
+      "tier": 2,
+      "cr": 1,
+      "hp": 14,
+      "ac": 10,
+      "natural_armor": 0,
       "movement": 6,
       "vision_base": 0,
-      "atk_bonus": 3,
+      "size": [
+        1,
+        1
+      ],
+      "porte": "medio",
+      "image": "esqueletoArmadurado",
+      "model3d": "assets/models3d/monstros/esqueleto_armadurado.glb",
+      "armor_only_ac": true,
+      "atk_bonus": 5,
       "damage": "1d6",
-      "gold": 8,
-      "xp": 15,
+      "base_attack_bonus": 3,
+      "str_": 14,
+      "dex": 12,
+      "con_": 10,
+      "int_": 4,
+      "fort": 2,
+      "ref_": 3,
+      "will": -1,
+      "attacks": [
+        {
+          "name": "Espada Curta",
+          "atk_bonus": 5,
+          "damage": "1d6",
+          "damage_types": [
+            "physical"
+          ],
+          "num_attacks": 1,
+          "categoria": "cortante"
+        }
+      ],
+      "special_abilities": [
+        {
+          "id": "sem_dor",
+          "name": "Sem Dor",
+          "action_type": "passiva"
+        },
+        {
+          "id": "corpo_inerte",
+          "name": "Corpo Inerte",
+          "action_type": "passiva"
+        },
+        {
+          "id": "vulnerabilidade",
+          "name": "Vulnerabilidade",
+          "action_type": "passiva",
+          "saves": [
+            "vontade"
+          ],
+          "penalty": 2,
+          "descricao": "-2 em testes de Vontade"
+        }
+      ],
+      "immunities": [
+        "veneno",
+        "controle_mental"
+      ],
+      "weaknesses": [
+        {
+          "type": "physical",
+          "categoria": "perfurante",
+          "bonus_flat": -2,
+          "descricao": "Resistência a perfurante (-2 dano)"
+        },
+        {
+          "type": "physical",
+          "categoria": "cortante",
+          "bonus_flat": -1,
+          "descricao": "Resistência a cortante (-1 dano)"
+        },
+        {
+          "type": "physical",
+          "categoria": "contundente",
+          "bonus_flat": 2,
+          "descricao": "Vulnerável a impacto (+2 dano)"
+        },
+        {
+          "type": "sagrado",
+          "multiplier": 2,
+          "descricao": "Dano sagrado dobrado"
+        },
+        {
+          "type": "save_penalty",
+          "saves": [
+            "vontade"
+          ],
+          "bonus_flat": -2,
+          "vulnerabilidade": true,
+          "descricao": "Vulnerabilidade: -2 em testes de Vontade"
+        }
+      ],
+      "loot_table": {
+        "1-100": null
+      },
+      "equipment_enabled": true,
+      "equipped_items": [],
+      "gold": 0,
+      "xp": 30,
+      "ai_type": "esqueleto_humano",
       "undead": true,
       "subtipo": "morto_vivo",
-      "percepcao": 13
+      "darkvision_range": 4,
+      "percepcao": 12
     },
     {
       "type": "orc",
@@ -7191,12 +7288,47 @@ window.EDITOR_CATALOG = {
       "descricao": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
     },
     {
+      "id": "esqueleto_golpe_devastador",
+      "source": "guilda",
+      "name": "Golpe Devastador",
+      "icon": "💥",
+      "action_type": "acao_livre",
+      "monster_effect": "golpe_devastador_multiplicador",
+      "damage_multiplier": 1.25,
+      "uses_per_day": null,
+      "cooldown_turns": 4,
+      "descricao": "O próximo acerto causa 1,25× o dano bruto. Recarga: 4 rodadas."
+    },
+    {
       "id": "disparada_cavalo_sela",
       "name": "Disparada",
       "icon": "💨",
       "action_type": "passiva",
       "cooldown_turns": 4,
       "descricao": "Dobra o deslocamento neste turno. Recarga: 4 rodadas.",
+      "source": "monstro"
+    },
+    {
+      "id": "sem_dor",
+      "name": "Sem Dor",
+      "action_type": "passiva",
+      "source": "monstro"
+    },
+    {
+      "id": "corpo_inerte",
+      "name": "Corpo Inerte",
+      "action_type": "passiva",
+      "source": "monstro"
+    },
+    {
+      "id": "vulnerabilidade",
+      "name": "Vulnerabilidade",
+      "action_type": "passiva",
+      "saves": [
+        "vontade"
+      ],
+      "penalty": 2,
+      "descricao": "-2 em testes de Vontade",
       "source": "monstro"
     },
     {
@@ -7340,29 +7472,6 @@ window.EDITOR_CATALOG = {
       "name": "Predador Implacável",
       "action_type": "passiva",
       "descricao": "Pode manter dois inimigos Imobilizados ao mesmo tempo.",
-      "source": "monstro"
-    },
-    {
-      "id": "sem_dor",
-      "name": "Sem Dor",
-      "action_type": "passiva",
-      "source": "monstro"
-    },
-    {
-      "id": "corpo_inerte",
-      "name": "Corpo Inerte",
-      "action_type": "passiva",
-      "source": "monstro"
-    },
-    {
-      "id": "vulnerabilidade",
-      "name": "Vulnerabilidade",
-      "action_type": "passiva",
-      "saves": [
-        "vontade"
-      ],
-      "penalty": 2,
-      "descricao": "-2 em testes de Vontade",
       "source": "monstro"
     },
     {
@@ -10325,9 +10434,9 @@ window.EDITOR_CATALOG = {
       "id": "guild_lenda_skeleton",
       "source": "guilda",
       "source_id": "lenda_skeleton",
-      "name": "Lenda: Esqueleto",
+      "name": "Lenda: Esqueleto Armadurado",
       "icon": "✦",
-      "descricao": "+1 de ataque e +1 nos saves contra Esqueleto.",
+      "descricao": "+1 de ataque e +1 nos saves contra Esqueleto Armadurado.",
       "action_type": "passiva",
       "monster_effect": "passiva_combate",
       "guild_category": "especializacao"
@@ -18798,6 +18907,642 @@ window.EDITOR_CATALOG = {
       "effect": "intelligence_potion",
       "value": "1d6+4",
       "descricao": "Ação bônus. Aumenta a Inteligência em 1d4+1 por 1d6+4 rodadas, aplicando os modificadores normais a Vontade, CD das magias, iniciativa na próxima recalculação, visão, curas que usam INT e slots de controle do Reviver quando aplicável. Não concede slots normais nem magias conhecidas. Beber outra renova a duração sem acumular o bônus."
+    },
+    {
+      "id": "espada2m_magica",
+      "name": "Espada de 2 Mãos Mágica +1",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
+    },
+    {
+      "id": "espada2m_aco_damasco_magica",
+      "name": "Espada de 2 Mãos de Aço Damasco Mágica +1",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/espada_2m_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada de 2 Mãos de Aço Damasco: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "espada2m_liga_titanio_magica",
+      "name": "Espada de 2 Mãos de Liga de Titânio Mágica +1",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/espada_2m_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada de 2 Mãos de Liga de Titânio: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "espada2m_obsidiana_ferro_magica",
+      "name": "Espada de 2 Mãos de Obsidiana de Ferro Mágica +1",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/espada_2m_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "espada2m_prata_magica",
+      "name": "Espada de 2 Mãos de Prata Mágica +1",
+      "emoji": "⚔️",
+      "die": "2d6",
+      "stat": "str_",
+      "two_handed": true,
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Espada de 2 Mãos de Prata: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "lanca_curta_magica",
+      "name": "Lança Curta Mágica +1",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
+    },
+    {
+      "id": "lanca_curta_aco_damasco_magica",
+      "name": "Lança Curta de Aço Damasco Mágica +1",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_curta_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Lança Curta de Aço Damasco: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_curta_liga_titanio_magica",
+      "name": "Lança Curta de Liga de Titânio Mágica +1",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_curta_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Lança Curta de Liga de Titânio: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "lanca_curta_obsidiana_ferro_magica",
+      "name": "Lança Curta de Obsidiana de Ferro Mágica +1",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/lanca_curta_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "lanca_curta_prata_magica",
+      "name": "Lança Curta de Prata Mágica +1",
+      "emoji": "🔱",
+      "die": "1d6",
+      "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "throw_range": 4,
+      "categoria": "perfurante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Lança Curta de Prata: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "longsword_magica",
+      "name": "Espada Longa Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
+    },
+    {
+      "id": "longsword_aco_damasco_magica",
+      "name": "Espada Longa de Aço Damasco Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_longa_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada Longa de Aço Damasco: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longsword_liga_titanio_magica",
+      "name": "Espada Longa de Liga de Titânio Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_longa_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada Longa de Liga de Titânio: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "longsword_obsidiana_ferro_magica",
+      "name": "Espada Longa de Obsidiana de Ferro Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "icon": "assets/itens/espada_longa_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "longsword_prata_magica",
+      "name": "Espada Longa de Prata Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d8",
+      "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "machado_duplo_magica",
+      "name": "Machado Duplo Mágica +1",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Machado Duplo: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
+    },
+    {
+      "id": "machado_duplo_aco_damasco_magica",
+      "name": "Machado Duplo de Aço Damasco Mágica +1",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/machado_duplo_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Machado Duplo de Aço Damasco: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_duplo_liga_titanio_magica",
+      "name": "Machado Duplo de Liga de Titânio Mágica +1",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/machado_duplo_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Machado Duplo de Liga de Titânio: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "machado_duplo_obsidiana_ferro_magica",
+      "name": "Machado Duplo de Obsidiana de Ferro Mágica +1",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "icon": "assets/itens/machado_duplo_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "machado_duplo_prata_magica",
+      "name": "Machado Duplo de Prata Mágica +1",
+      "emoji": "🪓",
+      "die": "1d10",
+      "stat": "str_",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "extra_attack_on_crit_min_nat": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Machado Duplo de Prata: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "marreta_magica",
+      "name": "Marreta Mágica +1",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
+    },
+    {
+      "id": "marreta_aco_damasco_magica",
+      "name": "Marreta de Aço Damasco Mágica +1",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/marreta_aco_damasco.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "categoria": "contundente",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta de Aço Damasco: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "marreta_liga_titanio_magica",
+      "name": "Marreta de Liga de Titânio Mágica +1",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/marreta_liga_titanio.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta de Liga de Titânio: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "marreta_obsidiana_ferro_magica",
+      "name": "Marreta de Obsidiana de Ferro Mágica +1",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "icon": "assets/itens/marreta_obsidiana_ferro.png",
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "ignora_reducao_dano": 1,
+      "descricao": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "marreta_prata_magica",
+      "name": "Marreta de Prata Mágica +1",
+      "emoji": "🔨",
+      "die": "2d8",
+      "stat": "str_",
+      "two_handed": true,
+      "allowed_classes": [
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "categoria": "contundente",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "ignora_reducao_dano": 1,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Marreta de Prata: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    },
+    {
+      "id": "shortsword_magica",
+      "name": "Espada Curta Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
+    },
+    {
+      "id": "shortsword_aco_damasco_magica",
+      "name": "Espada Curta de Aço Damasco Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/espada_curta_aco_damasco.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 1,
+      "corrosao_niveis_penalidade": 2,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 2,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada Curta de Aço Damasco: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "shortsword_liga_titanio_magica",
+      "name": "Espada Curta de Liga de Titânio Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/espada_curta_liga_titanio.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosao_resistente": 2,
+      "corrosao_niveis_penalidade": 3,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "descricao": "Espada Curta de Liga de Titânio: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    },
+    {
+      "id": "shortsword_obsidiana_ferro_magica",
+      "name": "Espada Curta de Obsidiana de Ferro Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "icon": "assets/itens/espada_curta_obsidiana_ferro.png",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 1,
+      "corrosao_resistente": 0,
+      "corrosao_niveis_penalidade": 1,
+      "material": "metal",
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 2,
+      "magical": true,
+      "descricao": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    },
+    {
+      "id": "shortsword_prata_magica",
+      "name": "Espada Curta de Prata Mágica +1",
+      "emoji": "⚔️",
+      "die": "1d6",
+      "stat": "str_",
+      "allowed_classes": [
+        "bard",
+        "rogue",
+        "paladin",
+        "warrior"
+      ],
+      "corrosion_max": 2,
+      "crit_min_nat_roll": 19,
+      "categoria": "cortante",
+      "atk_bonus": 1,
+      "damage_bonus": 1,
+      "magical": true,
+      "corrosion_free_levels": 1,
+      "silver": true,
+      "descricao": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "grimorio_bola_fogo",

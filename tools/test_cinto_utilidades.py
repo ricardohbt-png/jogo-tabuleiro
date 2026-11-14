@@ -247,7 +247,7 @@ class BeltTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_preloaded_monster_loot_preserves_belt_slots(self):
         source = {'tipo': 'item', 'id': 'cinto_com_bolsos', 'utility_belt_slots': [stack(quantity=3), None]}
-        monster = {'id': 'm', 'name': 'Test', 'hp': 0, 'pos': list(self.p['pos']), 'type': 'skeleton', 'undead': True, 'xp': 0, 'loot_table': {'1-100': source}}
+        monster = {'id': 'm', 'name': 'Test', 'hp': 0, 'pos': list(self.p['pos']), 'type': 'goblin', 'xp': 0, 'loot_table': {'1-100': source}}
         self.r.monsters['m'] = monster
         await self.r._monster_dies(monster, 'p')
         chest = next(iter(self.r.chests.values()))
