@@ -7122,6 +7122,16 @@ window.EDITOR_CATALOG = {
   ],
   "monster_abilities": [
     {
+      "id": "assassino_veneno_rapido",
+      "source": "monstro",
+      "name": "Veneno Rápido",
+      "icon": "☠️",
+      "action_type": "acao_livre",
+      "cooldown_turns": 4,
+      "uses_per_day": null,
+      "descricao": "Ação livre antes de atacar. Consome um frasco de Agonia Sufocante e envenena uma arma por 3 acertos; prioriza a adaga e, se ela já estiver envenenada, usa a espada. Recarga: 4 rodadas."
+    },
+    {
       "id": "agarrar_aereo",
       "source": "monstro",
       "name": "Agarrão Aéreo",
