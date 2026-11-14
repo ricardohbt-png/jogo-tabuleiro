@@ -54179,6 +54179,7 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
       : monsterType === 'minotauro' ? 1.10
       : monsterType === 'minotauro_elite' ? 1.20
       : monsterType === 'garaloux_jovem' ? 0.80
+      : monsterType === 'lobo_cinzento_customizado' ? 1.10
       : monsterType === 'garaloux_alfa' ? 1.105
       : 1;
     wrap.scale.setScalar(scale * monsterVisualScale);
