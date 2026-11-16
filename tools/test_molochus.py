@@ -151,6 +151,16 @@ async def main():
     check("vapor mantém recarga fixa", abilities["explosao_vapor"]["cooldown_turns"] == 6 and abilities["explosao_vapor"]["dc"] == 17)
     check("explosao mantém raio/duracao", abilities["morte_explosiva"]["radius"] == 3 and abilities["morte_explosiva"]["duration"] == 3)
 
+    print("[5] Aura que mata outro monstro nao quebra o servidor")
+    r = room()
+    creature(r, "molochus_jovem", "m_aura")
+    vitima = creature(r, "goblin", "m_vitima")
+    vitima["pos"] = [6, 5]
+    vitima["hp"] = 1
+    vitima["resistances"] = []
+    await r._processar_aura_escaldante_inicio(vitima)
+    check("aura derruba o monstro vizinho sem excecao", vitima["hp"] <= 0)
+
     print("Todos os testes do Molochus passaram.")
 
 

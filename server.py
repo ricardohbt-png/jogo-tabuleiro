@@ -32246,6 +32246,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         bonus = (data.get("bonus") or {}) if data else {}
+        if not isinstance(bonus, dict):
+            bonus = {}
         def _b(k):
             try:    return min(2, max(0, int(bonus.get(k, 0))))
             except (TypeError, ValueError): return 0
@@ -48824,7 +48826,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.broadcast({"type": "dice_roll", "die": "d" + str(expressao).split("d", 1)[-1].split("+", 1)[0],
                               "value": bruto, "label": motivo, "damage_type": DMG_FIRE})
         if ajustado > 0:
-            await self._dano_em_alvo(alvo, ajustado, DMG_FIRE, fonte)
+            # `fonte` pode chegar como a ficha do Molochus (aura): o funil de
+            # dano espera um id, e um dict ali quebrava a morte do alvo.
+            killer_id = fonte.get("id") if isinstance(fonte, dict) else fonte
+            await self._dano_em_alvo(alvo, ajustado, DMG_FIRE, killer_id)
         return ajustado
 
     async def _processar_aura_escaldante_inicio(self, alvo):
@@ -48979,7 +48984,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         m["_ciclope_pisoteio_usado"] = True
         footprint_path = set()
         for pos in m.get("_ciclope_path", []):
-            footprint_path.update(self._monster_tiles_at(m, pos[0], pos[1]))
+            # As casas vêm como listas [x, y]; o conjunto precisa de tuplas
+            # (lista não serve de elemento e o pisoteio quebrava com TypeError).
+            footprint_path.update(
+                tuple(t) for t in self._monster_tiles_at(m, pos[0], pos[1]))
         alvos = []
         candidatos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
         for alvo in candidatos:
@@ -49656,6 +49664,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Reusa o movimento original e a duração compartilhada com a Trompa.
             orig = alvo.get("mov_reduzido_orig", alvo.get("movement", 5))
             self._reduzir_mov_monstro(alvo, orig, dur)
+            # Criatura que já não anda (movimento 0, ex.: boneco de treino): o
+            # helper acima não grava nada e a narração quebrava com KeyError.
+            alvo.setdefault("mov_reduzido_orig", orig)
+            alvo["mov_reduzido_rodadas"] = max(
+                int(alvo.get("mov_reduzido_rodadas", 0) or 0), int(dur or 0))
             alvo["movement"] = 0
             alvo["cola_sem_movimento"] = True
             alvo["_water_moves_left"] = 0
@@ -59469,6 +59482,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._monster_dies(m, None)
 
     async def _monster_dies(self, m, killer_pid, force=False):
+        # Rede de segurança: quem mata é sempre um id; uma ficha inteira aqui
+        # derrubava a morte com TypeError (dict não serve de chave).
+        if isinstance(killer_pid, dict):
+            killer_pid = killer_pid.get("id")
         with self._sem_fogo_grego():
             return await self._monster_dies_impl(m, killer_pid, force)
 

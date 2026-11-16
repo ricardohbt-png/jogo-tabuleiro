@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Correções de combate achadas por simulação (2026-11-16)
+
+Três falhas que derrubavam a ação com exceção: (1) a Aura Escaldante do Molochus passava a ficha do monstro como "quem matou" e quebrava quando a aura matava outro monstro; `_molochus_aplicar_fogo` agora manda o id, e `_monster_dies` converte ficha em id por segurança. (2) O Pisoteio Colossal dos gigantes juntava casas `[x, y]` (listas) num conjunto e quebrava sempre que disparava; agora usa tuplas. (3) A Cola Alquímica em criatura com movimento 0 (boneco de treino) quebrava a narração; `_aplicar_controle_arremesso` grava a duração também nesse caso. `_ativar_guerreiro_luz` ignora `bonus` que não seja dicionário. Testes: `python -X utf8 tools/test_correcoes_combate.py` e `tools/test_molochus.py` [5].
+
 ### Miniatura 3D do Gato (2026-11-14)
 
 A chave `gato` em `_MONSTER_GLB_MODELS` usa `assets/models3d/monstros/gato_aventureiro.glb`, copiado de `Downloads/gato_aventureiro.glb`. `gato` também está em `movementFront` na calibração `_monsterFacingToRotY`: remove o offset padrão de 90° para que a frente do modelo acompanhe o movimento. A miniatura 2D, ficha e mecânicas do gato não mudam.
