@@ -6399,12 +6399,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_aguia"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.5,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_252",

@@ -1938,7 +1938,17 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "boina_alerta"
+          },
+          {
+            "id": "flechas_explosivas"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "size": [
@@ -1948,7 +1958,9 @@
       "vscale": [
         1.2,
         1.5
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "travessia_arvore_seca_26",

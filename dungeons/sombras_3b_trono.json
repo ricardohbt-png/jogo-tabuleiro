@@ -752,12 +752,21 @@
         1,
         0
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "machadinha_runica_vai_e_volta"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.5,
         1.5
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_2",

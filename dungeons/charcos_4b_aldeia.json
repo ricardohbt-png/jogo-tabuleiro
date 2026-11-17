@@ -7575,13 +7575,22 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 35,
+        "items": [
+          {
+            "id": "chapeu_arquimago"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         2,
         2.6
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_256",

@@ -7133,12 +7133,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "manto_seda_aracne"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         3
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_332",

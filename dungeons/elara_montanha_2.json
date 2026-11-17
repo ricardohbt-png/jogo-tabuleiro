@@ -1110,9 +1110,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_urso_cinzento"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "arvore_seca.png"
+      "image": "arvore_seca.png",
+      "escondido": true,
+      "cd_busca": 16
     },
     {
       "id": "decor_13",

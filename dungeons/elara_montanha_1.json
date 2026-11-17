@@ -2769,13 +2769,25 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "mochila_dimensional"
+          },
+          {
+            "id": "flechas_magicas_mais_2"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         0.6,
         0.7
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_27",

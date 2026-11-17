@@ -115,7 +115,7 @@ class MecanicaTests(unittest.TestCase):
 
 class DadosTests(unittest.TestCase):
     def test_todos_os_esconderijos_existem_e_estao_ocultos(self):
-        for mapa, did, tipo, cd, ouro, itens in E.ESCONDERIJOS:
+        for mapa, did, tipo, cd, ouro, itens, *_ in E.ESCONDERIJOS:
             with open(os.path.join(S.DUNGEONS_DIR, f"{mapa}.json"), encoding="utf-8") as f:
                 defn = json.load(f)
             d = next((x for x in defn.get("decorations", []) if x.get("id") == did), None)
