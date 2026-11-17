@@ -2171,8 +2171,8 @@ window.LANG_CATALOGO = {
     "pt": "Desarmar Armadilha"
   },
   "cat.habilidade.detectar_armadilhas.desc": {
-    "en": "Bonus action (toggle). Reveals nearby traps and does not set off the dungeon's own. Upkeep 💧-1/turn.",
-    "pt": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno."
+    "en": "Bonus action (toggle). Reveals nearby traps and hidden caches and does not set off the dungeon's traps. Upkeep 💧-1/turn.",
+    "pt": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno."
   },
   "cat.habilidade.detectar_armadilhas.nome": {
     "en": "Detect Traps",

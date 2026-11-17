@@ -9907,8 +9907,8 @@ window.LANG_INTERFACE = {
     "pt": "Ação principal. 1d8 a 3d8 + INT em todos os aliados no raio 5."
   },
   "ui.selecao.skill.desc.detectar_armadilhas": {
-    "en": "Bonus action (toggle). Reveals nearby traps and does not set off dungeon ones. Upkeep 💧-1/turn.",
-    "pt": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno."
+    "en": "Bonus action (toggle). Reveals nearby traps and hidden caches and does not set off dungeon traps. Upkeep 💧-1/turn.",
+    "pt": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno."
   },
   "ui.selecao.skill.desc.esconder_sombras": {
     "en": "Bonus action. d20+DEX vs the monsters' perception. You can't attack in the same turn. Invisible (not targetable) until you attack — moving does NOT reveal you. Upkeep 🍖-1 💧-1/turn.",

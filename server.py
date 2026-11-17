@@ -5015,7 +5015,7 @@ CLASSES = {
             {
                 "id": "detectar_armadilhas",
                 "name": "Detectar Armadilhas",
-                "description": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno.",
+                "description": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno.",
                 "icon": "🔍",
                 "tipo": "acao_bonus",
                 "target": "self",
@@ -46886,6 +46886,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if "detect_trap" not in p.setdefault("status", []):
             p["status"].append("detect_trap")
         reveladas = self._revelar_armadilhas_luccas(p)
+        await self._detectar_esconderijos(p)
         await self.gm_say(
             T("narracao.ativa_a_deteccao_de_armadilhas_armadilha", heroi=p['name'], reveladas=reveladas))
         if reveladas:
@@ -46904,6 +46905,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         p["sede"] = max(0, p["sede"] - 1)
         self._revelar_armadilhas_luccas(p)
+        await self._detectar_esconderijos(p)
 
     async def handle_esconder_sombras(self, pid, msg):
         """Luccas tenta se esconder nas sombras (ação bônus). Em sucesso, fica
@@ -50848,6 +50850,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         (uma vez por objeto). A rolagem é secreta: só o sucesso é narrado."""
         if not p.get("alive") or not p.get("pos") or not getattr(self, "decorations", None):
             return
+        if p.get("detectar_ativo"):
+            await self._detectar_esconderijos(p)
         quem = p.get("class_id") or p["id"]
         for d in self.decorations:
             if not self._decor_oculto(d) or not self._adjacente_a_decor(p["pos"], d):
@@ -50864,6 +50868,28 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 meta = DECOR_TYPES.get(d["type"], {})
                 await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"],
                                     objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+
+    async def _detectar_esconderijos(self, p):
+        """Com Detectar Armadilhas ativa, o herói nota sem rolagem os esconderijos
+        dentro do raio da detecção (o mesmo das armadilhas) que ele enxerga."""
+        if not p.get("alive") or not p.get("pos") or not getattr(self, "decorations", None):
+            return 0
+        raio = self._get_raio_visao(p)
+        px, py = p["pos"]
+        achados = 0
+        for d in self.decorations:
+            if not self._decor_oculto(d):
+                continue
+            casas = [t for t in self._decor_tiles(d)
+                     if max(abs(t[0] - px), abs(t[1] - py)) <= raio]
+            if not any(self._tem_linha_de_visao(p["pos"], t) for t in casas):
+                continue
+            d["encontrado"] = True
+            achados += 1
+            meta = DECOR_TYPES.get(d["type"], {})
+            await self.gm_say(T("narracao.esconderijo_detectado", heroi=p["name"],
+                                objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+        return achados
 
     def _adjacente_a_decor(self, pos, d):
         """True se `pos` está a ≤1 casa (Chebyshev) de qualquer casa do footprint."""

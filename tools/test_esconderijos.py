@@ -113,6 +113,49 @@ class MecanicaTests(unittest.TestCase):
         self.assertTrue(r.decorations[0].get("encontrado"))
 
 
+class DeteccaoTests(unittest.TestCase):
+    """Detectar Armadilhas ligada acha o esconderijo no raio, sem rolagem."""
+
+    def test_ativar_a_deteccao_acha_de_longe(self):
+        r = sala(mapa_minimo(cd=30), "rogue")
+        p = r.players["p0"]; p["pos"] = [1, 3]
+        r._is_turn = lambda pid: True
+        with mock.patch.object(S.random, "randint", return_value=1) as rnd:
+            asyncio.run(r.handle_detectar_armadilhas("p0", {}))
+        self.assertTrue(p["detectar_ativo"])
+        self.assertTrue(serial(r)["tem_loot"], "CD alta não importa com a detecção")
+        rnd.assert_not_called()
+        self.assertTrue(any("barril" in f.lower() or "escondido" in f.lower()
+                            for f in r.falas_enviadas))
+
+    def test_desligada_nao_acha_de_longe(self):
+        r = sala(mapa_minimo(), "rogue")
+        p = r.players["p0"]; p["pos"] = [1, 3]
+        asyncio.run(r._procurar_esconderijos(p))
+        self.assertFalse(serial(r)["tem_loot"])
+
+    def test_ligada_acha_ao_andar_e_na_manutencao(self):
+        for via in ("passo", "manutencao"):
+            r = sala(mapa_minimo(), "rogue")
+            p = r.players["p0"]; p["pos"] = [1, 3]; p["detectar_ativo"] = True
+            if via == "passo":
+                asyncio.run(r._procurar_esconderijos(p))
+            else:
+                asyncio.run(r._cobrar_manutencao_detectar(p))
+            self.assertTrue(serial(r)["tem_loot"], via)
+
+    def test_fora_do_raio_ou_sem_linha_de_visao(self):
+        r = sala(mapa_minimo(), "rogue")
+        p = r.players["p0"]; p["pos"] = [1, 3]; p["detectar_ativo"] = True
+        r._get_raio_visao = lambda heroi: 2
+        asyncio.run(r._detectar_esconderijos(p))
+        self.assertFalse(serial(r)["tem_loot"], "o barril está a 4 casas")
+        r._get_raio_visao = lambda heroi: 10
+        r._tem_linha_de_visao = lambda a, b, **k: False
+        asyncio.run(r._detectar_esconderijos(p))
+        self.assertFalse(serial(r)["tem_loot"], "atrás de parede não acha")
+
+
 class DadosTests(unittest.TestCase):
     def test_todos_os_esconderijos_existem_e_estao_ocultos(self):
         for mapa, did, tipo, cd, ouro, itens, *_ in E.ESCONDERIJOS:
