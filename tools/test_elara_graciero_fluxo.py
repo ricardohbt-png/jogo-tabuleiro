@@ -80,6 +80,28 @@ class DestinosTests(unittest.TestCase):
         self.assertEqual(self.vis(r), {"elara_leonel_casa_alerta"})
         self.assertEqual(self.vis(sala({R.F_CAUTELOSO})), set(), "sem a morte do Gilo, nenhum")
 
+    def test_missoes_ficam_na_cidade_e_nao_no_mapa_mundi(self):
+        for did in R.destinos():
+            self.assertTrue(S.WORLD_ADVENTURES[did].get("so_na_cidade"), did)
+        pontos = R.pontos()
+        self.assertEqual({p["aventura"] for p in pontos.values()}, set(R.destinos()),
+                         "cada destino de Graciero tem a sua entrada na ilustração da cidade")
+        for pid, p in pontos.items():
+            self.assertEqual(p["type"], "dungeon", pid)
+            self.assertIn(pid, S.CITY_MAP_POINTS.get("graciero", {}), f"{pid} gravado em city_map_points.json")
+
+    def test_a_cidade_so_envia_a_entrada_do_destino_visivel(self):
+        def entradas(r):
+            return {pid for pid, p in r._city_points_payload().get("graciero", {}).items()
+                    if p.get("type") == "dungeon"}
+        self.assertEqual(entradas(sala()), set())
+        r = sala({R.F_RUMO, R.F_RAMO_A})
+        self.assertEqual(entradas(r), {"elara_beco"})
+        r.world_adventure_progress.update({"elara_graciero_beco": 1, "elara_graciero_cais": 1})
+        self.assertEqual(entradas(r), {"elara_praca_viva"})
+        r = sala({R.F_GILO_MORREU, R.F_CAUTELOSO})
+        self.assertEqual(entradas(r), {"elara_leonel_alerta"})
+
 
 class ConversasTests(unittest.TestCase):
     def test_bardo_so_ajuda_ou_trai_se_foi_poupado(self):

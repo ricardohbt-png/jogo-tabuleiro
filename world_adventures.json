@@ -1130,7 +1130,8 @@
       "sem_fato": "",
       "aventura_id": ""
     },
-    "renome_recompensa": 1
+    "renome_recompensa": 1,
+    "so_na_cidade": true
   },
   "elara_graciero_cais": {
     "id": "elara_graciero_cais",
@@ -1164,7 +1165,8 @@
       "sem_fato": "",
       "aventura_id": "elara_graciero_beco"
     },
-    "renome_recompensa": 1
+    "renome_recompensa": 1,
+    "so_na_cidade": true
   },
   "elara_graciero_praca_viva": {
     "id": "elara_graciero_praca_viva",
@@ -1246,7 +1248,8 @@
       "sem_fato": "elara_graciero_lento",
       "aventura_id": "elara_graciero_cais"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   },
   "elara_graciero_praca_morta": {
     "id": "elara_graciero_praca_morta",
@@ -1280,7 +1283,8 @@
       "sem_fato": "",
       "aventura_id": "elara_graciero_cais"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   },
   "elara_leonel_casa": {
     "id": "elara_leonel_casa",
@@ -1518,7 +1522,8 @@
       "sem_fato": "elara_leonel_cauteloso",
       "aventura_id": ""
     },
-    "renome_recompensa": 3
+    "renome_recompensa": 3,
+    "so_na_cidade": true
   },
   "elara_leonel_casa_alerta": {
     "id": "elara_leonel_casa_alerta",
@@ -1779,7 +1784,8 @@
       "aventura_id": "",
       "tambem_fato": "elara_leonel_cauteloso"
     },
-    "renome_recompensa": 3
+    "renome_recompensa": 3,
+    "so_na_cidade": true
   },
   "elara_montanha": {
     "id": "elara_montanha",
@@ -1950,6 +1956,7 @@
       "sem_fato": "elara_graciero_lento",
       "aventura_id": "elara_graciero_cais"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   }
 }

@@ -241,6 +241,76 @@
       "type": "caravana",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": false
+    },
+    "elara_beco": {
+      "x": 79.0,
+      "y": 45.0,
+      "type": "dungeon",
+      "name": "Os Becos de Graciero",
+      "emoji": "🌒",
+      "aventura": "elara_graciero_beco",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_cais": {
+      "x": 15.5,
+      "y": 61.0,
+      "type": "dungeon",
+      "name": "O Cais dos Leilões",
+      "emoji": "⚓",
+      "aventura": "elara_graciero_cais",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_praca_viva": {
+      "x": 49.0,
+      "y": 53.0,
+      "type": "dungeon",
+      "name": "A Praça dos Escorpiões",
+      "emoji": "🦂",
+      "aventura": "elara_graciero_praca_viva",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_praca_pedra": {
+      "x": 49.0,
+      "y": 53.0,
+      "type": "dungeon",
+      "name": "A Praça dos Escorpiões",
+      "emoji": "🦂",
+      "aventura": "elara_graciero_praca_pedra",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_praca_morta": {
+      "x": 49.0,
+      "y": 53.0,
+      "type": "dungeon",
+      "name": "A Praça dos Escorpiões",
+      "emoji": "🦂",
+      "aventura": "elara_graciero_praca_morta",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_leonel": {
+      "x": 61.0,
+      "y": 31.0,
+      "type": "dungeon",
+      "name": "A Casa de Leilões",
+      "emoji": "🏛️",
+      "aventura": "elara_leonel_casa",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
+    },
+    "elara_leonel_alerta": {
+      "x": 61.0,
+      "y": 31.0,
+      "type": "dungeon",
+      "name": "A Casa de Leilões",
+      "emoji": "🏛️",
+      "aventura": "elara_leonel_casa_alerta",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
     }
   },
   "vila_dos_charcos": {
