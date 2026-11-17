@@ -218,7 +218,8 @@ def test_item_amaldicoado_avisa():
     curse = [m for m in enviados if m.get("type") == "curse_result"]
     check("mandou curse_result", bool(curse))
     check("o quadro traz o nome da maldição", bool(curse) and curse[0].get("nome") == "Mãos Trêmulas")
-    check("o quadro explica o efeito", bool(curse) and "-2" in (curse[0].get("descricao") or ""))
+    check("o quadro explica o efeito", bool(curse) and any(
+        m in str(curse[0].get("descricao") or "") for m in ("-2", "−2")))
     check("o quadro diz que veio do item",
           bool(curse) and any("item" in str(x).lower() for x in curse[0].get("efeitos_extra") or []))
     check("narrou no log", any("amaldiçoad" in t.lower() for t in narrado))

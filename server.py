@@ -1887,6 +1887,12 @@ def _load_lang():
 
 LANG_STRINGS = _load_lang()
 
+# Textos de ficha de monstro (habilidades, ataques, fraquezas), chaveados pelo
+# PRÓPRIO texto português — ver tools/gerar_textos_monstros.py. Índice pt→chave
+# para traduzir um nome de habilidade que chega cru como parâmetro de frase.
+TEXTOS_FICHA_PT = {v["pt"]: k for k, v in LANG_STRINGS.items()
+                   if k.startswith("cat.texto.") and isinstance(v, dict) and v.get("pt")}
+
 _LANG_PARAM_RE = re.compile(r"\{(\w+)\}")
 
 def _param_texto(valor, lang):
@@ -1906,6 +1912,10 @@ def _param_texto(valor, lang):
             return itens[0]
         return (t("lista.separador", lang).join(itens[:-1])
                 + t("lista.ultimo", lang) + itens[-1])
+    # Nome de habilidade/ataque de monstro nativo chega cru (vem da ficha):
+    # traduz só quando é IDÊNTICO ao texto nativo, como a guarda do nome_cat.
+    if isinstance(valor, str) and lang != LANG_DEFAULT and valor in TEXTOS_FICHA_PT:
+        return t(TEXTOS_FICHA_PT[valor], lang)
     return str(valor)
 
 def t(key, lang=LANG_DEFAULT, **params):
@@ -1990,6 +2000,19 @@ def nome_de(familia, ident):
     armadilha, instrumento, classe. Id sem tradução cai na própria chave, então
     prefira montar a frase com o nome já em mãos quando o item for autoral."""
     return T(f"cat.{familia}.{ident}.nome")
+
+def nome_maldicao(mid):
+    """Nome da maldição como texto TARDIO (chave ui.maldicao.<id>, a mesma que o
+    cliente usa na ficha e no Templo). Sem chave, o nome do catálogo."""
+    if f"ui.maldicao.{mid}" in LANG_STRINGS:
+        return T(f"ui.maldicao.{mid}")
+    return MALDICOES.get(mid, {}).get("nome", mid)
+
+def efeito_maldicao(mid):
+    """Efeito curto da maldição (ui.maldicao.<id>.ef), tardio."""
+    if f"ui.maldicao.{mid}.ef" in LANG_STRINGS:
+        return T(f"ui.maldicao.{mid}.ef")
+    return MALDICOES.get(mid, {}).get("desc", "")
 
 def nome_cat(familia, ident, cru):
     """Nome de catálogo como texto TARDIO, mas SÓ quando o nome cru ainda é o do
@@ -20173,7 +20196,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.templo_cobra_ouro_cura_maldicao", preco=preco)}); return
         removida = self._remover_maldicao(p, maldicao_id)
         await self.broadcast({"type": "shop_result", "msg": T("erro.templo_liberta_de_maldicao",
-            personagem=p["name"], maldicao=MALDICOES[removida]["nome"], preco=preco)})
+            personagem=p["name"], maldicao=nome_maldicao(removida), preco=preco)})
         await self.broadcast_city_state()
 
     def _preco_remover_maldicao(self, p, maldicao_id):
@@ -35749,7 +35772,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if perda <= 0:
                 continue
             p[recurso] = max(0, p.get(recurso, 0) - perda)
-            await self.gm_say(T("narracao.consome_de_de", maldicoes_mid_nome=MALDICOES[mid]['nome'], perda=perda, recurso=recurso, heroi=p['name']))
+            await self.gm_say(T("narracao.consome_de_de", maldicoes_mid_nome=nome_maldicao(mid), perda=perda, recurso=recurso, heroi=p['name']))
 
         # Sangramento Profano: em vez de instrumentar os ~67 pontos que tiram HP,
         # compara o HP com o do turno anterior. Se caiu, houve dano no intervalo.
@@ -35794,7 +35817,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 q, self.ECO_MORTE_DANO, DMG_PHYSICAL, None, piso_hp=1)
             await self.gm_say(T("narracao.o_eco_da_morte_atravessa_de_dano", q=nome_criatura(q), self_eco_morte_dano=self.ECO_MORTE_DANO))
 
-    async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
+    async def _transformar_licantropo(self, p, motivo=None):
+        motivo = motivo if motivo is not None else T("ui.maldicao.lic.motivo_desperta")
         cfg = self._licantropia_config(p)
         if not cfg or p.get("licantropia_transformado") or not p.get("alive"):
             return False
@@ -35803,10 +35827,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["str_"] += cfg["for"]; p["con_"] += cfg["con"]; p["dex"] += cfg["des"]
         p["licantropia_transformado"] = True; p["licantropia_rodadas"] = duracao; p["pawn_override"] = "lobisomem"
         await self.send_to(p["id"], {"type":"curse_result", "tipo":"maldicao", "maldicao_id":"licantropia",
-            "nome":"Amaldiçoado: transformou-se em Lobisomem", "icone":"🐺",
-            "descricao":f"{motivo}. A forma lupina dura {duracao} rodadas.",
-            "efeitos_extra":[f"Estágio {cfg['estagio']}: +{cfg['for']} FOR, +{cfg['con']} CON e +{cfg['des']} DES.",
-                "A IA move e ataca a criatura mais próxima; em empate, prioriza aliados.", "Ganha Mordida e duas Garras."]})
+            "nome":T("ui.maldicao.lic.titulo"), "icone":"🐺",
+            "descricao":T("ui.maldicao.lic.descricao", motivo=motivo, duracao=duracao),
+            "efeitos_extra":[T("ui.maldicao.lic.estagio", n=cfg['estagio'], forca=cfg['for'], con=cfg['con'], des=cfg['des']),
+                T("ui.maldicao.lic.ia"), T("ui.maldicao.lic.ataques")]})
         await self.gm_say(T("narracao.se_transforma_em_lobisomem_por_rodadas", heroi=p['name'], duracao=duracao, motivo=motivo))
         return True
 
@@ -35844,14 +35868,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not cfg or cfg["estagio"] < 5 or p.get("licantropia_transformado") or not p.get("alive"): continue
             dado = random.randint(1, 4)
             await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":T("dado.licantropia_pos_combate", nome=p['name'])})
-            if dado == 1: await self._transformar_licantropo(p, "resultado 1 após o combate")
+            if dado == 1: await self._transformar_licantropo(p, T("ui.maldicao.lic.motivo_pos_combate"))
         # Maldição da Ferrugem: o equipamento se degrada ao fim de cada combate.
         for p in self.players.values():
             if not self._ativo(p) or not self._tem_maldicao(p, "maldicao_ferrugem"):
                 continue
             await self._corroer_equipamento(None, p, CORROSAO_ARMADURA_METAL,
                                             CORROSAO_ARMA_METAL, cura=None,
-                                            label="Maldição da Ferrugem")
+                                            label=nome_maldicao("maldicao_ferrugem"))
 
     async def _rolar_licantropia_inicio_masmorra(self):
         for p in self.players.values():
@@ -35859,17 +35883,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not cfg or not p.get("alive"): continue
             p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
             if cfg["estagio"] >= 4:
-                await self._transformar_licantropo(p, "o estágio avançado força a transformação"); continue
+                await self._transformar_licantropo(p, T("ui.maldicao.lic.motivo_estagio")); continue
             dado = random.randint(1, 4)
             await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":T("dado.licantropia", nome=p['name'])})
-            if dado <= cfg["chance"]: await self._transformar_licantropo(p, f"resultado {dado} no d4")
+            if dado <= cfg["chance"]: await self._transformar_licantropo(p, T("ui.maldicao.lic.motivo_d4", n=dado))
             else: await self.gm_say(T("narracao.contem_a_licantropia_no_d4", heroi=p['name'], dado=dado))
 
-    _MALDICAO_ORIGEM = {"item": "Veio de um item amaldiçoado — enquanto a maldição durar, "
-                                "peças que prendem não saem do lugar.",
-                        "armadilha": "Disparada por uma armadilha.",
-                        "monstro": "Lançada por um inimigo."}
-    _MALDICAO_GRAVIDADE = {"leve": "Leve", "media": "Média", "grave": "Grave"}
+    _MALDICAO_ORIGEM = ("item", "armadilha", "monstro")
 
     async def _enviar_resultado_maldicao(self, alvo, maldicao_id, fonte=None):
         """Quadro de resultado da maldição — o mesmo popup da armadilha/veneno.
@@ -35878,19 +35898,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         entrada = next((x for x in self._maldicoes(alvo) if x["id"] == maldicao_id), {})
         progressiva = bool(mal.get("progressiva"))
         estagio = self._maldicao_estagio(entrada) if progressiva else None
-        extras = [f"Efeito: {mal['desc']}.",
-                  f"Gravidade {self._MALDICAO_GRAVIDADE.get(mal['categoria'], mal['categoria'])} — "
-                  f"o Templo cobra {MALDICAO_PRECOS_TEMPLO[mal['categoria']]} ouro para curá-la."]
-        if self._MALDICAO_ORIGEM.get(fonte):
-            extras.append(self._MALDICAO_ORIGEM[fonte])
+        extras = [T("ui.maldicao.popup.efeito", efeito=efeito_maldicao(maldicao_id)),
+                  T("ui.maldicao.popup.gravidade",
+                    gravidade=T(f"ui.maldicao.gravidade.{mal['categoria']}"),
+                    preco=MALDICAO_PRECOS_TEMPLO[mal['categoria']])]
+        if fonte in self._MALDICAO_ORIGEM:
+            extras.append(T(f"ui.maldicao.popup.origem.{fonte}"))
         if progressiva:
-            extras.append(f"Progressiva: está no estágio {estagio} e piora a cada 2 aventuras concluídas.")
-        extras.append("Permanece até ser purificada por um clérigo ou curada no Templo.")
+            extras.append(T("ui.maldicao.popup.progressiva", n=estagio))
+        extras.append(T("ui.maldicao.popup.permanece"))
         await self.send_to(alvo["id"], {
             "type": "curse_result", "tipo": "maldicao", "maldicao_id": maldicao_id,
-            "nome": mal["nome"], "icone": "☠️", "categoria": mal["categoria"],
+            "nome": nome_maldicao(maldicao_id), "icone": "☠️", "categoria": mal["categoria"],
             "estagio": estagio,
-            "descricao": mal["desc"],
+            "descricao": efeito_maldicao(maldicao_id),
             "efeitos_extra": extras,
         })
 
@@ -35918,7 +35939,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvo["maldicao_tipo"] = atuais[0]["id"]
         mal = MALDICOES[maldicao_id]
         await self._enviar_resultado_maldicao(alvo, maldicao_id, fonte=origem)
-        await self.gm_say(T("narracao.foi_amaldicoado", alvo=nome_criatura(alvo), mal_nome=nome_criatura(mal), fonte=fonte))
+        await self.gm_say(T("narracao.foi_amaldicoado", alvo=nome_criatura(alvo), mal_nome=nome_maldicao(maldicao_id), fonte=fonte))
         return True
 
     async def _aplicar_maldicao_carta(self, p, item):
@@ -36007,7 +36028,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for mid in p.pop("_maldicoes_a_avisar", None) or []:
                 if mid in MALDICOES and self._tem_maldicao(p, mid):
                     await self._enviar_resultado_maldicao(p, mid, fonte="item")
-                    await self.gm_say(T("narracao.foi_amaldicoado_por_um_item", heroi=p['name'], maldicoes_mid_nome=MALDICOES[mid]['nome']))
+                    await self.gm_say(T("narracao.foi_amaldicoado_por_um_item", heroi=p['name'], maldicoes_mid_nome=nome_maldicao(mid)))
 
     async def _progredir_maldicoes_missao(self):
         """Avança apenas missões encerradas com sucesso, nunca fugas/retornos."""
@@ -36027,7 +36048,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 entrada["aventuras"] += 1
                 depois = self._maldicao_estagio(entrada)
                 if depois > antes:
-                    await self.gm_say(T("narracao.de_avanca_ao_estagio", mal_nome=nome_criatura(mal), heroi=p['name'], depois=depois))
+                    await self.gm_say(T("narracao.de_avanca_ao_estagio", mal_nome=nome_maldicao(entrada["id"]), heroi=p['name'], depois=depois))
                     if entrada["id"] == "corrupcao_crescente":
                         await self._corrupcao_gerar(p, depois)
 
