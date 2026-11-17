@@ -2,13 +2,341 @@
 // A chave é o TEXTO português da ficha nativa (ver o cabeçalho do
 // gerador). Preencha só a coluna "en".
 window.LANG_MONSTROS = {
+  "cat.texto.1_2_em_visao_ataque_dano_e_ca_ap_a727fc": {
+    "en": "+1/+2 to Sight, Attack, Damage and AC. Richard only",
+    "pt": "+1/+2 em Visão, Ataque, Dano e CA. Apenas Richard"
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_0145f6": {
+    "en": "+1 to attack and +1 to saving throws against Club Ogre.",
+    "pt": "+1 de ataque e +1 nos saves contra Ogro de Clava."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_0697ff": {
+    "en": "+1 to attack and +1 to saving throws against Goblin Dual-Wielder.",
+    "pt": "+1 de ataque e +1 nos saves contra Goblin Dual."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_112df7": {
+    "en": "+1 to attack and +1 to saving throws against Human Skeleton.",
+    "pt": "+1 de ataque e +1 nos saves contra Esqueleto Humano."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_1a7f67": {
+    "en": "+1 to attack and +1 to saving throws against Goblin Assassin.",
+    "pt": "+1 de ataque e +1 nos saves contra Assassino Goblin."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_1ad444": {
+    "en": "+1 to attack and +1 to saving throws against Skeleton.",
+    "pt": "+1 de ataque e +1 nos saves contra Esqueleto Armadurado."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_1c7362": {
+    "en": "+1 to attack and +1 to saving throws against Lacralion Hatchling.",
+    "pt": "+1 de ataque e +1 nos saves contra Lacralion Filhote."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_1d52fe": {
+    "en": "+1 to attack and +1 to saving throws against War Giant.",
+    "pt": "+1 de ataque e +1 nos saves contra Gigante da Guerra."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_23f1a6": {
+    "en": "+1 to attack and +1 to saving throws against Vampire Lord.",
+    "pt": "+1 de ataque e +1 nos saves contra Lorde Vampiro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_27c988": {
+    "en": "+1 to attack and +1 to saving throws against Shadow Spider.",
+    "pt": "+1 de ataque e +1 nos saves contra Aranha Sombria."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_2ce317": {
+    "en": "+1 to attack and +1 to saving throws against Fire Elemental.",
+    "pt": "+1 de ataque e +1 nos saves contra Elemental de Fogo."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_2d7d8f": {
+    "en": "+1 to attack and +1 to saving throws against Ancient Dragon.",
+    "pt": "+1 de ataque e +1 nos saves contra Dragão Ancião."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_2f11db": {
+    "en": "+1 to attack and +1 to saving throws against Necromancer.",
+    "pt": "+1 de ataque e +1 nos saves contra Necromante."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_31e35f": {
+    "en": "+1 to attack and +1 to saving throws against Tyrannosaurus Rex.",
+    "pt": "+1 de ataque e +1 nos saves contra Tiranossauro Rex."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_3acade": {
+    "en": "+1 attack and +1 saves against Bandit.",
+    "pt": "+1 de ataque e +1 nos saves contra Bandido."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_4154e5": {
+    "en": "+1 to attack and +1 to saving throws against Alpha Werewolf.",
+    "pt": "+1 de ataque e +1 nos saves contra Lobisomem Alfa."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_44e9ee": {
+    "en": "+1 to attack and +1 on saves against Sheep.",
+    "pt": "+1 de ataque e +1 nos saves contra Ovelha."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_45c712": {
+    "en": "+1 to attack and +1 to saving throws against Animal Skeleton.",
+    "pt": "+1 de ataque e +1 nos saves contra Esqueleto Animal."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_47f9bd": {
+    "en": "+1 to attack and +1 to saving throws against Skittish Cow.",
+    "pt": "+1 de ataque e +1 nos saves contra Vaca Arisca."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_4c0a8f": {
+    "en": "+1 to attack and +1 to saving throws against Adult Molochus.",
+    "pt": "+1 de ataque e +1 nos saves contra Molochus Adulto."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_50207b": {
+    "en": "+1 to attack and +1 to saving throws against Elder Lacralion.",
+    "pt": "+1 de ataque e +1 nos saves contra Lacralion Ancião."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_521318": {
+    "en": "+1 to attack and +1 to saving throws against Goblin.",
+    "pt": "+1 de ataque e +1 nos saves contra Goblin."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_55c796": {
+    "en": "+1 to attack and +1 to saving throws against Orc Warrior.",
+    "pt": "+1 de ataque e +1 nos saves contra Orc Guerreiro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_5696bc": {
+    "en": "+1 to attack and +1 to saving throws against Ancestral Tyrant.",
+    "pt": "+1 de ataque e +1 nos saves contra Tirano Ancestral."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_5adef7": {
+    "en": "+1 to attack and +1 to saving throws against Organic Devourer.",
+    "pt": "+1 de ataque e +1 nos saves contra Devorador Orgânico."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_5bcce0": {
+    "en": "+1 to attack and +1 to saving throws against Bugbear — Boogeyman of the Shadows.",
+    "pt": "+1 de ataque e +1 nos saves contra Bugbear — Bicho-Papão das Sombras."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_5d93b9": {
+    "en": "+1 to attack and +1 to saves against Brown Bears.",
+    "pt": "+1 de ataque e +1 nos saves contra Urso Pardo."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_61a58c": {
+    "en": "+1 to attack and +1 to saving throws against Ancient Vampire.",
+    "pt": "+1 de ataque e +1 nos saves contra Vampiro Ancião."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_65fd92": {
+    "en": "+1 to attack and +1 on saves against Rat.",
+    "pt": "+1 de ataque e +1 nos saves contra Rato."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_66466f": {
+    "en": "+1 to attack and +1 to saving throws against Grotão.",
+    "pt": "+1 de ataque e +1 nos saves contra Grotão."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_6a8e62": {
+    "en": "+1 to attack and +1 to saving throws against Spear Ogre.",
+    "pt": "+1 de ataque e +1 nos saves contra Ogro de Lança."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_6b57e1": {
+    "en": "+1 to attack and +1 to saving throws against Grey Wolf.",
+    "pt": "+1 de ataque e +1 nos saves contra Lobo Cinzento."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_6bf886": {
+    "en": "+1 to attack and +1 to saving throws against Ice Elemental.",
+    "pt": "+1 de ataque e +1 nos saves contra Elemental de Gelo."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_6e4502": {
+    "en": "+1 to attack and +1 to saving throws against Water Elemental.",
+    "pt": "+1 de ataque e +1 nos saves contra Elemental de Água."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_720b66": {
+    "en": "+1 to attack and +1 to saving throws against Black Bear.",
+    "pt": "+1 de ataque e +1 nos saves contra Urso Negro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_7504ab": {
+    "en": "+1 to attack and +1 on saves against Cat.",
+    "pt": "+1 de ataque e +1 nos saves contra Gato."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_776f83": {
+    "en": "+1 to attack and +1 to saving throws against Adult Lacralion.",
+    "pt": "+1 de ataque e +1 nos saves contra Lacralion Adulto."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_79d96c": {
+    "en": "+1 to attack and +1 to saving throws against Goblin Shaman.",
+    "pt": "+1 de ataque e +1 nos saves contra Xamã Goblin."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_7b7477": {
+    "en": "+1 to attack and +1 to saving throws against Young Marsh Stinger.",
+    "pt": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Jovem."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_7c2585": {
+    "en": "+1 to attack and +1 to saving throws against Elder Marsh Stinger.",
+    "pt": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Ancião."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_81dbc6": {
+    "en": "+1 to attack and +1 to saving throws against Elder Molochus.",
+    "pt": "+1 de ataque e +1 nos saves contra Molochus Ancião."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_856180": {
+    "en": "+1 to attack and +1 to saving throws against Werewolf.",
+    "pt": "+1 de ataque e +1 nos saves contra Lobisomem."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_86ef45": {
+    "en": "+1 to attack and +1 to saving throws against Adult Garaloux.",
+    "pt": "+1 de ataque e +1 nos saves contra Garaloux Adulto."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_881075": {
+    "en": "+1 to attack and +1 to saving throws against Cyclops.",
+    "pt": "+1 de ataque e +1 nos saves contra Ciclope."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_8a5af2": {
+    "en": "+1 attack and +1 saves against Bard.",
+    "pt": "+1 de ataque e +1 nos saves contra Bardo."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_92a922": {
+    "en": "+1 to attack and +1 to saving throws against Alligator.",
+    "pt": "+1 de ataque e +1 nos saves contra Jacaré."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_93358b": {
+    "en": "+1 to attack and +1 to saving throws against Stone Elemental.",
+    "pt": "+1 de ataque e +1 nos saves contra Elemental de Pedra."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_93b7b4": {
+    "en": "+1 to attack and +1 to saving throws against Saddle Horse.",
+    "pt": "+1 de ataque e +1 nos saves contra Cavalo de Sela."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_9829b6": {
+    "en": "+1 to attack and +1 to saving throws against Metal Devourer.",
+    "pt": "+1 de ataque e +1 nos saves contra Devorador de Metal."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_9ae8a6": {
+    "en": "+1 to attack and +1 to saving throws against Stone Scorpion.",
+    "pt": "+1 de ataque e +1 nos saves contra Escorpião de Pedra."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_9e3907": {
+    "en": "+1 attack and +1 to saves against Caravan Bard.",
+    "pt": "+1 de ataque e +1 nos saves contra Bardo da Caravana."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_a5f4df": {
+    "en": "+1 to attack and +1 on saves against Pigeon.",
+    "pt": "+1 de ataque e +1 nos saves contra Pombo."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_a93492": {
+    "en": "+1 to attack and +1 to saving throws against Infected Zombie.",
+    "pt": "+1 de ataque e +1 nos saves contra Zumbi Infectado."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_aa7276": {
+    "en": "+1 to attack and +1 to saving throws against Young Molochus.",
+    "pt": "+1 de ataque e +1 nos saves contra Molochus Jovem."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_ab8a8e": {
+    "en": "+1 to attack and +1 to saving throws against Dark Mage.",
+    "pt": "+1 de ataque e +1 nos saves contra Mago das Trevas."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_af9736": {
+    "en": "+1 to attack and +1 to saving throws against Electric Elemental.",
+    "pt": "+1 de ataque e +1 nos saves contra Elemental Elétrico."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_b12ba5": {
+    "en": "+1 to attack and +1 to saving throws against Young Vampire.",
+    "pt": "+1 de ataque e +1 nos saves contra Vampiro Jovem."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_b173a7": {
+    "en": "+1 to attack and +1 to saving throws against Young Garaloux.",
+    "pt": "+1 de ataque e +1 nos saves contra Garaloux Jovem."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_c0022c": {
+    "en": "+1 to attack and +1 to saving throws against Venomous Snake.",
+    "pt": "+1 de ataque e +1 nos saves contra Cobra Venenosa."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_c08993": {
+    "en": "+1 to attack and +1 to saving throws against Goblin Archer.",
+    "pt": "+1 de ataque e +1 nos saves contra Goblin Arqueiro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_c24916": {
+    "en": "+1 to attack and +1 on saves against Greater Medusa.",
+    "pt": "+1 de ataque e +1 nos saves contra Grande Medusa."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_c2b5fc": {
+    "en": "+1 to attack and +1 to saving throws against Alpha Garaloux.",
+    "pt": "+1 de ataque e +1 nos saves contra Garaloux Alfa."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_c4cd8f": {
+    "en": "+1 to attack and +1 to saving throws against Forest Tyrant.",
+    "pt": "+1 de ataque e +1 nos saves contra Tirano da Mata."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_ca86d0": {
+    "en": "+1 to attack and +1 to saving throws against Runic Giant.",
+    "pt": "+1 de ataque e +1 nos saves contra Gigante Rúnico."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_d1b3bb": {
+    "en": "+1 attack and +1 saves against Thug.",
+    "pt": "+1 de ataque e +1 nos saves contra Capanga."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_d2735d": {
+    "en": "+1 to attack and +1 to saving throws against Orc.",
+    "pt": "+1 de ataque e +1 nos saves contra Orc."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_d2ec29": {
+    "en": "+1 to attack and +1 to saving throws against Kobold Crossbowman.",
+    "pt": "+1 de ataque e +1 nos saves contra Kobold Besteiro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_d4fbfd": {
+    "en": "+1 to attack and +1 to saving throws against Air Elemental.",
+    "pt": "+1 de ataque e +1 nos saves contra Elemental de Ar."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_d7041c": {
+    "en": "+1 to attack and +1 to saving throws against Kobold Spearman.",
+    "pt": "+1 de ataque e +1 nos saves contra Kobold Lanceiro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_d9efe1": {
+    "en": "+1 to attack and +1 to saving throws against Constrictor Snake.",
+    "pt": "+1 de ataque e +1 nos saves contra Cobra Constritora."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_dc7b0e": {
+    "en": "+1 to attack and +1 to saving throws against Vampiric Thrall.",
+    "pt": "+1 de ataque e +1 nos saves contra Escravo Vampírico."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_e0073f": {
+    "en": "+1 to attack and +1 to saves against Kobold Mages.",
+    "pt": "+1 de ataque e +1 nos saves contra Kobold Mago."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_e3f01e": {
+    "en": "+1 to attack and +1 to saving throws against Adult Marsh Stinger.",
+    "pt": "+1 de ataque e +1 nos saves contra Ferrão dos Charcos Adulto."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_e7aad2": {
+    "en": "+1 to attack and +1 to saving throws against Carrion Lizard.",
+    "pt": "+1 de ataque e +1 nos saves contra Lagarto Carniceiro."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_eaee6c": {
+    "en": "+1 to attack and +1 to saving throws against Goblin Fighter.",
+    "pt": "+1 de ataque e +1 nos saves contra Goblin Combatente."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_f22d2d": {
+    "en": "+1 to attack and +1 to saving throws against Troll.",
+    "pt": "+1 de ataque e +1 nos saves contra Troll."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_fc2627": {
+    "en": "+1 to attack and +1 on saves against Medusa.",
+    "pt": "+1 de ataque e +1 nos saves contra Medusa."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_feeabd": {
+    "en": "+1 to attack and +1 to saving throws against Young Crocodile.",
+    "pt": "+1 de ataque e +1 nos saves contra Crocodilo Jovem."
+  },
+  "cat.texto.1_de_ataque_e_1_nos_saves_contra_ffb490": {
+    "en": "+1 to attack and +1 on saves against Greater Gorgon.",
+    "pt": "+1 de ataque e +1 nos saves contra Grande Gorgona."
+  },
   "cat.texto.1_em_testes_de_vontade_0507a3": {
     "en": "-1 on Will saves",
     "pt": "-1 em testes de Vontade"
   },
+  "cat.texto.1_inimigo_rodada_quando_um_aliad_c42eec": {
+    "en": "1×/enemy/round: when an ally hits an enemy, Luccas reacts with a Sneak Attack against it.",
+    "pt": "1×/inimigo/rodada: quando um aliado acerta um inimigo, Luccas reage com um Ataque Furtivo nele."
+  },
   "cat.texto.1_nas_mordidas_contra_alvos_com_e259cc": {
     "en": "+1 on bites against targets below 50% HP",
     "pt": "+1 nas mordidas contra alvos com menos de 50% do HP"
+  },
+  "cat.texto.1d8_a_3d8_int_em_todos_os_aliado_dec04a": {
+    "en": "1d8 to 3d8 + INT on every ally within radius 5. 🍖-4 💧-4 per die.",
+    "pt": "1d8 a 3d8 + INT em todos os aliados no raio 5. 🍖-4 💧-4 por dado."
+  },
+  "cat.texto.1d8_a_3d8_int_em_um_aliado_1_por_50f036": {
+    "en": "1d8 to 3d8 + INT on one ally. 💧-1 per die. Range extendable with 🍖.",
+    "pt": "1d8 a 3d8 + INT em um aliado. 💧-1 por dado. Alcance estendível com 🍖."
   },
   "cat.texto.20_de_chance_de_carregar_12_fras_0fc8ab": {
     "en": "20% chance to carry 1–2 vials of Acrid Fungus. It can drink one to poison its weapon; the next hit uses up the dose.",
@@ -34,6 +362,14 @@ window.LANG_MONSTROS = {
     "en": "-2 on Will saves",
     "pt": "-2 em testes de Vontade"
   },
+  "cat.texto.2_na_chance_de_desarmar_armadilh_a58f6c": {
+    "en": "+2 to the chance of disarming traps.",
+    "pt": "+2 na chance de desarmar armadilhas."
+  },
+  "cat.texto.2_na_chance_de_se_esconder_nas_s_4fb548": {
+    "en": "+2 to the chance of hiding in the shadows.",
+    "pt": "+2 na chance de se esconder nas sombras."
+  },
   "cat.texto.2_no_dado_de_acerto_neste_turno_2f061e": {
     "en": "+2 on the to-hit die this turn",
     "pt": "+2 no dado de acerto neste turno"
@@ -45,6 +381,10 @@ window.LANG_MONSTROS = {
   "cat.texto.2_no_raio_de_visao_ataques_furti_987fb4": {
     "en": "+2 vision radius; sneak attacks against the creature take -2 to hit.",
     "pt": "+2 no raio de visão; ataques furtivos contra a criatura sofrem -2 no acerto."
+  },
+  "cat.texto.2_slots_de_controle_chance_de_su_9c4623": {
+    "en": "+2 Control Slots. Success chance: 100% − CR×10%.",
+    "pt": "+2 Slots de Controle. Chance de sucesso: 100% − ND×10%."
   },
   "cat.texto.3_em_todos_os_testes_de_fortitud_e91ac8": {
     "en": "+3 on all Fortitude saves.",
@@ -78,6 +418,14 @@ window.LANG_MONSTROS = {
     "en": "The Grabbed creature follows the Tyrannosaur's movement, staying adjacent.",
     "pt": "A criatura Presa acompanha os movimentos do Tiranossauro, permanecendo adjacente."
   },
+  "cat.texto.a_desvantagem_dura_toda_a_provoc_bcc99e": {
+    "en": "The disadvantage lasts for the whole taunt; Henrique gains +2 AC and attacks the target with advantage.",
+    "pt": "A desvantagem dura toda a provocação; Henrique ganha +2 CA e ataca o alvo com vantagem."
+  },
+  "cat.texto.a_fonte_do_olhar_94f14d": {
+    "en": "the source of the gaze",
+    "pt": "a fonte do olhar"
+  },
   "cat.texto.a_ia_aplica_uma_dose_da_bolsa_a_5c303e": {
     "en": "The AI applies a dose from its bag to the dagger as a free action.",
     "pt": "A IA aplica uma dose da bolsa à adaga como ação livre."
@@ -90,9 +438,21 @@ window.LANG_MONSTROS = {
     "en": "The Horn's Brutal Charge inflicts Hemorrhage on a hit; 4-round cooldown.",
     "pt": "A Investida Brutal da Chifrada aplica Hemorragia ao acertar; recarga de 4 rodadas."
   },
+  "cat.texto.a_manutencao_da_cancao_heroica_c_e3a832": {
+    "en": "Maintaining the Heroic Song costs -1🍖 and -1💧 (minimum 0).",
+    "pt": "A manutenção da Canção Heroica custa -1🍖 e -1💧 (mínimo 0)."
+  },
   "cat.texto.a_mordida_cura_o_dano_causado_c27e8c": {
     "en": "The bite heals the damage dealt.",
     "pt": "A mordida cura o dano causado."
+  },
+  "cat.texto.a_primeira_vez_que_errar_um_ataq_e3ecab": {
+    "en": "The first time you miss an attack, you may reroll it.",
+    "pt": "A primeira vez que errar um ataque, você pode rolá-lo novamente."
+  },
+  "cat.texto.a_regeneracao_divina_alcanca_ali_636429": {
+    "en": "Divine Regeneration now reaches allies within radius 2.",
+    "pt": "A Regeneração Divina alcança aliados em raio 2."
   },
   "cat.texto.abrir_caminho_5b9f03": {
     "en": "Clear the Way",
@@ -101,6 +461,14 @@ window.LANG_MONSTROS = {
   "cat.texto.absorver_materia_839951": {
     "en": "Absorb Matter",
     "pt": "Absorver Matéria"
+  },
+  "cat.texto.acao_bonus_alternavel_revela_arm_9e3954": {
+    "en": "Bonus action (toggle). Reveals nearby traps and hidden caches and does not set off the dungeon's traps. Upkeep 💧-1/turn.",
+    "pt": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno."
+  },
+  "cat.texto.acao_bonus_d20_des_vs_percepcao_aca121": {
+    "en": "Bonus action. d20+DEX vs the monsters' perception. You may attack in the same round using the main action. Invisible (not a valid target) while active. Upkeep 🍖-1 💧-1/turn.",
+    "pt": "Ação bônus. d20+DES vs percepção dos monstros. Pode atacar na mesma rodada usando a ação principal. Invisível (não é alvo) enquanto ativo. Manutenção 🍖-1 💧-1/turno."
   },
   "cat.texto.acao_livre_1_na_dificuldade_cd_d_ad5d0a": {
     "en": "Free action. +1 to the spell's saving throw DC. 🍖-3 when casting.",
@@ -118,9 +486,33 @@ window.LANG_MONSTROS = {
     "en": "Extra free action. Single target in a straight line within the configured range: 3d6 acid. Reflex DC 13 halves the damage; on a failure, half the damage repeats the next round and equipment may be damaged.",
     "pt": "Ação livre extra. Alvo único em linha reta dentro do alcance configurado: 3d6 de ácido. Reflexos CD 13 reduz o dano à metade; em caso de falha, metade do dano é repetida na rodada seguinte e equipamentos podem ser danificados."
   },
+  "cat.texto.acao_livre_multiplica_o_dano_da_5a424a": {
+    "en": "Free action. Multiplies the spell's damage by 1.5. 🍖-6 💧-6 when casting.",
+    "pt": "Ação livre. Multiplica o dano da magia por 1,5. 🍖-6 💧-6 ao lançar."
+  },
+  "cat.texto.acao_livre_remove_medo_atordoame_13934f": {
+    "en": "Free action. Removes Fear, Stun, and Slow; 1 round immune to Silence.",
+    "pt": "Ação livre. Remove Medo, Atordoamento e Lentidão; 1 rodada imune a Silêncio."
+  },
   "cat.texto.acao_livre_solta_a_criatura_agar_84ccbe": {
     "en": "Free action. Releases the grabbed creature; it takes fall damage based on the current height.",
     "pt": "Ação livre. Solta a criatura agarrada; ela sofre dano de queda conforme a altura atual."
+  },
+  "cat.texto.acao_livre_unta_um_veneno_da_bol_a66f52": {
+    "en": "Free action. Consumes one vial and 1 thirst per vial to coat up to 10 arrows or bolts (20 with Veneno Rápido II). Veneno Rápido III can combine two different poisons on the same projectiles.",
+    "pt": "Ação livre. Unta um veneno da bolsa na arma — os próximos golpes certeiros envenenam o alvo."
+  },
+  "cat.texto.acao_principal_coloca_uma_armadi_224055": {
+    "en": "Main action. Places a trap on your own square or an adjacent one. Costs hunger/thirst + gold.",
+    "pt": "Ação principal. Coloca uma armadilha na própria casa ou adjacente. Custa fome/sede + ouro."
+  },
+  "cat.texto.acao_principal_faz_uma_unica_jog_b06299": {
+    "en": "Main action. Make one attack roll against every enemy in the four orthogonally adjacent squares; roll damage separately for each hit. Cannot use ranged weapons or throw the weapon.",
+    "pt": "Ação principal. Faz uma única jogada de ataque contra todos os inimigos nos quatro quadrados ortogonais adjacentes; cada acerto rola o dano separadamente. Não funciona com armas à distância nem arremessa a arma."
+  },
+  "cat.texto.acao_principal_selecione_uma_cas_4e73a1": {
+    "en": "Main action. Select an adjacent square to try to disarm the trap. A critical failure sets it off on you.",
+    "pt": "Ação principal. Selecione uma casa adjacente para tentar desarmar a armadilha. Falha crítica a dispara em você."
   },
   "cat.texto.acido_a6e24e": {
     "en": "Acid",
@@ -177,6 +569,10 @@ window.LANG_MONSTROS = {
   "cat.texto.alvo_unico_em_linha_reta_dentro_fa5864": {
     "en": "Single target in a straight line within the configured range (3 square(s)): 2d6 acid; Reflex DC 13 halves the damage. On a failure, half the damage repeats the next round and equipment may be damaged.",
     "pt": "Alvo único em linha reta dentro do alcance configurado (3 quadrado(s)): 2d6 de ácido; Reflexos CD 13 reduz o dano à metade. Em caso de falha, metade do dano é repetida na rodada seguinte e equipamentos podem ser danificados."
+  },
+  "cat.texto.amaldicoa_um_alvo_configure_a_ma_ea81b5": {
+    "en": "Curses a target: set a specific curse or a random one by severity.",
+    "pt": "Amaldiçoa um alvo: configure a maldição específica ou uma aleatória por gravidade."
   },
   "cat.texto.amaldicoar_2d4bd9": {
     "en": "Curse",
@@ -290,6 +686,10 @@ window.LANG_MONSTROS = {
     "en": "On death, explodes in radius 3. Reflex DC 18 halves 8d6; the ground burns for 3 rounds.",
     "pt": "Ao morrer, explode em raio 3. Reflexos CD 18 reduz 8d6 à metade; o chão fica em chamas por 3 rodadas."
   },
+  "cat.texto.ao_ser_revelado_2_de_ca_por_1_ro_5364fe": {
+    "en": "When revealed, +2 AC for 1 round.",
+    "pt": "Ao ser revelado, +2 de CA por 1 rodada."
+  },
   "cat.texto.ao_sofrer_dano_vontade_cd_10_ou_8438e9": {
     "en": "When damaged: Will DC 10 or lose the spell action this turn",
     "pt": "Ao sofrer dano: Vontade CD 10 ou perde a ação de magia no turno"
@@ -321,6 +721,10 @@ window.LANG_MONSTROS = {
   "cat.texto.apos_mover_pelo_menos_3_casas_fa_03bb0b": {
     "en": "After moving at least 3 squares, makes a single horn attack dealing 4d6+6. Cannot make other attacks that turn.",
     "pt": "Após mover pelo menos 3 casas, faz um único ataque de chifres causando 4d6+6. Não pode realizar outros ataques no turno."
+  },
+  "cat.texto.apos_mover_pelo_menos_3_casas_fa_bbdca3": {
+    "en": "After moving at least 3 squares, makes a single horn attack (4d6+6) and makes no other attacks that turn.",
+    "pt": "Após mover pelo menos 3 casas, faz um único ataque de chifres (4d6+6) e não realiza outros ataques no turno."
   },
   "cat.texto.aprimorar_ii_f318ea": {
     "en": "Enhance II",
@@ -362,9 +766,17 @@ window.LANG_MONSTROS = {
     "en": "Equipped weapon",
     "pt": "Arma equipada"
   },
+  "cat.texto.arma_o_proximo_ataque_basico_cor_3d0637": {
+    "en": "Arms your next basic attack (melee or ranged): if it hits, it's an automatic critical (damage doubled); on a natural 20 while armed, damage is TRIPLED. Consumed on the next attack, hit or miss.",
+    "pt": "Arma o próximo ataque básico (corpo a corpo ou à distância): se acertar, é crítico automático (dano dobrado); num natural 20 enquanto armado, o dano é TRIPLICADO. Consumida no próximo ataque, acerte ou erre."
+  },
   "cat.texto.arma_principal_03164d": {
     "en": "Main weapon",
     "pt": "Arma principal"
+  },
+  "cat.texto.armadilha_de_dardos_aae8f0": {
+    "en": "dart trap",
+    "pt": "armadilha de dardos"
   },
   "cat.texto.armas_comuns_sofrem_5_prata_magi_f9d699": {
     "en": "Common weapons take –5; silver, magic and spells ignore it.",
@@ -394,6 +806,10 @@ window.LANG_MONSTROS = {
     "en": "Throw 1d4+2 (range 3) as a bonus action; a natural 1 breaks the weapon",
     "pt": "Arremesso 1d4+2 (alcance 3) como ação bônus; 1 natural quebra a arma"
   },
+  "cat.texto.arremesso_bruto_cfd23c": {
+    "en": "Brutal Throw",
+    "pt": "Arremesso Bruto"
+  },
   "cat.texto.arremesso_colossal_bbd630": {
     "en": "Colossal Throw",
     "pt": "Arremesso Colossal"
@@ -401,6 +817,10 @@ window.LANG_MONSTROS = {
   "cat.texto.arremesso_e8ad0f": {
     "en": "Throw",
     "pt": "Arremesso"
+  },
+  "cat.texto.arremesso_rapido_ba3526": {
+    "en": "Quick Throw",
+    "pt": "Arremesso Rápido"
   },
   "cat.texto.arsenal_colossal_72b662": {
     "en": "Colossal Arsenal",
@@ -414,6 +834,10 @@ window.LANG_MONSTROS = {
     "en": "Attack",
     "pt": "Ataque"
   },
+  "cat.texto.ataque_coordenado_4e64b6": {
+    "en": "Coordinated Attack",
+    "pt": "Ataque Coordenado"
+  },
   "cat.texto.ataque_das_sombras_c14fc8": {
     "en": "Shadow Attack",
     "pt": "Ataque das Sombras"
@@ -421,6 +845,10 @@ window.LANG_MONSTROS = {
   "cat.texto.ataque_de_mandibula_a6df29": {
     "en": "Jaw Attack",
     "pt": "Ataque de Mandíbula"
+  },
+  "cat.texto.ataque_extra_neste_turno_com_hab_44a0ac": {
+    "en": "Extra attack this turn with active abilities; Berserker Fury III lets you choose 2 or 3 attacks",
+    "pt": "Ataque extra neste turno com habilidades ativas (Fúria Berserker III permite escolher 2 ou 3 ataques)"
   },
   "cat.texto.ataque_furtivo_1_694c58": {
     "en": "Sneak Attack 1",
@@ -430,6 +858,22 @@ window.LANG_MONSTROS = {
     "en": "Sneak Attack",
     "pt": "Ataque Furtivo"
   },
+  "cat.texto.ataque_furtivo_ii_a5f15f": {
+    "en": "Sneak Attack II",
+    "pt": "Ataque Furtivo II"
+  },
+  "cat.texto.ataque_furtivo_supremo_d2dcea": {
+    "en": "Supreme Sneak Attack",
+    "pt": "Ataque Furtivo Supremo"
+  },
+  "cat.texto.ataque_furtivo_tambem_dispara_se_a84577": {
+    "en": "Sneak Attack also triggers when an ally is adjacent to the target.",
+    "pt": "Ataque Furtivo também dispara se há aliado adjacente ao alvo."
+  },
+  "cat.texto.ataque_giratorio_723eed": {
+    "en": "Spinning Attack",
+    "pt": "Ataque Giratório"
+  },
   "cat.texto.ataque_normal_se_acertar_fortitu_060e35": {
     "en": "Normal attack; on a hit, Fortitude DC 10 or stunned (loses the next round). Cooldown 4 rounds",
     "pt": "Ataque normal; se acertar, Fortitude CD 10 ou atordoado (perde a próxima rodada). Recarga 4 rodadas"
@@ -438,9 +882,25 @@ window.LANG_MONSTROS = {
     "en": "Quick Attack",
     "pt": "Ataque Rápido"
   },
+  "cat.texto.ataque_sagrado_ii_8df5fe": {
+    "en": "Holy Strike II",
+    "pt": "Ataque Sagrado II"
+  },
+  "cat.texto.ataque_sagrado_iii_d9e1a4": {
+    "en": "Holy Strike III",
+    "pt": "Ataque Sagrado III"
+  },
+  "cat.texto.ataques_50_50_outras_fontes_75_n_1e86af": {
+    "en": "The ally takes half the damage. The other half goes to Richard",
+    "pt": "Ataques: 50/50. Outras fontes: 75% no aliado e 25% em Richard. Richard reduz 3 de todo dano."
+  },
   "cat.texto.ataques_corpo_a_corpo_atingem_al_1955a7": {
     "en": "Melee attacks reach targets up to 2 squares away.",
     "pt": "Ataques corpo a corpo atingem alvos a até 2 quadrados."
+  },
+  "cat.texto.ataques_que_acertam_aplicam_sang_10d582": {
+    "en": "Hits inflict Bleeding; critical hits also inflict Hemorrhage.",
+    "pt": "Ataques que acertam aplicam Sangramento; acertos críticos também aplicam Hemorragia."
   },
   "cat.texto.ate_o_fim_do_turno_ataques_fisic_2a6ad5": {
     "en": "Until the end of the turn, physical weapon attacks deal +2 damage.",
@@ -449,6 +909,14 @@ window.LANG_MONSTROS = {
   "cat.texto.ate_o_fim_do_turno_seus_ataques_67e2e6": {
     "en": "Until the end of the turn, its attacks deal +2 damage. Cooldown: 4 rounds.",
     "pt": "Até o fim do turno, seus ataques causam +2 de dano. Recarga: 4 rodadas."
+  },
+  "cat.texto.ate_o_proximo_turno_ataques_cont_62ea72": {
+    "en": "Until your next turn, attacks against you have disadvantage and you're immune to Sneak Attack.",
+    "pt": "Até o próximo turno, ataques contra você têm desvantagem e você fica imune a Ataque Furtivo."
+  },
+  "cat.texto.ate_o_proximo_turno_quando_um_in_b125fd": {
+    "en": "Until your next turn, whenever an enemy misses you (with a melee/reach weapon or hand crossbow, and it's within range), you strike back.",
+    "pt": "Até o próximo turno, quando um inimigo errar você (arma corpo a corpo/alcance ou besta de mão, e ele no alcance), você o ataca de volta."
   },
   "cat.texto.atinge_todos_atras_5_1d8_3_falha_624ea1": {
     "en": "Hits everyone behind: +5, 1d8+3; failure knocks down",
@@ -477,6 +945,10 @@ window.LANG_MONSTROS = {
   "cat.texto.aura_escaldante_4f5bc6": {
     "en": "Scorching Aura",
     "pt": "Aura Escaldante"
+  },
+  "cat.texto.bau_armadilha_90aecf": {
+    "en": "Trapped chest",
+    "pt": "Baú-armadilha"
   },
   "cat.texto.besta_a4acb4": {
     "en": "Crossbow",
@@ -514,6 +986,10 @@ window.LANG_MONSTROS = {
     "en": "Each bandit rolls hidden blade, fire trap or net. It sets up its known formula on a free adjacent square; setting it up replaces the turn's attack. 3-round cooldown.",
     "pt": "Cada bandido sorteia lâmina escondida, armadilha incendiária ou rede. Prepara sua fórmula conhecida em uma casa livre adjacente; a preparação substitui o ataque do turno. Recarga de 3 rodadas."
   },
+  "cat.texto.cada_veneno_corpo_a_corpo_dura_6_0b0ef6": {
+    "en": "Each melee poison application now lasts 6 successful hits instead of 3. One vial also coats up to 20 arrows or bolts instead of 10.",
+    "pt": "Cada veneno corpo a corpo dura 6 acertos em vez de 3; um frasco envenena até 20 flechas ou virotes."
+  },
   "cat.texto.cajado_95ffee": {
     "en": "Staff",
     "pt": "Cajado"
@@ -526,6 +1002,10 @@ window.LANG_MONSTROS = {
     "en": "Natural Camouflage",
     "pt": "Camuflagem Natural"
   },
+  "cat.texto.cancao_acerto_1_1e7497": {
+    "en": "Song: Accuracy +1",
+    "pt": "Canção: Acerto +1"
+  },
   "cat.texto.cancao_armadura_1_b06529": {
     "en": "Song: Armor +1",
     "pt": "Canção: Armadura +1"
@@ -537,6 +1017,10 @@ window.LANG_MONSTROS = {
   "cat.texto.cancao_heroica_3f9256": {
     "en": "Heroic Song",
     "pt": "Canção Heroica"
+  },
+  "cat.texto.cancao_heroica_suprema_e53233": {
+    "en": "Supreme Heroic Song",
+    "pt": "Canção Heroica Suprema"
   },
   "cat.texto.cancao_movimento_1_df17b0": {
     "en": "Song: Movement +1",
@@ -570,6 +1054,10 @@ window.LANG_MONSTROS = {
     "en": "Cause Hemorrhage",
     "pt": "Causar Hemorragia"
   },
+  "cat.texto.causar_sangramento_69c4dc": {
+    "en": "Cause Bleeding",
+    "pt": "Causar Sangramento"
+  },
   "cat.texto.cercado_82c617": {
     "en": "Surrounded",
     "pt": "Cercado"
@@ -577,6 +1065,10 @@ window.LANG_MONSTROS = {
   "cat.texto.chama_0f67cd": {
     "en": "Flame",
     "pt": "Chama"
+  },
+  "cat.texto.chance_extra_de_recuperar_o_ouro_5691dc": {
+    "en": "Extra chance to recover the gold from a disarmed trap.",
+    "pt": "Chance extra de recuperar o ouro da armadilha desarmada."
   },
   "cat.texto.chifrada_0abb61": {
     "en": "Horn",
@@ -634,6 +1126,10 @@ window.LANG_MONSTROS = {
     "en": "Command",
     "pt": "Comando"
   },
+  "cat.texto.combinar_duas_951095": {
+    "en": "Combine Two",
+    "pt": "Combinar Duas"
+  },
   "cat.texto.combo_devorador_a98983": {
     "en": "Devouring Combo",
     "pt": "Combo Devorador"
@@ -678,9 +1174,17 @@ window.LANG_MONSTROS = {
     "en": "Infect",
     "pt": "Contagiar"
   },
+  "cat.texto.contra_ataque_d1fc3e": {
+    "en": "Counterattack",
+    "pt": "Contra-Ataque"
+  },
   "cat.texto.contundente_55a8db": {
     "en": "Bludgeoning",
     "pt": "Contundente"
+  },
+  "cat.texto.coronhada_da_besta_2f6153": {
+    "en": "Crossbow butt",
+    "pt": "Coronhada da besta"
   },
   "cat.texto.corpo_condutor_2_de_dano_de_elet_bd669b": {
     "en": "Conductive body: +2 lightning damage",
@@ -750,6 +1254,10 @@ window.LANG_MONSTROS = {
     "en": "Creates an area of darkness centered on itself (once per combat)",
     "pt": "Cria uma área de escuridão centrada em si (1x por combate)"
   },
+  "cat.texto.criar_armadilha_934b29": {
+    "en": "Set Trap",
+    "pt": "Criar Armadilha"
+  },
   "cat.texto.criatura_das_sombras_sofre_dano_2965d7": {
     "en": "Shadow creature: takes double damage from holy/light effects",
     "pt": "Criatura das sombras: sofre dano dobrado de efeitos sagrados/luz"
@@ -774,9 +1282,65 @@ window.LANG_MONSTROS = {
     "en": "Adjacent creatures take 2d6 fire at the start of their own turn.",
     "pt": "Criaturas adjacentes sofrem 2d6 de fogo no início do próprio turno."
   },
+  "cat.texto.criaturas_passam_a_ocupar_slots_2b3a7e": {
+    "en": "Creatures now occupy Control Slots equal to their CR (fractional included). Success chance: 100% − CR×15%.",
+    "pt": "Criaturas passam a ocupar Slots de Controle iguais ao ND (fracionário incluso). Chance de sucesso: 100% − ND×15%."
+  },
+  "cat.texto.cura_1d6_bonus_forca_em_aliado_a_25ec43": {
+    "en": "Heals 1d6 + Strength bonus on an adjacent ally",
+    "pt": "Cura 1d6 + bônus Força em aliado adjacente"
+  },
   "cat.texto.cura_acelerada_19941c": {
     "en": "Rapid Healing",
     "pt": "Cura Acelerada"
+  },
+  "cat.texto.cura_em_area_fea2be": {
+    "en": "Mass Heal",
+    "pt": "Cura em Área"
+  },
+  "cat.texto.cura_em_massa_ate_2d8_int_raio_4_6458d6": {
+    "en": "Mass Heal: up to 2d8 + INT, radius 4.",
+    "pt": "Cura em Massa: até 2d8 + INT, raio 4."
+  },
+  "cat.texto.cura_em_massa_ate_3d8_int_raio_6_916a95": {
+    "en": "Mass Heal: up to 3d8 + INT, radius 6.",
+    "pt": "Cura em Massa: até 3d8 + INT, raio 6."
+  },
+  "cat.texto.cura_em_massa_ii_7f8d47": {
+    "en": "Mass Heal II",
+    "pt": "Cura em Massa II"
+  },
+  "cat.texto.cura_em_massa_iii_725e7f": {
+    "en": "Mass Heal III",
+    "pt": "Cura em Massa III"
+  },
+  "cat.texto.cura_fde1a9": {
+    "en": "Heal",
+    "pt": "Cura"
+  },
+  "cat.texto.cura_ii_0d3bda": {
+    "en": "Heal II",
+    "pt": "Cura II"
+  },
+  "cat.texto.cura_iii_bd7bee": {
+    "en": "Heal III",
+    "pt": "Cura III"
+  },
+  "cat.texto.cura_pelas_maos_ii_960742": {
+    "en": "Lay on Hands II",
+    "pt": "Cura pelas Mãos II"
+  },
+  "cat.texto.cura_pelas_maos_iii_d97bcb": {
+    "en": "Lay on Hands III",
+    "pt": "Cura pelas Mãos III"
+  },
+  "cat.texto.cura_pode_usar_ate_2d8_int_54793a": {
+    "en": "Heal can use up to 2d8 + INT.",
+    "pt": "Cura pode usar até 2d8 + INT."
+  },
+  "cat.texto.cura_pode_usar_ate_3d8_int_3a2f92": {
+    "en": "Heal can use up to 3d8 + INT.",
+    "pt": "Cura pode usar até 3d8 + INT."
   },
   "cat.texto.cuspir_acido_5fb5c3": {
     "en": "Spit Acid",
@@ -794,6 +1358,22 @@ window.LANG_MONSTROS = {
     "en": "Double holy damage",
     "pt": "Dano sagrado dobrado"
   },
+  "cat.texto.defensor_ii_31e14c": {
+    "en": "Defender II",
+    "pt": "Defensor II"
+  },
+  "cat.texto.defensor_iii_c175b8": {
+    "en": "Defender III",
+    "pt": "Defensor III"
+  },
+  "cat.texto.defesa_impecavel_7e52b2": {
+    "en": "Impeccable Defense",
+    "pt": "Defesa Impecável"
+  },
+  "cat.texto.depois_de_errar_um_ataque_voce_p_1b3c8d": {
+    "en": "After missing an attack, you may spend this technique to reroll it against the same target. Independent of Cold Blood.",
+    "pt": "Depois de errar um ataque, você pode gastar esta técnica para rolá-lo novamente contra o mesmo alvo. Independente do Sangue Frio."
+  },
   "cat.texto.derrubar_12ec8b": {
     "en": "Knock Down",
     "pt": "Derrubar"
@@ -801,6 +1381,82 @@ window.LANG_MONSTROS = {
   "cat.texto.desaparecer_nas_sombras_d1bbd9": {
     "en": "Vanish into Shadows",
     "pt": "Desaparecer nas Sombras"
+  },
+  "cat.texto.desarmar_armadilha_d2e135": {
+    "en": "Disarm Trap",
+    "pt": "Desarmar Armadilha"
+  },
+  "cat.texto.desarme_ii_20d69d": {
+    "en": "Disarm II",
+    "pt": "Desarme II"
+  },
+  "cat.texto.desarme_iii_527287": {
+    "en": "Disarm III",
+    "pt": "Desarme III"
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_3e9c75": {
+    "en": "Permanently unlocks crafting the Incendiary Trap.",
+    "pt": "Desbloqueia permanentemente a fabricação de Armadilha Incendiária."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_56b57e": {
+    "en": "Permanently unlocks crafting of the Pit.",
+    "pt": "Desbloqueia permanentemente a fabricação de Fosso."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_5d3adc": {
+    "en": "Permanently unlocks crafting the Gas Cloud.",
+    "pt": "Desbloqueia permanentemente a fabricação de Nuvem de Gás."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_6342d5": {
+    "en": "Permanently unlocks crafting the Net.",
+    "pt": "Desbloqueia permanentemente a fabricação de Rede."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_66be36": {
+    "en": "Permanently unlocks crafting of the Devouring Chest.",
+    "pt": "Desbloqueia permanentemente a fabricação de Baú Engolidor."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_8458f2": {
+    "en": "Permanently unlocks crafting of the Gas Chamber.",
+    "pt": "Desbloqueia permanentemente a fabricação de Câmara de Gás."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_869234": {
+    "en": "Permanently unlocks crafting of the Crushing Ceiling.",
+    "pt": "Desbloqueia permanentemente a fabricação de Teto Esmagador."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_95bbd7": {
+    "en": "Permanently unlocks crafting the Pendulum Blade.",
+    "pt": "Desbloqueia permanentemente a fabricação de Lâmina Pêndulo."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_962649": {
+    "en": "Permanently unlocks crafting the Ray of Frost Trap.",
+    "pt": "Desbloqueia permanentemente a fabricação de Armadilha de Raio Congelante."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_a019ba": {
+    "en": "Permanently unlocks crafting the Bear Trap.",
+    "pt": "Desbloqueia permanentemente a fabricação de Armadilha de Urso."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_a9940d": {
+    "en": "Permanently unlocks crafting of the Guillotine.",
+    "pt": "Desbloqueia permanentemente a fabricação de Guilhotina."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_aca9ae": {
+    "en": "Permanently unlocks crafting the Poisoned Spike Pit.",
+    "pt": "Desbloqueia permanentemente a fabricação de Fosso com Estacas Envenenadas."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_b22ae9": {
+    "en": "Permanently unlocks crafting the Spike Pit.",
+    "pt": "Desbloqueia permanentemente a fabricação de Fosso com Estacas."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_b31c58": {
+    "en": "Permanently unlocks crafting the Land Mine.",
+    "pt": "Desbloqueia permanentemente a fabricação de Mina Terrestre."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_d7cf32": {
+    "en": "Permanently unlocks crafting the Hidden Blade.",
+    "pt": "Desbloqueia permanentemente a fabricação de Lâmina Escondida."
+  },
+  "cat.texto.desbloqueia_permanentemente_a_fa_df75de": {
+    "en": "Permanently unlocks crafting of the Acid Jet.",
+    "pt": "Desbloqueia permanentemente a fabricação de Jato de Ácido."
   },
   "cat.texto.desfere_um_ataque_adicional_54593f": {
     "en": "Makes an additional attack.",
@@ -818,6 +1474,10 @@ window.LANG_MONSTROS = {
     "en": "Detects invisible creatures and prevents hiding.",
     "pt": "Detecta invisíveis e impede ocultação."
   },
+  "cat.texto.detectar_armadilhas_e2096c": {
+    "en": "Detect Traps",
+    "pt": "Detectar Armadilhas"
+  },
   "cat.texto.devorar_metal_ac8db9": {
     "en": "Devour Metal",
     "pt": "Devorar Metal"
@@ -833,6 +1493,10 @@ window.LANG_MONSTROS = {
   "cat.texto.disparo_de_teia_1535be": {
     "en": "Web Shot",
     "pt": "Disparo de Teia"
+  },
+  "cat.texto.disparo_duplo_0ec56d": {
+    "en": "Double Shot",
+    "pt": "Disparo Duplo"
   },
   "cat.texto.dobra_cada_dado_de_dano_neste_tu_953ca7": {
     "en": "Doubles each damage die this turn",
@@ -886,6 +1550,10 @@ window.LANG_MONSTROS = {
     "en": "Swallow",
     "pt": "Engolir"
   },
+  "cat.texto.enquanto_equipada_revela_o_circu_601ef6": {
+    "en": "While equipped, reveals the vision range circle of every visible monster.",
+    "pt": "Enquanto equipada, revela o círculo de alcance da visão de cada monstro visível."
+  },
   "cat.texto.enquanto_preso_e_adjacente_1d6_d_803846": {
     "en": "While grabbed and adjacent: 1d6 automatic damage per turn",
     "pt": "Enquanto preso e adjacente: 1d6 dano automático por turno"
@@ -901,6 +1569,38 @@ window.LANG_MONSTROS = {
   "cat.texto.enxerga_perfeitamente_no_escuro_f1560a": {
     "en": "Sees perfectly in the dark — suffers no penalties in darkness",
     "pt": "Enxerga perfeitamente no escuro — não sofre penalidades nas trevas"
+  },
+  "cat.texto.escolha_1_2_ou_3_ataques_girator_b108a7": {
+    "en": "Choose 1, 2, or 3 Spinning Attacks. Costs 4/8/14 hunger and thirst and recharges in 6/8/10 rounds. The 3-attack option requires Berserker Fury III.",
+    "pt": "Escolha 1, 2 ou 3 Ataques Giratórios. Custa 4/8/14 de fome e sede e recarrega em 6/8/10 rodadas. A opção de 3 exige Fúria Berserker III."
+  },
+  "cat.texto.escolha_nivel_1_2_3_1d8_2d8_sagr_e3736c": {
+    "en": "+1d8 holy damage. Doubled against undead and demons",
+    "pt": "Escolha nível 1/2/3: +1d8/+2d8 sagrado; no nível 3, +1d8 de fogo, gelo, eletricidade ou sagrado. Ativação 🍖-3/4/5 💧-3/3/4; manutenção 🍖-1/2/2 💧-1/1/2."
+  },
+  "cat.texto.escolha_um_aliado_em_ate_4_casas_b91d8e": {
+    "en": "Choose an ally within 4 squares; for 1d4 rounds, half their damage is transferred to you.",
+    "pt": "Escolha um aliado em até 4 casas; por 1d4 rodadas, metade do dano dele é transferida a você."
+  },
+  "cat.texto.escolha_um_aliado_nao_pode_ser_v_d5bca0": {
+    "en": "Choose an ally (can't be yourself); on THEIR OWN turn, they gain an extra action — move more, attack again, use their class ability again, or cast another spell. Expires at the end of this round if unused.",
+    "pt": "Escolha um aliado (não pode ser você); no PRÓPRIO turno dele, ganha uma ação extra — mover mais, atacar de novo, usar a habilidade de classe de novo, ou lançar mais uma magia. Expira no fim desta rodada se não for usada."
+  },
+  "cat.texto.escolha_um_aliado_neste_turno_qu_1fa483": {
+    "en": "Choose an ally; this turn, when you attack an enemy, the ally also attacks it.",
+    "pt": "Escolha um aliado; neste turno, quando você atacar um inimigo, o aliado também o ataca."
+  },
+  "cat.texto.esconder_nas_sombras_84052e": {
+    "en": "Hide in Shadows",
+    "pt": "Esconder nas Sombras"
+  },
+  "cat.texto.esconder_nas_sombras_ii_48a41c": {
+    "en": "Hide in Shadows II",
+    "pt": "Esconder nas Sombras II"
+  },
+  "cat.texto.esconder_nas_sombras_iii_4ef683": {
+    "en": "Hide in Shadows III",
+    "pt": "Esconder nas Sombras III"
   },
   "cat.texto.esconder_se_1_24fca0": {
     "en": "Hide 1",
@@ -937,6 +1637,10 @@ window.LANG_MONSTROS = {
   "cat.texto.espada_longa_magica_9968c4": {
     "en": "Magic Longsword",
     "pt": "Espada Longa Mágica"
+  },
+  "cat.texto.espirito_indomavel_a92e18": {
+    "en": "Indomitable Spirit",
+    "pt": "Espírito Indomável"
   },
   "cat.texto.essencia_profana_1cdc67": {
     "en": "Profane Essence",
@@ -1010,6 +1714,90 @@ window.LANG_MONSTROS = {
     "en": "Monstrous Strength",
     "pt": "Força Descomunal"
   },
+  "cat.texto.formula_armadilha_de_raio_congel_f65f65": {
+    "en": "Formula: Ray of Frost Trap",
+    "pt": "Fórmula: Armadilha de Raio Congelante"
+  },
+  "cat.texto.formula_armadilha_de_urso_d3a03c": {
+    "en": "Formula: Bear Trap",
+    "pt": "Fórmula: Armadilha de Urso"
+  },
+  "cat.texto.formula_armadilha_incendiaria_268fac": {
+    "en": "Formula: Incendiary Trap",
+    "pt": "Fórmula: Armadilha Incendiária"
+  },
+  "cat.texto.formula_bau_engolidor_107538": {
+    "en": "Formula: Devouring Chest",
+    "pt": "Fórmula: Baú Engolidor"
+  },
+  "cat.texto.formula_camara_de_gas_8414b5": {
+    "en": "Formula: Gas Chamber",
+    "pt": "Fórmula: Câmara de Gás"
+  },
+  "cat.texto.formula_fosso_6c8d99": {
+    "en": "Formula: Pit",
+    "pt": "Fórmula: Fosso"
+  },
+  "cat.texto.formula_fosso_com_estacas_171aec": {
+    "en": "Formula: Spike Pit",
+    "pt": "Fórmula: Fosso com Estacas"
+  },
+  "cat.texto.formula_fosso_com_estacas_envene_97a9ca": {
+    "en": "Formula: Poisoned Spike Pit",
+    "pt": "Fórmula: Fosso com Estacas Envenenadas"
+  },
+  "cat.texto.formula_guilhotina_8b47f0": {
+    "en": "Formula: Guillotine",
+    "pt": "Fórmula: Guilhotina"
+  },
+  "cat.texto.formula_jato_de_acido_4057c4": {
+    "en": "Formula: Acid Jet",
+    "pt": "Fórmula: Jato de Ácido"
+  },
+  "cat.texto.formula_lamina_escondida_092395": {
+    "en": "Formula: Hidden Blade",
+    "pt": "Fórmula: Lâmina Escondida"
+  },
+  "cat.texto.formula_lamina_pendulo_0581d2": {
+    "en": "Formula: Pendulum Blade",
+    "pt": "Fórmula: Lâmina Pêndulo"
+  },
+  "cat.texto.formula_mina_terrestre_d17da6": {
+    "en": "Formula: Land Mine",
+    "pt": "Fórmula: Mina Terrestre"
+  },
+  "cat.texto.formula_nuvem_de_gas_f88ab4": {
+    "en": "Formula: Gas Cloud",
+    "pt": "Fórmula: Nuvem de Gás"
+  },
+  "cat.texto.formula_rede_1745f8": {
+    "en": "Formula: Net",
+    "pt": "Fórmula: Rede"
+  },
+  "cat.texto.formula_teto_esmagador_cbb4ca": {
+    "en": "Formula: Crushing Ceiling",
+    "pt": "Fórmula: Teto Esmagador"
+  },
+  "cat.texto.fortalecer_ii_bc270d": {
+    "en": "Amplify II",
+    "pt": "Fortalecer II"
+  },
+  "cat.texto.fortalecer_iii_29e85f": {
+    "en": "Amplify III",
+    "pt": "Fortalecer III"
+  },
+  "cat.texto.fortalecer_magia_1ca215": {
+    "en": "Empower Spell",
+    "pt": "Fortalecer Magia"
+  },
+  "cat.texto.fortalecer_magia_multiplica_o_da_35b750": {
+    "en": "Amplify Spell multiplies damage by ×2.",
+    "pt": "Fortalecer Magia multiplica o dano por 2."
+  },
+  "cat.texto.fortalecer_magia_multiplica_o_da_fb06b1": {
+    "en": "Amplify Spell now multiplies damage by ×1.5 (was ×1.25).",
+    "pt": "Fortalecer Magia multiplica o dano por 1,5 (era ×1,25)."
+  },
   "cat.texto.fortitude_cd_15_falha_2d4_de_ven_ce12f1": {
     "en": "Fortitude DC 15; failure: +2d4 poison and -2 STR/-2 CON for 1d6 rounds; success: +2 poison.",
     "pt": "Fortitude CD 15; falha: +2d4 de veneno e -2 FOR/-2 CON por 1d6 rodadas; sucesso: +2 de veneno."
@@ -1053,6 +1841,14 @@ window.LANG_MONSTROS = {
   "cat.texto.furia_berserker_cc291c": {
     "en": "Berserker Fury",
     "pt": "Fúria Berserker"
+  },
+  "cat.texto.furia_berserker_concede_2_ataque_f2b71f": {
+    "en": "Berserker Rage grants 2 extra attacks (3 attacks total).",
+    "pt": "Fúria Berserker concede 2 ataques extras (3 ataques no total)."
+  },
+  "cat.texto.furia_berserker_iii_3aba2c": {
+    "en": "Berserker Rage III",
+    "pt": "Fúria Berserker III"
   },
   "cat.texto.furia_bestial_4ff42c": {
     "en": "Bestial Fury",
@@ -1114,6 +1910,10 @@ window.LANG_MONSTROS = {
     "en": "Wind Strike",
     "pt": "Golpe de Vento"
   },
+  "cat.texto.golpe_decisivo_6663dd": {
+    "en": "Decisive Strike",
+    "pt": "Golpe Decisivo"
+  },
   "cat.texto.golpe_devastador_5be548": {
     "en": "Devastating Blow",
     "pt": "Golpe Devastador"
@@ -1138,9 +1938,37 @@ window.LANG_MONSTROS = {
     "en": "Crushing Blow",
     "pt": "Golpe Esmagador"
   },
+  "cat.texto.golpe_sagrado_0e5b4e": {
+    "en": "Holy Strike",
+    "pt": "Golpe Sagrado"
+  },
+  "cat.texto.golpe_sagrado_causa_2d8_de_dano_03db13": {
+    "en": "Holy Strike deals +2d8 holy damage per attack.",
+    "pt": "Golpe Sagrado causa +2d8 de dano sagrado por ataque."
+  },
+  "cat.texto.golpe_sagrado_causa_2d8_sagrado_736280": {
+    "en": "Holy Strike deals +2d8 holy and +1d8 fire, ice, lightning or holy chosen per attack.",
+    "pt": "Golpe Sagrado causa +2d8 sagrado e +1d8 de fogo, gelo, eletricidade ou sagrado escolhido por ataque."
+  },
   "cat.texto.grito_de_guerra_40b174": {
     "en": "War Cry",
     "pt": "Grito de Guerra"
+  },
+  "cat.texto.guarda_maxima_a2f6c4": {
+    "en": "Maximum Guard",
+    "pt": "Guarda Máxima"
+  },
+  "cat.texto.guerreiro_da_luz_108197": {
+    "en": "Warrior of Light",
+    "pt": "Guerreiro da Luz"
+  },
+  "cat.texto.guerreiro_da_luz_ii_b2d74f": {
+    "en": "Warrior of Light II",
+    "pt": "Guerreiro da Luz II"
+  },
+  "cat.texto.guerreiro_da_luz_iii_64dfce": {
+    "en": "Warrior of Light III",
+    "pt": "Guerreiro da Luz III"
   },
   "cat.texto.habilidade_do_instrumento_0d58c7": {
     "en": "Instrument Ability",
@@ -1177,6 +2005,18 @@ window.LANG_MONSTROS = {
   "cat.texto.impacto_devastador_89381d": {
     "en": "Devastating Impact",
     "pt": "Impacto Devastador"
+  },
+  "cat.texto.impoe_desvantagem_ao_inimigo_e_o_ece311": {
+    "en": "Imposes disadvantage on the enemy and forces it to attack Henrique for 3 turns",
+    "pt": "Impõe desvantagem ao inimigo e o força a atacar Henrique por 3 turnos"
+  },
+  "cat.texto.imposicao_das_maos_4de67d": {
+    "en": "Lay on Hands",
+    "pt": "Imposição das Mãos"
+  },
+  "cat.texto.imposicao_das_maos_cura_2d6_for_8bcb31": {
+    "en": "Lay on Hands heals 2d6 + STR.",
+    "pt": "Imposição das Mãos cura 2d6 + FOR."
   },
   "cat.texto.inabalavel_fd844c": {
     "en": "Unshakable",
@@ -1226,6 +2066,322 @@ window.LANG_MONSTROS = {
     "en": "Great Spear",
     "pt": "Lança Grande"
   },
+  "cat.texto.lenda_aranha_sombria_36b698": {
+    "en": "Lore: Shadow Spider",
+    "pt": "Lenda: Aranha Sombria"
+  },
+  "cat.texto.lenda_assassino_goblin_e17396": {
+    "en": "Lore: Goblin Assassin",
+    "pt": "Lenda: Assassino Goblin"
+  },
+  "cat.texto.lenda_bandido_e03c3f": {
+    "en": "Legend: Bandit",
+    "pt": "Lenda: Bandido"
+  },
+  "cat.texto.lenda_bardo_da_caravana_ec1546": {
+    "en": "Legend: Caravan Bard",
+    "pt": "Lenda: Bardo da Caravana"
+  },
+  "cat.texto.lenda_bardo_f9858d": {
+    "en": "Legend: Bard",
+    "pt": "Lenda: Bardo"
+  },
+  "cat.texto.lenda_bugbear_bicho_papao_das_so_3e7d3d": {
+    "en": "Lore: Bugbear — Shadow Boogeyman",
+    "pt": "Lenda: Bugbear — Bicho-Papão das Sombras"
+  },
+  "cat.texto.lenda_capanga_8540be": {
+    "en": "Legend: Thug",
+    "pt": "Lenda: Capanga"
+  },
+  "cat.texto.lenda_cavalo_de_sela_5bf2a3": {
+    "en": "Lore: Saddle Horse",
+    "pt": "Lenda: Cavalo de Sela"
+  },
+  "cat.texto.lenda_ciclope_4ba422": {
+    "en": "Lore: Cyclops",
+    "pt": "Lenda: Ciclope"
+  },
+  "cat.texto.lenda_cobra_constritora_70f7a4": {
+    "en": "Lore: Constrictor Snake",
+    "pt": "Lenda: Cobra Constritora"
+  },
+  "cat.texto.lenda_cobra_venenosa_e0e8d7": {
+    "en": "Lore: Venomous Snake",
+    "pt": "Lenda: Cobra Venenosa"
+  },
+  "cat.texto.lenda_crocodilo_jovem_214810": {
+    "en": "Lore: Young Crocodile",
+    "pt": "Lenda: Crocodilo Jovem"
+  },
+  "cat.texto.lenda_devorador_de_metal_d7028f": {
+    "en": "Lore: Metal Devourer",
+    "pt": "Lenda: Devorador de Metal"
+  },
+  "cat.texto.lenda_devorador_organico_bfdba3": {
+    "en": "Lore: Organic Devourer",
+    "pt": "Lenda: Devorador Orgânico"
+  },
+  "cat.texto.lenda_dragao_anciao_97080a": {
+    "en": "Lore: Ancient Dragon",
+    "pt": "Lenda: Dragão Ancião"
+  },
+  "cat.texto.lenda_elemental_de_agua_86c25c": {
+    "en": "Lore: Water Elemental",
+    "pt": "Lenda: Elemental de Água"
+  },
+  "cat.texto.lenda_elemental_de_ar_63abe6": {
+    "en": "Lore: Air Elemental",
+    "pt": "Lenda: Elemental de Ar"
+  },
+  "cat.texto.lenda_elemental_de_fogo_f0656c": {
+    "en": "Lore: Fire Elemental",
+    "pt": "Lenda: Elemental de Fogo"
+  },
+  "cat.texto.lenda_elemental_de_gelo_594018": {
+    "en": "Lore: Ice Elemental",
+    "pt": "Lenda: Elemental de Gelo"
+  },
+  "cat.texto.lenda_elemental_de_pedra_c444ff": {
+    "en": "Lore: Stone Elemental",
+    "pt": "Lenda: Elemental de Pedra"
+  },
+  "cat.texto.lenda_elemental_eletrico_097c1b": {
+    "en": "Lore: Electric Elemental",
+    "pt": "Lenda: Elemental Elétrico"
+  },
+  "cat.texto.lenda_escorpiao_de_pedra_7ebb12": {
+    "en": "Lore: Stone Scorpion",
+    "pt": "Lenda: Escorpião de Pedra"
+  },
+  "cat.texto.lenda_escravo_vampirico_862b52": {
+    "en": "Lore: Vampiric Thrall",
+    "pt": "Lenda: Escravo Vampírico"
+  },
+  "cat.texto.lenda_esqueleto_animal_665cf1": {
+    "en": "Lore: Animal Skeleton",
+    "pt": "Lenda: Esqueleto Animal"
+  },
+  "cat.texto.lenda_esqueleto_armadurado_b14409": {
+    "en": "Lore: Skeleton",
+    "pt": "Lenda: Esqueleto Armadurado"
+  },
+  "cat.texto.lenda_esqueleto_humano_45e82f": {
+    "en": "Lore: Human Skeleton",
+    "pt": "Lenda: Esqueleto Humano"
+  },
+  "cat.texto.lenda_ferrao_dos_charcos_adulto_e45d5e": {
+    "en": "Lore: Adult Marsh Stinger",
+    "pt": "Lenda: Ferrão dos Charcos Adulto"
+  },
+  "cat.texto.lenda_ferrao_dos_charcos_anciao_20fc04": {
+    "en": "Lore: Elder Marsh Stinger",
+    "pt": "Lenda: Ferrão dos Charcos Ancião"
+  },
+  "cat.texto.lenda_ferrao_dos_charcos_jovem_7d84b2": {
+    "en": "Lore: Young Marsh Stinger",
+    "pt": "Lenda: Ferrão dos Charcos Jovem"
+  },
+  "cat.texto.lenda_garaloux_adulto_91c735": {
+    "en": "Lore: Adult Garaloux",
+    "pt": "Lenda: Garaloux Adulto"
+  },
+  "cat.texto.lenda_garaloux_alfa_9b0530": {
+    "en": "Lore: Alpha Garaloux",
+    "pt": "Lenda: Garaloux Alfa"
+  },
+  "cat.texto.lenda_garaloux_jovem_b93a12": {
+    "en": "Lore: Young Garaloux",
+    "pt": "Lenda: Garaloux Jovem"
+  },
+  "cat.texto.lenda_gato_30280f": {
+    "en": "Lore: Cat",
+    "pt": "Lenda: Gato"
+  },
+  "cat.texto.lenda_gigante_da_guerra_506e72": {
+    "en": "Lore: War Giant",
+    "pt": "Lenda: Gigante da Guerra"
+  },
+  "cat.texto.lenda_gigante_runico_659678": {
+    "en": "Lore: Runic Giant",
+    "pt": "Lenda: Gigante Rúnico"
+  },
+  "cat.texto.lenda_goblin_1ac743": {
+    "en": "Lore: Goblin",
+    "pt": "Lenda: Goblin"
+  },
+  "cat.texto.lenda_goblin_arqueiro_6593d9": {
+    "en": "Lore: Goblin Archer",
+    "pt": "Lenda: Goblin Arqueiro"
+  },
+  "cat.texto.lenda_goblin_combatente_202f53": {
+    "en": "Lore: Goblin Fighter",
+    "pt": "Lenda: Goblin Combatente"
+  },
+  "cat.texto.lenda_goblin_dual_21a0a5": {
+    "en": "Lore: Goblin Dual-Wielder",
+    "pt": "Lenda: Goblin Dual"
+  },
+  "cat.texto.lenda_grande_gorgona_58d5e7": {
+    "en": "Lore: Greater Gorgon",
+    "pt": "Lenda: Grande Gorgona"
+  },
+  "cat.texto.lenda_grande_medusa_2e6eb8": {
+    "en": "Lore: Greater Medusa",
+    "pt": "Lenda: Grande Medusa"
+  },
+  "cat.texto.lenda_grotao_c9a7e4": {
+    "en": "Lore: Grotão",
+    "pt": "Lenda: Grotão"
+  },
+  "cat.texto.lenda_jacare_d3b9f6": {
+    "en": "Lore: Alligator",
+    "pt": "Lenda: Jacaré"
+  },
+  "cat.texto.lenda_kobold_besteiro_510e26": {
+    "en": "Lore: Kobold Crossbowman",
+    "pt": "Lenda: Kobold Besteiro"
+  },
+  "cat.texto.lenda_kobold_lanceiro_e6f859": {
+    "en": "Lore: Kobold Spearman",
+    "pt": "Lenda: Kobold Lanceiro"
+  },
+  "cat.texto.lenda_kobold_mago_f060cd": {
+    "en": "Legend: Kobold Mage",
+    "pt": "Lenda: Kobold Mago"
+  },
+  "cat.texto.lenda_lacralion_adulto_04c334": {
+    "en": "Lore: Adult Lacralion",
+    "pt": "Lenda: Lacralion Adulto"
+  },
+  "cat.texto.lenda_lacralion_anciao_f11abb": {
+    "en": "Lore: Elder Lacralion",
+    "pt": "Lenda: Lacralion Ancião"
+  },
+  "cat.texto.lenda_lacralion_filhote_ebbcfd": {
+    "en": "Lore: Lacralion Hatchling",
+    "pt": "Lenda: Lacralion Filhote"
+  },
+  "cat.texto.lenda_lagarto_carniceiro_d24d98": {
+    "en": "Lore: Carrion Lizard",
+    "pt": "Lenda: Lagarto Carniceiro"
+  },
+  "cat.texto.lenda_lobisomem_alfa_0f98e0": {
+    "en": "Lore: Alpha Werewolf",
+    "pt": "Lenda: Lobisomem Alfa"
+  },
+  "cat.texto.lenda_lobisomem_cdc6bf": {
+    "en": "Lore: Werewolf",
+    "pt": "Lenda: Lobisomem"
+  },
+  "cat.texto.lenda_lobo_cinzento_0e65f9": {
+    "en": "Lore: Grey Wolf",
+    "pt": "Lenda: Lobo Cinzento"
+  },
+  "cat.texto.lenda_lorde_vampiro_50e5d5": {
+    "en": "Lore: Vampire Lord",
+    "pt": "Lenda: Lorde Vampiro"
+  },
+  "cat.texto.lenda_mago_das_trevas_0cb4a7": {
+    "en": "Lore: Dark Mage",
+    "pt": "Lenda: Mago das Trevas"
+  },
+  "cat.texto.lenda_medusa_270eff": {
+    "en": "Lore: Medusa",
+    "pt": "Lenda: Medusa"
+  },
+  "cat.texto.lenda_molochus_adulto_84fae3": {
+    "en": "Lore: Adult Molochus",
+    "pt": "Lenda: Molochus Adulto"
+  },
+  "cat.texto.lenda_molochus_anciao_1f0e66": {
+    "en": "Lore: Elder Molochus",
+    "pt": "Lenda: Molochus Ancião"
+  },
+  "cat.texto.lenda_molochus_jovem_b3d114": {
+    "en": "Lore: Young Molochus",
+    "pt": "Lenda: Molochus Jovem"
+  },
+  "cat.texto.lenda_necromante_202e74": {
+    "en": "Lore: Necromancer",
+    "pt": "Lenda: Necromante"
+  },
+  "cat.texto.lenda_ogro_de_clava_2f12d3": {
+    "en": "Lore: Club Ogre",
+    "pt": "Lenda: Ogro de Clava"
+  },
+  "cat.texto.lenda_ogro_de_lanca_5dfa35": {
+    "en": "Lore: Spear Ogre",
+    "pt": "Lenda: Ogro de Lança"
+  },
+  "cat.texto.lenda_orc_a2fe2e": {
+    "en": "Lore: Orc",
+    "pt": "Lenda: Orc"
+  },
+  "cat.texto.lenda_orc_guerreiro_8d1701": {
+    "en": "Lore: Orc Warrior",
+    "pt": "Lenda: Orc Guerreiro"
+  },
+  "cat.texto.lenda_ovelha_cf4bff": {
+    "en": "Lore: Sheep",
+    "pt": "Lenda: Ovelha"
+  },
+  "cat.texto.lenda_pombo_ca98db": {
+    "en": "Lore: Pigeon",
+    "pt": "Lenda: Pombo"
+  },
+  "cat.texto.lenda_rato_ab2195": {
+    "en": "Lore: Rat",
+    "pt": "Lenda: Rato"
+  },
+  "cat.texto.lenda_tirano_ancestral_03b37c": {
+    "en": "Lore: Ancestral Tyrant",
+    "pt": "Lenda: Tirano Ancestral"
+  },
+  "cat.texto.lenda_tirano_da_mata_7fd979": {
+    "en": "Lore: Forest Tyrant",
+    "pt": "Lenda: Tirano da Mata"
+  },
+  "cat.texto.lenda_tiranossauro_rex_364f56": {
+    "en": "Lore: Tyrannosaurus Rex",
+    "pt": "Lenda: Tiranossauro Rex"
+  },
+  "cat.texto.lenda_troll_a68ef8": {
+    "en": "Lore: Troll",
+    "pt": "Lenda: Troll"
+  },
+  "cat.texto.lenda_urso_negro_fcc430": {
+    "en": "Lore: Black Bear",
+    "pt": "Lenda: Urso Negro"
+  },
+  "cat.texto.lenda_urso_pardo_ba1534": {
+    "en": "Legend: Brown Bear",
+    "pt": "Lenda: Urso Pardo"
+  },
+  "cat.texto.lenda_vaca_arisca_a005fb": {
+    "en": "Lore: Skittish Cow",
+    "pt": "Lenda: Vaca Arisca"
+  },
+  "cat.texto.lenda_vampiro_anciao_24f8d2": {
+    "en": "Lore: Ancient Vampire",
+    "pt": "Lenda: Vampiro Ancião"
+  },
+  "cat.texto.lenda_vampiro_jovem_3d967a": {
+    "en": "Lore: Young Vampire",
+    "pt": "Lenda: Vampiro Jovem"
+  },
+  "cat.texto.lenda_xama_goblin_2b525d": {
+    "en": "Lore: Goblin Shaman",
+    "pt": "Lenda: Xamã Goblin"
+  },
+  "cat.texto.lenda_zumbi_infectado_ff05bf": {
+    "en": "Lore: Infected Zombie",
+    "pt": "Lenda: Zumbi Infectado"
+  },
+  "cat.texto.lendas_supremas_ddd0f5": {
+    "en": "Supreme Lore",
+    "pt": "Lendas Supremas"
+  },
   "cat.texto.lento_e_incansavel_d7fb93": {
     "en": "Slow and Tireless",
     "pt": "Lento e Incansável"
@@ -1258,6 +2414,14 @@ window.LANG_MONSTROS = {
     "en": "Colossal Jaws",
     "pt": "Mandíbulas Colossais"
   },
+  "cat.texto.mantem_3_atributos_ativos_com_vi_e6f4e9": {
+    "en": "Keeps 3 attributes active; with Vision, detects traps within radius 2.",
+    "pt": "Mantém 3 atributos ativos; com Visão, detecta armadilhas em raio 2."
+  },
+  "cat.texto.mantem_4_atributos_ativos_com_vi_cc3e63": {
+    "en": "Keeps 4 attributes active; with Vision, detects traps within radius 3.",
+    "pt": "Mantém 4 atributos ativos; com Visão, detecta armadilhas em raio 3."
+  },
   "cat.texto.manto_de_escuridao_b585f2": {
     "en": "Cloak of Darkness",
     "pt": "Manto de Escuridão"
@@ -1277,6 +2441,10 @@ window.LANG_MONSTROS = {
   "cat.texto.medo_98cf0b": {
     "en": "Fear",
     "pt": "Medo"
+  },
+  "cat.texto.mestre_de_combate_f22b12": {
+    "en": "Combat Master",
+    "pt": "Mestre de Combate"
   },
   "cat.texto.mestre_dos_mortos_1be934": {
     "en": "Master of the Dead",
@@ -1309,6 +2477,14 @@ window.LANG_MONSTROS = {
   "cat.texto.mira_certeira_tambem_concede_2_d_8eac5a": {
     "en": "Sure Aim also grants +2 damage (in addition to the +2 to hit).",
     "pt": "Mira Certeira também concede +2 de dano (além do +2 de acerto)."
+  },
+  "cat.texto.mira_perfeita_07872a": {
+    "en": "Perfect Aim",
+    "pt": "Mira Perfeita"
+  },
+  "cat.texto.moedas_de_ouro_8d341e": {
+    "en": "Gold Coins",
+    "pt": "Moedas de Ouro"
   },
   "cat.texto.mordida_02ad04": {
     "en": "Bite",
@@ -1422,6 +2598,26 @@ window.LANG_MONSTROS = {
     "en": "Acid Cloud",
     "pt": "Nuvem Ácida"
   },
+  "cat.texto.nuvem_de_gas_f0d0a9": {
+    "en": "Gas Cloud",
+    "pt": "Nuvem de Gás"
+  },
+  "cat.texto.o_alcance_aumenta_para_5_dano_na_85151d": {
+    "en": "The protection range increases to 5 squares.",
+    "pt": "O alcance aumenta para 5; dano não proveniente de ataque fica 65% no alvo e 35% em Richard."
+  },
+  "cat.texto.o_arremesso_desta_arma_usa_o_mod_f8498e": {
+    "en": "Throwing this weapon uses the Strength modifier for attack and damage.",
+    "pt": "O arremesso desta arma usa o modificador de Força no acerto e no dano."
+  },
+  "cat.texto.o_ataque_selecionado_aplica_hemo_e2fd32": {
+    "en": "The selected attack inflicts Hemorrhage on a hit and goes on cooldown.",
+    "pt": "O ataque selecionado aplica Hemorragia ao acertar e entra em recarga."
+  },
+  "cat.texto.o_bonus_de_acerto_da_cancao_hero_8ffe47": {
+    "en": "The Heroic Song's Accuracy bonus rises from +1 to +2.",
+    "pt": "O bônus de Acerto da Canção Heroica sobe de +1 para +2."
+  },
   "cat.texto.o_bonus_de_armadura_da_cancao_he_c424f3": {
     "en": "The Heroic Song's Armor bonus rises from +1 to +2.",
     "pt": "O bônus de Armadura da Canção Heroica sobe de +1 para +2."
@@ -1446,6 +2642,10 @@ window.LANG_MONSTROS = {
     "en": "The next hit deals 1.25× the raw damage. Cooldown: 4 rounds.",
     "pt": "O próximo acerto causa 1,25× o dano bruto. Recarga: 4 rodadas."
   },
+  "cat.texto.o_seu_movimento_e_dobrado_nesta_04f384": {
+    "en": "Your movement is doubled this round.",
+    "pt": "O seu movimento é dobrado nesta rodada."
+  },
   "cat.texto.olfato_agucado_a0f776": {
     "en": "Keen Smell",
     "pt": "Olfato Aguçado"
@@ -1461,6 +2661,26 @@ window.LANG_MONSTROS = {
   "cat.texto.onda_envolvente_afogar_b669c1": {
     "en": "Engulfing Wave / Drown",
     "pt": "Onda Envolvente / Afogar"
+  },
+  "cat.texto.oportunidade_7c24e4": {
+    "en": "Opportunity",
+    "pt": "Oportunidade"
+  },
+  "cat.texto.passiva_2d4_dano_extra_quando_ha_369d3e": {
+    "en": "Passive. +2d4 extra damage when an ally is adjacent to the target (or while invisible). +1d4 per level band.",
+    "pt": "Passiva. +2d4 dano extra quando há aliado adjacente ao alvo (ou se estiver invisível). +1d4 por faixa de nível."
+  },
+  "cat.texto.passiva_enquanto_equipada_dobra_4b093e": {
+    "en": "Passive. While equipped, doubles the armor bonus and damage reduction of all shields.",
+    "pt": "Passiva. Enquanto equipada, dobra o bônus de armadura e a redução de dano de todos os escudos."
+  },
+  "cat.texto.passivo_com_uma_besta_de_mao_em_c8b366": {
+    "en": "Passive. With a Hand Crossbow in each hand, when you attack an enemy you also fire the off-hand crossbow at the same target as a bonus action. The target must still be alive, in range and visible; each shot consumes 1 bolt, even on a miss. Once per turn.",
+    "pt": "Passivo. Com uma Besta de Mão em cada mão, ao atacar um inimigo dispara também a besta secundária contra o mesmo alvo como ação bônus. O alvo precisa continuar vivo, ao alcance e visível; cada disparo consome 1 virote, mesmo se errar. Uma vez por turno."
+  },
+  "cat.texto.passivo_uma_vez_por_turno_depois_f18b55": {
+    "en": "Passive. Once per turn, after throwing a throwable consumable with your main action, you can throw a second one with your bonus action. Each flask keeps its normal range and resolution and can target a different creature or location; each use consumes the item.",
+    "pt": "Passivo. Uma vez por turno, depois de arremessar um consumível arremessável com a ação principal, você pode arremessar um segundo com a ação bônus. Cada frasco mantém seu alcance e resolução normal e pode mirar um alvo ou local diferente; cada uso consome o item."
   },
   "cat.texto.passo_devastador_ed07e2": {
     "en": "Devastating Step",
@@ -1482,6 +2702,22 @@ window.LANG_MONSTROS = {
     "en": "Piercing",
     "pt": "Perfurante"
   },
+  "cat.texto.permite_armar_as_tres_habilidade_a597ce": {
+    "en": "Lets you arm all THREE abilities in the same turn.",
+    "pt": "Permite armar as TRÊS habilidades no mesmo turno."
+  },
+  "cat.texto.permite_armar_duas_habilidades_n_0e0231": {
+    "en": "Lets you arm TWO abilities in the same turn.",
+    "pt": "Permite armar DUAS habilidades no mesmo turno."
+  },
+  "cat.texto.permite_empilhar_2_metamagias_no_bf7b67": {
+    "en": "Lets you stack 2 metamagics on the same cast.",
+    "pt": "Permite empilhar 2 metamagias no mesmo lançamento."
+  },
+  "cat.texto.permite_empilhar_as_3_metamagias_a3792e": {
+    "en": "Lets you stack all 3 metamagics on the same cast.",
+    "pt": "Permite empilhar as 3 metamagias no mesmo lançamento."
+  },
   "cat.texto.personagens_usando_esconder_se_r_aea91e": {
     "en": "Characters using Hide get +2 on the check against the Cyclops.",
     "pt": "Personagens usando Esconder-se recebem +2 no teste contra o Ciclope."
@@ -1502,6 +2738,14 @@ window.LANG_MONSTROS = {
     "en": "Can pass through an occupied square, deals 1d4 lightning to the occupant and ends on a free square.",
     "pt": "Pode atravessar um quadrado ocupado, causa 1d4 de eletricidade ao ocupante e termina em uma casa livre."
   },
+  "cat.texto.pode_combinar_2_venenos_diferent_d3f2ce": {
+    "en": "Can apply 2 different poisons to the same ammunition and keep 2 different poisons queued on a melee weapon.",
+    "pt": "Pode combinar 2 venenos diferentes na mesma munição e mantê-los em sequência na arma corpo a corpo."
+  },
+  "cat.texto.pode_gastar_2_2_por_1d6_de_cura_18bd1a": {
+    "en": "Can spend +2🍖/+2💧 for +1d6 healing (up to 3×).",
+    "pt": "Pode gastar +2🍖/+2💧 por +1d6 de cura (até 3×)."
+  },
   "cat.texto.pode_manter_dois_inimigos_imobil_09ae50": {
     "en": "Can keep two enemies Immobilized at the same time.",
     "pt": "Pode manter dois inimigos Imobilizados ao mesmo tempo."
@@ -1517,6 +2761,10 @@ window.LANG_MONSTROS = {
   "cat.texto.ponto_vulneravel_lateral_apenas_bef93a": {
     "en": "Side Weak Spot: only one adjacent character can exploit it per round; that character can make multiple attacks. Ignores natural armor and damage reduction.",
     "pt": "Ponto Vulnerável lateral: apenas um personagem adjacente pode explorá-lo por rodada; esse personagem pode realizar múltiplos ataques. Ignora a armadura natural e reduções de dano."
+  },
+  "cat.texto.por_1d4_rodadas_2_de_movimento_e_d4f39c": {
+    "en": "For 1d4 rounds: +2 movement and you pass through squares occupied by objects (not walls or creatures).",
+    "pt": "Por 1d4 rodadas: +2 de movimento e você atravessa casas ocupadas por objetos (não paredes nem criaturas)."
   },
   "cat.texto.prata_causa_dano_dobrado_e_bloqu_8a1e4f": {
     "en": "Silver deals double damage and blocks regeneration.",
@@ -1546,6 +2794,10 @@ window.LANG_MONSTROS = {
     "en": "Terrifying Presence",
     "pt": "Presença Aterradora"
   },
+  "cat.texto.pressa_4cfd3e": {
+    "en": "Fleet Foot",
+    "pt": "Pressa"
+  },
   "cat.texto.pressao_constante_c407c5": {
     "en": "Constant Pressure",
     "pt": "Pressão Constante"
@@ -1554,9 +2806,45 @@ window.LANG_MONSTROS = {
     "en": "Always targets the lowest-HP enemy first",
     "pt": "Prioriza sempre o alvo com menor HP"
   },
+  "cat.texto.protetor_4647e9": {
+    "en": "Protector",
+    "pt": "Protetor"
+  },
   "cat.texto.provocacao_76709d": {
     "en": "Taunt",
     "pt": "Provocação"
+  },
+  "cat.texto.provocacao_ii_4950d3": {
+    "en": "Taunt II",
+    "pt": "Provocação II"
+  },
+  "cat.texto.provocacao_iii_bee51b": {
+    "en": "Taunt III",
+    "pt": "Provocação III"
+  },
+  "cat.texto.proximo_ataque_a_distancia_receb_aed6b3": {
+    "en": "Your next ranged attack gains advantage; if it hits, +2 damage.",
+    "pt": "Próximo ataque à distância recebe vantagem; se acertar, +2 de dano."
+  },
+  "cat.texto.purificacao_397ff0": {
+    "en": "Cleanse",
+    "pt": "Purificação"
+  },
+  "cat.texto.purificacao_ii_89692f": {
+    "en": "Purification II",
+    "pt": "Purificação II"
+  },
+  "cat.texto.purificacao_iii_81465b": {
+    "en": "Purification III",
+    "pt": "Purificação III"
+  },
+  "cat.texto.purificacao_tambem_remove_doenca_f8e975": {
+    "en": "Purification also removes diseases.",
+    "pt": "Purificação também remove doenças."
+  },
+  "cat.texto.purificacao_tambem_remove_maldic_8e86ea": {
+    "en": "Purification also removes curses and petrification.",
+    "pt": "Purificação também remove maldições e petrificação."
   },
   "cat.texto.quando_a_pinca_acerta_o_alvo_fic_27ea35": {
     "en": "When the Pincer hits, the target is Immobilized. Escape: Fortitude DC 16.",
@@ -1678,6 +2966,14 @@ window.LANG_MONSTROS = {
     "en": "Fixed 6-round cooldown. Radius-2 circle around the Molochus; Reflex DC 18 halves 8d6 fire.",
     "pt": "Recarga fixa de 6 rodadas. Círculo de raio 2 ao redor do Molochus; Reflexos CD 18 reduz 8d6 de fogo à metade."
   },
+  "cat.texto.recebe_2_em_todos_os_testes_de_r_ca6f0d": {
+    "en": "Gain +2 to all saving throws for 2 rounds.",
+    "pt": "Recebe +2 em todos os testes de resistência por 2 rodadas."
+  },
+  "cat.texto.recupera_1_hp_por_turno_ate_hp_m_45c3bc": {
+    "en": "Recovers 1 HP per turn up to max HP",
+    "pt": "Recupera 1 HP por turno até HP máximo"
+  },
   "cat.texto.recupera_2_hp_no_inicio_do_turno_085bd6": {
     "en": "Recovers 2 HP at the start of its turn, except after magic or silver damage.",
     "pt": "Recupera 2 HP no início do turno, exceto após dano mágico ou de prata."
@@ -1693,6 +2989,10 @@ window.LANG_MONSTROS = {
   "cat.texto.recupera_5_pv_por_turno_e_pode_v_e0f491": {
     "en": "Recovers 5 HP per turn and can come back with 1 HP when it falls, except for a final death by silver or fire.",
     "pt": "Recupera 5 PV por turno e pode voltar com 1 PV ao cair, salvo morte definitiva por prata ou fogo."
+  },
+  "cat.texto.redemoinho_da_morte_de6e3b": {
+    "en": "Death Whirlwind",
+    "pt": "Redemoinho da Morte"
   },
   "cat.texto.reducao_de_dano_5_34115c": {
     "en": "Damage Reduction 5",
@@ -1718,6 +3018,22 @@ window.LANG_MONSTROS = {
     "en": "Alpha Regeneration",
     "pt": "Regeneração Alfa"
   },
+  "cat.texto.regeneracao_divina_a3f15a": {
+    "en": "Divine Regeneration",
+    "pt": "Regeneração Divina"
+  },
+  "cat.texto.regeneracao_divina_tambem_cura_1_c4675a": {
+    "en": "Divine Regeneration also heals adjacent allies for +1 HP.",
+    "pt": "Regeneração Divina também cura +1 HP dos aliados adjacentes."
+  },
+  "cat.texto.regeneracao_ii_2fa5ae": {
+    "en": "Regeneration II",
+    "pt": "Regeneração II"
+  },
+  "cat.texto.regeneracao_iii_e43a19": {
+    "en": "Regeneration III",
+    "pt": "Regeneração III"
+  },
   "cat.texto.regeneracao_runica_0c02b3": {
     "en": "Runic Regeneration",
     "pt": "Regeneração Rúnica"
@@ -1730,6 +3046,10 @@ window.LANG_MONSTROS = {
     "en": "Lightning Bolt",
     "pt": "Relâmpago"
   },
+  "cat.texto.remove_veneno_doenca_maldicao_ou_a92929": {
+    "en": "Removes poison, disease, curse or petrification from an adjacent ally.",
+    "pt": "Remove veneno, doença, maldição ou petrificação de um aliado adjacente."
+  },
   "cat.texto.resistencia_a_cortante_1_dano_93e22e": {
     "en": "Resistance to slashing (-1 damage)",
     "pt": "Resistência a cortante (-1 dano)"
@@ -1738,9 +3058,33 @@ window.LANG_MONSTROS = {
     "en": "Resistance to piercing (-2 damage)",
     "pt": "Resistência a perfurante (-2 dano)"
   },
+  "cat.texto.resistencia_absoluta_a60fa7": {
+    "en": "Absolute Resistance",
+    "pt": "Resistência Absoluta"
+  },
   "cat.texto.resistencia_morta_f79489": {
     "en": "Dead Resistance",
     "pt": "Resistência Morta"
+  },
+  "cat.texto.ressurreicao_85baa5": {
+    "en": "Resurrection",
+    "pt": "Ressurreição"
+  },
+  "cat.texto.ressurreicao_ii_c7d37e": {
+    "en": "Resurrection II",
+    "pt": "Ressurreição II"
+  },
+  "cat.texto.ressurreicao_iii_adc4f4": {
+    "en": "Resurrection III",
+    "pt": "Ressurreição III"
+  },
+  "cat.texto.ressurreicao_traz_o_aliado_com_m_83eb63": {
+    "en": "Resurrection brings the ally back with half HP (🍖15 💧15).",
+    "pt": "Ressurreição traz o aliado com metade dos PV (🍖15 💧15)."
+  },
+  "cat.texto.ressurreicao_traz_o_aliado_com_p_c1cab6": {
+    "en": "Resurrection brings the ally back with full HP (🍖20 💧20).",
+    "pt": "Ressurreição traz o aliado com PV cheio (🍖20 💧20)."
   },
   "cat.texto.ressurreicao_vampirica_a1d51a": {
     "en": "Vampiric Resurrection",
@@ -1754,6 +3098,14 @@ window.LANG_MONSTROS = {
     "en": "Comes back once after 1d4 rounds, unless it takes enough holy/light damage.",
     "pt": "Retorna uma vez após 1d4 rodadas, salvo dano sagrado/luz suficiente."
   },
+  "cat.texto.reviver_os_mortos_ii_f6bdd6": {
+    "en": "Animate Dead II",
+    "pt": "Reviver os Mortos II"
+  },
+  "cat.texto.reviver_os_mortos_iii_b54d98": {
+    "en": "Animate Dead III",
+    "pt": "Reviver os Mortos III"
+  },
   "cat.texto.sacudida_brutal_871990": {
     "en": "Brutal Shake",
     "pt": "Sacudida Brutal"
@@ -1765,6 +3117,10 @@ window.LANG_MONSTROS = {
   "cat.texto.salto_selvagem_b47b41": {
     "en": "Savage Leap",
     "pt": "Salto Selvagem"
+  },
+  "cat.texto.sangue_frio_d42be5": {
+    "en": "Cold Blood",
+    "pt": "Sangue Frio"
   },
   "cat.texto.se_alvo_preso_e_adjacente_1d8_3_0159d5": {
     "en": "If the target is grabbed and adjacent: 1d8+3 direct damage (no attack roll)",
@@ -1862,6 +3218,10 @@ window.LANG_MONSTROS = {
     "en": "Whenever it kills a creature, it immediately makes an additional Bite. The additional Bite does not trigger another reaction.",
     "pt": "Sempre que eliminar uma criatura, realiza imediatamente uma Mordida adicional. A Mordida adicional não gera outra reação."
   },
+  "cat.texto.senhor_da_morte_de8101": {
+    "en": "Death Lord",
+    "pt": "Senhor da Morte"
+  },
   "cat.texto.sensivel_a_venenos_todos_os_efei_5abe0b": {
     "en": "Sensitive to poisons: all effects doubled",
     "pt": "Sensível a venenos: todos os efeitos dobrados"
@@ -1906,6 +3266,26 @@ window.LANG_MONSTROS = {
     "en": "Dragon Breath",
     "pt": "Sopro de Dragão"
   },
+  "cat.texto.sorrateiro_3fda3d": {
+    "en": "Sneaky",
+    "pt": "Sorrateiro"
+  },
+  "cat.texto.sorte_5a1f7e": {
+    "en": "Luck",
+    "pt": "Sorte"
+  },
+  "cat.texto.tatica_defensiva_e1d369": {
+    "en": "Defensive Tactics",
+    "pt": "Tática Defensiva"
+  },
+  "cat.texto.tecelagem_arcana_ii_883c7a": {
+    "en": "Arcane Weaving II",
+    "pt": "Tecelagem Arcana II"
+  },
+  "cat.texto.tecelagem_arcana_iii_7b82b9": {
+    "en": "Arcane Weaving III",
+    "pt": "Tecelagem Arcana III"
+  },
   "cat.texto.tenta_esconder_se_contra_a_perce_795d85": {
     "en": "Tries to hide against the observers' Perception; success keeps the bandit hidden until it attacks.",
     "pt": "Tenta esconder-se contra a Percepção dos observadores; sucesso oculta o bandido até atacar."
@@ -1913,6 +3293,14 @@ window.LANG_MONSTROS = {
   "cat.texto.tentaculos_4b0d03": {
     "en": "Tentacles",
     "pt": "Tentáculos"
+  },
+  "cat.texto.todo_dano_sofrido_pelo_alvo_e_di_2cc371": {
+    "en": "The split damage drops to 40%/40% (20% is mitigated).",
+    "pt": "Todo dano sofrido pelo alvo é dividido 50%/50%; Richard reduz 3 de todo dano enquanto o Protetor estiver ativo."
+  },
+  "cat.texto.todos_os_aliados_atacam_o_alvo_p_8d58e8": {
+    "en": "All allies attack the taunted target with advantage for 1 round.",
+    "pt": "Todos os aliados atacam o alvo provocado com vantagem por 1 rodada."
   },
   "cat.texto.todos_os_aliados_recebem_2_de_mo_e0ef5e": {
     "en": "All allies gain +2 movement for 1 round.",
@@ -1922,6 +3310,10 @@ window.LANG_MONSTROS = {
     "en": "All attacks made this turn get +2 damage.",
     "pt": "Todos os ataques realizados neste turno recebem +2 de dano."
   },
+  "cat.texto.todos_os_bonus_de_lenda_passam_a_c84ae1": {
+    "en": "All Lore bonuses now benefit the whole party (while Henrique is alive).",
+    "pt": "Todos os bônus de Lenda passam a beneficiar o grupo inteiro (enquanto Henrique vivo)."
+  },
   "cat.texto.toque_corrosivo_6cf92d": {
     "en": "Corrosive Touch",
     "pt": "Toque Corrosivo"
@@ -1929,6 +3321,10 @@ window.LANG_MONSTROS = {
   "cat.texto.toque_putrefato_916311": {
     "en": "Rotting Touch",
     "pt": "Toque Putrefato"
+  },
+  "cat.texto.traz_um_aliado_morto_adjacente_d_d7040c": {
+    "en": "Brings an adjacent dead ally back with 1 HP. 🍖-10 💧-10.",
+    "pt": "Traz um aliado morto adjacente de volta com 1 HP. 🍖-10 💧-10."
   },
   "cat.texto.turbilhao_43040f": {
     "en": "Whirlwind",
@@ -1993,6 +3389,18 @@ window.LANG_MONSTROS = {
   "cat.texto.veneno_rapido_5e6c63": {
     "en": "Quick Poison",
     "pt": "Veneno Rápido"
+  },
+  "cat.texto.veneno_rapido_ii_9b3761": {
+    "en": "Quick Poison II",
+    "pt": "Veneno Rápido II"
+  },
+  "cat.texto.veneno_rapido_iii_45f178": {
+    "en": "Quick Poison III",
+    "pt": "Veneno Rápido III"
+  },
+  "cat.texto.versao_alternativa_de_animar_os_77c9d8": {
+    "en": "Alternative version of Animate Dead: keeps the creature's full sheet, costs CR+2 slots, −20 success points and +10 hostility points.",
+    "pt": "Versão alternativa de Animar os Mortos: preserva a ficha completa da criatura, custa ND+2 slots, −20 pontos de sucesso e +10 pontos de hostilidade."
   },
   "cat.texto.vigor_colossal_15cb69": {
     "en": "Colossal Vigor",

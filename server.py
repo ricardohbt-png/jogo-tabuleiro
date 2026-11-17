@@ -5298,6 +5298,19 @@ CORROSAO_ARMA_METAL = {"dagger", "machado_basico", "machadinha_ana", "machadinha
                        "bastsword", "espada2m", "warhammer", "mangual", "maca", "maca_voto_guardiao", "rapieira_do_dueto",
                        "marreta", "lanca", "lanca_enorme", "lanca_curta", "alabarda", "gancho_corrente", "gancho_escorpiao_superior"}
 CORROSAO_NIVEL_NOME = {1: "danificado", 2: "quebrado", 3: "destruído"}
+_ESTADO_CORROSAO_CHAVE = {"danificado": "danificado", "quebrado": "quebrado", "destruído": "destruido",
+                          "muito danificado": "muito_danificado", "intacto": "intacto"}
+
+def nome_veneno_T(veneno):
+    """Nome do veneno para exibir: chave do catálogo de itens quando o nome é o nativo."""
+    nome = veneno.get("nome") or "Veneno"
+    vid = veneno.get("id") or next((k for k, v in VENENOS.items() if v.get("nome") == nome), None)
+    return nome_cat("item", vid, nome) if vid else nome
+
+def estado_corrosao_T(estado):
+    """Estado de corrosão para exibir. O valor cru segue nos dados (comparado e salvo)."""
+    k = _ESTADO_CORROSAO_CHAVE.get(estado)
+    return T(f"quadro.estado.{k}") if k else estado
 
 MONSTER_DEFS = [
     # Formas animais básicas da Metamorfose. São opções permanentes de todos
@@ -18620,10 +18633,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._aplicar_queda(alvo, "atordoamento", atacante.get("id"))
             if self._eh_jogador(alvo):
                 await self._enviar_resultado_atordoamento(
-                    alvo, "O golpe crítico de Bordão deixou você atordoado.",
-                    "1 rodada",
-                    ["Você perde sua próxima rodada",
-                     "Não pode se mover, atacar nem usar habilidades durante esse turno"],
+                    alvo, T("quadro.o_golpe_critico_de_bordao_deixou_voce_atordo"),
+                    T("quadro.1_rodada"),
+                    [T("quadro.voce_perde_sua_proxima_rodada"),
+                     T("quadro.nao_pode_se_mover_atacar_nem_usar_habilidade_2")],
                 )
         resultado = (T("narracao.bordao_critico_atordoa") if not passou
                      else T("narracao.bordao_critico_resiste"))
@@ -18662,8 +18675,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             total=total, dc=13))
         if self._eh_jogador(alvo):
             await self._enviar_resultado_atordoamento(
-                alvo, "A Serpente de Bronze imobilizou você.", "até o fim do próximo turno",
-                ["Você não pode se mover, atacar nem usar habilidades durante esse turno"])
+                alvo, T("quadro.a_serpente_de_bronze_imobilizou_voce"), T("quadro.ate_o_fim_do_proximo_turno"),
+                [T("quadro.voce_nao_pode_se_mover_atacar_nem_usar_habil")])
         return True
 
     async def _resolver_critico_choque_trovao(self, atacante, alvo, roll, weapon,
@@ -19127,9 +19140,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.sorte_reacao = pendente
         await self.send_to(alvo["id"], {
             "type": "sorte_reacao",
-            "texto": (f"{nome_criatura(atacante)} acertou você e causaria {dano} de dano. "
-                      f"Ativar {bracelete.get('name', 'o Bracelete da Guarda Reflexa')} "
-                      f"para reduzir o dano em {bracelete['bracelet_reaction_die']}?")
+            "texto": (T("quadro.acertou_voce_e_causaria_de_dano_ativar_para", nome_criatura_atacan=nome_criatura(atacante), dano=dano, bracelete_get_name_o=nome_item(bracelete), bracelet_reaction_di=bracelete['bracelet_reaction_die']))
         })
         try:
             await asyncio.wait_for(event.wait(), timeout=12)
@@ -19241,7 +19252,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if passou or not self._eh_jogador(alvo):
             return resultado
         if await self._oferecer_sorte(alvo, {"kind": "save", "nome": tipo_save, "cd": dificuldade,
-                                              "texto": f"Você falhou no teste de {tipo_save}. Usar Sorte para rerrolar com +2?"}):
+                                              "texto": T("quadro.voce_falhou_no_teste_de_usar_sorte_para_rerr", tipo_save=tipo_save)}):
             passou, d20, bonus, total = self._testar_save(alvo, tipo_save, dificuldade, extra_mod + 2, fonte, desvantagem)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                                   "label": T("dado.sorte_2_no_teste_de_resistencia"), "hit": passou})
@@ -21201,14 +21212,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         defn = carregar_dungeon("estrada_floresta_emboscada.json")
         if not defn:
             self.pending_world_travel = None
-            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Mapa de encontro de viagem ausente.")})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo=T("quadro.mapa_encontro_ausente"))})
             return
         comp = pending.get("composition") or []
         defs = {str(m.get("type")): m for m in MONSTER_DEFS if isinstance(m, dict)}
         slots = [[14, 6], [17, 9], [20, 6], [16, 11], [22, 9]]
         if len(comp) > len(slots) or any(tipo not in defs for tipo in comp):
             self.pending_world_travel = None
-            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Composição de encontro inválida.")})
+            await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo=T("quadro.composicao_encontro_invalida"))})
             return
         defn = deepcopy(defn)
         defn["monsters"] = [
@@ -21924,7 +21935,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             known_exits = {str(e.get("id")) for e in defn.get("route_exits", []) if isinstance(e, dict)}
             required_exits = stage_cfg.get("required_exit_ids") or []
             if not required_exits or any(str(e) not in known_exits for e in required_exits):
-                await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo="Saídas obrigatórias ausentes ou inválidas; revise esta etapa no editor.")})
+                await self.send_to(pid, {"type": "error", "msg": T("erro.destino_indisponivel", motivo=T("quadro.saidas_obrigatorias_invalidas"))})
                 return
         fome, sede = int(adventure.get("fome", 0)), int(adventure.get("sede", 0))
         if not _travel_resume:
@@ -23793,7 +23804,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._aplicar_queda(alvo, "petrificacao", None)
                 self._encerrar_olhar_petrificante(alvo)
                 await self._enviar_resultado_petrificacao(
-                    alvo, 0, "Olhar Petrificante", permanente=True)
+                    alvo, 0, T("quadro.olhar_petrificante"), permanente=True)
                 await self.gm_say(T("narracao.foi_totalmente_petrificado_a_condicao_e", nome_criatura_alvo=nome_criatura(alvo)))
             else:
                 self._registrar_aviso_petrificacao(alvo, fonte)
@@ -24799,8 +24810,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.gm_say(T("narracao.passou_no_teste_de_reflexos_e_se_esquivou",
                                         prefix=prefix, heroi=p["name"]))
                     await self._enviar_trap_result(
-                        p, "Buraco Escondido", "🕳️", sucesso=True, dano=0, metade=False,
-                        descricao="Um buraco disfarçado se abre sob seus pés.",
+                        p, T("quadro.buraco_escondido"), "🕳️", sucesso=True, dano=0, metade=False,
+                        descricao=T("quadro.um_buraco_disfarcado_se_abre_sob_seus_pes"),
                         efeitos_extra=[], tipo_id='buraco_escondido')
                 else:
                     hp_antes = p.get("hp", 0)
@@ -24811,9 +24822,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self.gm_say(T("narracao.falhou_em_reflexos_e_sofre_de_dano",
                                         prefix=prefix, heroi=p["name"], dano=dano_trap))
                     await self._enviar_trap_result(
-                        p, "Buraco Escondido", "🕳️", sucesso=False, dano=dano_trap, metade=False,
-                        descricao="Um buraco disfarçado se abre sob seus pés.",
-                        efeitos_extra=[f"💥 Sofreu {dano_trap} de dano"], tipo_id='buraco_escondido')
+                        p, T("quadro.buraco_escondido"), "🕳️", sucesso=False, dano=dano_trap, metade=False,
+                        descricao=T("quadro.um_buraco_disfarcado_se_abre_sob_seus_pes"),
+                        efeitos_extra=[T("quadro.sofreu_de_dano", dano_trap=dano_trap)], tipo_id='buraco_escondido')
                     if p["hp"] <= 0:
                         await self._player_dies(pid)
 
@@ -27211,7 +27222,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.mantem_o_sangue_frio_e_rola_novamente", heroi=p['name']))
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk, eff_target_ac, vantagem, desvantagem)
             if not hit and await self._oferecer_sorte(p, {
-                    "kind": "attack", "texto": "Você errou o ataque. Usar Sorte para rerrolar com +2?"}):
+                    "kind": "attack", "texto": T("quadro.voce_errou_o_ataque_usar_sorte_para_rerrolar")}):
                 hit, roll, total, crit, _desc = self._rolar_ataque(eff_atk + 2, eff_target_ac, vantagem, desvantagem)
                 await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                       "label": T("dado.sorte_2_no_ataque"), "hit": hit, "crit": crit})
@@ -28353,13 +28364,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if destruida:
                 await self.gm_say(T("narracao.de_foi_destruida_permanentemente", nome_peca=nome_item(dagger), heroi=p["name"]))
             else:
-                await self.gm_say(T("narracao.de_esta", label="Impacto do arremesso", nome_peca=nome_item(dagger), heroi=p["name"], rot=CORROSAO_NIVEL_NOME.get(nivel, "danificado"), nivel_pen=penalidade))
+                await self.gm_say(T("narracao.de_esta", label=T("quadro.impacto_do_arremesso"), nome_peca=nome_item(dagger), heroi=p["name"], rot=estado_corrosao_T(CORROSAO_NIVEL_NOME.get(nivel, "danificado")), nivel_pen=penalidade))
             await self._enviar_resultado_equipamento_danificado(
-                p, "Falha crítica de arremesso", dagger["name"],
-                "destruído" if destruida else CORROSAO_NIVEL_NOME.get(nivel, "danificado"),
-                (["A arma foi destruída permanentemente e não pode ser recuperada"] if destruida else
-                 [f"Vitalidade: {max(0, 3 - nivel)}/3", f"Acerto e dano -{penalidade}",
-                  "Cai perto do alvo; pode ser recolhida e reparada no ferreiro"]),
+                p, T("quadro.falha_critica_de_arremesso"), nome_item(dagger),
+                estado_corrosao_T("destruído" if destruida else CORROSAO_NIVEL_NOME.get(nivel, "danificado")),
+                ([T("quadro.arma_destruida_sem_recuperar")] if destruida else
+                 [T("quadro.vitalidade", n=max(0, 3 - nivel)), T("quadro.acerto_e_dano_menos", n=penalidade),
+                  T("quadro.cai_perto_do_alvo_reparar")]),
                 arma_quebrada=destruida)
         elif nat1:
             await self.gm_say(
@@ -35494,9 +35505,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         efeitos = [DOENCA_SINTOMA_DESC[t] for t in sintomas if t in DOENCA_SINTOMA_DESC]
         await self.send_to(alvo["id"], {
-            "type": "disease_result", "tipo": "doenca", "nome": f"Doença {severidade.capitalize()}",
+            "type": "disease_result", "tipo": "doenca", "nome": T("quadro.doenca", severidade_capitaliz=severidade.capitalize()),
             "icone": "🦠", "severidade": severidade,
-            "descricao": "A infecção se espalha pelo seu corpo. A condição permanece até ser curada por Purificação, elixir ou templo.",
+            "descricao": T("quadro.a_infeccao_se_espalha_pelo_seu_corpo_a_condi"),
             "efeitos_extra": efeitos,
         })
 
@@ -38156,9 +38167,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.gm_say(T("narracao.atinge_com_raio_divino_de_dano_sagrado", caster=caster['name'], alvo=nome_criatura(alvo), dano=dano))
         if not save_ok:
             await self._enviar_resultado_falha_magia_dano(
-                alvo, "Raio Divino", dano,
-                "O raio sagrado atinge você sem que consiga se esquivar.",
-                ["Dano sagrado total por falhar no teste de Reflexos"],
+                alvo, T("quadro.raio_divino"), dano,
+                T("quadro.o_raio_sagrado_atinge_voce_sem_que_consiga_s"),
+                [T("quadro.dano_sagrado_total_por_falhar_no_teste_de_re")],
             )
         await self.broadcast({
             "type": "spell_animation", "spell_id": "raio_divino", "phase": "resolve",
@@ -38430,9 +38441,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvo["congelamento_progressivo_pilhas"] = pilhas
         alvo["congelamento_progressivo_rodadas"] = 2
         await self._enviar_resultado_congelamento(
-            alvo, "Congelamento Progressivo",
-            "O frio se acumula em seu corpo após a Garra Congelante.",
-            [f"Movimento reduzido em {pilhas} quadrado(s)", "Duração: 2 turnos", "O efeito acumula até -3 de movimento"],
+            alvo, T("quadro.congelamento_progressivo"),
+            T("quadro.o_frio_se_acumula_em_seu_corpo_apos_a_garra"),
+            [T("quadro.movimento_reduzido_em_quadrado_s", pilhas=pilhas), T("quadro.duracao_2_turnos"), T("quadro.o_efeito_acumula_ate_3_de_movimento")],
         )
         await self.gm_say(
             T("narracao.sofre_congelamento_progressivo_movimento", alvo=nome_criatura(alvo), pilhas=pilhas))
@@ -38989,9 +39000,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._aplicar_queda(alvo, "sono", caster.get("id"))
                 sleeping_ids.append(alvo.get("id"))
                 await self._enviar_resultado_controle_mental(
-                    alvo, "Sono", dur,
-                    "Uma magia de sono domina seus sentidos.",
-                    ["Não pode se mover, atacar ou usar habilidades", "O primeiro ataque recebido é crítico", "Você acorda ao sofrer dano"],
+                    alvo, T("quadro.sono"), dur,
+                    T("quadro.uma_magia_de_sono_domina_seus_sentidos"),
+                    [T("quadro.nao_pode_se_mover_atacar_ou_usar_habilidades"), T("quadro.o_primeiro_ataque_recebido_e_critico"), T("quadro.voce_acorda_ao_sofrer_dano")],
                 )
         await self.broadcast({
             "type": "spell_animation", "spell_id": "sono", "phase": "resolve",
@@ -39038,9 +39049,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 self._set_mod_magia(alvo, {"ataque": -1}, dur); n += 1
                 frightened_ids.append(alvo.get("id"))
                 await self._enviar_resultado_controle_mental(
-                    alvo, "Medo", dur,
-                    "O medo mágico toma conta de você.",
-                    ["Não pode se aproximar da fonte do medo", "Deve fugir sempre que possível", "-1 em ataques"],
+                    alvo, T("quadro.medo"), dur,
+                    T("quadro.o_medo_magico_toma_conta_de_voce"),
+                    [T("quadro.nao_pode_se_aproximar_da_fonte_do_medo"), T("quadro.deve_fugir_sempre_que_possivel"), T("quadro.1_em_ataques")],
                 )
             else:
                 resisted_ids.append(alvo.get("id"))
@@ -39083,10 +39094,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # fica pendente até a próxima ativação do turno deste monstro.
             alvo["comando_pendente_pid"] = caster["id"]
             await self._enviar_resultado_controle_mental(
-                alvo, "Comando", 1,
-                "Uma ordem mágica invade sua mente.",
-                ["No próximo turno, o conjurador controlará seu movimento",
-                 "O conjurador também controlará sua ação principal e habilidades"],
+                alvo, T("quadro.comando"), 1,
+                T("quadro.uma_ordem_magica_invade_sua_mente"),
+                [T("quadro.no_proximo_turno_o_conjurador_controlara_seu"),
+                 T("quadro.o_conjurador_tambem_controlara_sua_acao_prin")],
             )
             await self.broadcast({
                 "type": "spell_animation", "spell_id": "comando", "phase": "resolve",
@@ -39128,9 +39139,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvo["dominio_mente_cd"] = self._dif_magia(caster, magia)
             alvo.pop("dominio_mente_save_bonus", None)
             await self._enviar_resultado_controle_mental(
-                alvo, "Dominar Mente", dur,
-                "Sua vontade foi subjugada por uma força arcana.",
-                ["Age sob o controle do conjurador a partir do próximo turno", "Cada dano sofrido concede +2 cumulativo no próximo teste de Vontade"],
+                alvo, T("quadro.dominar_mente"), dur,
+                T("quadro.sua_vontade_foi_subjugada_por_uma_forca_arca"),
+                [T("quadro.age_sob_o_controle_do_conjurador_a_partir_do"), T("quadro.cada_dano_sofrido_concede_2_cumulativo_no_pr")],
             )
             await self.broadcast({
                 "type": "spell_animation", "spell_id": "dominar_mente", "phase": "resolve",
@@ -39413,17 +39424,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 self._set_mod_magia(alvo, {"ca": -1, "ataque": -1}, dur)
                 lento_ids.append(alvo.get("id"))
                 await self._enviar_resultado_controle_mental(
-                    alvo, "Lentidão", dur,
-                    "Uma força mágica torna cada gesto mais difícil.",
-                    ["Age apenas em rodadas alternadas", "-1 CA", "-1 em ataques"],
+                    alvo, T("quadro.lentidao"), dur,
+                    T("quadro.uma_forca_magica_torna_cada_gesto_mais_dific"),
+                    [T("quadro.age_apenas_em_rodadas_alternadas"), "-1 CA", T("quadro.1_em_ataques")],
                 )
             else:             # sucesso: efeito brando (-1 ataque)
                 self._set_mod_magia(alvo, {"ataque": -1}, dur)
                 resistiu_ids.append(alvo.get("id"))
                 await self._enviar_resultado_controle_mental(
-                    alvo, "Lentidão", dur,
-                    "Você resistiu parcialmente à Lentidão, mas ainda sente seus efeitos.",
-                    ["-1 em ataques"],
+                    alvo, T("quadro.lentidao"), dur,
+                    T("quadro.voce_resistiu_parcialmente_a_lentidao_mas_ai"),
+                    [T("quadro.1_em_ataques")],
                 )
             n += 1
         await self.broadcast({
@@ -41932,10 +41943,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if self._eh_jogador(alvo) and not save_ok:
                 efeitos = [f"Empurrado {push} quadrado(s)"]
                 if col:
-                    efeitos.append(f"+{col} de dano por colisão")
+                    efeitos.append(T("quadro.de_dano_por_colisao", col=col))
                 await self._enviar_resultado_falha_magia_dano(
-                    alvo, "Jato de Ar", dano,
-                    "A rajada violenta o atinge e o arremessa para trás.", efeitos)
+                    alvo, T("quadro.jato_de_ar"), dano,
+                    T("quadro.a_rajada_violenta_o_atinge_e_o_arremessa_par"), efeitos)
             await self._aplicar_dano_alvo(alvo, dano, None, caster["id"]); n += 1
         await self.broadcast({
             "type": "spell_animation", "spell_id": "jato_ar", "phase": "resolve",
@@ -42120,9 +42131,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.gm_say(T("narracao.sofre_2", rotulo=rotulo, nome=nome_criatura(alvo), d=d_narr, extra=extra))
             if ehjog and com_save and not save_ok:
                 await self._enviar_resultado_falha_magia_dano(
-                    alvo, "Bola de Fogo", d,
-                    "A explosão de fogo envolve você completamente.",
-                    ["Dano de fogo total por falhar no teste de Reflexos", "A área permanece em chamas e pode causar dano novamente"],
+                    alvo, T("quadro.bola_de_fogo"), d,
+                    T("quadro.a_explosao_de_fogo_envolve_voce_completament"),
+                    [T("quadro.dano_de_fogo_total_por_falhar_no_teste_de_re"), T("quadro.a_area_permanece_em_chamas_e_pode_causar_dan")],
                 )
             await self._aplicar_dano_alvo(alvo, d, "fogo", caster_id)
             n += 1
@@ -42306,9 +42317,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 feriu_caster = True
             if ehjog and not save_ok:
                 await self._enviar_resultado_falha_magia_dano(
-                    alvo, "Relâmpago", d,
-                    "A descarga elétrica atravessa seu corpo.",
-                    ["Dano elétrico total por falhar no teste de Reflexos", "O raio pode ricochetear e atingir o mesmo alvo novamente"],
+                    alvo, T("quadro.relampago"), d,
+                    T("quadro.a_descarga_eletrica_atravessa_seu_corpo"),
+                    [T("quadro.dano_eletrico_total_por_falhar_no_teste_de_r"), T("quadro.o_raio_pode_ricochetear_e_atingir_o_mesmo_al")],
                 )
             await self._aplicar_dano_alvo(alvo, d, "eletricidade", caster["id"])
 
@@ -42409,14 +42420,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         })
 
         if self._eh_jogador(alvo):
-            efeitos = [f"{dano} de dano de gelo"]
+            efeitos = [T("quadro.de_dano_de_gelo", dano=dano)]
             if save_ok:
-                efeitos.append("Resistiu à paralisia no teste de Fortitude")
+                efeitos.append(T("quadro.resistiu_a_paralisia_no_teste_de_fortitude"))
             else:
-                efeitos.extend(["Você está paralisado", "Novo teste de Fortitude no início de cada turno", f"Paralisia dura no máximo {alvo['paralisado_rodada_max']} rodada(s)"])
+                efeitos.extend([T("quadro.voce_esta_paralisado"), T("quadro.novo_teste_de_fortitude_no_inicio_de_cada_tu"), T("quadro.paralisia_dura_no_maximo_rodada_s", paralisado_rodada_ma=alvo['paralisado_rodada_max'])])
             await self._enviar_resultado_congelamento(
-                alvo, "Raio Congelante",
-                "Um raio de frio arcano atinge você.", efeitos)
+                alvo, T("quadro.raio_congelante"),
+                T("quadro.um_raio_de_frio_arcano_atinge_voce"), efeitos)
 
         if alvo["hp"] <= 0:
             if self._eh_jogador(alvo):
@@ -42486,10 +42497,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.gm_say(T("narracao.maca_zero_absoluto_congela",
                             alvo=nome_criatura(alvo)))
         await self._enviar_resultado_congelamento(
-            alvo, "Maça do Zero Absoluto",
-            "Um golpe crítico envolve você em gelo sobrenatural.",
-            ["Preso em gelo", "Teste livre de Força CD 16 no início do turno para escapar",
-             "Se falhar, permanece congelado; o efeito termina após no máximo 2 rodadas"])
+            alvo, T("quadro.maca_do_zero_absoluto"),
+            T("quadro.um_golpe_critico_envolve_voce_em_gelo_sobren"),
+            [T("quadro.preso_em_gelo"), T("quadro.teste_livre_de_forca_cd_16_no_inicio_do_turn"),
+             T("quadro.se_falhar_permanece_congelado_o_efeito_termi")])
         return True
 
     async def _aplicar_dano_critico_elemental_arma(self, atacante, alvo, arma, crit,
@@ -44588,7 +44599,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "potencia": potencia,
             })
             await self._enviar_resultado_veneno(alvo, veneno, dur,
-                                                 [f"{veneno.get('dano', '1d4')} de dano por rodada"])
+                                                 [T("quadro.de_dano_por_rodada", veneno_get_dano_1d4=veneno.get('dano', '1d4'))])
             dano_txt = str(veneno.get("dano", "1d4"))
             regra_save = (f"Fortitude CD {veneno.get('dificuldade',10)} já foi testada e anula"
                           if veneno.get("save_aplicacao")
@@ -44824,23 +44835,22 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._eh_jogador(alvo) or not alvo.get("id"):
             return
         if permanente:
-            descricao = (f"{fonte} transformou seu corpo em pedra. "
-                         "A petrificação é permanente até ser removida.")
+            descricao = (T("quadro.transformou_seu_corpo_em_pedra_a_petrificaca", fonte=fonte))
             efeitos = [
-                "Marcas de Petrificação: 3/3",
-                "Petrificação total: o corpo foi transformado em pedra",
-                "Não pode se mover, atacar nem usar habilidades",
-                "Só pode ser removida por Purificação ou item que cure petrificação",
+                T("quadro.marcas_de_petrificacao_3_3"),
+                T("quadro.petrificacao_total_o_corpo_foi_transformado"),
+                T("quadro.nao_pode_se_mover_atacar_nem_usar_habilidade"),
+                T("quadro.so_pode_ser_removida_por_purificacao_ou_item"),
             ]
         else:
-            descricao = f"{fonte} transformou seu corpo em pedra. Você não pode agir enquanto o efeito durar."
+            descricao = T("quadro.transformou_seu_corpo_em_pedra_voce_nao_pode", fonte=fonte)
             efeitos = [
-                "Não pode se mover",
-                "Não pode atacar nem usar habilidades",
-                f"Duração: {int(duracao or 0)} rodada(s)",
+                T("quadro.nao_pode_se_mover"),
+                T("quadro.nao_pode_atacar_nem_usar_habilidades"),
+                T("quadro.duracao_rodada_s", int_duracao_or_0=int(duracao or 0)),
             ]
         await self.send_to(alvo["id"], {
-            "type": "petrify_result", "tipo": "petrificado", "nome": "Petrificado",
+            "type": "petrify_result", "tipo": "petrificado", "nome": T("quadro.petrificado"),
             "target_id": alvo.get("id"), "pos": list(alvo.get("pos", [0, 0])),
             "icone": "🗿", "duracao": int(duracao or 0),
             "permanente": bool(permanente),
@@ -44871,21 +44881,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Alerta pessoal do ataque Cuspir Ácido e de sua possível corrosão."""
         if not self._eh_jogador(alvo) or not alvo.get("id"):
             return
-        efeitos = [f"{dano} de dano de ácido"]
+        efeitos = [T("quadro.de_dano_de_acido", dano=dano)]
         if passou:
-            efeitos.append("Sucesso no teste de Reflexos: dano reduzido à metade")
+            efeitos.append(T("quadro.sucesso_no_teste_de_reflexos_dano_reduzido_a"))
         else:
-            efeitos.extend(["Falha no teste de Reflexos: dano total",
-                            "No início do seu próximo turno, você sofre metade desse dano novamente",
-                            "Um equipamento equipado pode sofrer corrosão"])
+            efeitos.extend([T("quadro.falha_no_teste_de_reflexos_dano_total"),
+                            T("quadro.no_inicio_do_seu_proximo_turno_voce_sofre_me"),
+                            T("quadro.um_equipamento_equipado_pode_sofrer_corrosao")])
         await self.send_to(alvo["id"], {
             "type": "acid_spit_result",
             "tipo": "cuspe_acido",
-            "nome": "Cuspe de Ácido",
+            "nome": T("quadro.cuspe_de_acido"),
             "icone": "🧪",
             "dano": dano,
             "metade": bool(passou),
-            "descricao": f"{fonte} lança uma rajada de ácido corrosivo contra você. Reflexos {total_save} vs. CD {cd}.",
+            "descricao": T("quadro.lanca_uma_rajada_de_acido_corrosivo_contra_v", fonte=fonte, total_save=total_save, cd=cd),
             "efeitos_extra": efeitos,
         })
 
@@ -44900,7 +44910,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "icone": "💥",
             "dano": dano,
             "descricao": descricao,
-            "efeitos_extra": [f"{dano} de dano sofrido", *efeitos],
+            "efeitos_extra": [T("quadro.de_dano_sofrido", dano=dano), *efeitos],
         })
 
     async def _enviar_resultado_congelamento(self, alvo, nome, descricao, efeitos):
@@ -45006,7 +45016,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.send_to(alvo["id"], {
             "type": "stun_result",
             "tipo": "atordoado",
-            "nome": "Atordoado",
+            "nome": T("quadro.atordoado"),
             "icone": "💫",
             "duracao": duracao,
             "descricao": fonte,
@@ -45018,11 +45028,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._eh_jogador(alvo) or not alvo.get("id"):
             return
         payload = {
-            "type": "sleep_result", "tipo": "sono", "nome": "Sono", "icone": "🌙",
+            "type": "sleep_result", "tipo": "sono", "nome": T("quadro.sono"), "icone": "🌙",
             "target_id": alvo.get("id"), "pos": list(alvo.get("pos", [0, 0])),
             "duracao": int(duracao or 0),
-            "descricao": descricao or "Uma magia de sono domina seus sentidos.",
-            "efeitos_extra": ["Não pode se mover, atacar ou usar habilidades", "O primeiro ataque recebido é crítico", "Você acorda ao sofrer dano"],
+            "descricao": descricao or T("quadro.uma_magia_de_sono_domina_seus_sentidos"),
+            "efeitos_extra": [T("quadro.nao_pode_se_mover_atacar_ou_usar_habilidades"), T("quadro.o_primeiro_ataque_recebido_e_critico"), T("quadro.voce_acorda_ao_sofrer_dano")],
         }
         if tipo_id:
             payload["tipo_id"] = tipo_id
@@ -45034,10 +45044,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not self._eh_jogador(alvo) or not alvo.get("id"):
             return
         await self.send_to(alvo["id"], {
-            "type": "poison_result", "tipo": "veneno", "nome": veneno.get("nome", "Veneno"),
+            "type": "poison_result", "tipo": "veneno", "nome": nome_veneno_T(veneno),
             "icone": veneno.get("icone", "☠️"), "target_id": alvo.get("id"),
             "pos": list(alvo.get("pos", [0, 0])), "duracao": int(duracao or 0),
-            "descricao": "O veneno foi aplicado. Seus efeitos persistem até a duração terminar ou serem purificados.",
+            "descricao": T("quadro.o_veneno_foi_aplicado_seus_efeitos_persistem"),
             "efeitos_extra": efeitos,
             "resistencia": resistencia,
             "imagem": imagem,
@@ -45362,6 +45372,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         if not pid:
             return
+        # Nome e descrição do catálogo saem no idioma de quem lê (guarda de
+        # igualdade: armadilha autoral mantém o texto do autor).
+        meta_arm = ARMADILHAS.get(tipo_id) if tipo_id else None
+        if meta_arm and isinstance(nome, str):
+            nome = nome_cat("armadilha", tipo_id, nome)
+        if meta_arm and isinstance(descricao, str) and descricao == meta_arm.get("desc") \
+                and f"cat.armadilha.{tipo_id}.desc" in LANG_STRINGS:
+            descricao = T(f"cat.armadilha.{tipo_id}.desc")
         payload = {
             "type": "trap_result", "nome": nome, "icone": icone,
             "sucesso": sucesso, "dano": dano, "metade": metade,
@@ -45519,7 +45537,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     if texto:
                         efeitos_extra.append(texto)
                 if dano_total:
-                    efeitos_extra.insert(0, f"💥 Sofreu {dano_total} de dano")
+                    efeitos_extra.insert(0, T("quadro.sofreu_de_dano_2", dano_total=dano_total))
                 await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False,
                                                 dano=dano_total, metade=False,
                                                 descricao=tipo["descricao"], efeitos_extra=efeitos_extra, tipo_id=arm["tipo"])
@@ -45612,7 +45630,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._enviar_trap_result(
                 alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
                 descricao=tipo["descricao"],
-                efeitos_extra=["☠️ Caiu no abismo e morreu."], tipo_id=arm["tipo"])
+                efeitos_extra=[T("quadro.caiu_no_abismo_e_morreu")], tipo_id=arm["tipo"])
             return
 
         quantidade, faces = dados
@@ -45682,7 +45700,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                   "origem": origem, "teleportado": False})
             await self.gm_say(T("narracao.o_teletransporte_de_falha_saida_bloquead", alvo_get_name_alvo=nome_criatura(alvo)))
             await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=True, dano=0, metade=False,
-                                            descricao="A saída está bloqueada; o portal não consegue se abrir.", efeitos_extra=[], tipo_id=arm["tipo"])
+                                            descricao=T("quadro.a_saida_esta_bloqueada_o_portal_nao_consegue"), efeitos_extra=[], tipo_id=arm["tipo"])
             return False
         alvo["pos"] = destino
         await self._matar_no_abismo(alvo, arm.get("criador"))
@@ -45692,7 +45710,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                               "origem": origem, "destino": list(destino), "teleportado": True})
         await self.gm_say(T("narracao.desaparece_de_e_surge_em", alvo_get_name_alvo=nome_criatura(alvo), origem=origem, destino=destino))
         await self._enviar_trap_result(alvo, nome, tipo["icone"], sucesso=False, dano=0, metade=False,
-                                        descricao=tipo["descricao"], efeitos_extra=[f"🌀 Teleportado para {destino[0]},{destino[1]}"], tipo_id=arm["tipo"])
+                                        descricao=tipo["descricao"], efeitos_extra=[T("quadro.teleportado_para", v0=destino[0], v1=destino[1])], tipo_id=arm["tipo"])
         return True
 
     async def _disparar_dardos_envenenados(self, alvo, arm, tipo):
@@ -45705,7 +45723,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                        dificuldade=arm.get("dificuldade"))
         await self._enviar_trap_result(
             alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano, metade=False,
-            descricao=tipo["descricao"], efeitos_extra=[f"💥 Sofreu {dano} de dano perfurante", f"☠️ Veneno: {veneno_nome}"], tipo_id=arm["tipo"])
+            descricao=tipo["descricao"], efeitos_extra=[T("quadro.sofreu_de_dano_perfurante", dano=dano), T("quadro.veneno", veneno_nome=veneno_nome)], tipo_id=arm["tipo"])
 
     async def _disparar_bau_engolidor(self, alvo, arm, tipo):
         """Resolve o Reflexos do objeto e prende o herói se ele falhar."""
@@ -45736,7 +45754,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._enviar_trap_result(
             alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=0,
             metade=False, descricao=tipo["descricao"],
-            efeitos_extra=[f"📦 Você ficou preso no baú. Força CD {tipo.get('escape_dificuldade', 20)} para escapar."],
+            efeitos_extra=[T("quadro.voce_ficou_preso_no_bau_forca_cd_para_escapa", tipo_get_escape_difi=tipo.get('escape_dificuldade', 20))],
             tipo_id=arm["tipo"])
 
     async def _escapar_bau_engolidor(self, p):
@@ -45792,7 +45810,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         bruto = self._rolar_dado(_trap_damage(arm, tipo.get("dano", "2d6")))
         dano = self._apply_damage_types(bruto, [DMG_ACID], alvo)
         await self._dano_em_alvo(alvo, dano, DMG_ACID, arm.get("criador"))
-        efeitos_extra = [f"💥 Sofreu {dano} de dano de ácido"]
+        efeitos_extra = [T("quadro.sofreu_de_dano_de_acido", dano=dano)]
 
         if dano > 0:
             residual = dano // 2
@@ -45801,19 +45819,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     "alvo_id": alvo.get("id"),
                     "valor": residual, "elemento": DMG_ACID, "rodadas_restantes": 1,
                 })
-                efeitos_extra.append(f"🧪 Sofrerá {residual} de dano de ácido na rodada seguinte")
+                efeitos_extra.append(T("quadro.sofrera_de_dano_de_acido_na_rodada_seguinte", residual=residual))
 
         if self._eh_jogador(alvo) and alvo.get("hp", 0) > 0:
             corrosao = await self._corroer_equipamento(
                 None, alvo, CORROSAO_ARMADURA_METAL, CORROSAO_ARMA_METAL,
-                cura=None, label="Jato de Ácido", randomize=True,
+                cura=None, label=T("quadro.jato_de_acido"), randomize=True,
                 ignore_material=True, notify=False, corrosion_type=DMG_ACID)
             if corrosao:
                 peca = corrosao["peca"]
                 estado = corrosao["estado"]
-                efeitos_extra.append(f"🛠️ {peca}: corrosão nível {corrosao['nivel']} ({estado})")
+                efeitos_extra.append(T("quadro.corrosao_nivel", peca=peca, nivel=corrosao['nivel'], estado=estado))
             else:
-                efeitos_extra.append("🛠️ Nenhum equipamento equipado disponível para corroer")
+                efeitos_extra.append(T("quadro.nenhum_equipamento_equipado_disponivel_para"))
 
         await self._enviar_trap_result(
             alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano, metade=False,
@@ -45843,7 +45861,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         paralisado = not save_ok and not imune_paralisia
         escape_dc = _monster_int(
             tipo.get("escape_dificuldade", 16), 16, 1, 40)
-        efeitos_extra = [f"💥 Sofreu {dano} de dano de gelo"]
+        efeitos_extra = [T("quadro.sofreu_de_dano_de_gelo", dano=dano)]
         if paralisado:
             alvo["paralisado"] = True
             alvo["paralisado_rodadas"] = 1
@@ -45855,15 +45873,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "narracao.armadilha_raio_congelante_paralisa",
                 alvo=nome_criatura(alvo), dc=escape_dc))
             efeitos_extra.extend([
-                f"❄️ Falhou na Fortitude CD {cd_paralisia}: está paralisado",
-                f"💪 Escapa com teste de Força CD {escape_dc} no início de cada turno",
+                T("quadro.falhou_na_fortitude_cd_esta_paralisado", cd_paralisia=cd_paralisia),
+                T("quadro.escapa_com_teste_de_forca_cd_no_inicio_de_ca", escape_dc=escape_dc),
             ])
         elif imune_paralisia:
             await self.gm_say(T("narracao.e_imune_a_paralisia", alvo=nome_criatura(alvo)))
-            efeitos_extra.append("🛡️ Imune à paralisia")
+            efeitos_extra.append(T("quadro.imune_a_paralisia"))
         else:
             await self.gm_say(T("narracao.resistiu_a_paralisacao", alvo=nome_criatura(alvo)))
-            efeitos_extra.append(f"✅ Resistiu à paralisia (Fortitude CD {cd_paralisia})")
+            efeitos_extra.append(T("quadro.resistiu_a_paralisia_fortitude_cd", cd_paralisia=cd_paralisia))
 
         # Usa o roteamento de trap_result para também alcançar o controlador
         # caso o alvo seja o prisioneiro; o marcador `tipo` faz o cliente usar
@@ -45938,7 +45956,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._enviar_trap_result(
                 alvo, tipo["nome"], tipo["icone"], sucesso=False, dano=dano,
                 metade=False, descricao=tipo["descricao"],
-                efeitos_extra=[f"💥 Sofreu {dano} de dano do desabamento"],
+                efeitos_extra=[T("quadro.sofreu_de_dano_do_desabamento", dano=dano)],
                 tipo_id=arm["tipo"])
 
     async def _disparar_fosso(self, alvo, arm, tipo):
@@ -45968,7 +45986,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         dano = self._rolar_dado(_trap_damage(arm, tipo.get("dano", "1d6")))
         await self._dano_em_alvo(alvo, dano, "fisico", arm.get("criador"))
-        efeitos_extra = [f"💥 Sofreu {dano} de dano", "🦵 Perdeu o movimento"]
+        efeitos_extra = [T("quadro.sofreu_de_dano_3", dano=dano), T("quadro.perdeu_o_movimento")]
         if self._eh_jogador(alvo) and alvo.get("hp", 0) > 0:
             alvo["fosso_oculto"] = True
             alvo["fosso_pular_proximo_turno"] = True
@@ -45978,8 +45996,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # o peão; o trap_result seguinte continua privado para seu popup.
             await self._avisar_armadilha("fosso", alvo.get("pos"), [alvo])
             efeitos_extra.extend([
-                "⏸️ Perderá a próxima rodada",
-                "🕳️ O peão some do mapa e fica protegido contra ataques e efeitos adversos até o fim da rodada perdida",
+                T("quadro.perdera_a_proxima_rodada"),
+                T("quadro.o_peao_some_do_mapa_e_fica_protegido_contra"),
             ])
             await self.gm_say(T(
                 "narracao.fosso_prende_heroi", heroi=alvo_nome))
@@ -46022,16 +46040,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.gm_say(T("narracao.camara_gas_resiste", alvo_nome=nome_criatura(alvo)))
             if self._eh_jogador(alvo):
                 await self._enviar_trap_result(
-                    alvo, "Câmara de Gás", "☠️", sucesso=True, dano=0, metade=False,
-                    descricao="O gás preenche a sala. Fortitude CD 13 evita o dano neste turno.",
-                    efeitos_extra=["🫁 Resistiu ao gás neste turno"], tipo_id="camara_gas")
+                    alvo, T("quadro.camara_de_gas"), "☠️", sucesso=True, dano=0, metade=False,
+                    descricao=T("quadro.o_gas_preenche_a_sala_fortitude_cd_13_evita"),
+                    efeitos_extra=[T("quadro.resistiu_ao_gas_neste_turno")], tipo_id="camara_gas")
             return
         dano = self._rolar_dado(_trap_damage(zona, ARMADILHAS["camara_gas"].get("dano", "1d6")))
         await self._dano_em_alvo(alvo, dano, "veneno", zona.get("criador"))
         await self._enviar_trap_result(
-            alvo, "Câmara de Gás", "☠️", sucesso=False, dano=dano, metade=False,
-            descricao="O gás preenche a sala. Fortitude CD 13 evita o dano neste turno.",
-            efeitos_extra=[f"☠️ Falhou no teste de Fortitude e sofreu {dano} de dano"],
+            alvo, T("quadro.camara_de_gas"), "☠️", sucesso=False, dano=dano, metade=False,
+            descricao=T("quadro.o_gas_preenche_a_sala_fortitude_cd_13_evita"),
+            efeitos_extra=[T("quadro.falhou_no_teste_de_fortitude_e_sofreu_de_dan", dano=dano)],
             tipo_id="camara_gas")
 
     async def _disparar_camara_gas(self, acionador, arm, tipo):
@@ -46156,14 +46174,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if self._eh_jogador(alvo):
                     await self._enviar_resultado_sono(
                         alvo, duracao_sono,
-                        descricao="A armadilha libera uma onda de sono que domina seus sentidos.",
+                        descricao=T("quadro.a_armadilha_libera_uma_onda_de_sono_que_domi"),
                         tipo_id=arm["tipo"],
                     )
                 elif self._eh_refem(alvo):
                     await self._enviar_trap_result(
-                        alvo, "Sono", "🌙", sucesso=False, dano=0, metade=False,
+                        alvo, T("quadro.sono"), "🌙", sucesso=False, dano=0, metade=False,
                         descricao=tipo["descricao"],
-                        efeitos_extra=[f"😴 Adormecido por {duracao_sono} rodada(s)"],
+                        efeitos_extra=[T("quadro.adormecido_por_rodada_s", duracao_sono=duracao_sono)],
                         tipo_id=arm["tipo"],
                     )
                 continue
@@ -46176,7 +46194,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 if texto:
                     efeitos_extra.append(texto)
             if dano_total:
-                efeitos_extra.insert(0, f"💥 Sofreu {dano_total} de dano")
+                efeitos_extra.insert(0, T("quadro.sofreu_de_dano_2", dano_total=dano_total))
             await self._enviar_trap_result(alvo, tipo["nome"], tipo["icone"], sucesso=save_ok,
                                             dano=dano_total, metade=metade, descricao=tipo["descricao"],
                                             efeitos_extra=efeitos_extra, tipo_id=arm["tipo"])
@@ -47407,7 +47425,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self._enviar_trap_result(
                         alvo, tipo_meta.get("nome", arm["tipo"]), tipo_meta.get("icone", "🔥"),
                         sucesso=False, dano=dano, metade=False,
-                        descricao=f"A {tipo_meta.get('nome', 'armadilha')} continua causando dano.",
+                        descricao=T("quadro.a_continua_causando_dano", tipo_meta_get_nome_a=tipo_meta.get('nome', 'armadilha')),
                         efeitos_extra=[], tick=True, tipo_id=arm["tipo"])
                 ef["rodadas_restantes"] -= 1
                 if ef["rodadas_restantes"] > 0:
@@ -47458,8 +47476,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._dano_em_alvo(alvo, dano_chamas, DMG_FIRE, None)
                 await self._concentracao_requiem(alvo, dano_chamas)   # Réquiem Final (Fase 3)
             await self._enviar_trap_result(
-                alvo, "Em Chamas", "🔥", sucesso=False, dano=dano_chamas, metade=False,
-                descricao="As chamas continuam queimando.",
+                alvo, T("quadro.em_chamas"), "🔥", sucesso=False, dano=dano_chamas, metade=False,
+                descricao=T("quadro.as_chamas_continuam_queimando"),
                 efeitos_extra=[], tick=True, tipo_id="armadilha_incendiaria")
             alvo["em_chamas_rodadas"] = max(0, alvo.get("em_chamas_rodadas", 0) - 1)
 
@@ -47477,8 +47495,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             await self._dano_em_alvo(alvo, d, "acido", None)
             await self._enviar_trap_result(
-                alvo, "Ácido Residual", "🧪", sucesso=False, dano=d, metade=False,
-                descricao="O ácido continua corroendo.", efeitos_extra=[], tick=True, tipo_id="cuspe_acido")
+                alvo, T("quadro.acido_residual"), "🧪", sucesso=False, dano=d, metade=False,
+                descricao=T("quadro.o_acido_continua_corroendo"), efeitos_extra=[], tick=True, tipo_id="cuspe_acido")
 
     def _serializar_armadilhas(self):
         """Estado das armadilhas para o cliente. Armadilhas de aliado são visíveis
@@ -47952,11 +47970,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 txt = f"cura o {nome_status}{quem}"
             else:
                 txt = f"não havia {nome_status}{quem} para curar"
-            extra = f" — imune a {nome_status} por **{rod}** rodada(s)!" if rod else "."
+            extra = T("quadro.imune_a_por_rodada_s", nome_status=nome_status, rod=rod) if rod else "."
             await self.gm_say(T("narracao.usa", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), txt=txt, extra=extra))
         elif effect == "coat_poison":
             _is_ranged, cargas = self._aplicar_veneno_na_arma(p, vid, weapon_slot)
-            desc = (f"{VENENO_CARGAS} disparos (acerto ou erro) envenenam o alvo"
+            desc = (T("quadro.disparos_acerto_ou_erro_envenenam_o_alvo", VENENO_CARGAS=VENENO_CARGAS)
                     if _is_ranged else T("narracao.veneno_golpes_desc", n=cargas))
             await self.gm_say(
                 T("narracao.unta_na_arma_2", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), desc=desc))
@@ -48096,9 +48114,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p["oculto_vela"] = True
             p["oculto_vela_rodadas"] = max(1, int(val or 2))
             if p.get("class_id") == "rogue":
-                extra = " — seu próximo ataque é um **Ataque Furtivo** automático!"
+                extra = T("quadro.seu_proximo_ataque_e_um_ataque_furtivo_autom")
             else:
-                extra = " — seu próximo ataque tem **vantagem**!"
+                extra = T("quadro.seu_proximo_ataque_tem_vantagem")
             await self.gm_say(
                 T("narracao.acende_a_e_a_luz_em_volta_e_sugada_fica", item_emoji=item['emoji'], heroi=p['name'], item=nome_item(item), extra=extra))
         elif effect == "reveal_traps_potion":
@@ -48414,21 +48432,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if p["class_id"] not in magia.get("classe", []):
             rc = random.randint(1, 100)
             if rc <= 50:
-                falhou = True; motivos.append(f"classe errada (d100={rc}≤50%)")
+                falhou = True; motivos.append(T("quadro.classe_errada_d100", rc=rc))
             else:
-                motivos.append(f"classe ok (d100={rc}>50%)")
+                motivos.append(T("quadro.classe_ok_d100", rc=rc))
         # 2) Falha por nÃ­vel â€” (nÃ­vel do pergaminho âˆ’ nÃ­vel do personagem) Ã— 15% (teto 95%).
         diff = max(0, nivel - p.get("level", 1))
         chance = min(PERGAMINHO_FALHA_MAX, diff * 15)
         if chance > 0:
             rn = random.randint(1, 100)
             if rn <= chance:
-                falhou = True; motivos.append(f"nível (d100={rn}≤{chance}%)")
+                falhou = True; motivos.append(T("quadro.nivel_d100", rn=rn, chance=chance))
             else:
-                motivos.append(f"nível ok (d100={rn}>{chance}%)")
+                motivos.append(T("quadro.nivel_ok_d100", rn=rn, chance=chance))
 
         if not falhou:
-            extra = f" ({'; '.join(motivos)})" if motivos else ""
+            extra = T("quadro.motivos_parenteses", motivos=motivos) if motivos else ""
             await self.gm_say(T("narracao.conjuracao_bem_sucedida", extra=extra))
             await self._pergaminho_conjurar(p, magia, data or {}, nivel, int_b, talentos)
         else:
@@ -48436,10 +48454,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             rh = random.randint(1, 100) if harm > 0 else 100
             if harm > 0 and rh <= harm:
                 await self.gm_say(
-                    T("narracao.a_magia_falha_e_provoca_um_efeito_nocivo", join_motivos='; '.join(motivos), rh=rh, harm=harm))
+                    T("narracao.a_magia_falha_e_provoca_um_efeito_nocivo", join_motivos=motivos, rh=rh, harm=harm))
                 await self._pergaminho_efeito_nocivo(p, magia, data or {}, nivel, int_b, talentos)
             else:
-                await self.gm_say(T("narracao.o_pergaminho_falha_e_a_energia_se_dissip", join_motivos='; '.join(motivos)))
+                await self.gm_say(T("narracao.o_pergaminho_falha_e_a_energia_se_dissip", join_motivos=motivos))
 
         await self.push_state()
 
@@ -49013,7 +49031,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not passou:
                 p["ciclope_ataque_penalty_ate"] = self.round_num + int(ab.get("duration_rounds", 1) or 1)
                 await self._enviar_trap_result(
-                    p, "Presença Aterradora", "😱", sucesso=False, dano=0, metade=False,
+                    p, T("quadro.presenca_aterradora"), "😱", sucesso=False, dano=0, metade=False,
                     descricao="", efeitos_extra=[], tipo="presenca_aterradora",
                     tipo_id="presenca_aterradora", imagem="medo.png",
                     duracao=int(ab.get("duration_rounds", 1) or 1),
@@ -49059,10 +49077,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             target["perde_turno"] = True
             await self._enviar_resultado_atordoamento(
                 target,
-                f"O Golpe Esmagador de {nome_criatura(m)} deixou você atordoado.",
-                "1 rodada",
-                ["Você perde sua próxima rodada",
-                 "Não pode se mover, atacar nem usar habilidades durante esse turno"],
+                T("quadro.o_golpe_esmagador_de_deixou_voce_atordoado", nome_criatura_m=nome_criatura(m)),
+                T("quadro.1_rodada"),
+                [T("quadro.voce_perde_sua_proxima_rodada"),
+                 T("quadro.nao_pode_se_mover_atacar_nem_usar_habilidade_2")],
             )
             await self.gm_say(T("narracao.fica_atordoado_fortitude_vs_cd_e_perde_a",
                                 tgt_name=nome_criatura(target), stot=total,
@@ -49772,7 +49790,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         limite = int((piece or {}).get("corrosao_penalidade_max", 0) or 0) or pen
         return False, max(0, min(lvl - extra, pen, limite))
 
-    async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label="Corrosão",
+    async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label=None,
                                    randomize=False, ignore_material=False, notify=True,
                                    corrosion_type=None):
         """Degrada UMA peça na prioridade armadura → escudo → arma → elmo → botas.
@@ -49782,6 +49800,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         `m` (o monstro que corrói) pode ser None quando a corrosão não vem de um
         Devorador — é o caso da Maldição da Ferrugem, que não tem monstro por trás;
         nesse caso ninguém é curado pela destruição da peça."""
+        if label is None:
+            label = T("quadro.corrosao")
         c = self._corr(p)
         material = "metal" if armaduras_ids is CORROSAO_ARMADURA_METAL else "organic"
         mats = {material}
@@ -49855,12 +49875,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 else:
                     gear[slot] = None
                 await self.gm_say(T("narracao.de_foi_destruida_permanentemente", nome_peca=nome_item(peca), heroi=p['name']))
-                perdas = ["A peça foi destruída permanentemente", "Todos os bônus desta peça foram removidos"]
+                perdas = [T("quadro.peca_destruida_permanentemente"), T("quadro.todos_os_bonus_removidos")]
                 if slot == "armor" and peca.get("ac_bonus"):
-                    perdas.insert(1, f"CA -{peca['ac_bonus']} (bônus da armadura perdido)")
+                    perdas.insert(1, T("quadro.ca_menos_bonus_perdido", n=peca['ac_bonus']))
                 if notify:
                     await self._enviar_resultado_equipamento_danificado(
-                        p, label, nome_peca, "destruído", perdas,
+                        p, label, nome_item(peca), estado_corrosao_T("destruído"), perdas,
                         arma_quebrada=(slot == "weapon"), armadura_quebrada=(slot == "armor"))
                 if m is not None:
                     await self._devorador_cura(m, cura)
@@ -49872,13 +49892,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                              "estado": "intacto", "destruida": False}
             else:
                 rot = CORROSAO_NIVEL_NOME.get(nivel_pen, "muito danificado")
-                await self.gm_say(T("narracao.de_esta", label=label, nome_peca=nome_item(peca), heroi=p['name'], rot=rot, nivel_pen=nivel_pen))
-                penalidade = (f"CA -{nivel_pen}" if slot in ("armor", "off_hand", "head")
-                               else (f"Acerto e dano -{nivel_pen}" if slot == "weapon"
-                                     else f"Movimento -{nivel_pen}"))
+                await self.gm_say(T("narracao.de_esta", label=label, nome_peca=nome_item(peca), heroi=p['name'], rot=estado_corrosao_T(rot), nivel_pen=nivel_pen))
+                penalidade = (T("quadro.ca_menos", n=nivel_pen) if slot in ("armor", "off_hand", "head")
+                               else (T("quadro.acerto_e_dano_menos", n=nivel_pen) if slot == "weapon"
+                                     else T("quadro.movimento_menos", n=nivel_pen)))
                 if notify:
                     await self._enviar_resultado_equipamento_danificado(
-                        p, label, nome_peca, rot, [penalidade, "A corrosão piora se a peça for atingida novamente"])
+                        p, label, nome_item(peca), estado_corrosao_T(rot), [penalidade, T("quadro.corrosao_piora")])
                 resultado = {"slot": slot, "peca": nome_peca, "nivel": lvl,
                              "estado": rot, "destruida": False}
             return resultado
@@ -49892,21 +49912,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         await self.send_to(alvo["id"], {
             "type": "equipment_damage_result", "tipo": ("arma_quebrada" if arma_quebrada else ("armadura_quebrada" if armadura_quebrada else "equipamento_danificado")),
-            "nome": ("Arma Quebrada" if arma_quebrada else ("Armadura Quebrada" if armadura_quebrada else "Equipamento Danificado")), "fonte": fonte, "peca": peca, "estado": estado,
-            "icone": "💥" if arma_quebrada else ("🛡️" if armadura_quebrada else "🛠️"), "descricao": (f"{peca} quebrou sob {fonte} e não pode mais ser usada."
-                if arma_quebrada else (f"{peca} quebrou sob {fonte}; sua proteção foi perdida." if armadura_quebrada else f"{fonte} atingiu {peca}. Estado: {estado}.")),
+            "nome": (T("quadro.arma_quebrada") if arma_quebrada else (T("quadro.armadura_quebrada") if armadura_quebrada else T("quadro.equipamento_danificado"))), "fonte": fonte, "peca": peca, "estado": estado,
+            "icone": "💥" if arma_quebrada else ("🛡️" if armadura_quebrada else "🛠️"), "descricao": (T("quadro.quebrou_sob_e_nao_pode_mais_ser_usada", peca=peca, fonte=fonte)
+                if arma_quebrada else (T("quadro.quebrou_sob_sua_protecao_foi_perdida", peca=peca, fonte=fonte) if armadura_quebrada else T("quadro.atingiu_estado", fonte=fonte, peca=peca, estado=estado))),
             "efeitos_extra": efeitos,
         })
 
     async def _aplicar_toque_putrefato(self, m, p):
         """Devorador Orgânico: corrói couro/manto e armas de madeira (cura 1d4)."""
         await self._corroer_equipamento(m, p, CORROSAO_ARMADURA_ORGANICA,
-                                        CORROSAO_ARMA_MADEIRA, "1d4", "Toque Putrefato")
+                                        CORROSAO_ARMA_MADEIRA, "1d4", T("quadro.toque_putrefato"))
 
     async def _aplicar_mordida_corrosiva(self, m, p):
         """Devorador de Metal: corrói armaduras e armas de METAL (cura 1d6)."""
         await self._corroer_equipamento(m, p, CORROSAO_ARMADURA_METAL,
-                                        CORROSAO_ARMA_METAL, "1d6", "Mordida Corrosiva")
+                                        CORROSAO_ARMA_METAL, "1d6", T("quadro.mordida_corrosiva"))
 
     async def _aplicar_corrosao_viva(self, m, p):
         """Corrosão Viva: alvo SEM armadura ganha uma pilha de DoT (1 dano/turno
@@ -51065,19 +51085,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         save_ok, d20, sb, stot = self._testar_save(p, "reflexos", 12)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": T("dado.nome_save", nome=p['name'], save=T("dado.save.reflexos"))})
-        extras = [f"👹 {monstro['name']} salta do objeto em {destino[0]},{destino[1]}!"]
+        extras = [T("quadro.salta_do_objeto_em", name=nome_criatura(monstro), v0=destino[0], v1=destino[1])]
         await self.gm_say(T("narracao.ativa_um_bau_armadilha_surge", heroi=p['name'], monstro=nome_criatura(monstro)))
         if not save_ok:
-            extras.append("⚔️ Falhou nos Reflexos: o monstro ataca imediatamente!")
-            await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=False, dano=0, metade=False,
-                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras, tipo_id='bau_armadilha')
+            extras.append(T("quadro.falhou_nos_reflexos_o_monstro_ataca_imediata"))
+            await self._enviar_trap_result(p, T("quadro.bau_armadilha_titulo"), "📦", sucesso=False, dano=0, metade=False,
+                                            descricao=T("quadro.reflexos_cd_12_a_criatura_salta_do_objeto"), efeitos_extra=extras, tipo_id='bau_armadilha')
             ataques = monstro.get("attacks") or []
             if ataques:
                 await self._execute_one_monster_attack(monstro, ataques[0], {"kind": "player", "obj": p})
         else:
-            extras.append("✅ Reflexos bem-sucedidos: ele só agirá na próxima rodada.")
-            await self._enviar_trap_result(p, "Baú-Armadilha", "📦", sucesso=True, dano=0, metade=False,
-                                            descricao="Reflexos CD 12. A criatura salta do objeto.", efeitos_extra=extras, tipo_id='bau_armadilha')
+            extras.append(T("quadro.reflexos_bem_sucedidos_ele_so_agira_na_proxi"))
+            await self._enviar_trap_result(p, T("quadro.bau_armadilha_titulo"), "📦", sucesso=True, dano=0, metade=False,
+                                            descricao=T("quadro.reflexos_cd_12_a_criatura_salta_do_objeto"), efeitos_extra=extras, tipo_id='bau_armadilha')
         await self.push_state()
 
     def _armadilhas_do_mecanismo(self, d):
@@ -52982,7 +53002,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             crit = True
 
         if hit and is_player and await self._oferecer_sorte(target, {
-                "kind": "monster_attack", "texto": f"{m['name']} acertou você. Usar Sorte para forçá-lo a rerrolar com −2?"}):
+                "kind": "monster_attack", "texto": T("quadro.acertou_voce_usar_sorte_para_forca_lo_a_rerr", name=nome_criatura(m))}):
             hit, roll, total, crit, _ = self._rolar_ataque(m_atk - 2, effective_ac, vantagem, desvantagem)
             await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                                   "label": T("dado.sorte_rerrola", nome=nome_criatura(m)), "hit": hit, "crit": crit})
@@ -54126,18 +54146,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         elemento = (ability.get("damage_types") or [DMG_FIRE])[0]
         nomes_elemento = {DMG_FIRE: "fogo", DMG_COLD: "gelo", DMG_LIGHTNING: "eletricidade"}
-        efeitos = [f"{dano} de dano de {nomes_elemento.get(elemento, elemento)}"]
+        efeitos = [T("quadro.de_dano_de", dano=dano, nomes_elemento_get_e=nomes_elemento.get(elemento, elemento))]
         if passou:
-            efeitos.append("Sucesso no teste de Reflexos: efeito reduzido")
+            efeitos.append(T("quadro.sucesso_no_teste_de_reflexos_efeito_reduzido"))
         else:
-            efeitos.append("Falha no teste de Reflexos: dano total")
+            efeitos.append(T("quadro.falha_no_teste_de_reflexos_dano_total"))
         formato = "cone" if ability.get("shape", "linha") != "linha" else "linha"
         await self.send_to(alvo["id"], {
             "type": "trap_result", "tipo": "sopro_dragao", "tipo_id": "sopro_dragao",
-            "nome": "Sopro de Dragão", "icone": "🐉", "dano": dano,
+            "nome": T("quadro.sopro_de_dragao"), "icone": "🐉", "dano": dano,
             "metade": bool(passou), "sucesso": False,
-            "descricao": (f"{fonte} usa Sopro de Dragão em {formato}. "
-                           f"Reflexos {total_save} vs. CD {cd}."),
+            "descricao": (T("quadro.usa_sopro_de_dragao_em_reflexos_vs_cd", fonte=fonte, formato=formato, total_save=total_save, cd=cd)),
             "efeitos_extra": efeitos,
         })
 
@@ -54903,10 +54922,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             else:
                 alvo["turbilhao_perde_acao"] = True
             await self._enviar_resultado_atordoamento(
-                alvo, "O Turbilhão do Elemental de Ar o deixa sem fôlego.",
-                "1 turno",
-                (["Você perde o movimento no próximo turno"] if passou
-                 else ["Você perde a próxima ação", "Duração: até o próximo turno"]))
+                alvo, T("quadro.o_turbilhao_do_elemental_de_ar_o_deixa_sem_f"),
+                T("quadro.1_turno"),
+                ([T("quadro.voce_perde_o_movimento_no_proximo_turno")] if passou
+                 else [T("quadro.voce_perde_a_proxima_acao"), T("quadro.duracao_ate_o_proximo_turno")]))
             await self.gm_say(
                 T("narracao.sofre_do_turbilhao_e_perdera" if passou
                   else "narracao.sofre_do_turbilhao_e_perdera_acao",
@@ -54977,7 +54996,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     target["petrificado"] = True
                     target["petrificado_rodadas"] = ability.get("effect_duration", 1)
                     await self._aplicar_queda(target, "petrificacao", m.get("id"))
-                    await self._enviar_resultado_petrificacao(target, target["petrificado_rodadas"], ability.get("name", "Petrificação"))
+                    await self._enviar_resultado_petrificacao(target, target["petrificado_rodadas"], ability.get("name", T("quadro.petrificacao")))
                     await self.gm_say(T("narracao.foi_petrificado", tgt_name=nome_criatura(target)))
             elif effect == "dormindo":
                 target["dormindo"] = True
@@ -55956,7 +55975,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         preso["pos"] = list(m.get("pos", preso.get("pos", [0, 0])))
         await self.gm_say(T("narracao.engole", monstro=nome_criatura(m), preso_get_name_or_preso=nome_criatura(preso)))
         await self._enviar_trap_result(
-            preso, "Engolido", "🫀", sucesso=False, dano=0, metade=False,
+            preso, T("quadro.engolido"), "🫀", sucesso=False, dano=0, metade=False,
             descricao="", efeitos_extra=[], tipo_id="engolido",
             monstro=nome_criatura(m),
             acid_damage=ab.get("acid_damage", "3d6"),
@@ -58183,9 +58202,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     else:
                         alvo["turbilhao_perde_acao"] = True
                     await self._enviar_resultado_atordoamento(
-                        alvo, "O Turbilhão do Elemental de Ar o deixa sem fôlego.", "1 turno",
-                        (["Você perde o movimento no próximo turno"] if passou
-                         else ["Você perde a próxima ação", "Duração: até o próximo turno"]),
+                        alvo, T("quadro.o_turbilhao_do_elemental_de_ar_o_deixa_sem_f"), T("quadro.1_turno"),
+                        ([T("quadro.voce_perde_o_movimento_no_proximo_turno")] if passou
+                         else [T("quadro.voce_perde_a_proxima_acao"), T("quadro.duracao_ate_o_proximo_turno")]),
                     )
                     await self.gm_say(T("narracao.sofre_do_turbilhao_e_perdera" if passou
                                         else "narracao.sofre_do_turbilhao_e_perdera_acao",
@@ -58557,8 +58576,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     target["perde_turno"] = True
                     await self._aplicar_queda(target, "atordoamento", m.get("id"))
                     await self._enviar_resultado_atordoamento(
-                        target, "A Força Descomunal do ogro o deixa atordoado.", "1 rodada",
-                        ["Você perde a próxima rodada", "Não pode mover, atacar ou usar habilidades durante esse turno"],
+                        target, T("quadro.a_forca_descomunal_do_ogro_o_deixa_atordoado"), T("quadro.1_rodada"),
+                        [T("quadro.voce_perde_a_proxima_rodada"), T("quadro.nao_pode_mover_atacar_ou_usar_habilidades_du")],
                     )
                     await self.gm_say(T("narracao.fica_atordoado_fortitude_vs_cd_e_perde_a", tgt_name=nome_criatura(target), stot=stot, dc=dc))
         else:                                                      # ataque normal
@@ -58654,10 +58673,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if self._eh_jogador(alvo) and alvo.get("id"):
             await self.send_to(alvo["id"], {
                 "type": "acid_spit_result", "tipo": "jato_acido_residual",
-                "nome": "Ácido Residual", "icone": "🧪", "dano": dano,
+                "nome": T("quadro.acido_residual"), "icone": "🧪", "dano": dano,
                 "metade": False,
-                "descricao": "O ácido do jato continua queimando no início do seu turno.",
-                "efeitos_extra": [f"{dano} de dano de ácido no turno seguinte"],
+                "descricao": T("quadro.o_acido_do_jato_continua_queimando_no_inicio"),
+                "efeitos_extra": [T("quadro.de_dano_de_acido_no_turno_seguinte", dano=dano)],
             })
 
     async def _cuspir_acido(self, m, target_obj, ability=None):
@@ -58716,7 +58735,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             corrosion = await self._corroer_equipamento(corrosor, alvo,
                 CORROSAO_ARMADURA_ORGANICA | CORROSAO_ARMADURA_METAL,
                 CORROSAO_ARMA_MADEIRA | CORROSAO_ARMA_METAL,
-                label="Ácido do Grotão", corrosion_type=DMG_ACID)
+                label=T("quadro.acido_do_grotao"), corrosion_type=DMG_ACID)
         await self.broadcast({
             "type": "spell_animation", "spell_id": "cuspir_acido", "phase": "resolve",
             "animation_id": animation_id, "damage": dano, "save": bool(passou),
@@ -59364,11 +59383,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     hit, roll, total, crit, discarded = self._rolar_ataque(m_atk, effective_ac, vantagem, desvantagem)
                     modo = "vantagem" if vantagem else "desvantagem"
                     motivos = []
-                    if prov: motivos.append("provocado")
-                    if esc == "desvantagem": motivos.append("escuridão")
-                    if esc == "vantagem": motivos.append("vê na escuridão")
+                    if prov: motivos.append(T("quadro.provocado"))
+                    if esc == "desvantagem": motivos.append(T("quadro.escuridao"))
+                    if esc == "vantagem": motivos.append(T("quadro.ve_na_escuridao"))
                     await self.gm_say(
-                        T("narracao.ataca_com_d20_usado_descartado", monstro=nome_criatura(m), modo=modo, join_motivos=', '.join(motivos), roll=roll, discarded=discarded))
+                        T("narracao.ataca_com_d20_usado_descartado", monstro=nome_criatura(m), modo=modo, join_motivos=motivos, roll=roll, discarded=discarded))
                     await self.broadcast({"type": "dice_roll", "die": "d20", "value": discarded,
                                           "label": T("dado.nome_descartado", nome=nome_criatura(m)), "discarded": True})
                     await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
@@ -59516,10 +59535,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if esgotado:
                 await self._aplicar_dano_alvo(p, 1, DMG_PHYSICAL, None)
                 motivos = []
-                if p.get("fome", 1) <= 0: motivos.append("fome")
-                if p.get("sede", 1) <= 0: motivos.append("sede")
+                if p.get("fome", 1) <= 0: motivos.append(T("quadro.fome"))
+                if p.get("sede", 1) <= 0: motivos.append(T("quadro.sede"))
                 await self.gm_say(
-                    T("narracao.sofre_de_exaustao_1_hp", heroi=p['name'], e_join_motivos=' e '.join(motivos), p_hp=p['hp'], p_max_hp=p['max_hp']))
+                    T("narracao.sofre_de_exaustao_1_hp", heroi=p['name'], e_join_motivos=motivos, p_hp=p['hp'], p_max_hp=p['max_hp']))
 
     # â”€â”€ death & XP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -60159,13 +60178,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "estado": "morte_definitiva",
             "target_id": p["id"],
             "pos": list(p.get("pos", [0, 0])),
-            "nome": "Você morreu",
+            "nome": T("quadro.voce_morreu"),
             "icone": "💀",
-            "descricao": "Seu personagem morreu em combate.",
+            "descricao": T("quadro.seu_personagem_morreu_em_combate"),
             "efeitos_extra": [
-                "Você não pode mais agir nesta aventura",
-                "Torça para que seus companheiros consigam resgatá-lo",
-                "Um aliado pode trazê-lo de volta com Ressurreição",
+                T("quadro.voce_nao_pode_mais_agir_nesta_aventura"),
+                T("quadro.torca_para_que_seus_companheiros_consigam_re"),
+                T("quadro.um_aliado_pode_traze_lo_de_volta_com_ressurr"),
             ],
         })
         await self.gm_say(T("narracao.foi_derrotado_os_companheiros_devem_cont", heroi=p['name']))

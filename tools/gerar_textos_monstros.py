@@ -24,6 +24,17 @@ CAMPOS = {"name", "nome", "descricao", "description", "desc", "label"}
 SUBARVORES = {"special_abilities", "attacks", "weaknesses", "resistances", "garra_attack"}
 LETRA = re.compile(r"[A-Za-zÀ-ÿ]{2,}")
 
+# Nomes que o servidor grava crus nos dados (comparados ou salvos na foto) e
+# que precisam sair traduzidos na tela e na narração: entram pelo mesmo índice.
+EXTRAS = {
+    "Coronhada da besta": "Crossbow butt",
+    "Moedas de Ouro": "Gold Coins",
+    "a fonte do olhar": "the source of the gaze",
+    "Nuvem de Gás": "Gas Cloud",
+    "Baú-armadilha": "Trapped chest",
+    "armadilha de dardos": "dart trap",
+}
+
 
 def chave_de(texto):
     base = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
@@ -77,11 +88,18 @@ def gravar(dic):
 def main():
     import server as S
     atual = ler_existente()
+    # A biblioteca de habilidades do editor também vira ficha de monstro
+    # personalizado, com o mesmo texto nativo.
+    biblioteca = S._base_ability_library()
+    biblioteca = list(biblioteca.values()) if isinstance(biblioteca, dict) else list(biblioteca)
     textos = coletar(S.MONSTER_DEFS)
+    for t in coletar([{"special_abilities": biblioteca}]) + list(EXTRAS):
+        if t not in textos:
+            textos.append(t)
     novo = {}
     for pt in textos:
         k = chave_de(pt)
-        novo[k] = {"en": (atual.get(k) or {}).get("en", ""), "pt": pt}
+        novo[k] = {"en": (atual.get(k) or {}).get("en", "") or EXTRAS.get(pt, ""), "pt": pt}
     if "--importar" in sys.argv:
         trad = json.load(open(sys.argv[sys.argv.index("--importar") + 1], encoding="utf-8"))
         for ent in novo.values():
