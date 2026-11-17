@@ -1973,13 +1973,25 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "flechas_magicas_mais_2"
+          },
+          {
+            "id": "pocao_voo"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         2,
         0.5
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "travessia_arvore_seca_27",

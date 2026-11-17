@@ -6621,12 +6621,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "espada_sangramento_longa"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_203",

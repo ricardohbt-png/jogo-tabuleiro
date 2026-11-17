@@ -54,16 +54,25 @@ ESCONDERIJOS = [
     ("elara_montanha_3", "carav_barril_11", "barril", 16, 0, ["cinzas_ardentes"]),
     # Sombras sob Alva e Luz
     ("sombras_1_vau", "vau_carroca", "carroca", 12, 0, ["lampada_vigilia_arcana", "pocao_voo"]),
+    ("sombras_1_vau", "decor_57", "arvore", 12, 20, ["boina_batedor"]),
     ("sombras_2_minas", "minas_barril_esconderijo", "barril", 13, 25, ["anel_vigia", "pocao_velocidade"],
      [29, 3]),
+    ("sombras_2_minas", "minas_barril_fundo", "barril", 13, 0, ["anel_impacto", "moeda_da_sorte"], [18, 8]),
     ("sombras_3a_saloes", "decor_14", "estante_armas", 14, 0, ["ferroada"]),
+    ("sombras_3a_saloes", "decor_9", "barril", 14, 0, ["chapeu_cacador", "pocao_velocidade"]),
     ("sombras_3b_trono", "decor_1", "trono", 15, 0, ["machadinha_runica_vai_e_volta"]),
+    ("sombras_3b_trono", "trono_barril_esconderijo", "barril", 15, 40, ["anel_supremacia"], [1, 15]),
     # A Maré do Charco
     ("charcos_1_bordas", "decor_18", "arvore_seca", 13, 0, ["flechas_magicas", "pocao_barreira_arcana"]),
+    ("charcos_1_bordas", "bordas_arvore_48", "arvore", 13, 0, ["anel_vigia"]),
     ("charcos_2_palafitas", "palafitas_barril_25", "barril", 15, 0, ["maca_zero_absoluto"]),
+    ("charcos_2_palafitas", "palafitas_barril_27", "barril", 14, 0, ["chapeu_explorador"]),
     ("charcos_3_travessia", "travessia_arvore_seca_25", "arvore_seca", 14, 0, ["boina_alerta", "flechas_explosivas"]),
+    ("charcos_3_travessia", "travessia_arvore_seca_26", "arvore_seca", 14, 0, ["flechas_magicas_mais_2", "pocao_voo"]),
     ("charcos_4a_arredores", "decor_251", "arvore", 14, 0, ["anel_aguia"]),
+    ("charcos_4a_arredores", "decor_250", "arvore", 15, 0, ["chapeu_conjurador"]),
     ("charcos_4b_aldeia", "decor_255", "arvore_seca", 15, 35, ["chapeu_arquimago"]),
+    ("charcos_4b_aldeia", "decor_202", "arvore", 15, 0, ["espada_sangramento_longa"]),
 ]
 
 
