@@ -5,7 +5,7 @@ aiohttp>=3.14.3
 # O SERVIDOR nao usa mais: a lib recusa todo metodo HTTP != GET dentro do
 # proprio parser, o que a impede de responder as sondas HEAD das plataformas
 # de hospedagem. Ver docs/superpowers/specs/2026-08-29-camada-de-rede-aiohttp-design.md
-websockets==16.0
+websockets==17.4
 
 # Reduz as imagens pedidas com ?w= (icones de item, peoes, objetos): pela
 # internet e o que mais pesa. OPCIONAL: sem ele o servidor serve o original.
