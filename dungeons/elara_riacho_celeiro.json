@@ -3126,13 +3126,28 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "flechas_magicas"
+          },
+          {
+            "id": "virotes_magicos"
+          },
+          {
+            "id": "pocao_velocidade"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "estante_armas_cranios.png",
       "size": [
         3,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_66",

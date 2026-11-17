@@ -158,7 +158,7 @@ class InteriorTests(unittest.TestCase):
 
     def test_celas_tem_o_que_achar(self):
         d = M.masmorra_leonel_2()
-        com_loot = [o for o in d["decorations"] if o.get("loot")]
+        com_loot = [o for o in d["decorations"] if o.get("loot") and not o.get("escondido")]  # esconderijos: tools/esconder_tesouros.py
         self.assertGreaterEqual(len(com_loot), 3)
         self.assertTrue(all(o["type"] == "gaiola" for o in com_loot))
 

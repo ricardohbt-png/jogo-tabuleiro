@@ -1873,12 +1873,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "bracelete_guarda_reflexa"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_43",

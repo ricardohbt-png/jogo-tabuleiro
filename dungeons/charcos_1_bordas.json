@@ -2319,13 +2319,25 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "flechas_magicas"
+          },
+          {
+            "id": "pocao_barreira_arcana"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         1.5,
         1.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_19",

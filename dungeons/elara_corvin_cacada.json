@@ -2369,12 +2369,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "lamina_trovejante"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.4,
         2.6
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_42",

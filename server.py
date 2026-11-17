@@ -9619,6 +9619,13 @@ def _contar_chao_alcancavel(tiles, w, h, start, limite, pontes=None):
 # continua barrando o passo em qualquer nível.
 DECOR_VISAO_NIVEIS = ("livre", "baixo", "alto")
 
+# Esconderijo: objeto-container com `escondido` não mostra o conteúdo (nem o 💰) até um
+# herói o notar. Ao terminar um passo ao lado dele, cada herói testa UMA vez:
+# d20 + (Percepção − 10) [+2 se Ladino] contra `cd_busca`.
+ESCONDERIJO_CD_PADRAO = 13
+ESCONDERIJO_CD_MIN, ESCONDERIJO_CD_MAX = 5, 30
+ESCONDERIJO_BONUS_LADINO = 2
+
 
 def decor_visao_padrao(meta):
     if meta.get("alto"):
@@ -10166,6 +10173,16 @@ def validar_dungeon(defn):
                 carta_err = _validar_config_maldicao_carta(it, "item de carta na decoração")
                 if carta_err:
                     return False, carta_err
+        if "escondido" in de:
+            if not isinstance(de["escondido"], bool):
+                return False, "escondido deve ser verdadeiro ou falso."
+            if de["escondido"] and not de.get("loot"):
+                return False, f"esconderijo em {dtype} precisa de conteúdo (loot)."
+        if "cd_busca" in de:
+            cd = de["cd_busca"]
+            if (isinstance(cd, bool) or not isinstance(cd, int)
+                    or not ESCONDERIJO_CD_MIN <= cd <= ESCONDERIJO_CD_MAX):
+                return False, f"cd_busca deve ser um inteiro de {ESCONDERIJO_CD_MIN} a {ESCONDERIJO_CD_MAX}."
         if meta["special"] == "fountain":
             ch = de.get("charges", 0)
             if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
@@ -20874,6 +20891,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 dec["loot"] = {"gold": int(loot.get("gold", 0)),
                                "items": hidratar_itens_bau(loot.get("items", []))}
                 dec["tem_loot"] = (dec["loot"]["gold"] > 0 or bool(dec["loot"]["items"]))
+                if d.get("escondido") is True:
+                    dec["escondido"] = True
+                    dec["cd_busca"] = int(d.get("cd_busca", ESCONDERIJO_CD_PADRAO))
+                    dec["encontrado"] = False
+                    dec["buscado_por"] = []
             if meta["special"] == "fountain":
                 dec["charges"] = int(d.get("charges", meta.get("charges", 0)))
             if d.get("type") == "fumarola":
@@ -24571,6 +24593,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
+        await self._procurar_esconderijos(p)          # esconderijos com conteúdo escondido
         # A varredura vem ANTES para que o passo que revela a lição também possa
         # cumpri-la (andar até a casa do marcador). Liberar a lição SEGUINTE é
         # trabalho do próprio _licao_evento, que faz isso para os sete verbos.
@@ -50815,6 +50838,33 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _decor_by_id(self, decor_id):
         return next((d for d in self.decorations if d["id"] == decor_id), None)
 
+    @staticmethod
+    def _decor_oculto(d):
+        """Esconderijo ainda não notado por nenhum herói."""
+        return bool(d.get("escondido") and not d.get("encontrado"))
+
+    async def _procurar_esconderijos(self, p):
+        """Ao terminar um passo ao lado de um esconderijo, o herói tenta notá-lo
+        (uma vez por objeto). A rolagem é secreta: só o sucesso é narrado."""
+        if not p.get("alive") or not p.get("pos") or not getattr(self, "decorations", None):
+            return
+        quem = p.get("class_id") or p["id"]
+        for d in self.decorations:
+            if not self._decor_oculto(d) or not self._adjacente_a_decor(p["pos"], d):
+                continue
+            ja = d.setdefault("buscado_por", [])
+            if quem in ja:
+                continue
+            ja.append(quem)
+            bonus = self._get_percepcao_heroi(p) - 10
+            if p.get("class_id") == "rogue":
+                bonus += ESCONDERIJO_BONUS_LADINO
+            if random.randint(1, 20) + bonus >= int(d.get("cd_busca", ESCONDERIJO_CD_PADRAO)):
+                d["encontrado"] = True
+                meta = DECOR_TYPES.get(d["type"], {})
+                await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"],
+                                    objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+
     def _adjacente_a_decor(self, pos, d):
         """True se `pos` está a ≤1 casa (Chebyshev) de qualquer casa do footprint."""
         for tx, ty in self._decor_tiles(d):
@@ -50869,6 +50919,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_nao_encontrado")}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
+        if self._decor_oculto(d) and not self._decor_e_mecanismo(d) and not d.get("trap"):
+            # O cliente não oferece o clique num esconderijo não achado; tocar nele
+            # sem tê-lo notado não revela nada.
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_objeto_esta_vazio")}); return
         if (d.get("trap") and not d.get("trap_disarmed")
                 and (not d.get("trap_triggered") or d.get("trap", {}).get("permanente"))):
             # Investigar o objeto é o gatilho: a mesma implementação das
@@ -51077,7 +51131,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _abrir_decor_loot(self, pid, d):
         """Abre o painel de loot da decoração (reusa o painel de baú no cliente)."""
-        if not d.get("loot") or not d.get("tem_loot"):
+        if not d.get("loot") or not d.get("tem_loot") or self._decor_oculto(d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.o_objeto_esta_vazio")}); return
         await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
                                   "gold": d["loot"]["gold"], "items": d["loot"]["items"]})
@@ -51092,7 +51146,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not p or not p.get("alive"):
             return
         d = self._decor_by_id(decor_id)
-        if not d or not d.get("loot"):
+        if not d or not d.get("loot") or self._decor_oculto(d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_sem_loot")}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
@@ -51128,7 +51182,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         d = self._decor_by_id(decor_id)
         if not p or not p.get("alive"):
             return
-        if not d or not d.get("loot"):
+        if not d or not d.get("loot") or self._decor_oculto(d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_sem_loot")}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
@@ -51181,7 +51235,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "id": d["id"], "type": d["type"], "pos": d["pos"],
                 "facing": d.get("facing", [0, 1]),
                 "tiles": self._decor_tiles(d),
-                "tem_loot": bool(d.get("tem_loot")),
+                "tem_loot": bool(d.get("tem_loot")) and not self._decor_oculto(d),
                 "chest_trap": bool(d.get("chest_trap_monster_type")
                                     and not d.get("chest_trap_disarmed")
                                     and (not d.get("chest_trap_triggered") or d.get("chest_trap_permanente"))),

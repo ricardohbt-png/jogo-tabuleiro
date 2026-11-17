@@ -880,7 +880,16 @@
         0,
         1
       ],
-      "loot": null
+      "loot": {
+        "gold": 20,
+        "items": [
+          {
+            "id": "botas_passo_felino"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "casa_estante_9",

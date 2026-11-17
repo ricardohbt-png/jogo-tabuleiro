@@ -930,8 +930,17 @@
         1,
         0
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "ferroada"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_15",

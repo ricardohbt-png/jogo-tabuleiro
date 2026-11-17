@@ -664,9 +664,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "lampada_vigilia_arcana"
+          },
+          {
+            "id": "pocao_voo"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "carroca.png"
+      "image": "carroca.png",
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "vau_arvore_1",

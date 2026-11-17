@@ -4634,9 +4634,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "chicote_fogo"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "carroca.png"
+      "image": "carroca.png",
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_228",

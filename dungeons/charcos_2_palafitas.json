@@ -1863,8 +1863,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "maca_zero_absoluto"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "palafitas_barril_26",
