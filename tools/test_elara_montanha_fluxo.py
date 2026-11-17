@@ -142,9 +142,7 @@ class ObjetivosTests(unittest.IsolatedAsyncioTestCase):
 
 class FinalComRotaTests(unittest.TestCase):
     def texto(self, com_olho):
-        r = sala({"elara_ramo_a", "elara_mocas_salvas"})
-        if com_olho:
-            r.players["p0"]["bag"].append(dict(S._DUNGEON_ITEM_CATALOG["olho_de_arveluz"]))
+        r = sala({"elara_ramo_a", "elara_mocas_salvas"} | ({"elara_olho_recuperado"} if com_olho else set()))
         b = S._story_beat("fim:x", [GG.outro_rota()], r._requisito_do_slide)
         return " || ".join(sl.get("text", "") for sl in b["slides"])
 

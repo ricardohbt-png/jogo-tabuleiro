@@ -189,9 +189,7 @@ class FinalTests(unittest.TestCase):
     """Toda combinação de ramo x Olho x bardo x Pedro/Henrique produz um final coerente."""
 
     def texto(self, fatos, classes, olho):
-        r = sala(fatos, classes)
-        if olho:
-            r.players["p0"]["bag"].append(dict(S._DUNGEON_ITEM_CATALOG[F.ID_OLHO]))
+        r = sala(set(fatos) | ({R.F_OLHO} if olho else set()), classes)
         b = S._story_beat("fim:x", [R.outro_rota()], r._requisito_do_slide)
         return " || ".join(sl.get("text", "") for sl in b["slides"])
 
@@ -207,6 +205,8 @@ class FinalTests(unittest.TestCase):
             self.assertIn("muito maior", t, "o fecho de mistério sempre sai")
             self.assertEqual("volta ao Templo" in t, olho)
             self.assertEqual("não está aqui" in t, not olho)
+            self.assertEqual("sobe a serra" in t, not olho and R.F_RAMO_A in ramo)
+            self.assertEqual("o que sobrou do Gilo" in t, not olho and R.F_RAMO_B in ramo)
             self.assertEqual("moças de Riacho" in t, R.F_RAMO_A in ramo)
             self.assertEqual("outras servas" in t, R.F_RAMO_B in ramo)
             self.assertEqual("abraça a irmã" in t, "mage" in elenco)
@@ -214,6 +214,14 @@ class FinalTests(unittest.TestCase):
             self.assertEqual("de longe, ergue o chapéu" in t, R.F_AJUDOU in bardo)
             self.assertEqual("para outro lado" in t, R.F_TRAIU in bardo)
         self.assertEqual(n, 48)
+
+    def test_olho_recuperado_fora_da_bolsa_ainda_volta_ao_templo(self):
+        """Relato do autor: o Olho foi recuperado, mas no final não estava na bolsa (Refúgio, outro herói)
+        e o slide dizia que ele subiu a serra. O final segue a marca de história, não o inventário."""
+        for ramo in (R.F_RAMO_A, R.F_RAMO_B):
+            t = self.texto({ramo}, ("warrior",), True)
+            self.assertIn("volta ao Templo", t)
+            self.assertNotIn("não está aqui", t)
 
 
 if __name__ == "__main__":

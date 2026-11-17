@@ -136,10 +136,16 @@ SLIDES_FINAIS = [
      "sem acreditar que a luz do dia é para elas.", {"fato": "elara_mocas_salvas"}),
     ("Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
      "agradecendo calada.", {"fato": F_RAMO_B}),
+    # O Olho segue a MARCA de história, não o inventário: as três formas de recuperá-lo (rota da montanha,
+    # Praça da pedra e os pertences do Gilo) gravam F_OLHO, e o item pode estar no Refúgio ou com outro herói
+    # na hora do final. Sem ele, o destino do Olho depende do ramo: no A ele subiu a serra com a caravana; no B
+    # ficou em Graciero, com o que sobrou do Gilo.
     ("O Olho de Arveluz volta ao Templo pesado e quente. O sacerdote o toma sem agradecer e o esconde "
-     "debaixo do manto, olhando para longe.", {"item_id": F.ID_OLHO}),
+     "debaixo do manto, olhando para longe.", {"fato": F_OLHO}),
     ("O Olho de Arveluz não está aqui. Ele sobe a serra, para o norte, numa caravana que não pede licença a "
-     "ninguém.", {"item_id": F.ID_OLHO, "negar": True}),
+     "ninguém.", {"fato": F_RAMO_A, "sem_fato": F_OLHO}),
+    ("O Olho de Arveluz não está aqui. Ficou em Graciero, entre o que sobrou do Gilo, e alguém na cidade "
+     "já deve ter posto as mãos nele.", {"fato": F_RAMO_B, "sem_fato": F_OLHO}),
     ("O bardo que vocês pouparam, de longe, ergue o chapéu uma última vez. Sem ele, a cidade teria sido "
      "bem mais difícil.", {"fato": F_AJUDOU}),
     ("O bardo que vocês pouparam também ergue o chapéu, mas para outro lado. Alguém soube cedo demais da "
