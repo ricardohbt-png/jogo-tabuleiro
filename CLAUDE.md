@@ -590,7 +590,7 @@ poste, grupo esperado 4×nível 3, armadilhas de caça e falas de rastro; a 2ª 
 (arredores, baú-chave) e o Esconderijo do Gilo, onde o `gilo_dedos_sujos` (`target`) tem `fuga_chefe`: derrotado por
 qualquer dano, vence o combate (XP e objetivo) mas foge sem cadáver nem loot, com um bardo (sem nome nem rede). O
 destino de Corvin só aparece ao concluir Adhadal (`aventura_id`) e não depende de ter conversado em Corvin.
-Fatos para o plano 4 (Graciero): `elara_adhadal_vencida`, `elara_corvin_chegada` (conversa do bartender),
+**Entrada pela vila (2026-11-17):** `elara_corvin` (O Curtume) tem `so_na_cidade` e entra pelo ponto `elara_curtume` da ilustração de Corvin (fora da paliçada, a leste, entre os charcos; `pontos()` no gerador, posição preservada); a Floresta de Adhadal fica entre as cidades e continua no mapa-múndi. Fatos para o plano 4 (Graciero): `elara_adhadal_vencida`, `elara_corvin_chegada` (conversa do bartender),
 `elara_cacada_vencida`, `elara_gilo_fugiu` (fuga) e `elara_pista_graciero` (objetivo do confronto); o Gilo chega a
 Graciero com o Olho quando valem ramo B + `elara_gilo_fugiu` + `elara_pista_graciero`. Testes:
 `python -X utf8 tools/test_elara_gilo_ficha.py`, `test_elara_gilo_mapas.py`, `test_elara_gilo_dados.py` e

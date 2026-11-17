@@ -1096,7 +1096,8 @@
       "sem_fato": "",
       "aventura_id": "elara_adhadal"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   },
   "elara_graciero_beco": {
     "id": "elara_graciero_beco",

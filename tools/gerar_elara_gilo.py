@@ -87,8 +87,9 @@ def destinos():
     meio = (round((a["x"] + c["x"]) / 2, 2), round((a["y"] + c["y"]) / 2, 2))
     perto = (round(min(100, c["x"] + 2.5), 2), round(min(100, c["y"] + 2.5), 2))
 
-    def destino(did, nome, xy, etapas, fome_sede, requisito, renome):
-        return {"id": did, "nome": nome, "x": xy[0], "y": xy[1], "fome": fome_sede, "sede": fome_sede,
+    def destino(did, nome, xy, etapas, fome_sede, requisito, renome, so_na_cidade=False):
+        extra = {"so_na_cidade": True} if so_na_cidade else {}
+        return {**extra, "id": did, "nome": nome, "x": xy[0], "y": xy[1], "fome": fome_sede, "sede": fome_sede,
                 "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": ""} for arq, enc in etapas],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
@@ -99,8 +100,17 @@ def destinos():
                                  _req(fato=F_RAMO_B), 1),
         "elara_corvin": destino("elara_corvin", "O Curtume de Corvin", perto,
                                 [("elara_corvin_cacada.json", True), ("elara_corvin_gilo.json", False)], 1,
-                                _req(aventura_id="elara_adhadal"), 2),
+                                _req(aventura_id="elara_adhadal"), 2, so_na_cidade=True),
     }
+
+
+# O Curtume fica na Vila de Corvin: entra-se pela ilustração da vila, não pelo mapa-múndi (o destino tem
+# `so_na_cidade`). A Floresta de Adhadal fica entre Alva e Luz e Corvin e continua no mapa-múndi. A posição
+# do ponto é do autor: o gerador preserva x/y de um ponto já gravado.
+def pontos():
+    return {"elara_curtume": {"x": 83.0, "y": 47.0, "type": "dungeon", "name": "O Curtume de Corvin",
+                              "emoji": "🪓", "aventura": "elara_corvin", "oculto_ate_liberar": False,
+                              "ocultar_apos_concluir": True}}
 
 
 def mapas():
@@ -141,7 +151,7 @@ def garantir_ficha(gravar):
 
 def aplicar(simular=False, forcar=False, caminhos=None):
     c = dict({"cenas": S.CITY_SCENES_FILE, "adventures": S.WORLD_ADVENTURES_FILE,
-              "dungeons_dir": S.DUNGEONS_DIR, "assinaturas": ASSINATURAS}, **(caminhos or {}))
+              "pontos": S.CITY_MAP_POINTS_FILE, "dungeons_dir": S.DUNGEONS_DIR, "assinaturas": ASSINATURAS}, **(caminhos or {}))
     garantir_ficha(gravar=not simular and caminhos is None)
     mm = mapas()
     for arq, defn in mm.items():
@@ -173,6 +183,14 @@ def aplicar(simular=False, forcar=False, caminhos=None):
         manter = [cv for cv in (slot.get("conversations") or []) if not str(cv.get("id", "")).startswith("elara_")]
         slot["conversations"] = manter + convs
 
+    mapa_pontos = _ler(c["pontos"], {})
+    da_vila = mapa_pontos.setdefault(CIDADE, {})
+    for pid, novo in pontos().items():
+        antigo = da_vila.get(pid) or {}
+        if "x" in antigo and "y" in antigo:          # a posição na ilustração é do autor
+            novo["x"], novo["y"] = antigo["x"], antigo["y"]
+        da_vila[pid] = novo
+
     aventuras = _ler(c["adventures"], {})
     for did, dest in destinos().items():
         anterior = aventuras.get(did) or {}
@@ -182,6 +200,7 @@ def aplicar(simular=False, forcar=False, caminhos=None):
     if simular:
         print(f"conversas: {[cv['id'] for convs in conversas().values() for cv in convs]}")
         print(f"destinos: {list(destinos())}")
+        print(f"pontos da vila: {list(pontos())}")
         print(f"mapas: {list(mm)}")
         return
     os.makedirs(c["dungeons_dir"], exist_ok=True)
@@ -191,6 +210,7 @@ def aplicar(simular=False, forcar=False, caminhos=None):
     _gravar(c["assinaturas"], assin)
     _gravar(c["cenas"], cenas)
     _gravar(c["adventures"], aventuras)
+    _gravar(c["pontos"], mapa_pontos)
     S._regen_dungeons_index()
 
 

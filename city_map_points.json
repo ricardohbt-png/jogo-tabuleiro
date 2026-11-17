@@ -203,6 +203,16 @@
       "type": "caravana",
       "oculto_ate_liberar": false,
       "ocultar_apos_concluir": false
+    },
+    "elara_curtume": {
+      "x": 83.0,
+      "y": 47.0,
+      "type": "dungeon",
+      "name": "O Curtume de Corvin",
+      "emoji": "🪓",
+      "aventura": "elara_corvin",
+      "oculto_ate_liberar": false,
+      "ocultar_apos_concluir": true
     }
   },
   "graciero": {
