@@ -15929,7 +15929,10 @@ function _drawSpinAttack2D(ctx, state, now){
 function _resistanceInfo(type){
   const key = String(type || '').toLowerCase();
   const table = VC.feedback?.combat?.resistance || {};
-  return table[key] || {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || t('ui.hud.resistencia')};
+  const base = table[key];
+  if(!base) return {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || t('ui.hud.resistencia')};
+  // O rótulo da tabela visual é só reserva: o texto vem do dicionário.
+  return {...base, label: _rotulo(key, 'ui.resistencia', base.label).toUpperCase()};
 }
 
 function _resistanceFeedbackVisible(f, state){

@@ -117,6 +117,17 @@ window.LANG_INTERFACE = {
   "ui.diario.tentar_novamente": {"en": "Try again", "pt": "Tentar novamente"},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
+  "ui.inv.estatisticas_indisponiveis": {"pt": "Estatísticas indisponíveis.", "en": "Stats unavailable."},
+  "ui.inv.atalhos": {"pt": "Atalhos", "en": "Shortcuts"},
+  "ui.inv.atalhos_titulo": {"pt": "ATALHOS", "en": "SHORTCUTS"},
+  "ui.inv.slots_atalho": {"pt": "Slots de atalho", "en": "Shortcut slots"},
+  "ui.inv.estatisticas": {"pt": "Estatísticas", "en": "Stats"},
+  "ui.inv.mostrar_estatisticas": {"pt": "Mostrar estatísticas", "en": "Show stats"},
+  "ui.inv.ocultar_estatisticas": {"pt": "Ocultar estatísticas", "en": "Hide stats"},
+  "ui.inv.mostrar_atalhos": {"pt": "Mostrar atalhos", "en": "Show shortcuts"},
+  "ui.inv.ocultar_atalhos": {"pt": "Ocultar atalhos", "en": "Hide shortcuts"},
+  "ui.inv.reserva": {"pt": "Reserva", "en": "Reserve"},
+  "ui.inv.reserva_regen": {"pt": "{hp} HP; +1 HP por rodada", "en": "{hp} HP; +1 HP per round"},
   "ui.inv.aljava_slot_vazio": {"pt": "Munição {n} (até 40)", "en": "Ammunition {n} (up to 40)"},
   "dado.bomba_de_flash_de_gilo": {
     "en": "Gilo's Flash Bomb",
@@ -10050,6 +10061,11 @@ window.LANG_INTERFACE = {
     "en": "🎭 You are the Master — you will control the monsters in the dungeon.",
     "pt": "🎭 Você é o Mestre — controlará os monstros na masmorra."
   },
+  "ui.comparar.dano": {"pt": "Dano", "en": "Damage"},
+  "ui.sobrevivencia.entrou_colapso": {"pt": "💀 {heroi} entrou em colapso total!", "en": "💀 {heroi} has fully collapsed!"},
+  "ui.sobrevivencia.recuperou_colapso": {"pt": "✅ {heroi} se recuperou do colapso!", "en": "✅ {heroi} recovered from the collapse!"},
+  "ui.sobrevivencia.em_colapso": {"pt": "💀 {heroi} em colapso — {n} turnos para morte permanente", "en": "💀 {heroi} collapsed — {n} turns until permanent death"},
+  "ui.sobrevivencia.morreu_fome_sede": {"pt": "💀 {heroi} morreu de fome e sede!", "en": "💀 {heroi} died of hunger and thirst!"},
   "ui.sobrevivencia.aviso_colapso": {
     "en": "⚠️ Restore hunger or thirst within {n} turns or you will die!",
     "pt": "⚠️ Recupere fome ou sede em {n} turnos ou morrerá!"

@@ -858,7 +858,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
         slot.setAttribute('role', 'button');
         slot.setAttribute('aria-label', item ? _itemDisplayName(item) : t('ui.inv.espaco_vazio'));
       }
-      slot.title = item ? _itemDisplayName(item) : 'Vazio';
+      slot.title = item ? _itemDisplayName(item) : t('ui.inv.espaco_vazio');
       slot.innerHTML = item ? `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '📦')}</span>${_ammoCountBadgeHTML(item)}` : '';
       const action = _bagActionState(item, player);
       const { isScroll, isConsumable, isArremessavel, podeUsar, podeConjurar, podeArremessar } = action;
@@ -928,19 +928,19 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   function _statusPanelMarkup(player){
     if(typeof window._renderStatusPanelHTML === 'function')
       return window._renderStatusPanelHTML(player);
-    return `<p class="st-empty">Estatísticas indisponíveis.</p>`;
+    return `<p class="st-empty">${t('ui.inv.estatisticas_indisponiveis')}</p>`;
   }
 
   function _shortcutPanelMarkup(){
-    return `<aside class="inv-shortcuts" data-panel="shortcuts" aria-label="Atalhos">
-      <div class="inv-shortcuts-heading"><span>ATALHOS</span><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" aria-label="Ocultar atalhos">▶</button></div>
-      <div id="shortcut-bar" aria-label="Slots de atalho" hidden></div>
+    return `<aside class="inv-shortcuts" data-panel="shortcuts" aria-label="${t('ui.inv.atalhos')}">
+      <div class="inv-shortcuts-heading"><span>${t('ui.inv.atalhos_titulo')}</span><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" aria-label="${t('ui.inv.ocultar_atalhos')}">▶</button></div>
+      <div id="shortcut-bar" aria-label="${t('ui.inv.slots_atalho')}" hidden></div>
     </aside>`;
   }
 
   function _statsPanelMarkup(player){
-    return `<aside class="inv-stats-panel" data-panel="stats" aria-label="Estatísticas">
-      <div class="inv-stats-toolbar"><span>${t('ui.status.titulo')}</span><button type="button" data-inv-toggle="stats" aria-label="Ocultar estatísticas">◀</button></div>
+    return `<aside class="inv-stats-panel" data-panel="stats" aria-label="${t('ui.inv.estatisticas')}">
+      <div class="inv-stats-toolbar"><span>${t('ui.status.titulo')}</span><button type="button" data-inv-toggle="stats" aria-label="${t('ui.inv.ocultar_estatisticas')}">◀</button></div>
       <div class="inv-stats-content">${_statusPanelMarkup(player)}</div>
     </aside>`;
   }
@@ -973,12 +973,12 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     if(shortcuts) shortcuts.hidden = _panelPrefs.shortcutsHidden;
     overlay.querySelectorAll('[data-inv-toggle="stats"]').forEach(btn => {
       btn.textContent = _panelPrefs.statsHidden ? '▶' : '◀';
-      btn.title = _panelPrefs.statsHidden ? 'Mostrar estatísticas' : 'Ocultar estatísticas';
+      btn.title = t(_panelPrefs.statsHidden ? 'ui.inv.mostrar_estatisticas' : 'ui.inv.ocultar_estatisticas');
       btn.setAttribute('aria-label', btn.title);
     });
     overlay.querySelectorAll('[data-inv-toggle="shortcuts"]').forEach(btn => {
       btn.textContent = _panelPrefs.shortcutsHidden ? '◀' : '▶';
-      btn.title = _panelPrefs.shortcutsHidden ? 'Mostrar atalhos' : 'Ocultar atalhos';
+      btn.title = t(_panelPrefs.shortcutsHidden ? 'ui.inv.mostrar_atalhos' : 'ui.inv.ocultar_atalhos');
       btn.setAttribute('aria-label', btn.title);
     });
   }
@@ -1009,7 +1009,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
             <div class="inv-main">
               <div class="inv-header">
                 <div class="inv-title"><img class="inv-title-icon" src="assets/inventario.png" alt="" aria-hidden="true"> ${t('ui.inv.titulo')} — ${player.name || ''}${_readOnly ? ' ' + t('ui.inv.somente_leitura') : ''}</div>
-                <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button><div class="inv-close" title="Fechar" role="button" tabindex="0">✕</div></div>
+                <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="${t('ui.inv.estatisticas')}">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="${t('ui.inv.atalhos')}">▶</button><div class="inv-close" title="${t('ui.geral.fechar')}" role="button" tabindex="0">✕</div></div>
               </div>
               ${typeof window._renderAcoesExplicacaoHTML === 'function' ? window._renderAcoesExplicacaoHTML() : ''}
               <div class="inv-hero-strip"></div>
@@ -1276,7 +1276,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
         </div>
         <div style="padding:10px 14px;">
           ${regeneracao
-            ? renderLinhaTooltip('🌿', 'Reserva', `${atual.value || 0} HP; +1 HP por rodada`)
+            ? renderLinhaTooltip('🌿', t('ui.inv.reserva'), t('ui.inv.reserva_regen', {hp: atual.value || 0}))
             : renderLinhaTooltip('❤️', t('ui.tooltip.cura_por_uso'), `+${atual.value ?? atual.valor ?? 0} HP`)}
           ${Number(atual.fome || 0)
             ? renderLinhaTooltip('🍖', t('ui.tooltip.fome'), `+${Number(atual.fome || 0)}`)
@@ -1450,7 +1450,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
             <div class="inv-main storage-main">
               <div class="inv-header">
                 <div class="inv-title">🧰 ${t(shared ? 'ui.inv.bau_compartilhado_caixa' : 'ui.inv.bau_heroi_caixa')}</div>
-                <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="Estatísticas">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="Atalhos">▶</button>${shared ? '' : `<button type="button" class="storage-room-link">${t('ui.inv.decorar_quarto')}</button>`}<div class="inv-close" title="${t('ui.geral.fechar')}">✕</div></div>
+                <div class="inv-header-actions"><button type="button" class="inv-panel-toggle" data-inv-toggle="stats" title="${t('ui.inv.estatisticas')}">◀</button><button type="button" class="inv-panel-toggle" data-inv-toggle="shortcuts" title="${t('ui.inv.atalhos')}">▶</button>${shared ? '' : `<button type="button" class="storage-room-link">${t('ui.inv.decorar_quarto')}</button>`}<div class="inv-close" title="${t('ui.geral.fechar')}">✕</div></div>
               </div>
               <div class="storage-columns">
               <section class="storage-column storage-stash">
