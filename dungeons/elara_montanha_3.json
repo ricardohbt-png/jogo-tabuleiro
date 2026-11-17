@@ -1611,8 +1611,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "cinzas_ardentes"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 16
     },
     {
       "id": "decor_178",

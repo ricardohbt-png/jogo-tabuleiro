@@ -80,6 +80,28 @@ class DestinosTests(unittest.TestCase):
         self.assertEqual(self.vis(r), {"elara_leonel_casa_alerta"})
         self.assertEqual(self.vis(sala({R.F_CAUTELOSO})), set(), "sem a morte do Gilo, nenhum")
 
+    def test_missoes_ficam_na_cidade_e_nao_no_mapa_mundi(self):
+        for did in R.destinos():
+            self.assertTrue(S.WORLD_ADVENTURES[did].get("so_na_cidade"), did)
+        pontos = R.pontos()
+        self.assertEqual({p["aventura"] for p in pontos.values()}, set(R.destinos()),
+                         "cada destino de Graciero tem a sua entrada na ilustração da cidade")
+        for pid, p in pontos.items():
+            self.assertEqual(p["type"], "dungeon", pid)
+            self.assertIn(pid, S.CITY_MAP_POINTS.get("graciero", {}), f"{pid} gravado em city_map_points.json")
+
+    def test_a_cidade_so_envia_a_entrada_do_destino_visivel(self):
+        def entradas(r):
+            return {pid for pid, p in r._city_points_payload().get("graciero", {}).items()
+                    if p.get("type") == "dungeon"}
+        self.assertEqual(entradas(sala()), set())
+        r = sala({R.F_RUMO, R.F_RAMO_A})
+        self.assertEqual(entradas(r), {"elara_beco"})
+        r.world_adventure_progress.update({"elara_graciero_beco": 1, "elara_graciero_cais": 1})
+        self.assertEqual(entradas(r), {"elara_praca_viva"})
+        r = sala({R.F_GILO_MORREU, R.F_CAUTELOSO})
+        self.assertEqual(entradas(r), {"elara_leonel_alerta"})
+
 
 class ConversasTests(unittest.TestCase):
     def test_bardo_so_ajuda_ou_trai_se_foi_poupado(self):
@@ -167,9 +189,7 @@ class FinalTests(unittest.TestCase):
     """Toda combinação de ramo x Olho x bardo x Pedro/Henrique produz um final coerente."""
 
     def texto(self, fatos, classes, olho):
-        r = sala(fatos, classes)
-        if olho:
-            r.players["p0"]["bag"].append(dict(S._DUNGEON_ITEM_CATALOG[F.ID_OLHO]))
+        r = sala(set(fatos) | ({R.F_OLHO} if olho else set()), classes)
         b = S._story_beat("fim:x", [R.outro_rota()], r._requisito_do_slide)
         return " || ".join(sl.get("text", "") for sl in b["slides"])
 
@@ -185,6 +205,8 @@ class FinalTests(unittest.TestCase):
             self.assertIn("muito maior", t, "o fecho de mistério sempre sai")
             self.assertEqual("volta ao Templo" in t, olho)
             self.assertEqual("não está aqui" in t, not olho)
+            self.assertEqual("sobe a serra" in t, not olho and R.F_RAMO_A in ramo)
+            self.assertEqual("o que sobrou do Gilo" in t, not olho and R.F_RAMO_B in ramo)
             self.assertEqual("moças de Riacho" in t, R.F_RAMO_A in ramo)
             self.assertEqual("outras servas" in t, R.F_RAMO_B in ramo)
             self.assertEqual("abraça a irmã" in t, "mage" in elenco)
@@ -192,6 +214,14 @@ class FinalTests(unittest.TestCase):
             self.assertEqual("de longe, ergue o chapéu" in t, R.F_AJUDOU in bardo)
             self.assertEqual("para outro lado" in t, R.F_TRAIU in bardo)
         self.assertEqual(n, 48)
+
+    def test_olho_recuperado_fora_da_bolsa_ainda_volta_ao_templo(self):
+        """Relato do autor: o Olho foi recuperado, mas no final não estava na bolsa (Refúgio, outro herói)
+        e o slide dizia que ele subiu a serra. O final segue a marca de história, não o inventário."""
+        for ramo in (R.F_RAMO_A, R.F_RAMO_B):
+            t = self.texto({ramo}, ("warrior",), True)
+            self.assertIn("volta ao Templo", t)
+            self.assertNotIn("não está aqui", t)
 
 
 if __name__ == "__main__":

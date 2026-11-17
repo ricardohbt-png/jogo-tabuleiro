@@ -1215,6 +1215,14 @@ window.LANG_NARRACAO = {
     "en": "🔑 **{heroi}** found the key object!",
     "pt": "🔑 **{heroi}** encontrou o objeto-chave!"
   },
+  "narracao.esconderijo_detectado": {
+    "en": "🔍 **{heroi}**'s trained eye spots something hidden in **{objeto}**!",
+    "pt": "🔍 O olho treinado de **{heroi}** percebe algo escondido em **{objeto}**!"
+  },
+  "narracao.esconderijo_achado": {
+    "en": "🔎 **{heroi}** notices something hidden in **{objeto}**!",
+    "pt": "🔎 **{heroi}** nota algo escondido em **{objeto}**!"
+  },
   "narracao.engole": {
     "en": "🦖 **{monstro}** swallows **{preso_get_name_or_preso}** whole!",
     "pt": "🦖 **{monstro}** engole **{preso_get_name_or_preso}**!"

@@ -136,10 +136,16 @@ SLIDES_FINAIS = [
      "sem acreditar que a luz do dia é para elas.", {"fato": "elara_mocas_salvas"}),
     ("Atrás da parede, outras servas do Templo esperavam, esquecidas. Voltam com vocês para Alva e Luz, "
      "agradecendo calada.", {"fato": F_RAMO_B}),
+    # O Olho segue a MARCA de história, não o inventário: as três formas de recuperá-lo (rota da montanha,
+    # Praça da pedra e os pertences do Gilo) gravam F_OLHO, e o item pode estar no Refúgio ou com outro herói
+    # na hora do final. Sem ele, o destino do Olho depende do ramo: no A ele subiu a serra com a caravana; no B
+    # ficou em Graciero, com o que sobrou do Gilo.
     ("O Olho de Arveluz volta ao Templo pesado e quente. O sacerdote o toma sem agradecer e o esconde "
-     "debaixo do manto, olhando para longe.", {"item_id": F.ID_OLHO}),
+     "debaixo do manto, olhando para longe.", {"fato": F_OLHO}),
     ("O Olho de Arveluz não está aqui. Ele sobe a serra, para o norte, numa caravana que não pede licença a "
-     "ninguém.", {"item_id": F.ID_OLHO, "negar": True}),
+     "ninguém.", {"fato": F_RAMO_A, "sem_fato": F_OLHO}),
+    ("O Olho de Arveluz não está aqui. Ficou em Graciero, entre o que sobrou do Gilo, e alguém na cidade "
+     "já deve ter posto as mãos nele.", {"fato": F_RAMO_B, "sem_fato": F_OLHO}),
     ("O bardo que vocês pouparam, de longe, ergue o chapéu uma última vez. Sem ele, a cidade teria sido "
      "bem mais difícil.", {"fato": F_AJUDOU}),
     ("O bardo que vocês pouparam também ergue o chapéu, mas para outro lado. Alguém soube cedo demais da "
@@ -247,7 +253,7 @@ def destinos():
                 "dungeons": [{"file": arq, "encadear": enc, "intro": intros[i] if intros else intro_etapa, "outro": ""}
                              for i, (arq, enc) in enumerate(etapas)],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
-                "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
+                "oculto_ate_liberar": True, "so_na_cidade": True, "revisitavel": False, "ocultar_apos_concluir": True,
                 "outro_rota": outro_rota() if final else "", "requisito": requisito, "renome_recompensa": renome}
     return {
         "elara_graciero_beco": destino("elara_graciero_beco", "Os Becos de Graciero", -2.0, 2.0,
@@ -275,6 +281,28 @@ def destinos():
                                             _req(fato=F_GILO_MORREU, tambem_fato=F_CAUTELOSO), 3, final=True,
                                             intros=[intro_casa(True), intro_mansao(True)]),
     }
+
+
+# Entradas das masmorras na ilustração de Graciero: as missões acontecem dentro da cidade, não no
+# mapa-múndi (os destinos têm `so_na_cidade`). Cada variante do mesmo lugar tem o seu ponto, na mesma
+# casa da ilustração; o servidor só envia o do destino visível (`_aventura_visivel`), então nunca
+# aparecem dois juntos. A posição é do autor: o gerador preserva x/y de um ponto já gravado.
+PONTOS_GRACIERO = (
+    # (id do ponto, destino, nome, emoji, x, y)
+    ("elara_beco", "elara_graciero_beco", "Os Becos de Graciero", "🌒", 79.0, 45.0),
+    ("elara_cais", "elara_graciero_cais", "O Cais dos Leilões", "⚓", 15.5, 61.0),
+    ("elara_praca_viva", "elara_graciero_praca_viva", "A Praça dos Escorpiões", "🦂", 49.0, 53.0),
+    ("elara_praca_pedra", "elara_graciero_praca_pedra", "A Praça dos Escorpiões", "🦂", 49.0, 53.0),
+    ("elara_praca_morta", "elara_graciero_praca_morta", "A Praça dos Escorpiões", "🦂", 49.0, 53.0),
+    ("elara_leonel", "elara_leonel_casa", "A Casa de Leilões", "🏛️", 61.0, 31.0),
+    ("elara_leonel_alerta", "elara_leonel_casa_alerta", "A Casa de Leilões", "🏛️", 61.0, 31.0),
+)
+
+
+def pontos():
+    return {pid: {"x": x, "y": y, "type": "dungeon", "name": nome, "emoji": emoji, "aventura": did,
+                  "oculto_ate_liberar": False, "ocultar_apos_concluir": True}
+            for pid, did, nome, emoji, x, y in PONTOS_GRACIERO}
 
 
 def mapas():
@@ -329,7 +357,7 @@ def garantir_registros(gravar):
 
 def aplicar(simular=False, forcar=False, caminhos=None):
     c = dict({"cenas": S.CITY_SCENES_FILE, "adventures": S.WORLD_ADVENTURES_FILE,
-              "dungeons_dir": S.DUNGEONS_DIR, "assinaturas": ASSINATURAS}, **(caminhos or {}))
+              "pontos": S.CITY_MAP_POINTS_FILE, "dungeons_dir": S.DUNGEONS_DIR, "assinaturas": ASSINATURAS}, **(caminhos or {}))
     garantir_registros(gravar=not simular and caminhos is None)
     mm = mapas()
     for arq, defn in mm.items():
@@ -361,6 +389,14 @@ def aplicar(simular=False, forcar=False, caminhos=None):
         manter = [cv for cv in (slot.get("conversations") or []) if not str(cv.get("id", "")).startswith("elara_")]
         slot["conversations"] = manter + convs
 
+    mapa_pontos = _ler(c["pontos"], {})
+    da_cidade = mapa_pontos.setdefault(CIDADE, {})
+    for pid, novo in pontos().items():
+        antigo = da_cidade.get(pid) or {}
+        if "x" in antigo and "y" in antigo:          # a posição na ilustração é do autor
+            novo["x"], novo["y"] = antigo["x"], antigo["y"]
+        da_cidade[pid] = novo
+
     aventuras = _ler(c["adventures"], {})
     for did, dest in destinos().items():
         anterior = aventuras.get(did) or {}
@@ -370,6 +406,7 @@ def aplicar(simular=False, forcar=False, caminhos=None):
     if simular:
         print(f"conversas: {[cv['id'] for convs in conversas().values() for cv in convs]}")
         print(f"destinos: {list(destinos())}")
+        print(f"pontos da cidade: {list(pontos())}")
         print(f"mapas: {list(mm)}")
         return
     os.makedirs(c["dungeons_dir"], exist_ok=True)
@@ -379,6 +416,7 @@ def aplicar(simular=False, forcar=False, caminhos=None):
     _gravar(c["assinaturas"], assin)
     _gravar(c["cenas"], cenas)
     _gravar(c["adventures"], aventuras)
+    _gravar(c["pontos"], mapa_pontos)
     S._regen_dungeons_index()
 
 

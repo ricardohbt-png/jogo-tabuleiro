@@ -851,12 +851,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "punhal_assassino"
+          }
+        ]
+      },
       "key_objective": false,
       "size": [
         2,
         1
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_7",

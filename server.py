@@ -15,6 +15,7 @@ import datetime
 import gzip
 import hashlib
 import hmac
+import io
 import shutil
 import signal
 import json
@@ -1886,6 +1887,12 @@ def _load_lang():
 
 LANG_STRINGS = _load_lang()
 
+# Textos de ficha de monstro (habilidades, ataques, fraquezas), chaveados pelo
+# PRÓPRIO texto português — ver tools/gerar_textos_monstros.py. Índice pt→chave
+# para traduzir um nome de habilidade que chega cru como parâmetro de frase.
+TEXTOS_FICHA_PT = {v["pt"]: k for k, v in LANG_STRINGS.items()
+                   if k.startswith("cat.texto.") and isinstance(v, dict) and v.get("pt")}
+
 _LANG_PARAM_RE = re.compile(r"\{(\w+)\}")
 
 def _param_texto(valor, lang):
@@ -1905,6 +1912,10 @@ def _param_texto(valor, lang):
             return itens[0]
         return (t("lista.separador", lang).join(itens[:-1])
                 + t("lista.ultimo", lang) + itens[-1])
+    # Nome de habilidade/ataque de monstro nativo chega cru (vem da ficha):
+    # traduz só quando é IDÊNTICO ao texto nativo, como a guarda do nome_cat.
+    if isinstance(valor, str) and lang != LANG_DEFAULT and valor in TEXTOS_FICHA_PT:
+        return t(TEXTOS_FICHA_PT[valor], lang)
     return str(valor)
 
 def t(key, lang=LANG_DEFAULT, **params):
@@ -1989,6 +2000,19 @@ def nome_de(familia, ident):
     armadilha, instrumento, classe. Id sem tradução cai na própria chave, então
     prefira montar a frase com o nome já em mãos quando o item for autoral."""
     return T(f"cat.{familia}.{ident}.nome")
+
+def nome_maldicao(mid):
+    """Nome da maldição como texto TARDIO (chave ui.maldicao.<id>, a mesma que o
+    cliente usa na ficha e no Templo). Sem chave, o nome do catálogo."""
+    if f"ui.maldicao.{mid}" in LANG_STRINGS:
+        return T(f"ui.maldicao.{mid}")
+    return MALDICOES.get(mid, {}).get("nome", mid)
+
+def efeito_maldicao(mid):
+    """Efeito curto da maldição (ui.maldicao.<id>.ef), tardio."""
+    if f"ui.maldicao.{mid}.ef" in LANG_STRINGS:
+        return T(f"ui.maldicao.{mid}.ef")
+    return MALDICOES.get(mid, {}).get("desc", "")
 
 def nome_cat(familia, ident, cru):
     """Nome de catálogo como texto TARDIO, mas SÓ quando o nome cru ainda é o do
@@ -5014,7 +5038,7 @@ CLASSES = {
             {
                 "id": "detectar_armadilhas",
                 "name": "Detectar Armadilhas",
-                "description": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno.",
+                "description": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno.",
                 "icon": "🔍",
                 "tipo": "acao_bonus",
                 "target": "self",
@@ -9618,6 +9642,13 @@ def _contar_chao_alcancavel(tiles, w, h, start, limite, pontes=None):
 # continua barrando o passo em qualquer nível.
 DECOR_VISAO_NIVEIS = ("livre", "baixo", "alto")
 
+# Esconderijo: objeto-container com `escondido` não mostra o conteúdo (nem o 💰) até um
+# herói o notar. Ao terminar um passo ao lado dele, cada herói testa UMA vez:
+# d20 + (Percepção − 10) [+2 se Ladino] contra `cd_busca`.
+ESCONDERIJO_CD_PADRAO = 13
+ESCONDERIJO_CD_MIN, ESCONDERIJO_CD_MAX = 5, 30
+ESCONDERIJO_BONUS_LADINO = 2
+
 
 def decor_visao_padrao(meta):
     if meta.get("alto"):
@@ -10165,6 +10196,16 @@ def validar_dungeon(defn):
                 carta_err = _validar_config_maldicao_carta(it, "item de carta na decoração")
                 if carta_err:
                     return False, carta_err
+        if "escondido" in de:
+            if not isinstance(de["escondido"], bool):
+                return False, "escondido deve ser verdadeiro ou falso."
+            if de["escondido"] and not de.get("loot"):
+                return False, f"esconderijo em {dtype} precisa de conteúdo (loot)."
+        if "cd_busca" in de:
+            cd = de["cd_busca"]
+            if (isinstance(cd, bool) or not isinstance(cd, int)
+                    or not ESCONDERIJO_CD_MIN <= cd <= ESCONDERIJO_CD_MAX):
+                return False, f"cd_busca deve ser um inteiro de {ESCONDERIJO_CD_MIN} a {ESCONDERIJO_CD_MAX}."
         if meta["special"] == "fountain":
             ch = de.get("charges", 0)
             if isinstance(ch, bool) or not isinstance(ch, int) or ch < 0:
@@ -20155,7 +20196,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.templo_cobra_ouro_cura_maldicao", preco=preco)}); return
         removida = self._remover_maldicao(p, maldicao_id)
         await self.broadcast({"type": "shop_result", "msg": T("erro.templo_liberta_de_maldicao",
-            personagem=p["name"], maldicao=MALDICOES[removida]["nome"], preco=preco)})
+            personagem=p["name"], maldicao=nome_maldicao(removida), preco=preco)})
         await self.broadcast_city_state()
 
     def _preco_remover_maldicao(self, p, maldicao_id):
@@ -20873,6 +20914,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 dec["loot"] = {"gold": int(loot.get("gold", 0)),
                                "items": hidratar_itens_bau(loot.get("items", []))}
                 dec["tem_loot"] = (dec["loot"]["gold"] > 0 or bool(dec["loot"]["items"]))
+                if d.get("escondido") is True:
+                    dec["escondido"] = True
+                    dec["cd_busca"] = int(d.get("cd_busca", ESCONDERIJO_CD_PADRAO))
+                    dec["encontrado"] = False
+                    dec["buscado_por"] = []
             if meta["special"] == "fountain":
                 dec["charges"] = int(d.get("charges", meta.get("charges", 0)))
             if d.get("type") == "fumarola":
@@ -24570,6 +24616,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if entered:
             self.salas_visitadas.add(entered["id"])   # objetivo salas_obrigatorias (visit)
         await self._verificar_falas(p, entered)       # Falas de NPC: proximidade + sala
+        await self._procurar_esconderijos(p)          # esconderijos com conteúdo escondido
         # A varredura vem ANTES para que o passo que revela a lição também possa
         # cumpri-la (andar até a casa do marcador). Liberar a lição SEGUINTE é
         # trabalho do próprio _licao_evento, que faz isso para os sete verbos.
@@ -32246,6 +32293,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         bonus = (data.get("bonus") or {}) if data else {}
+        if not isinstance(bonus, dict):
+            bonus = {}
         def _b(k):
             try:    return min(2, max(0, int(bonus.get(k, 0))))
             except (TypeError, ValueError): return 0
@@ -35723,7 +35772,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if perda <= 0:
                 continue
             p[recurso] = max(0, p.get(recurso, 0) - perda)
-            await self.gm_say(T("narracao.consome_de_de", maldicoes_mid_nome=MALDICOES[mid]['nome'], perda=perda, recurso=recurso, heroi=p['name']))
+            await self.gm_say(T("narracao.consome_de_de", maldicoes_mid_nome=nome_maldicao(mid), perda=perda, recurso=recurso, heroi=p['name']))
 
         # Sangramento Profano: em vez de instrumentar os ~67 pontos que tiram HP,
         # compara o HP com o do turno anterior. Se caiu, houve dano no intervalo.
@@ -35768,7 +35817,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 q, self.ECO_MORTE_DANO, DMG_PHYSICAL, None, piso_hp=1)
             await self.gm_say(T("narracao.o_eco_da_morte_atravessa_de_dano", q=nome_criatura(q), self_eco_morte_dano=self.ECO_MORTE_DANO))
 
-    async def _transformar_licantropo(self, p, motivo="a maldição desperta"):
+    async def _transformar_licantropo(self, p, motivo=None):
+        motivo = motivo if motivo is not None else T("ui.maldicao.lic.motivo_desperta")
         cfg = self._licantropia_config(p)
         if not cfg or p.get("licantropia_transformado") or not p.get("alive"):
             return False
@@ -35777,10 +35827,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["str_"] += cfg["for"]; p["con_"] += cfg["con"]; p["dex"] += cfg["des"]
         p["licantropia_transformado"] = True; p["licantropia_rodadas"] = duracao; p["pawn_override"] = "lobisomem"
         await self.send_to(p["id"], {"type":"curse_result", "tipo":"maldicao", "maldicao_id":"licantropia",
-            "nome":"Amaldiçoado: transformou-se em Lobisomem", "icone":"🐺",
-            "descricao":f"{motivo}. A forma lupina dura {duracao} rodadas.",
-            "efeitos_extra":[f"Estágio {cfg['estagio']}: +{cfg['for']} FOR, +{cfg['con']} CON e +{cfg['des']} DES.",
-                "A IA move e ataca a criatura mais próxima; em empate, prioriza aliados.", "Ganha Mordida e duas Garras."]})
+            "nome":T("ui.maldicao.lic.titulo"), "icone":"🐺",
+            "descricao":T("ui.maldicao.lic.descricao", motivo=motivo, duracao=duracao),
+            "efeitos_extra":[T("ui.maldicao.lic.estagio", n=cfg['estagio'], forca=cfg['for'], con=cfg['con'], des=cfg['des']),
+                T("ui.maldicao.lic.ia"), T("ui.maldicao.lic.ataques")]})
         await self.gm_say(T("narracao.se_transforma_em_lobisomem_por_rodadas", heroi=p['name'], duracao=duracao, motivo=motivo))
         return True
 
@@ -35818,14 +35868,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not cfg or cfg["estagio"] < 5 or p.get("licantropia_transformado") or not p.get("alive"): continue
             dado = random.randint(1, 4)
             await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":T("dado.licantropia_pos_combate", nome=p['name'])})
-            if dado == 1: await self._transformar_licantropo(p, "resultado 1 após o combate")
+            if dado == 1: await self._transformar_licantropo(p, T("ui.maldicao.lic.motivo_pos_combate"))
         # Maldição da Ferrugem: o equipamento se degrada ao fim de cada combate.
         for p in self.players.values():
             if not self._ativo(p) or not self._tem_maldicao(p, "maldicao_ferrugem"):
                 continue
             await self._corroer_equipamento(None, p, CORROSAO_ARMADURA_METAL,
                                             CORROSAO_ARMA_METAL, cura=None,
-                                            label="Maldição da Ferrugem")
+                                            label=nome_maldicao("maldicao_ferrugem"))
 
     async def _rolar_licantropia_inicio_masmorra(self):
         for p in self.players.values():
@@ -35833,17 +35883,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not cfg or not p.get("alive"): continue
             p["licantropia_regen_proxima"] = self.round_num + cfg["intervalo_regen"]
             if cfg["estagio"] >= 4:
-                await self._transformar_licantropo(p, "o estágio avançado força a transformação"); continue
+                await self._transformar_licantropo(p, T("ui.maldicao.lic.motivo_estagio")); continue
             dado = random.randint(1, 4)
             await self.broadcast({"type":"dice_roll", "die":"d4", "value":dado, "label":T("dado.licantropia", nome=p['name'])})
-            if dado <= cfg["chance"]: await self._transformar_licantropo(p, f"resultado {dado} no d4")
+            if dado <= cfg["chance"]: await self._transformar_licantropo(p, T("ui.maldicao.lic.motivo_d4", n=dado))
             else: await self.gm_say(T("narracao.contem_a_licantropia_no_d4", heroi=p['name'], dado=dado))
 
-    _MALDICAO_ORIGEM = {"item": "Veio de um item amaldiçoado — enquanto a maldição durar, "
-                                "peças que prendem não saem do lugar.",
-                        "armadilha": "Disparada por uma armadilha.",
-                        "monstro": "Lançada por um inimigo."}
-    _MALDICAO_GRAVIDADE = {"leve": "Leve", "media": "Média", "grave": "Grave"}
+    _MALDICAO_ORIGEM = ("item", "armadilha", "monstro")
 
     async def _enviar_resultado_maldicao(self, alvo, maldicao_id, fonte=None):
         """Quadro de resultado da maldição — o mesmo popup da armadilha/veneno.
@@ -35852,19 +35898,20 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         entrada = next((x for x in self._maldicoes(alvo) if x["id"] == maldicao_id), {})
         progressiva = bool(mal.get("progressiva"))
         estagio = self._maldicao_estagio(entrada) if progressiva else None
-        extras = [f"Efeito: {mal['desc']}.",
-                  f"Gravidade {self._MALDICAO_GRAVIDADE.get(mal['categoria'], mal['categoria'])} — "
-                  f"o Templo cobra {MALDICAO_PRECOS_TEMPLO[mal['categoria']]} ouro para curá-la."]
-        if self._MALDICAO_ORIGEM.get(fonte):
-            extras.append(self._MALDICAO_ORIGEM[fonte])
+        extras = [T("ui.maldicao.popup.efeito", efeito=efeito_maldicao(maldicao_id)),
+                  T("ui.maldicao.popup.gravidade",
+                    gravidade=T(f"ui.maldicao.gravidade.{mal['categoria']}"),
+                    preco=MALDICAO_PRECOS_TEMPLO[mal['categoria']])]
+        if fonte in self._MALDICAO_ORIGEM:
+            extras.append(T(f"ui.maldicao.popup.origem.{fonte}"))
         if progressiva:
-            extras.append(f"Progressiva: está no estágio {estagio} e piora a cada 2 aventuras concluídas.")
-        extras.append("Permanece até ser purificada por um clérigo ou curada no Templo.")
+            extras.append(T("ui.maldicao.popup.progressiva", n=estagio))
+        extras.append(T("ui.maldicao.popup.permanece"))
         await self.send_to(alvo["id"], {
             "type": "curse_result", "tipo": "maldicao", "maldicao_id": maldicao_id,
-            "nome": mal["nome"], "icone": "☠️", "categoria": mal["categoria"],
+            "nome": nome_maldicao(maldicao_id), "icone": "☠️", "categoria": mal["categoria"],
             "estagio": estagio,
-            "descricao": mal["desc"],
+            "descricao": efeito_maldicao(maldicao_id),
             "efeitos_extra": extras,
         })
 
@@ -35892,7 +35939,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         alvo["maldicao_tipo"] = atuais[0]["id"]
         mal = MALDICOES[maldicao_id]
         await self._enviar_resultado_maldicao(alvo, maldicao_id, fonte=origem)
-        await self.gm_say(T("narracao.foi_amaldicoado", alvo=nome_criatura(alvo), mal_nome=nome_criatura(mal), fonte=fonte))
+        await self.gm_say(T("narracao.foi_amaldicoado", alvo=nome_criatura(alvo), mal_nome=nome_maldicao(maldicao_id), fonte=fonte))
         return True
 
     async def _aplicar_maldicao_carta(self, p, item):
@@ -35981,7 +36028,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             for mid in p.pop("_maldicoes_a_avisar", None) or []:
                 if mid in MALDICOES and self._tem_maldicao(p, mid):
                     await self._enviar_resultado_maldicao(p, mid, fonte="item")
-                    await self.gm_say(T("narracao.foi_amaldicoado_por_um_item", heroi=p['name'], maldicoes_mid_nome=MALDICOES[mid]['nome']))
+                    await self.gm_say(T("narracao.foi_amaldicoado_por_um_item", heroi=p['name'], maldicoes_mid_nome=nome_maldicao(mid)))
 
     async def _progredir_maldicoes_missao(self):
         """Avança apenas missões encerradas com sucesso, nunca fugas/retornos."""
@@ -36001,7 +36048,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 entrada["aventuras"] += 1
                 depois = self._maldicao_estagio(entrada)
                 if depois > antes:
-                    await self.gm_say(T("narracao.de_avanca_ao_estagio", mal_nome=nome_criatura(mal), heroi=p['name'], depois=depois))
+                    await self.gm_say(T("narracao.de_avanca_ao_estagio", mal_nome=nome_maldicao(entrada["id"]), heroi=p['name'], depois=depois))
                     if entrada["id"] == "corrupcao_crescente":
                         await self._corrupcao_gerar(p, depois)
 
@@ -46860,6 +46907,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if "detect_trap" not in p.setdefault("status", []):
             p["status"].append("detect_trap")
         reveladas = self._revelar_armadilhas_luccas(p)
+        await self._detectar_esconderijos(p)
         await self.gm_say(
             T("narracao.ativa_a_deteccao_de_armadilhas_armadilha", heroi=p['name'], reveladas=reveladas))
         if reveladas:
@@ -46878,6 +46926,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         p["sede"] = max(0, p["sede"] - 1)
         self._revelar_armadilhas_luccas(p)
+        await self._detectar_esconderijos(p)
 
     async def handle_esconder_sombras(self, pid, msg):
         """Luccas tenta se esconder nas sombras (ação bônus). Em sucesso, fica
@@ -48824,7 +48873,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.broadcast({"type": "dice_roll", "die": "d" + str(expressao).split("d", 1)[-1].split("+", 1)[0],
                               "value": bruto, "label": motivo, "damage_type": DMG_FIRE})
         if ajustado > 0:
-            await self._dano_em_alvo(alvo, ajustado, DMG_FIRE, fonte)
+            # `fonte` pode chegar como a ficha do Molochus (aura): o funil de
+            # dano espera um id, e um dict ali quebrava a morte do alvo.
+            killer_id = fonte.get("id") if isinstance(fonte, dict) else fonte
+            await self._dano_em_alvo(alvo, ajustado, DMG_FIRE, killer_id)
         return ajustado
 
     async def _processar_aura_escaldante_inicio(self, alvo):
@@ -48979,7 +49031,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         m["_ciclope_pisoteio_usado"] = True
         footprint_path = set()
         for pos in m.get("_ciclope_path", []):
-            footprint_path.update(self._monster_tiles_at(m, pos[0], pos[1]))
+            # As casas vêm como listas [x, y]; o conjunto precisa de tuplas
+            # (lista não serve de elemento e o pisoteio quebrava com TypeError).
+            footprint_path.update(
+                tuple(t) for t in self._monster_tiles_at(m, pos[0], pos[1]))
         alvos = []
         candidatos = list(self.players.values()) + list(self.monsters.values()) + list(self._all_animados())
         for alvo in candidatos:
@@ -49656,6 +49711,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Reusa o movimento original e a duração compartilhada com a Trompa.
             orig = alvo.get("mov_reduzido_orig", alvo.get("movement", 5))
             self._reduzir_mov_monstro(alvo, orig, dur)
+            # Criatura que já não anda (movimento 0, ex.: boneco de treino): o
+            # helper acima não grava nada e a narração quebrava com KeyError.
+            alvo.setdefault("mov_reduzido_orig", orig)
+            alvo["mov_reduzido_rodadas"] = max(
+                int(alvo.get("mov_reduzido_rodadas", 0) or 0), int(dur or 0))
             alvo["movement"] = 0
             alvo["cola_sem_movimento"] = True
             alvo["_water_moves_left"] = 0
@@ -50801,6 +50861,57 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _decor_by_id(self, decor_id):
         return next((d for d in self.decorations if d["id"] == decor_id), None)
 
+    @staticmethod
+    def _decor_oculto(d):
+        """Esconderijo ainda não notado por nenhum herói."""
+        return bool(d.get("escondido") and not d.get("encontrado"))
+
+    async def _procurar_esconderijos(self, p):
+        """Ao terminar um passo ao lado de um esconderijo, o herói tenta notá-lo
+        (uma vez por objeto). A rolagem é secreta: só o sucesso é narrado."""
+        if not p.get("alive") or not p.get("pos") or not getattr(self, "decorations", None):
+            return
+        if p.get("detectar_ativo"):
+            await self._detectar_esconderijos(p)
+        quem = p.get("class_id") or p["id"]
+        for d in self.decorations:
+            if not self._decor_oculto(d) or not self._adjacente_a_decor(p["pos"], d):
+                continue
+            ja = d.setdefault("buscado_por", [])
+            if quem in ja:
+                continue
+            ja.append(quem)
+            bonus = self._get_percepcao_heroi(p) - 10
+            if p.get("class_id") == "rogue":
+                bonus += ESCONDERIJO_BONUS_LADINO
+            if random.randint(1, 20) + bonus >= int(d.get("cd_busca", ESCONDERIJO_CD_PADRAO)):
+                d["encontrado"] = True
+                meta = DECOR_TYPES.get(d["type"], {})
+                await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"],
+                                    objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+
+    async def _detectar_esconderijos(self, p):
+        """Com Detectar Armadilhas ativa, o herói nota sem rolagem os esconderijos
+        dentro do raio da detecção (o mesmo das armadilhas) que ele enxerga."""
+        if not p.get("alive") or not p.get("pos") or not getattr(self, "decorations", None):
+            return 0
+        raio = self._get_raio_visao(p)
+        px, py = p["pos"]
+        achados = 0
+        for d in self.decorations:
+            if not self._decor_oculto(d):
+                continue
+            casas = [t for t in self._decor_tiles(d)
+                     if max(abs(t[0] - px), abs(t[1] - py)) <= raio]
+            if not any(self._tem_linha_de_visao(p["pos"], t) for t in casas):
+                continue
+            d["encontrado"] = True
+            achados += 1
+            meta = DECOR_TYPES.get(d["type"], {})
+            await self.gm_say(T("narracao.esconderijo_detectado", heroi=p["name"],
+                                objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+        return achados
+
     def _adjacente_a_decor(self, pos, d):
         """True se `pos` está a ≤1 casa (Chebyshev) de qualquer casa do footprint."""
         for tx, ty in self._decor_tiles(d):
@@ -50855,6 +50966,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_nao_encontrado")}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
+        if self._decor_oculto(d) and not self._decor_e_mecanismo(d) and not d.get("trap"):
+            # O cliente não oferece o clique num esconderijo não achado; tocar nele
+            # sem tê-lo notado não revela nada.
+            await self.send_to(pid, {"type": "error", "msg": T("erro.o_objeto_esta_vazio")}); return
         if (d.get("trap") and not d.get("trap_disarmed")
                 and (not d.get("trap_triggered") or d.get("trap", {}).get("permanente"))):
             # Investigar o objeto é o gatilho: a mesma implementação das
@@ -51063,7 +51178,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _abrir_decor_loot(self, pid, d):
         """Abre o painel de loot da decoração (reusa o painel de baú no cliente)."""
-        if not d.get("loot") or not d.get("tem_loot"):
+        if not d.get("loot") or not d.get("tem_loot") or self._decor_oculto(d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.o_objeto_esta_vazio")}); return
         await self.send_to(pid, {"type": "decor_loot", "decor_id": d["id"],
                                   "gold": d["loot"]["gold"], "items": d["loot"]["items"]})
@@ -51078,7 +51193,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not p or not p.get("alive"):
             return
         d = self._decor_by_id(decor_id)
-        if not d or not d.get("loot"):
+        if not d or not d.get("loot") or self._decor_oculto(d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_sem_loot")}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
@@ -51114,7 +51229,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         d = self._decor_by_id(decor_id)
         if not p or not p.get("alive"):
             return
-        if not d or not d.get("loot"):
+        if not d or not d.get("loot") or self._decor_oculto(d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.objeto_sem_loot")}); return
         if not self._adjacente_a_decor(p["pos"], d):
             await self.send_to(pid, {"type": "error", "msg": T("erro.muito_longe_do_objeto")}); return
@@ -51167,7 +51282,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "id": d["id"], "type": d["type"], "pos": d["pos"],
                 "facing": d.get("facing", [0, 1]),
                 "tiles": self._decor_tiles(d),
-                "tem_loot": bool(d.get("tem_loot")),
+                "tem_loot": bool(d.get("tem_loot")) and not self._decor_oculto(d),
                 "chest_trap": bool(d.get("chest_trap_monster_type")
                                     and not d.get("chest_trap_disarmed")
                                     and (not d.get("chest_trap_triggered") or d.get("chest_trap_permanente"))),
@@ -59469,6 +59584,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self._monster_dies(m, None)
 
     async def _monster_dies(self, m, killer_pid, force=False):
+        # Rede de segurança: quem mata é sempre um id; uma ficha inteira aqui
+        # derrubava a morte com TypeError (dict não serve de chave).
+        if isinstance(killer_pid, dict):
+            killer_pid = killer_pid.get("id")
         with self._sem_fogo_grego():
             return await self._monster_dies_impl(m, killer_pid, force)
 
@@ -66405,6 +66524,209 @@ def _http(status, reason, body, ctype="text/plain; charset=utf-8", extra=None):
         resp.headers[k] = v
     return resp
 
+
+# ---- Desempenho online: versao do cliente, cache e miniaturas ----------------
+# Pela internet cada arquivo paga a ida e volta do tunel. Tres medidas:
+#  1. Os scripts levam `?v=<versao do cliente>` (antes `Date.now()`, que mudava
+#     a URL a cada abertura e fazia o navegador rebaixar ~5 MB de JS toda vez).
+#     Com a versao estavel a resposta e `immutable`: so volta a trafegar quando
+#     algum arquivo do cliente muda em disco.
+#  2. Arte (assets/) pedida de fora da maquina ganha validade curta com
+#     `stale-while-revalidate`: o navegador mostra o que tem na hora e confere
+#     em segundo plano. Em localhost segue `no-cache`, para o autor ver a arte
+#     trocada na primeira recarga.
+#  3. `?w=<largura>` devolve a imagem reduzida (icone de 1254 px e ~770 KB vira
+#     ~10 KB). Precisa do Pillow; sem ele o original e servido, so mais pesado.
+_CACHE_IMUTAVEL = "public, max-age=31536000, immutable"
+_CACHE_ARTE_ONLINE = "public, max-age=3600, stale-while-revalidate=604800"
+_HOSTS_LOCAIS = {"localhost", "127.0.0.1", "::1", "[::1]", ""}
+_MINI_LARGURAS = (64, 96, 128, 192, 256, 384, 512, 768, 1024)
+# PNG grande pedido SEM ?w= (fundo de cena, tela de transicao, retrato): vai no
+# mesmo tamanho, mas em WebP, para o navegador que diz aceitar. Tipicamente 8x
+# menor. Abaixo do piso nao compensa o custo de converter.
+_REENC_MIN_BYTES = 200 * 1024
+_MINI_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+_versao_memo = {"quando": 0.0, "base": None, "valor": ""}
+
+
+def _versao_cliente():
+    """Identifica a versao dos arquivos do cliente (muda quando qualquer um
+    deles muda em disco). Memorizada por 2 s: uma abertura de pagina pede ~30
+    scripts em rajada."""
+    agora = time.monotonic()
+    memo = _versao_memo
+    if memo["base"] == BASE_DIR and memo["valor"] and agora - memo["quando"] < 2.0:
+        return memo["valor"]
+    partes = []
+    arquivos = [os.path.join(BASE_DIR, n) for n in sorted(_STATIC_FILES)]
+    for raiz, _dirs, nomes in os.walk(os.path.join(BASE_DIR, "src")):
+        _dirs.sort()
+        arquivos += [os.path.join(raiz, n) for n in sorted(nomes) if n.endswith(".js")]
+    for caminho in arquivos:
+        try:
+            st = os.stat(caminho)
+        except OSError:
+            continue
+        partes.append("%s:%x:%x" % (os.path.relpath(caminho, BASE_DIR), int(st.st_mtime), st.st_size))
+    valor = hashlib.sha1("|".join(partes).encode("utf-8")).hexdigest()[:12]
+    memo.update(quando=agora, base=BASE_DIR, valor=valor)
+    return valor
+
+
+def _consulta_do_pedido(request):
+    """Parametros da URL (`?v=...&w=...`), com o request do aiohttp ou o falso
+    dos testes, que traz a consulta dentro de `path`."""
+    qs = getattr(request, "query_string", None)
+    if not isinstance(qs, str) or not qs:
+        caminho = getattr(request, "path", "") or ""
+        qs = caminho.split("?", 1)[1] if "?" in caminho else ""
+    try:
+        return {k: v[-1] for k, v in urllib.parse.parse_qs(qs).items()}
+    except Exception:
+        return {}
+
+
+def _pedido_de_fora(request):
+    """O pedido veio pela rede (tunel, hospedagem, LAN) e nao do proprio micro?"""
+    try:
+        host = (request.headers.get("Host") or "").strip().lower()
+    except Exception:
+        return False
+    if host.startswith("["):
+        host = host.split("]", 1)[0] + "]"
+    else:
+        host = host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+    return host not in _HOSTS_LOCAIS
+
+
+def _cache_do_estatico(request, rel_norm, consulta):
+    """Cache-Control de um arquivo estatico (None = o `no-cache` de sempre)."""
+    ext = os.path.splitext(rel_norm)[1].lower()
+    topo = rel_norm.split("/", 1)[0]
+    if ext in (".js", ".css") and (topo == "src" or rel_norm in _STATIC_FILES):
+        if consulta.get("v") and consulta.get("v") == _versao_cliente():
+            return _CACHE_IMUTAVEL
+        return None
+    if topo == "assets" and _pedido_de_fora(request):
+        return _CACHE_ARTE_ONLINE
+    return None
+
+
+def _index_com_versao(body):
+    """Carimba a versao do cliente no index.html: os scripts passam a usar uma
+    URL estavel (`?v=<versao>`) em vez de `Date.now()`."""
+    versao = _versao_cliente().encode("ascii")
+    body = body.replace(b"<head>", b'<head>\n<script>window.LFH_VER="' + versao + b'";</script>', 1)
+    return re.sub(rb'game\.css\?v=[^"\']*', b"game.css?v=" + versao, body, count=1)
+
+
+# Pastas reduzidas de antemao (as mesmas larguras que o cliente pede em game.js).
+MINIATURAS_PREAQUECER = (
+    ("assets/itens", 192), ("assets/itens magicos", 192), ("assets/habilidades", 128),
+    ("assets/pawns", 512), ("assets/objetos", 768),
+    # Largura 0 = mesmo tamanho, so convertido (o que vai sem ?w=).
+    ("assets", 0),
+)
+
+
+def _preaquecer_miniaturas():
+    """Em segundo plano, ao subir: deixa as miniaturas prontas para o primeiro
+    jogador nao pagar a reducao de cada imagem. Uma por vez e com pausa, para
+    nao disputar a CPU com a partida. O que ja esta em disco so custa um stat."""
+    try:
+        import PIL  # noqa: F401
+    except Exception:
+        return
+    for pasta, largura in MINIATURAS_PREAQUECER:
+        for raiz, _dirs, nomes in os.walk(os.path.join(BASE_DIR, pasta)):
+            for nome in sorted(nomes):
+                if os.path.splitext(nome)[1].lower() not in _MINI_EXTS:
+                    continue
+                full = os.path.join(raiz, nome)
+                try:
+                    st = os.stat(full)
+                    if not largura and (not nome.lower().endswith(".png")
+                                        or st.st_size < _REENC_MIN_BYTES):
+                        continue
+                    rel = os.path.relpath(full, BASE_DIR).replace("\\", "/")
+                    _miniatura(full, rel, st, largura)
+                except Exception:
+                    continue
+                time.sleep(0.02)
+
+
+def _largura_miniatura(consulta, rel_norm):
+    if os.path.splitext(rel_norm)[1].lower() not in _MINI_EXTS:
+        return 0
+    if rel_norm.split("/", 1)[0] != "assets":
+        return 0
+    try:
+        w = int(consulta.get("w") or 0)
+    except (TypeError, ValueError):
+        return 0
+    return w if w in _MINI_LARGURAS else 0
+
+
+def _miniatura(full, rel_norm, stat, w):
+    """Devolve (bytes, content_type) da imagem reduzida a `w` px de largura, ou
+    None para servir o original (sem Pillow, imagem ja pequena, erro de leitura).
+
+    O resultado fica em disco, em .cache/miniaturas/, com mtime e tamanho do
+    original no nome: arte trocada gera outra miniatura sozinha."""
+    try:
+        from PIL import Image, features
+    except Exception:
+        return None
+    usa_webp = False
+    try:
+        usa_webp = bool(features.check("webp"))
+    except Exception:
+        pass
+    ext_saida = ".webp" if usa_webp else ".png"
+    ctype = "image/webp" if usa_webp else "image/png"
+    pasta = os.path.join(BASE_DIR, ".cache", "miniaturas")
+    nome = "%s_%x_%x_w%d%s" % (hashlib.sha1(rel_norm.encode("utf-8")).hexdigest()[:20],
+                               int(stat.st_mtime), stat.st_size, w, ext_saida)
+    destino = os.path.join(pasta, nome)
+    try:
+        with open(destino, "rb") as f:
+            dados = f.read()
+        # Arquivo vazio = "esta imagem nao precisa de miniatura" (ja e pequena).
+        return (dados, ctype) if dados else None
+    except OSError:
+        pass
+    if w == 0 and not usa_webp:
+        return None
+    try:
+        with Image.open(full) as im:
+            if w and im.width <= w and (not usa_webp or stat.st_size < _REENC_MIN_BYTES):
+                dados = b""
+            else:
+                im = im.convert("RGBA" if (im.mode in ("RGBA", "LA", "P") or "transparency" in im.info) else "RGB")
+                if w and im.width > w:
+                    altura = max(1, round(im.height * w / im.width))
+                    im = im.resize((w, altura), Image.LANCZOS)
+                buf = io.BytesIO()
+                if usa_webp:
+                    im.save(buf, "WEBP", quality=86, method=4)
+                else:
+                    im.save(buf, "PNG", optimize=True)
+                dados = buf.getvalue()
+                # So vale se encolher de verdade (3/4 do original no maximo).
+                if len(dados) * 4 > stat.st_size * 3:
+                    dados = b""
+    except Exception:
+        return None
+    try:
+        os.makedirs(pasta, exist_ok=True)
+        tmp = destino + ".%d.tmp" % os.getpid()
+        with open(tmp, "wb") as f:
+            f.write(dados)
+        os.replace(tmp, destino)
+    except OSError:
+        pass
+    return (dados, ctype) if dados else None
+
 # â”€â”€â”€ Upload de mÃ­dia da histÃ³ria (editor â†’ assets/story/) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 STORY_DIR = os.path.join(BASE_DIR, "assets", "story")
 SCENES_ASSET_DIR = os.path.join(BASE_DIR, "assets", "cenas")
@@ -66817,16 +67139,50 @@ def _serve_static(request):
         stat = os.stat(full)
     except OSError:
         return _http(404, "Not Found", "404 Not Found")
+    consulta = _consulta_do_pedido(request)
+    eh_index = rel_norm == "index.html"
+    largura = _largura_miniatura(consulta, rel_norm)
     etag = '"%x-%x"' % (int(stat.st_mtime), stat.st_size)
     validadores = {"ETag": etag,
                    "Last-Modified": _http_date(stat.st_mtime)}
-    if _cliente_ja_tem(request, etag, stat.st_mtime):
+    if eh_index:
+        # O index carrega a versao do cliente: precisa mudar quando QUALQUER
+        # script muda, e nao so quando o proprio index.html muda. Por isso o
+        # ETag leva a versao e nao ha Last-Modified (que so ve o index).
+        etag = '"%x-%x-%s"' % (int(stat.st_mtime), stat.st_size, _versao_cliente())
+        validadores = {"ETag": etag}
+    elif largura:
+        etag = '"%x-%x-w%d"' % (int(stat.st_mtime), stat.st_size, largura)
+        validadores["ETag"] = etag
+    reencodar = (not largura and rel_norm.startswith("assets/")
+                 and rel_norm.lower().endswith(".png")
+                 and stat.st_size >= _REENC_MIN_BYTES
+                 and "image/webp" in (request.headers.get("Accept") or "").lower())
+    if reencodar:
+        etag = '"%x-%x-webp"' % (int(stat.st_mtime), stat.st_size)
+        validadores["ETag"] = etag
+        validadores["Vary"] = "Accept"
+    politica = _cache_do_estatico(request, rel_norm, consulta)
+    if politica:
+        validadores["Cache-Control"] = politica
+    if eh_index:
+        inm = request.headers.get("If-None-Match")
+        ja_tem = bool(inm) and etag in [t.strip() for t in inm.split(",")]
+    else:
+        ja_tem = _cliente_ja_tem(request, etag, stat.st_mtime)
+    if ja_tem:
         return _http(304, "Not Modified", b"", extra=validadores)
+    if largura or reencodar:
+        mini = _miniatura(full, rel_norm, stat, largura)
+        if mini:
+            return _http(200, "OK", mini[0], mini[1], extra=validadores)
     try:
         with open(full, "rb") as f:
             body = f.read()
     except OSError:
         return _http(404, "Not Found", "404 Not Found")
+    if eh_index:
+        body = _index_com_versao(body)
     tipo_video = mimetypes.guess_type(full)[0] or ""
     if tipo_video.startswith("video/"):
         return _resposta_video(request, body, tipo_video, validadores)
@@ -66841,7 +67197,8 @@ def _serve_static(request):
             "application/javascript", "application/json", "image/svg+xml"):
         ctype += "; charset=utf-8"
     corpo, encoding = _talvez_gzip(body, ctype,
-                                   (rel_norm, int(stat.st_mtime), stat.st_size))
+                                   (rel_norm, int(stat.st_mtime), stat.st_size,
+                                    _versao_cliente() if eh_index else ""))
     if encoding:
         validadores["Content-Encoding"] = encoding
         # Cache compartilhado precisa saber que a resposta varia com o
@@ -66939,6 +67296,27 @@ def _preview_dungeon_state(defn):
     return True, payload, avisos
 
 
+WS_PING_INTERVALO_S = 40
+
+
+async def _manter_ws_vivo(ws):
+    """Ping periodico: tuneis e proxies derrubam WebSocket parado (o da
+    Cloudflare, em ~100 s), e o jogador que pensa na jogada caia e tinha de
+    reconectar. Nao exige resposta -- aba em segundo plano no celular nao e
+    desconectada por isso."""
+    try:
+        while not ws.closed:
+            await asyncio.sleep(WS_PING_INTERVALO_S)
+            if ws.closed:
+                break
+            try:
+                await ws.ping()
+            except Exception:
+                break
+    except asyncio.CancelledError:
+        pass
+
+
 async def _rota(request):
     """Rota unica do servidor. Decide pelo header `Upgrade`, exatamente como o
     process_request antigo fazia.
@@ -66952,7 +67330,11 @@ async def _rota(request):
             return _http(403, "Forbidden", "403 Forbidden")
         ws = web.WebSocketResponse(max_msg_size=34 * 1024 * 1024)
         await ws.prepare(request)
-        await handler(_WS(ws, _ip_do_cliente(request, _modo_publico())))
+        vivo = asyncio.ensure_future(_manter_ws_vivo(ws))
+        try:
+            await handler(_WS(ws, _ip_do_cliente(request, _modo_publico())))
+        finally:
+            vivo.cancel()
         return ws
 
     if request.method not in ("GET", "HEAD"):
@@ -67055,6 +67437,9 @@ async def main():
     # Deliberado: no spike SP0 o log da plataforma foi a UNICA janela para
     # diagnosticar o bind, e nao havia nada impresso.
     print(f"  escutando em: {', '.join(subiu)}")
+    # Miniaturas das imagens (?w=): prontas antes do primeiro jogador chegar.
+    import threading
+    threading.Thread(target=_preaquecer_miniaturas, name="miniaturas", daemon=True).start()
     # SIGTERM e como a plataforma (e o pkill) param o servico. SEM isto o
     # finally abaixo nunca roda, e a "saida limpa" nao existe -- medido: a conta
     # criada ficava so na memoria e sumia no encerramento.

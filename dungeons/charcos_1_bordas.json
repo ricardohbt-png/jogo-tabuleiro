@@ -1874,8 +1874,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_vigia"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "bordas_arvore_49",
@@ -2319,13 +2328,25 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "flechas_magicas"
+          },
+          {
+            "id": "pocao_barreira_arcana"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         1.5,
         1.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_19",

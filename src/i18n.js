@@ -112,6 +112,24 @@
     return null;
   }
 
+  // ── Textos de ficha de monstro (habilidade, ataque, fraqueza) ─────────────
+  // Gêmeo do TEXTOS_FICHA_PT do server.py. A chave é o TEXTO português da ficha
+  // nativa (tools/gerar_textos_monstros.py): a mesma habilidade tem descrições
+  // diferentes conforme o monstro, e quem recebe a ficha não sabe de que
+  // monstro ela veio. Só troca texto IDÊNTICO ao nativo — habilidade escrita
+  // pelo autor no editor sai como ele escreveu.
+  const CAMPOS_TEXTO_FICHA = ['name', 'nome', 'desc', 'descricao', 'description', 'label'];
+  let _fichaPt = null;
+  function _chaveTextoFicha(texto) {
+    if (_fichaPt === null) {
+      _fichaPt = new Map();
+      for (const k in DICT) {
+        if (k.indexOf('cat.texto.') === 0 && DICT[k] && DICT[k].pt) _fichaPt.set(DICT[k].pt, k);
+      }
+    }
+    return _fichaPt.get(texto) || null;
+  }
+
   // ── Nomes compostos (etapa 4c) ─────────────────────────────────────────────
   // Gêmeo de nome_item / _instrumento_nome_T do server.py, lendo AS MESMAS
   // chaves (src/lang/composto.js). Existe porque o nome composto não está em
@@ -200,8 +218,22 @@
           if (typeof o[campo] === 'string') { o[campo] = _comSufixos(o, o[campo]); break; }
         }
       }
+      // Texto de ficha de monstro: vem ANTES da descrição por id, porque uma
+      // habilidade de monstro pode ter o mesmo id de uma magia (bola_fogo,
+      // medo, sono…) e a descrição da magia não é a da habilidade.
+      const trocados = new Set();
+      for (const campo of CAMPOS_TEXTO_FICHA) {
+        if (typeof o[campo] !== 'string') continue;
+        const ehNome = CAMPOS_NOME.indexOf(campo) >= 0;
+        // Nome de herói é do jogador: nunca troca, mesmo se coincidir.
+        if (ehNome && (kNome || composto !== null || o.class_id)) continue;
+        if (!ehNome && soNome) continue;
+        const k = _chaveTextoFicha(o[campo]);
+        if (k) { o[campo] = t(k); trocados.add(campo); }
+      }
       if (kDesc && !soNome) {
         for (const campo of CAMPOS_DESC) {
+          if (trocados.has(campo)) break;
           if (typeof o[campo] === 'string') { o[campo] = t(kDesc); break; }
         }
       }

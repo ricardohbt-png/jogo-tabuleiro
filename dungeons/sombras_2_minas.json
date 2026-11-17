@@ -821,7 +821,58 @@
       ]
     }
   ],
-  "decorations": [],
+  "decorations": [
+    {
+      "id": "minas_barril_esconderijo",
+      "type": "barril",
+      "pos": [
+        29,
+        3
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "anel_vigia"
+          },
+          {
+            "id": "pocao_velocidade"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 13
+    },
+    {
+      "id": "minas_barril_fundo",
+      "type": "barril",
+      "pos": [
+        18,
+        8
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_impacto"
+          },
+          {
+            "id": "moeda_da_sorte"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 13
+    }
+  ],
   "secret_passages": [],
   "falas": [
     {

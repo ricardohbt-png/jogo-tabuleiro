@@ -4267,6 +4267,9 @@
         ${Array.isArray(ref.disable_trap_ids) ? `<div class="trap-overrides compact"><b>⚙️ ${t("ui.editor.masmorra.painel.armadilhas_desligadas_objeto")}</b>${remoteTrapChoices.length ? remoteTrapChoices.map(trap => `<label style="display:block"><input type="checkbox" class="d-disable-trap" data-id="${trap.id}"${remoteTrapIds.has(trap.id) ? " checked" : ""}> ${trap.label}</label>`).join("") : `<small>${t("ui.editor.masmorra.painel.crie_armadilha_mapa")}</small>`}<small>${t("ui.editor.masmorra.painel.ativar_objeto_desativa_hint")}</small></div>` : ""}
         <label style="display:block;margin-top:8px"><input type="checkbox" id="d-key" ${ref.key_objective ? "checked" : ""}> ${t("ui.editor.masmorra.painel.objeto_chave")} <small>(${t("ui.editor.masmorra.painel.objeto_chave_hint")})</small></label>
         <div id="d-loot" style="${hasLoot ? "" : "display:none"}">
+          <label style="display:block"><input type="checkbox" id="d-escondido" ${ref.escondido ? "checked" : ""}> 🔎 ${t("ui.editor.masmorra.painel.esconderijo")}</label>
+          ${ref.escondido ? `<label>${t("ui.editor.masmorra.painel.esconderijo_cd")} <input id="d-cd-busca" type="number" min="5" max="30" value="${ref.cd_busca || 13}"></label>` : ""}
+          <small style="display:block;color:#8a7a5a">${t("ui.editor.masmorra.painel.esconderijo_hint")}</small>
           <label>${t("ui.editor.masmorra.painel.ouro")} <input id="d-gold" type="number" min="0" value="${hasLoot ? (ref.loot.gold | 0) : 0}"></label>
           <label>${t("ui.editor.masmorra.painel.itens")}</label>
         <div id="d-items">${hasLoot ? ref.loot.items.map((it, i) => lootItemRowHTML(it, i, "d-rm")).join("") : ""}</div>
@@ -4395,9 +4398,17 @@
         };
       }
       if (m.loot_capaz) document.getElementById("d-haslook").onchange = e => {
-        ref.loot = e.target.checked ? { gold: 0, items: [] } : null; renderPanel();
+        ref.loot = e.target.checked ? { gold: 0, items: [] } : null;
+        if (!ref.loot) { delete ref.escondido; delete ref.cd_busca; }
+        renderPanel();
       };
       if (hasLoot) {
+        document.getElementById("d-escondido").onchange = e => {
+          if (e.target.checked) ref.escondido = true; else { delete ref.escondido; delete ref.cd_busca; }
+          renderPanel();
+        };
+        const cdBusca = document.getElementById("d-cd-busca");
+        if (cdBusca) cdBusca.onchange = e => { ref.cd_busca = Math.max(5, Math.min(30, Number(e.target.value) | 0 || 13)); };
         document.getElementById("d-gold").onchange = e => { ref.loot.gold = Math.max(0, Number(e.target.value) | 0); };
         document.getElementById("d-additem").onclick = () => { const id = document.getElementById("d-add").value; if (id) ref.loot.items.push({ id }); renderPanel(); };
         wireCartaTextFields(panel, ref.loot.items, renderPanel);
@@ -5119,6 +5130,7 @@
         const o = { id: d.id, type: d.type, pos: d.pos.slice(), facing: d.facing.slice() };
         o.loot = d.loot ? { gold: d.loot.gold | 0, items: d.loot.items.map(exportLootItem) } : null;
         o.key_objective = !!d.key_objective;
+        if (d.loot && d.escondido) { o.escondido = true; o.cd_busca = Math.max(5, Math.min(30, d.cd_busca | 0 || 13)); }
         if (d.chest_trap_monster_type) o.chest_trap_monster_type = d.chest_trap_monster_type;
         if (d.chest_trap_monster_type && d.chest_trap_permanente) o.chest_trap_permanente = true;
         if (d.trap?.tipo) {
@@ -5749,6 +5761,7 @@
       type: d.type, pos: d.pos.slice(), facing: (d.facing || [0, 1]).slice(),
       loot: d.loot ? { gold: d.loot.gold | 0, items: (d.loot.items || []).map(exportLootItem) } : null,
       key_objective: !!d.key_objective,
+      ...(d.loot && d.escondido === true ? { escondido: true, cd_busca: Number(d.cd_busca) | 0 || 13 } : {}),
       ...(typeof d.texto === "string" ? { texto: d.texto.slice(0, 600) } : {}),
       ...(d.chest_trap_monster_type ? { chest_trap_monster_type: d.chest_trap_monster_type } : {}),
       ...(d.chest_trap_permanente === true && d.chest_trap_monster_type ? { chest_trap_permanente: true } : {}),

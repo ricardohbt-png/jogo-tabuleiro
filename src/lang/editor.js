@@ -1489,6 +1489,18 @@ window.LANG_EDITOR = {
     "en": "completes “Open the key chest” on interaction",
     "pt": "conclui “Abrir o baú-chave” ao interagir"
   },
+  "ui.editor.masmorra.painel.esconderijo": {
+    "en": "hidden cache (contents hidden)",
+    "pt": "esconderijo (conteúdo escondido)"
+  },
+  "ui.editor.masmorra.painel.esconderijo_cd": {
+    "en": "DC to find",
+    "pt": "CD para encontrar"
+  },
+  "ui.editor.masmorra.painel.esconderijo_hint": {
+    "en": "The object shows no 💰 and cannot be opened until a hero notices it: walking next to it, each hero rolls Perception (d20 + perception − 10, Rogue +2) against the DC, once per object.",
+    "pt": "O objeto não mostra 💰 nem pode ser aberto até um herói o notar: ao passar ao lado, cada herói faz um teste de Percepção (d20 + percepção − 10, Ladino +2) contra a CD, uma vez por objeto."
+  },
   "ui.editor.masmorra.painel.tamanho": {
     "en": "Size",
     "pt": "Tamanho"

@@ -756,8 +756,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "espada_magica_mais_2"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "pracam_barril_2",

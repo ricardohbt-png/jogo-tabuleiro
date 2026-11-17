@@ -6618,9 +6618,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "amulet_alcance_arcano"
+          },
+          {
+            "id": "pocao_barreira_arcana"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "arvore_seca.png"
+      "image": "arvore_seca.png",
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_556",

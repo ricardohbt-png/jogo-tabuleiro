@@ -1898,7 +1898,14 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_touro_ferro"
+          }
+        ]
+      },
       "key_objective": false,
       "size": [
         1,
@@ -1911,7 +1918,9 @@
       "voffset": [
         0,
         -0.25
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "mansao_sofa_luxo_2",
@@ -3316,7 +3325,17 @@
         0,
         -1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 30,
+        "items": [
+          {
+            "id": "calice_eter"
+          },
+          {
+            "id": "ultimo_suspiro"
+          }
+        ]
+      },
       "key_objective": false,
       "size": [
         3,
@@ -3325,7 +3344,9 @@
       "vscale": [
         1.6,
         1
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_72",

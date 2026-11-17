@@ -1096,7 +1096,8 @@
       "sem_fato": "",
       "aventura_id": "elara_adhadal"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   },
   "elara_graciero_beco": {
     "id": "elara_graciero_beco",
@@ -1130,7 +1131,8 @@
       "sem_fato": "",
       "aventura_id": ""
     },
-    "renome_recompensa": 1
+    "renome_recompensa": 1,
+    "so_na_cidade": true
   },
   "elara_graciero_cais": {
     "id": "elara_graciero_cais",
@@ -1164,7 +1166,8 @@
       "sem_fato": "",
       "aventura_id": "elara_graciero_beco"
     },
-    "renome_recompensa": 1
+    "renome_recompensa": 1,
+    "so_na_cidade": true
   },
   "elara_graciero_praca_viva": {
     "id": "elara_graciero_praca_viva",
@@ -1246,7 +1249,8 @@
       "sem_fato": "elara_graciero_lento",
       "aventura_id": "elara_graciero_cais"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   },
   "elara_graciero_praca_morta": {
     "id": "elara_graciero_praca_morta",
@@ -1280,7 +1284,8 @@
       "sem_fato": "",
       "aventura_id": "elara_graciero_cais"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   },
   "elara_leonel_casa": {
     "id": "elara_leonel_casa",
@@ -1465,8 +1470,8 @@
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
-            "item_id": "olho_de_arveluz",
-            "fato": "",
+            "item_id": "",
+            "fato": "elara_olho_recuperado",
             "sem_fato": "",
             "aventura_id": ""
           }
@@ -1476,12 +1481,22 @@
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
-            "item_id": "olho_de_arveluz",
-            "fato": "",
-            "sem_fato": "",
+            "item_id": "",
+            "fato": "elara_ramo_a",
+            "sem_fato": "elara_olho_recuperado",
             "aventura_id": ""
-          },
-          "negar": true
+          }
+        },
+        {
+          "text": "O Olho de Arveluz não está aqui. Ficou em Graciero, entre o que sobrou do Gilo, e alguém na cidade já deve ter posto as mãos nele.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_ramo_b",
+            "sem_fato": "elara_olho_recuperado",
+            "aventura_id": ""
+          }
         },
         {
           "text": "O bardo que vocês pouparam, de longe, ergue o chapéu uma última vez. Sem ele, a cidade teria sido bem mais difícil.",
@@ -1518,7 +1533,8 @@
       "sem_fato": "elara_leonel_cauteloso",
       "aventura_id": ""
     },
-    "renome_recompensa": 3
+    "renome_recompensa": 3,
+    "so_na_cidade": true
   },
   "elara_leonel_casa_alerta": {
     "id": "elara_leonel_casa_alerta",
@@ -1725,8 +1741,8 @@
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
-            "item_id": "olho_de_arveluz",
-            "fato": "",
+            "item_id": "",
+            "fato": "elara_olho_recuperado",
             "sem_fato": "",
             "aventura_id": ""
           }
@@ -1736,12 +1752,22 @@
           "requisito": {
             "renome_min": 0,
             "nivel_grupo_min": 0,
-            "item_id": "olho_de_arveluz",
-            "fato": "",
-            "sem_fato": "",
+            "item_id": "",
+            "fato": "elara_ramo_a",
+            "sem_fato": "elara_olho_recuperado",
             "aventura_id": ""
-          },
-          "negar": true
+          }
+        },
+        {
+          "text": "O Olho de Arveluz não está aqui. Ficou em Graciero, entre o que sobrou do Gilo, e alguém na cidade já deve ter posto as mãos nele.",
+          "requisito": {
+            "renome_min": 0,
+            "nivel_grupo_min": 0,
+            "item_id": "",
+            "fato": "elara_ramo_b",
+            "sem_fato": "elara_olho_recuperado",
+            "aventura_id": ""
+          }
         },
         {
           "text": "O bardo que vocês pouparam, de longe, ergue o chapéu uma última vez. Sem ele, a cidade teria sido bem mais difícil.",
@@ -1779,7 +1805,8 @@
       "aventura_id": "",
       "tambem_fato": "elara_leonel_cauteloso"
     },
-    "renome_recompensa": 3
+    "renome_recompensa": 3,
+    "so_na_cidade": true
   },
   "elara_montanha": {
     "id": "elara_montanha",
@@ -1950,6 +1977,7 @@
       "sem_fato": "elara_graciero_lento",
       "aventura_id": "elara_graciero_cais"
     },
-    "renome_recompensa": 2
+    "renome_recompensa": 2,
+    "so_na_cidade": true
   }
 }

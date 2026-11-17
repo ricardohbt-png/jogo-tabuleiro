@@ -752,12 +752,21 @@
         1,
         0
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "machadinha_runica_vai_e_volta"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.5,
         1.5
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_2",
@@ -846,6 +855,28 @@
         ]
       },
       "key_objective": false
+    },
+    {
+      "id": "trono_barril_esconderijo",
+      "type": "barril",
+      "pos": [
+        1,
+        15
+      ],
+      "facing": [
+        0,
+        1
+      ],
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "anel_supremacia"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 15
     }
   ],
   "secret_passages": [

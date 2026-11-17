@@ -860,8 +860,20 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "chapeu_cacador"
+          },
+          {
+            "id": "pocao_velocidade"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_10",
@@ -930,8 +942,17 @@
         1,
         0
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "ferroada"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_15",

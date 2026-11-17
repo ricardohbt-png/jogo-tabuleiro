@@ -117,6 +117,17 @@ window.LANG_INTERFACE = {
   "ui.diario.tentar_novamente": {"en": "Try again", "pt": "Tentar novamente"},
   "ui.inv.cinto": {"pt": "Cinto", "en": "Belt"},
   "ui.inv.cinto_bolso_vazio": {"pt": "Bolso {n} vazio", "en": "Empty pocket {n}"},
+  "ui.inv.estatisticas_indisponiveis": {"pt": "Estatísticas indisponíveis.", "en": "Stats unavailable."},
+  "ui.inv.atalhos": {"pt": "Atalhos", "en": "Shortcuts"},
+  "ui.inv.atalhos_titulo": {"pt": "ATALHOS", "en": "SHORTCUTS"},
+  "ui.inv.slots_atalho": {"pt": "Slots de atalho", "en": "Shortcut slots"},
+  "ui.inv.estatisticas": {"pt": "Estatísticas", "en": "Stats"},
+  "ui.inv.mostrar_estatisticas": {"pt": "Mostrar estatísticas", "en": "Show stats"},
+  "ui.inv.ocultar_estatisticas": {"pt": "Ocultar estatísticas", "en": "Hide stats"},
+  "ui.inv.mostrar_atalhos": {"pt": "Mostrar atalhos", "en": "Show shortcuts"},
+  "ui.inv.ocultar_atalhos": {"pt": "Ocultar atalhos", "en": "Hide shortcuts"},
+  "ui.inv.reserva": {"pt": "Reserva", "en": "Reserve"},
+  "ui.inv.reserva_regen": {"pt": "{hp} HP; +1 HP por rodada", "en": "{hp} HP; +1 HP per round"},
   "ui.inv.aljava_slot_vazio": {"pt": "Munição {n} (até 40)", "en": "Ammunition {n} (up to 40)"},
   "dado.bomba_de_flash_de_gilo": {
     "en": "Gilo's Flash Bomb",
@@ -7598,6 +7609,30 @@ window.LANG_INTERFACE = {
     "en": "<b>Range:</b> 3 squares +1 every 3 caster levels<br><b>Target:</b> 1 ally (or yourself)<br><b>Effect:</b> grants Flight until the end of the mission; starting altitude 2, maximum 10<br><b>Control:</b> use the ↕ Altitude button and the scroll wheel, or L1 + L2/R2 on the gamepad<br><b>Cost:</b> 🍖-1 💧-1 + 1 slot",
     "pt": "<b>Alcance:</b> 3 quadrados +1 a cada 3 níveis de conjurador<br>\n               <b>Alvo:</b> 1 aliado (ou você)<br>\n               <b>Efeito:</b> ativa Voo até o fim da missão; altura inicial 2, máxima 10<br>\n               <b>Controle:</b> use o botão ↕ Altura e o scroll, ou L1 + L2/R2 no joystick<br>\n               <b>Custo:</b> 🍖-1 💧-1 + 1 slot"
   },
+  "ui.maldicao.fome_eterna.ef": {"pt": "consumo sobrenatural de fome", "en": "supernatural hunger drain"},
+  "ui.maldicao.sede_infinita.ef": {"pt": "consumo sobrenatural de sede", "en": "supernatural thirst drain"},
+  "ui.maldicao.tocado_morte.ef": {"pt": "recuperação cada vez menos eficaz", "en": "healing grows less and less effective"},
+  "ui.maldicao.licantropia.ef": {"pt": "transformação bestial", "en": "bestial transformation"},
+  "ui.maldicao.corrupcao_crescente.ef": {"pt": "gera doenças e maldições", "en": "spawns diseases and curses"},
+  "ui.maldicao.popup.efeito": {"pt": "Efeito: {efeito}.", "en": "Effect: {efeito}."},
+  "ui.maldicao.popup.gravidade": {"pt": "Gravidade {gravidade} — o Templo cobra {preco} ouro para curá-la.", "en": "{gravidade} severity — the Temple charges {preco} gold to cure it."},
+  "ui.maldicao.gravidade.leve": {"pt": "Leve", "en": "Light"},
+  "ui.maldicao.gravidade.media": {"pt": "Média", "en": "Moderate"},
+  "ui.maldicao.gravidade.grave": {"pt": "Grave", "en": "Severe"},
+  "ui.maldicao.popup.origem.item": {"pt": "Veio de um item amaldiçoado — enquanto a maldição durar, peças que prendem não saem do lugar.", "en": "It came from a cursed item — while the curse lasts, binding pieces cannot be removed."},
+  "ui.maldicao.popup.origem.armadilha": {"pt": "Disparada por uma armadilha.", "en": "Triggered by a trap."},
+  "ui.maldicao.popup.origem.monstro": {"pt": "Lançada por um inimigo.", "en": "Cast by an enemy."},
+  "ui.maldicao.popup.progressiva": {"pt": "Progressiva: está no estágio {n} e piora a cada 2 aventuras concluídas.", "en": "Progressive: it is at stage {n} and worsens every 2 completed adventures."},
+  "ui.maldicao.popup.permanece": {"pt": "Permanece até ser purificada por um clérigo ou curada no Templo.", "en": "Lasts until purified by a cleric or cured at the Temple."},
+  "ui.maldicao.lic.titulo": {"pt": "Amaldiçoado: transformou-se em Lobisomem", "en": "Cursed: turned into a Werewolf"},
+  "ui.maldicao.lic.descricao": {"pt": "{motivo}. A forma lupina dura {duracao} rodadas.", "en": "{motivo}. The wolf form lasts {duracao} rounds."},
+  "ui.maldicao.lic.estagio": {"pt": "Estágio {n}: +{forca} FOR, +{con} CON e +{des} DES.", "en": "Stage {n}: +{forca} STR, +{con} CON and +{des} DEX."},
+  "ui.maldicao.lic.ia": {"pt": "A IA move e ataca a criatura mais próxima; em empate, prioriza aliados.", "en": "The AI moves and attacks the nearest creature; on a tie, it targets allies first."},
+  "ui.maldicao.lic.ataques": {"pt": "Ganha Mordida e duas Garras.", "en": "Gains a Bite and two Claws."},
+  "ui.maldicao.lic.motivo_desperta": {"pt": "a maldição desperta", "en": "the curse awakens"},
+  "ui.maldicao.lic.motivo_pos_combate": {"pt": "resultado 1 após o combate", "en": "rolled a 1 after combat"},
+  "ui.maldicao.lic.motivo_estagio": {"pt": "o estágio avançado força a transformação", "en": "the advanced stage forces the transformation"},
+  "ui.maldicao.lic.motivo_d4": {"pt": "resultado {n} no d4", "en": "rolled {n} on the d4"},
   "ui.maldicao.alma_quebrada": {
     "en": "Broken Soul",
     "pt": "Alma Quebrada"
@@ -9907,8 +9942,8 @@ window.LANG_INTERFACE = {
     "pt": "Ação principal. 1d8 a 3d8 + INT em todos os aliados no raio 5."
   },
   "ui.selecao.skill.desc.detectar_armadilhas": {
-    "en": "Bonus action (toggle). Reveals nearby traps and does not set off dungeon ones. Upkeep 💧-1/turn.",
-    "pt": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno."
+    "en": "Bonus action (toggle). Reveals nearby traps and hidden caches and does not set off dungeon traps. Upkeep 💧-1/turn.",
+    "pt": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno."
   },
   "ui.selecao.skill.desc.esconder_sombras": {
     "en": "Bonus action. d20+DEX vs the monsters' perception. You can't attack in the same turn. Invisible (not targetable) until you attack — moving does NOT reveal you. Upkeep 🍖-1 💧-1/turn.",
@@ -10050,6 +10085,11 @@ window.LANG_INTERFACE = {
     "en": "🎭 You are the Master — you will control the monsters in the dungeon.",
     "pt": "🎭 Você é o Mestre — controlará os monstros na masmorra."
   },
+  "ui.comparar.dano": {"pt": "Dano", "en": "Damage"},
+  "ui.sobrevivencia.entrou_colapso": {"pt": "💀 {heroi} entrou em colapso total!", "en": "💀 {heroi} has fully collapsed!"},
+  "ui.sobrevivencia.recuperou_colapso": {"pt": "✅ {heroi} se recuperou do colapso!", "en": "✅ {heroi} recovered from the collapse!"},
+  "ui.sobrevivencia.em_colapso": {"pt": "💀 {heroi} em colapso — {n} turnos para morte permanente", "en": "💀 {heroi} collapsed — {n} turns until permanent death"},
+  "ui.sobrevivencia.morreu_fome_sede": {"pt": "💀 {heroi} morreu de fome e sede!", "en": "💀 {heroi} died of hunger and thirst!"},
   "ui.sobrevivencia.aviso_colapso": {
     "en": "⚠️ Restore hunger or thirst within {n} turns or you will die!",
     "pt": "⚠️ Recupere fome ou sede em {n} turnos ou morrerá!"

@@ -212,7 +212,7 @@ const GS = (() => {
       if (!heroi.emColapsoTotal) {
         heroi.emColapsoTotal = true;
         heroi.contadorMorte = 0;
-        adicionarLog(`💀 ${heroi.name} entrou em colapso total!`);
+        adicionarLog(_t('ui.sobrevivencia.entrou_colapso', `💀 ${heroi.name} entrou em colapso total!`, { heroi: heroi.name }));
         adicionarLog(_t('ui.sobrevivencia.aviso_colapso',
           `⚠️ Recupere fome ou sede em ${SOBREVIVENCIA_CONFIG.morteConfig.turnosParaMorte} turnos ou morrerá!`,
           { n: SOBREVIVENCIA_CONFIG.morteConfig.turnosParaMorte }));
@@ -224,7 +224,7 @@ const GS = (() => {
     if (heroi.emColapsoTotal && (heroi.fome > 0 || heroi.sede > 0)) {
       heroi.emColapsoTotal = false;
       heroi.contadorMorte = 0;
-      adicionarLog(`✅ ${heroi.name} se recuperou do colapso!`);
+      adicionarLog(_t('ui.sobrevivencia.recuperou_colapso', `✅ ${heroi.name} se recuperou do colapso!`, { heroi: heroi.name }));
     }
 
     // Log de mudança de estado
@@ -252,16 +252,15 @@ const GS = (() => {
     heroi.modificadorTemporario =
       SOBREVIVENCIA_CONFIG.morteConfig.penaltiesPorTurno * heroi.contadorMorte;
 
-    adicionarLog(
-      `💀 ${heroi.name} em colapso — ` +
-      `${turnosRestantes} turnos para morte permanente`
-    );
+      adicionarLog(_t('ui.sobrevivencia.em_colapso',
+      `💀 ${heroi.name} em colapso — ${turnosRestantes} turnos para morte permanente`,
+      { heroi: heroi.name, n: turnosRestantes }));
 
     // Morte permanente
     if (heroi.contadorMorte >= SOBREVIVENCIA_CONFIG.morteConfig.turnosParaMorte) {
       heroi.morto = true;
       heroi.causaMorte = 'fome e sede';
-      adicionarLog(`💀 ${heroi.name} morreu de fome e sede!`);
+      adicionarLog(_t('ui.sobrevivencia.morreu_fome_sede', `💀 ${heroi.name} morreu de fome e sede!`, { heroi: heroi.name }));
     }
 
     return heroi;
@@ -3375,7 +3374,7 @@ const GS = (() => {
         else if(newVal < oldVal) arrow = 'down';
       }
       rows.push({
-        label: f.label,
+        label: f.key === 'dano' ? _t('ui.comparar.dano', f.label) : f.label,
         newDisplay: hasNew ? f.fmt(newItem[f.key]) : '—',
         oldDisplay: hasOld ? f.fmt(equippedItem[f.key]) : '—',
         arrow,

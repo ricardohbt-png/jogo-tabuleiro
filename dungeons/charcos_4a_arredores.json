@@ -6381,12 +6381,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "chapeu_conjurador"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.4,
         1.7
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_251",
@@ -6399,12 +6408,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_aguia"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.5,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_252",

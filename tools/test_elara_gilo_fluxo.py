@@ -84,6 +84,25 @@ class FluxoTests(unittest.TestCase):
                 S.WORLD_ADVENTURES.pop(k, None)
 
 
+    def test_o_curtume_entra_pela_vila_e_a_floresta_pelo_mapa_mundi(self):
+        d = R.destinos()
+        self.assertTrue(d["elara_corvin"].get("so_na_cidade"))
+        self.assertFalse(d["elara_adhadal"].get("so_na_cidade"), "Adhadal fica entre as cidades")
+        self.assertEqual({p["aventura"] for p in R.pontos().values()}, {"elara_corvin"})
+        self.assertIn("elara_curtume", S.CITY_MAP_POINTS.get("vila_corvin", {}))
+        S.WORLD_ADVENTURES.update(d)
+        try:
+            def entradas(r):
+                return {pid for pid, p in r._city_points_payload().get("vila_corvin", {}).items()
+                        if p.get("type") == "dungeon"}
+            r = sala({R.F_RAMO_B})
+            self.assertEqual(entradas(r), set(), "antes de Adhadal, nenhuma entrada na vila")
+            r.world_adventure_progress["elara_adhadal"] = 2
+            self.assertEqual(entradas(r), {"elara_curtume"})
+        finally:
+            for k in d:
+                S.WORLD_ADVENTURES.pop(k, None)
+
 class ObjetivosTests(unittest.IsolatedAsyncioTestCase):
     async def test_adhadal_2_chegar_na_saida_grava_o_fato(self):
         r = masmorra("elara_adhadal_2.json")

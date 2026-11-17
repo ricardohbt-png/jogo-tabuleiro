@@ -2171,8 +2171,8 @@ window.LANG_CATALOGO = {
     "pt": "Desarmar Armadilha"
   },
   "cat.habilidade.detectar_armadilhas.desc": {
-    "en": "Bonus action (toggle). Reveals nearby traps and does not set off the dungeon's own. Upkeep 💧-1/turn.",
-    "pt": "Ação bônus (alternável). Revela armadilhas próximas e não dispara as da masmorra. Manutenção 💧-1/turno."
+    "en": "Bonus action (toggle). Reveals nearby traps and hidden caches and does not set off the dungeon's traps. Upkeep 💧-1/turn.",
+    "pt": "Ação bônus (alternável). Revela armadilhas e esconderijos próximos e não dispara as armadilhas da masmorra. Manutenção 💧-1/turno."
   },
   "cat.habilidade.detectar_armadilhas.nome": {
     "en": "Detect Traps",
@@ -3691,11 +3691,11 @@ window.LANG_CATALOGO = {
     "pt": "Espada de 2 Mãos de Aço Damasco"
   },
   "cat.item.espada2m_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Espada de 2 Mãos de Aço Damasco: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.espada2m_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Two-Handed Sword +1",
     "pt": "Espada de 2 Mãos de Aço Damasco Mágica +1"
   },
   "cat.item.espada2m_liga_titanio.desc": {
@@ -3707,19 +3707,19 @@ window.LANG_CATALOGO = {
     "pt": "Espada de 2 Mãos de Liga de Titânio"
   },
   "cat.item.espada2m_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Espada de 2 Mãos de Liga de Titânio: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.espada2m_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Two-Handed Sword +1",
     "pt": "Espada de 2 Mãos de Liga de Titânio Mágica +1"
   },
   "cat.item.espada2m_magica.desc": {
-    "en": "",
+    "en": "Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20.",
     "pt": "Espada de 2 Mãos: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20."
   },
   "cat.item.espada2m_magica.nome": {
-    "en": "",
+    "en": "Magic Two-Handed Sword +1",
     "pt": "Espada de 2 Mãos Mágica +1"
   },
   "cat.item.espada2m_obsidiana_ferro.desc": {
@@ -3731,11 +3731,11 @@ window.LANG_CATALOGO = {
     "pt": "Espada de 2 Mãos de Obsidiana de Ferro"
   },
   "cat.item.espada2m_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Two-Handed Sword: 2d6 slashing damage, using Strength. Requires both hands. Natural critical on 19–20. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Espada de 2 Mãos de Obsidiana de Ferro: 2d6 de dano cortante, usando Força. Requer as duas mãos. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.espada2m_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Two-Handed Sword +1",
     "pt": "Espada de 2 Mãos de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.espada2m_prata.desc": {
@@ -3995,27 +3995,27 @@ window.LANG_CATALOGO = {
     "pt": "Gancho de Corrente"
   },
   "cat.item.gancho_corrente_aco_damasco.desc": {
-    "en": "",
+    "en": "Damascus Steel Chain Hook: Deals 1d6 piercing using Dexterity, reaches 3 squares in a straight line and requires line of sight. Once every 10 rounds, on a hit, the target makes a DC 13 Fortitude save; on a failure, it is pulled up to 2 squares toward the wielder. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall. Usable by Bard, Rogue, Paladin, and Warrior. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Gancho de Corrente de Aço Damasco: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.gancho_corrente_aco_damasco.nome": {
-    "en": "",
+    "en": "Damascus Steel Chain Hook",
     "pt": "Gancho de Corrente de Aço Damasco"
   },
   "cat.item.gancho_corrente_liga_titanio.desc": {
-    "en": "",
+    "en": "Titanium Alloy Chain Hook: Deals 1d6 piercing using Dexterity, reaches 3 squares in a straight line and requires line of sight. Once every 10 rounds, on a hit, the target makes a DC 13 Fortitude save; on a failure, it is pulled up to 2 squares toward the wielder. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall. Usable by Bard, Rogue, Paladin, and Warrior. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Gancho de Corrente de Liga de Titânio: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.gancho_corrente_liga_titanio.nome": {
-    "en": "",
+    "en": "Titanium Alloy Chain Hook",
     "pt": "Gancho de Corrente de Liga de Titânio"
   },
   "cat.item.gancho_corrente_obsidiana_ferro.desc": {
-    "en": "",
+    "en": "Iron Obsidian Chain Hook: Deals 1d6 piercing using Dexterity, reaches 3 squares in a straight line and requires line of sight. Once every 10 rounds, on a hit, the target makes a DC 13 Fortitude save; on a failure, it is pulled up to 2 squares toward the wielder. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall. Usable by Bard, Rogue, Paladin, and Warrior. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Gancho de Corrente de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 3 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 2 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.gancho_corrente_obsidiana_ferro.nome": {
-    "en": "",
+    "en": "Iron Obsidian Chain Hook",
     "pt": "Gancho de Corrente de Obsidiana de Ferro"
   },
   "cat.item.gancho_corrente_prata.desc": {
@@ -4035,27 +4035,27 @@ window.LANG_CATALOGO = {
     "pt": "Gancho do Escorpião Superior"
   },
   "cat.item.gancho_escorpiao_superior_aco_damasco.desc": {
-    "en": "",
+    "en": "Damascus Steel Superior Scorpion Hook: Deals 1d6 piercing using Dexterity, reaches 5 squares in a straight line and requires line of sight. Once every 10 rounds, on a hit, the target makes a DC 13 Fortitude save; on a failure, it is pulled up to 3 squares toward the wielder. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall. Usable by Bard, Rogue, Paladin, and Warrior. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Gancho do Escorpião Superior de Aço Damasco: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.gancho_escorpiao_superior_aco_damasco.nome": {
-    "en": "",
+    "en": "Damascus Steel Superior Scorpion Hook",
     "pt": "Gancho do Escorpião Superior de Aço Damasco"
   },
   "cat.item.gancho_escorpiao_superior_liga_titanio.desc": {
-    "en": "",
+    "en": "Titanium Alloy Superior Scorpion Hook: Deals 1d6 piercing using Dexterity, reaches 5 squares in a straight line and requires line of sight. Once every 10 rounds, on a hit, the target makes a DC 13 Fortitude save; on a failure, it is pulled up to 3 squares toward the wielder. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall. Usable by Bard, Rogue, Paladin, and Warrior. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Gancho do Escorpião Superior de Liga de Titânio: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.gancho_escorpiao_superior_liga_titanio.nome": {
-    "en": "",
+    "en": "Titanium Alloy Superior Scorpion Hook",
     "pt": "Gancho do Escorpião Superior de Liga de Titânio"
   },
   "cat.item.gancho_escorpiao_superior_obsidiana_ferro.desc": {
-    "en": "",
+    "en": "Iron Obsidian Superior Scorpion Hook: Deals 1d6 piercing using Dexterity, reaches 5 squares in a straight line and requires line of sight. Once every 10 rounds, on a hit, the target makes a DC 13 Fortitude save; on a failure, it is pulled up to 3 squares toward the wielder. Obstacles and creatures block the pull; a target pulled into an abyss suffers the normal fall. Usable by Bard, Rogue, Paladin, and Warrior. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Gancho do Escorpião Superior de Obsidiana de Ferro: causa 1d6 perfurante usando Destreza, alcança 5 casas em linha reta e exige linha de visão. Uma vez a cada 10 rodadas, ao acertar, o alvo testa Fortitude CD 13; se falhar, é puxado até 3 casas em direção ao portador. Obstáculos e criaturas bloqueiam o deslocamento; um alvo puxado para um abismo sofre a queda normal. Usável por Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.gancho_escorpiao_superior_obsidiana_ferro.nome": {
-    "en": "",
+    "en": "Iron Obsidian Superior Scorpion Hook",
     "pt": "Gancho do Escorpião Superior de Obsidiana de Ferro"
   },
   "cat.item.gancho_escorpiao_superior_prata.desc": {
@@ -4499,11 +4499,11 @@ window.LANG_CATALOGO = {
     "pt": "Lança Curta de Aço Damasco"
   },
   "cat.item.lanca_curta_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Lança Curta de Aço Damasco: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.lanca_curta_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Short Spear +1",
     "pt": "Lança Curta de Aço Damasco Mágica +1"
   },
   "cat.item.lanca_curta_liga_titanio.desc": {
@@ -4515,19 +4515,19 @@ window.LANG_CATALOGO = {
     "pt": "Lança Curta de Liga de Titânio"
   },
   "cat.item.lanca_curta_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Lança Curta de Liga de Titânio: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.lanca_curta_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Short Spear +1",
     "pt": "Lança Curta de Liga de Titânio Mágica +1"
   },
   "cat.item.lanca_curta_magica.desc": {
-    "en": "",
+    "en": "Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares.",
     "pt": "Lança Curta: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas."
   },
   "cat.item.lanca_curta_magica.nome": {
-    "en": "",
+    "en": "Magic Short Spear +1",
     "pt": "Lança Curta Mágica +1"
   },
   "cat.item.lanca_curta_obsidiana_ferro.desc": {
@@ -4539,11 +4539,11 @@ window.LANG_CATALOGO = {
     "pt": "Lança Curta de Obsidiana de Ferro"
   },
   "cat.item.lanca_curta_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Short Spear: 1d6 piercing damage, using Strength. Can also be thrown up to 4 squares. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Lança Curta de Obsidiana de Ferro: 1d6 de dano perfurante, usando Força. Também pode ser arremessada até 4 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.lanca_curta_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Short Spear +1",
     "pt": "Lança Curta de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.lanca_curta_prata.desc": {
@@ -4555,83 +4555,83 @@ window.LANG_CATALOGO = {
     "pt": "Lança Curta de Prata"
   },
   "cat.item.lanca_enorme.desc": {
-    "en": "",
+    "en": "Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand.",
     "pt": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão."
   },
   "cat.item.lanca_enorme.nome": {
-    "en": "",
+    "en": "Huge Spear",
     "pt": "Lança Enorme"
   },
   "cat.item.lanca_enorme_aco_damasco.desc": {
-    "en": "",
+    "en": "Damascus Steel Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Lança Enorme de Aço Damasco: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.lanca_enorme_aco_damasco.nome": {
-    "en": "",
+    "en": "Damascus Steel Huge Spear",
     "pt": "Lança Enorme de Aço Damasco"
   },
   "cat.item.lanca_enorme_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon. Carries a rare +1 enchantment to attack and damage rolls.",
     "pt": "Lança Enorme de Aço Damasco: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
   },
   "cat.item.lanca_enorme_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Huge Spear +1",
     "pt": "Lança Enorme de Aço Damasco Mágica +1"
   },
   "cat.item.lanca_enorme_liga_titanio.desc": {
-    "en": "",
+    "en": "Titanium Alloy Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Lança Enorme de Liga de Titânio: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.lanca_enorme_liga_titanio.nome": {
-    "en": "",
+    "en": "Titanium Alloy Huge Spear",
     "pt": "Lança Enorme de Liga de Titânio"
   },
   "cat.item.lanca_enorme_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon. Carries a rare +1 enchantment to attack and damage rolls.",
     "pt": "Lança Enorme de Liga de Titânio: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
   },
   "cat.item.lanca_enorme_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Huge Spear +1",
     "pt": "Lança Enorme de Liga de Titânio Mágica +1"
   },
   "cat.item.lanca_enorme_magica.desc": {
-    "en": "",
+    "en": "Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Carries a rare +1 enchantment to attack and damage rolls.",
     "pt": "Lança Enorme: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Recebe um encantamento raro +1 no acerto e no dano."
   },
   "cat.item.lanca_enorme_magica.nome": {
-    "en": "",
+    "en": "Magic Huge Spear +1",
     "pt": "Lança Enorme Mágica +1"
   },
   "cat.item.lanca_enorme_obsidiana_ferro.desc": {
-    "en": "",
+    "en": "Iron Obsidian Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Lança Enorme de Obsidiana de Ferro: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.lanca_enorme_obsidiana_ferro.nome": {
-    "en": "",
+    "en": "Iron Obsidian Huge Spear",
     "pt": "Lança Enorme de Obsidiana de Ferro"
   },
   "cat.item.lanca_enorme_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 square diagonally, and can be thrown up to 3 squares. Heroes need both hands; ogres can wield it in one hand. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon. Carries a rare +1 enchantment to attack and damage rolls.",
     "pt": "Lança Enorme de Obsidiana de Ferro: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 casa na diagonal e pode ser arremessada até 3 casas. Exige duas mãos de heróis; ogros conseguem empunhá-la com uma mão. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma. Recebe um encantamento raro +1 no acerto e no dano."
   },
   "cat.item.lanca_enorme_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Huge Spear +1",
     "pt": "Lança Enorme de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.lanca_enorme_prata.desc": {
-    "en": "",
+    "en": "Silver Huge Spear: Deals 1d10 piercing + Strength, reaches 2 squares in an orthogonal line or 1 diagonally, and heroes need both hands. Silver harms creatures resistant to common weapons, suffers no penalty at corrosion level 1 and is destroyed at level 2. Ogres can wield it in one hand.",
     "pt": "Lança Enorme de Prata: causa 1d10 perfurante + Força, alcança 2 casas em linha ortogonal ou 1 na diagonal e exige duas mãos de heróis. A prata fere criaturas resistentes a armas comuns, não penaliza no primeiro nível de corrosão e é destruída no segundo. Ogros conseguem empunhá-la com uma mão."
   },
   "cat.item.lanca_enorme_prata.nome": {
-    "en": "",
+    "en": "Silver Huge Spear",
     "pt": "Lança Enorme de Prata"
   },
   "cat.item.lanca_enorme_prata_magica.desc": {
-    "en": "",
+    "en": "Silver Huge Spear: 1d10 piercing damage, using Strength. Reach: 2 orthogonal squares ahead or 1 adjacent diagonal square. Can also be thrown up to 3 squares. Requires both hands. Silver: withstands 1 corrosion level without penalty and is destroyed at the second; it can damage enemies resistant to normal weapons. Carries a rare +1 enchantment to attack and damage rolls.",
     "pt": "Lança Enorme de Prata: 1d10 de dano perfurante, usando Força. Alcance: 2 casas ortogonais à frente ou 1 casa diagonal adjacente. Também pode ser arremessada até 3 casas. Requer as duas mãos. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Recebe um encantamento raro +1 no acerto e no dano."
   },
   "cat.item.lanca_enorme_prata_magica.nome": {
-    "en": "",
+    "en": "Magic Silver Huge Spear +1",
     "pt": "Lança Enorme de Prata Mágica +1"
   },
   "cat.item.lanca_liga_titanio.desc": {
@@ -4783,11 +4783,11 @@ window.LANG_CATALOGO = {
     "pt": "Espada Longa de Aço Damasco"
   },
   "cat.item.longsword_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Longsword: 1d8 slashing damage, using Strength. Natural critical on 19–20. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Espada Longa de Aço Damasco: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.longsword_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Longsword +1",
     "pt": "Espada Longa de Aço Damasco Mágica +1"
   },
   "cat.item.longsword_liga_titanio.desc": {
@@ -4799,19 +4799,19 @@ window.LANG_CATALOGO = {
     "pt": "Espada Longa de Liga de Titânio"
   },
   "cat.item.longsword_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Longsword: 1d8 slashing damage, using Strength. Natural critical on 19–20. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Espada Longa de Liga de Titânio: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.longsword_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Longsword +1",
     "pt": "Espada Longa de Liga de Titânio Mágica +1"
   },
   "cat.item.longsword_magica.desc": {
-    "en": "",
+    "en": "Longsword: 1d8 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Longa: 1d8 de dano cortante, usando Força. Crítico natural com 19–20."
   },
   "cat.item.longsword_magica.nome": {
-    "en": "",
+    "en": "Magic Longsword +1",
     "pt": "Espada Longa Mágica +1"
   },
   "cat.item.longsword_obsidiana_ferro.desc": {
@@ -4823,11 +4823,11 @@ window.LANG_CATALOGO = {
     "pt": "Espada Longa de Obsidiana de Ferro"
   },
   "cat.item.longsword_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Longsword: 1d8 slashing damage, using Strength. Natural critical on 19–20. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Espada Longa de Obsidiana de Ferro: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.longsword_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Longsword +1",
     "pt": "Espada Longa de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.longsword_prata.desc": {
@@ -5015,11 +5015,11 @@ window.LANG_CATALOGO = {
     "pt": "Machado Duplo de Aço Damasco"
   },
   "cat.item.machado_duplo_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Machado Duplo de Aço Damasco: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.machado_duplo_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Double Axe +1",
     "pt": "Machado Duplo de Aço Damasco Mágica +1"
   },
   "cat.item.machado_duplo_liga_titanio.desc": {
@@ -5031,19 +5031,19 @@ window.LANG_CATALOGO = {
     "pt": "Machado Duplo de Liga de Titânio"
   },
   "cat.item.machado_duplo_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Machado Duplo de Liga de Titânio: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.machado_duplo_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Double Axe +1",
     "pt": "Machado Duplo de Liga de Titânio Mágica +1"
   },
   "cat.item.machado_duplo_magica.desc": {
-    "en": "",
+    "en": "Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack.",
     "pt": "Machado Duplo: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
   },
   "cat.item.machado_duplo_magica.nome": {
-    "en": "",
+    "en": "Magic Double Axe +1",
     "pt": "Machado Duplo Mágica +1"
   },
   "cat.item.machado_duplo_obsidiana_ferro.desc": {
@@ -5055,11 +5055,11 @@ window.LANG_CATALOGO = {
     "pt": "Machado Duplo de Obsidiana de Ferro"
   },
   "cat.item.machado_duplo_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Double Axe: 1d10 slashing damage, using Strength. Natural 19: makes an additional attack. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Machado Duplo de Obsidiana de Ferro: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.machado_duplo_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Double Axe +1",
     "pt": "Machado Duplo de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.machado_duplo_prata.desc": {
@@ -5239,11 +5239,11 @@ window.LANG_CATALOGO = {
     "pt": "Marreta de Aço Damasco"
   },
   "cat.item.marreta_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Marreta de Aço Damasco: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.marreta_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Sledgehammer +1",
     "pt": "Marreta de Aço Damasco Mágica +1"
   },
   "cat.item.marreta_liga_titanio.desc": {
@@ -5255,19 +5255,19 @@ window.LANG_CATALOGO = {
     "pt": "Marreta de Liga de Titânio"
   },
   "cat.item.marreta_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Marreta de Liga de Titânio: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.marreta_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Sledgehammer +1",
     "pt": "Marreta de Liga de Titânio Mágica +1"
   },
   "cat.item.marreta_magica.desc": {
-    "en": "",
+    "en": "Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit.",
     "pt": "Marreta: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe."
   },
   "cat.item.marreta_magica.nome": {
-    "en": "",
+    "en": "Magic Sledgehammer +1",
     "pt": "Marreta Mágica +1"
   },
   "cat.item.marreta_obsidiana_ferro.desc": {
@@ -5279,11 +5279,11 @@ window.LANG_CATALOGO = {
     "pt": "Marreta de Obsidiana de Ferro"
   },
   "cat.item.marreta_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Sledgehammer: 2d8 bludgeoning damage, using Strength. Requires both hands. Ignores 1 total point of damage reduction per hit. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Marreta de Obsidiana de Ferro: 2d8 de dano contundente, usando Força. Requer as duas mãos. Ignora 1 ponto total de redução de dano por golpe. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.marreta_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Sledgehammer +1",
     "pt": "Marreta de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.marreta_prata.desc": {
@@ -5675,11 +5675,11 @@ window.LANG_CATALOGO = {
     "pt": "Espada Curta de Aço Damasco"
   },
   "cat.item.shortsword_aco_damasco_magica.desc": {
-    "en": "",
+    "en": "Damascus Steel Shortsword: 1d6 slashing damage, using Strength. Natural critical on 19–20. Nonmagical Damascus Steel variant; +1 to attack rolls, no damage bonus. The material tolerates 1 corrosion level without penalty; the next two levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Espada Curta de Aço Damasco: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.shortsword_aco_damasco_magica.nome": {
-    "en": "",
+    "en": "Magic Damascus Steel Shortsword +1",
     "pt": "Espada Curta de Aço Damasco Mágica +1"
   },
   "cat.item.shortsword_liga_titanio.desc": {
@@ -5691,19 +5691,19 @@ window.LANG_CATALOGO = {
     "pt": "Espada Curta de Liga de Titânio"
   },
   "cat.item.shortsword_liga_titanio_magica.desc": {
-    "en": "",
+    "en": "Titanium Alloy Shortsword: 1d6 slashing damage, using Strength. Natural critical on 19–20. Mundane Titanium Alloy variant, with no extra attack or damage bonus. Tolerates 2 corrosion levels without penalty; the next three levels apply normal penalties and the following level destroys the weapon.",
     "pt": "Espada Curta de Liga de Titânio: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.shortsword_liga_titanio_magica.nome": {
-    "en": "",
+    "en": "Magic Titanium Alloy Shortsword +1",
     "pt": "Espada Curta de Liga de Titânio Mágica +1"
   },
   "cat.item.shortsword_magica.desc": {
-    "en": "",
+    "en": "Shortsword: 1d6 slashing damage, using Strength. Natural critical on 19–20.",
     "pt": "Espada Curta: 1d6 de dano cortante, usando Força. Crítico natural com 19–20."
   },
   "cat.item.shortsword_magica.nome": {
-    "en": "",
+    "en": "Magic Shortsword +1",
     "pt": "Espada Curta Mágica +1"
   },
   "cat.item.shortsword_obsidiana_ferro.desc": {
@@ -5715,11 +5715,11 @@ window.LANG_CATALOGO = {
     "pt": "Espada Curta de Obsidiana de Ferro"
   },
   "cat.item.shortsword_obsidiana_ferro_magica.desc": {
-    "en": "",
+    "en": "Iron Obsidian Shortsword: 1d6 slashing damage, using Strength. Natural critical on 19–20. Nonmagical Iron Obsidian variant; +1 damage. Fragile against corrosion: the first corrosive hit destroys the weapon.",
     "pt": "Espada Curta de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.shortsword_obsidiana_ferro_magica.nome": {
-    "en": "",
+    "en": "Magic Iron Obsidian Shortsword +1",
     "pt": "Espada Curta de Obsidiana de Ferro Mágica +1"
   },
   "cat.item.shortsword_prata.desc": {

@@ -143,7 +143,8 @@ function abilityIconHtml(ability, fallback = '') {
   // O id vai no markup para depuração e para o `.ability-icon` já inserido ser
   // reconhecível. Quem decide o ícone é o `data-ability-id` do ELEMENTO pai,
   // emitido pelo render — ver replaceAbilityEmoji.
-  return src ? `<img class="ability-icon" src="${src}" data-ability-id="${id}" alt="" aria-hidden="true">` : fallback;
+  // `?w=128`: o servidor devolve o ícone reduzido (o PNG original tem ~130 KB).
+  return src ? `<img class="ability-icon" src="${src}?w=128" data-ability-id="${id}" alt="" aria-hidden="true">` : fallback;
 }
 
 // Alguns botões de classe têm estados próprios e montam seu texto diretamente.
@@ -625,7 +626,9 @@ const CELL=64; // px per tile (CSS pixels × devicePixelRatio)
 const SPR_SCALE=CELL/48; // sprite scale factor (sprites designed for CELL=48)
 // Cache-buster das texturas de peão (frente.png): garante que imagens trocadas
 // no disco apareçam (uma busca fresca por sessão; cacheado dentro da sessão).
-const _ASSET_VER = Date.now();
+// Com o jogo servido pelo server.py a versão vem carimbada no index.html
+// (window.LFH_VER): a URL fica estável e o navegador reaproveita o cache.
+const _ASSET_VER = window.LFH_VER || Date.now();
 // Arte binária pesada (modelos e texturas) NÃO leva o cache-buster: com um `?v`
 // novo a cada sessão a URL muda sempre e o navegador rebaixa dezenas de MB toda
 // vez — é essa rajada que derruba carregamentos no teste do editor, que revela o
@@ -633,8 +636,21 @@ const _ASSET_VER = Date.now();
 // então o arquivo é revalidado a cada abertura: trocou no disco, vem de novo;
 // não trocou, custa um 304 vazio. O resto (JS, JSON, áudio) segue com o buster.
 const _ASSET_SEM_BUSTER = /\.(glb|gltf|png|jpe?g|webp)(\?|$)/i;
+// Imagens grandes pedidas REDUZIDAS ao servidor (`?w=<largura>`): os PNGs de
+// arte têm ~1250 px e centenas de KB, e pela internet eram o maior peso do
+// jogo. O servidor devolve a miniatura (ou o original, se não souber reduzir),
+// então a proporção — que é o que o render usa — não muda.
+const _ASSET_LARGURA = [[/^assets\/pawns\//, 512], [/^assets\/objetos\//, 768]];
+const _ASSET_IMAGEM = /\.(png|jpe?g|webp)$/i;
+function _imgURL(path, largura){
+  if(!path || !_ASSET_IMAGEM.test(path)) return path;
+  return path + '?w=' + largura;
+}
 function _assetURL(path){
-  if(_ASSET_SEM_BUSTER.test(path)) return path;
+  if(_ASSET_SEM_BUSTER.test(path)){
+    for(const [re, largura] of _ASSET_LARGURA) if(re.test(path)) return _imgURL(path, largura);
+    return path;
+  }
   return path + (path.includes('?') ? '&' : '?') + 'v=' + _ASSET_VER;
 }
 
@@ -3257,8 +3273,11 @@ function itemIconHTML(item, fallbackEmoji){
     : (item.effect === 'coat_poison' || itemId.startsWith('veneno_')) ? baseItemId
     : item.id;
   const icon = item.icon || GS.CATALOGO_ITENS[item.id]?.icon || ITEM_ICON_OVERRIDES[item.id];
-  const src = _assetURL(icon || `assets/itens/${fileId}.png`);
-  return `<img src="${src}" alt="" class="item-icon-img" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
+  // Ícone reduzido (192 px cobre o slot e o zoom do hover) e carregado só
+  // quando a linha aparece: a loja do ferreiro tem mais de 200 itens.
+  const original = _assetURL(icon || `assets/itens/${fileId}.png`);
+  const src = original + (original.includes('?') ? '&' : '?') + 'w=192';
+  return `<img src="${src}" alt="" class="item-icon-img" loading="lazy" decoding="async" data-fallback="${emoji}" onerror="this.replaceWith(this.dataset.fallback)">`;
 }
 
 function _guardarSelecaoLoja(itemId){
@@ -15910,7 +15929,10 @@ function _drawSpinAttack2D(ctx, state, now){
 function _resistanceInfo(type){
   const key = String(type || '').toLowerCase();
   const table = VC.feedback?.combat?.resistance || {};
-  return table[key] || {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || t('ui.hud.resistencia')};
+  const base = table[key];
+  if(!base) return {color:'#d9c7ff', icon:'🛡', label:key.toUpperCase() || t('ui.hud.resistencia')};
+  // O rótulo da tabela visual é só reserva: o texto vem do dicionário.
+  return {...base, label: _rotulo(key, 'ui.resistencia', base.label).toUpperCase()};
 }
 
 function _resistanceFeedbackVisible(f, state){
@@ -53888,9 +53910,10 @@ function _loadHeroGLB(T, classId, cb) {
   if (!T.GLTFLoader) { cb(null); return; }
 
   _heroGLBQueue[classId] = [cb];
-  // cache-buster: sem ele o navegador serve .glb antigos após regenerar os modelos
+  // Sem cache-buster: o servidor manda ETag e o navegador revalida sozinho. Com
+  // `?v=Date.now()` os ~5 MB de cada herói eram rebaixados a cada abertura.
   new T.GLTFLoader().load(
-    `assets/models3d/${classId}.glb?v=${Date.now()}`,
+    _assetURL(`assets/models3d/${classId}.glb`),
     g => {
       const tpl = g.scene;
       tpl.traverse(o => {
