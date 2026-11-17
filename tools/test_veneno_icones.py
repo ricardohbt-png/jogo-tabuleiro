@@ -59,7 +59,7 @@ console.log(JSON.stringify(items.map(item => context.itemIconHTML(item, '📦'))
         self.assertEqual(len(rendered), len(ids))
         for item_id, html in zip(ids, rendered):
             with self.subTest(item_id=item_id):
-                self.assertIn(f'src="assets/itens/{item_id}.png"', html)
+                self.assertIn(f'src="assets/itens/{item_id}.png?w=192"', html)
 
 
 if __name__ == "__main__":

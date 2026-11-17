@@ -38,7 +38,7 @@ console.log(JSON.stringify({
         self.assertEqual(result.returncode, 0, result.stderr)
         data = json.loads(result.stdout)
         self.assertEqual(data["item"].get("icon"), ICON)
-        self.assertIn(f'src="{ICON}"', data["html"])
+        self.assertIn(f'src="{ICON}?w=192"', data["html"])
 
 
 if __name__ == "__main__":

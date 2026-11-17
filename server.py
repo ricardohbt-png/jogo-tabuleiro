@@ -15,6 +15,7 @@ import datetime
 import gzip
 import hashlib
 import hmac
+import io
 import shutil
 import signal
 import json
@@ -66422,6 +66423,209 @@ def _http(status, reason, body, ctype="text/plain; charset=utf-8", extra=None):
         resp.headers[k] = v
     return resp
 
+
+# ---- Desempenho online: versao do cliente, cache e miniaturas ----------------
+# Pela internet cada arquivo paga a ida e volta do tunel. Tres medidas:
+#  1. Os scripts levam `?v=<versao do cliente>` (antes `Date.now()`, que mudava
+#     a URL a cada abertura e fazia o navegador rebaixar ~5 MB de JS toda vez).
+#     Com a versao estavel a resposta e `immutable`: so volta a trafegar quando
+#     algum arquivo do cliente muda em disco.
+#  2. Arte (assets/) pedida de fora da maquina ganha validade curta com
+#     `stale-while-revalidate`: o navegador mostra o que tem na hora e confere
+#     em segundo plano. Em localhost segue `no-cache`, para o autor ver a arte
+#     trocada na primeira recarga.
+#  3. `?w=<largura>` devolve a imagem reduzida (icone de 1254 px e ~770 KB vira
+#     ~10 KB). Precisa do Pillow; sem ele o original e servido, so mais pesado.
+_CACHE_IMUTAVEL = "public, max-age=31536000, immutable"
+_CACHE_ARTE_ONLINE = "public, max-age=3600, stale-while-revalidate=604800"
+_HOSTS_LOCAIS = {"localhost", "127.0.0.1", "::1", "[::1]", ""}
+_MINI_LARGURAS = (64, 96, 128, 192, 256, 384, 512, 768, 1024)
+# PNG grande pedido SEM ?w= (fundo de cena, tela de transicao, retrato): vai no
+# mesmo tamanho, mas em WebP, para o navegador que diz aceitar. Tipicamente 8x
+# menor. Abaixo do piso nao compensa o custo de converter.
+_REENC_MIN_BYTES = 200 * 1024
+_MINI_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+_versao_memo = {"quando": 0.0, "base": None, "valor": ""}
+
+
+def _versao_cliente():
+    """Identifica a versao dos arquivos do cliente (muda quando qualquer um
+    deles muda em disco). Memorizada por 2 s: uma abertura de pagina pede ~30
+    scripts em rajada."""
+    agora = time.monotonic()
+    memo = _versao_memo
+    if memo["base"] == BASE_DIR and memo["valor"] and agora - memo["quando"] < 2.0:
+        return memo["valor"]
+    partes = []
+    arquivos = [os.path.join(BASE_DIR, n) for n in sorted(_STATIC_FILES)]
+    for raiz, _dirs, nomes in os.walk(os.path.join(BASE_DIR, "src")):
+        _dirs.sort()
+        arquivos += [os.path.join(raiz, n) for n in sorted(nomes) if n.endswith(".js")]
+    for caminho in arquivos:
+        try:
+            st = os.stat(caminho)
+        except OSError:
+            continue
+        partes.append("%s:%x:%x" % (os.path.relpath(caminho, BASE_DIR), int(st.st_mtime), st.st_size))
+    valor = hashlib.sha1("|".join(partes).encode("utf-8")).hexdigest()[:12]
+    memo.update(quando=agora, base=BASE_DIR, valor=valor)
+    return valor
+
+
+def _consulta_do_pedido(request):
+    """Parametros da URL (`?v=...&w=...`), com o request do aiohttp ou o falso
+    dos testes, que traz a consulta dentro de `path`."""
+    qs = getattr(request, "query_string", None)
+    if not isinstance(qs, str) or not qs:
+        caminho = getattr(request, "path", "") or ""
+        qs = caminho.split("?", 1)[1] if "?" in caminho else ""
+    try:
+        return {k: v[-1] for k, v in urllib.parse.parse_qs(qs).items()}
+    except Exception:
+        return {}
+
+
+def _pedido_de_fora(request):
+    """O pedido veio pela rede (tunel, hospedagem, LAN) e nao do proprio micro?"""
+    try:
+        host = (request.headers.get("Host") or "").strip().lower()
+    except Exception:
+        return False
+    if host.startswith("["):
+        host = host.split("]", 1)[0] + "]"
+    else:
+        host = host.rsplit(":", 1)[0] if host.count(":") == 1 else host
+    return host not in _HOSTS_LOCAIS
+
+
+def _cache_do_estatico(request, rel_norm, consulta):
+    """Cache-Control de um arquivo estatico (None = o `no-cache` de sempre)."""
+    ext = os.path.splitext(rel_norm)[1].lower()
+    topo = rel_norm.split("/", 1)[0]
+    if ext in (".js", ".css") and (topo == "src" or rel_norm in _STATIC_FILES):
+        if consulta.get("v") and consulta.get("v") == _versao_cliente():
+            return _CACHE_IMUTAVEL
+        return None
+    if topo == "assets" and _pedido_de_fora(request):
+        return _CACHE_ARTE_ONLINE
+    return None
+
+
+def _index_com_versao(body):
+    """Carimba a versao do cliente no index.html: os scripts passam a usar uma
+    URL estavel (`?v=<versao>`) em vez de `Date.now()`."""
+    versao = _versao_cliente().encode("ascii")
+    body = body.replace(b"<head>", b'<head>\n<script>window.LFH_VER="' + versao + b'";</script>', 1)
+    return re.sub(rb'game\.css\?v=[^"\']*', b"game.css?v=" + versao, body, count=1)
+
+
+# Pastas reduzidas de antemao (as mesmas larguras que o cliente pede em game.js).
+MINIATURAS_PREAQUECER = (
+    ("assets/itens", 192), ("assets/itens magicos", 192), ("assets/habilidades", 128),
+    ("assets/pawns", 512), ("assets/objetos", 768),
+    # Largura 0 = mesmo tamanho, so convertido (o que vai sem ?w=).
+    ("assets", 0),
+)
+
+
+def _preaquecer_miniaturas():
+    """Em segundo plano, ao subir: deixa as miniaturas prontas para o primeiro
+    jogador nao pagar a reducao de cada imagem. Uma por vez e com pausa, para
+    nao disputar a CPU com a partida. O que ja esta em disco so custa um stat."""
+    try:
+        import PIL  # noqa: F401
+    except Exception:
+        return
+    for pasta, largura in MINIATURAS_PREAQUECER:
+        for raiz, _dirs, nomes in os.walk(os.path.join(BASE_DIR, pasta)):
+            for nome in sorted(nomes):
+                if os.path.splitext(nome)[1].lower() not in _MINI_EXTS:
+                    continue
+                full = os.path.join(raiz, nome)
+                try:
+                    st = os.stat(full)
+                    if not largura and (not nome.lower().endswith(".png")
+                                        or st.st_size < _REENC_MIN_BYTES):
+                        continue
+                    rel = os.path.relpath(full, BASE_DIR).replace("\\", "/")
+                    _miniatura(full, rel, st, largura)
+                except Exception:
+                    continue
+                time.sleep(0.02)
+
+
+def _largura_miniatura(consulta, rel_norm):
+    if os.path.splitext(rel_norm)[1].lower() not in _MINI_EXTS:
+        return 0
+    if rel_norm.split("/", 1)[0] != "assets":
+        return 0
+    try:
+        w = int(consulta.get("w") or 0)
+    except (TypeError, ValueError):
+        return 0
+    return w if w in _MINI_LARGURAS else 0
+
+
+def _miniatura(full, rel_norm, stat, w):
+    """Devolve (bytes, content_type) da imagem reduzida a `w` px de largura, ou
+    None para servir o original (sem Pillow, imagem ja pequena, erro de leitura).
+
+    O resultado fica em disco, em .cache/miniaturas/, com mtime e tamanho do
+    original no nome: arte trocada gera outra miniatura sozinha."""
+    try:
+        from PIL import Image, features
+    except Exception:
+        return None
+    usa_webp = False
+    try:
+        usa_webp = bool(features.check("webp"))
+    except Exception:
+        pass
+    ext_saida = ".webp" if usa_webp else ".png"
+    ctype = "image/webp" if usa_webp else "image/png"
+    pasta = os.path.join(BASE_DIR, ".cache", "miniaturas")
+    nome = "%s_%x_%x_w%d%s" % (hashlib.sha1(rel_norm.encode("utf-8")).hexdigest()[:20],
+                               int(stat.st_mtime), stat.st_size, w, ext_saida)
+    destino = os.path.join(pasta, nome)
+    try:
+        with open(destino, "rb") as f:
+            dados = f.read()
+        # Arquivo vazio = "esta imagem nao precisa de miniatura" (ja e pequena).
+        return (dados, ctype) if dados else None
+    except OSError:
+        pass
+    if w == 0 and not usa_webp:
+        return None
+    try:
+        with Image.open(full) as im:
+            if w and im.width <= w and (not usa_webp or stat.st_size < _REENC_MIN_BYTES):
+                dados = b""
+            else:
+                im = im.convert("RGBA" if (im.mode in ("RGBA", "LA", "P") or "transparency" in im.info) else "RGB")
+                if w and im.width > w:
+                    altura = max(1, round(im.height * w / im.width))
+                    im = im.resize((w, altura), Image.LANCZOS)
+                buf = io.BytesIO()
+                if usa_webp:
+                    im.save(buf, "WEBP", quality=86, method=4)
+                else:
+                    im.save(buf, "PNG", optimize=True)
+                dados = buf.getvalue()
+                # So vale se encolher de verdade (3/4 do original no maximo).
+                if len(dados) * 4 > stat.st_size * 3:
+                    dados = b""
+    except Exception:
+        return None
+    try:
+        os.makedirs(pasta, exist_ok=True)
+        tmp = destino + ".%d.tmp" % os.getpid()
+        with open(tmp, "wb") as f:
+            f.write(dados)
+        os.replace(tmp, destino)
+    except OSError:
+        pass
+    return (dados, ctype) if dados else None
+
 # â”€â”€â”€ Upload de mÃ­dia da histÃ³ria (editor â†’ assets/story/) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 STORY_DIR = os.path.join(BASE_DIR, "assets", "story")
 SCENES_ASSET_DIR = os.path.join(BASE_DIR, "assets", "cenas")
@@ -66834,16 +67038,50 @@ def _serve_static(request):
         stat = os.stat(full)
     except OSError:
         return _http(404, "Not Found", "404 Not Found")
+    consulta = _consulta_do_pedido(request)
+    eh_index = rel_norm == "index.html"
+    largura = _largura_miniatura(consulta, rel_norm)
     etag = '"%x-%x"' % (int(stat.st_mtime), stat.st_size)
     validadores = {"ETag": etag,
                    "Last-Modified": _http_date(stat.st_mtime)}
-    if _cliente_ja_tem(request, etag, stat.st_mtime):
+    if eh_index:
+        # O index carrega a versao do cliente: precisa mudar quando QUALQUER
+        # script muda, e nao so quando o proprio index.html muda. Por isso o
+        # ETag leva a versao e nao ha Last-Modified (que so ve o index).
+        etag = '"%x-%x-%s"' % (int(stat.st_mtime), stat.st_size, _versao_cliente())
+        validadores = {"ETag": etag}
+    elif largura:
+        etag = '"%x-%x-w%d"' % (int(stat.st_mtime), stat.st_size, largura)
+        validadores["ETag"] = etag
+    reencodar = (not largura and rel_norm.startswith("assets/")
+                 and rel_norm.lower().endswith(".png")
+                 and stat.st_size >= _REENC_MIN_BYTES
+                 and "image/webp" in (request.headers.get("Accept") or "").lower())
+    if reencodar:
+        etag = '"%x-%x-webp"' % (int(stat.st_mtime), stat.st_size)
+        validadores["ETag"] = etag
+        validadores["Vary"] = "Accept"
+    politica = _cache_do_estatico(request, rel_norm, consulta)
+    if politica:
+        validadores["Cache-Control"] = politica
+    if eh_index:
+        inm = request.headers.get("If-None-Match")
+        ja_tem = bool(inm) and etag in [t.strip() for t in inm.split(",")]
+    else:
+        ja_tem = _cliente_ja_tem(request, etag, stat.st_mtime)
+    if ja_tem:
         return _http(304, "Not Modified", b"", extra=validadores)
+    if largura or reencodar:
+        mini = _miniatura(full, rel_norm, stat, largura)
+        if mini:
+            return _http(200, "OK", mini[0], mini[1], extra=validadores)
     try:
         with open(full, "rb") as f:
             body = f.read()
     except OSError:
         return _http(404, "Not Found", "404 Not Found")
+    if eh_index:
+        body = _index_com_versao(body)
     tipo_video = mimetypes.guess_type(full)[0] or ""
     if tipo_video.startswith("video/"):
         return _resposta_video(request, body, tipo_video, validadores)
@@ -66858,7 +67096,8 @@ def _serve_static(request):
             "application/javascript", "application/json", "image/svg+xml"):
         ctype += "; charset=utf-8"
     corpo, encoding = _talvez_gzip(body, ctype,
-                                   (rel_norm, int(stat.st_mtime), stat.st_size))
+                                   (rel_norm, int(stat.st_mtime), stat.st_size,
+                                    _versao_cliente() if eh_index else ""))
     if encoding:
         validadores["Content-Encoding"] = encoding
         # Cache compartilhado precisa saber que a resposta varia com o
@@ -66956,6 +67195,27 @@ def _preview_dungeon_state(defn):
     return True, payload, avisos
 
 
+WS_PING_INTERVALO_S = 40
+
+
+async def _manter_ws_vivo(ws):
+    """Ping periodico: tuneis e proxies derrubam WebSocket parado (o da
+    Cloudflare, em ~100 s), e o jogador que pensa na jogada caia e tinha de
+    reconectar. Nao exige resposta -- aba em segundo plano no celular nao e
+    desconectada por isso."""
+    try:
+        while not ws.closed:
+            await asyncio.sleep(WS_PING_INTERVALO_S)
+            if ws.closed:
+                break
+            try:
+                await ws.ping()
+            except Exception:
+                break
+    except asyncio.CancelledError:
+        pass
+
+
 async def _rota(request):
     """Rota unica do servidor. Decide pelo header `Upgrade`, exatamente como o
     process_request antigo fazia.
@@ -66969,7 +67229,11 @@ async def _rota(request):
             return _http(403, "Forbidden", "403 Forbidden")
         ws = web.WebSocketResponse(max_msg_size=34 * 1024 * 1024)
         await ws.prepare(request)
-        await handler(_WS(ws, _ip_do_cliente(request, _modo_publico())))
+        vivo = asyncio.ensure_future(_manter_ws_vivo(ws))
+        try:
+            await handler(_WS(ws, _ip_do_cliente(request, _modo_publico())))
+        finally:
+            vivo.cancel()
         return ws
 
     if request.method not in ("GET", "HEAD"):
@@ -67072,6 +67336,9 @@ async def main():
     # Deliberado: no spike SP0 o log da plataforma foi a UNICA janela para
     # diagnosticar o bind, e nao havia nada impresso.
     print(f"  escutando em: {', '.join(subiu)}")
+    # Miniaturas das imagens (?w=): prontas antes do primeiro jogador chegar.
+    import threading
+    threading.Thread(target=_preaquecer_miniaturas, name="miniaturas", daemon=True).start()
     # SIGTERM e como a plataforma (e o pkill) param o servico. SEM isto o
     # finally abaixo nunca roda, e a "saida limpa" nao existe -- medido: a conta
     # criada ficava so na memoria e sumia no encerramento.

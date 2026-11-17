@@ -105,9 +105,9 @@ console.log(JSON.stringify(items.map(item => context.itemIconHTML(item,'📦')))
                                 encoding="utf-8", capture_output=True, check=True)
         icons = json.loads(result.stdout)
         for index in range(3):
-            self.assertIn(f'src="{ICON}"', icons[index])
+            self.assertIn(f'src="{ICON}?w=192"', icons[index])
         for index, file_id in ((3, "antidote"), (4, "pergaminho"), (5, "harpa")):
-            self.assertIn(f'src="assets/itens/{file_id}.png"', icons[index])
+            self.assertIn(f'src="assets/itens/{file_id}.png?w=192"', icons[index])
             self.assertIn('data-fallback="📦"', icons[index])
 
 
