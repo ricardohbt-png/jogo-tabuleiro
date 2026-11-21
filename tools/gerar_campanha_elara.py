@@ -139,7 +139,8 @@ def slides_fim_da_fazenda():
         {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
          "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em "
                  "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre "
-                 "de Armas vai encontrá-los na cidade para mostrar o lugar.”"}]}
+                 "de Armas vai encontrá-los na cidade para mostrar o lugar. Depois, venham me procurar "
+                 "aqui no Templo para falarmos sobre o que foi roubado.”"}]}
 
 
 def destinos():
