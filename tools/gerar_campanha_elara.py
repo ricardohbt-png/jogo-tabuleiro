@@ -47,12 +47,10 @@ F_PRESSIONOU = "elara_templo_pressionou"   # o grupo ouviu o Exequiel depois da 
 F_RAMO_A = "elara_ramo_a"                  # seguir as moças
 F_RAMO_B = "elara_ramo_b"                  # seguir o Gilo
 
-CENA_MESTRE = "mestre_armas_alva"
-NPC_MESTRE = "npc_mestre_armas"
-PONTO_MESTRE = "mestre_armas_alva"
-F_PRESENTE = "elara_refugio_presenteado"   # o Mestre de Armas deu a fazenda de presente
-FUNDO_MESTRE = "assets/cenas/fundos/templo_alva_patio.png"   # arte provisória: pátio de Alva e Luz
-IMAGEM_MESTRE = "assets/portraits/mestre_de_armas.png"
+# O Mestre de Armas não tem mais ponto nem cena em Alva e Luz: o Refúgio é
+# apresentado pelo tour guiado do cliente (game.js, _refugioTour*), que o servidor
+# dispara no primeiro desbloqueio. O gerador só apaga o que versões antigas criaram.
+PONTO_MESTRE_ANTIGO = CENA_MESTRE_ANTIGA = "mestre_armas_alva"
 
 MAPAS = {"casa_secreta.json": F_CASA, "fazenda.json": F_FAZENDA}
 
@@ -116,31 +114,6 @@ def cena_templo():
             "slots": [{"id": NPC_ID, "name": "Exequiel", "image": IMAGEM_EXEQUIEL,
                        "x": 35.0, "y": 30.3, "w": 30.0, "h": 69.7, "z": 1.0, "dialog": "",
                        "conversations": conversas_templo()}]}
-
-
-def _conversa_mestre():
-    return _conversa(
-        "elara_fazenda_presente",
-        "Então foram vocês que limparam a Fazenda do Leste! O Templo já falou com o regente: a "
-        "fazenda é de vocês, de presente pelos serviços prestados. É o Refúgio dos Heróis, que "
-        "agora aparece no mapa da cidade. Lá o grupo guarda itens e dinheiro e expõe os troféus das "
-        "suas aventuras. O que deixarem por lá fica seguro de uma missão para outra.",
-        _req(fato=F_FAZENDA), fato=F_PRESENTE, uma_vez=False)
-
-
-def cena_mestre():
-    """O Mestre de Armas do tutorial aparece em Alva e Luz depois da fazenda e dá o lugar de presente."""
-    return {"nome": "Mestre de Armas", "background": FUNDO_MESTRE, "art_ratio": 1.5,
-            "mode": "individual", "mask": "",
-            "slots": [{"id": NPC_MESTRE, "name": "Mestre de Armas", "image": IMAGEM_MESTRE,
-                       "x": 26.3, "y": 35.0, "w": 47.4, "h": 65.0, "z": 1.0, "dialog": "",
-                       "conversations": [_conversa_mestre()]}]}
-
-
-def ponto_mestre():
-    """Marcador do Mestre de Armas no mapa da cidade: só aparece depois da fazenda vencida."""
-    return {"x": 44.0, "y": 27.0, "type": "cena", "name": "Mestre de Armas", "emoji": "🎓",
-            "scene": CENA_MESTRE, "requisito": _req(fato=F_FAZENDA), "oculto_ate_liberar": True}
 
 
 PONTO_CASA = "elara_casa"
@@ -268,18 +241,11 @@ def aplicar(simular=False, caminhos=None):
         refugio["requisito"] = _req(fato=F_FAZENDA)     # o Refúgio é a recompensa da missão da fazenda
         refugio["oculto_ate_liberar"] = True
 
-    pontos[CIDADE].setdefault(PONTO_MESTRE, ponto_mestre())
+    pontos[CIDADE].pop(PONTO_MESTRE_ANTIGO, None)
 
     cenas = _ler(c["cenas"], {})
     da_cidade = cenas.setdefault(CIDADE, {})
-    existente = da_cidade.get(CENA_MESTRE)
-    if existente is None:
-        da_cidade[CENA_MESTRE] = cena_mestre()
-    else:
-        slot_m = next((x for x in existente.get("slots", []) if x.get("id") == NPC_MESTRE), None)
-        if slot_m is not None:
-            slot_m["conversations"] = [_conversa_mestre()] + [
-                cv for cv in slot_m.get("conversations", []) if cv.get("id") != "elara_fazenda_presente"]
+    da_cidade.pop(CENA_MESTRE_ANTIGA, None)
     cena = da_cidade.get(CENA_ID)
     if not cena:
         da_cidade[CENA_ID] = cena_templo()

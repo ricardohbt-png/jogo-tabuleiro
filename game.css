@@ -2229,3 +2229,7 @@ body.preview-mode #map-panel { width:100%; }
 .travel-decision-actions button.primary{border-color:#d2a54c;background:#71501c;color:#fff3d4;}
 .travel-decision-actions button:focus-visible{outline:3px solid #ffe18b;outline-offset:2px;}
 @media(max-width:520px){.travel-decision-dialog{padding:18px}.travel-decision-actions{justify-content:stretch}.travel-decision-actions button{flex:1 1 100%;}}
+/* Tour da Fazenda do Leste: o botão da cena que o Mestre de Armas indica. */
+.refugio-scene-baus button.tutorial-tour-target{border-color:#ffe08a;color:#fff0bf;animation:city-tour-pulse 1.25s ease-in-out infinite alternate;}
+.city-tour-card.refugio-tour-topo{top:64px;bottom:auto;left:auto;right:18px;}
+@media(max-width:600px){.city-tour-card.refugio-tour-topo{top:54px;right:10px;}}
