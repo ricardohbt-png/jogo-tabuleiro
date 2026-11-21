@@ -138,8 +138,8 @@ def slides_fim_da_fazenda():
                  "do que isso, só que ele não pode ficar em mãos erradas.”"},
         {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
          "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em "
-                 "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. Procurem o "
-                 "Mestre de Armas, ele explica como usá-la.”"}]}
+                 "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre "
+                 "de Armas vai encontrá-los na cidade para mostrar o lugar.”"}]}
 
 
 def destinos():
