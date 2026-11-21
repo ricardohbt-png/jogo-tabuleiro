@@ -3884,6 +3884,7 @@ FOTO_SALA_CATEGORIAS = {
     "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
     "training_mode": "foto", "training_allies": "foto", "training_state": "foto",
     "tutorial_city_tour_id": "conexao",
+    "refugio_tour_id": "conexao",
     "_bestiary_cache": "conexao",
     "master_reserve": "foto", "key_chest_opened": "foto",
     "_licantropia_ultimo_fim_combate": "foto",
@@ -15346,6 +15347,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.licoes_feitas = set() # ids de lição cumpridos por qualquer herói
         self.training_mode = False
         self.tutorial_city_tour_id = None
+        # Muda no primeiro desbloqueio do Refúgio: o cliente abre o tour do
+        # Mestre de Armas pela Fazenda. Não vai a disco (uma vez por desbloqueio).
+        self.refugio_tour_id = None
         self.training_allies = {}
         self.training_state = {}
         self._decor_block_tiles = set()
@@ -16716,9 +16720,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                             # alterar a regra nem tornar o cache parte do save.
                             bonus_ataque_temporario=int(self.blessed.get(p["id"], 0) or 0))
                         for p in self.players.values()]
+        # Antes do dict: o primeiro desbloqueio do Refúgio acontece ao montar os
+        # pontos e precisa sair já neste city_state (`tour_refugio_id`).
+        pontos_cidade = self._city_points_payload()
         return {
             "type": "city_state",
-            "tutorial": {"tour_cidade_id": self.tutorial_city_tour_id},
+            "tutorial": {"tour_cidade_id": self.tutorial_city_tour_id,
+                         "tour_refugio_id": self.refugio_tour_id},
             # Quem entra direto na cidade (jogo salvo já em andamento) não passa
             # pelo lobby; é por aqui que o cliente grava a sessão de reconexão.
             "code": self.code,
@@ -16771,7 +16779,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             },
             "dungeon_entry_scene_available": self._campaign_dungeon_entry_scene_available(),
             "reputacao": {"renome": self.renome, "fatos": sorted(self.fatos)},
-            "city_map_points": self._city_points_payload(),
+            "city_map_points": pontos_cidade,
             "city_shops": CITY_SHOPS,
             "scenes": self._cenas_payload(),
             "campaign": self._campaign_payload(),
@@ -21549,6 +21557,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ok, _ = self._avaliar_requisito(point.get("requisito") or {})
         if ok and point.get("requisito"):
             state["unlocked"] = True
+            self.refugio_tour_id = str(time.time_ns())
             if self.savegame is not None:
                 self.savegame["refugio"] = deepcopy(state)
                 write_savegame(self.savegame)

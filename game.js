@@ -2875,6 +2875,7 @@ function _storyComplete(msg){
   _storyCineParar();
   _storyVideoParar();
   _cidadeTourTentarMostrar();
+  _refugioTourRender();
 }
 
 function renderStory() {
@@ -2918,6 +2919,7 @@ function renderStory() {
         _defeatAudioStop();
         ov.style.display = 'none';
         _cidadeTourTentarMostrar();
+        _refugioTourRender();
       }
     };
     ov.querySelector('#story-mute').onclick = () => {
@@ -3194,20 +3196,21 @@ function _renderCenaConversas(){
     const irPara=(key,semCena)=>{const sid=cenaDe(key); if(sid) openShop('refugio','refugio',sid); else semCena();};
     const isCommon=GS.activeScene===refugePoint.scene_comum, isRoom=GS.activeScene===refugePoint.scene_quarto;
     const acoes=isRoom
-      ? [[t('ui.cena.bau_heroi'), ()=>_abrirBauDireto('room')],
-         ...(cenaDe('scene_comum') ? [[t('ui.cena.voltar_area_comum'), ()=>irPara('scene_comum',GS.openRefugio)]] : [])]
+      ? [[t('ui.cena.bau_heroi'), ()=>_abrirBauDireto('room'), 'bau_heroi'],
+         ...(cenaDe('scene_comum') ? [[t('ui.cena.voltar_area_comum'), ()=>irPara('scene_comum',GS.openRefugio), 'voltar_comum']] : [])]
       : isCommon
-        ? [[t('ui.cena.bau_compartilhado'), ()=>_abrirBauDireto('shared')],
-           [t('ui.cena.entrar_quarto'), ()=>irPara('scene_quarto',()=>_abrirBauDireto('room'))],
-           [t('ui.diario.abrir'), button=>_solicitarDiarioAventureiros(button)]]
-        : [[t('ui.cena.entrar_refugio'), ()=>irPara('scene_comum',GS.openRefugio)]];
+        ? [[t('ui.cena.bau_compartilhado'), ()=>_abrirBauDireto('shared'), 'bau_compartilhado'],
+           [t('ui.cena.entrar_quarto'), ()=>irPara('scene_quarto',()=>_abrirBauDireto('room')), 'entrar_quarto'],
+           [t('ui.diario.abrir'), button=>_solicitarDiarioAventureiros(button), 'diario']]
+        : [[t('ui.cena.entrar_refugio'), ()=>irPara('scene_comum',GS.openRefugio), 'entrar_refugio']];
     const baus=document.createElement('div'); baus.className='refugio-scene-baus';
-    acoes.forEach(([txt,fn])=>{const b=document.createElement('button'); b.type='button'; b.textContent=txt; b.onclick=()=>fn(b); baus.appendChild(b);});
+    acoes.forEach(([txt,fn,acao])=>{const b=document.createElement('button'); b.type='button'; b.dataset.refugioAcao=acao; b.textContent=txt; b.onclick=()=>fn(b); baus.appendChild(b);});
     scene.appendChild(baus);
   }
   const hint=document.createElement('p'); hint.className='cena-hint'; hint.textContent=t('ui.cena.dica_clique'); scene.appendChild(hint);
   const keepOpen=(cena.slots||[]).find(slot=>slot.id===_openCenaNpcId && !slot.removed && slot.image);
   if(keepOpen) _showCenaDialogo(keepOpen, scene);
+  if(GS.activeShop==='refugio') _refugioTourRender();
 }
 
 // `host` é o palco (.cena-palco): o painel de diálogo é uma camada sobre a
@@ -3791,6 +3794,7 @@ function closeShop(){
   window._shopSelectionRestore = null;
   _openCenaNpcId=null;
   const m=$('shop-modal'); if(m) m.classList.remove('open');
+  _refugioTourRender();
 }
 
 // A loja pode conter uma cena/conversa antes das abas comerciais. No controle,
@@ -6404,6 +6408,8 @@ function _cidadeTourConcluir(pular=false){
   _cidadeTourSalvar({...dados, status: pular ? 'skipped' : 'done', etapa: _CIDADE_TOUR_PARADAS.length});
   _cidadeTourLimparDestaques();
   document.getElementById('city-tour-card')?.remove();
+  // O tour do Refúgio espera o da cidade; testes isolam estas funções sem ele.
+  if(typeof _refugioTourRender === 'function') _refugioTourRender();
 }
 
 function _cidadeTourAvancar(){
@@ -6529,6 +6535,130 @@ function _cidadeTourIniciarOuRetomar(iniciar=false, execucao=null){
     _cidadeTourSalvar(dados);
   }
   if(dados?.status === 'active') _cidadeTourTentarMostrar();
+}
+
+// ── Tour da Fazenda do Leste (Refúgio dos Heróis) ─────────────────────────────
+// O servidor muda `tutorial.tour_refugio_id` no PRIMEIRO desbloqueio do Refúgio
+// (fim da missão da fazenda). O Mestre de Armas aparece no canto, como no tour
+// da cidade, e acompanha o jogador: mapa → cena externa → área comum → quarto.
+// O passo é derivado da tela aberta (`_refugioTourVista`), então voltar, fechar
+// ou abrir fora de ordem nunca deixa o texto apontando para o lugar errado.
+function _refugioTourChave(){
+  const conta = (GS.getAccount && GS.getAccount()) || GS.myPid || 'jogador';
+  return 'lfh.tutorial.refugioTour.' + String(conta).replace(/[^a-zA-Z0-9_.-]/g, '_');
+}
+let _refugioTourMemoria = {chave:null, dados:null};
+function _refugioTourLer(){
+  const chave = _refugioTourChave();
+  try {
+    const salvo = localStorage.getItem(chave);
+    if(salvo) return JSON.parse(salvo);
+  } catch (_) {}
+  return _refugioTourMemoria.chave === chave ? _refugioTourMemoria.dados : null;
+}
+function _refugioTourSalvar(dados){
+  const chave = _refugioTourChave();
+  _refugioTourMemoria = {chave, dados};
+  try { localStorage.setItem(chave, JSON.stringify(dados)); } catch (_) {}
+}
+function _refugioTourPontoId(){
+  const pontos = GS.cityPoints() || {};
+  return Object.keys(pontos).find(id => pontos[id]?.type === 'refugio' && !pontos[id]?.locked) || null;
+}
+function _refugioTourVista(){
+  if(GS.activeShop !== 'refugio') return 'mapa';
+  const ponto = (GS.cityPoints() || {})[_refugioTourPontoId()] || {};
+  if(GS.activeScene && GS.activeScene === ponto.scene_quarto) return 'quarto';
+  if(GS.activeScene && GS.activeScene === ponto.scene_comum) return 'comum';
+  return 'externa';
+}
+// Botão da cena que o passo destaca (data-refugio-acao, ver _renderShopItems).
+const _REFUGIO_TOUR_ALVO = {externa:'entrar_refugio', comum:'entrar_quarto', quarto:'bau_heroi'};
+function _refugioTourLimparDestaques(){
+  document.querySelectorAll('.tutorial-tour-target[data-refugio-acao], #city-hotspots .tutorial-tour-refugio')
+    .forEach(el => el.classList.remove('tutorial-tour-target', 'tutorial-tour-refugio'));
+}
+function _refugioTourFechar(status){
+  const dados = _refugioTourLer();
+  if(dados?.status === 'active') _refugioTourSalvar({...dados, status});
+  _refugioTourLimparDestaques();
+  document.getElementById('refugio-tour-card')?.remove();
+}
+function _refugioTourPodeMostrar(){
+  if(!document.getElementById('screen-city')?.classList.contains('active')) return false;
+  if(_cidadeTourStoryAberta()) return false;
+  // Um passeio por vez: o da cidade (fim do treinamento) tem a vez.
+  return _cidadeTourLer()?.status !== 'active';
+}
+function _refugioTourRender(){
+  const dados = _refugioTourLer();
+  if(dados?.status !== 'active' || !_refugioTourPodeMostrar()){
+    if(dados?.status !== 'active') document.getElementById('refugio-tour-card')?.remove();
+    return;
+  }
+  const pontoId = _refugioTourPontoId();
+  if(!pontoId) return;   // cidade sem Refúgio: o passeio espera a volta a Alva e Luz
+  const vista = dados.iniciou ? _refugioTourVista() : null;
+  const vistos = new Set(dados.vistos || []);
+  if(vista && !vistos.has(vista)){
+    vistos.add(vista);
+    _refugioTourSalvar({...dados, vistos:[...vistos]});
+  }
+  // Saiu do Refúgio depois de conhecer o quarto: o passeio termina sozinho
+  // (no controle o cartão não recebe foco enquanto a cena está aberta).
+  if(vista === 'mapa' && vistos.has('quarto')){ _refugioTourFechar('done'); return; }
+  _refugioTourLimparDestaques();
+  if(vista === 'mapa'){
+    const marker = [...(_cityImg?.hotWrap?.querySelectorAll('[data-city-point]') || [])]
+      .find(el => el.dataset.cityPoint === pontoId);
+    marker?.classList.add('tutorial-tour-target', 'tutorial-tour-refugio');
+  } else if(vista){
+    document.querySelector(`#shop-modal [data-refugio-acao="${_REFUGIO_TOUR_ALVO[vista]}"]`)
+      ?.classList.add('tutorial-tour-target');
+  }
+  let card = document.getElementById('refugio-tour-card');
+  const manterFoco = !!card && card.contains(document.activeElement);
+  if(!card){
+    card = document.createElement('section');
+    card.id = 'refugio-tour-card';
+    card.className = 'city-tour-card';
+    document.body.appendChild(card);
+  }
+  // Sem cena de área comum vinculada, "Entrar no Refúgio" abre o painel de baús:
+  // a explicação da área comum vem já na cena externa e o passeio fecha ali.
+  // Dentro das cenas os botões ficam embaixo: o cartão sobe para não cobri-los.
+  card.classList.toggle('refugio-tour-topo', !!vista && vista !== 'mapa');
+  const ponto = (GS.cityPoints() || {})[pontoId] || {};
+  const temComum = !!(ponto.scene_comum && GS.scenes()[ponto.scene_comum]);
+  const passo = !dados.iniciou ? 'abertura'
+    : (vista === 'externa' && !temComum) ? 'externa_sem_comum' : vista;
+  let botoes = '';
+  if(passo === 'abertura') botoes = `<button type="button" data-rtour-start>${t('ui.tutorial.refugio.comecar')}</button>`;
+  else if(passo === 'mapa') botoes = `<button type="button" data-rtour-open>${t('ui.tutorial.refugio.abrir')}</button>`;
+  else if(passo === 'quarto' || passo === 'externa_sem_comum')
+    botoes = `<button type="button" data-rtour-finish>${t('ui.tutorial.tour.concluir')}</button>`;
+  card.innerHTML = `<img class="city-tour-portrait" src="${_esc(_assetURL(_CIDADE_TOUR_RETRATO))}" alt="${_esc(t('ui.tutorial.refugio.retrato_alt'))}">` +
+    `<div class="city-tour-copy"><div class="city-tour-name">${_esc(t('ui.tutorial.tour.mestre'))}</div>` +
+    `<h2>${_esc(t('ui.tutorial.refugio.' + passo + '.titulo'))}</h2><p>${_esc(t('ui.tutorial.refugio.' + passo + '.texto'))}</p>` +
+    `<div class="city-tour-actions">${botoes}` +
+    `<button type="button" class="city-tour-skip" data-rtour-skip>${t('ui.tutorial.tour.pular')}</button></div></div>`;
+  card.querySelector('[data-rtour-start]')?.addEventListener('click', () => {
+    _refugioTourSalvar({..._refugioTourLer(), iniciou:true});
+    _refugioTourRender();
+  });
+  card.querySelector('[data-rtour-open]')?.addEventListener('click', () => _cityHotspotClick(pontoId, 'refugio'));
+  card.querySelector('[data-rtour-finish]')?.addEventListener('click', () => _refugioTourFechar('done'));
+  card.querySelector('[data-rtour-skip]')?.addEventListener('click', () => _refugioTourFechar('skipped'));
+  const primeiroBotao = card.querySelector('button');
+  if(manterFoco) requestAnimationFrame(() => primeiroBotao?.focus());
+}
+function _refugioTourIniciarOuRetomar(execucao=null){
+  let dados = _refugioTourLer();
+  if(execucao && dados?.execucao !== execucao && !['done','skipped'].includes(dados?.status)){
+    dados = {status:'active', iniciou:false, vistos:[], execucao};
+    _refugioTourSalvar(dados);
+  }
+  _refugioTourRender();
 }
 
 // Confirmação antes de encerrar a missão (itens largados podem ficar para trás).
@@ -58963,6 +59093,7 @@ GS.on('gameStart', () => {
   _cidadeTourPendenteDoTutorial = false;
   _cidadeTourLimparDestaques();
   document.getElementById('city-tour-card')?.remove();
+  document.getElementById('refugio-tour-card')?.remove();
   destroyClassSelectFull();
   showScreen('screen-city');
   // Proactively request city_state — handles cases where the first one was lost
@@ -59045,6 +59176,7 @@ GS.on('cityState', msg => {
   const iniciarTourTutorial = !!execucaoTour || (vindoDaMasmorra && _cidadeTourPendenteDoTutorial);
   if(iniciarTourTutorial) _cidadeTourPendenteDoTutorial = false;
   _cidadeTourIniciarOuRetomar(iniciarTourTutorial, execucaoTour);
+  _refugioTourIniciarOuRetomar(msg.tutorial?.tour_refugio_id || null);
 });
 // `isOpen()` também é verdadeiro com o inventário NORMAL aberto — usar ele aqui
 // engolia o estado do Refúgio (o `updateStorage` não faz nada fora do modo baú)
