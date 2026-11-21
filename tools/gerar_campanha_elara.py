@@ -36,6 +36,7 @@ RELOGIO_ID = "elara_p1"
 FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
 IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
 IMAGEM_EXEQUIEL_HISTORIA = "assets/story/exequiel_templo.png"   # cópia: a mídia de história só vem de assets/story/
+IMAGEM_FIM_FAZENDA = "assets/story/fazenda_fim_rastros.webp"   # o grupo examina os rastros de carroça
 
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
@@ -129,7 +130,8 @@ def ponto_casa():
 def slides_fim_da_fazenda():
     """Cena final da fazenda: o Templo, o Exequiel e o roubo do Olho."""
     return {"slides": [
-        {"text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
+        {"image": IMAGEM_FIM_FAZENDA,
+         "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
                  "moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis "
                  "prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.", "fit": "cover"},
         {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",

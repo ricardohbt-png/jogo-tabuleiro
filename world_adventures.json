@@ -910,8 +910,9 @@
         "outro": {
           "slides": [
             {
-              "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.",
-              "fit": "cover"
+              "image": "assets/story/fazenda_fim_rastros.webp",
+              "fit": "cover",
+              "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo."
             },
             {
               "image": "assets/story/exequiel_templo.png",
