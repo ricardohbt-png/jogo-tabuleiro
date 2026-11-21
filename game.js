@@ -6408,7 +6408,8 @@ function _cidadeTourConcluir(pular=false){
   _cidadeTourSalvar({...dados, status: pular ? 'skipped' : 'done', etapa: _CIDADE_TOUR_PARADAS.length});
   _cidadeTourLimparDestaques();
   document.getElementById('city-tour-card')?.remove();
-  _refugioTourRender();
+  // O tour do Refúgio espera o da cidade; testes isolam estas funções sem ele.
+  if(typeof _refugioTourRender === 'function') _refugioTourRender();
 }
 
 function _cidadeTourAvancar(){
