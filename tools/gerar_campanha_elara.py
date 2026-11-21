@@ -35,7 +35,6 @@ PONTO_FAZENDA_ANTIGO = "elara_fazenda"   # ponto/destino de combate da fazenda, 
 RELOGIO_ID = "elara_p1"
 FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
 IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
-IMAGEM_EXEQUIEL_HISTORIA = "assets/story/exequiel_templo.png"   # cópia: a mídia de história só vem de assets/story/
 IMAGEM_FIM_FAZENDA = "assets/story/fazenda_fim_rastros.webp"   # o grupo examina os rastros de carroça
 IMAGEM_TEMPLO_SAQUEADO = "assets/story/fazenda_fim_templo_saqueado.webp"   # Exequiel nos degraus do Templo arrombado
 IMAGEM_MENSAGEIRO = "assets/story/fazenda_fim_mensageiro.webp"   # o mensageiro do regente entrega o recado
@@ -145,7 +144,7 @@ def slides_fim_da_fazenda():
                  "antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos "
                  "serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre de Armas vai "
                  "encontrá-los na cidade para mostrar o lugar.”"},
-        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
+        {"image": IMAGEM_MENSAGEIRO, "fit": "cover",
          "text": "Quando o mensageiro se vai, Exequiel se volta para vocês: “Depois, venham me procurar "
                  "aqui no Templo para falarmos sobre o que foi roubado.”"}]}
 
