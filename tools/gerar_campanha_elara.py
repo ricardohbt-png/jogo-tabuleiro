@@ -136,10 +136,13 @@ def slides_fim_da_fazenda():
          "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. "
                  "Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais "
                  "do que isso, só que ele não pode ficar em mãos erradas.”"},
+        {"fit": "cover",
+         "text": "Um mensageiro do regente chega ao Templo e se dirige a vocês: “Os bandidos mataram os "
+                 "antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos "
+                 "serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre de Armas vai "
+                 "encontrá-los na cidade para mostrar o lugar.”"},
         {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
-         "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em "
-                 "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre "
-                 "de Armas vai encontrá-los na cidade para mostrar o lugar. Depois, venham me procurar "
+         "text": "Quando o mensageiro se vai, Exequiel se volta para vocês: “Depois, venham me procurar "
                  "aqui no Templo para falarmos sobre o que foi roubado.”"}]}
 
 
