@@ -33628,7 +33628,10 @@ function _gamepadUiScope(){
     '#instrumento-dir-overlay, #improviso-overlay, #ficha-monstro-overlay,' +
     '#overlay-escolha-magia, #overlay-selecao-criacao, #painel-guerreiro-luz, #gamepad-keyboard-overlay'
   )].filter(_gamepadLayerVisible);
-  return open.at(-1) || document.querySelector('.screen.active');
+  // O cartão do tour da Fazenda fica no fim do body e venceria qualquer janela
+  // aberta depois (uma loja, o mapa-múndi): só recebe o controle sozinho.
+  const semTour = open.filter(el => el.id !== 'refugio-tour-card');
+  return (semTour.length ? semTour.at(-1) : open.at(-1)) || document.querySelector('.screen.active');
 }
 
 function _gamepadUiVisible(el){
