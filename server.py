@@ -16493,6 +16493,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 h["pos"] = self._casa_livre_retomada(list(casa), h["id"])
                 h.pop("facing", None)
 
+    def _revelar_herois_na_nevoa(self):
+        """Herói no tabuleiro sobre uma casa nunca explorada ganha a visão em
+        volta. Conserta partidas salvas antes da correção da entrada fora da
+        sala (Adhadal 1 e 2, Caçada de Corvin): a foto guardava a névoa sobre
+        o herói, e o cliente, que só calcula alcance sobre casa explorada, não
+        mostrava casas azuis nem deixava andar."""
+        for p in self.players.values():
+            pos = list(p.get("pos") or [-1, -1])
+            if (p.get("is_master") or not p.get("alive") or p.get("fora_masmorra")
+                    or pos == [-1, -1] or tuple(pos) in self.explored):
+                continue
+            self._reveal_around(pos[0], pos[1], radius=self._get_raio_visao(p))
+
     async def religar_heroi(self, alvo, ws, pid_conexao, name):
         """Religa um herói que caiu durante a partida. Devolve o pid antigo."""
         LANG_BY_PID[alvo["id"]] = LANG_BY_PID.pop(pid_conexao, LANG_DEFAULT)   # idem ao mestre
@@ -16523,6 +16536,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Ausente na retomada de um jogo salvo: volta à casa da foto (ou à
             # livre mais próxima, se alguém a ocupou nesse meio-tempo).
             alvo["pos"] = self._casa_livre_retomada(list(alvo.pop("_pos_retomada")), pid)
+            self._revelar_herois_na_nevoa()
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             self._iniciar_timer_turno()
@@ -16536,6 +16550,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 alvo["pos"] = self._casa_livre_retomada(list(casa), pid)
             if not casa_caida:
                 alvo.pop("facing", None)
+            self._revelar_herois_na_nevoa()
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             self._iniciar_timer_turno()   # reativa o timer caso estivesse parado
@@ -33280,6 +33295,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.initiative_active = True
         self._rebuild_initiative()
         self._ultima_foto = registro
+        self._revelar_herois_na_nevoa()
         # O start_game arma a história de abertura da campanha; no meio de uma
         # masmorra ela não pode tocar de novo.
         self._story_encadeada = None

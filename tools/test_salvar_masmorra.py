@@ -272,7 +272,8 @@ async def jogar_e_salvar(arquivo, classe="warrior", pid_real=False):
     p["pos"] = list(livres[len(livres) // 2])
     p["hp"] = max(1, p["hp"] - 3)
     p["gold"] = 777
-    r.explored |= {livres[0], livres[-1]}
+    # Como num passo de verdade: a casa onde o herói está fica explorada.
+    r.explored |= {livres[0], livres[-1], tuple(p["pos"])}
     for m in list(r.monsters.values())[:1]:
         m["hp"] = max(1, m["hp"] - 2)
     for c in r.chests.values():

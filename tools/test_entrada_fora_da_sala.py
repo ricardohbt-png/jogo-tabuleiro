@@ -64,6 +64,38 @@ async def main():
     check(not fora, "só a sala de entrada e sua borda ficam reveladas")
 
 
+async def jogo_salvo_antigo():
+    """Partida salva antes da correção: a foto guarda a névoa sobre o herói.
+    Ao continuar, o jogo tem de revelar em volta dele."""
+    print("[jogo salvo antes da correção, retomado]")
+    r, d = await entrar("elara_adhadal_1.json")
+    r.selected_dungeon = "elara_adhadal_1.json"
+    sala = next(s for s in r.rooms if s["role"] == "entrance")
+    r.explored = {c for c in r.explored
+                  if sala["x"] - 1 <= c[0] <= sala["x"] + sala["w"]
+                  and sala["y"] - 1 <= c[1] <= sala["y"] + sala["h"]}
+    casas = {p["class_id"]: tuple(p["pos"]) for p in r.players.values()}
+    check(all(c not in r.explored for c in casas.values()),
+          "a foto antiga tem a névoa sobre os heróis")
+    registro = S.foto_empacotar(r._montar_foto(), onde="masmorra", rodada=r.round_num,
+                                masmorra="elara_adhadal_1.json", masmorra_nome="x")
+
+    n = S.GameRoom("RET")
+    n.players["q0"] = S.make_player("q0", "W", "warrior", 0)
+    n.players["q1"] = S.make_player("q1", "M", "mage", 1)
+    n.host_pid = "q0"; n.player_order = ["q0", "q1"]
+    n.mode = "authored"; n.dungeon_def = d; n.selected_dungeon = "elara_adhadal_1.json"
+    n.broadcast = nada; n.send_to = nada; n.gm_say = nada; n.push_state = nada
+    ok = await n._retomar_masmorra(registro)
+    n._cancelar_intro_masmorra()
+    check(ok, "a retomada aceita a foto")
+    for p in n.players.values():
+        pos = tuple(p["pos"])
+        check(pos == casas[p["class_id"]], f"{p['name']} volta à casa salva {list(pos)}")
+        check(pos in n.explored, f"{p['name']} já não está na névoa ao continuar")
+
+
 asyncio.run(main())
+asyncio.run(jogo_salvo_antigo())
 print("\nOK" if not falhas else f"\n{len(falhas)} falha(s)")
 sys.exit(1 if falhas else 0)
