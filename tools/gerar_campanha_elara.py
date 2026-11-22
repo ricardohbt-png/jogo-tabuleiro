@@ -35,7 +35,10 @@ PONTO_FAZENDA_ANTIGO = "elara_fazenda"   # ponto/destino de combate da fazenda, 
 RELOGIO_ID = "elara_p1"
 FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
 IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
-IMAGEM_EXEQUIEL_HISTORIA = "assets/story/exequiel_templo.png"   # cópia: a mídia de história só vem de assets/story/
+IMAGEM_FIM_FAZENDA = "assets/story/fazenda_fim_rastros.webp"   # o grupo examina os rastros de carroça
+IMAGEM_TEMPLO_SAQUEADO = "assets/story/fazenda_fim_templo_saqueado.webp"   # Exequiel nos degraus do Templo arrombado
+IMAGEM_MENSAGEIRO = "assets/story/fazenda_fim_mensageiro.webp"   # o mensageiro do regente entrega o recado
+IMAGEM_EXEQUIEL_CHAMA = "assets/story/fazenda_fim_exequiel_chama.webp"   # Exequiel chama o grupo de volta ao Templo
 
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
@@ -129,17 +132,22 @@ def ponto_casa():
 def slides_fim_da_fazenda():
     """Cena final da fazenda: o Templo, o Exequiel e o roubo do Olho."""
     return {"slides": [
-        {"text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
+        {"image": IMAGEM_FIM_FAZENDA,
+         "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
                  "moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis "
                  "prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.", "fit": "cover"},
-        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
+        {"image": IMAGEM_TEMPLO_SAQUEADO, "fit": "cover",
          "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. "
                  "Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais "
                  "do que isso, só que ele não pode ficar em mãos erradas.”"},
-        {"image": IMAGEM_EXEQUIEL_HISTORIA, "fit": "contain",
-         "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em "
-                 "reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre "
-                 "de Armas vai encontrá-los na cidade para mostrar o lugar.”"}]}
+        {"image": IMAGEM_MENSAGEIRO, "fit": "cover",
+         "text": "Um mensageiro do regente chega ao Templo e se dirige a vocês: “Os bandidos mataram os "
+                 "antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos "
+                 "serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre de Armas vai "
+                 "encontrá-los na cidade para mostrar o lugar.”"},
+        {"image": IMAGEM_EXEQUIEL_CHAMA, "fit": "cover",
+         "text": "Quando o mensageiro se vai, Exequiel se volta para vocês: “Depois, venham me procurar "
+                 "aqui no Templo para falarmos sobre o que foi roubado.”"}]}
 
 
 def destinos():

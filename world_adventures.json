@@ -910,18 +910,24 @@
         "outro": {
           "slides": [
             {
-              "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.",
-              "fit": "cover"
+              "image": "assets/story/fazenda_fim_rastros.webp",
+              "fit": "cover",
+              "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo."
             },
             {
-              "image": "assets/story/exequiel_templo.png",
-              "fit": "contain",
+              "image": "assets/story/fazenda_fim_templo_saqueado.webp",
+              "fit": "cover",
               "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais do que isso, só que ele não pode ficar em mãos erradas.”"
             },
             {
-              "image": "assets/story/exequiel_templo.png",
-              "fit": "contain",
-              "text": "“Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre de Armas vai encontrá-los na cidade para mostrar o lugar.”"
+              "image": "assets/story/fazenda_fim_mensageiro.webp",
+              "fit": "cover",
+              "text": "Um mensageiro do regente chega ao Templo e se dirige a vocês: “Os bandidos mataram os antigos donos da fazenda. O Templo falou com o regente e, em reconhecimento pelos serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre de Armas vai encontrá-los na cidade para mostrar o lugar.”"
+            },
+            {
+              "image": "assets/story/fazenda_fim_exequiel_chama.webp",
+              "fit": "cover",
+              "text": "Quando o mensageiro se vai, Exequiel se volta para vocês: “Depois, venham me procurar aqui no Templo para falarmos sobre o que foi roubado.”"
             }
           ]
         }
