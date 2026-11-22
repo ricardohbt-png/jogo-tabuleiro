@@ -59209,7 +59209,7 @@ GS.on('enterDungeon', (msg) => {
   _limparMortesVisuais();
   _limparAnimacoesTempestade();
   // O cartão do tour da Fazenda é anexado ao body e sobrevivia à entrada.
-  document.getElementById('refugio-tour-card')?.remove();
+  if(typeof document !== 'undefined') document.getElementById('refugio-tour-card')?.remove();
   // O mapa-múndi é um overlay sobre screen-city e só some quando a cidade MUDA.
   // Entrar numa aventura não muda a cidade, então sem isto o jogador voltaria da
   // masmorra para o mapa-múndi em vez da ilustração da cidade.
