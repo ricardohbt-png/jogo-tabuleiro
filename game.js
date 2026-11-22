@@ -6593,7 +6593,9 @@ function _refugioTourPodeMostrar(){
 function _refugioTourRender(){
   const dados = _refugioTourLer();
   if(dados?.status !== 'active' || !_refugioTourPodeMostrar()){
-    if(dados?.status !== 'active') document.getElementById('refugio-tour-card')?.remove();
+    // Fora da cidade (masmorra), com slide de história ou com o passeio da
+    // cidade ativo o cartão sai: o próximo render na cidade o recria.
+    document.getElementById('refugio-tour-card')?.remove();
     return;
   }
   const pontoId = _refugioTourPontoId();
@@ -59206,6 +59208,8 @@ GS.on('enterDungeon', (msg) => {
   fecharFichaCidade();
   _limparMortesVisuais();
   _limparAnimacoesTempestade();
+  // O cartão do tour da Fazenda é anexado ao body e sobrevivia à entrada.
+  if(typeof document !== 'undefined') document.getElementById('refugio-tour-card')?.remove();
   // O mapa-múndi é um overlay sobre screen-city e só some quando a cidade MUDA.
   // Entrar numa aventura não muda a cidade, então sem isto o jogador voltaria da
   // masmorra para o mapa-múndi em vez da ilustração da cidade.

@@ -29,7 +29,7 @@ class ServidorTests(unittest.TestCase):
     def test_refugio_oculto_antes_da_fazenda(self):
         self.assertNotIn("ponto_1", sala()._city_points_payload()["alva_e_luz"])
 
-    def test_tour_so_no_primeiro_desbloqueio(self):
+    def test_tour_sai_ao_desbloquear(self):
         r = sala()
         self.assertIsNone(r._city_state_payload()["tutorial"]["tour_refugio_id"])
         r.fatos.add("elara_fazenda_vencida")
@@ -38,10 +38,14 @@ class ServidorTests(unittest.TestCase):
         self.assertEqual(r._city_state_payload()["tutorial"]["tour_refugio_id"], primeiro,
                          "o id não muda nos estados seguintes")
 
-    def test_save_antigo_ja_desbloqueado_nao_reabre(self):
+    def test_save_antigo_ja_desbloqueado_tambem_recebe(self):
+        # Fazenda liberada antes do tour existir: o tour sai mesmo assim; o
+        # cliente o mostra uma vez por conta (quem já viu ou pulou não vê).
         r = sala({"elara_fazenda_vencida"})
         r.refugio_state["unlocked"] = True
-        self.assertIsNone(r._city_state_payload()["tutorial"]["tour_refugio_id"])
+        self.assertEqual(r._city_state_payload()["tutorial"]["tour_refugio_id"], "refugio")
+        self.assertEqual(sala({"elara_fazenda_vencida"})._city_state_payload()["tutorial"]["tour_refugio_id"],
+                         "refugio", "mesmo id de quem libera agora")
 
 
 class ClienteTests(unittest.TestCase):

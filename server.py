@@ -3884,7 +3884,6 @@ FOTO_SALA_CATEGORIAS = {
     "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
     "training_mode": "foto", "training_allies": "foto", "training_state": "foto",
     "tutorial_city_tour_id": "conexao",
-    "refugio_tour_id": "conexao",
     "_bestiary_cache": "conexao",
     "master_reserve": "foto", "key_chest_opened": "foto",
     "_licantropia_ultimo_fim_combate": "foto",
@@ -15349,7 +15348,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.tutorial_city_tour_id = None
         # Muda no primeiro desbloqueio do Refúgio: o cliente abre o tour do
         # Mestre de Armas pela Fazenda. Não vai a disco (uma vez por desbloqueio).
-        self.refugio_tour_id = None
         self.training_allies = {}
         self.training_state = {}
         self._decor_block_tiles = set()
@@ -16493,6 +16491,19 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 h["pos"] = self._casa_livre_retomada(list(casa), h["id"])
                 h.pop("facing", None)
 
+    def _revelar_herois_na_nevoa(self):
+        """Herói no tabuleiro sobre uma casa nunca explorada ganha a visão em
+        volta. Conserta partidas salvas antes da correção da entrada fora da
+        sala (Adhadal 1 e 2, Caçada de Corvin): a foto guardava a névoa sobre
+        o herói, e o cliente, que só calcula alcance sobre casa explorada, não
+        mostrava casas azuis nem deixava andar."""
+        for p in self.players.values():
+            pos = list(p.get("pos") or [-1, -1])
+            if (p.get("is_master") or not p.get("alive") or p.get("fora_masmorra")
+                    or pos == [-1, -1] or tuple(pos) in self.explored):
+                continue
+            self._reveal_around(pos[0], pos[1], radius=self._get_raio_visao(p))
+
     async def religar_heroi(self, alvo, ws, pid_conexao, name):
         """Religa um herói que caiu durante a partida. Devolve o pid antigo."""
         LANG_BY_PID[alvo["id"]] = LANG_BY_PID.pop(pid_conexao, LANG_DEFAULT)   # idem ao mestre
@@ -16523,6 +16534,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Ausente na retomada de um jogo salvo: volta à casa da foto (ou à
             # livre mais próxima, se alguém a ocupou nesse meio-tempo).
             alvo["pos"] = self._casa_livre_retomada(list(alvo.pop("_pos_retomada")), pid)
+            self._revelar_herois_na_nevoa()
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             self._iniciar_timer_turno()
@@ -16536,6 +16548,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 alvo["pos"] = self._casa_livre_retomada(list(casa), pid)
             if not casa_caida:
                 alvo.pop("facing", None)
+            self._revelar_herois_na_nevoa()
             await ws.send(json.dumps({"type": "game_start", "instrumentos_base": INSTRUMENTOS_BASE}))
             await ws.send(json.dumps({"type": "enter_dungeon"}))
             self._iniciar_timer_turno()   # reativa o timer caso estivesse parado
@@ -16726,7 +16739,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return {
             "type": "city_state",
             "tutorial": {"tour_cidade_id": self.tutorial_city_tour_id,
-                         "tour_refugio_id": self.refugio_tour_id},
+                         "tour_refugio_id": self._refugio_tour_id()},
             # Quem entra direto na cidade (jogo salvo já em andamento) não passa
             # pelo lobby; é por aqui que o cliente grava a sessão de reconexão.
             "code": self.code,
@@ -21541,6 +21554,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             saida[city_id] = limpos
         return saida
 
+    def _refugio_tour_id(self):
+        """Id do tour do Refúgio: sai sempre que o Refúgio liberado por
+        requisito (a Fazenda do Leste) está aberto. Fixo de propósito: o
+        cliente mostra o tour uma vez por conta, então quem liberou a Fazenda
+        antes do tour existir também o vê, e quem já viu ou pulou não vê de
+        novo."""
+        if not self.refugio_state.get("unlocked"):
+            return None
+        tem_requisito = any(p.get("type") == "refugio" and p.get("requisito")
+                            for pontos in CITY_MAP_POINTS.values() for p in pontos.values())
+        return "refugio" if tem_requisito else None
+
     def _refugio_unlocked(self, point=None):
         """Avalia o requisito do ponto e transforma o primeiro desbloqueio em
         estado permanente na campanha. Sem savegame, permanece apenas na sala."""
@@ -21557,7 +21582,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ok, _ = self._avaliar_requisito(point.get("requisito") or {})
         if ok and point.get("requisito"):
             state["unlocked"] = True
-            self.refugio_tour_id = str(time.time_ns())
             if self.savegame is not None:
                 self.savegame["refugio"] = deepcopy(state)
                 write_savegame(self.savegame)
@@ -22319,6 +22343,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         else:
             # Reveal entrance (room + 1-tile border so surrounding walls are visible)
             self._reveal_room(entrance)
+            # O ponto de entrada autorado pode ficar FORA da sala de entrada
+            # (Adhadal 1 e 2, a Caçada de Corvin). Sem isto o herói começava numa
+            # casa nunca explorada: o alcance do cliente só anda por casa
+            # explorada, então não havia casas azuis nem movimento até alguém
+            # revelar o lugar.
+            for pid2 in pids:
+                p2 = self.players[pid2]
+                pos = p2.get("pos") or [-1, -1]
+                if not (entrance["x"] - 1 <= pos[0] <= entrance["x"] + entrance["w"]
+                        and entrance["y"] - 1 <= pos[1] <= entrance["y"] + entrance["h"]):
+                    self._reveal_around(pos[0], pos[1], radius=self._get_raio_visao(p2))
 
         self.initiative_active = True
         self._rebuild_initiative()
@@ -33269,6 +33304,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.initiative_active = True
         self._rebuild_initiative()
         self._ultima_foto = registro
+        self._revelar_herois_na_nevoa()
         # O start_game arma a história de abertura da campanha; no meio de uma
         # masmorra ela não pode tocar de novo.
         self._story_encadeada = None
