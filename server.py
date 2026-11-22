@@ -22319,6 +22319,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         else:
             # Reveal entrance (room + 1-tile border so surrounding walls are visible)
             self._reveal_room(entrance)
+            # O ponto de entrada autorado pode ficar FORA da sala de entrada
+            # (Adhadal 1 e 2, a Caçada de Corvin). Sem isto o herói começava numa
+            # casa nunca explorada: o alcance do cliente só anda por casa
+            # explorada, então não havia casas azuis nem movimento até alguém
+            # revelar o lugar.
+            for pid2 in pids:
+                p2 = self.players[pid2]
+                pos = p2.get("pos") or [-1, -1]
+                if not (entrance["x"] - 1 <= pos[0] <= entrance["x"] + entrance["w"]
+                        and entrance["y"] - 1 <= pos[1] <= entrance["y"] + entrance["h"]):
+                    self._reveal_around(pos[0], pos[1], radius=self._get_raio_visao(p2))
 
         self.initiative_active = True
         self._rebuild_initiative()
