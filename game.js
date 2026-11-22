@@ -959,6 +959,9 @@ function showScreen(id){
   }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   $(id).classList.add('active');
+  // O cartão do tour da Fazenda mora no body: fora da cidade ele sai (o
+  // próximo city_state o recria se o passeio continuar).
+  if(id !== 'screen-city') document.getElementById('refugio-tour-card')?.remove();
   // A barra de configuração dos atalhos também é usada na cidade, onde o
   // jogador prepara habilidades, magias e itens para a próxima masmorra.
   if(id !== 'screen-game' && id !== 'screen-city'){
@@ -6599,7 +6602,12 @@ function _refugioTourRender(){
     return;
   }
   const pontoId = _refugioTourPontoId();
-  if(!pontoId) return;   // cidade sem Refúgio: o passeio espera a volta a Alva e Luz
+  if(!pontoId){
+    // Cidade sem Refúgio: o passeio espera a volta a Alva e Luz, sem cartão na tela.
+    _refugioTourLimparDestaques();
+    document.getElementById('refugio-tour-card')?.remove();
+    return;
+  }
   const vista = dados.iniciou ? _refugioTourVista() : null;
   const vistos = new Set(dados.vistos || []);
   if(vista && !vistos.has(vista)){
@@ -33614,6 +33622,8 @@ function _gamepadUiScope(){
   const open = [...document.querySelectorAll(
     '#pause-menu.open, [id$="-modal"].open, [id$="-overlay"].open, .ficha-cidade-panel.open,' +
     '#loja-overlay, #refugio-overlay, #quarto-overlay, #worldmap-overlay, #story-overlay, #city-tour-card,' +
+    // Só no mapa: dentro das cenas (.refugio-tour-topo) o controle navega os botões da cena.
+    '#refugio-tour-card:not(.refugio-tour-topo),' +
     '#campaign-scene-overlay, #ficha-overlay-jogo, #encerrar-missao-overlay, #city-dungeon-entry, #audio-pop,' +
     '#instrumento-dir-overlay, #improviso-overlay, #ficha-monstro-overlay,' +
     '#overlay-escolha-magia, #overlay-selecao-criacao, #painel-guerreiro-luz, #gamepad-keyboard-overlay'
