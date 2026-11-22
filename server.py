@@ -3884,7 +3884,6 @@ FOTO_SALA_CATEGORIAS = {
     "falas": "foto", "licoes": "foto", "licoes_feitas": "foto",
     "training_mode": "foto", "training_allies": "foto", "training_state": "foto",
     "tutorial_city_tour_id": "conexao",
-    "refugio_tour_id": "conexao",
     "_bestiary_cache": "conexao",
     "master_reserve": "foto", "key_chest_opened": "foto",
     "_licantropia_ultimo_fim_combate": "foto",
@@ -15349,7 +15348,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.tutorial_city_tour_id = None
         # Muda no primeiro desbloqueio do Refúgio: o cliente abre o tour do
         # Mestre de Armas pela Fazenda. Não vai a disco (uma vez por desbloqueio).
-        self.refugio_tour_id = None
         self.training_allies = {}
         self.training_state = {}
         self._decor_block_tiles = set()
@@ -16741,7 +16739,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return {
             "type": "city_state",
             "tutorial": {"tour_cidade_id": self.tutorial_city_tour_id,
-                         "tour_refugio_id": self.refugio_tour_id},
+                         "tour_refugio_id": self._refugio_tour_id()},
             # Quem entra direto na cidade (jogo salvo já em andamento) não passa
             # pelo lobby; é por aqui que o cliente grava a sessão de reconexão.
             "code": self.code,
@@ -21556,6 +21554,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             saida[city_id] = limpos
         return saida
 
+    def _refugio_tour_id(self):
+        """Id do tour do Refúgio: sai sempre que o Refúgio liberado por
+        requisito (a Fazenda do Leste) está aberto. Fixo de propósito: o
+        cliente mostra o tour uma vez por conta, então quem liberou a Fazenda
+        antes do tour existir também o vê, e quem já viu ou pulou não vê de
+        novo."""
+        if not self.refugio_state.get("unlocked"):
+            return None
+        tem_requisito = any(p.get("type") == "refugio" and p.get("requisito")
+                            for pontos in CITY_MAP_POINTS.values() for p in pontos.values())
+        return "refugio" if tem_requisito else None
+
     def _refugio_unlocked(self, point=None):
         """Avalia o requisito do ponto e transforma o primeiro desbloqueio em
         estado permanente na campanha. Sem savegame, permanece apenas na sala."""
@@ -21572,7 +21582,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         ok, _ = self._avaliar_requisito(point.get("requisito") or {})
         if ok and point.get("requisito"):
             state["unlocked"] = True
-            self.refugio_tour_id = str(time.time_ns())
             if self.savegame is not None:
                 self.savegame["refugio"] = deepcopy(state)
                 write_savegame(self.savegame)
