@@ -21572,8 +21572,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         state = self.refugio_state
         state["slot_limit"] = max(int(state.get("slot_limit", 10) or 10),
                                    30 if self.renome >= 50 else 20 if self.renome >= 25 else 10)
+        # Sem ponto e numa cidade sem Refúgio, vale o Refúgio do mundo (a Fazenda
+        # do Leste): antes caía em `{}`, sem requisito, e abrir o Refúgio fora de
+        # Alva e Luz liberava a fazenda sem a missão.
         point = point or next((p for p in CITY_MAP_POINTS.get(self.world_location, {}).values()
-                               if p.get("type") == "refugio"), {})
+                               if p.get("type") == "refugio"), None) or next(
+            (p for pontos in CITY_MAP_POINTS.values() for p in pontos.values()
+             if p.get("type") == "refugio"), {})
         for key, dest in (("fundo_externo", "background_external"), ("fundo_comum", "background_common"), ("fundo_quarto", "background_room")):
             if point.get(key): state[dest] = str(point[key])[:240]
         state["background"] = state.get("background_common") or state.get("background")

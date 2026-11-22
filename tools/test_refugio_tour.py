@@ -47,6 +47,21 @@ class ServidorTests(unittest.TestCase):
         self.assertEqual(sala({"elara_fazenda_vencida"})._city_state_payload()["tutorial"]["tour_refugio_id"],
                          "refugio", "mesmo id de quem libera agora")
 
+    def test_abrir_refugio_fora_de_alva_nao_libera_a_fazenda(self):
+        # Antes, sem Refúgio na cidade, o requisito virava {} e liberava tudo.
+        import asyncio
+        r = sala()
+        r.world_location = "vila_corvin"
+        r.players["p"] = S.make_player("p", "A", "warrior", 0)
+        async def nada(*a, **k):
+            pass
+        r.send_to = nada
+        r.broadcast = nada
+        asyncio.run(r.handle_open_refugio("p"))
+        self.assertFalse(r.refugio_state.get("unlocked"))
+        r.world_location = "alva_e_luz"
+        self.assertIsNone(r._city_state_payload()["tutorial"]["tour_refugio_id"])
+
 
 class ClienteTests(unittest.TestCase):
     def setUp(self):
@@ -65,6 +80,16 @@ class ClienteTests(unittest.TestCase):
             if acao in ("externa", "comum", "quarto"):
                 continue
             self.assertIn(f"'{acao}']", self.js, acao)
+
+    def test_cartao_sai_fora_de_alva_e_fora_da_cidade(self):
+        corpo = self.js.split("function _refugioTourRender(){", 1)[1].split("\nfunction ", 1)[0]
+        trecho = corpo.split("if(!pontoId)", 1)[1][:300]
+        self.assertIn("refugio-tour-card')?.remove()", trecho)
+        show = self.js.split("function showScreen(id){", 1)[1][:1200]
+        self.assertIn("refugio-tour-card", show)
+
+    def test_controle_alcanca_o_cartao_no_mapa(self):
+        self.assertIn("#refugio-tour-card:not(.refugio-tour-topo)", self.js)
 
     def test_tour_ligado_ao_city_state(self):
         self.assertIn("_refugioTourIniciarOuRetomar(msg.tutorial?.tour_refugio_id", self.js)
