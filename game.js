@@ -17185,7 +17185,7 @@ function _receiveAttackFeedback(msg){
     if(msg.spin_id) _registrarGiroAtaque(msg, now);
     _playCombatCue('attack', {repeatKey:'attack', volume:.9});
     try{ _somRugidoAoAgir(msg.attacker_id); }catch(e){}
-    const f={id, attackerName:msg.attacker_name||'Atacante', targetName:_attackFeedbackTargetName(msg),
+    const f={id, attackerName:msg.attacker_name||t('ui.combate.atacante'), targetName:_attackFeedbackTargetName(msg),
       attackerId:msg.attacker_id, targetId:msg.target_id, attackName:msg.attack_name||t('ui.hud.ataque'), attackerPos:(msg.attacker_pos||[0,0]).map(Number),
       targetPos:(msg.target_pos||[0,0]).map(Number), advantageMode:msg.advantage_mode||'normal',
       holyStrike:!!msg.holy_strike, holyLevel:Math.max(1,Math.min(3,Number(msg.holy_level)||1)), holyType:msg.holy_type||'holy', holyStrikeAt:msg.holy_strike&&!_cenaAtiva()?now+_animationProgressDuration(ATTACK_FEEDBACK_PREP_MS):null,
@@ -25490,7 +25490,7 @@ function _registrarHistoricoAtaque(msg){
       targetId:msg.target_id == null ? null : String(msg.target_id),
       attackerPos:Array.isArray(msg.attacker_pos) ? msg.attacker_pos.slice(0,2) : null,
       targetPos:Array.isArray(msg.target_pos) ? msg.target_pos.slice(0,2) : null,
-      attackerName:String(msg.attacker_name || 'Atacante'), targetName:String(_attackFeedbackTargetName(msg)),
+      attackerName:String(msg.attacker_name || t('ui.combate.atacante')), targetName:String(_attackFeedbackTargetName(msg)),
       attackName:String(msg.attack_name || t('ui.hud.ataque')), mode:String(msg.advantage_mode || 'normal'),
       area:!!(msg.projectile && msg.projectile.area),
       text:'', updatedAt:Date.now(), seq:_masterHistorySeq++, result:null,
