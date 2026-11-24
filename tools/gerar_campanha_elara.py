@@ -148,7 +148,8 @@ def slides_fim_da_fazenda():
                  "serviços prestados, a Fazenda do Leste agora é de vocês. O Mestre de Armas vai "
                  "encontrá-los na cidade para mostrar o lugar.”"},
         {"image": IMAGEM_EXEQUIEL_CHAMA, "fit": "cover",
-         "text": "Quando o mensageiro se vai, Exequiel se volta para vocês: “Depois, venham me procurar "
+         "text": "Quando o mensageiro se vai, Exequiel se volta para vocês, aos gritos: “Ei! Não é hora "
+                 "de ficar comemorando! Vocês têm um trabalho pra fazer! Depois, venham me procurar "
                  "aqui no Templo para falarmos sobre o que foi roubado.”"}]}
 
 
