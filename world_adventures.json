@@ -1047,7 +1047,20 @@
         "file": "elara_adhadal_2.json",
         "encadear": false,
         "intro": "",
-        "outro": ""
+        "outro": {
+          "slides": [
+            {
+              "image": "assets/story/elara_adhadal_fim_estrada_corvin.webp",
+              "fit": "cover",
+              "text": "A mata finalmente se abre. Lama até os joelhos, vocês pisam na estrada de terra e, lá embaixo, entre os campos e o rio, avistam a paliçada de Corvin. Sobreviveram à Floresta de Adhadal."
+            },
+            {
+              "image": "assets/story/elara_corvin_taverna_barman.webp",
+              "fit": "cover",
+              "text": "Cansados e famintos, vocês cruzam o portão atrás de uma taverna e de um prato quente. Da porta ouvem o barman comentar com um freguês: “Um sujeito de botas atoladas de lama pagou um quarto que nem usou e perguntou pela estrada de Graciero...”"
+            }
+          ]
+        }
       }
     ],
     "espera_retorno": {
@@ -1067,7 +1080,8 @@
       "sem_fato": "",
       "aventura_id": ""
     },
-    "renome_recompensa": 1
+    "renome_recompensa": 1,
+    "chegada_em": "vila_corvin"
   },
   "elara_corvin": {
     "id": "elara_corvin",
