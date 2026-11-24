@@ -21355,7 +21355,7 @@ window.EDITOR_CATALOG = {
       "gira": false,
       "alto": false,
       "pisavel": false,
-      "loot_capaz": false,
+      "loot_capaz": true,
       "special": null,
       "image": "saco_grao.png"
     },
@@ -21370,7 +21370,7 @@ window.EDITOR_CATALOG = {
       "gira": true,
       "alto": false,
       "pisavel": false,
-      "loot_capaz": false,
+      "loot_capaz": true,
       "special": null,
       "image": "caixa_ferramentas.png"
     },
@@ -21656,7 +21656,7 @@ window.EDITOR_CATALOG = {
       "gira": true,
       "alto": true,
       "pisavel": false,
-      "loot_capaz": false,
+      "loot_capaz": true,
       "special": null,
       "image": "mesa_banquete_luxo.png"
     },
@@ -21746,7 +21746,7 @@ window.EDITOR_CATALOG = {
       "gira": false,
       "alto": false,
       "pisavel": false,
-      "loot_capaz": false,
+      "loot_capaz": true,
       "special": null,
       "image": "barril_cerveja.png"
     },
@@ -22737,7 +22737,7 @@ window.EDITOR_CATALOG = {
       "gira": true,
       "alto": true,
       "pisavel": false,
-      "loot_capaz": false,
+      "loot_capaz": true,
       "special": null,
       "image": "acampamento_abandonado.png"
     },

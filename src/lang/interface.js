@@ -3552,6 +3552,10 @@ window.LANG_INTERFACE = {
     "en": "Attacker",
     "pt": "Atacante"
   },
+  "ui.cidade.card_reposicionar": {
+    "en": "Drag to reposition; click to open the sheet",
+    "pt": "Arraste para reposicionar; clique para abrir a ficha"
+  },
   "ui.hud.ataque": {
     "en": "Attack",
     "pt": "Ataque"
@@ -11829,6 +11833,7 @@ window.LANG_INTERFACE = {
   "ui.veneno.passo_veneno": {"en":"1. Poison","pt":"1. Veneno"},
   "ui.veneno.passo_alvo": {"en":"2. What to poison? One click applies it.","pt":"2. O que envenenar? Um clique aplica."},
   "ui.veneno.dica_dois": {"en":"You can combine up to 2 poisons on arrows and bolts.","pt":"Você pode combinar até 2 venenos em flechas e virotes."},
+  "ui.veneno.custo_cidade": {"en":"Preparation in town: consumes the vial, no combat action cost","pt":"Preparo na cidade: consome o frasco, sem custo de ação de combate"},
   "ui.veneno.custo_frasco": {"en":"Cost: bonus action (the vial is used up)","pt":"Custo: ação bônus (o frasco é consumido)"},
   "ui.veneno.custo_rapido": {"en":"Quick Poison: free action, 💧1 thirst per vial","pt":"Veneno Rápido: ação livre, 💧1 de sede por frasco"},
   "ui.item.laminas_riposta_envenenadas.nome": {"en":"Poisoned Riposte Blades","pt":"Lâminas de Riposta Envenenadas"},

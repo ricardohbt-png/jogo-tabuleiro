@@ -242,7 +242,11 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   const STORAGE_CSS = `
 .storage-modal{width:min(1080px,96vw)!important;max-width:96vw!important;}
 .storage-modal .inv-modal{box-sizing:border-box;max-width:100%;}
-.storage-modal .inv-header{margin-top:14px;}
+.storage-modal .inv-header{margin-top:0;}
+.storage-modal .storage-main{box-sizing:border-box;max-height:calc(100vh - 100px);max-height:calc(100dvh - 100px);
+  overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:8px;}
+.storage-modal .storage-grid{max-height:none;overflow:visible;}
+.storage-modal .storage-body{display:block;min-width:0;}
 .storage-columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;}
 .storage-column{min-width:0;display:flex;flex-direction:column;}
 .storage-column h3{color:#f4ecd8;font-family:Georgia,serif;font-size:.85rem;letter-spacing:1px;text-align:center;margin:0 0 10px;}
@@ -462,9 +466,12 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const isBonusAction = !!item && typeof BONUS_ACTION_EFFECTS !== 'undefined'
       && BONUS_ACTION_EFFECTS.has(item.effect);
     const bonusBloqueado = isBonusAction && !!player.bonus_action_used;
-    // Na cidade não há turno: só a poção de cura (efeito `heal`) pode ser usada.
+    // Na cidade também é possível consumir provisões para recuperar fome/sede.
     const podeCurarNaCidade = !_readOnly && !gsNow && !!GS.cityState && player?.id === GS.myPid
-      && !!player.alive && item?.effect === 'heal';
+      && !!player.alive && ['heal', 'coat_poison'].includes(item?.effect);
+    const podeConsumirNaCidade = !_readOnly && !gsNow && !!GS.cityState && player?.id === GS.myPid
+      && !!player.alive && ['food', 'meal_survival', 'ration', 'ale', 'ale_ac',
+        'wine', 'rum', 'hidromel', 'absinto'].includes(item?.effect);
     const catDef = (typeof GS !== 'undefined' && GS.CATALOGO_ITENS)
       ? GS.CATALOGO_ITENS[item && item.id] : null;
     const isArremessavel = !!(catDef?.arremessavel || item?.arremessavel);
@@ -472,7 +479,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       isCarta, isScroll, isConsumable, isArremessavel,
       podeLer: isCarta,
       podeUsar: (isMyOwnDungeonTurn && isConsumable && !isScroll && !isArremessavel
-        && !bonusBloqueado) || podeCurarNaCidade,
+        && !bonusBloqueado) || podeCurarNaCidade || (podeConsumirNaCidade && isConsumable),
       podeConjurar: isMyOwnDungeonTurn && isScroll && ehCaster && !player.action_done,
       podeArremessar: isMyOwnDungeonTurn && isArremessavel
         && (typeof GS.canThrowItem !== 'function' || GS.canThrowItem(player)),
@@ -1251,7 +1258,11 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
 
   function _showInventoryTooltip(itemId, comparisonItemId, touchPos, itemInstance){
     if(typeof GS === 'undefined' || !GS.CATALOGO_ITENS) return;
-    const bruto = itemInstance || GS.CATALOGO_ITENS[itemId];
+    const player = _currentPlayer();
+    const arma = player?.weapon;
+    const equipada = player?.gear?.weapon;
+    const bruto = itemInstance && itemInstance === equipada && arma?.id === itemInstance.id
+      ? { ...arma, ...itemInstance } : (itemInstance || GS.CATALOGO_ITENS[itemId]);
     const item = (typeof normalizarItemTooltip === 'function')
       ? normalizarItemTooltip(bruto) : bruto;
     if(!item || typeof _initItemTooltip !== 'function' || typeof gerarConteudoTooltip !== 'function') return;
@@ -1437,16 +1448,16 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const scope  = _storageCtx.scope;
     const shared = scope === 'shared';
     const stash  = _storageStash();
+    const scrollTop = overlay.querySelector('.storage-main')?.scrollTop || 0;
     overlay.innerHTML = `
-      <div class="inv-frame storage-modal inv-combined-frame">
+      <div class="inv-frame storage-modal">
         <div class="inv-modal">
           <svg class="inv-edge" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path class="glow" d="${EDGE_D}"/>
             <path class="char" d="${EDGE_D}"/>
             <path class="gold" d="${EDGE_D}"/>
           </svg>
-          <div class="inv-body inv-combined-body">
-            ${_statsPanelMarkup(player)}
+          <div class="inv-body storage-body">
             <div class="inv-main storage-main">
               <div class="inv-header">
                 <div class="inv-title">🧰 ${t(shared ? 'ui.inv.bau_compartilhado_caixa' : 'ui.inv.bau_heroi_caixa')}</div>
@@ -1474,7 +1485,6 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
               </section>
               </div>
             </div>
-            ${_shortcutPanelMarkup()}
           </div>
         </div>
       </div>`;
@@ -1490,9 +1500,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     _renderBelts(overlay, player);
     _renderBag(overlay, player);
     _renderStashGrid(overlay);
-    if(typeof window._mostrarAtalhosNoMenu === 'function') window._mostrarAtalhosNoMenu();
-    _wirePanelToggles(overlay);
-    _applyPanelPrefs(overlay);
+    overlay.querySelector('.storage-main').scrollTop = scrollTop;
     // Soltar em qualquer ponto vazio da metade do herói também retira do baú.
     // Os slots da bolsa já tratam o próprio drop (e zeram `_selected`), então
     // o evento que borbulha até aqui não repete a retirada.

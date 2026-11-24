@@ -1772,6 +1772,14 @@ function _cityHideTooltip(){
   const tip=document.getElementById('city-bldg-tooltip'); if(tip) tip.style.display='none';
 }
 
+const CITY_HERO_CARD_OFFSETS = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cityHeroCardOffsets') || '{}');
+    return new Map(Object.entries(saved).filter(([, pos]) =>
+      Number.isFinite(pos?.x) && Number.isFinite(pos?.y)));
+  } catch { return new Map(); }
+})();
+
 function _updateCityHeroBar(msg){
   const bar=document.getElementById('city-hero-bar'); if(!bar||!msg) return;
   const gold=msg.players.reduce((s,p)=>s+(p.gold||0),0);
@@ -1791,7 +1799,8 @@ function _updateCityHeroBar(msg){
       ${face}
       <div><div class="city-hcard-name">${p.name}</div>
            <div class="city-hcard-hp ${st}">${p.hp}/${p.max_hp} HP</div>
-           ${p.class_id&&!p.is_master&&!p.test_hero?`<div class="city-hcard-gold">💰 ${Number(p.gold||0)} ${t('ui.cidade.ouro_individual')}</div>`:''}</div>
+           ${p.class_id&&!p.is_master&&!p.test_hero
+             ? `<div class="city-hcard-survival">${renderBarrasSobrevivencia(p, {mostrarDoenca:false})}</div>` : ''}</div>
     </div>`;
   }).join('')+(msg.solo_grupo
     ? `<div class="city-gold-badge">${t('ui.cidade.ouro_total_grupo', {n: gold})}</div>
@@ -1802,6 +1811,42 @@ function _updateCityHeroBar(msg){
     : `<div class="city-gold-badge">${t('ui.cidade.badge_ouro', {n: gold})}</div>`);
   bar.querySelectorAll('.city-hcard[data-pid]').forEach(card => {
     const pid0 = card.getAttribute('data-pid');
+    const offset = CITY_HERO_CARD_OFFSETS.get(pid0) || {x:0,y:0};
+    if(offset.x || offset.y) card.style.transform=`translate(${offset.x}px, ${offset.y}px)`;
+    card.style.touchAction='none';
+    card.style.cursor='grab';
+    card.title=t('ui.cidade.card_reposicionar');
+    card.onpointerdown = e => {
+      if(e.button!==0) return;
+      const startX=e.clientX,startY=e.clientY;
+      const startOffset=CITY_HERO_CARD_OFFSETS.get(pid0)||{x:0,y:0};
+      let moved=false;
+      card.setPointerCapture(e.pointerId);
+      card.onpointermove = ev => {
+        if(!moved && Math.hypot(ev.clientX-startX,ev.clientY-startY)>5){
+          moved=true; card.style.zIndex='20'; card.style.cursor='grabbing';
+        }
+        if(!moved) return;
+        const next={x:startOffset.x+ev.clientX-startX,y:startOffset.y+ev.clientY-startY};
+        CITY_HERO_CARD_OFFSETS.set(pid0,next);
+        card.style.transform=`translate(${next.x}px, ${next.y}px)`;
+      };
+      card.onpointerup = () => {
+        card.onpointermove=null; card.onpointerup=null;
+        card.style.zIndex=''; card.style.cursor='grab';
+        if(moved){
+          card.dataset.layoutDragged='1';
+          try { localStorage.setItem('cityHeroCardOffsets', JSON.stringify(Object.fromEntries(CITY_HERO_CARD_OFFSETS))); }
+          catch(err) { console.warn('Não foi possível salvar a posição dos cartões da cidade.', err); }
+        }
+      };
+    };
+    card.addEventListener('click', e => {
+      if(card.dataset.layoutDragged){
+        delete card.dataset.layoutDragged;
+        e.preventDefault(); e.stopImmediatePropagation();
+      }
+    }, true);
     // Item arrastado no inventário pode ser solto sobre o retrato de outro herói meu.
     card.ondragover = e => {
       if(typeof InventoryModal !== 'undefined' && InventoryModal.temItemSelecionado?.() && GS.ehMeuHeroi(pid0)){
@@ -5347,7 +5392,7 @@ function _converterBagParaInventario(bag, bagSize){
     // catálogo do cliente descartava o item do servidor inteiro e o nome
     // voltava ao português. Só o nome é sobreposto de propósito: `tipo`,
     // `preco` e os demais campos do catálogo do cliente seguem valendo.
-    inv[i] = cat ? { ...cat, nome: it.name || cat.nome }
+    inv[i] = cat ? { ...cat, ...(it.effect === 'ammo' ? it : {}), nome: it.name || cat.nome }
                  : { id: it.id, nome: it.name || it.id, tipo: it.tipo || it.type || 'item', ...it };
   });
   return inv;
@@ -30904,7 +30949,7 @@ function _abrirPainelAplicarVenenoArma(itemId, sourceInfo){
 
 function useItem(itemId, targetId, sourceInfo){
   if(targetId === undefined){
-    const me = GS.gameState && GS.gameState.players.find(p => p.id === GS.myPid);
+    const me = GS.me;
     const it = sourceInfo?.source === 'utility_belt'
       ? me?.gear?.[sourceInfo.gearSlot]?.utility_belt_slots?.[sourceInfo.pocketIndex]?.item
       : me && (me.bag || []).find(b => b.id === itemId);

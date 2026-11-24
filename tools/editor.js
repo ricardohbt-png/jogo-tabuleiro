@@ -361,7 +361,7 @@
     CAT.decorations = (CAT.decorations || []).concat({
       type: "acampamento_abandonado", nome: nomeCat("decor", "acampamento_abandonado", "Acampamento abandonado"), emoji: "⛺",
       size: [2, 2], gira: true, alto: true, pisavel: false,
-      loot_capaz: false, special: null, image: "acampamento_abandonado.png",
+      loot_capaz: true, special: null, image: "acampamento_abandonado.png",
     });
   }
   if (!(CAT.decorations || []).some(d => d && d.type === "ruinas_pedra")) {

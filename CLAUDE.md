@@ -9,6 +9,18 @@ Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o ma
 
 `_menuStatusMarkup` soma o `atk_bonus` da arma além de `p.atk_bonus`, como o cálculo autoritativo de ataque; não subtrair o bônus da arma ao decompor o BBA, pois isso anulava o material no total exibido. Dano soma `dmg_bonus` e `damage_bonus` aditivamente. A mão secundária inclui seus próprios `atk_bonus`/`damage_bonus`, com a parcela da arma nas explicações PT/EN. Cobertura em `tools/test_menu_status.js` para Damasco, Obsidiana e coexistência dos campos de dano.
 
+### Preparar venenos na cidade (2026-11-16)
+
+Frascos `coat_poison` podem ser usados pelo próprio herói vivo na cidade pelo inventário, inclusive a partir do cinto de utilidades. O painel de envenenamento usa `GS.me` e dispensa turno/ação bônus na cidade. `handle_use_item` encaminha armas corpo a corpo para `_preparar_veneno_cidade`; os handlers de munições e lâminas permitem preparo com método `frasco` em `_em_cidade(pid)`, mantendo validação de alvos, capacidade e consumo de frascos. Não há custo de ação ou fome/sede durante esse preparo. Veneno Rápido mantém suas regras de turno. Os resultados usam `push_state_or_city` e as cargas permanecem nos itens para a masmorra.
+
+### Consumir provisões na cidade (2026-11-22)
+
+Na cidade, o inventário permite usar provisões de `food`, `meal_survival`, `ration` e bebidas que restauram fome/sede (`ale`, `ale_ac`, `wine`, `rum`, `hidromel`, `absinto`), inclusive quando o herói não está na vez. A validação autoritativa fica em `handle_use_item`; o cliente libera o botão no `_bagActionState`. O uso não gasta ação bônus. Itens de cura que também restauram fome/sede (Caldo Revigorante, Fermentado de Raízes e Fruto de Lúmen) aplicam todos os seus efeitos na cidade, inclusive se os PV já estiverem cheios. Poções de cura sem efeito de sobrevivência e os demais consumíveis conservam as regras atuais.
+
+### Loot no Acampamento abandonado (2026-11-22)
+
+`DECORATIONS["acampamento_abandonado"]["loot_capaz"]` é `True`, habilitando o campo de loot no editor e a coleta como contêiner no mapa. O catálogo do editor vem de `tools/export_catalog.py`; o fallback de `tools/editor.js` deve manter o mesmo valor. A mudança só habilita loot por instância e não preenche automaticamente os acampamentos existentes.
+
 ### Retrato do Rato ND 0 (2026-11-22)
 
 `assets/retratos/monstros/rato_retrato.png` retrata o Rato ND 0 como um pequeno rato branco, com olhos rubi, orelhas e focinho rosados, em um porão medieval. A ficha nativa `rato` usa `portrait: "rato_retrato"` no bestiário; `updateInitiativeTrack` exibe essa imagem para `rato`, distinta do Rato Gigante. A miniatura 3D permanece separada.
@@ -329,6 +341,9 @@ Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o ma
 
 `assets/retratos/monstros/esqueleto_animal_grande.png` retrata o Grande Esqueleto Animal como um urso esquelético de postura ereta, tórax largo e patas dianteiras erguidas. O modelo personalizado `esqueleto_animal_customizado` declara `portrait: "esqueleto_animal_grande"` no bestiário; `updateInitiativeTrack` usa essa arte para o tipo personalizado. A miniatura `esqueleto_animal_grande` do tabuleiro permanece separada.
 
+### Transferência dos baús (2026-11-16)
+
+`src/ui/inventoryModal.js`, em `_renderStorage`, usa uma tela exclusiva com baú e inventário (equipamento, cintos e bolsa), sem os painéis de status e atalhos do inventário normal. O mesmo layout atende os baús compartilhado e individual. `.storage-main` limita a altura à janela e permite rolagem de todo o conteúdo, incluindo os slots extras de mochilas; a posição de rolagem é preservada ao redesenhar após transferências. As preferências dos painéis do inventário normal não são aplicadas nessa tela.
 ### Desempenho online: entrega de arquivos (2026-11-17)
 
 Medido no navegador (login, cidade, 5 lojas, Campo de Treinamento): a primeira visita trafegava 164 MB e passou a 39 MB; o envio de estado do servidor já era leve (~4 ms e ~14 KB por jogador a cada ação) e não mudou. Quatro peças, todas em `_serve_static` (`server.py`): **(1) versão do cliente:** `_versao_cliente()` (hash de mtime+tamanho de `index.html`, `game.js`, `game.css` e `src/**/*.js`) é carimbada no `index.html` servido (`window.LFH_VER`, `_index_com_versao`); os scripts usam `?v=<versão>` em vez de `Date.now()` e respondem `immutable` quando o `v` bate (`_cache_do_estatico`). O ETag do index leva a versão e não há `Last-Modified`, senão um script alterado ficaria preso no cache. `_ASSET_VER` do `game.js` usa a mesma versão. **(2) cache da arte:** `assets/` pedido de fora do micro (`_pedido_de_fora`, pelo `Host`) ganha `max-age=3600, stale-while-revalidate=604800`; em localhost segue `no-cache`, para a arte trocada aparecer na primeira recarga. **(3) miniaturas:** `?w=<largura>` (lista `_MINI_LARGURAS`) devolve a imagem reduzida, guardada em `.cache/miniaturas/` com mtime e tamanho do original no nome (`_miniatura`). O cliente pede 192 nos ícones de item (`itemIconHTML`, com `loading="lazy"`), 128 nos de habilidade, 512 em `assets/pawns/` e 768 em `assets/objetos/` (`_ASSET_LARGURA` em `_assetURL`; `_imgURL` é o helper). **(4) PNG grande sem `?w=`** (200 KB ou mais, em `assets/`) vai no mesmo tamanho em WebP para o navegador que manda `Accept: image/webp` (`Vary: Accept`): cobre fundos de cena, telas de transição e retratos sem tocar no cliente. Precisa do Pillow (agora em `requirements.txt`); sem ele o servidor serve o original. As miniaturas são geradas no primeiro pedido, em segundo plano ao subir (`_preaquecer_miniaturas`) ou de antemão por `python -X utf8 tools/gerar_miniaturas.py`. **Imagem nova exibida pequena: peça com `_imgURL(caminho, largura)`.** Não use `?v=Date.now()` em arte nem em script. Junto: `_manter_ws_vivo` manda ping a cada 40 s (túneis derrubam WebSocket parado; não exige resposta), e o GLB do herói perdeu o `?v=Date.now()` que o rebaixava a cada sessão. O que ainda pesa são os modelos 3D (`assets/objetos/*.glb`, com textura embutida) e a música. Teste: `python -X utf8 tools/test_desempenho_online.py`.
@@ -1751,6 +1766,7 @@ resistência enquanto o herói permanecia na mesma sala.
 > p/ atualizar o painel). Footprint resolvido por `_decor_tiles`/`_decor_tiles_at`
 > (espelhado no cliente `GS.decorTilesOf` e no editor `decorTilesAt`). Render: 2D
 > emoji + 3D geometria procedural (`DECOR_3D`/`decorMeshes`, preparado p/ GLB).
+> `saco_grao`, `caixa_ferramentas`, `barril_cerveja` e `mesa_banquete_luxo` são lootáveis (`loot_capaz=True`), sem conteúdo padrão; o editor permite configurar ouro e itens neles.
 > Decorações `special:wall` ficam na face da parede e não ocupam o chão; `tocha_parede`
 > combina `assets/objetos/tocha_parede.png` com o loop GLB de `chama_viva.glb` no 3D.
 > `cocho` é uma decoração baixa 2×1, sólida, girável e sem interação; o PNG transparente

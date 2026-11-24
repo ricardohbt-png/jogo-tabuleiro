@@ -11915,9 +11915,9 @@ DECOR_TYPES = {
                              alto=True, loot_capaz=False,
                              image="banca_flores.png"),
     "saco_grao":      _decor("Saco de grãos", "🌾", [1, 1],
-                               loot_capaz=False, image="saco_grao.png"),
+                               loot_capaz=True, image="saco_grao.png"),
     "caixa_ferramentas": _decor("Caixa de ferramentas", "🧰", [1, 1], gira=True,
-                                  loot_capaz=False, image="caixa_ferramentas.png"),
+                                  loot_capaz=True, image="caixa_ferramentas.png"),
     "ancinho":        _decor("Ancinho", "🛠️", [1, 1], gira=True, alto=True,
                                loot_capaz=False, image="ancinho.png"),
     "forcado":        _decor("Forcado", "🛠️", [1, 1], gira=True, alto=True,
@@ -11957,7 +11957,7 @@ DECOR_TYPES = {
                                   alto=True, loot_capaz=False,
                                   image="escadaria_luxuosa.png"),
     "mesa_banquete_luxo": _decor("Mesa de banquete luxuosa", "🍷", [2, 3],
-                                    gira=True, alto=True, loot_capaz=False,
+                                    gira=True, alto=True, loot_capaz=True,
                                     image="mesa_banquete_luxo.png"),
     "estante":        _decor("Estante", "🗄️", [1, 2], gira=True, alto=True,
                                image="estante_armas_cranios.png"),
@@ -11968,7 +11968,7 @@ DECOR_TYPES = {
     "coluna":         _decor("Coluna de pedra", "🏛️", [1, 1], alto=True),
     "barril":         _decor("Barril", "🛢️", [1, 1]),
     "barril_cerveja": _decor("Barril de cerveja", "🍺", [1, 1],
-                               loot_capaz=False, image="barril_cerveja.png"),
+                               loot_capaz=True, image="barril_cerveja.png"),
     "arca_tesouros":  _decor("Arca de tesouros", "💰", [1, 1]),
     "cama_casal":     _decor("Cama de casal", "🛌", [2, 2], gira=True),
     "estante_livros": _decor("Estante de livros", "📚", [1, 2], gira=True, alto=True),
@@ -12137,7 +12137,7 @@ DECOR_TYPES = {
                             image="oasis_pequeno.png"),
     "acampamento_abandonado": _decor("Acampamento abandonado", "⛺", [2, 2],
                                       gira=True, alto=True,
-                                      loot_capaz=False,
+                                      loot_capaz=True,
                                       image="acampamento_abandonado.png"),
     # Ruínas altas de pedra, com colunas e trechos de muralha; bloqueiam passagem.
     "ruinas_pedra": _decor("Ruínas de pedra", "🏛️", [2, 2],
@@ -47430,7 +47430,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def handle_envenenar_laminas(self, pid, msg):
         """Aplica um frasco a até dez lâminas de riposta do Ladino."""
-        if not self._is_turn(pid):
+        city_preparation = self._em_cidade(pid) and msg.get("method", "frasco") == "frasco"
+        if city_preparation and self.players.get(pid, {}).get("is_master"):
+            return
+        if not city_preparation and not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         p = self.players.get(pid)
@@ -47514,7 +47517,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_max_itens", max_itens=p.get("bag_size", 6))})
             return
         if method == "frasco":
-            if "coat_poison" in self.BONUS_ACTION_EFFECTS:
+            if not city_preparation and "coat_poison" in self.BONUS_ACTION_EFFECTS:
                 if not await self._executar_acao_bonus(p, narrar=False):
                     return
             if vial_location is not None:
@@ -47526,11 +47529,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p["bag"] = new_bag
         await self.gm_say(T("narracao.municao_envenenada", heroi=p["name"], quantidade=quantity,
                             venenos=nome_veneno, frascos=1))
-        await self.push_state()
+        await self.push_state_or_city()
 
     async def handle_envenenar_municao(self, pid, msg, method_override=None):
         """Valida e aplica de uma só vez os frascos à pilha escolhida."""
-        if not self._is_turn(pid):
+        city_preparation = self._em_cidade(pid) and (method_override or msg.get("method", "frasco")) == "frasco"
+        if city_preparation and self.players.get(pid, {}).get("is_master"):
+            return
+        if not city_preparation and not self._is_turn(pid):
             await self._avisar_controle_de_monstro(pid)
             return
         p = self.players.get(pid)
@@ -47575,7 +47581,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                 venenos_vid_nome=meta["nome"],
                                 desc_veneno=T("narracao.veneno_golpes_desc", n=cargas), custo_sede=1))
             await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
-            await self.push_state()
+            await self.push_state_or_city()
             return
 
         poison_ids = msg.get("poison_ids")
@@ -47668,7 +47674,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.inventario_cheio_max_itens", max_itens=bag_size)}); return
 
         if method == "frasco":
-            if "coat_poison" in self.BONUS_ACTION_EFFECTS:
+            if not city_preparation and "coat_poison" in self.BONUS_ACTION_EFFECTS:
                 # Defer the narration until the vial/ammo transaction is fully
                 # committed; the narrated helper yields to concurrent actions.
                 ok = await self._executar_acao_bonus(p, narrar=False)
@@ -47690,12 +47696,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if method == "veneno_rapido":
             await self._licao_evento(p, "usar_habilidade", alvo="veneno_rapido")
         nomes = ", ".join(_veneno_com_melhorias(vid)["nome"] for vid in poison_ids)
-        if method == "frasco" and "coat_poison" in self.BONUS_ACTION_EFFECTS:
+        if method == "frasco" and not city_preparation and "coat_poison" in self.BONUS_ACTION_EFFECTS:
             await self.gm_say(T("narracao.usou_acao_bonus_fome_sede", heroi=p["name"],
                                 fome=f"{p['fome']:.1f}", sede=f"{p['sede']:.1f}"))
         await self.gm_say(T("narracao.municao_envenenada", heroi=p["name"], quantidade=quantity,
                             venenos=nomes, frascos=len(vials)))
-        await self.push_state()
+        await self.push_state_or_city()
 
     async def _processar_inicio_turno_luccas(self, p):
         """Upkeep das habilidades alternáveis de Luccas no início do seu turno."""
@@ -47918,7 +47924,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p, item_id, source, gear_slot, pocket_index, belt_token)
         if not item or item.get("effect") != "heal":
             return False
-        if p.get("hp", 0) >= p.get("max_hp", 0):
+        fome_item = int(item.get("fome", 0) or 0)
+        sede_item = int(item.get("sede", 0) or 0)
+        if (p.get("hp", 0) >= p.get("max_hp", 0)
+                and not fome_item and not sede_item):
             await self.send_to(pid, {"type": "error", "msg": T("erro.a_vida_ja_esta_cheia")})
             return True
         max_uses = int(item.get("max_uses", 1) or 1)
@@ -47935,29 +47944,86 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if remove_item and not self._consume_action_item(p, item, source_location):
             return True
         cura = self._curar_hp(p, item.get("value", 0), "Poção de cura")
+        if fome_item or sede_item:
+            _restaurar_sobrevivencia(p, fome_item, sede_item)
+            self._verificar_estado_sobrevivencia(p)
         doses_msg = ""
         if max_uses > 1:
             doses_msg = (T("narracao.doses.garrafa_vazia") if remove_item
                          else T("narracao.doses.restantes_destaque", n=uses_left, max=max_uses))
-        await self.gm_say(T("narracao.usa_e_recupera_hp_3", item_emoji=usado.get("emoji", ""),
-                            heroi=p["name"], item=nome_item(usado), val=cura, doses_msg=doses_msg))
+        if fome_item or sede_item:
+            await self.gm_say(T(
+                ("narracao.usa_fermentado_raizes" if usado.get("id") == "fermentado_raizes"
+                 else "narracao.usa_fruto_de_lumen" if usado.get("id") == "fruto_de_lumen"
+                 else "narracao.usa_caldo_revigorante"),
+                item_emoji=usado.get("emoji", "🥣"), heroi=p["name"],
+                item=nome_item(usado), val=cura, fome=fome_item, sede=sede_item))
+        else:
+            await self.gm_say(T("narracao.usa_e_recupera_hp_3", item_emoji=usado.get("emoji", ""),
+                                heroi=p["name"], item=nome_item(usado), val=cura, doses_msg=doses_msg))
+        await self.push_state_or_city()
+        return True
+
+    async def _preparar_veneno_cidade(self, pid, item_id, source, gear_slot, pocket_index, belt_token, weapon_slot):
+        """Prepara a arma equipada com um frasco, sem ações de combate."""
+        p = self.players.get(pid)
+        if not p or not p.get("alive") or p.get("is_master"):
+            return False
+        item, location = self._resolve_consumable_source(
+            p, item_id, source, gear_slot, pocket_index, belt_token)
+        if not item or item.get("effect") != "coat_poison":
+            return False
+        if p.get("petrificado"):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.voce_esta_petrificado_e_nao_pode_agir")})
+            return True
+        weapon = self._arma_do_slot(p, weapon_slot) if weapon_slot in {"weapon", "off_hand"} else None
+        vid = item.get("veneno_id")
+        if (not _veneno_id_valido(vid) or not isinstance(weapon, dict)
+                or not weapon.get("die")):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_foi_possivel_envenenar_a_arma")})
+            return True
+        if weapon.get("id") in RANGED_AMMO:
+            await self.send_to(pid, {"type": "error", "msg": T("erro.selecione_municao_para_envenenar")})
+            return True
+        if not self._validar_aplicacao_veneno_arma(p, vid, weapon_slot):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.veneno_arma_limite")})
+            return True
+        if not self._consume_action_item(p, item, location):
+            return True
+        _, charges = self._aplicar_veneno_na_arma(p, vid, weapon_slot)
+        await self.gm_say(T("narracao.unta_na_arma_2", item_emoji=item.get("emoji", "☠️"),
+                            heroi=p["name"], item=nome_item(item),
+                            desc=T("narracao.veneno_golpes_desc", n=charges)))
         await self.push_state_or_city()
         return True
 
     async def handle_use_item(self, pid, item_id, target_id=None, source="bag", gear_slot=None, pocket_index=None, belt_token=None, target_pos=None, weapon_slot="weapon"):
+        if self._em_cidade(pid) and await self._preparar_veneno_cidade(
+                pid, item_id, source, gear_slot, pocket_index, belt_token, weapon_slot):
+            return
         if self._em_cidade(pid) and await self._usar_pocao_cidade(
                 pid, item_id, source, gear_slot, pocket_index, belt_token):
             return
-        if not self._is_turn(pid):
-            await self._avisar_controle_de_monstro(pid)
-            return
-        p = self.players[pid]
-        if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
-            await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_itens")})
+        p = self.players.get(pid)
+        if not p:
             return
         item, source_location = self._resolve_consumable_source(p, item_id, source, gear_slot, pocket_index, belt_token)
         if not item:
             await self.send_to(pid, {"type": "error", "msg": T("erro.item_nao_encontrado")}); return
+        efeitos_comida_cidade = {"food", "meal_survival", "ration", "ale", "ale_ac",
+                                 "wine", "rum", "hidromel", "absinto"}
+        consumo_sobrevivencia_cidade = (
+            self._em_cidade(pid) and p.get("alive") and not p.get("is_master")
+            and (item.get("effect") in efeitos_comida_cidade
+                 or (item.get("effect") == "heal"
+                     and (item.get("fome", 0) or item.get("sede", 0))))
+        )
+        if not self._is_turn(pid) and not consumo_sobrevivencia_cidade:
+            await self._avisar_controle_de_monstro(pid)
+            return
+        if p.get("metamorfose_ativa") and not p.get("metamorfose_usa_equipamentos"):
+            await self.send_to(pid, {"type":"error", "msg": T("erro.a_forma_transformada_nao_pode_usar_itens")})
+            return
         provision_id = _tutorial_provision_id(item)
         if (self.training_mode and provision_id
                 and self._tutorial_provision_counts(pid, provision_id, used=True)
@@ -48177,7 +48243,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
 
         # SÃ³ efeitos listados como aÃ§Ã£o bÃ´nus consomem esse limite; comida Ã© livre.
-        if effect in self.BONUS_ACTION_EFFECTS and effect not in {"food", "meal_survival"}:
+        if (effect in self.BONUS_ACTION_EFFECTS
+                and effect not in {"food", "meal_survival"}
+                and not consumo_sobrevivencia_cidade):
             # Sem narração intermediária, o caminho do Cálice não cede o loop
             # entre a validação do slot e o consumo/restauração do mesmo.
             ok = await self._executar_acao_bonus(p, narrar=effect != "restore_spell_slot")
