@@ -36,6 +36,7 @@ RELOGIO_ID = "elara_p1"
 FUNDO_PROVISORIO = "assets/cenas/fundos/templo_alva_patio.png"
 IMAGEM_EXEQUIEL = "assets/cenas/personagens/exequiel_corpo_inteiro.png"
 IMAGEM_FIM_FAZENDA = "assets/story/fazenda_fim_rastros.webp"   # o grupo examina os rastros de carroça
+IMAGEM_TEMPLO_AVISTADO = "assets/story/fazenda_fim_templo_avistado.webp"   # o grupo avista o Templo arrombado
 IMAGEM_TEMPLO_SAQUEADO = "assets/story/fazenda_fim_templo_saqueado.webp"   # Exequiel nos degraus do Templo arrombado
 IMAGEM_MENSAGEIRO = "assets/story/fazenda_fim_mensageiro.webp"   # o mensageiro do regente entrega o recado
 IMAGEM_EXEQUIEL_CHAMA = "assets/story/fazenda_fim_exequiel_chama.webp"   # Exequiel chama o grupo de volta ao Templo
@@ -136,6 +137,7 @@ def slides_fim_da_fazenda():
          "text": "Os últimos bandidos tombam e o silêncio volta aos campos da Fazenda do Leste. Nada das "
                  "moças: só rastros de carroça, camas feitas às pressas e a sensação de que alguém quis "
                  "prender vocês ali. Vocês voltam a Alva e Luz sem perder tempo.", "fit": "cover"},
+        {"image": IMAGEM_TEMPLO_AVISTADO, "fit": "cover", "text": "“Ei! Vejam aquilo!”"},
         {"image": IMAGEM_TEMPLO_SAQUEADO, "fit": "cover",
          "text": "Exequiel espera nos degraus do Templo, pálido, de mãos trêmulas. “Os bandidos voltaram. "
                  "Enquanto vocês estavam na fazenda, entraram aqui e levaram o Olho. Não posso dizer mais "
