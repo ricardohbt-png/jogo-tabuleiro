@@ -5315,14 +5315,14 @@ def estado_corrosao_T(estado):
 MONSTER_DEFS = [
     # Formas animais básicas da Metamorfose. São opções permanentes de todos
     # os personagens e não aparecem em encontros aleatórios.
-    {"type":"pombo", "name":"Pombo", "emoji":"🕊️", "tier":0, "cr":0,
+    {"type":"pombo", "name":"Pombo", "emoji":"🕊️", "portrait":"pombo_retrato", "tier":0, "cr":0,
      "hp":1, "ac":17, "size":[1,1], "movement":9, "movement_exception":True,
      "str_":2, "dex":17, "con_":10, "int_":2, "fort":2, "ref_":5, "will":2,
      "initiative_bonus":-4, "vision_base":0, "attacks":[], "special_abilities":[],
      "voo":True, "altura_inicial":2, "altura_max":10, "porte":"minusculo",
      "subtipo":"animal", "spawn_min":0, "spawn_max":0,
      "undead":False, "boss":False, "foge_se_nd_zero":True},
-    {"type":"rato", "name":"Rato", "emoji":"🐀", "tier":0, "cr":0,
+    {"type":"rato", "name":"Rato", "emoji":"🐀", "portrait":"rato_retrato", "tier":0, "cr":0,
      "hp":1, "ac":14, "natural_armor":2, "size":[1,1], "movement":4, "movement_exception":True,
      "str_":2, "dex":15, "con_":10, "int_":2, "fort":2, "ref_":4, "will":1,
      "initiative_bonus":-4, "vision_base":0,
@@ -5335,14 +5335,14 @@ MONSTER_DEFS = [
      "initiative_bonus":-4, "vision_base":0,
      "attacks":[{"name":"Garras","atk_bonus":4,"damage":"1","damage_types":[DMG_PHYSICAL],"num_attacks":2}],
      "special_abilities":[], "visao_escuro":True, "darkvision_range":8, "porte":"pequeno",
-     "subtipo":"animal", "spawn_min":0, "spawn_max":0,
+     "subtipo":"animal", "portrait":"gato_retrato", "spawn_min":0, "spawn_max":0,
      "undead":False, "boss":False, "foge_se_nd_zero":True},
     {"type":"ovelha", "name":"Ovelha", "emoji":"🐑", "tier":0, "cr":0,
      "hp":6, "ac":10, "size":[1,1], "movement":6, "movement_exception":True,
      "str_":11, "dex":10, "con_":15, "int_":2, "fort":4, "ref_":2, "will":1,
      "initiative_bonus":-3, "vision_base":0,
      "attacks":[{"name":"Cabeçada","atk_bonus":1,"damage":"1d4","damage_types":[DMG_PHYSICAL],"num_attacks":1}],
-     "special_abilities":[], "porte":"medio", "subtipo":"animal",
+     "special_abilities":[], "porte":"medio", "subtipo":"animal", "portrait":"ovelha_retrato",
      "spawn_min":0, "spawn_max":0, "undead":False, "boss":False, "foge_se_nd_zero":True},
     {"type":"vaca", "name":"Vaca Arisca", "emoji":"🐄", "tier":0, "cr":0.25,
      "hp":16, "ac":11, "size":[1,1], "movement":6,
@@ -5353,7 +5353,7 @@ MONSTER_DEFS = [
          {"kind":"item", "item_id":"carne_bovina", "chance":100, "quantity_range":[1,3]},
          {"kind":"item", "item_id":"leite", "chance":100, "quantity_range":[1,4]},
      ], "gold":0, "spawn_min":0, "spawn_max":0, "ai_type":"vaca_passiva",
-     "porte":"medio", "image":"vaca", "subtipo":"animal", "undead":False, "boss":False},
+     "porte":"medio", "image":"vaca", "portrait":"vaca_arisca_retrato", "subtipo":"animal", "undead":False, "boss":False},
     {"type":"cavalo_sela", "name":"Cavalo de Sela", "emoji":"🐎", "tier":0, "cr":0.25,
      "hp":16, "ac":11, "size":[1,1], "movement":8, "movement_exception":True,
      "str_":16, "dex":12, "con_":14, "int_":2, "fort":4, "ref_":3, "will":1,
@@ -5363,7 +5363,7 @@ MONSTER_DEFS = [
                             "action_type":"passiva", "cooldown_turns":4,
                             "descricao":"Dobra o deslocamento neste turno. Recarga: 4 rodadas."}],
      "gold":0, "spawn_min":0, "spawn_max":0, "ai_type":"cavalo_passivo",
-     "porte":"medio", "image":"cavalo_sela", "subtipo":"animal", "undead":False, "boss":False},
+     "porte":"medio", "image":"cavalo_sela", "portrait":"cavalo_sela_retrato", "subtipo":"animal", "undead":False, "boss":False},
     # â”€â”€ Placeholders (sistema legado) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     # TODO: Substituir por monstros reais com fichas completas
     {"type": "goblin",    "name": "Goblin",         "emoji": "👺", "hp": 8,  "ac": 12, "atk_bonus": 2,  "damage": "1d4", "xp": 10,  "gold": 5,   "tier": 1, "cr": 0.25, "vscale": [0.6, 0.6]},
@@ -5375,6 +5375,7 @@ MONSTER_DEFS = [
      "equipment_enabled": True, "equipped_items": [], "subtipo": "morto_vivo",
      "darkvision_range": 4, "ai_type": "esqueleto_humano",
      "image": "esqueletoArmadurado", "model3d": "assets/models3d/monstros/esqueleto_armadurado.glb",
+     "portrait": "esqueleto_armadurado",
      "attacks": [{"name": "Espada Curta", "atk_bonus": 5, "damage": "1d6",
                   "damage_types": ["physical"], "num_attacks": 1,
                   "categoria": "cortante"}],
@@ -5397,7 +5398,7 @@ MONSTER_DEFS = [
           "vulnerabilidade": True, "descricao": "Vulnerabilidade: -2 em testes de Vontade"},
      ], "loot_table": {"1-100": None}, "spawn_min": 0, "spawn_max": 0,
      "porte": "medio", "undead": True, "boss": False},
-    {"type": "orc",       "name": "Orc",            "emoji": "👹", "hp": 16, "ac": 14, "atk_bonus": 5,  "damage": "1d8", "xp": 25,  "gold": 12,  "tier": 2, "cr": 0.75},
+    {"type": "orc",       "name": "Orc",            "emoji": "👹", "hp": 16, "ac": 14, "atk_bonus": 5,  "damage": "1d8", "xp": 25,  "gold": 12,  "tier": 2, "cr": 0.75, "portrait": "orc_comum"},
     {
         "type": "dark_mage", "name": "Mago das Trevas", "emoji": "🧟",
         "tier": 2, "cr": 1, "level": 1, "caster_level": 1,
@@ -5422,7 +5423,7 @@ MONSTER_DEFS = [
         },
         "gold_range": [4, 12], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "porte": "medio",
-        "image": "necromante", "subtipo": "raca_padrao", "undead": False, "boss": False,
+        "image": "necromante", "portrait": "mago_das_trevas", "subtipo": "raca_padrao", "undead": False, "boss": False,
     },
     {
         "type": "bardo", "name": "Bardo", "emoji": "🎻",
@@ -5503,7 +5504,7 @@ MONSTER_DEFS = [
         "loot_table": {"1-50": None, "51-80": {"tipo": "gold", "valor": 8},
                         "81-100": {"tipo": "item", "id": "pocao_cura"}},
         "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "troll", "porte": "grande", "image": "troll",
+        "ai_type": "troll", "porte": "grande", "image": "troll", "portrait": "troll",
         "undead": False, "boss": False,
     },
     {"type": "dragon",    "name": "Dragão Ancião",  "emoji": "🐉", "hp": 60, "ac": 20, "atk_bonus": 12, "damage": "2d8", "xp": 200, "gold": 100, "tier": 4, "cr": 5.0, "boss": True},
@@ -5539,6 +5540,7 @@ MONSTER_DEFS = [
         "ai_type": "emboscador",
         "porte": "medio",
         "image": "aranhasombria",
+        "portrait": "aranha_sombria",
         "undead": False, "boss": False,
     },
     {
@@ -5566,6 +5568,7 @@ MONSTER_DEFS = [
         "ai_type": "agressivo",
         "porte": "medio",
         "image": "escorpiaodepedra",
+        "portrait": "escorpiao_pedra",
         "undead": False, "boss": False,
     },
     # ── Lacralion ─────────────────────────────────────────────────────────────
@@ -5593,7 +5596,7 @@ MONSTER_DEFS = [
         ],
         "immunities": [], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
-        "porte": "grande", "image": "lacralion", "subtipo": "animal",
+        "porte": "grande", "image": "lacralion", "portrait": "lacralion_retrato", "subtipo": "animal",
         "undead": False, "boss": False,
     },
     {
@@ -5625,7 +5628,7 @@ MONSTER_DEFS = [
         ],
         "immunities": [], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
-        "porte": "grande", "image": "lacralion", "subtipo": "animal",
+        "porte": "grande", "image": "lacralion", "portrait": "lacralion_retrato", "subtipo": "animal",
         "undead": False, "boss": False,
     },
     {
@@ -5659,7 +5662,7 @@ MONSTER_DEFS = [
         ],
         "immunities": [], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
-        "porte": "grande", "image": "lacralion", "subtipo": "animal",
+        "porte": "grande", "image": "lacralion", "portrait": "lacralion_retrato", "subtipo": "animal",
         "undead": False, "boss": False,
     },
     # â”€â”€ Esqueleto Humano â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5706,6 +5709,7 @@ MONSTER_DEFS = [
         "ai_type": "esqueleto_humano",
         "porte": "medio",
         "image": "esqueletoHumano",
+        "portrait": "esqueleto_humano",
         "undead": True, "boss": False,
     },
     # â”€â”€ Esqueleto Animal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5749,6 +5753,7 @@ MONSTER_DEFS = [
         "ai_type": "esqueleto_animal",
         "porte": "medio",
         "image": "esqueletoAnimal",
+        "portrait": "esqueleto_animal",
         "undead": True, "boss": False,
     },
     # â”€â”€ Lobo Cinzento â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5778,6 +5783,7 @@ MONSTER_DEFS = [
         "ai_type": "lobo_cinzento",
         "porte": "medio",
         "image": "loboCinzento",
+        "portrait": "lobo_cinzento",
         "undead": False, "boss": False,
     },
     # â”€â”€ Crocodilo Jovem (ND 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5814,6 +5820,7 @@ MONSTER_DEFS = [
         "ai_type": "crocodilo_jovem",
         "porte": "medio",
         "image": "crocodiloJovem",
+        "portrait": "crocodilo_jovem",
         "undead": False, "boss": False,
     },
     # Jacaré (ND 2): uma versão maior e mais resistente do Crocodilo Jovem.
@@ -5882,6 +5889,7 @@ MONSTER_DEFS = [
         "ai_type": "cobra_constritora",
         "porte": "grande",
         "image": "cobraConstritora",
+        "portrait": "cobra_constritora",
         "undead": False, "boss": False,
     },
     # â”€â”€ Cobra Venenosa (ND 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5919,6 +5927,7 @@ MONSTER_DEFS = [
         "ai_type": "cobra_venenosa",
         "porte": "medio",
         "image": "cobraVenenosa",
+        "portrait": "cobra_venenosa",
         "undead": False, "boss": False,
     },
     # â”€â”€ Devorador OrgÃ¢nico (ND 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5956,6 +5965,7 @@ MONSTER_DEFS = [
         "ai_type": "devorador_organico",
         "porte": "medio",
         "image": "devoradorOrganico",
+        "portrait": "devorador_organico",
         "undead": False, "boss": False,
     },
     # â”€â”€ Urso Negro (ND 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -5989,6 +5999,7 @@ MONSTER_DEFS = [
         "ai_type": "agressivo",
         "porte": "grande",
         "image": "ursoNegro",
+        "portrait": "urso_negro",
         "undead": False, "boss": False,
     },
     # Urso Pardo (ND 3): variante mais resistente e agressiva do Urso Negro.
@@ -6027,6 +6038,7 @@ MONSTER_DEFS = [
         "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1,
         "ai_type": "agressivo", "porte": "grande", "image": "ursoNegro",
+        "portrait": "urso_pardo",
         "undead": False, "boss": False,
     },
     # â”€â”€ Orc Guerreiro (ND 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6066,6 +6078,7 @@ MONSTER_DEFS = [
         "ai_type": "orc_guerreiro",
         "porte": "medio",
         "image": "orcGuerreiro",
+        "portrait": "orc_guerreiro",
         "undead": False, "boss": False,
     },
     # â”€â”€ Goblins das Fendas (base: HP 9 / CA 13 / Mov 6) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6098,6 +6111,7 @@ MONSTER_DEFS = [
         "ai_type": "goblin_arqueiro",
         "porte": "pequeno",
         "image": "goblinArqueiro", "vscale": [0.6, 0.6],
+        "portrait": "goblin_arqueiro",
         "undead": False, "boss": False,
     },
     {
@@ -6138,6 +6152,7 @@ MONSTER_DEFS = [
         "ai_type": "goblin_melee",
         "porte": "pequeno",
         "image": "goblinCombatente", "vscale": [0.6, 0.6],
+        "portrait": "goblin_combatente",
         "undead": False, "boss": False,
     },
     {
@@ -6181,6 +6196,7 @@ MONSTER_DEFS = [
         "ai_type": "goblin_melee",
         "porte": "medio",
         "image": "goblinDual", "vscale": [0.6, 0.6],
+        "portrait": "goblin_dual",
         "undead": False, "boss": False,
     },
     {
@@ -6225,6 +6241,7 @@ MONSTER_DEFS = [
         "ai_type": "goblin_assassin",
         "porte": "medio",
         "image": "goblinDual", "vscale": [0.6, 0.6],
+        "portrait": "goblin_assassino",
         "undead": False, "boss": False,
     },
     {
@@ -6337,6 +6354,7 @@ MONSTER_DEFS = [
         "ai_type": "goblin_xama",
         "porte": "pequeno",
         "image": "xamaGoblin", "vscale": [0.6, 0.6],
+        "portrait": "goblin_xama",
         "undead": False, "boss": False,
     },
     # â”€â”€ Kobolds (surgem juntos: 1-4 lanceiros + 1-2 besteiros) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6369,6 +6387,7 @@ MONSTER_DEFS = [
         "ai_type": "kobold_lanceiro",
         "porte": "pequeno",
         "image": "koboldlanceiro",
+        "portrait": "kobold_lanceiro",
         "vscale": [0.5, 0.5],
         "undead": False, "boss": False,
     },
@@ -6400,6 +6419,7 @@ MONSTER_DEFS = [
         "ai_type": "kobold_besteiro",
         "porte": "pequeno",
         "image": "koboldbesteiro",
+        "portrait": "kobold_besteiro",
         "vscale": [0.5, 0.5],
         "undead": False, "boss": False,
     },
@@ -6429,7 +6449,7 @@ MONSTER_DEFS = [
         "loot_table": {"1-100": None},
         "spawn_min": 0, "spawn_max": 0,
         "ai_type": "agressivo", "porte": "pequeno",
-        "image": "kobold_mago", "vscale": [0.5, 0.5],
+        "image": "kobold_mago", "portrait": "kobold_mago", "vscale": [0.5, 0.5],
         "undead": False, "boss": False,
     },
     # â”€â”€ Necromante (ND 2): mago nÃ­vel 2, conjurador + mestre dos mortos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6474,6 +6494,7 @@ MONSTER_DEFS = [
         "ai_type": "necromante",
         "porte": "medio",
         "image": "necromante",
+        "portrait": "necromante",
         "undead": False, "boss": False,
     },
     # â”€â”€ Zumbi Infectado (ND 1): morto-vivo lento que transmite doenÃ§a â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6511,6 +6532,7 @@ MONSTER_DEFS = [
         "ai_type": "zumbi",
         "porte": "medio",
         "image": "zumbi",
+        "portrait": "zumbi_infectado",
         "undead": True, "boss": False,
     },
     # â”€â”€ Lagarto Carniceiro (ND 2): predador de 2 casas em linha (frente/trÃ¡s) â”€â”€â”€â”€
@@ -6583,6 +6605,7 @@ MONSTER_DEFS = [
         "ai_type": "devorador_metal",
         "porte": "medio",
         "image": "devoradordemetal",
+        "portrait": "devorador_metal",
         "undead": False, "boss": False,
     },
     # â”€â”€ Bugbear â€” Bicho-PapÃ£o das Sombras (ND 2): caÃ§ador furtivo das trevas â”€â”€â”€â”€â”€
@@ -6641,6 +6664,7 @@ MONSTER_DEFS = [
         "ai_type": "bugbear_sombras",
         "porte": "medio",
         "image": "bugbear",          # assets/pawns/monstros/bugbear/bugbear.png
+        "portrait": "bugbear_das_sombras",
         "undead": False, "boss": False,
     },
     # â”€â”€ Ogro de Clava (ND 2): bruto ofensivo (ocupa 1 tile) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -6679,6 +6703,7 @@ MONSTER_DEFS = [
         "ai_type": "ogro",
         "porte": "grande",
         "image": "ogroClava",
+        "portrait": "ogro_clava",
         "undead": False, "boss": False,
     },
     # â”€â”€ Ogro de LanÃ§a (ND 2): bruto defensivo (ocupa 1 tile), alcance estendido â”€â”€
@@ -6718,6 +6743,7 @@ MONSTER_DEFS = [
         "ai_type": "ogro",
         "porte": "grande",
         "image": "ogroLanca",
+        "portrait": "ogro_lanca",
         "undead": False, "boss": False,
     },
     # GrotÃ£o: predador blindado orientado; a cabeÃ§a ocupa a Ã¢ncora e a cauda a casa traseira.
@@ -6777,7 +6803,7 @@ MONSTER_DEFS = [
                          "descricao": "Gelo causa 1,5× de dano."}],
         "loot_table": {"1-55": None, "56-85": {"tipo": "gold", "valor": 3}, "86-100": {"tipo": "gold", "valor": 6}},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo", "porte": "medio",
-        "image": "elemental_fogo", "subtipo": "construto", "undead": False, "boss": False,
+        "image": "elemental_fogo", "portrait": "elemental_fogo_retrato", "subtipo": "construto", "undead": False, "boss": False,
     },
     # Elemental de Gelo (ND 3): defesa cumulativa e controle de deslocamento.
     {
@@ -6814,7 +6840,7 @@ MONSTER_DEFS = [
                          "descricao": "Fogo causa 1,5× de dano."}],
         "loot_table": {"1-100": {"tipo": "gold", "valor": "2d6"}},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo", "porte": "medio",
-        "image": "elemental_gelo", "subtipo": "construto", "undead": False, "boss": False,
+        "image": "elemental_gelo", "portrait": "elemental_gelo_retrato", "subtipo": "construto", "undead": False, "boss": False,
     },
     # Elemental de Pedra (ND 3): lento, resistente e muito perigoso quando parado.
     {
@@ -6844,7 +6870,7 @@ MONSTER_DEFS = [
                          "descricao": "Dano contundente ignora reduções e causa +2 de dano."}],
         "loot_table": {"1-100": {"tipo": "gold", "valor": "2d6"}},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo", "porte": "medio",
-        "image": "elemental_pedra", "subtipo": "construto", "undead": False, "boss": False,
+        "image": "elemental_pedra", "portrait": "elemental_pedra_retrato", "subtipo": "construto", "undead": False, "boss": False,
     },
     # Elemental ElÃ©trico (ND 3): atirador veloz que atravessa o campo de batalha.
     {
@@ -6886,7 +6912,7 @@ MONSTER_DEFS = [
         "monster_spells": [{"id": "relampago", "limit_mode": "cooldown", "cooldown_turns": 6}],
         "loot_table": {"1-100": {"tipo": "gold", "valor": "2d6"}},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo", "porte": "medio",
-        "image": "elemental_eletrico", "subtipo": "construto", "undead": False, "boss": False,
+        "image": "elemental_eletrico", "portrait": "elemental_eletrico_retrato", "subtipo": "construto", "undead": False, "boss": False,
     },
     {
         "type": "elemental_ar", "name": "Elemental de Ar", "emoji": "🌪️",
@@ -6919,7 +6945,7 @@ MONSTER_DEFS = [
         "weaknesses": [{"type": "fire", "multiplier": 2, "descricao": "Fogo causa dano dobrado."}],
         "loot_table": {"1-100": {"tipo": "gold", "valor": "2d6"}},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo", "porte": "medio",
-        "image": "elemental_ar", "subtipo": "construto", "undead": False, "boss": False,
+        "image": "elemental_ar", "portrait": "elemental_ar_retrato", "subtipo": "construto", "undead": False, "boss": False,
     },
     {
         "type": "elemental_agua", "name": "Elemental de Água", "emoji": "🌊",
@@ -6939,7 +6965,7 @@ MONSTER_DEFS = [
         "immunities": [], "resistances": [{"type": "physical", "mode": "half"}, {"type": "fire", "mode": "half"}],
         "weaknesses": [{"type": "lightning", "multiplier": 2, "descricao": "Eletricidade causa dano dobrado."}],
         "loot_table": {"1-100": {"tipo": "gold", "valor": "2d6"}}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "medio", "image": "elemental_agua", "subtipo": "construto", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "medio", "image": "elemental_agua", "portrait": "elemental_agua_retrato", "subtipo": "construto", "undead": False, "boss": False,
     },
     {"type":"lobisomem","name":"Lobisomem","emoji":"🐺","tier":3,"cr":3,
      "hp":31,"ac":17,"natural_armor":4,"size":[1,1],"movement":6,
@@ -6947,18 +6973,18 @@ MONSTER_DEFS = [
      "attacks":[{"name":"Garras","atk_bonus":6,"damage":"1d4","damage_types":["physical"],"num_attacks":2,"attack_attribute":"str_","apply_attribute_damage":True,"attribute_mod_base":4,"base_attack_bonus":2,"on_hit":None},{"name":"Mordida","atk_bonus":4,"damage":"1d6","damage_types":["physical"],"num_attacks":1,"attack_attribute":"str_","apply_attribute_damage":True,"attribute_mod_base":4,"base_attack_bonus":0,"on_hit":None}],
      "special_abilities":[{"id":"olfato_agucado","name":"Olfato Aguçado","action_type":"passiva","descricao":"Detecta invisíveis e impede ocultação."},{"id":"pele_amaldicoada","name":"Pele Amaldiçoada","action_type":"passiva","descricao":"Armas não mágicas e sem prata causam metade do dano."},{"id":"regeneracao_lobisomem","name":"Regeneração","action_type":"passiva","descricao":"Recupera 2 HP no início do turno, exceto após dano mágico ou de prata."},{"id":"furia_bestial_lobisomem","name":"Fúria Bestial","action_type":"passiva","descricao":"Com 12 HP ou menos: +2 ataque e dano."}],
      "immunities":[],"resistances":[],"weaknesses":[{"type":"silver","multiplier":2,"descricao":"Prata causa dano dobrado e bloqueia regeneração."}],
-     "loot_drops":[{"kind":"gold","amount":10,"chance":30},{"kind":"gold","amount":15,"chance":30},{"kind":"gold","amount":20,"chance":25},{"kind":"gold","amount":35,"chance":15},{"kind":"gold","amount":50,"chance":5}],"loot_table":{},"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lobisomem","subtipo":"raca_padrao","undead":False,"boss":False},
+     "loot_drops":[{"kind":"gold","amount":10,"chance":30},{"kind":"gold","amount":15,"chance":30},{"kind":"gold","amount":20,"chance":25},{"kind":"gold","amount":35,"chance":15},{"kind":"gold","amount":50,"chance":5}],"loot_table":{},"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lobisomem","portrait":"lobisomem_retrato","subtipo":"raca_padrao","undead":False,"boss":False},
     {"type":"lobisomem_alfa","name":"Lobisomem Alfa","emoji":"🐺","tier":6,"cr":6,
      "hp":85,"ac":19,"natural_armor":6,"size":[1,1],"movement":6,
      "str_":20,"dex":16,"con_":18,"int_":10,"fort":8,"ref_":6,"will":4,
      "attacks":[{"name":"Garras","atk_bonus":8,"damage":"2d6+5","damage_types":["physical"],"num_attacks":2,"categoria":"cortante"},{"name":"Mordida","atk_bonus":8,"damage":"2d8+5","damage_types":["physical"],"num_attacks":1,"categoria":"perfurante"}],
      "special_abilities":[{"id":"olfato_agucado","name":"Olfato Aguçado","action_type":"passiva","descricao":"Detecta heróis invisíveis e ocultos."},{"id":"pele_amaldicoada","name":"Pele Amaldiçoada","action_type":"passiva","descricao":"Armas não mágicas e sem prata causam metade do dano; prata causa dano dobrado."},{"id":"regeneracao_lobisomem_alfa","name":"Regeneração Alfa","action_type":"passiva","amount":5,"descricao":"Recupera 5 PV por turno e pode voltar com 1 PV ao cair, salvo morte definitiva por prata ou fogo."}],
      "immunities":[],"resistances":[],"weaknesses":[{"type":"silver","multiplier":2,"descricao":"Prata causa dano dobrado; um golpe letal de prata impede o retorno."}],
-     "loot_drops":[{"kind":"gold","amount":10,"chance":30},{"kind":"gold","amount":15,"chance":30},{"kind":"gold","amount":20,"chance":25},{"kind":"gold","amount":35,"chance":15},{"kind":"gold","amount":50,"chance":5}],"loot_table":{},"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lobisomem_alfa","subtipo":"raca_padrao","undead":False,"boss":False},
-    {"type":"escravo_vampirico","name":"Escravo Vampírico","emoji":"🧛","tier":3,"cr":3,"hp":18,"ac":15,"size":[1,1],"movement":6,"str_":14,"dex":14,"con_":10,"int_":6,"fort":2,"ref_":4,"will":4,"attacks":[{"name":"Espada Curta","atk_bonus":4,"damage":"1d6+2","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":3,"damage":"1d4+2","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva","descricao":"Armas comuns sofrem –5; prata, magia e magias ignoram."},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva","descricao":"Recupera 5 HP; sagrado/luz e fogo bloqueiam."},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva","descricao":"A mordida cura o dano causado."},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva","descricao":"Retorna uma vez após 1d4 rodadas, salvo dano sagrado/luz suficiente."}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"loot_drops":[{"kind":"item","item_id":"pocao_cura","chance":25}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"cria_vampirica","subtipo":"morto_vivo","undead":True,"boss":False},
-    {"type":"vampiro_jovem","name":"Vampiro Jovem","emoji":"🧛","tier":5,"cr":5,"hp":28,"ac":17,"size":[1,1],"movement":6,"str_":16,"dex":18,"con_":10,"int_":12,"fort":4,"ref_":6,"will":5,"attacks":[{"name":"Espada Longa","atk_bonus":6,"damage":"1d8+3","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":5,"damage":"1d6+3","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_vampirico","name":"Encantar","action_type":"acao","dc":12,"cooldown_turns":3},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"vampiro","subtipo":"morto_vivo","undead":True,"boss":False},
-    {"type":"vampiro_anciao","name":"Vampiro Ancião","emoji":"🧛","tier":7,"cr":7,"hp":42,"ac":19,"size":[1,1],"movement":6,"str_":18,"dex":20,"con_":10,"int_":16,"fort":6,"ref_":8,"will":8,"attacks":[{"name":"Espada Bastarda","atk_bonus":9,"damage":"1d10+5","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":8,"damage":"1d8+5","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_area_vampirico","name":"Encantar em Área","action_type":"acao","dc":13,"range":4,"cooldown_turns":2},{"id":"comandar_escravos","name":"Comandar Escravos","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"mestre_vampiro","subtipo":"morto_vivo","undead":True,"boss":False},
-    {"type":"lorde_vampiro","name":"Lorde Vampiro","emoji":"👑🧛","tier":9,"cr":9,"hp":60,"ac":21,"size":[1,1],"movement":6,"str_":20,"dex":22,"con_":10,"int_":18,"fort":8,"ref_":10,"will":10,"attacks":[{"name":"Espada Longa Mágica","atk_bonus":12,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":11,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_supremo_vampirico","name":"Encantar Supremo em Área","action_type":"acao","dc":14,"range":6,"cooldown_turns":2},{"id":"comandar_vampiros","name":"Comandar Vampiros","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lorde_vampiro","subtipo":"morto_vivo","undead":True,"boss":True},
+     "loot_drops":[{"kind":"gold","amount":10,"chance":30},{"kind":"gold","amount":15,"chance":30},{"kind":"gold","amount":20,"chance":25},{"kind":"gold","amount":35,"chance":15},{"kind":"gold","amount":50,"chance":5}],"loot_table":{},"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lobisomem_alfa","portrait":"lobisomem_alfa_retrato","subtipo":"raca_padrao","undead":False,"boss":False},
+    {"type":"escravo_vampirico","name":"Escravo Vampírico","emoji":"🧛","tier":3,"cr":3,"hp":18,"ac":15,"size":[1,1],"movement":6,"str_":14,"dex":14,"con_":10,"int_":6,"fort":2,"ref_":4,"will":4,"attacks":[{"name":"Espada Curta","atk_bonus":4,"damage":"1d6+2","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":3,"damage":"1d4+2","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva","descricao":"Armas comuns sofrem –5; prata, magia e magias ignoram."},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva","descricao":"Recupera 5 HP; sagrado/luz e fogo bloqueiam."},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva","descricao":"A mordida cura o dano causado."},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva","descricao":"Retorna uma vez após 1d4 rodadas, salvo dano sagrado/luz suficiente."}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"loot_drops":[{"kind":"item","item_id":"pocao_cura","chance":25}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"cria_vampirica","portrait":"cria_vampirica_retrato","subtipo":"morto_vivo","undead":True,"boss":False},
+    {"type":"vampiro_jovem","name":"Vampiro Jovem","emoji":"🧛","tier":5,"cr":5,"hp":28,"ac":17,"size":[1,1],"movement":6,"str_":16,"dex":18,"con_":10,"int_":12,"fort":4,"ref_":6,"will":5,"attacks":[{"name":"Espada Longa","atk_bonus":6,"damage":"1d8+3","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":5,"damage":"1d6+3","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_vampirico","name":"Encantar","action_type":"acao","dc":12,"cooldown_turns":3},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"vampiro","portrait":"vampiro_retrato","subtipo":"morto_vivo","undead":True,"boss":False},
+    {"type":"vampiro_anciao","name":"Vampiro Ancião","emoji":"🧛","tier":7,"cr":7,"hp":42,"ac":19,"size":[1,1],"movement":6,"str_":18,"dex":20,"con_":10,"int_":16,"fort":6,"ref_":8,"will":8,"attacks":[{"name":"Espada Bastarda","atk_bonus":9,"damage":"1d10+5","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":8,"damage":"1d8+5","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_area_vampirico","name":"Encantar em Área","action_type":"acao","dc":13,"range":4,"cooldown_turns":2},{"id":"comandar_escravos","name":"Comandar Escravos","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"mestre_vampiro","portrait":"vampiro_anciao_retrato","subtipo":"morto_vivo","undead":True,"boss":False},
+    {"type":"lorde_vampiro","name":"Lorde Vampiro","emoji":"👑🧛","tier":9,"cr":9,"hp":60,"ac":21,"size":[1,1],"movement":6,"str_":20,"dex":22,"con_":10,"int_":18,"fort":8,"ref_":10,"will":10,"attacks":[{"name":"Espada Longa Mágica","atk_bonus":12,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1},{"name":"Mordida","atk_bonus":11,"damage":"1d8+7","damage_types":["physical"],"num_attacks":1}],"special_abilities":[{"id":"reducao_vampirica","name":"Redução de Dano 5","action_type":"passiva"},{"id":"cura_acelerada_vampirica","name":"Cura Acelerada","action_type":"passiva"},{"id":"drenar_vida","name":"Drenar Vida","action_type":"passiva"},{"id":"encantar_supremo_vampirico","name":"Encantar Supremo em Área","action_type":"acao","dc":14,"range":6,"cooldown_turns":2},{"id":"comandar_vampiros","name":"Comandar Vampiros","action_type":"passiva"},{"id":"ressurreicao_vampirica","name":"Ressurreição Vampírica","action_type":"passiva"}],"immunities":["poison","sono"],"resistances":[{"type":"physical","reduction":5}],"weaknesses":[{"type":"fire","multiplier":1.5},{"type":"holy","multiplier":2}],"spawn_min":1,"spawn_max":1,"ai_type":"agressivo","porte":"medio","image":"lorde_vampiro","portrait":"lorde_vampiro_retrato","subtipo":"morto_vivo","undead":True,"boss":True},
 ]
 BARDO_DISTANCIA_SEGURA = 2   # herói a esta distância ou menos faz o bardo atirador recuar
 
@@ -6983,6 +7009,7 @@ def _variante_bardo_caravana():
             "ammunition": {"count": 20, "incendiary_chance": {"hand_crossbow": 25, "besta": 30}},
         },
     })
+    v["portrait"] = "bardo_da_caravana"
     v["attacks"][0]["atk_bonus"] = 6
     for ab in v["special_abilities"]:
         if ab["id"] == "bardo_provocacao":
@@ -7019,7 +7046,7 @@ MONSTER_DEFS.extend([
             {"id": "veneno_charcos", "name": "Veneno", "action_type": "passiva", "attack_index": 3, "poison_dc": 15, "effect": "perde_movimento", "descricao": "Ao acertar o Ferrão, Fortitude CD 15; falha: perde a ação de movimento no próximo turno."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
-        "porte": "grande", "image": "ferrao_do_lamacal", "subtipo": "aberracao", "undead": False, "boss": False,
+        "porte": "grande", "image": "ferrao_do_lamacal", "portrait": "ferrao_charcos_retrato", "subtipo": "aberracao", "undead": False, "boss": False,
     },
     {
         "type": "ferrao_charcos_adulto", "name": "Ferrão dos Charcos Adulto", "emoji": "🦂",
@@ -7039,7 +7066,7 @@ MONSTER_DEFS.extend([
             {"id": "nuvem_acida", "name": "Nuvem Ácida", "action_type": "acao", "cooldown_turns": 4, "range": 4, "radius": 1, "duration": 2, "initial_damage": "2d6", "tick_damage": "1d6", "damage_types": ["acid"], "descricao": "Recarga 4 rodadas. Centro no alvo; raio 1. Causa 2d6 ao surgir e 1d6 no turno de cada criatura dentro da área."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
-        "porte": "grande", "image": "ferrao_do_lamacal", "subtipo": "aberracao", "undead": False, "boss": False,
+        "porte": "grande", "image": "ferrao_do_lamacal", "portrait": "ferrao_charcos_retrato", "subtipo": "aberracao", "undead": False, "boss": False,
     },
     {
         "type": "ferrao_charcos_anciao", "name": "Ferrão dos Charcos Ancião", "emoji": "🦂",
@@ -7060,7 +7087,7 @@ MONSTER_DEFS.extend([
             {"id": "predador_implacavel", "name": "Predador Implacável", "action_type": "passiva", "max_targets": 2, "descricao": "Pode manter dois inimigos Imobilizados ao mesmo tempo."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1, "ai_type": "agressivo",
-        "porte": "grande", "image": "ferrao_do_lamacal", "subtipo": "aberracao", "undead": False, "boss": False,
+        "porte": "grande", "image": "ferrao_do_lamacal", "portrait": "ferrao_charcos_retrato", "subtipo": "aberracao", "undead": False, "boss": False,
     },
 ])
 
@@ -7103,7 +7130,7 @@ MONSTER_DEFS.extend([
         ],
         "immunities": [], "resistances": [{"type": "physical", "reduction": 4, "common_weapon_only": True}], "weaknesses": [],
         "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "tiranossauro_rex", "porte": "enorme", "image": "tiranossauro_rex",
+        "ai_type": "tiranossauro_rex", "porte": "enorme", "image": "tiranossauro_rex", "portrait": "tiranossauro_rex_retrato",
         "subtipo": "animal", "undead": False, "boss": False,
     },
     {
@@ -7140,7 +7167,7 @@ MONSTER_DEFS.extend([
         "immunities": [],
         "weaknesses": [{"type": "poison", "multiplier": 2, "descricao": "Metabolismo Vulnerável: dano de veneno dobrado."}],
         "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "tirano_da_mata", "porte": "grande", "image": "tirano_da_mata",
+        "ai_type": "tirano_da_mata", "porte": "grande", "image": "tirano_da_mata", "portrait": "tirano_da_mata_retrato",
         "subtipo": "besta_magica", "undead": False, "boss": False,
     },
     {
@@ -7186,7 +7213,7 @@ MONSTER_DEFS.extend([
         "immunities": [],
         "weaknesses": [{"type": "poison", "multiplier": 2, "descricao": "Metabolismo Instável: dano de veneno dobrado."}],
         "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "tirano_ancestral", "porte": "grande", "image": "tirano_da_mata",
+        "ai_type": "tirano_ancestral", "porte": "grande", "image": "tirano_da_mata", "portrait": "tirano_da_mata_retrato",
         "subtipo": "besta_magica", "undead": False, "boss": False,
     },
 ])
@@ -7255,7 +7282,7 @@ MONSTER_DEFS.extend([
                         "descricao": "Olho Único: furtividade +2, críticos naturais 19–20, Reflexos -2 e vulnerável quando cercado."}],
         "loot_table": {"1-50": {"tipo": "item", "id": "espada2m"}, "51-75": {"tipo": "item", "id": "joia"}, "76-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "ciclope", "porte": "enorme",
-        "image": "ciclope", "portrait": "ciclope", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "image": "ciclope", "portrait": "ciclope_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
 ])
 
@@ -7335,7 +7362,7 @@ MONSTER_DEFS.extend([
             {"kind": "item", "item_id": "joia", "chance": 25},
         ],
         "spawn_min": 1, "spawn_max": 1, "ai_type": "gigante_guerra", "porte": "enorme",
-        "image": "gigante_guerreiro", "portrait": "gigante_guerreiro", "subtipo": "raca_padrao",
+        "image": "gigante_guerreiro", "portrait": "gigante_guerreiro_retrato", "subtipo": "raca_padrao",
         "undead": False, "boss": False,
     },
 ])
@@ -7399,7 +7426,7 @@ MONSTER_DEFS.extend([
             {"kind": "item", "item_id": "joia", "chance": 25},
         ],
         "spawn_min": 1, "spawn_max": 1, "ai_type": "gigante_runico", "porte": "enorme",
-        "image": "gigante_runas", "portrait": "gigante_runas", "subtipo": "besta_magica",
+        "image": "gigante_runas", "portrait": "gigante_runas_retrato", "subtipo": "besta_magica",
         "undead": False, "boss": False,
     },
 ])
@@ -7425,7 +7452,7 @@ MONSTER_DEFS.extend([
              "descricao": "Se mover 3 quadrados antes da Chifrada, o alvo testa Reflexos CD 14 ou fica Imobilizado; escapa com Força CD 14. Se estiver contra uma parede, sofre +1d6 de colisão."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "portrait": "garaloux_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
     {
         "type": "garaloux_adulto", "name": "Garaloux Adulto", "emoji": "🦁",
@@ -7451,7 +7478,7 @@ MONSTER_DEFS.extend([
              "descricao": "Ao atingir metade da Vida ou menos, recebe +2 no ataque e +2 no dano."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "portrait": "garaloux_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
     {
         "type": "garaloux_alfa", "name": "Garaloux Alfa", "emoji": "🦁",
@@ -7482,7 +7509,7 @@ MONSTER_DEFS.extend([
              "descricao": "Sempre que eliminar uma criatura, realiza imediatamente uma Mordida adicional. A Mordida adicional não gera outra reação."},
         ],
         "immunities": [], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "grande", "image": "garaloux", "portrait": "garaloux_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
 ])
 
@@ -7509,7 +7536,7 @@ MONSTER_DEFS.extend([
             {"type": "cold", "multiplier": 2, "descricao": "Gelo causa dano dobrado."},
             {"type": "water", "multiplier": 2, "descricao": "Água causa dano dobrado."},
         ], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "portrait": "molochos_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
     {
         "type": "molochus_adulto", "name": "Molochus Adulto", "emoji": "🔥",
@@ -7537,7 +7564,7 @@ MONSTER_DEFS.extend([
             {"type": "cold", "multiplier": 2, "descricao": "Gelo causa dano dobrado."},
             {"type": "water", "multiplier": 2, "descricao": "Água causa dano dobrado."},
         ], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "portrait": "molochos_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
     {
         "type": "molochus_anciao", "name": "Molochus Ancião", "emoji": "🔥",
@@ -7565,7 +7592,7 @@ MONSTER_DEFS.extend([
             {"type": "cold", "multiplier": 2, "descricao": "Gelo causa dano dobrado."},
             {"type": "water", "multiplier": 2, "descricao": "Água causa dano dobrado."},
         ], "loot_table": {"1-100": None}, "spawn_min": 1, "spawn_max": 1,
-        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "ai_type": "agressivo", "porte": "grande", "image": "molochos", "portrait": "molochos_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
     },
 ])
 
@@ -7596,7 +7623,7 @@ MONSTER_DEFS.extend([
         ],
         "immunities": [], "weaknesses": [], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "medusa", "porte": "medio",
-        "image": "medusa", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "image": "medusa", "portrait": "medusa_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
         "medusa_variant": True, "olhar_petrificante_cd": 15,
     },
     {
@@ -7621,7 +7648,7 @@ MONSTER_DEFS.extend([
         ],
         "immunities": [], "weaknesses": [], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "medusa", "porte": "medio",
-        "image": "medusa", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "image": "medusa", "portrait": "medusa_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
         "medusa_variant": True, "olhar_petrificante_cd": 15,
     },
     {
@@ -7646,7 +7673,7 @@ MONSTER_DEFS.extend([
         ],
         "immunities": [], "weaknesses": [], "loot_table": {"1-100": None},
         "spawn_min": 1, "spawn_max": 1, "ai_type": "medusa", "porte": "medio",
-        "image": "medusa", "subtipo": "besta_magica", "undead": False, "boss": False,
+        "image": "medusa", "portrait": "medusa_retrato", "subtipo": "besta_magica", "undead": False, "boss": False,
         "medusa_variant": True, "olhar_petrificante_cd": 16,
     },
 ])
@@ -62133,6 +62160,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         players_state.extend(dict(a, initiative=0) for a in self.training_allies.values())
         _alvos_hostis = self._alvos_hostis_para_monstros()
         monsters_state = [dict(m, initiative=self.initiative_value(m),
+                               initiative_engaged=self._monstro_ativo_em_combate(m),
                                vision_radius=self._get_raio_visao_monstro(m),
                                percepcao=self._get_percepcao_monstro(m),
                                procurando=self._monstro_procurando(m, _alvos_hostis),
