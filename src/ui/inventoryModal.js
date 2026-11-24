@@ -209,7 +209,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   text-shadow:0 0 8px rgba(255,180,60,.6);font-family:Georgia,serif;margin-bottom:14px;}
 .inv-bagbar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
   border-top:1px solid rgba(244,220,140,.3);padding-top:14px;}
-.inv-bagslot{width:42px;height:42px;border-radius:6px;background:rgba(6,6,8,.55);
+.inv-bagslot{position:relative;width:42px;height:42px;border-radius:6px;background:rgba(6,6,8,.55);
   border:1px solid rgba(244,220,140,.35);display:flex;align-items:center;justify-content:center;
   font-size:1.1rem;cursor:pointer;}
 .inv-belt-sections{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:12px 0;}
@@ -283,7 +283,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   }
 
   function _ammoCountBadgeHTML(item){
-    if(!item || (item.effect !== 'ammo' && item.effect !== 'counter_blades')) return '';
+    if(!item || (item.effect !== 'ammo' && item.effect !== 'counter_blades' && item.ammo_count == null)) return '';
     const count = Math.max(0, Number(item.effect === 'counter_blades'
       ? item.counter_blade_count : item.ammo_count) || 0);
     return `<span class="inv-ammo-count" aria-label="${t(item.effect === 'counter_blades' ? 'ui.inv.pilha_aria' : 'ui.inv.municao_aria', {n:count})}">${count}</span>`;
@@ -723,7 +723,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
         slot.title = item ? `${_itemDisplayName(item)} ×${item.ammo_count}` : t('ui.inv.aljava_slot_vazio', {n:i + 1});
         slot.setAttribute('aria-label', slot.title);
         if(item){
-          slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🏹')}</span><span class="inv-belt-count">${item.ammo_count}</span>`;
+          slot.innerHTML = `<span class="inv-bagslot-emoji">${_itemIconHTML(item, '🏹')}</span>${_ammoCountBadgeHTML(item)}`;
           _wireTooltip(slot, item.id, null, item);
         }
         if(_selected?.kind === 'quiver' && _selected.gearSlot === gearSlot && _selected.pocketIndex === i) slot.classList.add('selected');

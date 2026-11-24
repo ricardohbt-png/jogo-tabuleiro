@@ -34,9 +34,9 @@ def sala():
 
 
 class MaoPrincipalTests(unittest.TestCase):
-    def test_o_item_inicial_da_mao_principal_nao_tem_dado(self):
+    def test_o_item_inicial_da_mao_principal_tem_dado(self):
         _r, p, _e = sala()
-        self.assertFalse(p["gear"]["weapon"].get("die"), "premissa: o item inicial vem reduzido")
+        self.assertTrue(p["gear"]["weapon"].get("die"), "o item inicial já carrega o dado da arma")
         self.assertTrue(p["weapon"].get("die"))
 
     def test_arma_do_slot_completa_a_principal(self):

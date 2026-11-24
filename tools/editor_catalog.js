@@ -12005,7 +12005,7 @@ window.EDITOR_CATALOG = {
       "name": "Chicote",
       "emoji": "🪢",
       "die": "1d4",
-      "stat": "dex",
+      "stat": "str_",
       "off_hand_weapon": true,
       "allowed_classes": [
         "bard",
@@ -12015,7 +12015,7 @@ window.EDITOR_CATALOG = {
       ],
       "range": 2,
       "categoria": "cortante",
-      "descricao": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
+      "descricao": "Chicote: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
     },
     {
       "id": "hand_crossbow",
@@ -12138,7 +12138,7 @@ window.EDITOR_CATALOG = {
       "name": "Rapieira do Dueto",
       "emoji": "🗡️",
       "die": "1d6",
-      "stat": "dex",
+      "stat": "str_",
       "icon": "assets/itens/rapieira_duelista.png",
       "allowed_classes": [
         "bard"
@@ -12163,7 +12163,7 @@ window.EDITOR_CATALOG = {
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
+      "descricao": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano."
     },
     {
       "id": "machadinha_arremesso_ana",
@@ -12183,7 +12183,7 @@ window.EDITOR_CATALOG = {
       "throw_range": 3,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
+      "descricao": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
     },
     {
       "id": "arco_curto",
@@ -12307,9 +12307,9 @@ window.EDITOR_CATALOG = {
       ],
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": true,
+      "add_strength_to_damage": false,
       "categoria": "perfurante",
-      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
     },
     {
       "id": "warhammer",
@@ -12567,7 +12567,7 @@ window.EDITOR_CATALOG = {
       "name": "Chicote de Prata",
       "emoji": "🪢",
       "die": "1d4",
-      "stat": "dex",
+      "stat": "str_",
       "off_hand_weapon": true,
       "allowed_classes": [
         "bard",
@@ -12580,7 +12580,7 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante",
       "corrosion_free_levels": 1,
       "silver": true,
-      "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+      "descricao": "Chicote de Prata: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_curta_prata",
@@ -12678,7 +12678,7 @@ window.EDITOR_CATALOG = {
       "name": "Rapieira do Dueto de Prata",
       "emoji": "🗡️",
       "die": "1d6",
-      "stat": "dex",
+      "stat": "str_",
       "icon": "assets/itens/rapieira_duelista_prata.png",
       "allowed_classes": [
         "bard"
@@ -12709,7 +12709,7 @@ window.EDITOR_CATALOG = {
       "granted_ability": "arremesso_bruto",
       "corrosion_free_levels": 1,
       "silver": true,
-      "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "machadinha_ana_prata",
@@ -12731,7 +12731,7 @@ window.EDITOR_CATALOG = {
       "granted_ability": "arremesso_bruto",
       "corrosion_free_levels": 1,
       "silver": true,
-      "descricao": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+      "descricao": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
     },
     {
       "id": "lanca_prata",
@@ -12998,7 +12998,7 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 1,
       "damage_bonus": 1,
       "magical": true,
-      "descricao": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+      "descricao": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto usa Força no acerto e no dano ao arremessar até 5 casas; retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
     },
     {
       "id": "machadinha_runica_vai_e_volta_maior",
@@ -13022,7 +13022,7 @@ window.EDITOR_CATALOG = {
       "atk_bonus": 2,
       "damage_bonus": 2,
       "magical": true,
-      "descricao": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+      "descricao": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto usa Força no acerto e no dano ao arremessar até 5 casas; retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
     },
     {
       "id": "lamina_de_kriswoo",
@@ -13871,7 +13871,7 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
       "atk_bonus": 1,
-      "descricao": "Machado de Aço Damasco: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Machado de Aço Damasco: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "machado_duplo_aco_damasco",
@@ -14121,7 +14121,7 @@ window.EDITOR_CATALOG = {
       "name": "Rapieira do Dueto de Aço Damasco",
       "emoji": "🗡️",
       "die": "1d6",
-      "stat": "dex",
+      "stat": "str_",
       "icon": "assets/itens/rapieira_duelista_aco_damasco.png",
       "allowed_classes": [
         "bard"
@@ -14285,10 +14285,10 @@ window.EDITOR_CATALOG = {
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": true,
+      "add_strength_to_damage": false,
       "categoria": "perfurante",
       "atk_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "hand_crossbow_freixo_negro",
@@ -14550,7 +14550,7 @@ window.EDITOR_CATALOG = {
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
       "damage_bonus": 1,
-      "descricao": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+      "descricao": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "machado_duplo_obsidiana_ferro",
@@ -14812,7 +14812,7 @@ window.EDITOR_CATALOG = {
       "name": "Rapieira do Dueto de Obsidiana de Ferro",
       "emoji": "🗡️",
       "die": "1d6",
-      "stat": "dex",
+      "stat": "str_",
       "icon": "assets/itens/rapieira_duelista_obsidiana_ferro.png",
       "allowed_classes": [
         "bard"
@@ -14984,10 +14984,10 @@ window.EDITOR_CATALOG = {
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": true,
+      "add_strength_to_damage": false,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "hand_crossbow_cedro_rubro",
@@ -15241,7 +15241,7 @@ window.EDITOR_CATALOG = {
       "throw_range": 2,
       "categoria": "cortante",
       "granted_ability": "arremesso_bruto",
-      "descricao": "Machado de Liga de Titânio: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Machado de Liga de Titânio: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "machado_duplo_liga_titanio",
@@ -15479,7 +15479,7 @@ window.EDITOR_CATALOG = {
       "name": "Rapieira do Dueto de Liga de Titânio",
       "emoji": "🗡️",
       "die": "1d6",
-      "stat": "dex",
+      "stat": "str_",
       "icon": "assets/itens/rapieira_duelista_liga_titanio.png",
       "allowed_classes": [
         "bard"
@@ -15636,9 +15636,9 @@ window.EDITOR_CATALOG = {
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": true,
+      "add_strength_to_damage": false,
       "categoria": "perfurante",
-      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "hand_crossbow_cerne_tita",
@@ -19853,7 +19853,7 @@ window.EDITOR_CATALOG = {
       "item_slot": "weapon",
       "effect": "atk",
       "value": 0,
-      "descricao": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
+      "descricao": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede. Uma única jogada de ataque contra os inimigos nos quatro quadrados ortogonais adjacentes, com dano separado por acerto. Recarga de 10 rodadas quando a técnica é concedida pela arma; se equipada pela Guilda, mantém a recarga da técnica."
     },
     {
       "id": "ferrao_do_brejo",

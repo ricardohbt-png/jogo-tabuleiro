@@ -30,7 +30,7 @@ class AljavaSlots(unittest.IsolatedAsyncioTestCase):
             q = self.item(iid)
             self.assertEqual(self.room._quiver_capacity(q), capacity)
             self.player['gear']['item1'] = q
-            self.assertEqual(S._max_ammo_stack_for(self.player, self.item('flechas')), 10)
+            self.assertEqual(S._max_ammo_stack_for(self.player, self.item('flechas')), 20)
 
     async def test_move_and_preserve_legacy_stack(self):
         q = self.item('mini_aljava')

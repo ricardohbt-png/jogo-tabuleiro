@@ -2604,7 +2604,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente.desc": {
     "en": "Combatant’s Brutish Bow: a sturdy, nonmagical long composite bow with thick black wood and war carvings. Deals 1d10 piercing damage; uses Dexterity for attack rolls and adds both Dexterity and Strength modifiers to damage. Range: 10 squares in any direction, including diagonals. Requires two hands, accepts all arrow types, and is exclusive to Paladins and Warriors.",
-    "pt": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+    "pt": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
   },
   "cat.item.arco_bruto_combatente.nome": {
     "en": "Combatant’s Brutish Bow",
@@ -2612,7 +2612,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_cedro_rubro.desc": {
     "en": "Red Cedar Combatant Bow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_bruto_combatente_cedro_rubro.nome": {
     "en": "Red Cedar Combatant Bow",
@@ -2620,7 +2620,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_cerne_tita.desc": {
     "en": "Titan Heartwood Combatant Bow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_bruto_combatente_cerne_tita.nome": {
     "en": "Titan Heartwood Combatant Bow",
@@ -2628,7 +2628,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_freixo_negro.desc": {
     "en": "Black Ash Combatant Bow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_bruto_combatente_freixo_negro.nome": {
     "en": "Black Ash Combatant Bow",
@@ -3304,7 +3304,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.chicote.desc": {
     "en": "Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield.",
-    "pt": "Chicote: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
+    "pt": "Chicote: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
   },
   "cat.item.chicote.nome": {
     "en": "Whip",
@@ -3328,7 +3328,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.chicote_prata.desc": {
     "en": "Silver Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
-    "pt": "Chicote de Prata: 1d4 de dano cortante, usando Destreza. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    "pt": "Chicote de Prata: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.chicote_prata.nome": {
     "en": "Silver Whip",
@@ -4256,7 +4256,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.instrumento.desc": {
     "en": "Musical Instrument: — physical damage, using Dexterity.",
-    "pt": "Instrumento Musical: — de dano físico, usando Destreza."
+    "pt": "Instrumento Musical: — de dano físico, usando Força."
   },
   "cat.item.instrumento.nome": {
     "en": "Musical Instrument",
@@ -4436,7 +4436,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.lamina_do_vento.desc": {
     "en": "Wind Blade: 1d8 slashing damage, using Strength. Can also be thrown up to 1 square.",
-    "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional."
+    "pt": "Lamina do Vento: 1d10 de dano cortante, usando Força. 19 natural: faz um ataque adicional. Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede. Uma única jogada de ataque contra os inimigos nos quatro quadrados ortogonais adjacentes, com dano separado por acerto. Recarga de 10 rodadas quando a técnica é concedida pela arma; se equipada pela Guilda, mantém a recarga da técnica."
   },
   "cat.item.lamina_do_vento.nome": {
     "en": "Wind Blade",
@@ -4928,7 +4928,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machadinha_ana_prata.desc": {
     "en": "Silver Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength. Silver: withstands 5 levels of corrosion, the first 2 without penalty, and can hurt enemies resistant to normal weapons.",
-    "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    "pt": "Machadinha de Arremesso Anã de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machadinha_ana_prata.nome": {
     "en": "Silver Dwarven Throwing Hatchet",
@@ -4936,7 +4936,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machadinha_arremesso_ana.desc": {
     "en": "Dwarven Throwing Hatchet: 1d6 slashing damage, using Strength. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. The attack uses Strength.",
-    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
+    "pt": "Machadinha de Arremesso Anã: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 3 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. O ataque usa Força."
   },
   "cat.item.machadinha_arremesso_ana.nome": {
     "en": "Dwarven Throwing Hatchet",
@@ -4944,7 +4944,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machadinha_runica_vai_e_volta.desc": {
     "en": "Rare magical Dwarven Throwing Hatchet: 1d6 slashing + Strength, +1 to hit and damage. Keeps the extra off-hand attack using Strength. Brute Throw range 5; automatically returns to the thrower's hand after the throw, even on a miss.",
-    "pt": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+    "pt": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto usa Força no acerto e no dano ao arremessar até 5 casas; retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
   },
   "cat.item.machadinha_runica_vai_e_volta.nome": {
     "en": "Runic Boomerang Hatchet",
@@ -4952,7 +4952,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machadinha_runica_vai_e_volta_maior.desc": {
     "en": "Very rare magical Dwarven Throwing Hatchet: 1d6 slashing + Strength, +2 to hit and damage. Keeps the extra off-hand attack using Strength. Brute Throw range 5; automatically returns to the thrower's hand after the throw, even on a miss.",
-    "pt": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
+    "pt": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto usa Força no acerto e no dano ao arremessar até 5 casas; retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."
   },
   "cat.item.machadinha_runica_vai_e_volta_maior.nome": {
     "en": "Greater Runic Boomerang Hatchet",
@@ -4960,7 +4960,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_basico.desc": {
     "en": "Iron Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares.",
-    "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas."
+    "pt": "Machado de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano."
   },
   "cat.item.machado_basico.nome": {
     "en": "Iron Axe",
@@ -4968,7 +4968,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_basico_aco_damasco.desc": {
     "en": "Damascus Steel Axe: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
-    "pt": "Machado de Aço Damasco: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Machado de Aço Damasco: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.machado_basico_aco_damasco.nome": {
     "en": "Damascus Steel Axe",
@@ -4976,7 +4976,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_basico_liga_titanio.desc": {
     "en": "Titanium Alloy Axe: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
-    "pt": "Machado de Liga de Titânio: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Machado de Liga de Titânio: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.machado_basico_liga_titanio.nome": {
     "en": "Titanium Alloy Axe",
@@ -4984,7 +4984,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_basico_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Axe: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    "pt": "Machado de Obsidiana de Ferro: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.machado_basico_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Axe",
@@ -4992,7 +4992,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.machado_basico_prata.desc": {
     "en": "Silver Axe: 1d6 slashing damage, using Strength. Can also be thrown up to 2 squares. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
-    "pt": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
+    "pt": "Machado de Prata: 1d6 de dano cortante, usando Força. Também pode ser arremessada até 2 casas. Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
   },
   "cat.item.machado_basico_prata.nome": {
     "en": "Silver Axe",

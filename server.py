@@ -1712,7 +1712,7 @@ WEAPONS = {
     "besta_duelista": {"id": "besta_duelista", "name": "Besta do Duelista", "die": "1d6", "stat": "dex", "range": 4, "categoria": "perfurante", "icon": "assets/itens/besta_do_duelista.png"},
     "longbow":       {"id": "longbow",       "name": "Arco Longo",           "die": "1d8",  "stat": "dex",  "range": 10, "categoria": "perfurante"},
     "arco_composto_longo": {"id": "arco_composto_longo", "name": "Arco Composto Longo", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/arco_composto_longo.png", "allowed_classes": ["paladin", "warrior"]},
-    "arco_bruto_combatente": {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": True, "categoria": "perfurante", "icon": "assets/itens/arco_bruto_do_combatente.png", "allowed_classes": ["paladin", "warrior"]},
+    "arco_bruto_combatente": {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": False, "categoria": "perfurante", "icon": "assets/itens/arco_bruto_do_combatente.png", "allowed_classes": ["paladin", "warrior"]},
     "besta":         {"id": "besta",         "name": "Besta",                "die": "1d8",  "stat": "dex",  "range": 8,  "categoria": "perfurante"},
     "besta_pesada":  {"id": "besta_pesada",  "name": "Besta Pesada",         "die": "1d10", "stat": "dex",  "range": 12, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_pesada.png", "allowed_classes": ["warrior", "paladin", "cleric", "rogue"]},
     "besta_repetidora_patrulha": {"id": "besta_repetidora_patrulha", "name": "Besta Repetidora de Patrulha", "die": "1d6", "stat": "dex", "range": 6, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_repetidora_media.png", "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "allowed_classes": ["warrior", "paladin", "bard", "rogue"]},
@@ -7843,7 +7843,7 @@ SHOP_WEAPONS = [
     {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "arco_composto_longo", "name": "Arco Composto Longo", "emoji": "🏹", "icon": "assets/itens/arco_composto_longo.png", "die": "1d10", "stat": "dex", "price": 60, "range": 10, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."},
-    {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "emoji": "🏹", "icon": "assets/itens/arco_bruto_do_combatente.png", "die": "1d10", "stat": "dex", "price": 120, "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": True, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."},
+    {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "emoji": "🏹", "icon": "assets/itens/arco_bruto_do_combatente.png", "die": "1d10", "stat": "dex", "price": 120, "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": False, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."},
     {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "crit_nat20_multiplier": 3, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
     {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 8, "categoria": "perfurante",
@@ -7896,6 +7896,8 @@ def _descricao_arma_catalogo(arma):
         partes.append(alcance_txt + ".")
     if arma.get("throw_range") is not None:
         partes.append(f"Também pode ser arremessada até {arma['throw_range']} casas.")
+    if arma.get("granted_ability") == "arremesso_bruto":
+        partes.append("Qualidade Arremesso Bruto: ao atacar à distância com esta arma arremessada, usa Força no acerto e no dano.")
     if arma.get("off_hand_weapon"):
         partes.append("Pode ser usada na mão secundária para um ataque extra, substituindo o escudo."
                       + (" O ataque usa Força." if arma.get("off_hand_forca") else ""))
@@ -7912,12 +7914,22 @@ def _descricao_arma_catalogo(arma):
         partes.append("No 20 natural, o alvo testa Fortitude ou fica tonto.")
     if arma.get("extra_attack_on_crit_min_nat"):
         partes.append(f"{arma['extra_attack_on_crit_min_nat']} natural: faz um ataque adicional.")
+    if arma.get("id") == "lamina_do_vento":
+        partes.append("Concede Ataque Giratório: ação principal, custo de 4 de fome e 4 de sede. "
+                      "Uma única jogada de ataque contra os inimigos nos quatro quadrados ortogonais "
+                      "adjacentes, com dano separado por acerto. Recarga de 10 rodadas quando a técnica "
+                      "é concedida pela arma; se equipada pela Guilda, mantém a recarga da técnica.")
     if arma.get("silver"):
         partes.append(
             "Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, "
             "podendo causar dano a inimigos resistentes a armas normais."
         )
     return " ".join(partes)
+
+# O atributo é definido pelo tipo de arma, inclusive nas descrições das variantes.
+for _weapon in [*SHOP_WEAPONS, *WEAPONS.values()]:
+    if not _projetil_de(_weapon) and not _weapon.get("chain_hook_range"):
+        _weapon["stat"] = "str_"
 
 for _weapon in SHOP_WEAPONS:
     _weapon.setdefault("descricao", _descricao_arma_catalogo(_weapon))
@@ -7983,7 +7995,7 @@ SHOP_WEAPONS.extend([
      "granted_ability": "arremesso_bruto", "categoria": "cortante",
      "magical": True, "atk_bonus": 1, "damage_bonus": 1,
      "return_on_throw": True, "allowed_classes": ["warrior"],
-     "descricao": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."},
+     "descricao": "Raridade: Rara. Machadinha mágica de 1d6 cortante + Força, +1 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto usa Força no acerto e no dano ao arremessar até 5 casas; retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."},
     {"id": "machadinha_runica_vai_e_volta_maior", "name": "Machadinha Rúnica Vai-e-Volta Maior",
      "emoji": "🪓", "icon": "assets/itens magicos/vai_e_volta.png",
      "die": "1d6", "stat": "str_", "price": 3000,
@@ -7992,7 +8004,7 @@ SHOP_WEAPONS.extend([
      "granted_ability": "arremesso_bruto", "categoria": "cortante",
      "magical": True, "atk_bonus": 2, "damage_bonus": 2,
      "return_on_throw": True, "allowed_classes": ["warrior"],
-     "descricao": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Pode ser arremessada com Arremesso Bruto até 5 casas e retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."},
+     "descricao": "Raridade: Muito rara. Machadinha mágica de 1d6 cortante + Força, +2 no acerto e no dano. Mantém o ataque extra da mão secundária usando Força. Arremesso Bruto usa Força no acerto e no dano ao arremessar até 5 casas; retorna automaticamente à mão de quem a arremessou, mesmo se errar. Uso exclusivo de Guerreiro."},
     {"id": "lamina_de_kriswoo", "name": "Lâmina de Kriswoo",
      "emoji": "🪓", "icon": "assets/itens magicos/lamina_de_kriswoo.png",
      "die": "1d12", "stat": "str_", "price": 5000,
@@ -9346,6 +9358,8 @@ def _quivers_equipped(p):
 
 def _max_ammo_stack_for(p, item):
     """Limite das pilhas equipadas; os slots da aljava têm limite próprio."""
+    if (item or {}).get("ammo_type") in QUIVER_ARROW_TYPES | QUIVER_BOLT_TYPES:
+        return MAX_BAG_AMMO_STACK
     return MAX_AMMO_STACK
 
 
@@ -13623,6 +13637,7 @@ def make_player(pid, name, cls_id, slot):
 
     # Starting gear items (display only â€” stats already baked into ac_start / weapon dict)
     starting_weapon_item = {
+        **deepcopy(weapon),
         "id": w_id, "name": weapon["name"],
         "emoji": _WEAPON_EMOJI.get(w_id, "⚔️"),
         "item_slot": "weapon", "effect": "atk", "value": 0,
@@ -18369,13 +18384,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _bonus_atributo_dano_arma(self, p, weapon):
         """Modificador de atributo somado ao dado da arma (acuidade usa o melhor
         de FOR/DES). Compartilhado pelo dano real e pela prévia do tooltip."""
-        if _weapon_uses_finesse(weapon):
-            bonus = max(mod(p.get("str_", 12)), mod(p.get("dex", 12)))
-        else:
-            bonus = mod(p.get(weapon["stat"], 12))
-        if weapon.get("add_strength_to_damage"):
-            bonus += mod(p.get("str_", 12))
-        return bonus
+        return _weapon_attribute_modifier(p, weapon)
 
     def _bonus_fixo_dano_arma(self, p, weapon, surv_mod, cancao_dano, gl_dano, bonus_extra):
         """Parcela FIXA do dano armado (tudo além do dado e do atributo), antes do
@@ -27674,15 +27683,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 off_finesse = _weapon_uses_finesse(off)
                 off_forca = bool(off.get("off_hand_forca")
                                  or WEAPONS.get(off.get("id"), {}).get("off_hand_forca"))
-                off_stat_mod = (mod(p.get("str_", 10)) if off_forca
-                                else max(mod(p.get("str_", 10)), odex)
-                                if off_finesse else odex)
-                off_attr = off.get("off_hand_stat") or WEAPONS.get(off.get("id"), {}).get("off_hand_stat")
-                if off_attr:
-                    off_stat_mod = mod(p.get(off_attr, 10))
+                off_stat_mod = _weapon_attribute_modifier(p, off)
                 off_wear = self._penalidade_desgaste_arma(off)
                 _mainhand_atk_bonus = int((p.get("weapon") or {}).get("atk_bonus", 0) or 0)
-                offhand_atk = (off_stat_mod + p.get("level_bonus", 1)
+                offhand_atk = (_hero_attack_bonus_with_weapon(p, off)
                                + (eff_atk - main_attack_base - _mainhand_atk_bonus
                                   - _ammo_attack_bonus)
                                + int(off.get("atk_bonus", 0) or 0))
@@ -27728,7 +27732,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     await self._registrar_dano_desbloqueio_metamorfose(p, tgt, odmg)
                     ocrit_str = " **CRÍTICO!**" if ocrit else ""
                     osb = f"+{off_stat_mod}" if off_stat_mod >= 0 else str(off_stat_mod)
-                    ostat = "FOR" if off_forca else "FOR/DES" if off_finesse else "DES"
+                    ostat = "FOR" if off_forca else "FOR/DES" if off_finesse else "FOR"
                     await self.gm_say(
                         T("narracao.desfere_golpe_de_mao_secundaria_com_acao", heroi=p['name'], off=nome_item(off), oroll=oroll, offhand_atk=offhand_atk, ototal=ototal, tgt_ac=tgt['ac'], ocrit_str=ocrit_str, off_die=off['die'], oraw=oraw, osb=osb, ostat=ostat, odmg=odmg))
                     await self._dano_retaliacao(tgt, p, True, odmg)
@@ -28382,12 +28386,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         dex_mod = mod(p.get("dex", 12))
         throw_weapon = (p.get("weapon") or dagger) if slot_key == "weapon" else dagger
         throw_brutal = _weapon_uses_brutal_throw(throw_weapon)
-        throw_atk = (_hero_attack_bonus_with_stat(p, "str_")
-                     if throw_brutal else _hero_attack_bonus_with_weapon(p, throw_weapon))
-        throw_finesse = _weapon_uses_finesse(throw_weapon)
-        throw_stat_mod = (mod(p.get("str_", 10)) if throw_brutal
-                          else max(mod(p.get("str_", 10)), dex_mod) if throw_finesse
-                          else dex_mod)
+        throw_atk = _hero_attack_bonus_with_stat(p, "str_" if throw_brutal else "dex")
+        throw_stat_mod = _weapon_attribute_modifier(p, throw_weapon, thrown=True)
         throw_wear = self._penalidade_desgaste_arma(dagger)
         throw_atk += int(dagger.get("atk_bonus", 0) or 0)
         throw_atk -= throw_wear
@@ -28426,7 +28426,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._registrar_dano_desbloqueio_metamorfose(p, target, dmg)
             await self._furtivo_reativo(p, target)
             sb = f"+{throw_stat_mod}" if throw_stat_mod >= 0 else str(throw_stat_mod)
-            throw_stat_name = "FOR (Arremesso Bruto)" if throw_brutal else "FOR/DES" if throw_finesse else "DES"
+            throw_stat_name = "FOR (Arremesso Bruto)" if throw_brutal else "DES"
             crit_str = " **CRÍTICO!**" if crit else ""
             await self.gm_say(
                 T("narracao.arremessa_em_d20_vs_ca_dano", heroi=p['name'], dagger=nome_item(dagger), target=nome_criatura(target), roll=roll, throw_atk=throw_atk, total=total, target_ac=target['ac'], crit_str=crit_str, die_str=die_str, raw=raw, sb=sb, throw_stat_name=throw_stat_name, dmg=dmg))
@@ -28586,7 +28586,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             projectile={"kind": "item", "item_id": defn.get("id") or item.get("id"), "item_emoji": defn.get("emoji") or item.get("emoji"),
                         "item_elemento": defn.get("elemento")})
         roll = random.randint(1, 20)
-        total = roll + p["atk_bonus"]
+        total = roll + _hero_attack_bonus_with_stat(p, "dex")
         nat1 = (roll == 1); crit = (roll == 20)
         target_ac = (10 + mod(target.get("dex", 10))) if defn.get("holy_water") else self._ponto_vulneravel_ac(target, target_tile, target["ac"], attacker_id=pid)
         _cobertura = self._cobertura_baixa_bonus(p, target, target_tile)
@@ -38400,7 +38400,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if distancia(alvo) > 1: return
         self._face_toward(p, obj["pos"])
         base = p.get("_licantropia_atributos_base", {}).get("str_", p.get("str_", 10))
-        bonus = int(p.get("atk_bonus", 0)) + mod(p.get("str_", 10)) - mod(base)
+        bonus = _hero_attack_bonus_with_stat(p, "str_")
         for nome, expr in (("Garras", "1d4"), ("Garras", "1d4"), ("Mordida", "1d6")):
             if not obj.get("alive", obj.get("hp", 0) > 0): break
             dado = random.randint(1, 20); total = dado + bonus
@@ -61545,8 +61545,6 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # espelho desta lista (game.js), para os dois lados saírem iguais.
             if _weapon_uses_brutal_throw(item):
                 atributo = T("ui.arremesso.forca")
-            elif finesse:
-                atributo = T("ui.arremesso.forca_ou_destreza")
             else:
                 atributo = T("ui.arremesso.destreza")
             nome = nome_item(item)
@@ -65531,16 +65529,24 @@ _RESIST_TYPES = {DMG_PHYSICAL, DMG_FIRE, DMG_COLD, DMG_LIGHTNING, DMG_ACID,
 _CLASS_ATK_ATTR = {"warrior": "str_", "mage": "str_", "cleric": "str_", "paladin": "str_",
                    "rogue": "dex", "bard": "dex", "ranger": "dex"}
 
+def _weapon_attribute_modifier(p, weapon, *, thrown=False):
+    """Atributo da arma, independente da classe e compatível com itens legados."""
+    weapon = {**WEAPONS.get((weapon or {}).get("id"), {}), **(weapon or {})}
+    if thrown:
+        return mod(p.get("str_" if _weapon_uses_brutal_throw(weapon) else "dex", 10))
+    if _projetil_de(weapon) or weapon.get("chain_hook_range"):
+        return mod(p.get("dex", 10))
+    if _weapon_uses_finesse(weapon):
+        return max(mod(p.get("str_", 10)), mod(p.get("dex", 10)))
+    return mod(p.get("str_", 10))
+
+
 def _hero_attack_bonus_with_weapon(p, weapon=None):
-    """Retorna o bônus de ataque respeitando a propriedade finesse."""
+    """Substitui apenas o atributo embutido em atk_bonus pelo atributo da arma."""
     weapon = weapon or p.get("weapon") or {}
-    base = int(p.get("atk_bonus", 0) or 0)
-    if not _weapon_uses_finesse(weapon):
-        return base
     class_attr = _CLASS_ATK_ATTR.get(p.get("class_id"), "str_")
-    class_mod = mod(p.get(class_attr, 10))
-    finesse_mod = max(mod(p.get("str_", 10)), mod(p.get("dex", 10)))
-    return base - class_mod + finesse_mod
+    return (int(p.get("atk_bonus", 0) or 0) - mod(p.get(class_attr, 10))
+            + _weapon_attribute_modifier(p, weapon))
 
 def _weapon_uses_finesse(weapon):
     """Aceita a propriedade do item e também corrige equipamentos legados."""
@@ -65561,7 +65567,8 @@ def _weapon_uses_brutal_throw(weapon):
         return False
     native = WEAPONS.get(weapon.get("id"), {})
     return bool(weapon.get("granted_ability") == "arremesso_bruto"
-                or native.get("granted_ability") == "arremesso_bruto")
+                or native.get("granted_ability") == "arremesso_bruto"
+                or _arma_base_id(weapon.get("id", "")) in ("machado_basico", "machadinha_arremesso_ana"))
 
 def _weapon_nat1_wear(weapon):
     """Níveis de dano de equipamento em um 1 natural (opt-in da arma)."""

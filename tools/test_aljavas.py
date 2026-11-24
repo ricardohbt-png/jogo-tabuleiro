@@ -37,24 +37,24 @@ class AljavasTests(unittest.TestCase):
             for item_id in ("aljava_pequena", "aljava_grande"):
                 self.assertEqual(ids.count(item_id), 1, f"{cidade}:{item_id}")
 
-    def test_sem_aljava_o_limite_continua_10(self):
+    def test_sem_aljava_o_limite_e_20(self):
         p = jogador()
         for tipo in ("flechas", "flechas_prata", "virotes", "virotes_incendiarios"):
-            self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": tipo}), 10, tipo)
+            self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": tipo}), 20, tipo)
 
     def test_aljava_pequena_mantem_limite_da_bolsa(self):
         p = jogador(aljava("aljava_pequena"))
         for tipo in ("flechas", "flechas_prata", "virotes", "virotes_incendiarios"):
-            self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": tipo}), 10)
+            self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": tipo}), 20)
 
     def test_aljava_grande_mantem_limite_da_bolsa(self):
         p = jogador(aljava("aljava_grande"))
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas_incendiarias"}), 10)
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "virotes_prata"}), 10)
+        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas_incendiarias"}), 20)
+        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "virotes_prata"}), 20)
 
     def test_outro_item_na_mao_secundaria_nao_amplia(self):
         p = jogador({"id": "escudo_p", "name": "Escudo", "effect": "def_"})
-        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas"}), 10)
+        self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "flechas"}), 20)
         self.assertEqual(S._max_ammo_stack_for(p, {"ammo_type": "item_qualquer"}), 10)
 
     def test_aljava_nao_amplia_o_que_nao_e_municao_de_arco_ou_besta(self):
