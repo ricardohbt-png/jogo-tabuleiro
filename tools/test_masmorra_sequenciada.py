@@ -265,6 +265,28 @@ def setup_room(encadear=True):
     r.phase = "city"
     return r
 
+async def test_chegada_em_outra_cidade():
+    print("\n[21] rota com `chegada_em` termina na cidade indicada")
+    salvos = server.WORLD_ADVENTURES
+    try:
+        r = setup_room(encadear=False)
+        server.WORLD_ADVENTURES["test_seq"]["chegada_em"] = "vila_corvin"
+        server.WORLD_ADVENTURES["test_seq"]["dungeons"] = server.WORLD_ADVENTURES["test_seq"]["dungeons"][:1]
+        await r.handle_world_adventure("p1", "test_seq")
+        await _concluir_historia(r)
+        await _concluir_etapa(r)
+        check("grupo reaparece em Corvin", r.world_location == "vila_corvin")
+        check("voltou à cidade", r.phase == "city")
+        r2 = setup_room(encadear=False)
+        server.WORLD_ADVENTURES["test_seq"].pop("chegada_em", None)
+        server.WORLD_ADVENTURES["test_seq"]["dungeons"] = server.WORLD_ADVENTURES["test_seq"]["dungeons"][:1]
+        await r2.handle_world_adventure("p1", "test_seq")
+        await _concluir_historia(r2)
+        await _concluir_etapa(r2)
+        check("sem chegada_em fica onde estava", r2.world_location == "alva_e_luz")
+    finally:
+        server.WORLD_ADVENTURES = salvos
+
 async def test_destino_some_apos_concluir():
     print("\n[18d] destino some ao concluir a rota")
     salvos = server.WORLD_ADVENTURES
@@ -641,6 +663,7 @@ async def main():
     await test_masmorra_esvazia()
     await test_morte_com_heroi_na_cidade()
     await test_recompensa_com_ausente()
+    await test_chegada_em_outra_cidade()
     print(f"\n=== {PASS} passou, {FAIL} falhou ===")
     sys.exit(1 if FAIL else 0)
 
