@@ -3537,6 +3537,10 @@ window.LANG_INTERFACE = {
     "en": "Attack",
     "pt": "Atacar"
   },
+  "ui.combate.atacante": {
+    "en": "Attacker",
+    "pt": "Atacante"
+  },
   "ui.hud.ataque": {
     "en": "Attack",
     "pt": "Ataque"
