@@ -65,8 +65,8 @@ async def main():
     # em si cresce com o conteudo autoral, entao NAO se crava o seu tamanho.
     check("a serrilhada continua em CHEST_ITEMS", "sword" in ids_chest, f"tem: {ids_chest}")
     sword = next(i for i in CHEST_ITEMS if i["id"] == "sword")
-    check("serrilhada com price 32", sword.get("price") == 32)
-    check("serrilhada mantém corrosao_resistente", sword.get("corrosao_resistente") == 1)
+    check("serrilhada com price 40", sword.get("price") == 40)
+    check("serrilhada: desgaste severo em uma etapa (-2)", sword.get("corrosion_penalty_step") == 2 and sword.get("corrosion_max") == 2)
     for iid in ("magic_sword", "bow", "shield", "ring", "racao"):
         check(f"'{iid}' saiu do catálogo", iid not in _DUNGEON_ITEM_CATALOG)
     for iid in ("health_potion", "elixir", "antidote", "garrafa_vinho",
