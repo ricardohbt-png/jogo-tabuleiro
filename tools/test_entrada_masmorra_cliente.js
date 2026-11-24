@@ -20,7 +20,7 @@ for (const three of [false, true]) {
   const calls = [];
   const context = { console, window: { THREE: three ? {} : null }, CITY_MODE: 'image',
     g3: three ? {} : null, mode3D: three, _hpSnapshot: new Map([['old', 10]]),
-    _monsterKnowledgeLevels: new Set(['old']),
+    _monsterKnowledgeLevels: new Set(['old']), _initiativeCameraTurn: 'x', _initiativeCameraRequest: 0,
     showScreen: screen => calls.push(screen),
   };
   for (const name of ['_clearCityTravelTransition', 'fecharFichaCidade', '_limparMortesVisuais',
