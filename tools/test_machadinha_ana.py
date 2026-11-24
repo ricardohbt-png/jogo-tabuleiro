@@ -281,13 +281,15 @@ class MachadinhaTests(unittest.IsolatedAsyncioTestCase):
         script = r"""
 const fs=require('fs'),vm=require('vm');
 const c={window:{LANG_STRINGS:{}},_assetURL:x=>x,_esc:String,
-  _rotulo:x=>x,_itemAcaoMeta:()=>null,gerarHabilidadesEspeciais:()=>''};
+  _rotulo:x=>x,_itemAcaoMeta:()=>null,gerarHabilidadesEspeciais:()=>'',_modAtributo:v=>Math.floor((v-10)/2)};
 vm.createContext(c);
 vm.runInContext(fs.readFileSync('src/gameState.js','utf8')+'\nthis.api=GS;',c);
 vm.runInContext(fs.readFileSync('src/lang/interface.js','utf8'),c);
 vm.runInContext(fs.readFileSync('src/lang/catalogo.js','utf8'),c);
 c.t=(key,args={})=>(c.window.LANG_STRINGS[key]?.pt||key).replace(/\{(\w+)\}/g,(_,k)=>args[k]??'');
 const source=fs.readFileSync('game.js','utf8');
+vm.runInContext(source.slice(source.indexOf('function _weaponAttributeKey('),
+  source.indexOf('function _menuStatusMarkup(')),c);
 vm.runInContext(source.slice(source.indexOf('function renderLinhaTooltip('),
   source.indexOf('function gerarHabilidadesEspeciais(')),c);
 const item=c.api.CATALOGO_ITENS.machadinha_arremesso_ana;
