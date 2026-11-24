@@ -367,7 +367,7 @@
     "ai_profile": "cacador",
     "ai_tactics": [],
     "image": "rato_gicante",
-    "portrait": "rato_gicante",
+    "portrait": "rato_gigante_retrato",
     "size": [
       1,
       1
@@ -500,7 +500,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "escorpiaodepedra",
-    "portrait": "escorpiaodepedra",
+    "portrait": "escorpiao_pedra",
     "size": [
       1,
       1
@@ -972,7 +972,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "esqueletoBesteiro",
-    "portrait": "esqueletohumano_original",
+    "portrait": "esqueleto_besteiro",
     "size": [
       1,
       1
@@ -1422,7 +1422,7 @@
     "ai_profile": "tatico",
     "ai_tactics": [],
     "image": "vela_fogo",
-    "portrait": "vela_fogo",
+    "portrait": "vela_fogo_retrato",
     "size": [
       1,
       2
@@ -1888,7 +1888,7 @@
     "ai_profile": "emboscador",
     "ai_tactics": [],
     "image": "escorpiaodepedra_original",
-    "portrait": "nova_criatura_customizado",
+    "portrait": "escorpiao_pequeno_amarelo",
     "size": [
       1,
       1
@@ -2342,7 +2342,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "grotao",
-    "portrait": "grotao_customizado",
+    "portrait": "grotao",
     "size": [
       1,
       2
@@ -3287,7 +3287,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "minotauro",
-    "portrait": "minotauro",
+    "portrait": "minotauro_retrato",
     "model3d": "assets/models3d/monstros/minotauro.glb",
     "size": [
       1,
@@ -3499,7 +3499,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "minotauro",
-    "portrait": "minotauro",
+    "portrait": "minotauro_retrato",
     "model3d": "assets/models3d/monstros/minotauro.glb",
     "armor_description": "Armadura completa — descrição mecânica; não é equipamento nem gera saque.",
     "size": [
@@ -3799,7 +3799,7 @@
     "ai_profile": "sentinela",
     "ai_tactics": [],
     "image": "armadura",
-    "portrait": "armadura",
+    "portrait": "boneco_treino_retrato",
     "model3d": "assets/objetos/boneco_palha_treino.glb",
     "size": [
       1,
@@ -3868,7 +3868,7 @@
     "ai_profile": "sentinela",
     "ai_tactics": [],
     "image": "armadura",
-    "portrait": "armadura",
+    "portrait": "boneco_treino_retrato",
     "model3d": "assets/objetos/boneco_palha_treino.glb",
     "size": [
       1,
@@ -3937,7 +3937,7 @@
     "ai_profile": "sentinela",
     "ai_tactics": [],
     "image": "armadura",
-    "portrait": "armadura",
+    "portrait": "boneco_palha_retrato",
     "model3d": "assets/objetos/boneco_palha_treino.glb",
     "size": [
       1,
@@ -4437,7 +4437,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "assassino_da_serra",
-    "portrait": "assassino_da_serra",
+    "portrait": "assassino_da_serra_retrato",
     "model3d": "assets/models3d/monstros/assassino_da_serra.glb",
     "armor_description": null,
     "size": [
@@ -4607,7 +4607,7 @@
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "escorpiaodepedra",
-    "portrait": "escorpiaodepedra",
+    "portrait": "escorpiao_negro_gigante",
     "model3d": "assets/models3d/monstros/escorpiao_gigante_preto.glb",
     "armor_description": null,
     "size": [

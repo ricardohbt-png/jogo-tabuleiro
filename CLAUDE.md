@@ -1,5 +1,307 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Retrato do Rato ND 0 (2026-11-22)
+
+`assets/retratos/monstros/rato_retrato.png` retrata o Rato ND 0 como um pequeno rato branco, com olhos rubi, orelhas e focinho rosados, em um porão medieval. A ficha nativa `rato` usa `portrait: "rato_retrato"` no bestiário; `updateInitiativeTrack` exibe essa imagem para `rato`, distinta do Rato Gigante. A miniatura 3D permanece separada.
+
+### Retrato do Pombo (2026-11-22)
+
+`assets/retratos/monstros/pombo_retrato.png` retrata um pombo-correio cinza em close-up, com pescoço iridescente, barras escuras nas asas e telhados medievais ao fundo. A ficha nativa `pombo` usa `portrait: "pombo_retrato"` no bestiário; `updateInitiativeTrack` exibe a mesma imagem para `pombo`. A miniatura 3D permanece separada.
+
+### Retrato do Gato (2026-11-22)
+
+`assets/retratos/monstros/gato_retrato.png` retrata o Gato comum como uma variação do Gato Aventureiro, mantendo o pelo laranja rajado, os olhos verdes e o lenço azul, sem capa ou armas. A ficha `gato` usa `portrait: "gato_retrato"` no bestiário; `updateInitiativeTrack` exibe a mesma arte para `gato`. O modelo 3D permanece separado.
+
+### Retrato da Ovelha (2026-11-22)
+
+`assets/retratos/monstros/ovelha_retrato.png` retrata a Ovelha em close-up, com lã creme encaracolada e expressão alerta. A ficha nativa `ovelha` usa `portrait: "ovelha_retrato"` no bestiário; `updateInitiativeTrack` exibe a mesma imagem para `ovelha`. A arte foi criada sem uma miniatura PNG de referência; o modelo 3D permanece separado.
+
+### Retrato da Vaca Arisca (2026-11-22)
+
+`assets/retratos/monstros/vaca_arisca_retrato.png` retrata a Vaca Arisca preta e branca, com chifres curvos, faixa branca na testa e focinho rosado, em postura alerta. A ficha nativa `vaca` usa `portrait: "vaca_arisca_retrato"` no bestiário; `updateInitiativeTrack` exibe a mesma imagem para `vaca`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Cavalo de Sela (2026-11-22)
+
+`assets/retratos/monstros/cavalo_sela_retrato.png` retrata o cavalo castanho com listra branca, crina escura, cabeçada e sela. A ficha nativa `cavalo_sela` usa `portrait: "cavalo_sela_retrato"` no bestiário; `updateInitiativeTrack` exibe a mesma imagem para `cavalo_sela`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Boneco de Treino (2026-11-22)
+
+`assets/retratos/monstros/boneco_treino_retrato.png` retrata o boneco de treino com alvo vermelho, cabeça de estopa e braços de palha presos por cordas, seguindo a referência do modelo. As fichas personalizadas `boneco_treino` e `boneco_treino_veneno` usam `portrait: "boneco_treino_retrato"` no bestiário; `updateInitiativeTrack` mostra essa imagem para esses dois tipos.
+
+### Retrato do Boneco de Palha (2026-11-22)
+
+`assets/retratos/monstros/boneco_palha_retrato.png` retrata o Boneco de Palha como um objeto inanimado de estopa remendada e palha, com rosto de tecido liso e sem olhos ou alvo pintado. A ficha personalizada `boneco_palha` usa `portrait: "boneco_palha_retrato"` no bestiário; `updateInitiativeTrack` exibe essa arte para `boneco_palha`, distinta do Boneco de Treino. Ambos mantêm o mesmo modelo 3D.
+
+### Retrato do Lorde Vampiro (2026-11-22)
+
+`assets/retratos/monstros/lorde_vampiro_retrato.png` retrata o Lorde Vampiro com coroa, armadura preta e dourada, gola carmesim e espada. O registro `lorde_vampiro` usa `portrait: "lorde_vampiro_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma arte na iniciativa. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Vampiro Ancião (2026-11-22)
+
+`assets/retratos/monstros/vampiro_anciao_retrato.png` retrata o Vampiro Ancião com gola alta carmesim, armadura preta e dourada e espada. O registro `vampiro_anciao` usa `portrait: "vampiro_anciao_retrato"` no bestiário; `updateInitiativeTrack` mostra a arte para `vampiro_anciao` e o alias `mestre_vampiro`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Vampiro Jovem (2026-11-22)
+
+`assets/retratos/monstros/vampiro_retrato.png` retrata o Vampiro Jovem pálido, de cabelos negros, capa escura e espada. O registro `vampiro_jovem` usa `portrait: "vampiro_retrato"` no bestiário; `updateInitiativeTrack` mostra a arte para `vampiro_jovem` e o alias `vampiro`. O Vampiro Ancião mantém retrato e miniatura próprios.
+
+### Retrato da Cria Vampírica (2026-11-22)
+
+`assets/retratos/monstros/cria_vampirica_retrato.png` retrata a Cria Vampírica pálida, de cabelos negros e presas. A ficha nativa `escravo_vampirico` e o catálogo do bestiário usam `portrait: "cria_vampirica_retrato"`; `updateInitiativeTrack` exibe a mesma imagem para `escravo_vampirico` e seu alias `cria_vampirica`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Elemental Elétrico (2026-11-22)
+
+`assets/retratos/monstros/elemental_eletrico_retrato.png` é o retrato do Elemental Elétrico, com forma humanoide de energia azul e relâmpagos branco-azulados. O registro `elemental_eletrico` usa `portrait: "elemental_eletrico_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma imagem na iniciativa. A miniatura do tabuleiro continua separada.
+
+### Retrato do Elemental de Água (2026-11-22)
+
+`assets/retratos/monstros/elemental_agua_retrato.png` é o retrato do Elemental de Água, com forma humanoide de ondas azul-turquesa e rosto emergindo da água. O registro `elemental_agua` usa `portrait: "elemental_agua_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma imagem na iniciativa. A miniatura do tabuleiro continua separada.
+
+### Retrato do Elemental de Ar (2026-11-22)
+
+`assets/retratos/monstros/elemental_ar_retrato.png` é o retrato do Elemental de Ar, com forma humanoide composta de correntes de vento e olhos azul-claros. O registro `elemental_ar` usa `portrait: "elemental_ar_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma imagem na iniciativa. A miniatura do tabuleiro continua separada.
+
+### Retrato do Elemental de Gelo (2026-11-22)
+
+`assets/retratos/monstros/elemental_gelo_retrato.png` é o retrato do Elemental de Gelo, com rosto facetado, olhos azul-ciano e espinhos cristalinos. O registro `elemental_gelo` usa `portrait: "elemental_gelo_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma imagem na iniciativa. A miniatura do tabuleiro continua separada.
+
+### Retrato do Elemental de Pedra (2026-11-22)
+
+`assets/retratos/monstros/elemental_pedra_retrato.png` é o retrato do Elemental de Pedra, com corpo de placas rochosas e olhos verdes. O registro `elemental_pedra` usa `portrait: "elemental_pedra_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma imagem na iniciativa. A miniatura do tabuleiro continua separada.
+
+### Retrato do Elemental de Fogo (2026-11-22)
+
+`assets/retratos/monstros/elemental_fogo_retrato.png` é o retrato do Elemental de Fogo, com rosto de chamas e ombros de rocha vulcânica. O registro `elemental_fogo` usa `portrait: "elemental_fogo_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma imagem na iniciativa. A miniatura do tabuleiro continua separada.
+
+### Retrato do Lobo Cinzento (2026-11-22)
+
+`assets/retratos/monstros/lobo_cinzento.png` é o retrato do Lobo Cinzento. `MONSTER_DEFS` declara `portrait: "lobo_cinzento"`, usado pelo bestiário; `updateInitiativeTrack` mostra o mesmo retrato na fila de turnos. A miniatura `loboCinzento` do tabuleiro continua separada.
+
+`assets/retratos/monstros/lobo_alfa.png` é a variação de pelagem branca/cinza do Lobo Alfa. O registro `lobo_cinzento_customizado` usa `portrait: "lobo_alfa"` no bestiário, e `updateInitiativeTrack` usa esse retrato na iniciativa sem alterar a miniatura `lobo_alfa` do tabuleiro.
+
+### Retrato do Urso Negro (2026-11-22)
+
+`assets/retratos/monstros/urso_negro.png` é o retrato do Urso Negro. O registro base e `urso_negro_customizado` usam `portrait: "urso_negro"` no bestiário, e `updateInitiativeTrack` mostra o mesmo retrato para ambos os tipos. As miniaturas `ursoNegro` do tabuleiro permanecem separadas.
+
+### Retrato do Urso Pardo (2026-11-22)
+
+`assets/retratos/monstros/urso_pardo.png` é o retrato maior e de pelagem castanha do Urso Pardo. O campo `portrait` no registro base aponta para esse arquivo no bestiário; `updateInitiativeTrack` também usa essa arte para `urso_pardo`. A miniatura de tabuleiro compartilhada com Urso Negro permanece igual.
+
+### Retrato do Goblin Combatente (2026-11-22)
+
+`assets/retratos/monstros/goblin_combatente.png` é o retrato do Goblin Combatente. `MONSTER_DEFS` declara `portrait: "goblin_combatente"` para o bestiário; `updateInitiativeTrack` mostra o retrato para esse tipo, mesmo quando a miniatura varia conforme arma e escudo. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Goblin Arqueiro (2026-11-22)
+
+`assets/retratos/monstros/goblin_arqueiro.png` é o retrato do Goblin Arqueiro. `MONSTER_DEFS` declara `portrait: "goblin_arqueiro"` no bestiário e `updateInitiativeTrack` mostra a arte na fila de turnos. A miniatura de tabuleiro `goblinArqueiro` permanece separada.
+
+### Retrato do Goblin Assassino (2026-11-22)
+
+`assets/retratos/monstros/goblin_assassino.png` é o retrato do Assassino Goblin, também chamado Goblin Assassino. `MONSTER_DEFS` declara `portrait: "goblin_assassino"` no bestiário e `updateInitiativeTrack` mostra a arte na fila de turnos. A miniatura de tabuleiro continua usando `goblinDual`.
+
+### Retrato do Xamã Goblin (2026-11-22)
+
+`assets/retratos/monstros/goblin_xama.png` é o retrato do Xamã Goblin. O registro base e o personalizado usam `portrait: "goblin_xama"` no bestiário; `updateInitiativeTrack` usa a mesma arte para `goblin_xama` e `xama_goblin_customizado`. A miniatura `xamaGoblin` do tabuleiro permanece separada.
+
+### Retrato do Orc Guerreiro (2026-11-22)
+
+`assets/retratos/monstros/orc_guerreiro.png` é o retrato do Orc Guerreiro. O registro base define `portrait: "orc_guerreiro"` no bestiário; `updateInitiativeTrack` mostra essa imagem para o mesmo tipo. A miniatura `orcGuerreiro` do tabuleiro continua separada.
+
+### Retrato do Orc (2026-11-22)
+
+`assets/retratos/monstros/orc_comum.png` é o retrato do Orc base, distinto do Orc Guerreiro. Seu registro aponta `portrait: "orc_comum"` no bestiário e `updateInitiativeTrack` usa essa arte na iniciativa. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Kobold Mago (2026-11-22)
+
+`assets/retratos/monstros/kobold_mago.png` é o retrato do Kobold Mago, com vestes arcanas e foco mágico luminoso. `MONSTER_DEFS` declara `portrait: "kobold_mago"` no bestiário e `updateInitiativeTrack` usa o retrato na fila de turnos. A miniatura `kobold_mago` do tabuleiro permanece separada.
+
+### Retrato do Esqueleto Humano (2026-11-22)
+
+`assets/retratos/monstros/esqueleto_humano.png` é o retrato do Esqueleto Humano, com espada curta, armadura gasta e aparência cadavérica. `MONSTER_DEFS` declara `portrait: "esqueleto_humano"` no bestiário e `updateInitiativeTrack` usa essa arte para o tipo `esqueleto_humano`. A miniatura `esqueletoHumano` do tabuleiro permanece separada.
+
+### Retrato do Esqueleto Armadurado (2026-11-22)
+
+`assets/retratos/monstros/esqueleto_armadurado.png` é o retrato do Esqueleto Armadurado, com elmo, malha e placas pesadas. O registro legado `skeleton` declara `portrait: "esqueleto_armadurado"` para o bestiário; `updateInitiativeTrack` usa a arte para esse tipo. A miniatura `esqueletoArmadurado` do tabuleiro permanece separada.
+
+### Retrato do Esqueleto Besteiro (2026-11-22)
+
+`assets/retratos/monstros/esqueleto_besteiro.png` é o retrato do Esqueleto Besteiro, com besta carregada e aljava de virotes. O modelo personalizado `esqueleto_humano_customizado` aponta para `portrait: "esqueleto_besteiro"` no bestiário e `updateInitiativeTrack` usa a mesma arte na iniciativa. A miniatura `esqueletoBesteiro` do tabuleiro permanece separada.
+
+### Retrato do Escorpião de Pedra (2026-11-22)
+
+`assets/retratos/monstros/escorpiao_pedra.png` é o retrato do Escorpião de Pedra, com carapaça rochosa, pinças e ferrão. O registro base e o modelo personalizado declaram `portrait: "escorpiao_pedra"` no bestiário; `updateInitiativeTrack` usa essa arte para `escorpiao_pedra` e `escorpiao_de_pedra_customizado`. A miniatura `escorpiaodepedra` do tabuleiro permanece separada.
+
+### Retrato do Escorpião Negro Gigante (2026-11-22)
+
+`assets/retratos/monstros/escorpiao_negro_gigante.png` é o retrato de carapaça negra para o tipo personalizado `escorpiao_gigante`. O modelo e a ficha do bestiário apontam para `portrait: "escorpiao_negro_gigante"`, e `updateInitiativeTrack` usa a mesma arte na iniciativa. A miniatura/modelo 3D do tabuleiro permanece separado.
+
+### Retrato do Escorpião Pequeno Amarelo (2026-11-22)
+
+`assets/retratos/monstros/escorpiao_pequeno_amarelo.png` é o retrato amarelo-ocre para o tipo personalizado `escorpiao_pequeno`. O cadastro aponta para `portrait: "escorpiao_pequeno_amarelo"` no bestiário, e `updateInitiativeTrack` usa essa imagem na iniciativa. O modelo 3D amarelo e a miniatura do tabuleiro permanecem separados.
+
+### Retrato da Aranha Sombria (2026-11-22)
+
+`assets/retratos/monstros/aranha_sombria.png` é o retrato da Aranha Sombria, com olhos violeta e teias ao fundo. `MONSTER_DEFS` declara `portrait: "aranha_sombria"` no bestiário e `updateInitiativeTrack` usa essa arte para `aranha_sombria`. A miniatura `aranhasombria` do tabuleiro permanece separada.
+
+### Retrato do Crocodilo Jovem (2026-11-22)
+
+`assets/retratos/monstros/crocodilo_jovem.png` é o retrato do Crocodilo Jovem, com escamas oliva e cenário de pântano. `MONSTER_DEFS` declara `portrait: "crocodilo_jovem"` no bestiário e `updateInitiativeTrack` usa a arte para `crocodilo_jovem`. A miniatura `crocodiloJovem` do tabuleiro permanece separada.
+
+### Retrato do Jacaré (2026-11-22)
+
+`assets/retratos/monstros/jacare.png` é o retrato do Jacaré, maior e de focinho mais largo que o Crocodilo Jovem. `MONSTER_DEFS` já aponta `portrait: "jacare"` para o bestiário, e `updateInitiativeTrack` agora usa essa arte para `jacare`. A miniatura do tabuleiro permanece separada.
+
+### Retrato da Cobra Constritora (2026-11-22)
+
+`assets/retratos/monstros/cobra_constritora.png` é o retrato da Cobra Constritora, com o corpo grosso enrolado em destaque. `MONSTER_DEFS` declara `portrait: "cobra_constritora"` no bestiário e `updateInitiativeTrack` usa a mesma arte para `cobra_constritora`. A miniatura `cobraConstritora` do tabuleiro permanece separada.
+
+### Retrato da Cobra Venenosa (2026-11-22)
+
+`assets/retratos/monstros/cobra_venenosa.png` retrata a Cobra Venenosa com capelo aberto e presas à mostra. `MONSTER_DEFS` declara `portrait: "cobra_venenosa"` no bestiário e `updateInitiativeTrack` usa a mesma imagem para `cobra_venenosa`. A miniatura `cobraVenenosa` do tabuleiro permanece separada.
+
+### Retrato do Devorador Orgânico (2026-11-22)
+
+`assets/retratos/monstros/devorador_organico.png` retrata a massa gelatinosa do Devorador Orgânico com aberturas sensoriais e boca central. `MONSTER_DEFS` declara `portrait: "devorador_organico"` no bestiário e `updateInitiativeTrack` usa essa arte para `devorador_organico`. A miniatura `devoradorOrganico` do tabuleiro permanece separada.
+
+### Retrato do Devorador de Metal (2026-11-22)
+
+`assets/retratos/monstros/devorador_metal.png` retrata a massa gelatinosa com armas, placas e moedas corroídas incorporadas ao corpo. `MONSTER_DEFS` declara `portrait: "devorador_metal"` no bestiário e `updateInitiativeTrack` usa a mesma imagem para `devorador_metal`. A miniatura `devoradordemetal` do tabuleiro permanece separada.
+
+### Retrato do Bandido (2026-11-22)
+
+`assets/retratos/monstros/bandido.png` retrata o Bandido encapuzado com armadura de couro gasta e besta ao ombro. `MONSTER_DEFS` já aponta `portrait: "bandido"` para o bestiário, e `updateInitiativeTrack` agora usa a mesma arte para `bandido`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Capanga (2026-11-22)
+
+`assets/retratos/monstros/capanga.png` retrata o Capanga como um combatente corpulento com couro reforçado e machado. `MONSTER_DEFS` já aponta `portrait: "capanga"` para o bestiário, e `updateInitiativeTrack` agora usa essa arte para `capanga`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Necromante (2026-11-22)
+
+`assets/retratos/monstros/necromante.png` retrata o Necromante encapuzado com magia verde e uma caveira. `MONSTER_DEFS` declara `portrait: "necromante"` no bestiário e `updateInitiativeTrack` usa essa arte para `necromante`. A miniatura `necromante` do tabuleiro permanece separada.
+
+### Retrato do Mago das Trevas (2026-11-22)
+
+`assets/retratos/monstros/mago_das_trevas.png` retrata o Mago das Trevas com vestes azul-escuras e magia sombria violeta, distinto do Necromante. `MONSTER_DEFS` declara `portrait: "mago_das_trevas"` no bestiário, e `updateInitiativeTrack` usa essa imagem para `dark_mage`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Zumbi Infectado (2026-11-22)
+
+`assets/retratos/monstros/zumbi_infectado.png` retrata o Zumbi Infectado com pele cinza-esverdeada, olhos turvos e roupas rasgadas. `MONSTER_DEFS` declara `portrait: "zumbi_infectado"` no bestiário, e `updateInitiativeTrack` usa a mesma arte para `zumbi_infectado`. A miniatura `zumbi` do tabuleiro permanece separada.
+
+### Retrato do Bugbear das Sombras (2026-11-22)
+
+`assets/retratos/monstros/bugbear_das_sombras.png` retrata o Bugbear como a criatura monstruosa de sombras da miniatura, com olhos claros e garras. `MONSTER_DEFS` declara `portrait: "bugbear_das_sombras"` no bestiário, e `updateInitiativeTrack` usa essa arte para `bugbear_sombras`. A miniatura `bugbear` do tabuleiro permanece separada.
+
+### Retrato do Ogro de Clava (2026-11-22)
+
+`assets/retratos/monstros/ogro_clava.png` retrata o Ogro com clava pesada de madeira e roupas de pele. `MONSTER_DEFS` declara `portrait: "ogro_clava"` no bestiário, e `updateInitiativeTrack` usa essa arte para `ogro_clava`. A miniatura `ogroClava` do tabuleiro permanece separada.
+
+### Retrato do Ogro de Lança (2026-11-22)
+
+`assets/retratos/monstros/ogro_lanca.png` retrata o Ogro de Lança com lança longa e escudo visíveis. `MONSTER_DEFS` declara `portrait: "ogro_lanca"` no bestiário, e `updateInitiativeTrack` usa essa arte para `ogro_lanca`. A miniatura `ogroLanca` do tabuleiro permanece separada.
+
+### Retrato do Troll (2026-11-22)
+
+`assets/retratos/monstros/troll.png` retrata o Troll de pele verde-oliva, porte robusto e clava pesada. `MONSTER_DEFS` declara `portrait: "troll"` no bestiário, e `updateInitiativeTrack` usa essa imagem para `troll`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Gilo Dedos Sujos (2026-11-22)
+
+`assets/retratos/monstros/gilo_dedos_sujos.png` retrata Gilo com chapéu gasto, barba escura e duas bestas de mão. A ficha personalizada já declara `portrait: "gilo_dedos_sujos"` no bestiário; `updateInitiativeTrack` usa a mesma imagem na iniciativa. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Lagarto Carniceiro (2026-11-22)
+
+`assets/retratos/monstros/lagarto_carniceiro.png` retrata o Lagarto Carniceiro de duas cabeças, com escamas escuras, espinhos e olhos amarelos, seguindo a miniatura. A ficha personalizada já declara `portrait: "lagarto_carniceiro"` no bestiário; `updateInitiativeTrack` usa a mesma imagem na iniciativa. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Grotão (2026-11-22)
+
+`assets/retratos/monstros/grotao.png` retrata o Grotão com carapaça quase negra, pescoço alongado para a frente, espinhos dorsais, presas e saliva ácida, seguindo a miniatura. As fichas `grotao` e `grotao_customizado` usam `portrait: "grotao"` no bestiário; `updateInitiativeTrack` mostra a mesma arte para ambos os tipos. A miniatura do tabuleiro permanece separada.
+
+### Retrato da Harpia (2026-11-22)
+
+`assets/retratos/monstros/harpia.png` retrata a Harpia com rosto humano, cabelos escuros ao vento, asas cinzentas e garras, seguindo sua miniatura. A ficha personalizada `harpia` usa `portrait: "harpia"` no bestiário; `updateInitiativeTrack` exibe a mesma imagem para `harpia`. A miniatura 3D permanece separada.
+
+### Retrato do Molochus (2026-11-22)
+
+`assets/retratos/monstros/molochos_retrato.png` retrata a criatura quadrúpede de chifres curvos, placas negras e juba flamejante, seguindo a miniatura. As fichas Jovem, Adulto e Ancião declaram `portrait: "molochos_retrato"` no catálogo do bestiário; `updateInitiativeTrack` usa a mesma arte para os três tipos. A arte horizontal `molochos.png` e a miniatura do tabuleiro permanecem separadas.
+
+### Retrato do Garaloux (2026-11-22)
+
+`assets/retratos/monstros/garaloux_retrato.png` retrata o Garaloux com pelagem escura, chifres curvos e asas emplumadas, seguindo a miniatura. As fichas Jovem, Adulto e Alfa declaram `portrait: "garaloux_retrato"` no catálogo do bestiário; `updateInitiativeTrack` usa a mesma arte para os três tipos. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Lacralion (2026-11-22)
+
+`assets/retratos/monstros/lacralion_retrato.png` retrata o Lacralion como aracnídeo de carapaça vermelho-escura, pinças e ferrão curvado, seguindo a miniatura. As fichas Filhote, Adulto e Ancião declaram `portrait: "lacralion_retrato"` no catálogo do bestiário; `updateInitiativeTrack` usa a mesma arte para os três tipos. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Ferrão dos Charcos (2026-11-22)
+
+`assets/retratos/monstros/ferrao_charcos_retrato.png` retrata a aberração dos pântanos com cabeça bulbosa, boca circular cheia de dentes e tentáculos curvados, seguindo a miniatura. As fichas Jovem, Adulto e Ancião declaram `portrait: "ferrao_charcos_retrato"` no catálogo do bestiário; `updateInitiativeTrack` usa a mesma arte para os três tipos e seus aliases. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Bardo (2026-11-22)
+
+`assets/retratos/monstros/bardo.png` retrata o Bardo comum com manto vermelho e alaúde, baseado na miniatura. A ficha nativa e o catálogo declaram `portrait: "bardo"` no bestiário; `updateInitiativeTrack` usa o mesmo retrato para `bardo`. Ele permanece distinto do Bardo da Caravana.
+
+### Retrato do Bardo da Caravana (2026-11-22)
+
+`assets/retratos/monstros/bardo_da_caravana.png` retrata o bardo com manto verde-musgo, detalhes dourados e alaúde, baseado no modelo 3D da caravana. A ficha nativa declara `portrait: "bardo_da_caravana"` no bestiário; `updateInitiativeTrack` usa essa arte para `bardo_da_caravana`, separada do retrato do Bardo comum.
+
+### Retrato do Soldado (2026-11-22)
+
+`assets/retratos/monstros/soldado.png` retrata o soldado de elmo de aço, túnica azul e branca e lança. A ficha personalizada já declara `portrait: "soldado"` no bestiário; `updateInitiativeTrack` usa a mesma imagem para `soldado`. A miniatura do tabuleiro permanece separada.
+
+### Retrato da Vela de Fogo (2026-11-22)
+
+`assets/retratos/monstros/vela_fogo_retrato.png` retrata a Vela de Fogo em close-up, com escamas negras, crista incandescente e cauda flamejante. A ficha personalizada declara `portrait: "vela_fogo_retrato"` no bestiário; `updateInitiativeTrack` usa a mesma arte para `vela_de_fogo` e seu alias. A miniatura e a imagem antiga de corpo inteiro permanecem separadas.
+
+### Retrato do Assassino da Serra (2026-11-22)
+
+`assets/retratos/monstros/assassino_da_serra_retrato.png` retrata o Assassino da Serra em close-up com capuz escuro, máscara de aço e armadura preta com detalhes marrons. A ficha personalizada `assassino_da_caravana` declara `portrait: "assassino_da_serra_retrato"` no bestiário; `updateInitiativeTrack` usa a mesma arte para esse tipo e o alias `assassino_da_serra`. A arte de corpo inteiro e a miniatura permanecem separadas.
+
+### Retrato do Rato Gigante (2026-11-22)
+
+`assets/retratos/monstros/rato_gigante_retrato.png` retrata o Rato Gigante em close-up, com pelo escuro, orelhas rosadas, bigodes e incisivos grandes. A ficha personalizada declara `portrait: "rato_gigante_retrato"` no bestiário; `updateInitiativeTrack` usa a mesma arte para `rato_gigante`. A arte anterior de corpo inteiro e a miniatura permanecem separadas.
+
+### Retrato do Minotauro (2026-11-22)
+
+`assets/retratos/monstros/minotauro_retrato.png` retrata o Minotauro de pelagem cinza-amarronzada, chifres largos, armadura e machado. As fichas Minotauro e Minotauro de Elite declaram `portrait: "minotauro_retrato"` no bestiário; `updateInitiativeTrack` usa a mesma arte para ambos os tipos. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Lobisomem (2026-11-22)
+
+`assets/retratos/monstros/lobisomem_retrato.png` retrata o Lobisomem comum de pelagem cinza, olhos âmbar e presas expostas. A ficha declara `portrait: "lobisomem_retrato"` no bestiário; `updateInitiativeTrack` usa essa imagem para `lobisomem`. O Alfa usa ficha, retrato e miniatura próprios.
+
+### Retrato do Lobisomem Alfa (2026-11-22)
+
+`assets/retratos/monstros/lobisomem_alfa_retrato.png` retrata o Alfa maior e mais sobrenatural, com pelagem quase negra, olhos vermelhos luminosos e aura azulada. A ficha declara `portrait: "lobisomem_alfa_retrato"` no bestiário; `updateInitiativeTrack` usa essa imagem para `lobisomem_alfa`, distinta da arte do Lobisomem comum.
+
+### Retrato da Medusa (2026-11-22)
+
+`assets/retratos/monstros/medusa_retrato.png` retrata a Medusa com serpentes no lugar dos cabelos, pele cinza-pálida e olhar verde-dourado. As fichas Medusa, Grande Medusa e Grande Górgona declaram `portrait: "medusa_retrato"` no bestiário; `updateInitiativeTrack` usa a mesma arte para os três tipos.
+
+### Retrato do Ciclope (2026-11-22)
+
+`assets/retratos/monstros/ciclope_retrato.png` retrata o Ciclope em close-up, destacando o olho único, a armadura gasta e a clava. A ficha declara `portrait: "ciclope_retrato"` no bestiário; `updateInitiativeTrack` usa essa imagem para `ciclope`. O JPEG anterior e a miniatura permanecem separados.
+
+### Retrato do Gigante Rúnico (2026-11-22)
+
+`assets/retratos/monstros/gigante_runas_retrato.png` retrata o Gigante Rúnico em close-up, com barba branca longa, olhos e runas azuis luminosos e parte do cajado rúnico. A ficha `gigante_runico` usa `portrait: "gigante_runas_retrato"` no bestiário; `updateInitiativeTrack` mostra essa arte para `gigante_runico` e `gigante_runas`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Gigante da Guerra (2026-11-22)
+
+`assets/retratos/monstros/gigante_guerreiro_retrato.png` retrata o Gigante da Guerra em close-up, com cabeça raspada, barba escura, ombreira de ferro e partes do machado e escudo. A ficha `gigante_guerra` usa `portrait: "gigante_guerreiro_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma arte para `gigante_guerra` e `gigante_guerreiro`. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Tiranossauro Rex (2026-11-22)
+
+`assets/retratos/monstros/tiranossauro_rex_retrato.png` retrata o Tiranossauro Rex em close-up, com escamas verde-oliva, olho âmbar e mandíbula aberta. A ficha `tiranossauro_rex` usa `portrait: "tiranossauro_rex_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma arte na iniciativa. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Tirano da Mata (2026-11-22)
+
+`assets/retratos/monstros/tirano_da_mata_retrato.png` retrata a fera reptiliana de escamas negras, espinhos dorsais e mandíbula cheia de dentes, seguindo a miniatura. As fichas Tirano da Mata e Tirano Ancestral declaram `portrait: "tirano_da_mata_retrato"` no bestiário; `updateInitiativeTrack` usa a mesma imagem para ambos. A antiga imagem de cena e a miniatura permanecem separadas.
+
+### Retrato do Esqueleto Animal (2026-11-22)
+
+`assets/retratos/monstros/esqueleto_animal.png` é o retrato do Esqueleto Animal quadrúpede, com crânio alongado e costelas expostas. `MONSTER_DEFS` declara `portrait: "esqueleto_animal"` no bestiário e `updateInitiativeTrack` usa essa arte para `esqueleto_animal`. A miniatura `esqueletoAnimal` e o retrato do Grande Esqueleto Animal permanecem separados.
+
+### Retrato do Grande Esqueleto Animal (2026-11-22)
+
+`assets/retratos/monstros/esqueleto_animal_grande.png` retrata o Grande Esqueleto Animal como um urso esquelético de postura ereta, tórax largo e patas dianteiras erguidas. O modelo personalizado `esqueleto_animal_customizado` declara `portrait: "esqueleto_animal_grande"` no bestiário; `updateInitiativeTrack` usa essa arte para o tipo personalizado. A miniatura `esqueleto_animal_grande` do tabuleiro permanece separada.
+
 ### Desempenho online: entrega de arquivos (2026-11-17)
 
 Medido no navegador (login, cidade, 5 lojas, Campo de Treinamento): a primeira visita trafegava 164 MB e passou a 39 MB; o envio de estado do servidor já era leve (~4 ms e ~14 KB por jogador a cada ação) e não mudou. Quatro peças, todas em `_serve_static` (`server.py`): **(1) versão do cliente:** `_versao_cliente()` (hash de mtime+tamanho de `index.html`, `game.js`, `game.css` e `src/**/*.js`) é carimbada no `index.html` servido (`window.LFH_VER`, `_index_com_versao`); os scripts usam `?v=<versão>` em vez de `Date.now()` e respondem `immutable` quando o `v` bate (`_cache_do_estatico`). O ETag do index leva a versão e não há `Last-Modified`, senão um script alterado ficaria preso no cache. `_ASSET_VER` do `game.js` usa a mesma versão. **(2) cache da arte:** `assets/` pedido de fora do micro (`_pedido_de_fora`, pelo `Host`) ganha `max-age=3600, stale-while-revalidate=604800`; em localhost segue `no-cache`, para a arte trocada aparecer na primeira recarga. **(3) miniaturas:** `?w=<largura>` (lista `_MINI_LARGURAS`) devolve a imagem reduzida, guardada em `.cache/miniaturas/` com mtime e tamanho do original no nome (`_miniatura`). O cliente pede 192 nos ícones de item (`itemIconHTML`, com `loading="lazy"`), 128 nos de habilidade, 512 em `assets/pawns/` e 768 em `assets/objetos/` (`_ASSET_LARGURA` em `_assetURL`; `_imgURL` é o helper). **(4) PNG grande sem `?w=`** (200 KB ou mais, em `assets/`) vai no mesmo tamanho em WebP para o navegador que manda `Accept: image/webp` (`Vary: Accept`): cobre fundos de cena, telas de transição e retratos sem tocar no cliente. Precisa do Pillow (agora em `requirements.txt`); sem ele o servidor serve o original. As miniaturas são geradas no primeiro pedido, em segundo plano ao subir (`_preaquecer_miniaturas`) ou de antemão por `python -X utf8 tools/gerar_miniaturas.py`. **Imagem nova exibida pequena: peça com `_imgURL(caminho, largura)`.** Não use `?v=Date.now()` em arte nem em script. Junto: `_manter_ws_vivo` manda ping a cada 40 s (túneis derrubam WebSocket parado; não exige resposta), e o GLB do herói perdeu o `?v=Date.now()` que o rebaixava a cada sessão. O que ainda pesa são os modelos 3D (`assets/objetos/*.glb`, com textura embutida) e a música. Teste: `python -X utf8 tools/test_desempenho_online.py`.
@@ -1182,8 +1484,9 @@ locais ao navegador, sem alteração de estado ou protocolo do servidor.
 O painel inferior `#gm-log` mantém o minimizador interno `#gm-log-toggle` e tem
 uma preferência independente `lfh_gm_log_mode`. No desktop, “Recolher” retira o
 painel inteiro do fluxo vertical; a alça inferior abre uma prévia sobre o mapa,
-e “Fixar” devolve sua altura ao layout. A faixa de iniciativa e o resumo de turno
-continuam independentes. `Esc` e Voltar/B fecham a prévia; no celular, o painel
+e “Fixar” devolve sua altura ao layout. A coluna de iniciativa e o resumo de turno
+continuam independentes. Sem preferência salva, o log começa recolhido no desktop
+e minimizado no celular. `Esc` e Voltar/B fecham a prévia; no celular, o painel
 permanece no layout responsivo atual.
 
 ### Encerramento automático de turno na exploração
@@ -3080,20 +3383,25 @@ de salvamento. Gerenciar pontos/capítulos com o jogo fechado continua só do Me
 > Editor de Itens. Testes: `tools/test_editor_itens.py` [D1] + node. Fases seguintes: as
 > outras sub-abas (anéis/botas/poções/arremessáveis/venenos) + habilidades ativáveis.
 
-> **Faixa de iniciativa multiplayer:** `game_state` já envia `initiative_order` e
-> `current_actor`; o cliente (`game.js`) mostra a ordem autoritativa numa faixa
-> horizontal independente, imediatamente acima do log `#gm-log` (“MESTRE DO JOGO”).
-> A faixa inclui heróis e monstros, destaca o ator atual e desloca a fila para mantê-lo
-> visível quando necessário. Ela se oculta no modo de combate de teste, que tem fila
-> própria, e permanece visível quando o log é minimizado.
-
-> **Resumo pré-turno multiplayer:** logo abaixo da iniciativa e acima do log, o cliente
-> mostra um painel apenas para o herói que está agindo ou será o próximo na fila. Ele
-> resume dano/cura e condições recebidos desde a última vez, PV/condições atuais,
-> inimigos visíveis ao alcance do ataque básico, slots de magia livres e aliados feridos.
-> Alvos são filtrados pela visão local; dados vêm do `game_state`, sem alterar regras,
-> turnos ou permissões. O painel se oculta para mestre, jogadores fora da vez e modo de teste.
-
+> **Coluna de iniciativa:** o cliente sobrepõe `initiative_order` à borda esquerda
+> do tabuleiro, a partir de `current_actor` até o fim da rodada. Usa retratos dos
+> heróis e miniaturas dos monstros, com destaque para o ator atual e nomes ao
+> passar o mouse. Clicar no retrato enquadra a unidade no 2D ou no 3D.
+> Para monstros,
+> `monsters[].initiative_engaged` espelha `_monstro_ativo_em_combate` e a interface
+> aplica a visão local do tabuleiro. O combate de teste usa sua fila própria.
+>
+> **Painel da vez:** o resumo acumula dano, cura e condições separadamente para cada
+> herói controlado pela conexão. O resumo e as ações aparecem no painel direito
+> na vez do herói em foco. Encerrar Turno e Encerramento Automático ficam no
+> rodapé do painel direito.
+> O cartão sobre o canto inferior esquerdo acompanha o herói da vez controlado
+> pela conexão, mesmo ao consultar outro herói. Mostra retrato, PV, fome, sede,
+> movimentos e ações restantes. Slots por círculo aparecem no cartão do Mago
+> e do Clérigo. Os cartões à direita mostram PV e fome e mantêm os atalhos de
+> ficha e foco.
+> O botão Marcar fica abaixo do cartão inferior esquerdo e o menu abre para cima.
+>
 > **Editor de Itens — bônus de visão:** efeito escalar **`vision`** no motor de multi-efeito
 > (`_apply_single_effect`, mesmo ramo de `spd`/`initiative`) → `p["vision_bonus"]`, somado em
 > `_get_raio_visao` **antes** do piso `max(1, …)`, ao lado do bônus de atributos e do Guerreiro

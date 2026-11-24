@@ -388,12 +388,13 @@ document.body.innerHTML = `
     <div id="gamepad-context-hud" aria-live="polite" hidden></div>
     <div id="gamepad-shortcuts-tray" aria-label="Atalhos do controle" hidden></div>
     <div id="gamepad-shortcuts-hud" aria-label="Atalhos do controle" hidden></div>
-    <div id="map-wrap" data-guia="hud:tabuleiro">
-      <canvas id="dungeon-canvas"></canvas>
-      <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
-      <div id="objectives-hud" data-guia="hud:objetivos" style="display:none"></div>
-      <button id="objectives-toggle" type="button" data-gamepad-action="activate" tabindex="0"
-              aria-controls="objectives-hud" aria-keyshortcuts="O" aria-expanded="false" style="display:none"></button>
+    <div id="battlefield-layout">
+      <div id="battlefield-left-hud">
+        <div id="initiative-track" role="group" hidden>
+          <div id="initiative-track-actors" role="list" tabindex="0"></div>
+        </div>
+        <div id="battlefield-turn-tools">
+        <section id="turn-hero-hud" hidden></section>
       <div id="cooperative-marker-control" hidden>
         <button id="cooperative-marker-toggle" type="button" data-gamepad-action="activate" tabindex="0"
                 aria-expanded="false" aria-controls="cooperative-marker-options" onclick="_toggleCooperativeMarkerMenu()">📍 <span data-i18n="ui.marker.title">Marcar</span></button>
@@ -405,17 +406,24 @@ document.body.innerHTML = `
         </div>
         <span id="cooperative-marker-prompt" role="status" aria-live="polite" hidden></span>
       </div>
+        </div>
+      </div>
+    <div id="map-wrap" data-guia="hud:tabuleiro">
+      <canvas id="dungeon-canvas"></canvas>
+      <!-- Fase 3: HUD de objetivos + botão Libertar (só em masmorra autorada) -->
+      <div id="objectives-hud" data-guia="hud:objetivos" style="display:none"></div>
+      <button id="objectives-toggle" type="button" data-gamepad-action="activate" tabindex="0"
+              aria-controls="objectives-hud" aria-keyshortcuts="O" aria-expanded="false" style="display:none"></button>
       <button id="btn-libertar" style="display:none" onclick="libertarRefem()" data-i18n="ui.hud.libertar_prisioneiro">🔓 Libertar prisioneiro</button>
     </div>
-    <canvas id="dice-canvas"></canvas>
-    <div id="initiative-track" role="group" hidden>
-      <span id="initiative-track-title"></span>
-      <div id="initiative-track-actors" role="list"></div>
+      <div id="player-fabs">
+        <button id="actions-fab" onclick="toggleFichaDrawer(true)" data-i18n-title="ui.hud.personagem_title" title="Personagem (ações e habilidades)">⚔️</button>
+        <button id="fab-inventario" data-guia="botao:inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
+        <button id="fab-habilidades" data-guia="botao:habilidades" data-guia-acao="abrir-menu" data-gamepad-action="activate" data-i18n-title="ui.hud.habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
+        <button id="fab-magias" data-guia="botao:magias" data-guia-acao="abrir-menu" data-gamepad-action="activate" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
+      </div>
     </div>
-    <section id="turn-brief" aria-live="polite" hidden>
-      <div class="turn-brief-heading"><span id="turn-brief-title"></span><span id="turn-brief-round"></span></div>
-      <div id="turn-brief-content"></div>
-    </section>
+    <canvas id="dice-canvas"></canvas>
     <div id="gm-log">
       <div id="gm-log-header">
         <span data-i18n="ui.hud.mestre_do_jogo">📖 MESTRE DO JOGO</span>
@@ -457,12 +465,18 @@ document.body.innerHTML = `
         </div>
         <div class="section-title" data-i18n="ui.hud.meu_personagem">Meu Personagem</div>
         <div id="my-stats"></div>
-        <div class="section-title" data-i18n="ui.hud.acoes">Ações</div>
-        <div class="actions-grid" id="action-btns"></div>
+        <section id="turn-brief" aria-live="polite" hidden>
+          <div class="turn-brief-heading"><span id="turn-brief-title"></span><span id="turn-brief-round"></span></div>
+          <div id="turn-brief-content"></div>
+        </section>
+        <div id="side-actions">
+          <div class="section-title" data-i18n="ui.hud.acoes">Ações</div>
+          <div class="actions-grid" id="action-btns"></div>
+        </div>
         <div class="section-title" data-i18n="ui.hud.habilidades">Habilidades</div>
         <div class="skills-list" id="skills-list"></div>
       </div>
-      <div style="padding:6px 8px;border-top:1px solid var(--border);flex-shrink:0;">
+      <div id="side-end-turn">
         <button type="button" class="btn-end-turn" id="btn-end-turn" data-guia="botao:encerrar_turno" disabled>
           <span data-i18n="ui.hud.encerrar_turno">⏭ Encerrar Turno</span>
         </button>
@@ -474,13 +488,6 @@ document.body.innerHTML = `
   <button type="button" id="side-panel-edge" data-gamepad-action="activate" tabindex="0" aria-controls="side-panel" aria-expanded="false" hidden>‹</button>
   <!-- Celular: fundo escuro + botão flutuante que abre/fecha Ações/Habilidades (gaveta) -->
   <div id="ficha-backdrop" onclick="toggleFichaDrawer(false)"></div>
-  <!-- Celular: fileira de menus do jogador (Personagem, Inventário, Habilidades, Magias) -->
-  <div id="player-fabs">
-    <button id="actions-fab" onclick="toggleFichaDrawer(true)" data-i18n-title="ui.hud.personagem_title" title="Personagem (ações e habilidades)">⚔️</button>
-    <button id="fab-inventario" data-guia="botao:inventario" onclick="if(GS.myPid) InventoryModal.toggle(GS.myPid)" data-i18n-title="ui.hud.inventario_title" title="Inventário">🎒</button>
-    <button id="fab-habilidades" data-guia="botao:habilidades" data-guia-acao="abrir-menu" data-gamepad-action="activate" data-i18n-title="ui.hud.habilidades" onclick="if(GS.myPid) abrirMenuHabilidades(GS.myPid)" title="Habilidades">📖</button>
-    <button id="fab-magias" data-guia="botao:magias" data-guia-acao="abrir-menu" data-gamepad-action="activate" data-i18n-title="ui.ficha.magias_title" onclick="if(GS.myPid) abrirMenuMagias(GS.myPid)" title="Magias" style="display:none">✨</button>
-  </div>
   <!-- Atalho exclusivo do mestre para o Mapa de CR; heróis usam o menu de personagem. -->
   <button id="ficha-fab" data-i18n-title="ui.hud.mapa_cr_title" title="Mapa de CR (mestre)">🗺️</button>
 </div>
@@ -6078,6 +6085,8 @@ function handleGameState(msg){
   if(markerControl?.hidden) _cancelCooperativeMarkerTarget();
   if(Array.isArray(msg?.tiles) && typeof GS.setCooperativeVisionPreference === 'function')
     GS.setCooperativeVisionPreference(!!(GS.temGrupo || (_visaoCompPref && visaoCompartilhadaPermitida(msg))));
+  updateInitiativeTrack(msg);
+  renderTurnHeroHud(msg);
   _atualizarBotaoEncerrarTurno(msg);
   syncDiceCanvas();
   renderMap(msg);
@@ -6932,105 +6941,286 @@ function buyPoisonItem(baseId){
   send({type:'shop_buy',shop:'mercador',item_id:baseId,poison_upgrades:upgrades});
 }
 
-// A faixa mostra a ordem autoritativa recebida do servidor. O combate de teste
-// usa uma fila própria e fica fora desta iniciativa multiplayer.
-let _initiativeTrackFocusKey = '';
-function updateInitiativeTrack(msg){
-  const track = document.getElementById('initiative-track');
-  const actorsEl = document.getElementById('initiative-track-actors');
-  if(!track || !actorsEl) return;
-  const order = Array.isArray(msg?.initiative_order) ? msg.initiative_order : [];
-  if(msg?.test_mode || !order.length){
+// A fila do servidor inclui atores que o jogador ainda não pode ver.
+let _initiativeTrackKey = '';
+let _initiativeCameraTurn = '';
+let _initiativeCameraRequest = 0;
+function _initiativeTurnKey(state){
+  return `${state.round}:${_initiativeActorKey(state.current_actor)}:${GS.myPid}`;
+}
+
+function _centerInitiativeActor(id, monster){
+  const state = GS.gameState;
+  if(state?.phase !== 'playing') return;
+  const actor = (monster ? state.monsters : state.players)?.find(entity => String(entity.id) === id);
+  if(!actor?.pos || !(actor.hp > 0) || actor.fora_masmorra || actor.fosso_oculto) return;
+  const [x, y] = actor.pos;
+  if(!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0) return;
+  const [dx, dy] = monster ? _monsterVisualCenterOffset(actor) : [0, 0];
+  const pos = [x + dx, y + dy];
+  _initiativeCameraTurn = _initiativeTurnKey(state);
+  _initiativeCameraRequest++;
+  if(mode3D) centralizarCamera3DNoPeao(pos);
+  else _scrollMapToTile(pos);
+}
+
+function updateInitiativeTrack(state){
+  const track = $('initiative-track'), list = $('initiative-track-actors');
+  if(!track || !list) return;
+  const order = state.initiative_order || [];
+  const currentKey = _initiativeActorKey(state.current_actor);
+  const currentIndex = order.findIndex(entry => _initiativeActorKey(entry) === currentKey);
+  if(state.phase !== 'playing' || state.test_mode || currentIndex < 0){
     track.hidden = true;
-    _initiativeTrackFocusKey = '';
+    list.replaceChildren();
+    _initiativeTrackKey = '';
+    return;
+  }
+  const players = new Map((state.players || []).map(actor => [String(actor.id), actor]));
+  const monsters = new Map((state.monsters || []).map(actor => [String(actor.id), actor]));
+  const me = players.get(String(GS.myPid));
+  const master = GS.isMaster();
+  const vision = !master && me?.pos && state.explored ? computeVisionSet(state, me) : new Set();
+  const entries = [];
+  for(const entry of order.slice(currentIndex)){
+    const monster = entry.kind === 'monster';
+    const actor = (monster ? monsters : players).get(String(entry.id));
+    if(!actor || !(actor.hp > 0)) continue;
+    if(monster){
+      if(!actor.initiative_engaged || _monstroOcultadoParaJogador(actor)
+        || (!master && !vision.has(actor.pos?.join(',')))) continue;
+    } else if(entry.kind !== 'player' || actor.alive === false || actor.connected === false
+      || actor.fora_masmorra || actor.fosso_oculto) continue;
+    const sprite = monster ? _monsterImageName(actor) : null;
+    const portrait = monster
+      ? (actor.type === 'lobo_cinzento'
+        ? 'assets/retratos/monstros/lobo_cinzento.png'
+        : actor.type === 'lobo_cinzento_customizado'
+          ? 'assets/retratos/monstros/lobo_alfa.png'
+        : actor.type === 'urso_pardo'
+          ? 'assets/retratos/monstros/urso_pardo.png'
+        : ['urso_negro', 'urso_negro_customizado'].includes(actor.type)
+          ? 'assets/retratos/monstros/urso_negro.png'
+        : actor.type === 'goblin_combatente'
+          ? 'assets/retratos/monstros/goblin_combatente.png'
+        : actor.type === 'goblin_arqueiro'
+          ? 'assets/retratos/monstros/goblin_arqueiro.png'
+        : actor.type === 'goblin_assassino'
+          ? 'assets/retratos/monstros/goblin_assassino.png'
+        : actor.type === 'goblin_dual'
+          ? 'assets/retratos/monstros/goblin_dual.png'
+        : ['goblin_xama', 'xama_goblin_customizado'].includes(actor.type)
+          ? 'assets/retratos/monstros/goblin_xama.png'
+        : actor.type === 'orc_guerreiro'
+          ? 'assets/retratos/monstros/orc_guerreiro.png'
+        : actor.type === 'orc'
+          ? 'assets/retratos/monstros/orc_comum.png'
+        : actor.type === 'kobold_lanceiro'
+          ? 'assets/retratos/monstros/kobold_lanceiro.png'
+        : actor.type === 'kobold_besteiro'
+          ? 'assets/retratos/monstros/kobold_besteiro.png'
+        : actor.type === 'kobold_mago'
+          ? 'assets/retratos/monstros/kobold_mago.png'
+        : actor.type === 'esqueleto_humano'
+          ? 'assets/retratos/monstros/esqueleto_humano.png'
+        : actor.type === 'esqueleto_animal'
+          ? 'assets/retratos/monstros/esqueleto_animal.png'
+        : actor.type === 'esqueleto_animal_customizado'
+          ? 'assets/retratos/monstros/esqueleto_animal_grande.png'
+        : actor.type === 'esqueleto_humano_customizado'
+          ? 'assets/retratos/monstros/esqueleto_besteiro.png'
+        : actor.type === 'skeleton'
+          ? 'assets/retratos/monstros/esqueleto_armadurado.png'
+        : actor.type === 'escorpiao_gigante'
+          ? 'assets/retratos/monstros/escorpiao_negro_gigante.png'
+        : actor.type === 'aranha_sombria'
+          ? 'assets/retratos/monstros/aranha_sombria.png'
+        : actor.type === 'crocodilo_jovem'
+          ? 'assets/retratos/monstros/crocodilo_jovem.png'
+        : actor.type === 'jacare'
+          ? 'assets/retratos/monstros/jacare.png'
+        : actor.type === 'lagarto_carniceiro'
+          ? 'assets/retratos/monstros/lagarto_carniceiro.png'
+        : actor.type === 'cobra_constritora'
+          ? 'assets/retratos/monstros/cobra_constritora.png'
+        : actor.type === 'cobra_venenosa'
+          ? 'assets/retratos/monstros/cobra_venenosa.png'
+        : actor.type === 'devorador_organico'
+          ? 'assets/retratos/monstros/devorador_organico.png'
+        : actor.type === 'devorador_metal'
+          ? 'assets/retratos/monstros/devorador_metal.png'
+        : actor.type === 'bandido'
+          ? 'assets/retratos/monstros/bandido.png'
+        : actor.type === 'boneco_palha'
+          ? 'assets/retratos/monstros/boneco_palha_retrato.png'
+        : ['boneco_treino', 'boneco_treino_veneno'].includes(actor.type)
+          ? 'assets/retratos/monstros/boneco_treino_retrato.png'
+        : actor.type === 'cavalo_sela'
+          ? 'assets/retratos/monstros/cavalo_sela_retrato.png'
+        : actor.type === 'vaca'
+          ? 'assets/retratos/monstros/vaca_arisca_retrato.png'
+        : actor.type === 'gato'
+          ? 'assets/retratos/monstros/gato_retrato.png'
+        : actor.type === 'ovelha'
+          ? 'assets/retratos/monstros/ovelha_retrato.png'
+        : actor.type === 'pombo'
+          ? 'assets/retratos/monstros/pombo_retrato.png'
+        : actor.type === 'rato'
+          ? 'assets/retratos/monstros/rato_retrato.png'
+        : actor.type === 'leonel'
+          ? 'assets/retratos/monstros/leonel_retrato.png'
+        : actor.type === 'soldado'
+          ? 'assets/retratos/monstros/soldado.png'
+        : ['rato_gigante', 'rato_gicante'].includes(actor.type)
+          ? 'assets/retratos/monstros/rato_gigante_retrato.png'
+        : ['minotauro', 'minotauro_elite'].includes(actor.type)
+          ? 'assets/retratos/monstros/minotauro_retrato.png'
+        : actor.type === 'lobisomem'
+          ? 'assets/retratos/monstros/lobisomem_retrato.png'
+        : actor.type === 'lobisomem_alfa'
+          ? 'assets/retratos/monstros/lobisomem_alfa_retrato.png'
+        : ['medusa', 'grande_medusa', 'grande_gorgona'].includes(actor.type)
+          ? 'assets/retratos/monstros/medusa_retrato.png'
+        : actor.type === 'elemental_fogo'
+          ? 'assets/retratos/monstros/elemental_fogo_retrato.png'
+        : actor.type === 'elemental_pedra'
+          ? 'assets/retratos/monstros/elemental_pedra_retrato.png'
+        : actor.type === 'elemental_gelo'
+          ? 'assets/retratos/monstros/elemental_gelo_retrato.png'
+        : actor.type === 'elemental_ar'
+          ? 'assets/retratos/monstros/elemental_ar_retrato.png'
+        : actor.type === 'elemental_agua'
+          ? 'assets/retratos/monstros/elemental_agua_retrato.png'
+        : actor.type === 'elemental_eletrico'
+          ? 'assets/retratos/monstros/elemental_eletrico_retrato.png'
+        : actor.type === 'ciclope'
+          ? 'assets/retratos/monstros/ciclope_retrato.png'
+        : ['gigante_guerreiro', 'gigante_guerra'].includes(actor.type)
+          ? 'assets/retratos/monstros/gigante_guerreiro_retrato.png'
+        : ['gigante_runico', 'gigante_runas'].includes(actor.type)
+          ? 'assets/retratos/monstros/gigante_runas_retrato.png'
+        : ['tirano_da_mata', 'tirano_ancestral'].includes(actor.type)
+          ? 'assets/retratos/monstros/tirano_da_mata_retrato.png'
+        : actor.type === 'tiranossauro_rex'
+          ? 'assets/retratos/monstros/tiranossauro_rex_retrato.png'
+        : ['assassino_da_caravana', 'assassino_da_serra'].includes(actor.type)
+          ? 'assets/retratos/monstros/assassino_da_serra_retrato.png'
+        : ['vela_de_fogo', 'vela_fogo'].includes(actor.type)
+          ? 'assets/retratos/monstros/vela_fogo_retrato.png'
+        : actor.type === 'bardo'
+          ? 'assets/retratos/monstros/bardo.png'
+        : actor.type === 'bardo_da_caravana'
+          ? 'assets/retratos/monstros/bardo_da_caravana.png'
+        : actor.type === 'capanga'
+          ? 'assets/retratos/monstros/capanga.png'
+        : actor.type === 'gilo_dedos_sujos'
+          ? 'assets/retratos/monstros/gilo_dedos_sujos.png'
+        : actor.type === 'necromante'
+          ? 'assets/retratos/monstros/necromante.png'
+        : actor.type === 'dark_mage'
+          ? 'assets/retratos/monstros/mago_das_trevas.png'
+        : actor.type === 'zumbi_infectado'
+          ? 'assets/retratos/monstros/zumbi_infectado.png'
+        : ['escravo_vampirico', 'cria_vampirica'].includes(actor.type)
+          ? 'assets/retratos/monstros/cria_vampirica_retrato.png'
+        : ['vampiro', 'vampiro_jovem'].includes(actor.type)
+          ? 'assets/retratos/monstros/vampiro_retrato.png'
+        : ['mestre_vampiro', 'vampiro_anciao'].includes(actor.type)
+          ? 'assets/retratos/monstros/vampiro_anciao_retrato.png'
+        : actor.type === 'lorde_vampiro'
+          ? 'assets/retratos/monstros/lorde_vampiro_retrato.png'
+        : actor.type === 'harpia'
+          ? 'assets/retratos/monstros/harpia.png'
+        : ['grotao', 'grotao_customizado'].includes(actor.type)
+          ? 'assets/retratos/monstros/grotao.png'
+        : actor.type === 'bugbear_sombras'
+          ? 'assets/retratos/monstros/bugbear_das_sombras.png'
+        : ['molochos', 'molochus_jovem', 'molochus_adulto', 'molochus_anciao'].includes(actor.type)
+          ? 'assets/retratos/monstros/molochos_retrato.png'
+        : ['garaloux', 'garaloux_jovem', 'garaloux_adulto', 'garaloux_alfa'].includes(actor.type)
+          ? 'assets/retratos/monstros/garaloux_retrato.png'
+        : ['lacralion_filhote', 'lacralion_adulto', 'lacralion_anciao'].includes(actor.type)
+          ? 'assets/retratos/monstros/lacralion_retrato.png'
+        : ['ferrao_dos_charcos', 'ferrao_do_lamacal', 'ferrao_charcos_jovem', 'ferrao_charcos_adulto', 'ferrao_charcos_anciao'].includes(actor.type)
+          ? 'assets/retratos/monstros/ferrao_charcos_retrato.png'
+        : actor.type === 'ogro_clava'
+          ? 'assets/retratos/monstros/ogro_clava.png'
+        : actor.type === 'ogro_lanca'
+          ? 'assets/retratos/monstros/ogro_lanca.png'
+        : actor.type === 'troll'
+          ? 'assets/retratos/monstros/troll.png'
+        : actor.type === 'escorpiao_pequeno'
+          ? 'assets/retratos/monstros/escorpiao_pequeno_amarelo.png'
+        : ['escorpiao_pedra', 'escorpiao_de_pedra_customizado'].includes(actor.type)
+          ? 'assets/retratos/monstros/escorpiao_pedra.png'
+        : sprite && `assets/pawns/monstros/${sprite}/${sprite}.png`)
+      : HERO_PORTRAIT_PATHS[actor.class_id];
+    entries.push({
+      key: _initiativeActorKey(entry),
+      id: String(entry.id),
+      monster,
+      portrait,
+      name: String(actor.name || actor.class_id || actor.type || actor.id),
+      icon: actor.emoji || (monster ? '👹' : '🛡️')
+    });
+  }
+  track.hidden = !entries.length;
+  if(!entries.length){
+    list.replaceChildren();
+    _initiativeTrackKey = '';
     return;
   }
 
-  const players = new Map((msg.players || []).map(p => [String(p.id), p]));
-  const monsters = new Map((msg.monsters || []).map(m => [String(m.id), m]));
-  const current = msg.current_actor;
-  const currentKey = current ? `${current.kind}:${String(current.id)}` : '';
-  const visibleActors = order.map(entry => {
-    if(!entry || !entry.kind) return null;
-    const actor = entry.kind === 'player' ? players.get(String(entry.id))
-      : entry.kind === 'monster' ? monsters.get(String(entry.id)) : null;
-    if(!actor || Number(actor.hp) <= 0 || actor.fora_masmorra) return null;
-    return {entry, actor};
-  }).filter(Boolean);
-
-  if(!visibleActors.length){
-    track.hidden = true;
-    _initiativeTrackFocusKey = '';
-    return;
-  }
-
-  track.hidden = false;
-  track.setAttribute('aria-label', t('ui.hud.ordem_iniciativa'));
-  const title = document.getElementById('initiative-track-title');
-  if(title) title.textContent = t('ui.hud.ordem_iniciativa');
-  actorsEl.replaceChildren();
-
-  let currentNode = null;
-  visibleActors.forEach(({entry, actor}, index) => {
-    const actorKey = `${entry.kind}:${String(entry.id)}`;
-    const isCurrent = actorKey === currentKey;
-    const name = String(actor.name || actor.class_id || actor.type || actor.id || '');
+  const title = t('ui.hud.ordem_iniciativa');
+  const now = t('ui.hud.agora');
+  const renderKey = JSON.stringify([state.round, currentKey, entries, title, now]);
+  if(renderKey === _initiativeTrackKey) return;
+  _initiativeTrackKey = renderKey;
+  track.setAttribute('aria-label', title);
+  const focusedKey = list.contains(document.activeElement) ? document.activeElement.dataset.actorKey : null;
+  let focusTarget = null;
+  list.replaceChildren(...entries.map(({key, id, monster, portrait, name, icon}, index) => {
+    const active = key === currentKey;
     const item = document.createElement('div');
-    item.className = `initiative-actor${isCurrent ? ' is-current' : ''}`;
+    item.className = `initiative-actor ${monster ? 'is-monster' : 'is-hero'}${active ? ' is-current' : ''}`;
     item.setAttribute('role', 'listitem');
-    item.setAttribute('aria-current', isCurrent ? 'step' : 'false');
-    item.title = `${index + 1}. ${name}${isCurrent ? ` — ${t('ui.hud.agora')}` : ''}`;
+    if(active) item.setAttribute('aria-current', 'step');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'initiative-focus';
+    button.dataset.actorKey = key;
+    button.dataset.gamepadAction = 'activate';
+    button.title = active ? `${name} · ${now}` : name;
+    button.onclick = () => _centerInitiativeActor(id, monster);
+    if(focusedKey === key) focusTarget = button;
 
+    const frame = document.createElement('span');
+    frame.className = 'initiative-portrait';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.textContent = icon;
+    if(portrait){
+      const img = document.createElement('img');
+      img.alt = '';
+      img.addEventListener('error', () => img.remove(), {once:true});
+      img.src = _assetURL(portrait);
+      frame.appendChild(img);
+    }
     const position = document.createElement('span');
     position.className = 'initiative-order-index';
     position.textContent = String(index + 1);
-    item.appendChild(position);
-
-    const emoji = document.createElement('span');
-    emoji.className = 'initiative-actor-emoji';
-    emoji.setAttribute('aria-hidden', 'true');
-    emoji.textContent = actor.emoji || (entry.kind === 'player' ? '🛡️' : '👹');
-    item.appendChild(emoji);
-
     const label = document.createElement('span');
     label.className = 'initiative-actor-name';
     label.textContent = name;
-    item.appendChild(label);
-
-    if(isCurrent){
-      const now = document.createElement('span');
-      now.className = 'initiative-current-tag';
-      now.textContent = t('ui.hud.agora');
-      item.appendChild(now);
-      currentNode = item;
-    }
-    actorsEl.appendChild(item);
-  });
-
-  const orderKey = order.map(entry => `${entry?.kind}:${String(entry?.id)}`).join(',');
-  const focusKey = currentKey ? `${msg.round ?? ''}:${currentKey}:${orderKey}` : '';
-  if(focusKey && focusKey !== _initiativeTrackFocusKey && currentNode){
-    requestAnimationFrame(() => {
-      const activeNode = actorsEl.querySelector('.initiative-actor.is-current');
-      if(!activeNode) return;
-      const viewport = actorsEl.getBoundingClientRect();
-      const actorRect = activeNode.getBoundingClientRect();
-      if(actorRect.left < viewport.left || actorRect.right > viewport.right){
-        actorsEl.scrollBy({
-          left: actorRect.left - viewport.left - (actorsEl.clientWidth - activeNode.offsetWidth) / 2,
-          behavior: 'smooth'
-        });
-      }
-    });
-  }
-  _initiativeTrackFocusKey = focusKey;
+    button.append(frame, position, label);
+    item.appendChild(button);
+    return item;
+  }));
+  list.scrollTop = 0;
+  if(focusedKey) (focusTarget || list).focus({preventScroll:true});
 }
 
-// Briefing pessoal: acumula o que mudou no herói enquanto os outros agem e o
-// apresenta quando ele é o próximo da fila. A informação vem do game_state;
-// nada aqui altera regras ou habilita ações fora da vez.
-const _turnBriefState = { pid: null, actorKey: '', wasMyTurn: false, snapshot: null,
-  damage: 0, healing: 0, conditionChanges: [], seenConditions: new Set() };
+// Acumula as mudanças separadamente para cada herói controlado pela conexão.
+const _turnBriefByHero = new Map();
 const _turnBriefConditions = [
   ['sangramento_nivel', 'ui.condicao.sangramento', '🩸'], ['ferida_aberta', 'ui.condicao.ferida_aberta_titulo', '🩹'],
   ['hemorragia', 'ui.condicao.hemorragia', '🩸'], ['em_chamas_rodadas', 'ui.hud.resumo_chamas', '🔥'],
@@ -7038,30 +7228,8 @@ const _turnBriefConditions = [
   ['dormindo_rodadas', 'ui.hud.resumo_sono', '💤'], ['paralisado_rodadas', 'ui.hud.resumo_paralisia', '🧊'],
   ['cego_rodadas', 'ui.hud.resumo_cegueira', '🙈'], ['petrificacao_marcas', 'ui.condicao.petrificacao', '🪨']
 ];
-function _turnBriefActorKey(actor){
+function _initiativeActorKey(actor){
   return actor?.kind && actor?.id != null ? `${actor.kind}:${String(actor.id)}` : '';
-}
-function _turnBriefAlive(entry, players, monsters){
-  const actor = entry?.kind === 'player' ? players.get(String(entry.id))
-    : entry?.kind === 'monster' ? monsters.get(String(entry.id)) : null;
-  if(!actor || Number(actor.hp) <= 0 || actor.fora_masmorra) return false;
-  if(entry.kind === 'player' && actor.connected === false) return false;
-  return true;
-}
-function _turnBriefNextIsMe(msg, myKey){
-  const order = msg?.initiative_order || [];
-  if(!order.length || !msg.current_actor) return false;
-  const currentKey = _turnBriefActorKey(msg.current_actor);
-  const at = order.findIndex(actor => _turnBriefActorKey(actor) === currentKey);
-  if(at < 0) return false;
-  const players = new Map((msg.players || []).map(p => [String(p.id), p]));
-  const monsters = new Map((msg.monsters || []).map(m => [String(m.id), m]));
-  for(let step = 1; step <= order.length; step++){
-    const candidate = order[(at + step) % order.length];
-    if(!_turnBriefAlive(candidate, players, monsters)) continue;
-    return _turnBriefActorKey(candidate) === myKey;
-  }
-  return false;
 }
 function _turnBriefConditionValue(player, key){
   const value = player?.[key];
@@ -7069,104 +7237,82 @@ function _turnBriefConditionValue(player, key){
   if(typeof value === 'number') return value > 0;
   return !!value;
 }
-function _turnBriefCollect(msg, me){
-  const eventKey = `p:${GS.myPid}`;
+function _turnBriefCollect(msg, me, brief){
+  const eventKey = `p:${me.id}`;
   for(const event of msg?.combat_damage_events || [])
-    if(String(event?.entity_key || '') === eventKey) _turnBriefState.damage += Math.max(0, Number(event.amount) || 0);
+    if(String(event?.entity_key || '') === eventKey) brief.damage += Math.max(0, Number(event.amount) || 0);
   for(const event of msg?.positive_effect_events || [])
-    if(String(event?.entity_key || '') === eventKey) _turnBriefState.healing += Math.max(0, Number(event.amount) || 0);
+    if(String(event?.entity_key || '') === eventKey) brief.healing += Math.max(0, Number(event.amount) || 0);
   const active = new Set();
   for(const [key, labelKey, icon] of _turnBriefConditions)
     if(_turnBriefConditionValue(me, key)) active.add(`${icon} ${t(labelKey)}`);
-  if(_turnBriefState.snapshot){
-    for(const label of active) if(!_turnBriefState.seenConditions.has(label))
-      _turnBriefState.conditionChanges.push({label, gained:true});
-    for(const label of _turnBriefState.seenConditions) if(!active.has(label))
-      _turnBriefState.conditionChanges.push({label, gained:false});
+  if(brief.snapshot){
+    for(const label of active) if(!brief.seenConditions.has(label))
+      brief.conditionChanges.push({label, gained:true});
+    for(const label of brief.seenConditions) if(!active.has(label))
+      brief.conditionChanges.push({label, gained:false});
   }
-  _turnBriefState.seenConditions = active;
-  _turnBriefState.snapshot = {hp:Number(me.hp) || 0, pos:Array.isArray(me.pos) ? [...me.pos] : null};
+  brief.seenConditions = active;
+  brief.snapshot = {hp:Number(me.hp) || 0, pos:Array.isArray(me.pos) ? [...me.pos] : null};
 }
-function _turnBriefReset(pid){
-  Object.assign(_turnBriefState, {pid, actorKey:'', wasMyTurn:false, snapshot:null,
-    damage:0, healing:0, conditionChanges:[], seenConditions:new Set()});
+function _newTurnBrief(){
+  return {wasMyTurn:false, snapshot:null, damage:0, healing:0,
+    conditionChanges:[], seenConditions:new Set()};
 }
 function _turnBriefListSection(title, lines){
   if(!lines.length) return '';
   return {title, lines};
 }
-function updateTurnBrief(msg){
-  const panel = document.getElementById('turn-brief');
-  const titleEl = document.getElementById('turn-brief-title');
-  const roundEl = document.getElementById('turn-brief-round');
-  const content = document.getElementById('turn-brief-content');
+function updateTurnBrief(msg, collect = true){
+  const panel = $('turn-brief'), content = $('turn-brief-content');
   if(!panel || !content) return;
-  const myKey = `player:${String(GS.myPid)}`;
-  const me = (msg?.players || []).find(player => String(player.id) === String(GS.myPid) && Number(player.hp) > 0);
-  if(msg?.test_mode || !me || !Array.isArray(msg?.initiative_order) || !msg.current_actor){
-    panel.hidden = true;
-    _turnBriefReset(GS.myPid);
+  panel.hidden = true;
+  if(msg.test_mode || msg.phase !== 'playing' || GS.isMaster()){
+    _turnBriefByHero.clear();
     return;
   }
-  if(_turnBriefState.pid !== GS.myPid) _turnBriefReset(GS.myPid);
-  const currentKey = _turnBriefActorKey(msg.current_actor);
-  const myTurn = currentKey === myKey || String(msg.animados_turn || '') === String(GS.myPid);
-  const nextIsMe = _turnBriefNextIsMe(msg, myKey);
-  const visible = myTurn || nextIsMe;
-  const enteredMyTurn = myTurn && !_turnBriefState.wasMyTurn;
-
-  // Ao terminar a própria vez, começa um novo resumo vazio para o próximo ciclo.
-  if(_turnBriefState.wasMyTurn && !myTurn){
-    _turnBriefState.damage = 0; _turnBriefState.healing = 0;
-    _turnBriefState.conditionChanges = [];
-    _turnBriefState.snapshot = null;
-    _turnBriefState.seenConditions = new Set();
+  const heroes = (msg.players || []).filter(player => GS.ehMeuHeroi(player.id));
+  if(collect){
+    for(const pid of _turnBriefByHero.keys()){
+      if(!heroes.some(hero => hero.id === pid)) _turnBriefByHero.delete(pid);
+    }
+    for(const hero of heroes){
+      const acting = msg.current_turn === hero.id || msg.animados_turn === hero.id
+        || msg.last_stand_pid === hero.id;
+      let brief = _turnBriefByHero.get(hero.id);
+      if(!brief || (brief.wasMyTurn && !acting)) brief = _newTurnBrief();
+      if(!acting || !brief.wasMyTurn || !brief.snapshot) _turnBriefCollect(msg, hero, brief);
+      brief.wasMyTurn = acting;
+      _turnBriefByHero.set(hero.id, brief);
+    }
   }
-  // Atualizações emitidas durante a vez de outro ator registram os efeitos que
-  // o herói sofreu antes de agir; no início da vez dele, congelamos esse resumo.
-  if(!myTurn || enteredMyTurn || !_turnBriefState.snapshot) _turnBriefCollect(msg, me);
-  _turnBriefState.wasMyTurn = myTurn;
-  _turnBriefState.actorKey = currentKey;
+  const me = heroes.find(hero => hero.id === GS.myPid);
+  const brief = me && _turnBriefByHero.get(me.id);
+  if(!brief?.wasMyTurn || !GS.isMyTurn || me.fora_masmorra || !me.pos) return;
 
-  panel.hidden = !visible;
-  if(!visible) return;
-  panel.setAttribute('aria-label', t('ui.hud.resumo_pre_turno'));
-  if(titleEl) titleEl.textContent = myTurn ? t('ui.hud.seu_turno_resumo') : t('ui.hud.prepare_seu_turno');
-  if(roundEl) roundEl.textContent = t('ui.hud.badge_rodada', {n:msg.round ?? msg.round_num ?? 1});
+  panel.hidden = false;
+  panel.setAttribute('aria-label', t('ui.hud.seu_turno_resumo'));
+  $('turn-brief-title').textContent = `${t('ui.hud.seu_turno_resumo')} · ${me.name || me.class_id}`;
+  $('turn-brief-round').textContent = t('ui.hud.badge_rodada', {n:msg.round ?? 1});
 
   const changes = [];
-  if(_turnBriefState.damage) changes.push(`−${_turnBriefState.damage} PV ${t('ui.hud.resumo_dano_recebido')}`);
-  if(_turnBriefState.healing) changes.push(`+${_turnBriefState.healing} PV ${t('ui.hud.resumo_cura_recebida')}`);
-  for(const change of _turnBriefState.conditionChanges.slice(-4))
+  if(brief.damage) changes.push(`−${brief.damage} PV ${t('ui.hud.resumo_dano_recebido')}`);
+  if(brief.healing) changes.push(`+${brief.healing} PV ${t('ui.hud.resumo_cura_recebida')}`);
+  for(const change of brief.conditionChanges.slice(-4))
     changes.push(`${change.gained ? '+' : '−'} ${change.label}`);
   if(!changes.length) changes.push(t('ui.hud.resumo_sem_mudancas'));
-  const now = [`❤️ ${Math.max(0, Number(me.hp) || 0)} / ${Number(me.max_hp) || Number(me.hp) || 0} PV`];
+  const now = [];
   const activeConditions = _turnBriefConditions.filter(([key]) => _turnBriefConditionValue(me, key))
     .map(([,labelKey,icon]) => `${icon} ${t(labelKey)}`);
   if(me.moeda_sorte_ativa) activeConditions.push(`🪙 ${t('ui.hud.moeda_da_sorte_ativa')}`);
   if(activeConditions.length) now.push(`${t('ui.hud.resumo_condicoes')}: ${activeConditions.join(', ')}`);
-
-  const slots = me.slots_max || {};
-  const spent = me.slots_remaining || {};
-  const slotNames = {primeiro:'I', segundo:'II', terceiro:'III', quarto:'IV', quinto:'V'};
-  const extraSlotsPorCirculo = {
-    primeiro:['cajado_arcano','chapeu_arquimago'],
-    segundo:['chapeu_arquimago_superior']
-  };
-  const slotLines = Object.entries(slotNames).filter(([circle]) => Number(slots[circle] || 0) > 0
-    || (extraSlotsPorCirculo[circle] || []).some(id => spent[id]?.ativo)).map(([circle, roman]) => {
-    const remaining = Array.isArray(spent[circle]) ? spent[circle].length : 0;
-    const extrasProntos = (extraSlotsPorCirculo[circle] || [])
-      .filter(id => spent[id]?.ativo && spent[id]?.pronto).length;
-    return `${t('ui.hud.resumo_circulo', {n:roman})}: ${Math.max(0, Number(slots[circle] || 0) - remaining) + extrasProntos} ${t('ui.hud.resumo_livres')}`;
-  });
 
   const vision = computeVisionSet(msg, me);
   const attack = GS.resolveAttack?.();
   const visibleTargets = (attack?.type === 'direct' ? [attack.targetId]
       : attack?.type === 'modal' ? attack.targets.map(target => target.id) : [])
     .map(id => (msg.monsters || []).find(monster => String(monster.id) === String(id)))
-    .filter(monster => monster && monster.pos && vision.has(`${monster.pos[0]},${monster.pos[1]}`))
+    .filter(monster => monster && !_monstroOcultadoParaJogador(monster) && monster.pos && vision.has(`${monster.pos[0]},${monster.pos[1]}`))
     .map(monster => `⚔️ ${monster.name || monster.type || t('ui.hud.resumo_inimigo')} (${monster.hp} PV)`);
 
   const allies = (msg.players || []).filter(player => String(player.id) !== String(me.id)
@@ -7177,7 +7323,6 @@ function updateTurnBrief(msg){
     _turnBriefListSection(t('ui.hud.resumo_desde_ultima_vez'), changes),
     _turnBriefListSection(t('ui.hud.resumo_agora'), now),
     _turnBriefListSection(t('ui.hud.resumo_alvos_ao_alcance'), visibleTargets),
-    _turnBriefListSection(t('ui.hud.resumo_magias_disponiveis'), slotLines),
     _turnBriefListSection(t('ui.hud.resumo_aliados_feridos'), allies)
   ].filter(Boolean);
   content.replaceChildren();
@@ -7246,6 +7391,8 @@ const findPath     = (...a) => GS.findPath(...a);
 
 // Center the map wrap on the player — runs inside rAF so canvas resize never beats it
 function centerOnPlayer(state){
+  if(_initiativeCameraTurn && _initiativeCameraTurn === _initiativeTurnKey(state)) return;
+  _initiativeCameraTurn = '';
   const me=state.players.find(p=>p.id===GS.myPid&&p.alive);
   if(!me) return;
   if(mode3D){
@@ -7254,10 +7401,17 @@ function centerOnPlayer(state){
       centralizarCamera3DNoPeao(me.pos);
     return;
   }
-  const wrap=$('map-wrap');
-  const tl=Math.max(0, me.pos[0]*CELL+CELL/2 - wrap.clientWidth/2);
-  const tt=Math.max(0, me.pos[1]*CELL+CELL/2 - wrap.clientHeight/2);
-  requestAnimationFrame(()=>{ wrap.scrollLeft=tl; wrap.scrollTop=tt; });
+  const request = _initiativeCameraRequest;
+  requestAnimationFrame(() => {
+    if(request === _initiativeCameraRequest && !mode3D) _scrollMapToTile(me.pos);
+  });
+}
+
+function _scrollMapToTile(pos){
+  const wrap = $('map-wrap'), canvas = $('dungeon-canvas');
+  if(!wrap || !canvas || !pos) return;
+  wrap.scrollLeft = canvas.offsetLeft + (pos[0] + .5) * CELL - wrap.clientWidth / 2;
+  wrap.scrollTop = canvas.offsetTop + (pos[1] + .5) * CELL - wrap.clientHeight / 2;
 }
 
 // ══ SPRITE ENGINE ══════════════════════════════════════════════════════════
@@ -17171,6 +17325,22 @@ function _tickCombatScene(now){
 
 function _receiveAttackFeedback(msg){
   if(!msg || !msg.attack_id) return;
+  if(msg.phase === 'start' && Array.isArray(msg.attacker_pos)){
+    const state = GS.gameState;
+    const monster = (state?.monsters || []).find(m => String(m.id) === String(msg.attacker_id));
+    const [x, y] = msg.attacker_pos;
+    if(monster && !_monstroOcultadoParaJogador(monster)
+        && _senhorAguasTileVisible(state, x, y)){
+      if(mode3D) centralizarCamera3DNoPeao([x, y]);
+      else {
+        const wrap = $('map-wrap');
+        if(wrap){
+          wrap.scrollLeft = Math.max(0, x * CELL + CELL / 2 - wrap.clientWidth / 2);
+          wrap.scrollTop = Math.max(0, y * CELL + CELL / 2 - wrap.clientHeight / 2);
+        }
+      }
+    }
+  }
   _registrarHistoricoAtaque(msg);
   const id=String(msg.attack_id), now=performance.now();
   if(_cenaAtiva()){
@@ -17943,7 +18113,7 @@ function syncDiceCanvas(){
   const wrap=$('map-wrap'), panel=$('map-panel'), dc=$('dice-canvas');
   if(!wrap||!panel||!dc) return;
   const wr=wrap.getBoundingClientRect(), pr=panel.getBoundingClientRect();
-  dc.style.top=(wr.top-pr.top)+'px'; dc.style.left='0px';
+  dc.style.top=(wr.top-pr.top)+'px'; dc.style.left=(wr.left-pr.left)+'px';
   const cssW=Math.floor(wr.width), cssH=Math.floor(wr.height);
   dc._cssW=cssW; dc._cssH=cssH;
   applyDPR(dc, cssW, cssH);
@@ -19129,10 +19299,10 @@ function _updateDiceLoop3D(now){
 }
 
 // ── Barras de Fome e Sede (sistema de sobrevivência) ───────────────────────
-// Barras de Fome/Sede do HUD — refletem o recurso AUTORITATIVO do servidor
+// Barras de Fome/Sede — refletem o recurso AUTORITATIVO do servidor
 // (player.fome / player.sede, escala 0–100), que é o que as habilidades do warrior,
 // o ataque básico, o caminhar e as ações bônus consomem. `p` = jogador do game_state.
-function renderBarrasSobrevivencia(p){
+function renderBarrasSobrevivencia(p, {mostrarSede = true, mostrarDoenca = mostrarSede} = {}){
   if(!p) return '';
   const fomeMax = Math.max(1, Math.round(p.fome_max ?? 100));
   const sedeMax = Math.max(1, Math.round(p.sede_max ?? 100));
@@ -19151,7 +19321,7 @@ function renderBarrasSobrevivencia(p){
 
   // Bloco de DOENÇA (sistema de doenças) — só aparece se o herói estiver doente.
   let doencaHTML = '';
-  if(p.doente && p.doenca){
+  if(mostrarDoenca && p.doente && p.doenca){
     const sevNome = {leve:t('ui.hud.leve'), pesada:t('ui.hud.pesada'), grave:t('ui.hud.grave')}[p.doenca.severidade] || t('ui.hud.leve');
     const descs = {
       leve:  t('ui.hud.1_reflexos_1_fortitude_1_movimento'),
@@ -19169,26 +19339,26 @@ function renderBarrasSobrevivencia(p){
 
   return doencaHTML + `
     <!-- FOME -->
-    <div style="width:100%; margin-bottom:5px;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-        <span style="color:#8a7a5a; font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px;">🍖 ${t('ui.sobrevivencia.fome_caixa')}</span>
-        <span style="color:${corBarra(pctFome)}; font-family:'Cinzel',serif; font-size:9px;">${fome}/${fomeMax}</span>
+    <div class="survival-meter">
+      <div class="survival-meter-heading">
+        <span class="survival-label">🍖 ${t('ui.sobrevivencia.fome_caixa')}</span>
+        <span class="survival-value" style="--survival-status:${corBarra(pctFome)};">${fome}/${fomeMax}</span>
       </div>
       <div style="width:100%; height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
         <div style="width:${pctFome}%; height:100%; background:${corBarra(pctFome)}; transition:width 0.5s ease, background 0.5s ease;"></div>
       </div>
     </div>
 
-    <!-- SEDE -->
-    <div style="width:100%; margin-bottom:5px;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
-        <span style="color:#8a7a5a; font-family:'Cinzel',serif; font-size:9px; letter-spacing:2px;">💧 ${t('ui.sobrevivencia.sede_caixa')}</span>
-        <span style="color:${corBarra(pctSede)}; font-family:'Cinzel',serif; font-size:9px;">${sede}/${sedeMax}</span>
+    ${mostrarSede ? `
+    <div class="survival-meter">
+      <div class="survival-meter-heading">
+        <span class="survival-label">💧 ${t('ui.sobrevivencia.sede_caixa')}</span>
+        <span class="survival-value" style="--survival-status:${corBarra(pctSede)};">${sede}/${sedeMax}</span>
       </div>
       <div style="width:100%; height:5px; background:#1a1a1a; border:1px solid #2a2a2a;">
         <div style="width:${pctSede}%; height:100%; background:${corBarra(pctSede)}; transition:width 0.5s ease, background 0.5s ease;"></div>
       </div>
-    </div>
+    </div>` : ''}
   `;
 }
 
@@ -19238,9 +19408,6 @@ function renderPlayers(state){
       };
     }
     if(disc||fora) div.style.opacity='0.45';
-    const hpPct=Math.max(0,p.hp/p.max_hp*100);
-    // MP foi removido do jogo — nenhuma classe usa mana (magias custam slots + fome/sede).
-    const mpRowHTML = '';
     const _csong = p.buffs_cancao && Object.keys(p.buffs_cancao).length;
     div.innerHTML=`
       <div class="pcard-top">
@@ -19252,14 +19419,7 @@ function renderPlayers(state){
       ${fora ? `<div class="pcard-fora" style="font-size:11px;color:#8fc6ff;">${GS.faseForaDe(p) === 'cidade' ? t('ui.hud.na_cidade_comprando') : t('ui.hud.voltando_chega_em', {n: fora.rodadas_restantes|0})}</div>` : ''}
       ${disc && !fora ? `<div class="pcard-ausente" style="font-size:11px;color:#c8b98a;">${t('ui.hud.aguardando_jogador', {nome: p.name})}</div>` : ''}
       ${meu && (isCur || p.id === state.animados_turn || p.id === state.last_stand_pid) ? `<div class="pcard-vez">${t('ui.hud.na_vez')}</div>` : ''}
-      <div class="bars">
-          <div class="bar-row"${isMe ? ' data-guia="hud:vida"' : ''}>
-          <span class="bar-label">HP</span>
-          <div class="bar-bg"><div class="bar-fill hp" style="width:${hpPct}%"></div></div>
-          <span class="bar-val">${p.hp}/${p.max_hp}</span>
-        </div>${mpRowHTML}
-        <div class="survival-bars">${renderBarrasSobrevivencia(p)}</div>
-      </div>`;
+      ${renderHeroVitals(p, {guide:!!state.test_mode && isMe, completa:!!state.test_mode})}`;
     // Clique no mini-card abre a ficha do herói correspondente.
     div.style.cursor = 'pointer';
     div.title        = t(meu && !isMe ? 'ui.hud.clique_para_focar' : 'ui.hud.clique_para_ver_a_ficha');
@@ -21306,7 +21466,8 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
   }
   const me=GS.me;
   if(!me||(metodo==='veneno_rapido'&&me.class_id!=='rogue'))return;
-  if(!_rogueMyTurn(me)){toast(t('ui.hud.so_no_seu_turno'),'var(--orange)');return;}
+  const preparoCidade = metodo === 'frasco' && !GS.gameState && !!GS.cityState;
+  if(!preparoCidade && !_rogueMyTurn(me)){toast(t('ui.hud.so_no_seu_turno'),'var(--orange)');return;}
   const venenos=_venenosNaBolsa(me);
   if(metodo==='frasco'&&vialSource?.source==='utility_belt'){
     const beltVial=me.gear?.[vialSource.gearSlot]?.utility_belt_slots?.[vialSource.pocketIndex]?.item;
@@ -21355,7 +21516,7 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
 
   const desenhar=()=>{
     const alvos=GS.venenoAlvos(me,{metodo,venenoId:escolhidos[0],doisVenenos:podeDois,maxPorFrasco:maxFrasco});
-    const bonusUsado=metodo==='frasco'&&!!me.bonus_action_used;
+    const bonusUsado=!preparoCidade&&metodo==='frasco'&&!!me.bonus_action_used;
     const semSedeArma=metodo==='veneno_rapido'&&(me.sede||0)<1;
     const semSedeMunicao=metodo==='veneno_rapido'&&(me.sede||0)<escolhidos.length;
     const nomesEscolhidos=escolhidos.map(_nomeVenenoPorId).join(' + ');
@@ -21367,7 +21528,7 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
         border:1px solid ${on?'#cc44ff':'#66502c'};font-family:inherit;font-size:10px;cursor:${travado?'not-allowed':'pointer'}">${on?'✔ ':''}${_esc(v.icone)} ${_esc(v.nome)}</button>`;
     }).join('');
     const dica=podeDois?`<div style="color:#8a7a5a;font-size:9px;margin-top:3px">${t('ui.veneno.dica_dois')}</div>`:'';
-    const custo=metodo==='frasco'?t('ui.veneno.custo_frasco'):t('ui.veneno.custo_rapido');
+    const custo=preparoCidade?t('ui.veneno.custo_cidade'):metodo==='frasco'?t('ui.veneno.custo_frasco'):t('ui.veneno.custo_rapido');
     const aviso=bonusUsado?`<div style="color:var(--red);font-size:10px;margin:6px 0">${t('ui.veneno.bonus_usado')}</div>`:'';
     painel.innerHTML=`
       <div style="color:#cc44ff;text-align:center;font-family:'Cinzel Decorative',serif;font-size:13px">${t('ui.veneno.titulo')}</div>
@@ -25960,7 +26121,7 @@ const _MP_HAB_EXTRAIDAS = ['mestre_dos_mortos','sopro_dragao','amaldicoar_monstr
                            // Técnicas que só a IA disparava; o servidor agora as
                            // aceita no controle manual (troll, goblin, necromante).
                            'golpe_devastador_troll','pressao_constante_troll',
-                           'investida_brutal_troll','arremesso','dominar_morto_vivo'];
+                           'investida_brutal_troll','arremesso','dominar_morto_vivo','kobold_disparo_duplo'];
 // Ativações manuais sem mira: o servidor resolve sozinho (self-buff ou
 // escolha automática do alvo).
 const _MP_HAB_SEM_MIRA = new Set(['golpe_devastador_troll','investida_brutal_troll',
@@ -27876,9 +28037,61 @@ function _renderAcoesExplicacaoHTML(){
 }
 window._renderAcoesExplicacaoHTML = _renderAcoesExplicacaoHTML;
 
-function _renderRecursosRodada(me, state){
-  const jogando = state?.phase === 'playing';
-  const emTurno = !!(jogando && GS.isMyTurn && me?.alive);
+function renderHeroVitals(hero, {guide = false, completa = true} = {}){
+  const hp = Math.max(0, Number(hero.hp) || 0);
+  const max = Math.max(1, Number(hero.max_hp) || 1);
+  return `<div class="bars">
+    <div class="bar-row"${guide ? ' data-guia="hud:vida"' : ''}>
+      <span class="bar-label">HP</span>
+      <div class="bar-bg"><div class="bar-fill hp" style="width:${Math.min(100, hp / max * 100)}%"></div></div>
+      <span class="bar-val">${hp}/${max}</span>
+    </div>
+    <div class="survival-bars">${renderBarrasSobrevivencia(hero, {mostrarSede:completa})}</div>
+  </div>`;
+}
+
+function renderTurnHeroHud(state){
+  const hud = $('turn-hero-hud');
+  if(!hud) return;
+  const pid = state.last_stand_pid || state.current_turn;
+  const hero = state.phase === 'playing' && !state.test_mode && !state.animados_turn
+    && pid != null && GS.ehMeuHeroi(pid)
+    && (state.players || []).find(p => p.id === pid && !p.fora_masmorra && p.connected !== false);
+  hud.hidden = !hero;
+  if(!hero){
+    hud.replaceChildren();
+    return;
+  }
+
+  const name = _esc(hero.name || hero.class_id);
+  const path = HERO_PORTRAIT_PATHS[hero.class_id];
+  const portrait = path ? `<img src="${_esc(_assetURL(path))}" alt="">` : _esc(hero.emoji || '🛡️');
+  let spells = '';
+  if(hero.class_id === 'mage' || hero.class_id === 'cleric'){
+    const limits = hero.slots_max || _slotsMaxParaHeroi(hero);
+    const circles = {primeiro:'I', segundo:'II', terceiro:'III', quarto:'IV', quinto:'V'};
+    const counts = Object.entries(circles).flatMap(([circle, roman]) => {
+      const capacity = Number(limits[circle]) || 0;
+      const cooldowns = hero.slots_remaining?.[circle];
+      const extras = _slotsExtrasMagiaEquipados(hero, circle);
+      const total = capacity + extras.length;
+      const ready = Math.max(0, capacity - (Array.isArray(cooldowns) ? cooldowns.length : 0))
+        + extras.filter(slot => slot.pronto).length;
+      return total ? [`<span>${roman} <b>${ready}/${total}</b></span>`] : [];
+    });
+    if(hero.slots_livres_treino || counts.length){
+      spells = `<div class="turn-hero-slots"><strong>${_esc(t('ui.magia.slots_titulo'))}</strong>
+        ${hero.slots_livres_treino ? _esc(t('ui.magia.slots_treino_livre')) : counts.join('')}</div>`;
+    }
+  }
+  hud.setAttribute('aria-label', `${t('ui.hud.seu_turno_resumo')} · ${hero.name || hero.class_id}`);
+  hud.innerHTML = `<div class="turn-hero-main">
+    <div class="turn-hero-portrait" aria-hidden="true">${portrait}</div>
+    <div class="turn-hero-vitals"><strong>${name}</strong>${renderHeroVitals(hero, {guide:true})}</div>
+  </div>${_renderRecursosRodada(hero, state, true)}${spells}`;
+}
+
+function _renderRecursosRodada(me, state, emTurno = !!(state?.phase === 'playing' && GS.isMyTurn && me?.alive)){
   const movimentos = Math.max(0, Number(me?.moves_left) || 0);
   const principalLivre = emTurno && !me.action_done;
   const bonusLivre = emTurno && !me.bonus_action_used;
@@ -27938,6 +28151,7 @@ function _escolherCasaDesmontar(me){
 
 function renderMyPanel(state){
   _atualizarBotaoEncerrarTurno(state);
+  $('side-actions').hidden = !state.test_mode && !GS.isMyTurn;
   // Mestre: sem ficha de personagem — mostra o HUD de controle de monstros
   // em vez da ficha normal (ele não está em state.players).
   if(GS.canControlMonster()){
@@ -28054,7 +28268,7 @@ function renderMyPanel(state){
 
   // ── Build HTML ──
   const statsHTML = `
-    ${_renderRecursosRodada(me, state)}
+    ${state.test_mode ? _renderRecursosRodada(me, state) : ''}
     ${me.regeneracao_ativa ? `
     <div style="margin-top:4px; padding:5px 8px; background:rgba(248,208,64,0.12); border:1px solid #f8d04066; border-radius:3px; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Cinzel',serif;">
       <span style="color:#f8d040; font-weight:bold; font-size:.95rem;">✨ +1 HP</span>
@@ -29964,12 +30178,15 @@ function toggleGMLog(){
   if(log) _setGMLogMinimized(!log.classList.contains('gm-log-collapsed'));
 }
 
-try{ _setGMLogMinimized(localStorage.getItem('lfh_gm_log_minimized')==='1', false); }catch(e){}
+try{
+  const saved = localStorage.getItem('lfh_gm_log_minimized');
+  _setGMLogMinimized(saved === '1' || (saved === null && window.matchMedia('(max-width: 820px)').matches), false);
+}catch(e){}
 
 // Recolhimento completo do Mestre do Jogo, independente do minimizador interno.
 // A prévia flutua sobre o tabuleiro; fixar devolve o painel ao fluxo vertical.
 const _gmLogPanelState = {
-  mode: (() => { try { return localStorage.getItem('lfh_gm_log_mode') === 'auto' ? 'auto' : 'fixed'; } catch(_) { return 'fixed'; } })(),
+  mode: (() => { try { return localStorage.getItem('lfh_gm_log_mode') === 'fixed' ? 'fixed' : 'auto'; } catch(_) { return 'auto'; } })(),
   preview: false,
   docked: false,
   openTimer: null,
@@ -36951,7 +37168,7 @@ function _renderEfeitosAtivos(state = GS.gameState){
   if(!hud) return;
   const telaJogo = document.getElementById('screen-game')?.classList.contains('active');
   const player = state?.players?.find(p => p.id === GS.myPid && !p.is_master);
-  if(!telaJogo || !player || player.alive === false){
+  if(!telaJogo || !player || player.alive === false || (!state.test_mode && !GS.isMyTurn)){
     hud.hidden = true;
     hud.innerHTML = '';
     return;
@@ -53976,8 +54193,8 @@ const _MONSTER_GLB_MODELS = Object.freeze({
   escravo_vampirico:  'assets/models3d/monstros/cria_vampirica.glb',
   rato_gigante:       'assets/models3d/monstros/rato_gicante.glb',
   pombo:              'assets/models3d/monstros/pombo.glb',
-  // Formas animais da Metamorfose: casam pelo `type`, porque as fichas não
-  // declaram `image` (não existe PNG destas — a arte é só o GLB).
+  // Formas animais da Metamorfose: casam pelo `type`, pois não têm PNG de
+  // miniatura; os retratos do bestiário são arquivos separados.
   rato:               'assets/models3d/monstros/rato.glb',
   gato:               'assets/models3d/monstros/gato_aventureiro.glb',
   ovelha:             'assets/models3d/monstros/ovelha.glb',
@@ -59214,6 +59431,8 @@ GS.on('shopResult',  msg =>
   toast(msg.msg.replace(/\*\*(.+?)\*\*/g,'$1'), 'var(--green)'));
 
 GS.on('enterDungeon', (msg) => {
+  _initiativeCameraTurn = '';
+  _initiativeCameraRequest++;
   // GS.on mantém um único callback por evento: as limpezas ficam nesta transição.
   _monsterKnowledgeLevels.clear();
   _reacoesFuligensLimpar();
@@ -59452,7 +59671,6 @@ GS.on('gameState', msg => {
   if(msg?.tutorial?.tour_cidade && msg.mission_complete_pending)
     _cidadeTourPendenteDoTutorial = true;
   _sincronizarFossoQuedas(msg);
-  updateInitiativeTrack(msg);
   updateTurnBrief(msg);
   // O destaque fica ativo apenas durante a escolha/execução da técnica. O
   // primeiro estado autoritativo após o ataque confirma ação/recarga e remove
@@ -59563,7 +59781,10 @@ GS.on('focoHeroi', ev => {
   if(typeof _licaoTrocarFoco === 'function') _licaoTrocarFoco();
   const st = GS.gameState;
   if(st){
-    if(!ev.auto) handleGameState(st);
+    if(!ev.auto){
+      handleGameState(st);
+      updateTurnBrief(st, false);
+    }
     const h = (st.players || []).find(p => p.id === ev.pid);
     if(h && Array.isArray(h.pos) && h.pos[0] >= 0) centralizarCamera3DNoPeao(h.pos);
   } else if(GS.cityState){
