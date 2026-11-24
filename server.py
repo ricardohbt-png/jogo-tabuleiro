@@ -14955,6 +14955,7 @@ def make_monster(mdef, room):
     _aplicar_equipamentos_monstro(m)
     if m.get("type") == "kobold_besteiro" and m.get("attacks"):
         m["attacks"][0]["range_shape"] = "orthogonal"
+        m["attacks"][0]["projectile"] = "bolt"
     if m.get("type") == "goblin_dual":
         _configurar_goblin_dual_ataques(m)
     if m.get("type") == "skeleton" and m.get("esqueleto_arma_id") == "lanca_curta" and m.get("attacks"):
