@@ -785,6 +785,10 @@ def _save_world_adventures_upload(raw_locations, raw_adventures):
                         "so_na_cidade": bool(row.get("so_na_cidade")),
                         "outro_rota": _clean_story_field(row.get("outro_rota")),
                         "requisito": req, "renome_recompensa": renome_reward}
+        # Cidade onde o grupo reaparece ao fechar a rota (ausente = fica onde estava).
+        chegada = str(row.get("chegada_em") or "").strip()
+        if chegada:
+            cleaned[aid]["chegada_em"] = chegada[:60]
     try:
         WORLD_ADVENTURES = cleaned
         _save_world_map_points(); _save_world_adventures()
@@ -60894,6 +60898,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if not was_revisit and completed_index + 1 >= len(stages):
                 partes.append(adventure.get("outro_rota"))
             fim = _story_beat(f"fim:{adventure_id}:{completed_index}", partes, self._requisito_do_slide)
+            # Rota que termina em outra cidade (ex.: a Floresta de Adhadal acaba em Corvin):
+            # o grupo reaparece lá, sem custo de viagem. Revisita volta ao lugar de sempre.
+            chegada = adventure.get("chegada_em")
+            if (not was_revisit and completed_index + 1 >= len(stages)
+                    and chegada in WORLD_LOCATIONS):
+                self.world_location = chegada
             self.world_adventure_id = None
             self.world_adventure_index = None
             self.world_adventure_revisit = False
