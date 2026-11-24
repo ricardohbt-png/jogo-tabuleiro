@@ -8631,6 +8631,31 @@ for _lanca_base_id in _LANCAS_ENORMES_BASES_MAGICAS:
     WEAPONS[_lanca_magica["id"]] = _lanca_magica_combate
     CORROSAO_ARMA_METAL.add(_lanca_magica["id"])
 
+# A serrilha ganha dano constante em troca de uma etapa de desgaste severo.
+_SERRILHADA_PERFIS = {
+    "sword": (40, 0, 2),
+    "sword_aco_damasco": (60, 1, 3),
+    "sword_obsidiana_ferro": (60, 0, 1),
+    "sword_liga_titanio": (70, 2, 4),
+    "sword_prata": (400, 1, 2),
+}
+for _wid, (_price, _free, _total) in _SERRILHADA_PERFIS.items():
+    _w = next(w for w in SHOP_WEAPONS if w["id"] == _wid)
+    _rule = ("Destruída na primeira corrosão." if _total == 1 else
+             "Primeira corrosão sem penalidade; a segunda destrói a arma." if _w.get("silver") else
+             f"Tolera {_free} níveis de corrosão sem penalidade; no nível {_free + 1} sofre -2 no acerto e no dano; no nível {_total} é destruída.")
+    _w.update(price=_price, corrosao_resistente=_free,
+              corrosao_niveis_penalidade=1, corrosion_max=_total,
+              corrosion_penalty_step=2,
+              descricao=f"{_w['name']}: 1d6 cortante usando Força, +{2 + int(_w.get('damage_bonus', 0))} de dano. "
+                        + ("+1 no acerto. " if _w.get("atk_bonus") else "")
+                        + "Crítico apenas no 20 natural. " + _rule
+                        + (" Prata: fere criaturas resistentes a armas comuns." if _w.get("silver") else ""))
+    WEAPONS.setdefault(_wid, {}).update(deepcopy(_w))
+    for _chest in CHEST_ITEMS:
+        if _chest.get("id") == _wid:
+            _chest.update(deepcopy(_w))
+
 SHOP_ARMORS = [
     # â”€â”€ ProteÃ§Ãµes / Escudos (slot acessÃ³rio â€” somam com armadura) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     {"id": "escudo_p",     "name": "Escudo Pequeno",     "emoji": "🛡️", "icon": "assets/itens/escudo_p.png", "ac_bonus": 1, "damage_reduction": 1, "price": 20, "kind": "shield", "corrosion_materials": ["organic"],
@@ -12545,10 +12570,27 @@ def _criar_catalogo_loot_masmorra():
 
 _DUNGEON_ITEM_CATALOG = _criar_catalogo_loot_masmorra()
 
+# Encantamento raro do Goblin Dual: preserva arma e material sorteados.
+_GOBLIN_DUAL_MAIN = ("bordao", "shortsword", "longsword", "sword", "warhammer", "maca")
+_GOBLIN_DUAL_OFF = ("dagger", "chicote")
+_goblin_dual_bases = set(_GOBLIN_DUAL_MAIN + _GOBLIN_DUAL_OFF)
+for _iid, _definition in list(_DUNGEON_ITEM_CATALOG.items()):
+    if _arma_base_id(_iid) not in _goblin_dual_bases or _definition.get("magical"):
+        continue
+    _enchanted = deepcopy(_definition)
+    _enchanted.update(id=f"{_iid}_magica", name=f"{_definition['name']} Mágica +1",
+                      magical=True, atk_bonus=int(_definition.get("atk_bonus", 0) or 0) + 1,
+                      damage_bonus=int(_definition.get("damage_bonus", 0) or 0) + 1,
+                      price=int(_definition.get("price", 0) or 0) + 500)
+    _enchanted["descricao"] = (_definition.get("descricao", "")
+                               + " Encantamento mágico +1 no acerto e no dano, acumulável com o material.")
+    _DUNGEON_ITEM_CATALOG[_enchanted["id"]] = _enchanted
+    WEAPONS[_enchanted["id"]] = deepcopy(_enchanted)
+
 # Versões mágicas +1 usadas apenas pelo sorteio raro do Esqueleto Armadurado.
 # São adicionadas ao catálogo de equipamento/loot, sem entrar no estoque do ferreiro.
 _ESQUELETO_ARMADURADO_ARMAS_BASE = frozenset((
-    "shortsword", "lanca_curta", "longsword", "machado_duplo", "espada2m", "marreta",
+    "shortsword", "sword", "lanca_curta", "longsword", "machado_duplo", "espada2m", "marreta",
 ))
 _esqueleto_armas_material = set(_ESQUELETO_ARMADURADO_ARMAS_BASE)
 for _linhas_material in (_MATERIAL_WEAPON_VARIANTS,
@@ -13992,6 +14034,7 @@ def _aplicar_equipamentos_monstro(m):
                        for b in [item, *(item.get("bonuses") or [])]
                        if b.get("effect") == "damage_bonus")
     damage_bonus += sum(int(item.get("damage_bonus", 0) or 0)
+                        + int(item.get("dmg_bonus", 0) or 0)
                         for item in items if item.get("die"))
     if damage_bonus:
         m["equipment_damage_bonus"] = damage_bonus
@@ -14029,7 +14072,7 @@ def _aplicar_equipamentos_monstro(m):
 _MONSTROS_COM_ARMA_SORTEADA = frozenset({
     "goblin_arqueiro", "goblin_combatente", "orc", "kobold_lanceiro", "skeleton",
     "esqueleto_humano_customizado", "bandido", "capanga", "bardo",
-    "bardo_da_caravana", "ogro_lanca",
+    "bardo_da_caravana", "ogro_lanca", "goblin_dual", "goblin_xama",
 })
 
 
@@ -14218,6 +14261,71 @@ def _aplicar_material_aleatorio_armadura_monstro(monster):
             monster["esqueleto_besteiro_escudo_carregado_id"] = variante
 
 
+def _configurar_xama_voto_guardiao_spawn(m):
+    if random.random() >= 0.01:
+        return
+    equipped = list(m.get("equipped_items", m.get("equipment", [])) or [])
+    weapon_index = next((i for i, wid in enumerate(equipped)
+                         if (_DUNGEON_ITEM_CATALOG.get(wid) or {}).get("die")), None)
+    if weapon_index is None:
+        equipped.insert(0, "maca_voto_guardiao")
+    else:
+        equipped[weapon_index] = "maca_voto_guardiao"
+    m.update(equipment_enabled=True, base_attack_bonus=int(m.get("base_attack_bonus", 4)),
+             equipped_items=equipped)
+    m.setdefault("special_abilities", []).append({
+        "id": "xama_suplica_vital", "name": "Súplica Vital", "action_type": "passiva",
+        "descricao": "Após acertar com a Maça do Voto Guardião, cura 1d6 PV de si ou do aliado vivo a até 2 casas com mais PV faltando. Recarga de 10 rodadas."})
+
+
+def _configurar_goblin_dual_spawn(monster):
+    main = random.choices(_GOBLIN_DUAL_MAIN, weights=(20, 25, 15, 10, 15, 15), k=1)[0]
+    off = random.choices(_GOBLIN_DUAL_OFF, weights=(90, 10), k=1)[0]
+    armor = random.choices((None, "leather", "chainmail"), weights=(85, 10, 5), k=1)[0]
+    monster.update(equipment_enabled=True, base_attack_bonus=2,
+                   equipped_items=[main, off] + ([armor] if armor else []),
+                   guaranteed_loot=[], goblin_dual_off_base=off)
+
+
+def _finalizar_goblin_dual_armas(monster):
+    """Material já sorteado; o encantamento rola independentemente por mão."""
+    ids = monster["equipped_items"]
+    for index in range(2):
+        if random.random() < 0.005 and f"{ids[index]}_magica" in _DUNGEON_ITEM_CATALOG:
+            ids[index] += "_magica"
+    monster["goblin_dual_weapon_ids"] = ids[:2]
+
+
+def _configurar_goblin_dual_ataques(monster):
+    weapons = {i["id"]: i for i in monster.get("equipment_items", []) if i.get("die")}
+    attacks = []
+    for index, wid in enumerate(monster.get("goblin_dual_weapon_ids", [])):
+        w = weapons.get(wid)
+        if not w or w.get("corrosion_destroyed"):
+            continue
+        attr = "dex" if index == 1 else "str_"
+        value = mod(monster.get(attr, 10))
+        attacks.append({
+            "name": w["name"], "damage": w["die"], "damage_types": [DMG_PHYSICAL],
+            "num_attacks": 1, "attack_attribute": attr, "damage_attribute": attr,
+            "apply_attribute_damage": True, "attribute_mod_base": value,
+            "base_attack_bonus": 2, "atk_bonus": 2 + value + int(w.get("atk_bonus", 0) or 0),
+            "damage_bonus": int(w.get("dmg_bonus", 0) or 0) + int(w.get("damage_bonus", 0) or 0),
+            "range": w.get("range"), "reach": w.get("reach"), "categoria": w.get("categoria"),
+            "equipment_weapon_id": wid, "silver": bool(w.get("silver")),
+            "magical": bool(w.get("magical")),
+        })
+    monster["attacks"] = attacks
+    # Each weapon contributes only to its own attack.
+    monster.pop("equipment_attack_bonus", None)
+    monster.pop("equipment_damage_bonus", None)
+    off = weapons.get((monster.get("goblin_dual_weapon_ids") or [None, None])[1])
+    monster["pode_arremessar"] = bool(off and not off.get("corrosion_destroyed")
+                                      and _arma_base_id(off["id"]) == "dagger")
+    if not monster["pode_arremessar"]:
+        monster["special_abilities"] = [a for a in monster.get("special_abilities", []) if a.get("id") != "arremesso"]
+
+
 def _configurar_ogro_lanca_spawn(monster):
     """O Ogro de Lança usa Lança Enorme com uma mão e Escudo Grande."""
     monster["equipment_enabled"] = True
@@ -14231,8 +14339,10 @@ def _configurar_esqueleto_armadurado_spawn(monster):
     monster.pop("esqueleto_escudo", None)
     monster.pop("esqueleto_escudo_id", None)
     roll = random.randint(1, 100)
-    if roll <= 28:
+    if roll <= 18:
         name, die, category, weapon_id, reach = "Espada Curta", "1d6", "cortante", "shortsword", None
+    elif roll <= 28:
+        name, die, category, weapon_id, reach = "Espada Curta de Ferro Serrilhado", "1d6", "cortante", "sword", None
     elif roll <= 58:
         name, die, category, weapon_id, reach = "Lança", "1d6", "perfurante", "lanca_curta", 2
     elif roll <= 68:
@@ -14331,6 +14441,27 @@ def _configurar_esqueleto_besteiro_spawn(monster):
         monster["loot_drops"].append({
             "kind": "gold", "amount": random.randint(4, 8), "chance": 100,
         })
+
+
+def _configurar_kobold_besteiro_spawn(m):
+    weapon_id = random.choices(
+        ("hand_crossbow", "besta", "besta_pesada", "besta_duelista", "besta_repetidora_patrulha", "besta_repetidora_guerra"),
+        weights=(50, 10, 10, 10, 10, 10), k=1)[0]
+    m.update(equipment_enabled=True, base_attack_bonus=2, equipped_items=[weapon_id])
+    if random.random() < 0.10:
+        m["equipped_items"].append("helm_iron")
+    m["special_abilities"] = [a for a in m.get("special_abilities", []) if a.get("id") != "envenenar_arma"]
+    m["special_abilities"].append({"id": "envenenar_arma", "name": "Envenenar Virotes", "action_type": "passiva",
+        "descricao": "Usa um frasco como ação livre para envenenar até 10 virotes; cada disparo consome um virote, acertando ou errando."})
+    m["kobold_poison_id"] = random.choices(
+        ("veneno_aranha_sombria", "veneno_cobra_cuspidora", "veneno_dor_escarlate"), weights=(55, 30, 15), k=1)[0]
+    if _DUNGEON_ITEM_CATALOG[weapon_id].get("repeating_crossbow"):
+        m["special_abilities"].append({"id": "kobold_disparo_duplo", "name": "Disparo Duplo",
+            "action_type": "acao", "cooldown_turns": 10,
+            "descricao": "Dispara dois virotes contra o mesmo alvo, com ataques separados. Recarga de 10 rodadas."})
+    m["kobold_poison_vials"] = random.randint(1, 3)
+    m["kobold_poisoned_bolts"] = 0
+    m["kobold_repeater_ready_round"] = 0
 
 
 def _configurar_soldado_spawn(monster):
@@ -14618,6 +14749,17 @@ def _configurar_assassino_da_serra_spawn(monstro):
             deepcopy(item) for _ in range(max(0, min(4, int(quantity or 0)))))
 
 
+def _configurar_leonel_spawn(monstro):
+    """Materializa a reserva de explosivos definida pela aventura de Leonel."""
+    consumables = (monstro.get("leonel_loadout") or {}).get("consumables") or {}
+    monstro["equipment_consumables"] = []
+    for item_id in ("granada_superior", "bomba_incendiaria", "bomba_fumaca", "bomba_flash"):
+        item = _DUNGEON_ITEM_CATALOG.get(item_id)
+        quantity = max(0, min(10, int(consumables.get(item_id, 0) or 0)))
+        if item and quantity:
+            monstro["equipment_consumables"].extend(deepcopy(item) for _ in range(quantity))
+
+
 async def _assassino_veneno_rapido(room, monstro, target_obj):
     """Gasta um frasco para untar uma arma por três acertos, com recarga 4."""
     if monstro.get("type") != "assassino_da_caravana" or not target_obj:
@@ -14724,13 +14866,15 @@ def make_monster(mdef, room):
         random_equipment = m.get("random_equipment") or {}
         weapon_options = random_equipment.get("weapons") or (
             "lanca_curta", "bordao", "cajado_madeira", "shortsword", "maca", "machado_basico")
-        m["combatant_weapon_id"] = random.choice(tuple(weapon_options))
+        m["combatant_weapon_id"] = ("sword" if random.random() < 0.10
+                                    else random.choice(tuple(w for w in weapon_options if w != "sword") or ("shortsword",)))
         shield_option = random_equipment.get("shield") or {"id": "escudo_p", "chance": 10}
         m["combatant_shield_id"] = (shield_option["id"]
                                     if random.random() < float(shield_option.get("chance", 0)) / 100
                                     else None)
         shield_variant = "com_escudo" if m["combatant_shield_id"] else "sem_escudo"
-        m["image"] = f"goblinCombatente_{m['combatant_weapon_id']}_{shield_variant}"
+        visual_weapon = "shortsword" if m["combatant_weapon_id"] == "sword" else m["combatant_weapon_id"]
+        m["image"] = f"goblinCombatente_{visual_weapon}_{shield_variant}"
         potion_option = next(iter(random_equipment.get("consumables") or ()),
                              {"id": "health_potion_small", "chance": 5})
         combatant_potion = random.random() < float(potion_option.get("chance", 0)) / 100
@@ -14754,10 +14898,10 @@ def make_monster(mdef, room):
         if m["orc_armor_id"]:
             m["equipped_items"].append(m["orc_armor_id"])
     if m.get("type") == "kobold_lanceiro":
-        # Quatro combinações com a mesma chance. A lança mantém a IA de
-        # arremesso/recuperação; espada curta sempre vem junto do escudo.
-        m["kobold_weapon_id"] = random.choice((
-            "lanca_curta", "dagger", "shortsword", "bordao"))
+        # As duas armas superiores são mais raras; somente espadas usam escudo.
+        m["kobold_weapon_id"] = random.choices(
+            ("lanca_curta", "dagger", "shortsword", "bordao", "alabarda", "sword"),
+            weights=(20, 20, 20, 20, 10, 10), k=1)[0]
         m["kobold_weapon_mode"] = (
             "lance" if m["kobold_weapon_id"] == "lanca_curta" else "melee")
         m["kobold_lance_in_hand"] = m["kobold_weapon_mode"] == "lance"
@@ -14765,7 +14909,7 @@ def make_monster(mdef, room):
         m["equipment_enabled"] = True
         m["base_attack_bonus"] = 2  # mantém o +1 do Kobold com FOR 8
         m["equipped_items"] = [m["kobold_weapon_id"]]
-        m["kobold_shield_id"] = "escudo_p" if m["kobold_weapon_id"] == "shortsword" else None
+        m["kobold_shield_id"] = "escudo_p" if m["kobold_weapon_id"] in {"shortsword", "sword"} else None
         if m["kobold_shield_id"]:
             m["equipped_items"].append(m["kobold_shield_id"])
     if m.get("type") == "kobold_mago":
@@ -14782,12 +14926,18 @@ def make_monster(mdef, room):
         m["equipment_enabled"] = True
         m["equipped_items"] = [item_cabeca] if item_cabeca else []
         m["kobold_mago_slot_arquimago_pronto_em"] = 0
-    if m.get("type") == "capanga":
+    if m.get("type") == "goblin_dual":
+        _configurar_goblin_dual_spawn(m)
+    elif m.get("type") == "goblin_xama":
+        _configurar_xama_voto_guardiao_spawn(m)
+    elif m.get("type") == "capanga":
         _configurar_capanga_spawn(m)
     elif m.get("type") == "bandido":
         _configurar_bandido_spawn(m)
     elif m.get("type") == "dark_mage":
         _configurar_mago_trevas_spawn(m)
+    elif m.get("type") == "kobold_besteiro":
+        _configurar_kobold_besteiro_spawn(m)
     elif m.get("type") == "soldado":
         _configurar_soldado_spawn(m)
     elif m.get("type") == "ogro_lanca":
@@ -14799,8 +14949,14 @@ def make_monster(mdef, room):
     elif _eh_bardo(m):
         _configurar_bardo_spawn(m)
     _aplicar_material_aleatorio_monstro(m)
+    if m.get("type") == "goblin_dual":
+        _finalizar_goblin_dual_armas(m)
     _aplicar_material_aleatorio_armadura_monstro(m)
     _aplicar_equipamentos_monstro(m)
+    if m.get("type") == "kobold_besteiro" and m.get("attacks"):
+        m["attacks"][0]["range_shape"] = "orthogonal"
+    if m.get("type") == "goblin_dual":
+        _configurar_goblin_dual_ataques(m)
     if m.get("type") == "skeleton" and m.get("esqueleto_arma_id") == "lanca_curta" and m.get("attacks"):
         # O perfil da arma no catálogo descreve o arremesso; o esqueleto usa a
         # lança curta com o alcance corpo a corpo de 2 casas da ficha legada.
@@ -14809,6 +14965,8 @@ def make_monster(mdef, room):
         _configurar_gilo_spawn(m)
     elif m.get("type") == "assassino_da_caravana":
         _configurar_assassino_da_serra_spawn(m)
+    elif m.get("type") == "leonel":
+        _configurar_leonel_spawn(m)
     if m.get("type") == "bandido" and m.get("bandido_veneno_doses", 0) > 0:
         poison_def = _DUNGEON_ITEM_CATALOG.get("veneno_fungo_acre")
         if poison_def:
@@ -14862,7 +15020,7 @@ def make_monster(mdef, room):
     if m.get("type") == "goblin_arqueiro":
         m["flechas"] = 20
         m["pode_arremessar"] = False
-    if m.get("type") in {"goblin_dual", "goblin_assassino"}:
+    if m.get("type") == "goblin_assassino":
         m["pode_arremessar"] = True
     if m.get("type") == "goblin_assassino":
         venom_ids = (
@@ -14902,45 +15060,44 @@ def make_monster(mdef, room):
         m["equipment_poison"] = "veneno_fungo_acre"
     # â”€â”€ Kobold Lanceiro: lanÃ§a envenenada + doses extras â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if m.get("type") == "kobold_lanceiro":
-        if m.get("kobold_weapon_id", "lanca_curta") == "lanca_curta":
-            m["kobold_lance_item"] = deepcopy(next(
-                (i for i in SHOP_WEAPONS if i.get("id") == "lanca_curta"),
-                {"id": "lanca_curta", "name": "Lança Curta", "emoji": "🔱",
-                 "die": "1d6", "stat": "str_", "throw_range": 4,
-                 "categoria": "perfurante"}))
-        m["veneno_arma_ativo"]  = True               # 1 dose jÃ¡ aplicada na lanÃ§a
-        m["veneno_arma_id"]     = "veneno_aranha_sombria"
-        m["veneno_doses_extras"] = random.randint(1, 3)   # 1â€“3 frascos extras
-        # As doses vivem na bolsa; Envenenar Arma as consome como ação livre.
-        veneno_item = next((deepcopy(i) for i in SHOP_MERCHANT
-                            if i.get("id") == "veneno_aranha_sombria"), None)
-        if veneno_item:
-            m.setdefault("equipment_consumables", []).extend(
-                deepcopy(veneno_item) for _ in range(random.randint(1, 3)))
+        if m.get("kobold_weapon_id") == "lanca_curta":
+            m["kobold_lance_item"] = deepcopy(m.get("equipped_weapon") or _DUNGEON_ITEM_CATALOG["lanca_curta"])
+        poison_id = random.choices(
+            ("veneno_aranha_sombria", "veneno_fungo_acre", "veneno_dor_escarlate", "veneno_polvo_abissal"),
+            weights=(55, 30, 10, 5), k=1)[0]
+        m["kobold_poison_id"] = poison_id
+        m["veneno_arma_id"] = poison_id
+        poison = _DUNGEON_ITEM_CATALOG[poison_id]
+        m.setdefault("equipment_consumables", []).extend(
+            deepcopy(poison) for _ in range(random.randint(1, 3)))
         m["veneno_arma_ativo"] = False
         m["veneno_doses_extras"] = 0
-        m["covardia_testada"]   = False
-        m["kobold_medo"]        = False
+        m["covardia_testada"] = False
+        m["kobold_medo"] = False
         m["kobold_medo_rodadas"] = 0
     # â”€â”€ Kobold Besteiro: virotes normais + 10% de virotes especiais â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if m.get("type") == "kobold_besteiro":
-        m["virotes"]            = 10
-        m["virotes_especiais_tipo"]  = None
+        m["virotes"] = 10
+        m["virotes_especiais_tipo"] = None
         m["virotes_especiais_count"] = 0
-        if random.randint(1, 100) <= 10:
-            tipo_roll = random.randint(1, 2)
-            m["virotes_especiais_tipo"]  = ("veneno_escorpiao_pedra" if tipo_roll == 1
-                                             else "incendiario")
-            m["virotes_especiais_count"] = roll_dice("1d4")
-        m["covardia_testada"]   = False
-        m["kobold_medo"]        = False
+        if random.random() < 0.05:
+            m["virotes_especiais_tipo"] = "incendiario"
+            m["virotes_especiais_count"] = random.randint(1, 4)
+        m.setdefault("equipment_consumables", []).extend(
+            deepcopy(_DUNGEON_ITEM_CATALOG[m["kobold_poison_id"]])
+            for _ in range(m.pop("kobold_poison_vials", 1)))
+        m["covardia_testada"] = False
+        m["kobold_medo"] = False
         m["kobold_medo_rodadas"] = 0
     # â”€â”€ Esqueleto Humano: sorteia arma ao criar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if m.get("type") == "esqueleto_humano":
         _roll = random.randint(1, 100)
-        if _roll <= 30:
+        if _roll <= 20:
             _nome, _die, _cat, _range = "Espada Curta",  "1d6",  "cortante",   None
             m["esqueleto_arma_id"] = "shortsword"
+        elif _roll <= 30:
+            _nome, _die, _cat, _range = "Espada Curta de Ferro Serrilhado", "1d6", "cortante", None
+            m["esqueleto_arma_id"] = "sword"
         elif _roll <= 60:
             _nome, _die, _cat, _range = "Lança",         "1d6",  "perfurante", 2
             m["esqueleto_arma_id"] = "lanca_curta"
@@ -14966,6 +15123,10 @@ def make_monster(mdef, room):
                "categoria": _cat}
         if _range:
             atk["range"] = _range
+        if m.get("esqueleto_arma_id") == "sword":
+            weapon = deepcopy(_DUNGEON_ITEM_CATALOG["sword"])
+            m.setdefault("equipment_items", []).append(weapon)
+            atk.update(damage_bonus=int(weapon.get("dmg_bonus", 0)), equipment_weapon_id="sword")
         m["attacks"] = [atk]
         if m.get("esqueleto_escudo"):
             shield_id = random.choices(
@@ -19053,8 +19214,76 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await asyncio.sleep(.18)
         return {"disadvantage": hit, "attack_penalty": 2 if hit else 0}
 
+    async def _leonel_defensive_bomb_reaction(self, alvo, atacante):
+        """Leonel gasta fumaça ou Flash para atrapalhar um ataque contra si."""
+        if (self.phase != "playing" or not self._vivo(alvo) or not self._vivo(atacante)):
+            return None
+        origem, destino = alvo.get("pos"), atacante.get("pos")
+        if (not isinstance(origem, (list, tuple)) or len(origem) != 2
+                or not isinstance(destino, (list, tuple)) or len(destino) != 2):
+            return None
+        bag = alvo.get("equipment_consumables", [])
+        # Fumaça sempre cria a desvantagem; Leonel guarda Flash para quando
+        # não houver fumaça disponível.
+        smoke = next((item for item in bag if item.get("id") == "bomba_fumaca"), None)
+        if smoke:
+            reach = int(ARREMESSAVEIS["bomba_fumaca"].get("alcance", 4))
+            if (max(abs(origem[0] - destino[0]), abs(origem[1] - destino[1])) <= reach
+                    and self._tem_linha_de_visao(origem, destino)):
+                bag.remove(smoke)
+                defn = ARREMESSAVEIS["bomba_fumaca"]
+                feedback_id = await self._emitir_feedback_ataque(
+                    "start", alvo, atacante, defn["name"], "normal",
+                    projectile={"kind": "item", "item_id": "bomba_fumaca", "item_emoji": "💨",
+                                "area": True, "area_raio": 1, "sem_dado": True})
+                await self._emitir_feedback_ataque(
+                    "result", alvo, atacante, defn["name"], "normal", attack_id=feedback_id,
+                    hit=True, crit=False, natural_critical=False, natural_fumble=False)
+                await self._aplicar_escuridao(
+                    alvo, raio=1, duracao=2, pos=list(destino),
+                    visual_id=f"fumaca_leonel_{alvo.get('id')}_{self.round_num}_{destino[0]}_{destino[1]}")
+                await self.gm_say(T("narracao.leonel_fumaca_reacao", monstro=nome_criatura(alvo)))
+                return {"disadvantage": True, "attack_penalty": 0}
+
+        flash = next((item for item in bag if item.get("id") == "bomba_flash"), None)
+        if not flash:
+            return None
+        reach = int(ARREMESSAVEIS["bomba_flash"].get("alcance", 5))
+        if (max(abs(origem[0] - destino[0]), abs(origem[1] - destino[1])) > reach
+                or not self._tem_linha_de_visao(origem, destino)
+                or not self._alcance_com_altura(alvo, destino, reach, destino=atacante)):
+            return None
+        bag.remove(flash)
+        defn = ARREMESSAVEIS["bomba_flash"]
+        feedback_id = await self._emitir_feedback_ataque(
+            "start", alvo, atacante, defn["name"], "normal",
+            projectile={"kind": "item", "item_id": "bomba_flash", "item_emoji": defn["emoji"]})
+        await asyncio.sleep(.2)
+        roll = random.randint(1, 20)
+        attack_bonus = 6
+        target_tile = self._target_tile(atacante, atacante.get("pos"))
+        target_ac = (self._player_effective_ac(atacante) if atacante in self.players.values()
+                     else int(atacante.get("ac", atacante.get("ca", 10)) or 10))
+        target_ac = self._ponto_vulneravel_ac(
+            atacante, target_tile, target_ac, attacker_id=alvo.get("id"))
+        target_ac += self._cobertura_baixa_bonus(alvo, atacante, target_tile)
+        hit = roll != 1 and (roll == 20 or roll + attack_bonus >= target_ac)
+        await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
+                              "label": T("dado.bomba_flash_reacao_leonel"), "hit": hit,
+                              "crit": roll == 20, "modifier": attack_bonus,
+                              "total": roll + attack_bonus})
+        await self._emitir_feedback_ataque(
+            "result", alvo, atacante, defn["name"], "normal", attack_id=feedback_id,
+            roll=roll, total=roll + attack_bonus, hit=hit, crit=roll == 20,
+            natural=roll, natural_critical=roll == 20, natural_fumble=roll == 1)
+        await self.gm_say(T("narracao.leonel_flash_acerta" if hit else "narracao.leonel_flash_erra",
+                            monstro=nome_criatura(alvo), alvo=nome_criatura(atacante)))
+        return {"disadvantage": hit, "attack_penalty": 2 if hit else 0}
+
     async def _gilo_flash_reaction(self, alvo, atacante):
         """Gilo gasta uma Flash apenas em reação a um ataque contra si mesmo."""
+        if alvo and alvo.get("type") == "leonel":
+            return await self._leonel_defensive_bomb_reaction(alvo, atacante)
         if (not alvo or alvo.get("type") != "gilo_dedos_sujos"
                 or int(alvo.get("gilo_flash_grenades", 0) or 0) <= 0
                 or self.phase != "playing" or not self._vivo(alvo) or not self._vivo(atacante)):
@@ -20450,7 +20679,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "descricao": item.get("descricao"),
                 **{k: w[k] for k in ("die", "stat", "range", "range_all_directions", "add_strength_to_damage", "repeating_crossbow", "repeating_crossbow_cooldown", "reach", "astral_chain_reach",
                                      "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria",
-                                     "two_handed", "dmg_bonus", "corrosao_resistente", "off_hand_stat",
+                                     "two_handed", "dmg_bonus", "corrosao_resistente", "off_hand_stat", "corrosion_penalty_step",
                                      "ignora_reducao_dano",
                                      "throw_nat1_damage_levels",
                                      "corrosao_niveis_penalidade",
@@ -30388,6 +30617,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 cargas[key] = 0
             cargas[idx] = 1
             m["_minotauro_charge_manual_used"] = True
+        if (m.get("type") == "kobold_besteiro" and m.get("kobold_weapon_mode") != "lance"
+                and m.get("virotes", 0) <= 0):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")})
+            return
         cargas[idx] = cargas.get(idx, 0) - 1
         m["_master_acted"] = True
         m["_master_acao_tipo"] = "ataque"
@@ -30398,7 +30631,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Mordida Corrosiva do Devorador de Metal.
         if m.get("type") in {"lobo_cinzento", "lobo_cinzento_customizado"} and idx == 0:
             atk_def = await self._lobo_bando_atk(m, alvo, dict(atk_def))
-        hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo}, attack_index=idx)
+        if m.get("type") == "kobold_besteiro" and m.get("kobold_weapon_mode") != "lance":
+            hit = await self._kobold_besteiro_disparar(m, {"kind": alvo_kind, "obj": alvo})
+        else:
+            hit = await self._execute_one_monster_attack(m, atk_def, {"kind": alvo_kind, "obj": alvo}, attack_index=idx)
         if m.get("type") in {"lobo_cinzento", "lobo_cinzento_customizado"}:
             await self._lobo_derrubar(m, {"kind": alvo_kind, "obj": alvo}, hit)
         if (hit and m.get("type") == "devorador_metal" and idx == 0
@@ -34435,7 +34671,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         combat_fields = ("id", "name", "die", "stat", "range", "range_all_directions", "add_strength_to_damage", "repeating_crossbow", "repeating_crossbow_cooldown", "reach", "astral_chain_reach",
                          "finesse", "off_hand_weapon", "off_hand_forca", "throw_range", "crit_nat20_multiplier", "crit_nat20_stuns", "crit_min_nat_roll", "extra_attack_on_crit_min_nat", "categoria", "two_handed",
                          "ignora_reducao_dano",
-                         "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade",
+                         "dmg_bonus", "corrosao_resistente", "corrosao_niveis_penalidade", "corrosion_penalty_step",
                          "silver", "corrosion_max", "corrosion_free_levels",
                          "staff_spell_damage_bonus", "staff_area_dimension_bonus",
                          "staff_extra_spell_circle", "staff_extra_spell_cooldown",
@@ -42735,7 +42971,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             ids = monstro.get("equipped_items")
             if isinstance(ids, list):
                 monstro["equipped_items"] = [iid for iid in ids if iid != item.get("id")]
-            if slot == "weapon" and monstro.get("equipment_base_attacks"):
+            if slot == "weapon" and monstro.get("type") == "goblin_dual":
+                _configurar_goblin_dual_ataques(monstro)
+            elif slot == "weapon" and monstro.get("equipment_base_attacks"):
                 monstro["attacks"] = deepcopy(monstro["equipment_base_attacks"])
             estado = "destruído"
         else:
@@ -49746,7 +49984,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if weapon.get("silver"):
             return 0
         extra = weapon.get("corrosao_resistente", 0)
-        return min(max(0, c["arma_lvl"] - extra), pen_niveis)   # danificado -1, quebrado -2, ...
+        return min(max(0, c["arma_lvl"] - extra), pen_niveis) * int(weapon.get("corrosion_penalty_step", 1) or 1)   # danificado -1, quebrado -2, ...
 
     def _penalidade_desgaste_arma(self, item):
         """Desgaste da arma arremessável acompanha a peça em qualquer mão."""
@@ -49865,7 +50103,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if lvl >= extra + pen + 1:
             return True, 0
         limite = int((piece or {}).get("corrosao_penalidade_max", 0) or 0) or pen
-        return False, max(0, min(lvl - extra, pen, limite))
+        return False, max(0, min(lvl - extra, pen, limite)) * int((piece or {}).get("corrosion_penalty_step", 1) or 1)
 
     async def _corroer_equipamento(self, m, p, armaduras_ids, armas_ids, cura="1d4", label=None,
                                    randomize=False, ignore_material=False, notify=True,
@@ -52915,7 +53153,41 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 target = target_obj.get("obj") or {}
                 if self._alvo_vivo(target_obj):
                     await self._aplicar_veneno(target, venom_id, fonte="ataque")
+            if hit:
+                await self._xama_suplica_vital_apos_acerto(m, atk_def)
             return hit
+
+    async def _xama_suplica_vital_apos_acerto(self, m, attack):
+        if m.get("type") != "goblin_xama" or m.get("hp", 0) <= 0:
+            return False
+        weapon = next((i for i in m.get("equipment_items", [])
+                       if i.get("voto_guardiao") and not i.get("corrosion_destroyed")
+                       and i.get("id") == attack.get("equipment_weapon_id")
+                       and i.get("id") in m.get("equipped_items", [])), None)
+        if not weapon or int(weapon.get("voto_guardiao_ready_round", 0)) > self.round_num:
+            return False
+        candidates = [a for a in {m["id"]: m, **self.monsters}.values()
+                      if self._entidade_viva(a) and a.get("hp", 0) < a.get("max_hp", 0)
+                      and bool(a.get("dominado")) == bool(m.get("dominado"))
+                      and a.get("pos") and _distancia_chebyshev(m["pos"], a["pos"]) <= 2
+                      and not self._monster_hostility_matches(m, a)
+                      and not self._monster_hostility_matches(a, m)]
+        if not candidates:
+            return False
+        target = max(candidates, key=lambda a: int(a["max_hp"]) - int(a["hp"]))
+        rolled = roll_dice("1d6")
+        healed = min(rolled, target["max_hp"] - target["hp"])
+        target["hp"] += healed
+        ready = self.round_num + int(weapon.get("voto_guardiao_cooldown", 10))
+        weapon["voto_guardiao_ready_round"] = ready
+        if (m.get("equipped_weapon") or {}).get("id") == weapon["id"]:
+            m["equipped_weapon"]["voto_guardiao_ready_round"] = ready
+        await self.broadcast({"type": "dice_roll", "die": "d6", "value": rolled,
+                              "label": T("dado.cura"), "healing": True,
+                              "target_id": target.get("id"), "effective": healed})
+        await self.gm_say(T("narracao.suplicia_vital_cura", cleric=m.get("name", "Xamã Goblin"),
+                            target=target.get("name", "aliado"), cura=healed))
+        return True
 
     async def _execute_one_monster_attack_impl(self, m, atk_def, target_obj):
         """Executa um único ataque de um monstro com formato novo."""
@@ -53570,6 +53842,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          # _soldado_try_granada, que avalia alcance, risco próprio e HP
                          # (outros monstros no raio NÃO são considerados na mira).
                          and not (m.get("type") == "soldado" and item.get("id") in {"granada", "granada_superior"})
+                         # Leonel reserva fumaça e Flash para as reações defensivas.
+                         and not (m.get("type") == "leonel" and item.get("id") in {"bomba_fumaca", "bomba_flash"})
                          and target is not None
                          and self._alcance_com_altura(
                              m, target["pos"], ARREMESSAVEIS[item["id"]].get("alcance", 0),
@@ -53788,6 +54062,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         return True
 
     def _adicionar_veneno_ao_ataque_monstro_preview(self, m, attack_index, venom_id):
+        if m.get("type") == "kobold_besteiro" and m.get("kobold_weapon_mode") != "lance":
+            return bool(_veneno_id_valido(venom_id) and attack_index == 0
+                        and m.get("virotes", 0) > 0 and not m.get("kobold_poisoned_bolts", 0))
         attacks = m.get("attacks") if isinstance(m.get("attacks"), list) else []
         return bool(_veneno_id_valido(venom_id)
                     and type(attack_index) is int and 0 <= attack_index < len(attacks)
@@ -53798,6 +54075,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _adicionar_veneno_ao_ataque_monstro(self, m, attack_index, venom_id):
         if not self._adicionar_veneno_ao_ataque_monstro_preview(m, attack_index, venom_id):
             return False
+        if m.get("type") == "kobold_besteiro" and m.get("kobold_weapon_mode") != "lance":
+            m["kobold_poisoned_bolts"] = min(10, int(m.get("virotes", 0)))
+            m["kobold_bolt_poison_id"] = venom_id
+            return True
         attacks = m.get("attacks")
         attack = attacks[attack_index]
         attack["poison_slots"] = [venom_id] * 3
@@ -54433,7 +54714,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return True
         # Técnicas que só a IA disparava e agora o Mestre arma à mão.
         if aid in {"golpe_devastador_troll", "pressao_constante_troll",
-                   "investida_brutal_troll", "arremesso", "dominar_morto_vivo"}:
+                   "investida_brutal_troll", "arremesso", "dominar_morto_vivo", "kobold_disparo_duplo"}:
             return True
         if ability.get("action_type") == "passiva":
             return False
@@ -54517,6 +54798,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_agiu_neste_turno")}); return
         if custo == "bonus" and m.get("_master_bonus_acted"):
             await self.send_to(pid, {"type": "error", "msg": T("erro.este_monstro_ja_usou_a_acao_bonus")}); return
+        if ability_id == "kobold_disparo_duplo" and m.get("type") == "kobold_besteiro":
+            alvo, kind = self._alvo_manual_mestre(target_id)
+            if not alvo or not await self._kobold_besteiro_disparar(m, {"kind": kind, "obj": alvo}, double=True):
+                await self.send_to(pid, {"type": "error", "msg": T("erro.habilidade_sem_usos_ou_em_recarga")})
+                return
+            self._debitar_acao_mestre(m, custo, "habilidade")
+            await self.push_state()
+            return
         if (ability_id == "hero_bard_cancao_heroica"
                 or ability.get("source_id") == "cancao_heroica"):
             if not self._ativar_cancao_monstro(m, atributos):
@@ -55147,8 +55436,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Arma sempre
         arma_id = m.get("esqueleto_arma_id")
         if arma_id:
-            arma_item = next((w for w in SHOP_WEAPONS if w["id"] == arma_id), None)
-            if arma_item:
+            arma_instance = next((w for w in m.get("equipment_items", []) if w.get("id") == arma_id), None)
+            arma_item = arma_instance or next((w for w in SHOP_WEAPONS if w["id"] == arma_id), None)
+            if arma_item and not arma_item.get("corrosion_destroyed"):
                 items.append(deepcopy(arma_item))
         shield = next((item for item in (m.get("equipment_items") or [])
                        if (item.get("kind") == "shield" or item.get("item_slot") == "shield")
@@ -55176,73 +55466,48 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         gold_total = 0
 
         if m.get("type") == "kobold_lanceiro":
-            # A arma sorteada sempre vai ao loot, exceto a lança que já foi
-            # arremessada (ela permanece como item no chão).
-            weapon_id = m.get("kobold_weapon_id", "lanca_curta")
-            weapon = next((i for i in SHOP_WEAPONS if i["id"] == weapon_id), None)
-            if weapon and (weapon_id != "lanca_curta" or m.get("kobold_lance_in_hand", True)):
-                items_sempre.append(deepcopy(weapon))
-            shield_id = m.get("kobold_shield_id")
-            shield = next((i for i in SHOP_ARMORS if i["id"] == shield_id), None)
-            if shield:
-                items_sempre.append(deepcopy(shield))
+            for item in m.get("equipment_items", []):
+                if item.get("corrosion_destroyed"):
+                    continue
+                if item.get("die"):
+                    if m.get("kobold_weapon_id") == "lanca_curta" and not m.get("kobold_lance_in_hand"):
+                        continue  # Lança arremessada permanece no chão.
+                    items_sempre.append(deepcopy(item))
+                elif item.get("kind") == "shield" or item.get("item_slot") == "shield":
+                    items_sempre.append(deepcopy(item))
 
-            # Doses de veneno restantes (dose na arma + doses extras)
-            doses = m.get("veneno_doses_extras", 0)
-            if m.get("veneno_arma_ativo"):
-                doses += 1
-            veneno_item = next((i for i in SHOP_MERCHANT if i["id"] == "veneno_aranha_sombria"), None)
-            for _ in range(doses):
-                if veneno_item:
-                    items_sempre.append(deepcopy(veneno_item))
-
-            # Extra independente: 20% veneno
+            # Apenas frascos não utilizados; o extra segue o veneno desta instância.
+            items_sempre.extend(deepcopy(i) for i in m.get("equipment_consumables", [])
+                                if i.get("effect") == "coat_poison")
             if random.randint(1, 100) <= 20:
-                if veneno_item:
-                    items_sempre.append(deepcopy(veneno_item))
+                poison = _DUNGEON_ITEM_CATALOG.get(m.get("kobold_poison_id", "veneno_aranha_sombria"))
+                if poison:
+                    items_sempre.append(deepcopy(poison))
 
         elif m.get("type") == "kobold_besteiro":
-            # Arma sempre
-            besta = next((i for i in SHOP_WEAPONS if i["id"] == "hand_crossbow"), None)
-            if besta:
-                items_sempre.append(deepcopy(besta))
-
-            # Virotes restantes â†’ item real no loot
-            virotes_rest = m.get("virotes", 0)
-            if virotes_rest > 0:
-                virote_base = next((i for i in SHOP_AMMO if i["id"] == "virotes"), None)
-                if virote_base:
-                    virote_loot = deepcopy(virote_base)
-                    # A contagem sai do ammo_count na hora de exibir, não do
-                    # nome — ver nome_item / _comSufixos.
-                    virote_loot["ammo_count"] = virotes_rest
-                    items_sempre.append(virote_loot)
-
-            # Virotes especiais restantes
-            v_esp_tipo  = m.get("virotes_especiais_tipo")
-            v_esp_count = m.get("virotes_especiais_count", 0)
-            if v_esp_tipo and v_esp_count > 0:
-                if v_esp_tipo == "incendiario":
-                    virote_item = next((i for i in SHOP_AMMO if i["id"] == "virote_incendiario"), None)
-                    for _ in range(v_esp_count):
-                        if virote_item:
-                            items_sempre.append(deepcopy(virote_item))
-                elif v_esp_tipo == "veneno_escorpiao_pedra":
-                    veneno_item = next((i for i in SHOP_MERCHANT if i["id"] == "veneno_escorpiao_pedra"), None)
-                    for _ in range(v_esp_count):
-                        if veneno_item:
-                            items_sempre.append(deepcopy(veneno_item))
-
-            # Extras independentes: 5% veneno aranha, 5% 1d6 virotes incendiÃ¡rios
+            items_sempre.extend(deepcopy(i) for i in m.get("equipment_items", [])
+                                if not i.get("corrosion_destroyed"))
+            items_sempre.extend(deepcopy(m.get("equipment_consumables", [])))
+            remaining = max(0, int(m.get("virotes", 0)))
+            fire = min(remaining, max(0, int(m.get("virotes_especiais_count", 0))))
+            coated = min(remaining, max(0, int(m.get("kobold_poisoned_bolts", 0))))
+            for count, ammo_id in ((fire, "virote_incendiario"), (remaining - fire, "virotes")):
+                poisoned = min(count, coated)
+                coated -= poisoned
+                for quantity, venom in ((poisoned, True), (count - poisoned, False)):
+                    if quantity:
+                        ammo = deepcopy(_DUNGEON_ITEM_CATALOG[ammo_id])
+                        ammo["ammo_count"] = quantity
+                        if venom:
+                            ammo["poison_ids"] = [m["kobold_bolt_poison_id"]]
+                        items_sempre.append(ammo)
+            # Extras mantêm as probabilidades; veneno segue o tipo da instância.
             if random.randint(1, 100) <= 5:
-                veneno_item = next((i for i in SHOP_MERCHANT if i["id"] == "veneno_aranha_sombria"), None)
-                if veneno_item:
-                    items_sempre.append(deepcopy(veneno_item))
+                items_sempre.append(deepcopy(_DUNGEON_ITEM_CATALOG[m.get("kobold_poison_id", "veneno_aranha_sombria")]))
             if random.randint(1, 100) <= 5:
-                virote_item = next((i for i in SHOP_AMMO if i["id"] == "virote_incendiario"), None)
-                if virote_item:
-                    for _ in range(roll_dice("1d6")):
-                        items_sempre.append(deepcopy(virote_item))
+                ammo = deepcopy(_DUNGEON_ITEM_CATALOG["virote_incendiario"])
+                ammo["ammo_count"] = random.randint(1, 6)
+                items_sempre.append(ammo)
 
         if m.get("type") == "kobold_mago":
             for item in m.get("equipment_items", []):
@@ -56485,12 +56750,23 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     async def _goblin_arremesso_em(self, m, target_obj):
         """Resolve o Arremesso num alvo já escolhido (IA ou Mestre)."""
+        if m.get("type") == "goblin_dual" and not m.get("pode_arremessar"):
+            return
+        off_id = (m.get("goblin_dual_weapon_ids") or [None, None])[1]
+        off = next((i for i in m.get("equipment_items", []) if i.get("id") == off_id), None)
+        off_attack = next((a for a in m.get("attacks", []) if a.get("equipment_weapon_id") == off_id), {})
+        throw_atk = int(off_attack.get("atk_bonus", 4)) - int(off_attack.get("rede_corrosiva_atk_pen", 0))
+        throw_damage = int(off_attack.get("damage_bonus", 0)) - int(off_attack.get("rede_corrosiva_damage_pen", 0))
         target = target_obj["obj"]
         d20  = random.randint(1, 20)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": d20,
                               "label": T("dado.arremesso_de", nome=nome_criatura(m))})
         if d20 == 1:   # 1 natural â†’ a arma quebra
             m["pode_arremessar"] = False
+            if m.get("type") == "goblin_dual" and off:
+                off["corrosion_destroyed"] = True
+                m["equipped_items"] = [i for i in m.get("equipped_items", []) if i != off_id]
+                _configurar_goblin_dual_ataques(m)
             m["guaranteed_loot"] = [g for g in m.get("guaranteed_loot", []) if g != "dagger"]
             await self.gm_say(T("narracao.tira_1_no_arremesso_a_adaga_se_quebra", monstro=nome_criatura(m)))
             return
@@ -56499,9 +56775,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # usa a própria CA. _player_effective_ac leria campos de jogador.
         eff_ac = (self._player_effective_ac(target) if target_obj["kind"] == "player"
                   else target.get("ac", target.get("ca", 10)) + self._cancao_monstro_bonus(target, "ca"))
-        total  = d20 + 4
+        total  = d20 + throw_atk
         if d20 == 20 or total >= eff_ac:
-            dmg = self._apply_damage_types(roll_dice("1d4") + 2, ["physical"], target)
+            dmg = self._apply_damage_types(max(1, roll_dice("1d4") + 2 + throw_damage), ["physical"], target, weapon=off)
             await self._aplicar_dano_alvo(target, dmg, DMG_PHYSICAL,
                                           m.get("id"), is_attack=True)
             await self.gm_say(
@@ -57400,6 +57676,36 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self._envenenar_arma_do_inventario(m)
 
     # â”€â”€ IA Kobold Besteiro â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    async def _kobold_besteiro_disparar(self, m, target_obj, double=False):
+        weapon = m.get("equipped_weapon") or {}
+        if (not m.get("attacks") or m.get("virotes", 0) <= 0
+                or m.get("kobold_weapon_mode") == "lance"
+                or any(i.get("id") == weapon.get("id") and i.get("corrosion_destroyed") for i in m.get("equipment_items", []))
+                or not self._monster_attack_in_range(m, target_obj["obj"]["pos"], m["attacks"][0])
+                or not self._tem_linha_de_visao(m["pos"], target_obj["obj"]["pos"])):
+            return False
+        if double and (not weapon.get("repeating_crossbow") or m.get("virotes", 0) < 2
+                       or self.round_num < m.get("kobold_repeater_ready_round", 0)):
+            return False
+        if double:
+            m["kobold_repeater_ready_round"] = self.round_num + 10
+            m.setdefault("ability_cooldowns", {})["kobold_disparo_duplo"] = 10
+        for _ in range(2 if double else 1):
+            if m.get("virotes", 0) <= 0 or target_obj["obj"].get("hp", 0) <= 0:
+                break
+            if not m.get("kobold_poisoned_bolts", 0):
+                await self._envenenar_arma_do_inventario(m, attack_index=0)
+            attack = dict(m["attacks"][0])
+            if m.get("virotes_especiais_count", 0) > 0:
+                attack.update(extra_damage="1d4", extra_damage_types=[DMG_FIRE])
+                m["virotes_especiais_count"] -= 1
+            if m.get("kobold_poisoned_bolts", 0) > 0:
+                attack["on_hit"] = m["kobold_bolt_poison_id"]
+                m["kobold_poisoned_bolts"] -= 1
+            m["virotes"] -= 1
+            await self._execute_one_monster_attack(m, attack, target_obj)
+        return True
+
     async def _ai_kobold_besteiro(self, m, targets):
         if m.get("kobold_medo"):
             await self._ai_kobold_medo(m, targets)
@@ -57451,7 +57757,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Pode atirar = dentro do alcance E com linha de visÃ£o (a mesma regra
         # dos jogadores: paredes bloqueiam virotes â€” sem tiro atravÃ©s delas).
         def pode_atirar():
-            return self._alcance_com_altura(m, target["pos"], atk_range, destino=target) and \
+            return self._monster_attack_in_range(m, target["pos"], m["attacks"][0]) and \
                    self._tem_linha_de_visao(m["pos"], target["pos"])
 
         # Move atÃ© entrar no alcance COM visada (sem precisar estar adjacente)
@@ -57472,19 +57778,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not pode_atirar():
             return   # ainda fora do alcance ou sem linha de visÃ£o
 
-        # Prepara ataque â€” verifica virote especial
-        atk = dict(m["attacks"][0])
-        if m.get("virotes_especiais_count", 0) > 0:
-            tipo = m["virotes_especiais_tipo"]
-            if tipo == "incendiario":
-                atk["extra_damage"]       = "1d4"
-                atk["extra_damage_types"] = ["fire"]
-            elif tipo == "veneno_escorpiao_pedra":
-                atk["on_hit"] = "veneno_escorpiao_pedra"
-            m["virotes_especiais_count"] -= 1
-
-        await self._execute_one_monster_attack(m, atk, target_obj)
-        m["virotes"] = max(0, m.get("virotes", 1) - 1)
+        double = bool((m.get("equipped_weapon") or {}).get("repeating_crossbow")
+                      and m.get("virotes", 0) >= 2
+                      and self.round_num >= m.get("kobold_repeater_ready_round", 0))
+        await self._kobold_besteiro_disparar(m, target_obj, double=double)
 
     def _spell_cfg(self, m, sid):
         """Config de magia do monstro pelo id, ou None."""
@@ -59695,6 +59992,22 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if m["hp"] > 0: return
         if m.get("fugiu") and not force:
             return          # já fugiu: não repete a narração nem o prêmio
+        # Último Suspiro também protege chefes com equipamento da ficha.
+        # A cópia equipada é consumida para que a proteção seja de uso único.
+        if not force:
+            ward = next((item for item in (m.get("equipment_items") or [])
+                         if item.get("id") == "ultimo_suspiro"
+                         and item.get("effect") == "death_ward"), None)
+            if ward:
+                m["equipment_items"].remove(ward)
+                m["equipped_items"] = [item_id for item_id in m.get("equipped_items", [])
+                                        if item_id != "ultimo_suspiro"]
+                m["equipment"] = [item_id for item_id in m.get("equipment", [])
+                                  if item_id != "ultimo_suspiro"]
+                m["hp"] = 1
+                await self.gm_say(T("narracao.ultimo_suspiro_salva_monstro",
+                                    monstro=nome_criatura(m)))
+                return
         if m.get("type") == "cavalo_sela" and m.get("cavaleiro_id"):
             cavaleiro = self.players.get(m.get("cavaleiro_id"))
             if cavaleiro:
@@ -60126,7 +60439,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 )
                 if gdef:
                     loot_items.append(deepcopy(gdef))
-            if m.get("type") in {"goblin_combatente", "dark_mage"}:
+            if m.get("type") in {"goblin_combatente", "dark_mage", "leonel"}:
                 # A bolsa restante preserva só os consumíveis não utilizados.
                 loot_items.extend(deepcopy(m.get("equipment_consumables", [])))
             if m.get("type") in {"ogro_clava", "ogro_lanca"}:
@@ -65282,6 +65595,13 @@ def _validate_custom_monster(raw):
             "weapons": weapons,
             "consumables": {"veneno_agonia_sufocante": poison_count},
         }
+    if typ == "leonel" and isinstance(raw.get("leonel_loadout"), dict):
+        raw_consumables = raw["leonel_loadout"].get("consumables")
+        raw_consumables = raw_consumables if isinstance(raw_consumables, dict) else {}
+        result["leonel_loadout"] = {"consumables": {
+            item_id: _monster_int(raw_consumables.get(item_id, 0), 0, 0, 10)
+            for item_id in ("granada_superior", "bomba_incendiaria", "bomba_fumaca", "bomba_flash")
+        }}
     if vscale != [1.0, 1.0]:
         result["vscale"] = vscale
     if fill_footprint_3d:
@@ -65305,6 +65625,7 @@ def _validate_custom_monster(raw):
             "model3d", "armor_description", "size", "oriented", "porte", "vscale", "fill_footprint_3d", "undead", "subtipo", "boss",
             "voo", "altura_inicial", "altura_max", "pode_alterar_altura", "custo_mov_altura", "ignora_obstaculos_voo",
             "assassino_loadout",
+            "leonel_loadout",
         }
         for key, value in native_source.items():
             if key in editor_fields or key in {"_personalizado", "original_type"}:

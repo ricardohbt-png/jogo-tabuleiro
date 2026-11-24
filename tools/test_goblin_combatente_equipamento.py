@@ -27,7 +27,7 @@ def spawn(index=0, shield_roll=0.9, potion_roll=0.9):
     definition = next(m for m in S.MONSTER_DEFS if m["type"] == "goblin_combatente")
     # Select each position of the real equally weighted choice population.
     with patch.object(S.random, "choice", side_effect=lambda population: population[index]), \
-            patch.object(S.random, "random", side_effect=[shield_roll, potion_roll]):
+            patch.object(S.random, "random", side_effect=[0.99, shield_roll, potion_roll]):
         return S.make_monster(definition, {"id": 0, "cx": 3, "cy": 3})
 
 
@@ -93,14 +93,18 @@ class CombatantEquipmentTests(unittest.TestCase):
         self.assertEqual(second["equipment_consumables"][0], before)
         self.assertEqual(S._DUNGEON_ITEM_CATALOG["health_potion_small"], before)
 
-    def test_dual_preserves_dagger_throw_and_both_original_attacks(self):
+    def test_dual_equipa_duas_armas_sorteadas_que_viram_loot(self):
         definition = next(m for m in S.MONSTER_DEFS if m["type"] == "goblin_dual")
-        m = S.make_monster(definition, {"id": 0, "cx": 3, "cy": 3})
-        self.assertTrue(m["pode_arremessar"])
-        self.assertIn("arremesso", [a["id"] for a in m["special_abilities"]])
-        self.assertIn("dagger", m["guaranteed_loot"])
-        self.assertEqual([(a["name"], a["damage"], a["atk_bonus"]) for a in m["attacks"]],
-                         [("Espada Curta", "1d6", 2), ("Adaga", "1d4+2", 4)])
+        for _ in range(40):
+            m = S.make_monster(definition, {"id": 0, "cx": 3, "cy": 3})
+            self.assertEqual(len(m["attacks"]), 2)
+            ids = [i["id"] if isinstance(i, dict) else i for i in m["equipped_items"]][:2]
+            self.assertEqual(len(ids), 2)
+            self.assertEqual(m["guaranteed_loot"], [])
+            sec = ids[1]
+            self.assertEqual(bool(m["pode_arremessar"]), S._arma_base_id(sec) == "dagger")
+            if m["pode_arremessar"]:
+                self.assertIn("arremesso", [a["id"] for a in m["special_abilities"]])
 
 
 if __name__ == "__main__":

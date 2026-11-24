@@ -49,13 +49,17 @@ def ficha_escorpiao_gigante():
 
 def ficha_leonel():
     f = _base("soldado")
-    f.update({"type": TIPO_LEONEL, "name": "Leonel", "emoji": "🎩", "tier": 3, "cr": 3, "base_hp": 55,
-              "hp": 55, "ac": 15, "movement": 6, "equipment_enabled": False, "equipped_items": [],
-              "equipment": [], "xp": 120, "boss": True, "image": "leonel", "portrait": "soldado",
+    f.update({"type": TIPO_LEONEL, "name": "Leonel", "emoji": "🎩", "tier": 3, "cr": 3,
+              "base_hp": 54, "hp": 55, "natural_armor": 4, "ac_bonus": 0, "ac": 15,
+              "movement": 6, "equipment_enabled": True,
+              "equipped_items": ["ultimo_suspiro"], "equipment": ["ultimo_suspiro"],
+              "leonel_loadout": {"consumables": {"granada_superior": 3, "bomba_incendiaria": 2,
+                                                     "bomba_fumaca": 2, "bomba_flash": 2}},
+              "xp": 120, "boss": True, "image": "leonel", "portrait": "leonel_retrato",
               "model3d": "assets/models3d/monstros/leonel.glb"})
     f["attacks"] = [{"name": "Florete", "damage": "1d8", "damage_types": ["physical"], "num_attacks": 2,
                      "attack_attribute": "dex", "damage_attribute": "dex", "apply_attribute_damage": True,
-                     "attribute_mod_base": 2, "base_attack_bonus": 0, "atk_bonus": 5, "range": None,
+                     "attribute_mod_base": 1, "base_attack_bonus": 4, "atk_bonus": 5, "range": None,
                      "on_hit": None, "on_hit_effect": None, "poison_dc": 10, "extra_damage": None,
                      "extra_damage_types": []}]
     f["loot_drops"] = [{"kind": "gold", "amount": 120, "chance": 100}]

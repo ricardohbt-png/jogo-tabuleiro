@@ -140,6 +140,10 @@ window.LANG_INTERFACE = {
     "en": "Gilo's Flash Bomb",
     "pt": "Bomba de Flash de Gilo"
   },
+  "dado.bomba_flash_reacao_leonel": {
+    "en": "Leonel's Flash Bomb",
+    "pt": "Bomba de Flash de Leonel"
+  },
   "cat.item.flecha_envenenada.nome": {
     "en": "Poisoned Arrow",
     "pt": "Flecha Envenenada"

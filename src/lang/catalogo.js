@@ -3058,6 +3058,14 @@ window.LANG_CATALOGO = {
     "en": "Fractured Horizon Staff",
     "pt": "Bordão do Horizonte Partido"
   },
+  "cat.item.bordao_magica.desc": {
+    "en": "",
+    "pt": "Bordão: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.bordao_magica.nome": {
+    "en": "",
+    "pt": "Bordão Mágica +1"
+  },
   "cat.item.bordao_prata.desc": {
     "en": "Silver Quarterstaff: 1d6 bludgeoning damage, using Strength or Dexterity. On a natural 20, the target makes a Fortitude save or is stunned. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
     "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
@@ -3065,6 +3073,14 @@ window.LANG_CATALOGO = {
   "cat.item.bordao_prata.nome": {
     "en": "Silver Quarterstaff",
     "pt": "Bordão de Prata"
+  },
+  "cat.item.bordao_prata_magica.desc": {
+    "en": "",
+    "pt": "Bordão de Prata: 1d6 de dano contundente, usando Força ou Destreza. No 20 natural, o alvo testa Fortitude ou fica tonto. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.bordao_prata_magica.nome": {
+    "en": "",
+    "pt": "Bordão de Prata Mágica +1"
   },
   "cat.item.bordao_punho_ferro.desc": {
     "en": "Very rare magical quarterstaff: +1 to hit and damage and 1d6 bludgeoning using Strength or Dexterity. On a natural 20, the iron fist forces Fortitude DC 15; failure stuns the target and costs it its next turn. Cleric, Bard, Rogue, Paladin, and Warrior.",
@@ -3326,6 +3342,14 @@ window.LANG_CATALOGO = {
     "en": "Fire Whip",
     "pt": "Chicote de Fogo"
   },
+  "cat.item.chicote_magica.desc": {
+    "en": "",
+    "pt": "Chicote: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.chicote_magica.nome": {
+    "en": "",
+    "pt": "Chicote Mágica +1"
+  },
   "cat.item.chicote_prata.desc": {
     "en": "Silver Whip: 1d4 slashing damage, using Dexterity. Range: 2 squares in a straight line. Can be used in the off hand for an extra attack, replacing the shield. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
     "pt": "Chicote de Prata: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
@@ -3333,6 +3357,14 @@ window.LANG_CATALOGO = {
   "cat.item.chicote_prata.nome": {
     "en": "Silver Whip",
     "pt": "Chicote de Prata"
+  },
+  "cat.item.chicote_prata_magica.desc": {
+    "en": "",
+    "pt": "Chicote de Prata: 1d4 de dano cortante, usando Força. Alcance: 2 casas em linha reta. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.chicote_prata_magica.nome": {
+    "en": "",
+    "pt": "Chicote de Prata Mágica +1"
   },
   "cat.item.choque_do_trovao.desc": {
     "en": "Very rare magical warhammer: 1d8 bludgeoning + Strength, +1 to hit and damage, and +1d4 lightning damage on each hit. On a critical hit, a surviving target makes a Strength check (DC 13) or is pushed 1 square away. As a principal action, the wielder releases a pulse that hits all creatures in the eight adjacent squares, including allies but not the wielder, for 2d6 lightning damage (Reflex DC 13 halves). Recharge: 10 rounds. Cleric, Paladin, and Warrior only.",
@@ -3430,6 +3462,14 @@ window.LANG_CATALOGO = {
     "en": "Damascus Steel Dagger",
     "pt": "Adaga de Aço Damasco"
   },
+  "cat.item.dagger_aco_damasco_magica.desc": {
+    "en": "",
+    "pt": "Adaga de Aço Damasco: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.dagger_aco_damasco_magica.nome": {
+    "en": "",
+    "pt": "Adaga de Aço Damasco Mágica +1"
+  },
   "cat.item.dagger_liga_titanio.desc": {
     "en": "Titanium Alloy Dagger: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
     "pt": "Adaga de Liga de Titânio: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
@@ -3437,6 +3477,22 @@ window.LANG_CATALOGO = {
   "cat.item.dagger_liga_titanio.nome": {
     "en": "Titanium Alloy Dagger",
     "pt": "Adaga de Liga de Titânio"
+  },
+  "cat.item.dagger_liga_titanio_magica.desc": {
+    "en": "",
+    "pt": "Adaga de Liga de Titânio: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.dagger_liga_titanio_magica.nome": {
+    "en": "",
+    "pt": "Adaga de Liga de Titânio Mágica +1"
+  },
+  "cat.item.dagger_magica.desc": {
+    "en": "",
+    "pt": "Adaga: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.dagger_magica.nome": {
+    "en": "",
+    "pt": "Adaga Mágica +1"
   },
   "cat.item.dagger_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Dagger: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
@@ -3446,6 +3502,14 @@ window.LANG_CATALOGO = {
     "en": "Iron Obsidian Dagger",
     "pt": "Adaga de Obsidiana de Ferro"
   },
+  "cat.item.dagger_obsidiana_ferro_magica.desc": {
+    "en": "",
+    "pt": "Adaga de Obsidiana de Ferro: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.dagger_obsidiana_ferro_magica.nome": {
+    "en": "",
+    "pt": "Adaga de Obsidiana de Ferro Mágica +1"
+  },
   "cat.item.dagger_prata.desc": {
     "en": "Silver Dagger: 1d4 piercing damage, using Strength or Dexterity. Can also be thrown up to 3 squares. Can be used in the off hand for an extra attack, replacing the shield. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
     "pt": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
@@ -3453,6 +3517,14 @@ window.LANG_CATALOGO = {
   "cat.item.dagger_prata.nome": {
     "en": "Silver Dagger",
     "pt": "Adaga de Prata"
+  },
+  "cat.item.dagger_prata_magica.desc": {
+    "en": "",
+    "pt": "Adaga de Prata: 1d4 de dano perfurante, usando Força ou Destreza. Também pode ser arremessada até 3 casas. Pode ser usada na mão secundária para um ataque extra, substituindo o escudo. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.dagger_prata_magica.nome": {
+    "en": "",
+    "pt": "Adaga de Prata Mágica +1"
   },
   "cat.item.dente_da_fera.desc": {
     "en": "Beast Fang: 1d6 slashing damage, using Strength or Dexterity. Can also be thrown up to 3 squares.",
@@ -4838,6 +4910,14 @@ window.LANG_CATALOGO = {
     "en": "Silver Long Sword",
     "pt": "Espada Longa de Prata"
   },
+  "cat.item.longsword_prata_magica.desc": {
+    "en": "",
+    "pt": "Espada Longa de Prata: 1d8 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.longsword_prata_magica.nome": {
+    "en": "",
+    "pt": "Espada Longa de Prata Mágica +1"
+  },
   "cat.item.maca.desc": {
     "en": "Mace: 1d6 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3.",
     "pt": "Maça: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3."
@@ -4854,6 +4934,14 @@ window.LANG_CATALOGO = {
     "en": "Damascus Steel Mace",
     "pt": "Maça de Aço Damasco"
   },
+  "cat.item.maca_aco_damasco_magica.desc": {
+    "en": "",
+    "pt": "Maça de Aço Damasco: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.maca_aco_damasco_magica.nome": {
+    "en": "",
+    "pt": "Maça de Aço Damasco Mágica +1"
+  },
   "cat.item.maca_liga_titanio.desc": {
     "en": "Titanium Alloy Mace: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
     "pt": "Maça de Liga de Titânio: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
@@ -4861,6 +4949,22 @@ window.LANG_CATALOGO = {
   "cat.item.maca_liga_titanio.nome": {
     "en": "Titanium Alloy Mace",
     "pt": "Maça de Liga de Titânio"
+  },
+  "cat.item.maca_liga_titanio_magica.desc": {
+    "en": "",
+    "pt": "Maça de Liga de Titânio: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.maca_liga_titanio_magica.nome": {
+    "en": "",
+    "pt": "Maça de Liga de Titânio Mágica +1"
+  },
+  "cat.item.maca_magica.desc": {
+    "en": "",
+    "pt": "Maça: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.maca_magica.nome": {
+    "en": "",
+    "pt": "Maça Mágica +1"
   },
   "cat.item.maca_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Mace: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
@@ -4870,6 +4974,14 @@ window.LANG_CATALOGO = {
     "en": "Iron Obsidian Mace",
     "pt": "Maça de Obsidiana de Ferro"
   },
+  "cat.item.maca_obsidiana_ferro_magica.desc": {
+    "en": "",
+    "pt": "Maça de Obsidiana de Ferro: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.maca_obsidiana_ferro_magica.nome": {
+    "en": "",
+    "pt": "Maça de Obsidiana de Ferro Mágica +1"
+  },
   "cat.item.maca_prata.desc": {
     "en": "Silver Mace: 1d6 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
     "pt": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
@@ -4877,6 +4989,14 @@ window.LANG_CATALOGO = {
   "cat.item.maca_prata.nome": {
     "en": "Silver Mace",
     "pt": "Maça de Prata"
+  },
+  "cat.item.maca_prata_magica.desc": {
+    "en": "",
+    "pt": "Maça de Prata: 1d6 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.maca_prata_magica.nome": {
+    "en": "",
+    "pt": "Maça de Prata Mágica +1"
   },
   "cat.item.maca_voto_guardiao.desc": {
     "en": "Very rare magical mace exclusive to Clerics: 1d8 bludgeoning damage using Strength, natural 20 critical ×3, with no magical attack or damage bonus. Guardian Supplication: on a hit, once every 10 rounds, restore 1d6 HP to the Cleric or a living ally within 2 squares. Cannot revive characters.",
@@ -5730,6 +5850,14 @@ window.LANG_CATALOGO = {
     "en": "Silver Short Sword",
     "pt": "Espada Curta de Prata"
   },
+  "cat.item.shortsword_prata_magica.desc": {
+    "en": "",
+    "pt": "Espada Curta de Prata: 1d6 de dano cortante, usando Força. Crítico natural com 19–20. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.shortsword_prata_magica.nome": {
+    "en": "",
+    "pt": "Espada Curta de Prata Mágica +1"
+  },
   "cat.item.solucao_mecanismo.desc": {
     "en": "Bonus action. Before confirming, shows a 3-square radius around the hero. Automatically disarms every active trap in the area, including hidden traps and traps inside chests or objects. Grants normal disarm XP, doubled for permanent traps; does not recover gold.",
     "pt": "Ação bônus. Antes de confirmar, mostra o raio de 3 casas ao redor do herói. Desarma sem teste todas as armadilhas ativas na área, inclusive ocultas e as embutidas em baús e objetos. Concede XP por armadilha desarmada, em dobro para as permanentes; não recupera ouro."
@@ -5752,7 +5880,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.sword.desc": {
     "en": "Serrated Iron Shortsword: 1d6 slashing damage using Strength, with +2 damage. Nonmagical; tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
-    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais."
+    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, +2 de dano. Crítico apenas no 20 natural. Tolera 0 níveis de corrosão sem penalidade; no nível 1 sofre -2 no acerto e no dano; no nível 2 é destruída."
   },
   "cat.item.sword.nome": {
     "en": "Serrated Iron Shortsword",
@@ -5760,35 +5888,75 @@ window.LANG_CATALOGO = {
   },
   "cat.item.sword_aco_damasco.desc": {
     "en": "Damascus Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 to attack rolls. Tolerates 1 corrosion level without penalty, then follows the normal two penalty levels.",
-    "pt": "Espada Curta Serrilhada de Aço Damasco: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Espada Curta Serrilhada de Aço Damasco: 1d6 cortante usando Força, +2 de dano. +1 no acerto. Crítico apenas no 20 natural. Tolera 1 níveis de corrosão sem penalidade; no nível 2 sofre -2 no acerto e no dano; no nível 3 é destruída."
   },
   "cat.item.sword_aco_damasco.nome": {
     "en": "Damascus Serrated Shortsword",
     "pt": "Espada Curta Serrilhada de Aço Damasco"
   },
+  "cat.item.sword_aco_damasco_magica.desc": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Aço Damasco: 1d6 cortante usando Força, +2 de dano. +1 no acerto. Crítico apenas no 20 natural. Tolera 1 níveis de corrosão sem penalidade; no nível 2 sofre -2 no acerto e no dano; no nível 3 é destruída."
+  },
+  "cat.item.sword_aco_damasco_magica.nome": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Aço Damasco Mágica +1"
+  },
   "cat.item.sword_liga_titanio.desc": {
     "en": "Titanium Alloy Serrated Shortsword: keeps the base weapon's +2 damage, tolerates 2 corrosion levels without penalty, then suffers three normal penalty levels before breaking.",
-    "pt": "Espada Curta Serrilhada de Liga de Titânio: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Espada Curta Serrilhada de Liga de Titânio: 1d6 cortante usando Força, +2 de dano. Crítico apenas no 20 natural. Tolera 2 níveis de corrosão sem penalidade; no nível 3 sofre -2 no acerto e no dano; no nível 4 é destruída."
   },
   "cat.item.sword_liga_titanio.nome": {
     "en": "Titanium Alloy Serrated Shortsword",
     "pt": "Espada Curta Serrilhada de Liga de Titânio"
   },
+  "cat.item.sword_liga_titanio_magica.desc": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio: 1d6 cortante usando Força, +2 de dano. Crítico apenas no 20 natural. Tolera 2 níveis de corrosão sem penalidade; no nível 3 sofre -2 no acerto e no dano; no nível 4 é destruída."
+  },
+  "cat.item.sword_liga_titanio_magica.nome": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Liga de Titânio Mágica +1"
+  },
+  "cat.item.sword_magica.desc": {
+    "en": "",
+    "pt": "Espada Curta de Ferro Serrilhado: 1d6 cortante usando Força, +2 de dano. Crítico apenas no 20 natural. Tolera 0 níveis de corrosão sem penalidade; no nível 1 sofre -2 no acerto e no dano; no nível 2 é destruída."
+  },
+  "cat.item.sword_magica.nome": {
+    "en": "",
+    "pt": "Espada Curta de Ferro Serrilhado Mágica +1"
+  },
   "cat.item.sword_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Serrated Shortsword: keeps the base weapon's +2 damage and gains +1 damage, for +3 total. The first corrosive strike destroys it.",
-    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: 1d6 cortante usando Força, com +2 de dano. Arma mundana que tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: 1d6 cortante usando Força, +3 de dano. Crítico apenas no 20 natural. Destruída na primeira corrosão."
   },
   "cat.item.sword_obsidiana_ferro.nome": {
     "en": "Iron Obsidian Serrated Shortsword",
     "pt": "Espada Curta Serrilhada de Obsidiana de Ferro"
   },
+  "cat.item.sword_obsidiana_ferro_magica.desc": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro: 1d6 cortante usando Força, +3 de dano. Crítico apenas no 20 natural. Destruída na primeira corrosão."
+  },
+  "cat.item.sword_obsidiana_ferro_magica.nome": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Obsidiana de Ferro Mágica +1"
+  },
   "cat.item.sword_prata.desc": {
     "en": "Silver Serrated Shortsword: keeps +2 damage, can harm enemies resistant to normal weapons, suffers no penalty at corrosion level 1, and is destroyed at level 2.",
-    "pt": "Espada Curta Serrilhada de Prata: 1d6 cortante usando Força, com +2 de dano. Prata mundana: fere criaturas resistentes a armas comuns, não sofre penalidade no primeiro nível de corrosão e é destruída no segundo."
+    "pt": "Espada Curta Serrilhada de Prata: 1d6 cortante usando Força, +2 de dano. Crítico apenas no 20 natural. Primeira corrosão sem penalidade; a segunda destrói a arma. Prata: fere criaturas resistentes a armas comuns."
   },
   "cat.item.sword_prata.nome": {
     "en": "Silver Serrated Shortsword",
     "pt": "Espada Curta Serrilhada de Prata"
+  },
+  "cat.item.sword_prata_magica.desc": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Prata: 1d6 cortante usando Força, +2 de dano. Crítico apenas no 20 natural. Primeira corrosão sem penalidade; a segunda destrói a arma. Prata: fere criaturas resistentes a armas comuns."
+  },
+  "cat.item.sword_prata_magica.nome": {
+    "en": "",
+    "pt": "Espada Curta Serrilhada de Prata Mágica +1"
   },
   "cat.item.talisma_ascensao_constituicao.desc": {
     "en": "+2 Constitution while equipped.",
@@ -6022,6 +6190,14 @@ window.LANG_CATALOGO = {
     "en": "Damascus Steel Warhammer",
     "pt": "Martelo de Guerra de Aço Damasco"
   },
+  "cat.item.warhammer_aco_damasco_magica.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra de Aço Damasco: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Aço Damasco; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.warhammer_aco_damasco_magica.nome": {
+    "en": "",
+    "pt": "Martelo de Guerra de Aço Damasco Mágica +1"
+  },
   "cat.item.warhammer_liga_titanio.desc": {
     "en": "Titanium Alloy Warhammer: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
     "pt": "Martelo de Guerra de Liga de Titânio: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
@@ -6029,6 +6205,22 @@ window.LANG_CATALOGO = {
   "cat.item.warhammer_liga_titanio.nome": {
     "en": "Titanium Alloy Warhammer",
     "pt": "Martelo de Guerra de Liga de Titânio"
+  },
+  "cat.item.warhammer_liga_titanio_magica.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra de Liga de Titânio: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante mundana de Liga de Titânio, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.warhammer_liga_titanio_magica.nome": {
+    "en": "",
+    "pt": "Martelo de Guerra de Liga de Titânio Mágica +1"
+  },
+  "cat.item.warhammer_magica.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.warhammer_magica.nome": {
+    "en": "",
+    "pt": "Martelo de Guerra Mágica +1"
   },
   "cat.item.warhammer_obsidiana_ferro.desc": {
     "en": "Iron Obsidian Warhammer: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
@@ -6038,6 +6230,14 @@ window.LANG_CATALOGO = {
     "en": "Iron Obsidian Warhammer",
     "pt": "Martelo de Guerra de Obsidiana de Ferro"
   },
+  "cat.item.warhammer_obsidiana_ferro_magica.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra de Obsidiana de Ferro: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Variante não mágica de Obsidiana de Ferro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.warhammer_obsidiana_ferro_magica.nome": {
+    "en": "",
+    "pt": "Martelo de Guerra de Obsidiana de Ferro Mágica +1"
+  },
   "cat.item.warhammer_prata.desc": {
     "en": "Silver Warhammer: 1d8 bludgeoning damage, using Strength. Natural 20: damage multiplied by 3. Silver: suffers no penalty at corrosion level 1 and is destroyed at level 2; it can damage enemies resistant to normal weapons.",
     "pt": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais."
@@ -6045,6 +6245,14 @@ window.LANG_CATALOGO = {
   "cat.item.warhammer_prata.nome": {
     "en": "Silver Warhammer",
     "pt": "Martelo de Guerra de Prata"
+  },
+  "cat.item.warhammer_prata_magica.desc": {
+    "en": "",
+    "pt": "Martelo de Guerra de Prata: 1d8 de dano contundente, usando Força. 20 natural: dano multiplicado por 3. Prata: suporta 1 nível de corrosão sem penalidade e é destruída no segundo, podendo causar dano a inimigos resistentes a armas normais. Encantamento mágico +1 no acerto e no dano, acumulável com o material."
+  },
+  "cat.item.warhammer_prata_magica.nome": {
+    "en": "",
+    "pt": "Martelo de Guerra de Prata Mágica +1"
   },
   "cat.local.alva_e_luz.nome": {
     "en": "Alva e Luz",

@@ -54655,7 +54655,8 @@ function _makeMonsterPawn3D(T, grp, imageName, monsterType, Y0, facing, oriented
     // 10% menores, respectivamente;
     // o Garaloux Jovem fica 20% menor e o Alfa fica 15% menor sobre a escala
     // atual (1,30 × 0,85 = 1,105).
-    const monsterVisualScale = monsterType === 'bandido' ? 1.1025
+    const monsterVisualScale = (monsterType === 'kobold_besteiro' || imageName === 'koboldbesteiro') ? 0.9606
+      : monsterType === 'bandido' ? 1.1025
       : monsterType === 'capanga' ? 0.80
       : monsterType === 'gilo_dedos_sujos' ? 0.80548125
       : monsterType === 'assassino_da_caravana' ? 0.8075

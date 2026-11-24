@@ -198,6 +198,11 @@ class CorrosaoMateriaisTests(unittest.TestCase):
             for _base, vid, mat in self._variantes(sufixo):
                 metal = mat == "metal"
                 resultados = [corroer(vid, n, metal=metal) for n in (1, 2, 3, 4)]
+                if vid == "sword_aco_damasco":
+                    self.assertEqual([r[2] for r in resultados[:2]], [0, 2], vid)
+                    self.assertFalse(resultados[1][1], vid)
+                    self.assertTrue(resultados[2][1], vid)
+                    continue
                 self.assertEqual([r[2] for r in resultados[:3]], [0, 1, 2], vid)
                 self.assertFalse(resultados[2][1], vid)
                 self.assertTrue(resultados[3][1], vid)
@@ -207,6 +212,11 @@ class CorrosaoMateriaisTests(unittest.TestCase):
             for _base, vid, mat in self._variantes(sufixo):
                 metal = mat == "metal"
                 resultados = [corroer(vid, n, metal=metal) for n in range(1, 7)]
+                if vid == "sword_liga_titanio":
+                    self.assertEqual([r[2] for r in resultados[:3]], [0, 0, 2], vid)
+                    self.assertFalse(resultados[2][1], vid)
+                    self.assertTrue(resultados[3][1], vid)
+                    continue
                 self.assertEqual([r[2] for r in resultados[:5]], [0, 0, 1, 2, 3], vid)
                 self.assertFalse(resultados[4][1], vid)
                 self.assertTrue(resultados[5][1], vid)

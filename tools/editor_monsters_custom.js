@@ -4151,11 +4151,11 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "overwrite_native": false,
     "tier": 3,
     "cr": 3.0,
-    "base_hp": 55,
-    "hp": 56,
-    "natural_armor": 0,
+    "base_hp": 54,
+    "hp": 55,
+    "natural_armor": 4,
     "ac_bonus": 0,
-    "ac": 11,
+    "ac": 15,
     "movement": 6,
     "movement_exception": false,
     "vision_base": 0,
@@ -4185,8 +4185,8 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "damage_attribute": "dex",
         "apply_attribute_damage": true,
         "attribute_mod_base": 1,
-        "base_attack_bonus": 0,
-        "atk_bonus": 1,
+        "base_attack_bonus": 4,
+        "atk_bonus": 5,
         "range": null,
         "on_hit": null,
         "on_hit_effect": null,
@@ -4244,9 +4244,13 @@ window.EDITOR_CUSTOM_MONSTERS = [
         "multiplier": 2
       }
     ],
-    "equipment_enabled": false,
-    "equipped_items": [],
-    "equipment": [],
+    "equipment_enabled": true,
+    "equipped_items": [
+      "ultimo_suspiro"
+    ],
+    "equipment": [
+      "ultimo_suspiro"
+    ],
     "guaranteed_loot": [],
     "loot_table": {},
     "loot_drops": [
@@ -4262,7 +4266,7 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "ai_profile": "agressivo",
     "ai_tactics": [],
     "image": "leonel",
-    "portrait": "soldado",
+    "portrait": "leonel_retrato",
     "model3d": "assets/models3d/monstros/leonel.glb",
     "armor_description": null,
     "size": [
@@ -4286,7 +4290,15 @@ window.EDITOR_CUSTOM_MONSTERS = [
     "pode_alterar_altura": false,
     "custo_mov_altura": 1,
     "ignora_obstaculos_voo": false,
-    "level": 1
+    "level": 1,
+    "leonel_loadout": {
+      "consumables": {
+        "granada_superior": 3,
+        "bomba_incendiaria": 2,
+        "bomba_fumaca": 2,
+        "bomba_flash": 2
+      }
+    }
   },
   {
     "type": "assassino_da_caravana",

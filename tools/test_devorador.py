@@ -263,12 +263,17 @@ async def main():
     # Dual: 2 ataques, dropa espada+adaga, é chefe de bando
     dual = make_monster(dual_def, {"id": 1, "cx": 5, "cy": 5})
     check("Dual: 2 ataques", len(dual["attacks"]) == 2)
-    check("Dual: dropa espada + adaga", set(dual.get("guaranteed_loot", [])) == {"shortsword", "dagger"})
+    check("Dual: equipa duas armas sorteadas, que viram o loot", len(dual.get("equipped_items", [])) == 2 and not dual.get("guaranteed_loot"))
     check("Dual: tem spawn_companions (comb/arq/xamã)", len(dual_def.get("spawn_companions", [])) == 3)
 
     # Arremesso do Dual: 1 natural quebra a arma.
     r = setup()
-    comb = make_monster(dual_def, {"id": 1, "cx": 5, "cy": 5}); comb["pos"] = [5, 5]
+    def _dual_com_adaga():
+        for _ in range(500):
+            d = make_monster(dual_def, {"id": 1, "cx": 5, "cy": 5})
+            if d.get("pode_arremessar") and d["equipped_items"][1] == "dagger":
+                return d
+    comb = _dual_com_adaga(); comb["pos"] = [5, 5]
     r.monsters[comb["id"]] = comb
     alvo = make_player("p1", "Victor", "warrior", 0); alvo["pos"] = [5, 6]
     alvo["hp"] = 999; alvo["max_hp"] = 999; r.players["p1"] = alvo
@@ -281,7 +286,7 @@ async def main():
     check("Arremesso nat1 remove a adaga do drop", "dagger" not in comb.get("guaranteed_loot", []))
     # Arremesso acerto (d20=20)
     r = setup()
-    comb2 = make_monster(dual_def, {"id": 1, "cx": 5, "cy": 5}); comb2["pos"] = [5, 5]
+    comb2 = _dual_com_adaga(); comb2["pos"] = [5, 5]
     r.monsters[comb2["id"]] = comb2
     alvo2 = make_player("p1", "Victor", "warrior", 0); alvo2["pos"] = [5, 6]
     alvo2["hp"] = 50; alvo2["max_hp"] = 50; r.players["p1"] = alvo2

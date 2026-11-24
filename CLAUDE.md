@@ -41,6 +41,12 @@ Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o ma
 
 `assets/retratos/monstros/boneco_palha_retrato.png` retrata o Boneco de Palha como um objeto inanimado de estopa remendada e palha, com rosto de tecido liso e sem olhos ou alvo pintado. A ficha personalizada `boneco_palha` usa `portrait: "boneco_palha_retrato"` no bestiário; `updateInitiativeTrack` exibe essa arte para `boneco_palha`, distinta do Boneco de Treino. Ambos mantêm o mesmo modelo 3D.
 
+### Retrato de Leonel (2026-11-22)
+
+`assets/retratos/monstros/leonel_retrato.png` retrata Leonel com cabelo castanho na altura dos ombros, barba curta, manto bordô bordado em dourado e capa de pele, seguindo sua miniatura. A ficha personalizada `leonel` e seu espelho `tools/editor_monsters_custom.js` usam `portrait: "leonel_retrato"` no bestiário; `tools/elara_graciero_fichas.py` mantém a mesma chave ao gerar a ficha, e `updateInitiativeTrack` mostra a mesma imagem para `leonel`. A miniatura do tabuleiro permanece separada.
+
+**Ficha de combate (2026-11-22):** o gerador e o espelho do editor usam 55 PV, CA 15, dois ataques de florete +5, e `ultimo_suspiro` equipado. O `leonel_loadout` fixa três Granadas Superiores, duas Bombas Incendiárias, duas Bombas de Fumaça e duas Bombas de Flash; `_configurar_leonel_spawn` materializa as cópias por combate. Fumaça é consumida como reação automática dentro de 4 quadrados e impõe desvantagem ao ataque anunciado; sem fumaça, a Flash é arremessada dentro de 5 quadrados e, se acertar, impõe −2 e desvantagem. Granadas explosivas continuam no uso ofensivo normal da IA. Em `_monster_dies_impl`, o Último Suspiro equipado é consumido uma vez e deixa Leonel com 1 PV; mortes forçadas ignoram a proteção. Consumíveis restantes passam ao saque.
+
 ### Retrato do Lorde Vampiro (2026-11-22)
 
 `assets/retratos/monstros/lorde_vampiro_retrato.png` retrata o Lorde Vampiro com coroa, armadura preta e dourada, gola carmesim e espada. O registro `lorde_vampiro` usa `portrait: "lorde_vampiro_retrato"` no bestiário; `updateInitiativeTrack` mostra a mesma arte na iniciativa. A miniatura do tabuleiro permanece separada.
@@ -107,6 +113,10 @@ Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o ma
 
 `assets/retratos/monstros/goblin_assassino.png` é o retrato do Assassino Goblin, também chamado Goblin Assassino. `MONSTER_DEFS` declara `portrait: "goblin_assassino"` no bestiário e `updateInitiativeTrack` mostra a arte na fila de turnos. A miniatura de tabuleiro continua usando `goblinDual`.
 
+### Retrato do Goblin Dual (2026-11-22)
+
+`assets/retratos/monstros/goblin_dual.png` é o retrato selvagem do Goblin Dual, mostrando uma arma em cada mão. `MONSTER_DEFS` declara `portrait: "goblin_dual"` no bestiário e `updateInitiativeTrack` usa a mesma imagem para a iniciativa. A miniatura do tabuleiro continua usando `goblinDual`.
+
 ### Retrato do Xamã Goblin (2026-11-22)
 
 `assets/retratos/monstros/goblin_xama.png` é o retrato do Xamã Goblin. O registro base e o personalizado usam `portrait: "goblin_xama"` no bestiário; `updateInitiativeTrack` usa a mesma arte para `goblin_xama` e `xama_goblin_customizado`. A miniatura `xamaGoblin` do tabuleiro permanece separada.
@@ -118,6 +128,14 @@ Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o ma
 ### Retrato do Orc (2026-11-22)
 
 `assets/retratos/monstros/orc_comum.png` é o retrato do Orc base, distinto do Orc Guerreiro. Seu registro aponta `portrait: "orc_comum"` no bestiário e `updateInitiativeTrack` usa essa arte na iniciativa. A miniatura do tabuleiro permanece separada.
+
+### Retrato do Kobold Lanceiro (2026-11-22)
+
+`assets/retratos/monstros/kobold_lanceiro.png` é o retrato do Kobold Lanceiro. `MONSTER_DEFS` declara `portrait: "kobold_lanceiro"` no bestiário e `updateInitiativeTrack` mostra a arte para esse tipo. A miniatura `koboldlanceiro` do tabuleiro permanece separada.
+
+### Retrato do Kobold Besteiro (2026-11-22)
+
+`assets/retratos/monstros/kobold_besteiro.png` é o retrato do Kobold Besteiro, com a besta de mão em destaque. `MONSTER_DEFS` declara `portrait: "kobold_besteiro"` no bestiário e `updateInitiativeTrack` usa o retrato na fila de turnos. A miniatura `koboldbesteiro` do tabuleiro permanece separada.
 
 ### Retrato do Kobold Mago (2026-11-22)
 
@@ -407,7 +425,7 @@ O monstro personalizado `assassino_da_caravana` carrega Espada Longa de Aço Dam
 
 ### Espada Curta de Ferro Serrilhado e variantes (2026-11-14)
 
-`sword` custa 32 moedas, causa 1d6 cortante usando Força e mantém +2 de dano e `corrosao_resistente: 1` da peça de loot original. Está à venda nas cinco ferrarias. Variantes mundanas também vendidas nas cinco cidades: `sword_aco_damasco` (52 moedas, +1 acerto; N=1/M=2), `sword_obsidiana_ferro` (52, +1 dano sobre o +2 da base, total +3; o primeiro golpe corrosivo a destrói), `sword_liga_titanio` (62, mantém +2 dano; N=2/M=3) e `sword_prata` (320, mantém +2 dano, sem penalidade no primeiro nível de corrosão e destruída no segundo; fere inimigos resistentes a armas comuns). As variantes mantêm dano, atributo e tipo da base; cada uma usa PNG próprio, `assets/itens/sword_<material>.png`, preservando a silhueta serrilhada da espada original. IDs e metadados entram em `SHOP_WEAPONS`, `WEAPONS`, nas cinco listas `ferreiro_weapon` e no catálogo exportado.
+`sword` custa 40 moedas, causa 1d6+2 cortante usando Força e tem crítico apenas no 20. Corrosão: primeiro nível aplica -2 no acerto e dano; segundo destrói. Variantes: Aço Damasco 60 moedas (+1 acerto, +2 dano; nível 1 livre, 2 penaliza -2, 3 destrói); Obsidiana de Ferro 60 (+3 dano, primeira corrosão destrói); Liga de Titânio 70 (+2 dano; níveis 1–2 livres, 3 penaliza -2, 4 destrói); Prata 400 (+2 dano; nível 1 livre, 2 destrói). `corrosion_penalty_step: 2` multiplica a penalidade da única etapa de desgaste sem mudar outras armas. Compra, equipamento, loot e catálogo mantêm esses campos. As cinco versões estão nas cinco ferrarias e usam seus PNGs próprios.
 
 ### Variantes de material seguem a arma-base (2026-11-14)
 
@@ -1333,8 +1351,14 @@ do equipamento afetam suas magias; o slot do Chapéu do Arquimago recarrega em
 comida dos kobolds. A miniatura 3D está em `assets/models3d/monstros/kobold_mago.glb`
 (cópia colorida da miniatura de Desktop) e a PNG 2D transparente está em
 `assets/pawns/monstros/kobold_mago/kobold_mago.png`; ambas usam `image: kobold_mago`.
-`game.js` vincula o GLB pelo tipo `kobold_mago`. O catálogo do editor vem de
+`game.js` vincula o GLB pelo tipo `kobold_mago`; sua miniatura recebe o giro
+padrão; após os giros acumulados de 90°, 90° e 180°, totalizando 360°, usa a
+orientação-base em `_monsterFacingToRotY`. O catálogo do editor vem de
 `tools/export_catalog.py`.
+
+### Escala visual dos Kobolds 3D (2026-11-14)
+
+O Kobold Besteiro recebe fator visual `0.9606` em `_makeMonsterPawn3D`; o Lanceiro mantém a escala-base. Isso iguala o maior eixo visível das duas miniaturas depois do enquadramento automático do jogo.
 
 ### Capanga (ND 1)
 
@@ -5808,7 +5832,27 @@ O ferreiro exibe **Armas**, **Arcos e Bestas**, **Armaduras**, **Munição**, **
 ### Aba Escudos do Ferreiro (2026-11-13)
 
 O ferreiro exibe **Armaduras** e **Escudos** em abas separadas; a lista de escudos filtra `shops.ferreiro.armors` por `kind === "shield"` e inclui os 23 itens atuais: quatro bases, sete especiais e doze variantes de materiais. Armaduras filtra `kind !== "shield"`. Ambos mantêm `ferreiro_armor` como chave de compra e preservam `city_shops.json`; munição, reparo e venda seguem nos índices seguintes. Com cenas de loja, subtrair o offset da aba de conversas antes de comparar os índices relativos.
+
+### Goblin Dual — equipamento sorteado (2026-11-16)
+
+Ao nascer, sorteia mão principal: bordão 20%, espada curta 25%, espada longa 15%, serrilhada 10%, martelo de guerra 15%, maça 15%; secundária: adaga 90%, chicote 10%. Armadura: nenhuma 85%, couro 10%, malha 5%. Cada arma elegível rola material especial 30% separadamente (somente variantes existentes); depois cada mão rola encantamento +1 no acerto/dano com 0,5%, acumulável com material. Variantes mágicas mantêm o tipo, preço-base +500 e ficam no catálogo de loot, sem venda automática. `_configurar_goblin_dual_ataques` aplica bônus por mão, inclusive o `dmg_bonus` da serrilhada, sem somar o material das duas armas em ambos os ataques. Arremesso exclusivo da adaga usa seus bônus; 1 natural destrói a adaga e a remove dos ataques e loot. Corrosão preserva a outra mão. Equipamento sobrevivente cai no loot, preservando desgaste, material e magia; moedas mantêm 40% nenhuma, 50% duas, 10% três. Teste: `python -X utf8 tools/test_goblin_dual_equipamento.py`.
+
+### Serrilhada em monstros (2026-11-16)
+
+Goblin Combatente, Esqueleto Humano e Esqueleto Armadurado têm 10% de chance da arma-base `sword`. Goblin mantém as opções anteriores nos 90% restantes e reutiliza a miniatura da espada curta. Humano reduz a faixa de espada curta sem escudo de 30% para 20%; armadurado de 28% para 18%; serrilhada ocupa os 10% liberados sem escudo. As demais faixas permanecem. Goblin e armadurado conservam seus sorteios de material e o armadurado admite a serrilhada mágica +1. `_aplicar_equipamentos_monstro` soma também `dmg_bonus` para aplicar o +2 da serrilha. Humano usa seu fluxo legado com +2 no ataque correspondente e instancia a arma para corrosão/loot.
+
+### Kobold Lanceiro — armas raras e venenos (2026-11-16)
+
+Armas-base: lança curta 20%, adaga 20%, espada curta + escudo pequeno 20%, bordão 20%, alabarda sem escudo 10%, serrilhada + escudo pequeno 10%. Mantém 30% de material especial nas armas elegíveis. Sorteia um tipo de veneno por instância para seus 1–3 frascos: Aranha Sombria 55%, Fungo Acre 30%, Dor Escarlate 10%, Tinta do Polvo Abissal 5%. `kobold_poison_id` guarda a escolha; começa sem veneno aplicado e a IA usa os frascos pela habilidade normal. Loot de `_kobold_loot` copia o equipamento sobrevivente com material/desgaste e os frascos restantes, sem recriar a arma comum; o extra de veneno de 20% segue o tipo sorteado. Lança arremessada permanece no chão; `kobold_lance_item` começa como cópia da arma efetivamente equipada. Moedas preservadas. Conferidos 5000 spawns e os fluxos de aplicação de veneno, consumo e loot.
+
+### Kobold Besteiro — bestas, frascos e elmo (2026-11-16)
+
+`_configurar_kobold_besteiro_spawn` sorteia Besta de Mão 50%; Besta, Pesada, Duelista, Repetidora da Patrulha e Repetidora de Guerra 10% cada. Equipamento real comum com BAB 2 + DES 2, dano/alcance da besta; elmo de ferro independente 10% (+1 CA, loot). Carrega 1–3 frascos de um tipo sorteado por instância: Aranha Sombria 55%, Cobra Cuspidora 30%, Dor Escarlate 15%. Envenenar Virotes é ação livre: consome frasco e prepara até 10 virotes, com consumo por disparo inclusive erro; não usa as três cargas de veneno corpo a corpo. Mantém 10 virotes totais e 5% de 1d4 incendiários. `_kobold_besteiro_disparar` atende IA e Mestre: disparos separados, munição real, Disparo Duplo das repetidoras recarga absoluta 10 rodadas; ação manual `kobold_disparo_duplo` também é aceita no cliente. Bestas têm `range_shape: orthogonal`. Loot copia equipamento sobrevivente, frascos restantes e pilhas de virotes separadas por fogo/veneno (`poison_ids`), com quantidades reais; extras de 5% veneno do tipo sorteado e 5% de 1d6 incendiários preservados, moedas sem mudança. Validados 5000 spawns, erros consumindo munição, recarga no limite de rodada, uso de frascos e contagem de loot.
+
 ### Munição na mão secundária (2026-11-16)
 
 Flechas e virotes, incluindo prata, incendiários, explosivos, mágicos e envenenados, comportam 20 unidades por pilha na mão secundária como na bolsa. `_max_ammo_stack_for` e `GS.maxAmmoStackFor` espelham o limite para esses `ammo_type`. `MAX_AMMO_STACK` continua 10 para recipientes e regras que usam essa constante (inclusive capacidade por frasco de veneno); aljavas mantêm seus limites próprios. Compra/equipar/juntar/coleta/preparo de veneno usam o helper autoritativo.
 
+### Xamã Goblin com Maça do Voto Guardião (2026-11-16)
+
+`_configurar_xama_voto_guardiao_spawn`: 1% de chance de substituir apenas a arma principal pela maça, preservando o restante do equipamento personalizado. Por maça sorteada: 70% comum, 9% damasco, 9% obsidiana, 10% titânio, 2% prata. Mantém BAB da ficha. `_xama_suplica_vital_apos_acerto`, chamado pelo executor comum de ataque (IA/Mestre), verifica o ID da arma efetivamente usada, posse e ausência de destruição. Após acerto, cura 1d6 no próprio xamã ou monstro aliado vivo ferido a até 2 casas com mais PV faltando; não cura criaturas hostis, mortas ou de lado diferente por dominação. Não consome recarga se ninguém precisar. Recarga absoluta 10 rodadas gravada na arma, preservada no loot com material/desgaste. Heróis continuam sujeitos à restrição de Clérigo e à escolha opcional original. Teste: `python -X utf8 tools/test_xama_voto_guardiao.py`.
