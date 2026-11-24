@@ -54906,6 +54906,8 @@ function _monsterFacingToRotY(facing, imageName, monsterType, glbPath) {
     'elemental_pedra',
     // O Soldado também foi exportado com a frente deslocada em 90°.
     'soldado',
+    // Miniaturas infantis da Aldeia dos Charcos: alinhar a frente ao movimento.
+    'garoto_medieval', 'garoto_loiro', 'garoto_pele_escura', 'menina_cabelos_castanhos', 'menina_pele_escura',
   ]);
   // O Mago das Trevas usa um GLB próprio que já foi girado 90° no arquivo.
   // Como sua imagem legada ainda pode ser `necromante`, esta exceção precisa
@@ -55044,10 +55046,15 @@ function _makePrisonerModel3D(T, grp, modelName, Y0, onMissing){
     const inst = template.clone();
     const box = new T.Box3().setFromObject(inst);
     const size = box.getSize(new T.Vector3());
-    const scale = Math.min(
+    const scaleBase = Math.min(
       1.78 / Math.max(size.y, 1e-3),
       0.88 / Math.max(size.x, size.z, 1e-3)
     );
+    // As quatro miniaturas infantis desta missão ficam 40% menores no tabuleiro.
+    const reduzirCriancas = new Set([
+      'garoto_medieval', 'garoto_loiro', 'garoto_pele_escura', 'menina_cabelos_castanhos', 'menina_pele_escura'
+    ]);
+    const scale = scaleBase * (reduzirCriancas.has(String(modelName || '').replace(/\.glb$/i, '')) ? 0.6 : 1);
     inst.position.set(
       -(box.min.x + box.max.x) / 2,
       -box.min.y,

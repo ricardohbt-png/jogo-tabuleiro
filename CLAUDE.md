@@ -5,6 +5,10 @@
 Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o maior modificador de Força/Destreza em ambos; armas à distância e arremessos usam Destreza em ambos. Arremesso Bruto das machadinhas mantém Força. A classe não escolhe o atributo da arma: `_CLASS_ATK_ATTR` só identifica a parcela histórica embutida em `atk_bonus`, que `_hero_attack_bonus_with_weapon` substitui sem migrar saves. `_weapon_attribute_modifier` centraliza dano e mão secundária; `_weaponAttributeKey` espelha a regra no cliente. O Machado de Ferro e suas variantes mantêm Arremesso Bruto com Força no acerto e dano à distância; o Arco Bruto usa somente Destreza no dano, conforme a regra geral revisada. Chicotes e rapieira sem acuidade usam Força. Variantes seguem suas bases; bônus de material/magia continuam separados do atributo. Cobertura: `tools/test_atributos_armas.py`.
 
 
+### Miniaturas das crianças da Aldeia dos Charcos (2026-11-17)
+
+Os GLBs `garoto_medieval`, `garoto_loiro`, `garoto_pele_escura`, `menina_cabelos_castanhos` e `menina_pele_escura` recebem escala de `0.6` sobre a escala calculada normal (redução de 40%) em `_makePrisonerModel3D`. Os mesmos nomes ficam em `movementFront` de `_monsterFacingToRotY`, retirando o offset padrão de 90° e alinhando a frente ao movimento. As miniaturas não listadas mantêm escala e orientação anteriores.
+
 ### Materiais na ficha de status (2026-11-16)
 
 `_menuStatusMarkup` soma o `atk_bonus` da arma além de `p.atk_bonus`, como o cálculo autoritativo de ataque; não subtrair o bônus da arma ao decompor o BBA, pois isso anulava o material no total exibido. Dano soma `dmg_bonus` e `damage_bonus` aditivamente. A mão secundária inclui seus próprios `atk_bonus`/`damage_bonus`, com a parcela da arma nas explicações PT/EN. Cobertura em `tools/test_menu_status.js` para Damasco, Obsidiana e coexistência dos campos de dano.

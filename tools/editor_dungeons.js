@@ -22878,11 +22878,15 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "facing": [
-            1,
+            -1,
             0
           ],
           "loot": null,
-          "key_objective": true
+          "key_objective": true,
+          "vscale": [
+            1.5,
+            1.9
+          ]
         },
         {
           "id": "decor_1",
@@ -22901,6 +22905,10 @@ window.EDITOR_DUNGEONS = [
           "size": [
             1,
             1
+          ],
+          "voffset": [
+            0.4,
+            0
           ]
         },
         {
@@ -22943,7 +22951,14 @@ window.EDITOR_DUNGEONS = [
             0,
             -1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
@@ -22967,6 +22982,10 @@ window.EDITOR_DUNGEONS = [
             1,
             1
           ],
+          "vscale": [
+            1.4,
+            1.2
+          ],
           "voffset": [
             0,
             -0.4
@@ -22983,8 +23002,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "pocao_invisibilidade"
+              },
+              {
+                "id": "moeda_da_sorte"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_6",
@@ -23064,8 +23095,12 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": {
-            "gold": 0,
-            "items": []
+            "gold": 10,
+            "items": [
+              {
+                "id": "dagger_aco_damasco"
+              }
+            ]
           },
           "key_objective": false,
           "chest_trap_monster_type": "goblin_dual"
@@ -23108,8 +23143,8 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "image": "cortina_vermelha.png",
           "vscale": [
-            1.6,
-            1.3
+            2,
+            1.8
           ]
         },
         {
@@ -23140,6 +23175,7 @@ window.EDITOR_DUNGEONS = [
             8,
             5
           ],
+          "wall_material": "madeira",
           "key_decor_ids": [
             "decor_1"
           ],
@@ -23152,6 +23188,7 @@ window.EDITOR_DUNGEONS = [
             9,
             5
           ],
+          "wall_material": "madeira",
           "key_decor_ids": [
             "decor_1"
           ],
@@ -28256,8 +28293,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_vigia"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "bordas_arvore_49",
@@ -28701,13 +28747,25 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "flechas_magicas"
+              },
+              {
+                "id": "pocao_barreira_arcana"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             1.5,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_19",
@@ -34268,8 +34326,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "maca_zero_absoluto"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "palafitas_barril_26",
@@ -34296,8 +34363,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "chapeu_explorador"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "palafitas_juncos_28",
@@ -39722,7 +39798,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "boina_alerta"
+              },
+              {
+                "id": "flechas_explosivas"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "size": [
@@ -39732,7 +39818,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.2,
             1.5
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "travessia_arvore_seca_26",
@@ -39745,13 +39833,25 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "flechas_magicas_mais_2"
+              },
+              {
+                "id": "pocao_voo"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             2,
             0.5
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "travessia_arvore_seca_27",
@@ -52025,12 +52125,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "chapeu_conjurador"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.4,
             1.7
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_251",
@@ -52043,12 +52152,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_aguia"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.5,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_252",
@@ -55278,8 +55396,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_combatente",
           "pos": [
-            25,
-            11
+            23,
+            10
           ],
           "room_id": 0,
           "boss": false,
@@ -55323,7 +55441,7 @@ window.EDITOR_DUNGEONS = [
           "type": "goblin_xama",
           "pos": [
             22,
-            11
+            9
           ],
           "room_id": 1,
           "boss": false,
@@ -55344,7 +55462,7 @@ window.EDITOR_DUNGEONS = [
           "type": "goblin_xama",
           "pos": [
             25,
-            12
+            11
           ],
           "room_id": 1,
           "boss": false,
@@ -55386,7 +55504,7 @@ window.EDITOR_DUNGEONS = [
           "type": "necromante",
           "pos": [
             23,
-            10
+            8
           ],
           "room_id": 1,
           "boss": false,
@@ -55406,8 +55524,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_combatente",
           "pos": [
-            23,
-            13
+            35,
+            1
           ],
           "room_id": 1,
           "boss": false,
@@ -55527,8 +55645,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "necromante",
           "pos": [
-            31,
-            11
+            35,
+            5
           ],
           "room_id": 1,
           "boss": false,
@@ -55539,7 +55657,7 @@ window.EDITOR_DUNGEONS = [
           "type": "dark_mage",
           "pos": [
             22,
-            12
+            11
           ],
           "room_id": 1,
           "boss": false,
@@ -55571,8 +55689,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_assassino",
           "pos": [
-            25,
-            13
+            36,
+            2
           ],
           "room_id": 1,
           "boss": false,
@@ -55591,10 +55709,10 @@ window.EDITOR_DUNGEONS = [
           "source_id": "mob_25"
         },
         {
-          "type": "pombo",
+          "type": "esqueleto_animal_customizado",
           "pos": [
-            5,
-            18
+            30,
+            2
           ],
           "room_id": 0,
           "boss": false,
@@ -55624,7 +55742,7 @@ window.EDITOR_DUNGEONS = [
           "id": "aldeia_barril_2",
           "type": "barril",
           "pos": [
-            15,
+            18,
             5
           ],
           "facing": [
@@ -56043,8 +56161,8 @@ window.EDITOR_DUNGEONS = [
             11
           ],
           "facing": [
-            0,
-            -1
+            -1,
+            0
           ],
           "loot": null,
           "key_objective": false,
@@ -56055,11 +56173,11 @@ window.EDITOR_DUNGEONS = [
           "type": "cabana_palha_velha",
           "pos": [
             15,
-            2
+            3
           ],
           "facing": [
-            0,
-            1
+            -1,
+            0
           ],
           "loot": null,
           "key_objective": false,
@@ -56476,8 +56594,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_28",
           "type": "estatua_soterrada",
           "pos": [
-            31,
-            6
+            33,
+            13
           ],
           "facing": [
             0,
@@ -59732,12 +59850,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "espada_sangramento_longa"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_203",
@@ -60686,13 +60813,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 35,
+            "items": [
+              {
+                "id": "chapeu_arquimago"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             2,
             2.6
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_256",
@@ -61267,6 +61403,7 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 2,
           "image": "menina_ruiva.png",
+          "model3d": "menina_cabelos_castanhos.glb",
           "nome": "Rosa"
         }
       ],
@@ -65258,13 +65395,21 @@ window.EDITOR_DUNGEONS = [
         "30,20": 3,
         "29,20": 8,
         "23,8": 8,
-        "22,8": 8
+        "22,8": 8,
+        "44,3": 1,
+        "45,3": 1,
+        "46,2": 1,
+        "46,3": 1,
+        "43,3": 1
       },
       "alturas_parede": {
         "44,1": 1,
         "44,2": 1,
         "45,2": 1,
-        "45,1": 1
+        "45,1": 1,
+        "43,17": 8,
+        "43,18": 8,
+        "43,19": 8
       },
       "transicao_altura": "rampa",
       "objectives": {
@@ -65281,49 +65426,49 @@ window.EDITOR_DUNGEONS = [
             {
               "de": 6,
               "ate": 6,
-              "renome": 8,
               "xp": 225,
               "gold": 90,
+              "renome": 8,
               "fato": "charcos_criancas_todas"
             },
             {
               "de": 4,
               "ate": 5,
-              "renome": 5,
               "xp": 150,
               "gold": 60,
+              "renome": 5,
               "fato": "charcos_criancas_salvas"
             },
             {
               "de": 3,
               "ate": 3,
-              "renome": 0,
               "xp": 90,
               "gold": 36,
+              "renome": 0,
               "fato": "charcos_criancas_perdidas"
             },
             {
               "de": 2,
               "ate": 2,
-              "renome": -2,
               "xp": 60,
               "gold": 24,
+              "renome": -2,
               "fato": "charcos_criancas_perdidas"
             },
             {
               "de": 1,
               "ate": 1,
-              "renome": -4,
               "xp": 30,
               "gold": 12,
+              "renome": -4,
               "fato": "charcos_criancas_perdidas"
             },
             {
               "de": 0,
               "ate": 0,
-              "renome": -8,
               "xp": 0,
               "gold": 0,
+              "renome": -8,
               "fato": "charcos_criancas_mortas"
             }
           ]
@@ -67031,6 +67176,16 @@ window.EDITOR_DUNGEONS = [
           "id": 1,
           "x": 2,
           "y": 11,
+          "w": 3,
+          "h": 3,
+          "role": "empty",
+          "locked": false,
+          "doors": []
+        },
+        {
+          "id": 2,
+          "x": 2,
+          "y": 29,
           "w": 3,
           "h": 3,
           "role": "entrance",
@@ -72995,12 +73150,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "manto_seda_aracne"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             3
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_332",
@@ -82925,9 +83089,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "amulet_alcance_arcano"
+              },
+              {
+                "id": "pocao_barreira_arcana"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "arvore_seca.png"
+          "image": "arvore_seca.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_556",
@@ -95512,12 +95688,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "lamina_trovejante"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.4,
             2.6
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_42",
@@ -99018,12 +99203,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "punhal_assassino"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
             1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_7",
@@ -101521,12 +101715,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "bracelete_guarda_reflexa"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_43",
@@ -108694,9 +108897,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "chicote_fogo"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_228",
@@ -113589,8 +113801,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "espada_magica_mais_2"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "pracam_barril_2",
@@ -117697,8 +117918,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "espada_magica_mais_2"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "pracam_barril_2",
@@ -121608,8 +121838,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "espada_magica_mais_2"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "pracam_barril_2",
@@ -126558,8 +126797,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "tiara_expansao_arcana"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "casa_barril_2",
@@ -131241,8 +131489,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "tiara_expansao_arcana"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "casa_barril_2",
@@ -136012,7 +136269,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_touro_ferro"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             1,
@@ -136025,7 +136289,9 @@ window.EDITOR_DUNGEONS = [
           "voffset": [
             0,
             -0.25
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "mansao_sofa_luxo_2",
@@ -137430,7 +137696,17 @@ window.EDITOR_DUNGEONS = [
             0,
             -1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 30,
+            "items": [
+              {
+                "id": "calice_eter"
+              },
+              {
+                "id": "ultimo_suspiro"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             3,
@@ -137439,7 +137715,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.6,
             1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_72",
@@ -143396,13 +143674,25 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "mochila_dimensional"
+              },
+              {
+                "id": "flechas_magicas_mais_2"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             0.6,
             0.7
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_27",
@@ -150898,9 +151188,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_urso_cinzento"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "arvore_seca.png"
+          "image": "arvore_seca.png",
+          "escondido": true,
+          "cd_busca": 16
         },
         {
           "id": "decor_13",
@@ -153940,8 +154239,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "cinzas_ardentes"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 16
         },
         {
           "id": "decor_178",
@@ -158081,7 +158389,16 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": {
+            "gold": 20,
+            "items": [
+              {
+                "id": "botas_passo_felino"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "casa_estante_9",
@@ -161969,13 +162286,28 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "flechas_magicas"
+              },
+              {
+                "id": "virotes_magicos"
+              },
+              {
+                "id": "pocao_velocidade"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "estante_armas_cranios.png",
           "size": [
             3,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_66",
@@ -169393,9 +169725,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "espada_magica"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_93",
@@ -203517,9 +203858,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "lampada_vigilia_arcana"
+              },
+              {
+                "id": "pocao_voo"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "vau_arvore_1",
@@ -204625,12 +204978,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 20,
+            "items": [
+              {
+                "id": "boina_batedor"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_58",
@@ -207005,7 +207367,58 @@ window.EDITOR_DUNGEONS = [
           ]
         }
       ],
-      "decorations": [],
+      "decorations": [
+        {
+          "id": "minas_barril_esconderijo",
+          "type": "barril",
+          "pos": [
+            29,
+            3
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "anel_vigia"
+              },
+              {
+                "id": "pocao_velocidade"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 13
+        },
+        {
+          "id": "minas_barril_fundo",
+          "type": "barril",
+          "pos": [
+            18,
+            8
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_impacto"
+              },
+              {
+                "id": "moeda_da_sorte"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 13
+        }
+      ],
       "secret_passages": [],
       "falas": [
         {
@@ -208419,8 +208832,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "chapeu_cacador"
+              },
+              {
+                "id": "pocao_velocidade"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_10",
@@ -208489,8 +208914,17 @@ window.EDITOR_DUNGEONS = [
             1,
             0
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "ferroada"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_15",
@@ -209776,12 +210210,21 @@ window.EDITOR_DUNGEONS = [
             1,
             0
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "machadinha_runica_vai_e_volta"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.5,
             1.5
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_2",
@@ -209870,6 +210313,28 @@ window.EDITOR_DUNGEONS = [
             ]
           },
           "key_objective": false
+        },
+        {
+          "id": "trono_barril_esconderijo",
+          "type": "barril",
+          "pos": [
+            1,
+            15
+          ],
+          "facing": [
+            0,
+            1
+          ],
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "anel_supremacia"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 15
         }
       ],
       "secret_passages": [
@@ -212669,4 +213134,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.

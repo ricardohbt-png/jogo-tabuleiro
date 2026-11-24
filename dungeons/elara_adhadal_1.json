@@ -1171,6 +1171,16 @@
       "y": 11,
       "w": 3,
       "h": 3,
+      "role": "empty",
+      "locked": false,
+      "doors": []
+    },
+    {
+      "id": 2,
+      "x": 2,
+      "y": 29,
+      "w": 3,
+      "h": 3,
       "role": "entrance",
       "locked": false,
       "doors": []
