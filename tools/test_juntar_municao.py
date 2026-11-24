@@ -2,7 +2,7 @@
 
 Duas pilhas são iguais quando têm o mesmo tipo, os mesmos bônus/efeitos de disparo
 e a mesma combinação de venenos (`_ammo_stack_key`). Se a soma passa do limite da
-pilha (20 na bolsa, 10 na mão secundária), o destino fica cheio e a origem guarda o que sobrou.
+pilha (20 na bolsa e na mão secundária), o destino fica cheio e a origem guarda o que sobrou.
 Pilhas diferentes não se juntam: soltar uma sobre a outra só reordena, como antes.
 Roda da raiz: python -X utf8 tools/test_juntar_municao.py"""
 import asyncio, os, sys
@@ -98,6 +98,14 @@ async def main():
     await r.handle_juntar_municao("p", {"equip": "off_hand"}, {"bolsa": 0})
     check("da equipada para a bolsa: 7 na bolsa, mão vazia",
           contagens(p) == [7] and p["gear"]["off_hand"] is None, (p["gear"]["off_hand"], p["bag"]))
+
+    for tipo in ("flechas", "virotes", "flecha_incendiaria", "virotes_magicos"):
+        r, p = sala([municao(tipo, 10)], off_hand=municao(tipo, 10))
+        await r.handle_juntar_municao("p", {"bolsa": 0}, {"equip": "off_hand"})
+        check(f"{tipo}: duas pilhas de 10 viram 20 na mão", p["gear"]["off_hand"]["ammo_count"] == 20 and not p["bag"])
+        r, p = sala([municao(tipo, 8)], off_hand=municao(tipo, 18))
+        await r.handle_juntar_municao("p", {"bolsa": 0}, {"equip": "off_hand"})
+        check(f"{tipo}: limite 20 preserva excedente 6", p["gear"]["off_hand"]["ammo_count"] == 20 and contagens(p) == [6])
 
     print("\n[7] origem e destino inválidos não quebram nada")
     r, p = sala([municao("virotes", 3)])

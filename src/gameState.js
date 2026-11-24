@@ -2802,6 +2802,8 @@ const GS = (() => {
       && JSON.stringify(a[c]) === JSON.stringify(b[c]));
   }
   function maxAmmoStackFor(player, item) {
+    if (['flechas','flechas_prata','flechas_incendiarias','flechas_explosivas','flechas_magicas','flechas_magicas_mais_2',
+         'virotes','virotes_prata','virotes_incendiarios','virotes_explosivos','virotes_magicos','virotes_magicos_mais_2'].includes(item?.ammo_type)) return 20;
     return 10;
   }
   function moveQuiverAmmo(direction, gearSlot, slotIndex, bagIndex, token) {

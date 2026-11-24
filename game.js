@@ -5567,6 +5567,10 @@ function normalizarItemTooltip(item){
       : (bruto.nome || bruto.name || catalogado.nome || catalogado.name || 'Item'),
     preco: bruto.preco ?? bruto.price ?? catalogado.preco ?? catalogado.price ?? 0,
     dano: bruto.dano || bruto.die || catalogado.dano,
+    atributo: tipo === 'arma'
+      ? ((bruto.finesse || catalogado.finesse) ? 'forcaOuDestreza'
+        : (_weaponAttributeKey({}, {...catalogado, ...bruto}) === 'dex' ? 'destreza' : 'forca'))
+      : (bruto.atributo || catalogado.atributo),
     tipoDano: bruto.tipoDano || bruto.elemento || (bruto.extra_damage_types || []).join(', ') || catalogado.tipoDano,
     categoria: bruto.categoria || catalogado.categoria,
     bonusDanoArma: bruto.dmg_bonus ?? bruto.damage_bonus
@@ -5576,7 +5580,9 @@ function normalizarItemTooltip(item){
     bonusCA: bruto.bonusCA ?? bruto.ac_bonus ?? (bruto.effect === 'def_' ? bruto.value : catalogado.bonusCA),
     reducaoDano: bruto.reducaoDano ?? bruto.damage_reduction ?? catalogado.reducaoDano,
     quantidade: bruto.ammo_count ?? bruto.quantidade ?? catalogado.quantidade,
-    danoExtra: bruto.danoExtra ?? bruto.damage_bonus ?? bruto.extra_damage ?? catalogado.danoExtra,
+    // `damage_bonus` is a flat weapon/ammunition bonus, not the separate
+    // incendiary-style extra damage dice shown as `danoExtra`.
+    danoExtra: bruto.danoExtra ?? bruto.extra_damage ?? catalogado.danoExtra,
     arremesso: bruto.arremesso ?? catalogado.arremesso ?? (bruto.throw_range != null),
     arremessavel: bruto.arremessavel ?? catalogado.arremessavel ?? bruto.effect === 'throwable',
     alcanceArremesso: bruto.alcanceArremesso ?? bruto.throw_range ?? catalogado.alcanceArremesso,
@@ -5660,8 +5666,8 @@ function gerarConteudoTooltip(item){
   const vitalidadeArma = Math.max(0, Number(item.corrosion_max || 0));
   if(vitalidadeArma > 0){
     linhas.push(renderLinhaTooltip('🛠️',t('ui.tooltip.vitalidade_arma'),`${Math.max(0, vitalidadeArma - nivelDesgasteArma)}/${vitalidadeArma}`));
-    if(nivelDesgasteArma > 0)
-      linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.penalidade_desgaste'),`-${Math.min(nivelDesgasteArma, 2)}`));
+    if(nivelDesgasteArma > Number(item.corrosao_resistente || 0) && !item.silver)
+      linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.penalidade_desgaste'),`-${Math.min(Math.max(0, nivelDesgasteArma - Number(item.corrosao_resistente || 0)), Number(item.corrosao_niveis_penalidade || 2)) * Number(item.corrosion_penalty_step || 1)}`));
   }
   if(item.throw_nat1_damage_levels > 0)
     linhas.push(renderLinhaTooltip('⚠️',t('ui.tooltip.risco'),t('ui.tooltip.risco_arremesso_desgaste',{n:item.throw_nat1_damage_levels})));
@@ -31319,7 +31325,29 @@ function _modificadoresTemporariosStatus(p){
   if(Number(p.bonus_ataque_temporario || 0) !== 0)
     add(t('ui.status.bonus_temporario_de_ataque'), t('ui.status.bonus_ataque_ate_fim_turno', {delta: fmtDelta(p.bonus_ataque_temporario)}), null, 1);
   if(p.vinho_ativo) addRestante(t('ui.status.embriaguez'), t('ui.status.1_ataque_e_1_reflexos'), p.vinho_rodadas);
-  if(p.cerveja_ativo) addRestante('🍺 Alegria', '-1 ataque', p.cerveja_rodadas);
+  if(p.cerveja_ativo) addRestante(`🍺 ${t('cat.item.caneca_cerveja.nome')}`, S('bebida_ataque_ef', {n: 1}), p.cerveja_rodadas);
+  if(p.cerveja_ana_ca_ativo)
+    addRestante(`🍺 ${t('cat.item.cerveja_ana.nome')}`, S('bebida_ca_ef', {n: 1}), p.cerveja_ana_ca_rodadas);
+  // Cada dose tem seu próprio contador; doses com o mesmo prazo podem
+  // compartilhar uma linha sem esconder quando cada penalidade termina.
+  for(const [id, campo, emoji, efeito] of [
+    ['hidromel', 'hidromel_penalty_rodadas', '🍯', 'hidromel_penalidade_ef'],
+    ['rum', 'rum_penalty_rodadas', '🍾', 'rum_penalidade_ef'],
+    ['absinto', 'absinto_penalty_rodadas', '🍸', 'absinto_penalidade_ef'],
+  ]){
+    const timers = (Array.isArray(p[campo]) ? p[campo] : []).map(Number)
+      .filter(n => Number.isFinite(n) && n > 0);
+    const grupos = new Map();
+    for(const timer of timers) grupos.set(timer, (grupos.get(timer) || 0) + 1);
+    for(const [rodadas, n] of grupos)
+      addRestante(`${emoji} ${t(`cat.item.${id}.nome`)}`, S(efeito, {n}), rodadas);
+    if(id === 'absinto' && timers.length >= 3){
+      const pen = timers.length >= 5 ? 2 : 1;
+      const limite = timers.length >= 5 ? 5 : 3;
+      const prazo = [...timers].sort((a,b) => a-b)[timers.length - limite];
+      addRestante(`🍸 ${t('cat.item.absinto.nome')}`, S('bebida_movimento_ef', {n: pen}), prazo);
+    }
+  }
 
   // Venenos aplicados à arma também são efeitos ativos, embora não sejam uma
   // penalidade do próprio personagem.
@@ -31393,10 +31421,23 @@ function _modificadoresTemporariosStatus(p){
   return out;
 }
 function fecharMenuStatus(){ document.getElementById('menu-status-overlay')?.classList.remove('open'); }
+function _weaponAttributeKey(player, weapon, thrown=false){
+  weapon = weapon || {};
+  if(thrown) return weapon.granted_ability === 'arremesso_bruto'
+    || ['machado_basico','machadinha_arremesso_ana'].includes(GS.armaBaseId(weapon.id)) ? 'str_' : 'dex';
+  const base = GS.armaBaseId(weapon.id);
+  const ranged = ['arco_curto','arco_composto_curto','longbow','arco_composto_longo',
+    'arco_bruto_combatente','hand_crossbow','besta_duelista','besta','besta_pesada',
+    'besta_repetidora_patrulha','besta_repetidora_guerra'].includes(base);
+  if(ranged || weapon.ammo || weapon.projectile || weapon.chain_hook_range) return 'dex';
+  if((weapon.finesse || ['dagger','punhal_assassino','punhal_assassino_maior','bordao','cajado_madeira','staff'].includes(base)) && _modAtributo(player.dex) > _modAtributo(player.str_)) return 'dex';
+  return 'str_';
+}
 function _menuStatusMarkup(p, opts = {}){
   if(!p) return '';
   const weapon = p.weapon || p.gear?.weapon;
-  const statKey = weapon?.stat || 'str_';
+  const classAtkStat = ['bard','rogue','ranger'].includes(p.class_id) ? 'dex' : 'str_';
+  const statKey = _weaponAttributeKey(p, weapon);
   const dadoDano = weapon?.die || '1';
   const danoBase = _modAtributo(p[statKey]);
   const baseAtk = Number(p.atk_bonus) || 0;
@@ -31405,17 +31446,19 @@ function _menuStatusMarkup(p, opts = {}){
   // acerto da arma está sendo formado.
   const bonusArma = Number(weapon?.attack_bonus ?? weapon?.atk_bonus ?? weapon?.bonus_atk
     ?? weapon?.bonus_ataque ?? ((weapon?.effect === 'atk' || weapon?.effect === 'atk_bonus') ? weapon?.value : 0)) || 0;
-  const bonusBaseAtaque = baseAtk - danoBase - bonusArma;
-  const nomeAtributoAtaque = _rotulo(statKey, 'ui.atributo.sigla', t('ui.atributo.sigla.str_'));
+  const atributoAcerto = statKey;
+  const modAcerto = _modAtributo(p[atributoAcerto]);
+  const bonusBaseAtaque = baseAtk - _modAtributo(p[classAtkStat]);
+  const nomeAtributoAtaque = _rotulo(atributoAcerto, 'ui.atributo.sigla', t('ui.atributo.sigla.str_'));
   const cancao = p.buffs_cancao || {};
   const gl = p.guerreiro_luz_ativo ? (p.guerreiro_luz_bonus || {}) : {};
   const sobrevivencia = (Number(p.fome ?? p.hunger ?? 100) > 80 && Number(p.sede ?? p.thirst ?? 100) > 80) ? 1
     : -((Number(p.fome ?? p.hunger ?? 100) < 20 ? 1 : 0) + (Number(p.sede ?? p.thirst ?? 100) < 20 ? 1 : 0));
   const armadas = GS.getWarriorSelected?.() || [];
   const bonusAtaque = sobrevivencia + (cancao.bonus_acerto || 0) + (gl.ataque || 0) + (p.skill_bonus_acerto || 0) + (armadas.includes('mira_certeira') ? 2 : 0);
-  const acertoTotal = bonusBaseAtaque + danoBase + bonusArma + bonusAtaque;
-  const detalheAcerto = t('ui.status.detalhe_acerto', {bba:_fmtBonus(bonusBaseAtaque), attr:nomeAtributoAtaque, mod:_fmtBonus(danoBase), arma:_fmtBonus(bonusArma), temp:_fmtBonus(bonusAtaque)});
-  const bonusDanoArma = Number(weapon?.dmg_bonus ?? weapon?.damage_bonus ?? 0) || 0;
+  const acertoTotal = bonusBaseAtaque + modAcerto + bonusArma + bonusAtaque;
+  const detalheAcerto = t('ui.status.detalhe_acerto', {bba:_fmtBonus(bonusBaseAtaque), attr:nomeAtributoAtaque, mod:_fmtBonus(modAcerto), arma:_fmtBonus(bonusArma), temp:_fmtBonus(bonusAtaque)});
+  const bonusDanoArma = (Number(weapon?.dmg_bonus) || 0) + (Number(weapon?.damage_bonus) || 0);
   const bonusDanoHabilidade = Number(p.skill_bonus_dano || 0) || 0;
   // Anéis de Impacto/Supremacia: `damage_bonus` de equipamento fica em `gear_damage_bonus`
   // e soma em todo golpe armado (o servidor o lê em `_bonus_fixo_dano_arma`).
@@ -31441,19 +31484,19 @@ function _menuStatusMarkup(p, opts = {}){
   let linhasOff = '';
   if(offEhArma){
     const modFor = _modAtributo(p.str_), modDes = _modAtributo(p.dex);
-    let offMod = off.off_hand_forca ? modFor : (off.finesse ? Math.max(modFor, modDes) : modDes);
-    if(off.off_hand_stat) offMod = _modAtributo(p[off.off_hand_stat]);
-    const nomeAtrOff = off.off_hand_stat
-      ? _rotulo(off.off_hand_stat, 'ui.atributo.sigla', off.off_hand_stat)
-      : (off.off_hand_forca ? _rotulo('str_', 'ui.atributo.sigla', 'FOR') : _rotulo('dex', 'ui.atributo.sigla', 'DES'));
+    const offAttr = _weaponAttributeKey(p, off);
+    const offMod = _modAtributo(p[offAttr]);
+    const nomeAtrOff = _rotulo(offAttr, 'ui.atributo.sigla', offAttr);
     const levelBonus = Number(p.level_bonus ?? 1) || 0;
-    const acertoOff = offMod + levelBonus + bonusAtaque;
-    const danoOff = `${off.die} ${_fmtBonus(offMod)} → ${off.die} ${_fmtBonus(offMod + sobrevivencia)}`;
+    const bonusArmaOff = Number(off.atk_bonus) || 0;
+    const bonusDanoOff = Number(off.damage_bonus) || 0;
+    const acertoOff = offMod + bonusBaseAtaque + bonusAtaque + bonusArmaOff;
+    const danoOff = `${off.die} ${_fmtBonus(offMod)} → ${off.die} ${_fmtBonus(offMod + sobrevivencia + bonusDanoOff)}`;
     linhasOff = linha(t('ui.ladino.mao_secundaria'), off.name || '')
       + linha(t('ui.status.acerto_mao_sec'), _fmtBonus(acertoOff),
-          t('ui.status.detalhe_acerto_mao_sec', {attr:nomeAtrOff, mod:_fmtBonus(offMod), nivel:_fmtBonus(levelBonus), temp:_fmtBonus(bonusAtaque)}))
+          t('ui.status.detalhe_acerto_mao_sec', {attr:nomeAtrOff, mod:_fmtBonus(offMod), nivel:_fmtBonus(bonusBaseAtaque), arma:_fmtBonus(bonusArmaOff), temp:_fmtBonus(bonusAtaque)}))
       + linha(t('ui.status.dano_mao_sec'), danoOff,
-          t('ui.status.detalhe_dano_mao_sec', {attr:nomeAtrOff, mod:_fmtBonus(offMod), temp:_fmtBonus(sobrevivencia)}));
+          t('ui.status.detalhe_dano_mao_sec', {attr:nomeAtrOff, mod:_fmtBonus(offMod), arma:_fmtBonus(bonusDanoOff), temp:_fmtBonus(sobrevivencia)}));
   }
   const temporarios = _modificadoresTemporariosStatus(p);
   // Rodada atual: converte o `ate` absoluto dos efeitos em rodadas restantes.
@@ -32712,9 +32755,8 @@ function _weaponThrowSkillEntries(player){
   for(const [slot, item] of slots){
     if(!item || !item.die || (!item.throw_range && !item.lightning_line && !item.thunder_pulse && !item.solar_flare && !item.wind_line && !item.horizon_shock && !item.repeating_crossbow)) continue;
     const nome = item.name || item.id || 'arma';
-    const atributo = item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico'
-      ? t('ui.arremesso.forca')
-      : (item.finesse || item.id === 'dagger' ? t('ui.arremesso.forca_ou_destreza') : t('ui.arremesso.destreza'));
+    const atributo = _weaponAttributeKey(player, item, true) === 'str_'
+      ? t('ui.arremesso.forca') : t('ui.arremesso.destreza');
     if(item.throw_range){
       add({
         id: `arremesso_arma_${slot}`,
@@ -32794,10 +32836,7 @@ function _weaponThrowSkillEntries(player){
 }
 
 function _weaponThrowStatLabel(item){
-  if(!item) return t('ui.atributo.sigla.dex');
-  if(item.granted_ability === 'arremesso_bruto' || item.id === 'machado_basico') return t('ui.atributo.sigla.str_');
-  if(item.finesse || item.id === 'dagger') return t('ui.atributo.sigla.str_') + '/' + t('ui.atributo.sigla.dex');
-  return t('ui.atributo.sigla.dex');
+  return t(_weaponAttributeKey({}, item, true) === 'str_' ? 'ui.atributo.sigla.str_' : 'ui.atributo.sigla.dex');
 }
 
 function _weaponThrowSkillBtn(me, skill){
@@ -33024,7 +33063,7 @@ function _clickTileHorizonShockWeapon(tx, ty){
 }
 
 function _repeatingCrossbowWeaponSkillBtn(me, skill){
-  const item = me.gear?.weapon || me.weapon || {};
+  const item = {...(me.weapon || {}), ...(me.gear?.weapon || {})};
   const state = GS.gameState;
   const round = Number(state?.round ?? state?.round_num ?? 1) || 1;
   const readyRound = Number(item.repeating_crossbow_ready_round || 0) || 0;
@@ -33043,16 +33082,16 @@ function _repeatingCrossbowWeaponSkillBtn(me, skill){
   btn.disabled=!enabled;
   const cooldown=remaining>0?` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em',{n:remaining})}</small>`:'';
   btn.innerHTML=`<div class="skill-info"><div class="skill-name">🏹 ${skill.name}${cooldown}</div><div class="skill-desc">${skill.description||''}</div></div><div class="skill-cost">${remaining>0?`${remaining}r`:'🏹'}</div>`;
-  btn.onclick=beginRepeatingCrossbowWeapon;
+  btn.onclick=()=>{ fecharMenuHabilidades(); fecharMenuMagias(); beginRepeatingCrossbowWeapon(); };
   return btn;
 }
 
 function beginRepeatingCrossbowWeapon(){
   getAudioContext();
-  const state=GS.gameState, me=GS.me, item=me?.gear?.weapon||me?.weapon;
+  const state=GS.gameState, me=GS.me, item={...(me?.weapon||{}), ...(me?.gear?.weapon||{})};
   if(!state||!me||!item?.repeating_crossbow) return;
   const range=Number(item.range||6), origin=me.pos||[0,0], tiles=new Set(), targets=new Set();
-  for(let y=0;y<state.map_h;y++) for(let x=0;x<state.map_w;x++){
+  for(let y=0;y<(state.tiles?.length||0);y++) for(let x=0;x<(state.tiles[y]?.length||0);x++){
     const dx=x-origin[0], dy=y-origin[1];
     if((dx===0)===(dy===0) || Math.abs(dx+dy)>range) continue;
     if(!GS.hasLineOfSight(state,origin[0],origin[1],x,y)) continue;

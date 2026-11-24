@@ -15,6 +15,13 @@
 // os catálogos do cliente guardam descrição mais rica (card HTML com alcance e
 // efeito por rodada) que a frase curta do servidor. Ver aplicarCatalogo.
 window.LANG_INTERFACE = {
+  "ui.status.bebida_ataque_ef": {"pt": "−{n} ataque", "en": "−{n} attack"},
+  "ui.status.bebida_ca_ef": {"pt": "−{n} CA", "en": "−{n} AC"},
+  "ui.status.bebida_movimento_ef": {"pt": "−{n} movimento", "en": "−{n} movement"},
+  "ui.status.hidromel_penalidade_ef": {"pt": "−{n} CA · −{n} Reflexos", "en": "−{n} AC · −{n} Reflex"},
+  "ui.status.rum_penalidade_ef": {"pt": "−{n} ataque · −{n} Reflexos", "en": "−{n} attack · −{n} Reflex"},
+  "ui.status.absinto_penalidade_ef": {"pt": "−{n} ataque · −{n} CA", "en": "−{n} attack · −{n} AC"},
+
   "ui.editor.masmorra.barra.largura_caminho": {"pt":"Largura do caminho: ","en":"Road width: "},
   "ui.reacao_fumaca.titulo": {"pt": "Reação: Itens Arremessáveis", "en": "Reaction: Throwable Items"},
   "ui.reacao_fumaca.ataque": {"pt": "{inimigo} vai atacar {alvo}. Escolha um item para reagir:", "en": "{inimigo} is about to attack {alvo}. Choose an item to react:"},
@@ -10225,8 +10232,8 @@ window.LANG_INTERFACE = {
   "ui.inv.passar_item_para": {"en":"Pass the selected item to {nome}","pt":"Passar o item selecionado para {nome}"},
   "ui.status.acerto_mao_sec": {"en":"Attack (off hand)","pt":"Acerto (mão sec.)"},
   "ui.status.dano_mao_sec": {"en":"Damage (off hand)","pt":"Dano (mão sec.)"},
-  "ui.status.detalhe_acerto_mao_sec": {"en":"{attr} {mod} · level {nivel} · temporary {temp}","pt":"{attr} {mod} · nível {nivel} · temporários {temp}"},
-  "ui.status.detalhe_dano_mao_sec": {"en":"{attr} {mod} · other bonuses {temp}","pt":"{attr} {mod} · outros bônus {temp}"},
+  "ui.status.detalhe_acerto_mao_sec": {"en":"{attr} {mod} · level {nivel} · weapon {arma} · temporary {temp}","pt":"{attr} {mod} · nível {nivel} · arma {arma} · temporários {temp}"},
+  "ui.status.detalhe_dano_mao_sec": {"en":"{attr} {mod} · weapon {arma} · other bonuses {temp}","pt":"{attr} {mod} · arma {arma} · outros bônus {temp}"},
   "ui.status.arma_equipada": {
     "en": "Equipped weapon",
     "pt": "Arma equipada"

@@ -1,5 +1,14 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Atributos dos ataques por arma (2026-11-17)
+
+Ataques de heróis usam Força no acerto e dano corpo a corpo; acuidade usa o maior modificador de Força/Destreza em ambos; armas à distância e arremessos usam Destreza em ambos. Arremesso Bruto das machadinhas mantém Força. A classe não escolhe o atributo da arma: `_CLASS_ATK_ATTR` só identifica a parcela histórica embutida em `atk_bonus`, que `_hero_attack_bonus_with_weapon` substitui sem migrar saves. `_weapon_attribute_modifier` centraliza dano e mão secundária; `_weaponAttributeKey` espelha a regra no cliente. O Machado de Ferro e suas variantes mantêm Arremesso Bruto com Força no acerto e dano à distância; o Arco Bruto usa somente Destreza no dano, conforme a regra geral revisada. Chicotes e rapieira sem acuidade usam Força. Variantes seguem suas bases; bônus de material/magia continuam separados do atributo. Cobertura: `tools/test_atributos_armas.py`.
+
+
+### Materiais na ficha de status (2026-11-16)
+
+`_menuStatusMarkup` soma o `atk_bonus` da arma além de `p.atk_bonus`, como o cálculo autoritativo de ataque; não subtrair o bônus da arma ao decompor o BBA, pois isso anulava o material no total exibido. Dano soma `dmg_bonus` e `damage_bonus` aditivamente. A mão secundária inclui seus próprios `atk_bonus`/`damage_bonus`, com a parcela da arma nas explicações PT/EN. Cobertura em `tools/test_menu_status.js` para Damasco, Obsidiana e coexistência dos campos de dano.
+
 ### Retrato do Rato ND 0 (2026-11-22)
 
 `assets/retratos/monstros/rato_retrato.png` retrata o Rato ND 0 como um pequeno rato branco, com olhos rubi, orelhas e focinho rosados, em um porão medieval. A ficha nativa `rato` usa `portrait: "rato_retrato"` no bestiário; `updateInitiativeTrack` exibe essa imagem para `rato`, distinta do Rato Gigante. A miniatura 3D permanece separada.
@@ -348,6 +357,8 @@ As variantes de prata mantêm seus preços atuais. O primeiro nível de corrosã
 
 `besta_repetidora_patrulha` custa 70 moedas, causa 1d6 e alcança 6 quadrados em linha reta ortogonal; `besta_repetidora_guerra` custa 120 moedas, causa 1d8 e alcança 8. Ambas são armas mundanas de duas mãos, usam Destreza no ataque e dano, aceitam todos os virotes e podem ser usadas por Guerreiro, Paladino, Bardo e Ladino. A habilidade ativa **Disparo Duplo** usa a ação principal, exige dois virotes disponíveis e faz dois ataques separados contra o mesmo alvo; se o primeiro ataque o derrotar, o segundo não dispara. Recarga: 10 rodadas. As armas estão à venda nas cinco ferrarias e usam `assets/itens/besta_repetidora_media.png` e `assets/itens/besta_repetidora_poderosa.png`. Mensagem cliente-servidor: `repeating_crossbow_weapon`; resolução autoritativa em `handle_repeating_crossbow_weapon`.
 
+No cliente, a mira de Disparo Duplo percorre `game_state.tiles`, que contém as dimensões efetivamente enviadas pelo servidor. O botão fecha os menus e reúne os dados da arma de combate com os do equipamento antes de iniciar a seleção. A recarga só começa após o ataque validado.
+
 ### Ganchos de Corrente (2026-11-13)
 
 `gancho_corrente` custa 80 moedas: 1d6 perfurante usando Destreza, alcance de 3 casas em linha reta, sem bônus mágico, e pode ser usado por Bardo, Ladino, Paladino e Guerreiro. `gancho_escorpiao_superior` custa 180 moedas e mantém o dano e as classes, alcançando 5 casas. Ambos usam `assets/itens/get_over_here.png`. Uma vez a cada 10 rodadas, um acerto tenta puxar o alvo: Fortitude CD 13 evita; a falha puxa até 2 casas (3 na versão superior) em direção ao portador. O caminho para em obstáculos, paredes e criaturas; ocupa casas respeitando footprints e terreno. Entrar em um abismo resolve a queda normal do jogo (morte instantânea de criatura no chão); voo evita a morte. O cooldown `chain_pull_ready_round` é guardado na instância equipada, e `chain_hook_range`, `chain_pull_distance`, `chain_pull_cooldown` e `chain_pull_save_dc` são preservados ao comprar e sincronizados para o combate. Os dois itens aparecem nas cinco listas `ferreiro_weapon` e no catálogo do editor; a arte compartilhada é `get_over_here.png`.
@@ -442,7 +453,7 @@ O Bandido (`bandido`) sorteia a proteção independentemente da arma: sem armadu
 
 ### Juntar pilhas de munição (2026-11-01)
 
-No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até seu limite (20 na bolsa; 10 na mão secundária) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
+No inventário, soltar uma pilha de flechas/virotes sobre outra **igual** (mesmo `_ammo_stack_key`: item, tipo, propriedades do disparo e a mesma combinação de venenos) junta as duas: mensagem `juntar_municao {origem, destino}`, cada lado `{bolsa: i}` ou `{equip: "off_hand"}`, tratada por `handle_juntar_municao` (ação livre, cidade ou masmorra). O destino enche até seu limite (20 na bolsa e na mão secundária) e a origem fica com o que sobrou; a origem vazia sai da bolsa ou da mão secundária. Pilhas diferentes não se juntam: entre dois espaços da bolsa o servidor reordena, como antes. No cliente, `GS.mesmaPilhaMunicao(a, b)` (puro, `src/gameState.js`) espelha a chave do servidor (**mudou `_AMMO_STACK_FIELDS` ou `_ammo_stack_key`, mude o espelho**) e o `inventoryModal.js` o usa para decidir entre juntar e equipar/reordenar/desequipar. Testes: `python -X utf8 tools/test_juntar_municao.py` e `tools/test_juntar_municao_espelho.py` (paridade cliente × servidor).
 
 ### Mini Aljava (2026-11-01)
 
@@ -5797,3 +5808,7 @@ O ferreiro exibe **Armas**, **Arcos e Bestas**, **Armaduras**, **Munição**, **
 ### Aba Escudos do Ferreiro (2026-11-13)
 
 O ferreiro exibe **Armaduras** e **Escudos** em abas separadas; a lista de escudos filtra `shops.ferreiro.armors` por `kind === "shield"` e inclui os 23 itens atuais: quatro bases, sete especiais e doze variantes de materiais. Armaduras filtra `kind !== "shield"`. Ambos mantêm `ferreiro_armor` como chave de compra e preservam `city_shops.json`; munição, reparo e venda seguem nos índices seguintes. Com cenas de loja, subtrair o offset da aba de conversas antes de comparar os índices relativos.
+### Munição na mão secundária (2026-11-16)
+
+Flechas e virotes, incluindo prata, incendiários, explosivos, mágicos e envenenados, comportam 20 unidades por pilha na mão secundária como na bolsa. `_max_ammo_stack_for` e `GS.maxAmmoStackFor` espelham o limite para esses `ammo_type`. `MAX_AMMO_STACK` continua 10 para recipientes e regras que usam essa constante (inclusive capacidade por frasco de veneno); aljavas mantêm seus limites próprios. Compra/equipar/juntar/coleta/preparo de veneno usam o helper autoritativo.
+
