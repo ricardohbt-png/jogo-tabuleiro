@@ -11902,6 +11902,7 @@ window.LANG_INTERFACE = {
   "ui.loja.aba.botas": {"en":"🥾 Boots","pt":"🥾 Botas"},
   "ui.loja.aba.talismas_amuletos": {"en":"🧿 Talismans & Amulets","pt":"🧿 Talismãs e amuletos"},
   "ui.loja.aba.mochila_carga": {"en":"🎒 Packs & Cargo","pt":"🎒 Mochila e carga"},
+  "ui.loja.aba.grimorios": {"en":"📖 Grimoires","pt":"📖 Grimórios"},
   "ui.loja.aba.outros_equipamentos": {"en":"⚔️ Other Equipment","pt":"⚔️ Outros equipamentos"},
   "ui.loja.aba_vazia": {"en":"Nothing in this category is for sale here.","pt":"Nada desta categoria está à venda aqui."}
 };
