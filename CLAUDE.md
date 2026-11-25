@@ -5744,7 +5744,7 @@ A poção não recebe o bônus de área do Cajado Arcano. Ícone:
 bônus. Ao beber, consome o frasco e chama `_executar_velocidade` com duração
 `1d4+1`, compartilhando com a magia o movimento dobrado, uma ação principal
 extra por turno, animação e expiração. A ação extra renova no turno seguinte;
-cada ação ainda paga seu custo normal. Ícone: `assets/itens/pocao_velocidade.png`.
+cada ação ainda paga seu custo normal. Ícone: `assets/itens/pocao_velocidade.png`. **Ação extra no cliente:** o cliente só libera ataque e habilidades quando `action_done` é falso, então `_game_state_payload` envia `action_done: false` e `acao_extra_disponivel: true` enquanto a ação extra de Velocidade ou Oportunidade ainda não foi gasta (o estado do servidor não muda; `_acao_bloqueada` a consome na ação seguinte). Teste: `python -X utf8 tools/test_acao_extra_estado.py`.
 Regressão: `python -X utf8 tools/test_potions.py`.
 
 ### Poção de Voo (2026-10-17)
