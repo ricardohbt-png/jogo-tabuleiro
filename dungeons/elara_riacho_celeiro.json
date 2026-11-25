@@ -2593,8 +2593,20 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "gole_do_gigante"
+          },
+          {
+            "id": "hidromel"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_27",
@@ -2747,8 +2759,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "elixir_cavalo_ferro"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_38",
@@ -2789,8 +2810,23 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "banquete_viagem"
+          },
+          {
+            "id": "carne_bovina"
+          },
+          {
+            "id": "garrafa_vinho"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_41",
@@ -2985,8 +3021,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 15,
+        "items": [
+          {
+            "id": "sabedoria_liquida"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_55",
@@ -3346,9 +3391,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "lagrima_ultima_luz"
+          },
+          {
+            "id": "racao_viagem"
+          },
+          {
+            "id": "rum"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "saco_grao.png"
+      "image": "saco_grao.png",
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_80",
@@ -3391,9 +3451,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "ring_vita"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "saco_grao.png"
+      "image": "saco_grao.png",
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_83",

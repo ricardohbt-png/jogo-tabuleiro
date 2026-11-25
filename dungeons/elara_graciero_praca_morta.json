@@ -793,8 +793,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "carne_bovina"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "pracam_carroca_4",
@@ -807,9 +816,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "fermentado_raizes"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "carroca.png"
+      "image": "carroca.png",
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "pracam_monte_ossos_5",
@@ -2520,9 +2538,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "pao"
+          },
+          {
+            "id": "absinto"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "barril_cerveja.png"
+      "image": "barril_cerveja.png",
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_172",

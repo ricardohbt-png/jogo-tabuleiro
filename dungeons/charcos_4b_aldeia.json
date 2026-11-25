@@ -6009,12 +6009,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "carne_bovina"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_169",
@@ -6864,12 +6873,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "racao_completa"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_216",
@@ -6882,12 +6900,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "banquete_viagem"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_217",
@@ -7152,12 +7179,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "pao"
+          },
+          {
+            "id": "garrafa_vinho"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_232",
@@ -7296,12 +7335,27 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "leite"
+          },
+          {
+            "id": "caneca_cerveja"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_240",
@@ -7422,12 +7476,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "fruto_de_lumen"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_247",
@@ -7458,12 +7524,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 15,
+        "items": [
+          {
+            "id": "cerveja_ana"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.4
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_249",

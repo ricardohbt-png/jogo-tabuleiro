@@ -1,0 +1,1210 @@
+{
+ "casa_secreta": {
+  "decor_2": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    },
+    {
+     "id": "fermentado_raizes"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "lareira"
+  },
+  "decor_4": {
+   "achado": "misto",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "mira_do_falcao"
+    },
+    {
+     "id": "leite"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 20,
+   "tipo": "estante_livros"
+  }
+ },
+ "charcos_1_bordas": {
+  "decor_12": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "fermentado_raizes"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore_seca"
+  },
+  "decor_15": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "arvore_seca"
+  },
+  "decor_36": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "arvore"
+  },
+  "decor_4": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "carne_bovina"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore_seca"
+  },
+  "decor_55": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "rum"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "arvore"
+  },
+  "decor_59": {
+   "achado": "misto",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    },
+    {
+     "id": "hidromel"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_8": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pao"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore_seca"
+  }
+ },
+ "charcos_2_palafitas": {
+  "decor_11": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "pao"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore_seca"
+  }
+ },
+ "charcos_3_travessia": {
+  "decor_1": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "fermentado_raizes"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore_seca"
+  }
+ },
+ "charcos_4a_arredores": {
+  "decor_246": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  }
+ },
+ "charcos_4b_aldeia": {
+  "decor_168": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "carne_bovina"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore"
+  },
+  "decor_215": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "racao_completa"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore"
+  },
+  "decor_216": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "banquete_viagem"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore"
+  },
+  "decor_231": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "pao"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_239": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "leite"
+    },
+    {
+     "id": "caneca_cerveja"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "arvore"
+  },
+  "decor_246": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "fruto_de_lumen"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_248": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "cerveja_ana"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "arvore"
+  }
+ },
+ "elara_adhadal_1": {
+  "decor_144": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "chapeu_aventureiro"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "arvore"
+  },
+  "decor_270": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "manto_linho_engomado"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore"
+  },
+  "decor_280": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "alforge_explorador_aprimorado"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_302": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pao"
+    },
+    {
+     "id": "hidromel"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_324": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "absinto"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_61": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "anel_tigre"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_82": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    },
+    {
+     "id": "racao_viagem"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_89": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "leite"
+    },
+    {
+     "id": "fermentado_raizes"
+    },
+    {
+     "id": "cerveja_ana"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "arvore"
+  }
+ },
+ "elara_adhadal_2": {
+  "decor_120": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "racao_viagem"
+    },
+    {
+     "id": "hidromel"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_177": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "fermentado_raizes"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_242": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "garrafa_vinho"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_268": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "anel_negro_corvo"
+    },
+    {
+     "id": "absinto"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_435": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "aljava_grande"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_560": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "virotes_magicos_mais_2"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore_seca"
+  },
+  "decor_679": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "amulet"
+    },
+    {
+     "id": "caldo_revigorante"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_720": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "anel_protecao"
+    },
+    {
+     "id": "leite"
+    },
+    {
+     "id": "rum"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  }
+ },
+ "elara_corvin_cacada": {
+  "cacada_barril_5": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "anel_bastiao_basalto"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "barril"
+  },
+  "cacada_carroca_8": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "caneca_cerveja"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "carroca"
+  },
+  "decor_11": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "caixa_ferramentas"
+  },
+  "decor_14": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "mochila_aljava_dimensional"
+    },
+    {
+     "id": "racao_completa"
+    },
+    {
+     "id": "absinto"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "saco_grao"
+  }
+ },
+ "elara_corvin_gilo": {
+  "decor_10": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "anel_olho_esfinge"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "barril"
+  },
+  "decor_8": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "anel_danca_vento"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "barril"
+  },
+  "decor_9": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "rum"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "barril"
+  }
+ },
+ "elara_graciero_beco": {
+  "decor_3": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "alabarda_vendaval"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "barril"
+  },
+  "decor_33": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pocao_resistencia_gelo"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "arvore_grande"
+  },
+  "decor_38": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "veste_egide_arcana"
+    },
+    {
+     "id": "pao"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore_grande"
+  },
+  "decor_7": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "barril"
+  }
+ },
+ "elara_graciero_cais": {
+  "cais_barril_10": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "chapeu_bruxo"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "barril"
+  },
+  "cais_barril_9": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "ring_str"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "barril"
+  },
+  "decor_18": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "pao"
+    },
+    {
+     "id": "racao_viagem"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "barril_cerveja"
+  },
+  "decor_30": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "essencia_vento_favoravel"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "barril"
+  },
+  "decor_58": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "banquete_viagem"
+    },
+    {
+     "id": "leite"
+    },
+    {
+     "id": "cerveja_ana"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "saco_grao"
+  },
+  "decor_61": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "solucao_mecanismo"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "caixa_ferramentas"
+  },
+  "decor_66": {
+   "achado": "misto",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "pocao_resistencia_acido"
+    },
+    {
+     "id": "fruto_de_lumen"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "caixa_ferramentas"
+  }
+ },
+ "elara_graciero_praca_viva": {
+  "decor_171": {
+   "achado": "misto",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "pao"
+    },
+    {
+     "id": "absinto"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "barril_cerveja"
+  },
+  "pracam_barril_3": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "carne_bovina"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "barril"
+  },
+  "pracam_carroca_4": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "fermentado_raizes"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "carroca"
+  }
+ },
+ "elara_leonel_1": {
+  "casa_barril_2": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pernil"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "barril"
+  },
+  "decor_68": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "leite"
+    },
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "cerveja_ana"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  }
+ },
+ "elara_leonel_2": {
+  "decor_74": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "banquete_viagem"
+    },
+    {
+     "id": "fruto_de_lumen"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "barril_cerveja"
+  },
+  "mansao_estante_livros_15": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "racao_completa"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "estante_livros"
+  }
+ },
+ "elara_montanha_1": {
+  "decor_28": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "racao_viagem"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "arvore_seca"
+  },
+  "decor_29": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pao"
+    },
+    {
+     "id": "cerveja_ana"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "arvore_seca"
+  }
+ },
+ "elara_montanha_2": {
+  "decor_11": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "racao_completa"
+    },
+    {
+     "id": "pao"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "arvore_seca"
+  }
+ },
+ "elara_montanha_3": {
+  "carav_barril_8": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "pernil"
+    },
+    {
+     "id": "fruto_de_lumen"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "barril"
+  },
+  "carav_carroca_1": {
+   "achado": "magico",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "caldo_revigorante"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "carroca"
+  }
+ },
+ "elara_riacho_casa": {
+  "casa_cama_casal_7": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "carne_bovina"
+    },
+    {
+     "id": "racao_completa"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "cama_casal"
+  },
+  "casa_estante": {
+   "achado": "misto",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "pocao_resistencia_fogo"
+    },
+    {
+     "id": "fermentado_raizes"
+    },
+    {
+     "id": "cerveja_ana"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "estante_livros"
+  },
+  "casa_mesa_cadeiras_2": {
+   "achado": "comida",
+   "cd": 15,
+   "itens": [
+    {
+     "id": "leite"
+    },
+    {
+     "id": "garrafa_vinho"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "mesa_cadeiras"
+  }
+ },
+ "elara_riacho_celeiro": {
+  "decor_26": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "gole_do_gigante"
+    },
+    {
+     "id": "hidromel"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "barril"
+  },
+  "decor_37": {
+   "achado": "magico",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "elixir_cavalo_ferro"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "barril"
+  },
+  "decor_40": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "banquete_viagem"
+    },
+    {
+     "id": "carne_bovina"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "barril"
+  },
+  "decor_54": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "sabedoria_liquida"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "barril"
+  },
+  "decor_79": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "lagrima_ultima_luz"
+    },
+    {
+     "id": "racao_viagem"
+    },
+    {
+     "id": "rum"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "saco_grao"
+  },
+  "decor_82": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "ring_vita"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "saco_grao"
+  }
+ },
+ "fazenda": {
+  "decor_90": {
+   "achado": "misto",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "bote_da_serpente"
+    },
+    {
+     "id": "banquete_viagem"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_91": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "kit_reparo_campo"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "barril"
+  }
+ },
+ "sombras_1_vau": {
+  "decor_108": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pernil"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 20,
+   "tipo": "arvore"
+  },
+  "decor_113": {
+   "achado": "comida",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "racao_viagem"
+    },
+    {
+     "id": "hidromel"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "arvore"
+  },
+  "decor_37": {
+   "achado": "comida",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "pao"
+    },
+    {
+     "id": "carne_bovina"
+    },
+    {
+     "id": "absinto"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 5,
+   "tipo": "arvore"
+  },
+  "decor_69": {
+   "achado": "magico",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "arvore"
+  },
+  "decor_74": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "fermentado_raizes"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_97": {
+   "achado": "misto",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "leite"
+    },
+    {
+     "id": "rum"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "vau_arvore_2": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "banquete_viagem"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "arvore_grande"
+  }
+ },
+ "sombras_2_minas": {},
+ "sombras_3a_saloes": {
+  "decor_10": {
+   "achado": "misto",
+   "cd": 13,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "rum"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "barril"
+  },
+  "decor_13": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "racao_viagem"
+    }
+   ],
+   "ouro": 25,
+   "tipo": "barril"
+  }
+ },
+ "sombras_3b_trono": {}
+}

@@ -802,7 +802,22 @@
         0,
         1
       ],
-      "loot": null
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "leite"
+          },
+          {
+            "id": "garrafa_vinho"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "casa_barril_3",
@@ -867,7 +882,22 @@
         0,
         1
       ],
-      "loot": null
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "carne_bovina"
+          },
+          {
+            "id": "racao_completa"
+          },
+          {
+            "id": "caneca_cerveja"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "casa_cama_8",
@@ -941,7 +971,22 @@
         0,
         1
       ],
-      "loot": null
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "pocao_resistencia_fogo"
+          },
+          {
+            "id": "fermentado_raizes"
+          },
+          {
+            "id": "cerveja_ana"
+          }
+        ]
+      },
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "casa_barril_13",

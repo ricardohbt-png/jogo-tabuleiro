@@ -1615,8 +1615,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_bastiao_basalto"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "cacada_barril_6",
@@ -1657,13 +1666,28 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "caneca_cerveja"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "carroca.png",
       "vscale": [
         1.3,
         1.3
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "cacada_barril_9",
@@ -1853,9 +1877,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "caldo_revigorante"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "caixa_ferramentas.png"
+      "image": "caixa_ferramentas.png",
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_12",
@@ -1898,9 +1934,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "mochila_aljava_dimensional"
+          },
+          {
+            "id": "racao_completa"
+          },
+          {
+            "id": "absinto"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "saco_grao.png"
+      "image": "saco_grao.png",
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_15",

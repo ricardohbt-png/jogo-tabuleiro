@@ -6307,7 +6307,14 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "caldo_revigorante"
+          }
+        ]
+      },
       "key_objective": false,
       "size": [
         2,
@@ -6316,7 +6323,9 @@
       "vscale": [
         1.6,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_247",

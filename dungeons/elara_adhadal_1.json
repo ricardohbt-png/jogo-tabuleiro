@@ -2537,12 +2537,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_tigre"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.3,
         1.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_62",
@@ -2861,8 +2870,23 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "caldo_revigorante"
+          },
+          {
+            "id": "racao_viagem"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_83",
@@ -2949,12 +2973,30 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "leite"
+          },
+          {
+            "id": "fermentado_raizes"
+          },
+          {
+            "id": "cerveja_ana"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.3,
         1.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_90",
@@ -3939,12 +3981,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 15,
+        "items": [
+          {
+            "id": "chapeu_aventureiro"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.3,
         1.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_145",
@@ -6105,12 +6156,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "manto_linho_engomado"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.6,
         2.6
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_271",
@@ -6273,8 +6333,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "alforge_explorador_aprimorado"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_281",
@@ -6621,12 +6690,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "pao"
+          },
+          {
+            "id": "hidromel"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.3,
         1.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_303",
@@ -7017,12 +7098,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "absinto"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         3
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_325",
