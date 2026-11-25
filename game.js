@@ -28372,6 +28372,8 @@ function _barraSincronizar(){
   if(fim) fim.disabled = !!document.getElementById('btn-end-turn')?.disabled;
   const st = GS.gameState;
   const hero = st && (st.players || []).find(p => p.id === GS.myPid);
+  // Verde mais forte quando a ação principal já foi usada: dica de que dá para encerrar.
+  if(fim) fim.classList.toggle('is-pronto', !!hero?.action_done);
   for(const pop of bar.querySelectorAll('.tam-pop')){
     const aberto = _barraMenuAberto === pop.dataset.menu;
     pop.hidden = !aberto;
