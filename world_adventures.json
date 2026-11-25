@@ -438,7 +438,8 @@
           "slides": [
             {
               "text": "— Não era só roubo — diz Tomé, esfregando os pulsos. — Eles levavam a carga para as velhas minas de Pedra-Funda. Falavam de uma garra negra.",
-              "fit": "contain"
+              "fit": "contain",
+              "image": "assets/story/sombras_vau_tome_nao_era_roubo.webp"
             }
           ]
         }
@@ -615,7 +616,8 @@
             "fato": "",
             "aventura_id": ""
           },
-          "negar": true
+          "negar": true,
+          "image": "assets/story/sombras_covil_estante_segredo.webp"
         },
         {
           "text": "Outras estradas esperam por vocês no mapa.",
