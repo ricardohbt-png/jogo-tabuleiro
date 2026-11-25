@@ -11883,6 +11883,14 @@ window.LANG_INTERFACE = {
   "ui.armadilha.suspeita": {
     "en": "Suspicious trap",
     "pt": "Armadilha suspeita"
+  },
+  "ui.inv.grupo_bolsos": {
+    "en": "Pockets: potions, throwables and poisons",
+    "pt": "Bolsos: poções, arremessáveis e venenos"
+  },
+  "ui.inv.grupo_aljava": {
+    "en": "Quiver: arrows and bolts",
+    "pt": "Aljava: flechas e virotes"
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
