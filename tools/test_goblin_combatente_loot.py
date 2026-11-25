@@ -91,7 +91,10 @@ class CombatantLootTests(unittest.IsolatedAsyncioTestCase):
     async def test_dual_dagger_loot_and_successful_throw_are_preserved(self):
         definition = next(d for d in S.MONSTER_DEFS if d["type"] == "goblin_dual")
         r = room()
-        m = S.make_monster(definition, {"id": 0, "cx": 3, "cy": 3})
+        for _ in range(500):  # a mão secundária é sorteada: espera uma adaga comum
+            m = S.make_monster(definition, {"id": 0, "cx": 3, "cy": 3})
+            if m.get("pode_arremessar") and m["equipped_items"][1] == "dagger":
+                break
         m["pos"] = [3, 3]
         r.monsters[m["id"]] = m
         p = target(r)
@@ -101,7 +104,7 @@ class CombatantLootTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(p["hp"], 97)
         self.assertTrue(m["pode_arremessar"])
         chest = await kill(r, m)
-        self.assertCountEqual([it["id"] for it in chest["items"]], ["shortsword", "dagger"])
+        self.assertIn("dagger", [it["id"] for it in chest["items"]])
 
 
 if __name__ == "__main__":

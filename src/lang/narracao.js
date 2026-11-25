@@ -3244,6 +3244,22 @@ window.LANG_NARRACAO = {
     "en": "Gilo answers the attack with a Flash Bomb. The throw misses; {restam} left.",
     "pt": "Gilo reage ao ataque contra si com uma Bomba de Flash. O arremesso erra; restam {restam}."
   },
+  "narracao.leonel_fumaca_reacao": {
+    "en": "💨 **{monstro}** throws a Smoke Bomb, shrouding the attacker and disrupting the attack.",
+    "pt": "💨 **{monstro}** lança uma Bomba de Fumaça, encobrindo o atacante e atrapalhando o golpe."
+  },
+  "narracao.leonel_flash_acerta": {
+    "en": "✨ **{monstro}** answers **{alvo}** with a Flash Bomb. The attack has −2 and disadvantage.",
+    "pt": "✨ **{monstro}** reage a **{alvo}** com uma Bomba de Flash. O ataque sofre −2 e desvantagem."
+  },
+  "narracao.leonel_flash_erra": {
+    "en": "✨ **{monstro}** throws a Flash Bomb at **{alvo}**, but misses.",
+    "pt": "✨ **{monstro}** lança uma Bomba de Flash contra **{alvo}**, mas erra."
+  },
+  "narracao.ultimo_suspiro_salva_monstro": {
+    "en": "📿 The Last Breath Amulet shatters and keeps **{monstro}** alive with **1 HP**!",
+    "pt": "📿 O amuleto Último Suspiro se parte e mantém **{monstro}** vivo com **1 PV**!"
+  },
   "narracao.usa": {
     "en": "{item_emoji} **{heroi}** uses **{item}**: {txt}{extra}",
     "pt": "{item_emoji} **{heroi}** usa **{item}**: {txt}{extra}"
