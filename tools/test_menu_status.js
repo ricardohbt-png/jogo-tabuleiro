@@ -17,7 +17,7 @@ function extrair(nome) {
 }
 
 function montar(estado, temporarios, armaBaseId = id => id) {
-  const corpo = extrair('_weaponAttributeKey') + '\n' + extrair('_menuStatusMarkup');
+  const corpo = extrair('_weaponAttributeKey') + '\n' + extrair('_percepcaoDetalhesStatus') + '\n' + extrair('_menuStatusMarkup');
   const fabrica = new Function('GS', 't', '_rotulo', '_fmtBonus', '_modAtributo', '_modificadoresTemporariosStatus',
     corpo + '\nreturn _menuStatusMarkup;');
   const t = (k, p) => p && p.n != null ? `${k}:${p.n}` : k;
