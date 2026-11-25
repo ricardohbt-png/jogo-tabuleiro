@@ -21521,7 +21521,7 @@ function _descricaoVenenoPorId(id){
   return [desc,partes.length?t('ui.veneno.melhorias_resumo',{partes:partes.join(', ')}):''].filter(Boolean).join(' ');
 }
 
-function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=null}={}){
+function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=null,alvoFixo=null}={}){
   const existente=document.getElementById('painel-veneno-rapido');
   if(existente){
     const mesmo=existente.dataset.metodo===metodo&&!venenoId;
@@ -21579,7 +21579,9 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
     font-family:inherit;font-size:11px;line-height:1.35`;
 
   const desenhar=()=>{
-    const alvos=GS.venenoAlvos(me,{metodo,venenoId:escolhidos[0],doisVenenos:podeDois,maxPorFrasco:maxFrasco});
+    const todos=GS.venenoAlvos(me,{metodo,venenoId:escolhidos[0],doisVenenos:podeDois,maxPorFrasco:maxFrasco});
+    // Frasco arrastado sobre uma arma ou pilha: só esse alvo, como confirmação rápida.
+    const alvos=alvoFixo?_filtrarAlvoFixoVeneno(todos,alvoFixo):todos;
     const bonusUsado=!preparoCidade&&metodo==='frasco'&&!!me.bonus_action_used;
     const semSedeArma=metodo==='veneno_rapido'&&(me.sede||0)<1;
     const semSedeMunicao=metodo==='veneno_rapido'&&(me.sede||0)<escolhidos.length;
@@ -21595,7 +21597,7 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
     const custo=preparoCidade?t('ui.veneno.custo_cidade'):metodo==='frasco'?t('ui.veneno.custo_frasco'):t('ui.veneno.custo_rapido');
     const aviso=bonusUsado?`<div style="color:var(--red);font-size:10px;margin:6px 0">${t('ui.veneno.bonus_usado')}</div>`:'';
     painel.innerHTML=`
-      <div style="color:#cc44ff;text-align:center;font-family:'Cinzel Decorative',serif;font-size:13px">${t('ui.veneno.titulo')}</div>
+      <div style="color:#cc44ff;text-align:center;font-family:'Cinzel Decorative',serif;font-size:13px">${t(alvoFixo?'ui.veneno.titulo_confirmar':'ui.veneno.titulo')}</div>
       <div style="color:#8a7a5a;font-size:9px;text-align:center;margin:3px 0 8px">${custo}</div>
       <div style="color:#c8b89a;font-size:10px;margin-bottom:3px">${t('ui.veneno.passo_veneno')}</div>
       <div>${chips}</div>${dica}${aviso}
@@ -21667,10 +21669,43 @@ function abrirPainelEnvenenar({metodo='veneno_rapido',venenoId=null,vialSource=n
       });
     }
     if(!alvos.armas.length&&!alvos.municoes.length&&!(alvos.laminas||[]).length){
-      lista.innerHTML=`<div style="color:#b8704a;font-size:11px;padding:6px 0">${t('ui.veneno.sem_alvo')}</div>`;
+      const motivo=alvoFixo?_motivoSemAlvoVeneno(me,alvoFixo):t('ui.veneno.sem_alvo');
+      lista.innerHTML=`<div style="color:#b8704a;font-size:11px;padding:6px 0">${motivo}</div>`;
     }
   };
   desenhar();
+}
+
+// Alvo que o jogador escolheu ao soltar o frasco no inventário:
+//   {tipo:'arma', slot:'weapon'|'off_hand'}  ou  {tipo:'municao', source:'bag'|'off_hand', index}
+function _filtrarAlvoFixoVeneno(alvos, fixo){
+  const vazio={armas:[],municoes:[],laminas:[]};
+  if(!fixo) return alvos;
+  if(fixo.tipo==='arma') return {...vazio, armas:(alvos.armas||[]).filter(a=>a.slot===fixo.slot)};
+  if(fixo.tipo==='municao'){
+    const achadas=(alvos.municoes||[]).filter(m=>m.source===fixo.source&&(fixo.source==='off_hand'||m.index===fixo.index));
+    // A mesma pilha pode aparecer para as duas mãos; uma opção basta.
+    return {...vazio, municoes:achadas.slice(0,1)};
+  }
+  return vazio;
+}
+
+// Por que o frasco solto ali não tem o que fazer (mensagem no lugar do cartão).
+function _motivoSemAlvoVeneno(me, fixo){
+  const gear=me?.gear||{};
+  let item=null;
+  if(fixo?.tipo==='municao') item=fixo.source==='off_hand'?gear.off_hand:(me?.bag||[])[fixo.index];
+  else if(fixo?.tipo==='arma') item=fixo.slot==='off_hand'?gear.off_hand:(gear.weapon||me?.weapon);
+  if(item && Array.isArray(item.poison_ids) && item.poison_ids.length) return t('ui.veneno.arrastar_ja_envenenada');
+  if(fixo?.tipo==='municao') return t('ui.veneno.arrastar_sem_arma');
+  if(item && (item.ammo_type||item.effect==='ammo')) return t('ui.veneno.arrastar_sem_arma');
+  return t('ui.veneno.arrastar_arma_distancia');
+}
+
+// Entrada para o inventário: frasco (da bolsa ou do cinto) solto sobre uma arma ou pilha.
+function abrirPainelEnvenenarArrastado(itemId, sourceInfo, alvoFixo){
+  abrirPainelEnvenenar({metodo:'frasco',venenoId:itemId,alvoFixo,
+    vialSource:sourceInfo?.source==='utility_belt'?{...sourceInfo,itemId}:sourceInfo});
 }
 
 // ── Botões de habilidade do ladino (padrão skill-btn, como _paladinSkillBtn) ──

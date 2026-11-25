@@ -843,6 +843,10 @@ Cerveja Anã custa 8 moedas, usa assets/itens/barril_de_cerveja.png e é vendida
 
 `helm_iron` concede +1 CA, custa 40 moedas e só pode ser comprado/equipado por guerreiro, clérigo, patrulheiro e paladino. `allowed_classes` usa os IDs `warrior`, `cleric`, `ranger` e `paladin`; `handle_shop_buy` e o fluxo de equipamento aplicam a restrição no servidor.
 
+### Envenenar arrastando o frasco (2026-11-25)
+
+Complemento do painel único: no inventário, soltar um frasco de veneno (da bolsa ou de um bolso do cinto) sobre uma arma ou sobre uma pilha de flechas/virotes abre o MESMO painel "Envenenar" já com o alvo fixo (`abrirPainelEnvenenarArrastado` → `abrirPainelEnvenenar({alvoFixo})`, título "Confirmar envenenamento", um cartão só, um clique aplica). Alvos: arma da mão principal/secundária (`{tipo:'arma', slot}`), pilha da bolsa (`{tipo:'municao', source:'bag', index}`) e munição equipada na mão do escudo (`{source:'off_hand'}`); `_filtrarAlvoFixoVeneno` filtra o resultado de `GS.venenoAlvos`, então todas as regras (capacidade, dose perdida, cargas antigas, limite de venenos, ação bônus, turno) continuam sendo as do painel e do servidor, sem mensagem nova. Soltar sobre arco/besta ou sobre pilha sem arma compatível ou já envenenada mostra o motivo no lugar do cartão (`_motivoSemAlvoVeneno`); soltar na aljava avisa que a munição dela não aceita veneno; soltar sobre outro item mantém o comportamento de sempre. O reconhecimento do frasco e do slot fica em `_frascoVenenoArrastado`/`_alvoVenenoDoSlot` no `inventoryModal.js` (só na própria ficha, fora do baú). Só arrastar-e-soltar: teclado e controle seguem pelo uso do frasco. Teste: `node tools/test_veneno_arrastar.js`.
+
 ### Painel único "Envenenar" (2026-10-23)
 
 Frasco da bolsa (`useItem` → `_abrirPainelAplicarVenenoArma`) e botão Veneno Rápido caem no mesmo
