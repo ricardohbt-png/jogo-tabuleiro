@@ -265,7 +265,7 @@ class DiscoTests(unittest.TestCase):
             "menina_pele_escura", "menina_ruiva")])
         self.assertEqual([p.get("model3d") for p in prs], [a + ".glb" for a in (
             "garoto_loiro", "garoto_medieval", "garoto_pele_escura", "menina_cabelos_castanhos",
-            "menina_pele_escura")] + [None])
+            "menina_pele_escura", "menina_cabelos_castanhos")])
         r, p = sala(gravada)
         self.assertEqual(len(r.prisoners), 6)
         ocupadas = {tuple(t) for d in r.decorations for t in r._decor_tiles(d)}

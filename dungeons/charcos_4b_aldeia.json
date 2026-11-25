@@ -2167,8 +2167,8 @@
     {
       "type": "goblin_combatente",
       "pos": [
-        25,
-        11
+        23,
+        10
       ],
       "room_id": 0,
       "boss": false,
@@ -2212,7 +2212,7 @@
       "type": "goblin_xama",
       "pos": [
         22,
-        11
+        9
       ],
       "room_id": 1,
       "boss": false,
@@ -2233,7 +2233,7 @@
       "type": "goblin_xama",
       "pos": [
         25,
-        12
+        11
       ],
       "room_id": 1,
       "boss": false,
@@ -2275,7 +2275,7 @@
       "type": "necromante",
       "pos": [
         23,
-        10
+        8
       ],
       "room_id": 1,
       "boss": false,
@@ -2295,8 +2295,8 @@
     {
       "type": "goblin_combatente",
       "pos": [
-        23,
-        13
+        35,
+        1
       ],
       "room_id": 1,
       "boss": false,
@@ -2416,8 +2416,8 @@
     {
       "type": "necromante",
       "pos": [
-        31,
-        11
+        35,
+        5
       ],
       "room_id": 1,
       "boss": false,
@@ -2428,7 +2428,7 @@
       "type": "dark_mage",
       "pos": [
         22,
-        12
+        11
       ],
       "room_id": 1,
       "boss": false,
@@ -2460,8 +2460,8 @@
     {
       "type": "goblin_assassino",
       "pos": [
-        25,
-        13
+        36,
+        2
       ],
       "room_id": 1,
       "boss": false,
@@ -2480,10 +2480,10 @@
       "source_id": "mob_25"
     },
     {
-      "type": "pombo",
+      "type": "esqueleto_animal_customizado",
       "pos": [
-        5,
-        18
+        30,
+        2
       ],
       "room_id": 0,
       "boss": false,
@@ -2513,7 +2513,7 @@
       "id": "aldeia_barril_2",
       "type": "barril",
       "pos": [
-        15,
+        18,
         5
       ],
       "facing": [
@@ -2932,8 +2932,8 @@
         11
       ],
       "facing": [
-        0,
-        -1
+        -1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -2944,11 +2944,11 @@
       "type": "cabana_palha_velha",
       "pos": [
         15,
-        2
+        3
       ],
       "facing": [
-        0,
-        1
+        -1,
+        0
       ],
       "loot": null,
       "key_objective": false,
@@ -3365,8 +3365,8 @@
       "id": "decor_28",
       "type": "estatua_soterrada",
       "pos": [
-        31,
-        6
+        33,
+        13
       ],
       "facing": [
         0,
@@ -8174,6 +8174,7 @@
       ],
       "room_id": 2,
       "image": "menina_ruiva.png",
+      "model3d": "menina_cabelos_castanhos.glb",
       "nome": "Rosa"
     }
   ],
@@ -12165,13 +12166,21 @@
     "30,20": 3,
     "29,20": 8,
     "23,8": 8,
-    "22,8": 8
+    "22,8": 8,
+    "44,3": 1,
+    "45,3": 1,
+    "46,2": 1,
+    "46,3": 1,
+    "43,3": 1
   },
   "alturas_parede": {
     "44,1": 1,
     "44,2": 1,
     "45,2": 1,
-    "45,1": 1
+    "45,1": 1,
+    "43,17": 8,
+    "43,18": 8,
+    "43,19": 8
   },
   "transicao_altura": "rampa",
   "objectives": {
@@ -12188,49 +12197,49 @@
         {
           "de": 6,
           "ate": 6,
-          "renome": 8,
           "xp": 225,
           "gold": 90,
+          "renome": 8,
           "fato": "charcos_criancas_todas"
         },
         {
           "de": 4,
           "ate": 5,
-          "renome": 5,
           "xp": 150,
           "gold": 60,
+          "renome": 5,
           "fato": "charcos_criancas_salvas"
         },
         {
           "de": 3,
           "ate": 3,
-          "renome": 0,
           "xp": 90,
           "gold": 36,
+          "renome": 0,
           "fato": "charcos_criancas_perdidas"
         },
         {
           "de": 2,
           "ate": 2,
-          "renome": -2,
           "xp": 60,
           "gold": 24,
+          "renome": -2,
           "fato": "charcos_criancas_perdidas"
         },
         {
           "de": 1,
           "ate": 1,
-          "renome": -4,
           "xp": 30,
           "gold": 12,
+          "renome": -4,
           "fato": "charcos_criancas_perdidas"
         },
         {
           "de": 0,
           "ate": 0,
-          "renome": -8,
           "xp": 0,
           "gold": 0,
+          "renome": -8,
           "fato": "charcos_criancas_mortas"
         }
       ]

@@ -75,6 +75,8 @@ async def jogo_salvo_antigo():
                   if sala["x"] - 1 <= c[0] <= sala["x"] + sala["w"]
                   and sala["y"] - 1 <= c[1] <= sala["y"] + sala["h"]}
     casas = {p["class_id"]: tuple(p["pos"]) for p in r.players.values()}
+    # A foto antiga é a névoa sobre os heróis, qualquer que seja a geometria atual da entrada.
+    r.explored = {c for c in r.explored if tuple(c) not in set(casas.values())}
     check(all(c not in r.explored for c in casas.values()),
           "a foto antiga tem a névoa sobre os heróis")
     registro = S.foto_empacotar(r._montar_foto(), onde="masmorra", rodada=r.round_num,

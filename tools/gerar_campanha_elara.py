@@ -40,6 +40,8 @@ IMAGEM_TEMPLO_AVISTADO = "assets/story/fazenda_fim_templo_avistado.webp"   # o g
 IMAGEM_TEMPLO_SAQUEADO = "assets/story/fazenda_fim_templo_saqueado.webp"   # Exequiel nos degraus do Templo arrombado
 IMAGEM_MENSAGEIRO = "assets/story/fazenda_fim_mensageiro.webp"   # o mensageiro do regente entrega o recado
 IMAGEM_EXEQUIEL_CHAMA = "assets/story/fazenda_fim_exequiel_chama.webp"   # Exequiel chama o grupo de volta ao Templo
+IMAGEM_CASA_VIELA_HISTORIA = "assets/story/casa_da_viela_herois.png"
+IMAGEM_AVISTAMENTO_FAZENDA = "assets/story/elara_fazenda_celeiro_avistamento.png"
 
 # Fatos da campanha (nomes estáveis: os planos seguintes dependem deles)
 F_PEDIU = "elara_pediu"                    # o Templo deu a missão
@@ -160,12 +162,20 @@ def destinos():
         "id": AVENTURA, "nome": "O Resgate de Elara", "x": x, "y": y, "fome": 1, "sede": 1,
         "dungeons": [
             {"file": "casa_secreta.json", "encadear": True,
-             "intro": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira "
-                      "a poeira e a algo pior.",
-             "outro": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as "
-                      "muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de "
-                      "feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem "
-                      "luz: a Fazenda do Leste."},
+             "intro": {"slides": [{
+                 "text": "A casa fica numa viela de Alva e Luz. As janelas estão fechadas e o ar cheira "
+                         "a poeira e a algo pior.",
+                 "image": IMAGEM_CASA_VIELA_HISTORIA,
+                 "fit": "cover",
+             }]},
+             "outro": {"slides": [{
+                 "text": "Com a carta no bolso, vocês deixam a viela e tomam a estrada leste, até onde as "
+                         "muralhas de Alva e Luz ficam para trás. Os campos se abrem, o vento traz cheiro de "
+                         "feno e de cinza fria, e ao longe surge uma cerca torta, um celeiro e uma casa sem "
+                         "luz: a Fazenda do Leste.",
+                 "image": IMAGEM_AVISTAMENTO_FAZENDA,
+                 "fit": "cover",
+             }]}},
             {"file": "fazenda.json", "encadear": False, "intro": "",
              "outro": slides_fim_da_fazenda()},
         ],

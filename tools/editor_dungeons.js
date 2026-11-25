@@ -22878,11 +22878,15 @@ window.EDITOR_DUNGEONS = [
             6
           ],
           "facing": [
-            1,
+            -1,
             0
           ],
           "loot": null,
-          "key_objective": true
+          "key_objective": true,
+          "vscale": [
+            1.5,
+            1.9
+          ]
         },
         {
           "id": "decor_1",
@@ -22901,6 +22905,10 @@ window.EDITOR_DUNGEONS = [
           "size": [
             1,
             1
+          ],
+          "voffset": [
+            0.4,
+            0
           ]
         },
         {
@@ -22943,7 +22951,14 @@ window.EDITOR_DUNGEONS = [
             0,
             -1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
@@ -22966,6 +22981,10 @@ window.EDITOR_DUNGEONS = [
           "size": [
             1,
             1
+          ],
+          "vscale": [
+            1.4,
+            1.2
           ],
           "voffset": [
             0,
@@ -23076,8 +23095,12 @@ window.EDITOR_DUNGEONS = [
             1
           ],
           "loot": {
-            "gold": 0,
-            "items": []
+            "gold": 10,
+            "items": [
+              {
+                "id": "dagger_aco_damasco"
+              }
+            ]
           },
           "key_objective": false,
           "chest_trap_monster_type": "goblin_dual"
@@ -23120,8 +23143,8 @@ window.EDITOR_DUNGEONS = [
           "key_objective": false,
           "image": "cortina_vermelha.png",
           "vscale": [
-            1.6,
-            1.3
+            2,
+            1.8
           ]
         },
         {
@@ -23152,6 +23175,7 @@ window.EDITOR_DUNGEONS = [
             8,
             5
           ],
+          "wall_material": "madeira",
           "key_decor_ids": [
             "decor_1"
           ],
@@ -23164,6 +23188,7 @@ window.EDITOR_DUNGEONS = [
             9,
             5
           ],
+          "wall_material": "madeira",
           "key_decor_ids": [
             "decor_1"
           ],
@@ -55371,8 +55396,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_combatente",
           "pos": [
-            25,
-            11
+            23,
+            10
           ],
           "room_id": 0,
           "boss": false,
@@ -55416,7 +55441,7 @@ window.EDITOR_DUNGEONS = [
           "type": "goblin_xama",
           "pos": [
             22,
-            11
+            9
           ],
           "room_id": 1,
           "boss": false,
@@ -55437,7 +55462,7 @@ window.EDITOR_DUNGEONS = [
           "type": "goblin_xama",
           "pos": [
             25,
-            12
+            11
           ],
           "room_id": 1,
           "boss": false,
@@ -55479,7 +55504,7 @@ window.EDITOR_DUNGEONS = [
           "type": "necromante",
           "pos": [
             23,
-            10
+            8
           ],
           "room_id": 1,
           "boss": false,
@@ -55499,8 +55524,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_combatente",
           "pos": [
-            23,
-            13
+            35,
+            1
           ],
           "room_id": 1,
           "boss": false,
@@ -55620,8 +55645,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "necromante",
           "pos": [
-            31,
-            11
+            35,
+            5
           ],
           "room_id": 1,
           "boss": false,
@@ -55632,7 +55657,7 @@ window.EDITOR_DUNGEONS = [
           "type": "dark_mage",
           "pos": [
             22,
-            12
+            11
           ],
           "room_id": 1,
           "boss": false,
@@ -55664,8 +55689,8 @@ window.EDITOR_DUNGEONS = [
         {
           "type": "goblin_assassino",
           "pos": [
-            25,
-            13
+            36,
+            2
           ],
           "room_id": 1,
           "boss": false,
@@ -55684,10 +55709,10 @@ window.EDITOR_DUNGEONS = [
           "source_id": "mob_25"
         },
         {
-          "type": "pombo",
+          "type": "esqueleto_animal_customizado",
           "pos": [
-            5,
-            18
+            30,
+            2
           ],
           "room_id": 0,
           "boss": false,
@@ -55717,7 +55742,7 @@ window.EDITOR_DUNGEONS = [
           "id": "aldeia_barril_2",
           "type": "barril",
           "pos": [
-            15,
+            18,
             5
           ],
           "facing": [
@@ -56136,8 +56161,8 @@ window.EDITOR_DUNGEONS = [
             11
           ],
           "facing": [
-            0,
-            -1
+            -1,
+            0
           ],
           "loot": null,
           "key_objective": false,
@@ -56148,11 +56173,11 @@ window.EDITOR_DUNGEONS = [
           "type": "cabana_palha_velha",
           "pos": [
             15,
-            2
+            3
           ],
           "facing": [
-            0,
-            1
+            -1,
+            0
           ],
           "loot": null,
           "key_objective": false,
@@ -56569,8 +56594,8 @@ window.EDITOR_DUNGEONS = [
           "id": "decor_28",
           "type": "estatua_soterrada",
           "pos": [
-            31,
-            6
+            33,
+            13
           ],
           "facing": [
             0,
@@ -61378,6 +61403,7 @@ window.EDITOR_DUNGEONS = [
           ],
           "room_id": 2,
           "image": "menina_ruiva.png",
+          "model3d": "menina_cabelos_castanhos.glb",
           "nome": "Rosa"
         }
       ],
@@ -65369,13 +65395,21 @@ window.EDITOR_DUNGEONS = [
         "30,20": 3,
         "29,20": 8,
         "23,8": 8,
-        "22,8": 8
+        "22,8": 8,
+        "44,3": 1,
+        "45,3": 1,
+        "46,2": 1,
+        "46,3": 1,
+        "43,3": 1
       },
       "alturas_parede": {
         "44,1": 1,
         "44,2": 1,
         "45,2": 1,
-        "45,1": 1
+        "45,1": 1,
+        "43,17": 8,
+        "43,18": 8,
+        "43,19": 8
       },
       "transicao_altura": "rampa",
       "objectives": {
@@ -65392,49 +65426,49 @@ window.EDITOR_DUNGEONS = [
             {
               "de": 6,
               "ate": 6,
-              "renome": 8,
               "xp": 225,
               "gold": 90,
+              "renome": 8,
               "fato": "charcos_criancas_todas"
             },
             {
               "de": 4,
               "ate": 5,
-              "renome": 5,
               "xp": 150,
               "gold": 60,
+              "renome": 5,
               "fato": "charcos_criancas_salvas"
             },
             {
               "de": 3,
               "ate": 3,
-              "renome": 0,
               "xp": 90,
               "gold": 36,
+              "renome": 0,
               "fato": "charcos_criancas_perdidas"
             },
             {
               "de": 2,
               "ate": 2,
-              "renome": -2,
               "xp": 60,
               "gold": 24,
+              "renome": -2,
               "fato": "charcos_criancas_perdidas"
             },
             {
               "de": 1,
               "ate": 1,
-              "renome": -4,
               "xp": 30,
               "gold": 12,
+              "renome": -4,
               "fato": "charcos_criancas_perdidas"
             },
             {
               "de": 0,
               "ate": 0,
-              "renome": -8,
               "xp": 0,
               "gold": 0,
+              "renome": -8,
               "fato": "charcos_criancas_mortas"
             }
           ]
@@ -67142,6 +67176,16 @@ window.EDITOR_DUNGEONS = [
           "id": 1,
           "x": 2,
           "y": 11,
+          "w": 3,
+          "h": 3,
+          "role": "empty",
+          "locked": false,
+          "doors": []
+        },
+        {
+          "id": 2,
+          "x": 2,
+          "y": 29,
           "w": 3,
           "h": 3,
           "role": "entrance",
