@@ -5538,6 +5538,14 @@ window.LANG_CATALOGO = {
     "en": "Monster Leather and Plate Armor of Iron Obsidian",
     "pt": "Armadura de Couro de Monstro e Placas de Obsidiana de Ferro"
   },
+  "cat.item.oculos_terceiro_olho.desc": {
+    "en": "+5 Perception while equipped.",
+    "pt": "+5 em Percepção enquanto equipado."
+  },
+  "cat.item.oculos_terceiro_olho.nome": {
+    "en": "Third Eye Glasses",
+    "pt": "Óculos do Terceiro Olho"
+  },
   "cat.item.oleo_dissolvente.desc": {
     "en": "Dissolves stone: cures petrification and protects for 1d4 rounds.",
     "pt": "Dissolve a pedra: cura petrificação e protege por 1d4 rodadas."

@@ -17811,6 +17811,17 @@ window.EDITOR_CATALOG = {
       "descricao": "+1 de visão, +1 de iniciativa e +5 aos máximos de fome e sede enquanto equipado."
     },
     {
+      "id": "oculos_terceiro_olho",
+      "name": "Óculos do Terceiro Olho",
+      "emoji": "👓",
+      "icon": "assets/itens/oculos_olho_atento.png",
+      "magical": true,
+      "item_slot": "head",
+      "effect": "perception_bonus",
+      "value": 5,
+      "descricao": "+5 em Percepção enquanto equipado."
+    },
+    {
       "id": "chapeu_explorador",
       "name": "Chapéu do Explorador",
       "emoji": "🤠",

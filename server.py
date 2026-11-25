@@ -9061,6 +9061,8 @@ SHOP_MERCHANT = [
     {"id": "chapeu_aventureiro", "name": "Chapéu do Aventureiro", "emoji": "🤠", "icon": "assets/itens/chapeu_aventureiro.png", "price": 120, "item_slot": "head", "effect": "vision", "value": 1,
      "bonuses": [{"effect": "initiative", "value": 1}, {"effect": "fome_max", "value": 5}, {"effect": "sede_max", "value": 5}],
      "descricao": "+1 de visão, +1 de iniciativa e +5 aos máximos de fome e sede enquanto equipado."},
+    {"id": "oculos_terceiro_olho", "name": "Óculos do Terceiro Olho", "emoji": "👓", "icon": "assets/itens/oculos_olho_atento.png", "price": 650, "item_slot": "head", "effect": "perception_bonus", "value": 5, "magical": True,
+     "descricao": "+5 em Percepção enquanto equipado."},
     {"id": "chapeu_explorador", "name": "Chapéu do Explorador", "emoji": "🤠", "icon": "assets/itens/chapeu_aventureiro.png", "price": 300, "item_slot": "head", "effect": "vision", "value": 2,
      "bonuses": [{"effect": "atk", "value": 1}, {"effect": "fome_max", "value": 4}, {"effect": "sede_max", "value": 4}],
      "descricao": "+2 de visão, +1 nos ataques e +4 aos máximos de fome e sede enquanto equipado."},
@@ -24208,7 +24210,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     def _get_percepcao_heroi(self, p):
         """Percepção individual da ficha: 10 + metade do raio de visão."""
         penalidade = int((p.get("penalidades") or {}).get("percepcao", 0) or 0)
-        return max(1, 10 + self._get_raio_visao(p) // 2 + penalidade)
+        bonus_equipamento = 0
+        for item in (p.get("gear") or {}).values():
+            if not isinstance(item, dict):
+                continue
+            if item.get("effect") == "perception_bonus":
+                bonus_equipamento += int(item.get("value", 0) or 0)
+            for bonus in item.get("bonuses", []) or []:
+                if isinstance(bonus, dict) and bonus.get("effect") == "perception_bonus":
+                    bonus_equipamento += int(bonus.get("value", 0) or 0)
+        return max(1, 10 + self._get_raio_visao(p) // 2 + penalidade + bonus_equipamento)
 
     def _get_percepcao_monstro(self, m):
         """Percepção base declarada na ficha, com fallback para fichas antigas."""

@@ -805,6 +805,8 @@ mochila_carga custa 250 moedas, usa assets/itens/backpack.png e concede +6 espa�
 
 `chapeu_explorador` custa 300 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 de visão, +1 nos ataques e +4 aos máximos de fome e sede enquanto equipado. Os bônus de sobrevivência são revertidos ao desequipar via efeitos `fome_max`/`sede_max`.
 
+`oculos_terceiro_olho` custa 650 moedas, ocupa `head`, usa `assets/itens/oculos_olho_atento.png` e concede `perception_bonus: +5` enquanto equipado. `_get_percepcao_heroi` calcula o bônus diretamente a partir do equipamento atual, afetando testes de Percepção e preservando o efeito em fichas restauradas. Está nos cinco mercadores.
+
 `chapeu_cacador` custa 200 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 ao dano por acerto com armas corpo a corpo ou à distância enquanto equipado, pelo efeito existente `damage_bonus`.
 
 ### Vela da Escuridão — duração (2026-10-25)
