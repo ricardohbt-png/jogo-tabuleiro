@@ -1219,6 +1219,14 @@ window.LANG_NARRACAO = {
     "en": "🔍 **{heroi}**'s trained eye spots something hidden in **{objeto}**!",
     "pt": "🔍 O olho treinado de **{heroi}** percebe algo escondido em **{objeto}**!"
   },
+  "narracao.armadilha_suspeita": {
+    "en": "⚠️ **{heroi}** senses something wrong with the ground ahead!",
+    "pt": "⚠️ **{heroi}** desconfia do chão logo à frente!"
+  },
+  "narracao.armadilha_suspeita_objeto": {
+    "en": "⚠️ **{heroi}** distrusts **{objeto}** — it may be trapped!",
+    "pt": "⚠️ **{heroi}** desconfia de **{objeto}** — pode estar armadilhado!"
+  },
   "narracao.esconderijo_achado": {
     "en": "🔎 **{heroi}** notices something hidden in **{objeto}**!",
     "pt": "🔎 **{heroi}** nota algo escondido em **{objeto}**!"
