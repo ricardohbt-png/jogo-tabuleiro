@@ -12,7 +12,7 @@ check("a aba de venda é achada pelo id, não por número", /activeShop==='merca
   && !/activeShop==='mercador'&&aba===\d/.test(game));
 check("cada item é filtrado por GS.abaMercadorDoItem", /abaMercadorDoItem\(item\)===idAba/.test(game));
 check("aba sem itens mostra o aviso (só no Mercador)", /!items\.length && GS\.activeShop==='mercador'[\s\S]{0,300}ui\.loja\.aba_vazia/.test(game));
-const abas = ['elmos', 'aneis', 'botas', 'talismas_amuletos', 'mochila_carga', 'outros_equipamentos', 'consumiveis',
+const abas = ['elmos', 'aneis', 'botas', 'talismas_amuletos', 'mochila_carga', 'grimorios', 'outros_equipamentos', 'consumiveis',
   'instrumentos', 'arremessaveis', 'venenos', 'pergaminhos', 'vender'];
 for (const a of abas) check(`rótulo PT/EN da aba ${a}`, new RegExp(String.raw`"ui\.loja\.aba\.${a}"\s*:\s*\{[^}]*"en"[^}]*"pt"`).test(lang));
 check('mensagem de aba vazia em PT e EN', /"ui\.loja\.aba_vazia"\s*:\s*\{[^}]*"en"[^}]*"pt"/.test(lang));

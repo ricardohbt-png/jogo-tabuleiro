@@ -3980,7 +3980,7 @@ const GS = (() => {
   // A ORDEM é índice de lógica (shopTabIdx): trocar a ordem aqui já reordena as abas na
   // tela e as comparações do render, que usam o id e não o número. "vender" é sempre a última.
   const ABAS_MERCADOR = ['elmos', 'aneis', 'botas', 'talismas_amuletos', 'mochila_carga',
-    'outros_equipamentos', 'consumiveis', 'instrumentos', 'arremessaveis', 'venenos',
+    'grimorios', 'outros_equipamentos', 'consumiveis', 'instrumentos', 'arremessaveis', 'venenos',
     'pergaminhos', 'vender'];
   // Em qual aba do Mercador um item é vendido. Toda a lista cai em alguma aba (o que não
   // tem regra própria vai para "outros_equipamentos" se se equipa, ou "consumiveis" se não).
@@ -4000,7 +4000,9 @@ const GS = (() => {
       if (/^(talisma_|amulet|relicario_)/.test(id)) return 'talismas_amuletos';
       return 'outros_equipamentos';
     }
-    if (slot && slot !== 'bag') return 'outros_equipamentos';   // grimórios, bola de cristal...
+    // Grimórios (efeito grimoire) e a Bola de Cristal ocupam a mão do escudo e ficam juntos.
+    if (item.effect === 'grimoire' || item.effect === 'crystal_ball_clairvoyance') return 'grimorios';
+    if (slot && slot !== 'bag') return 'outros_equipamentos';
     return 'consumiveis';
   }
 

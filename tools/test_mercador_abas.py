@@ -61,7 +61,7 @@ class AbasTests(unittest.TestCase):
 
     def test_ordem_das_abas(self):
         self.assertEqual(self.abas, ["elmos", "aneis", "botas", "talismas_amuletos", "mochila_carga",
-                                     "outros_equipamentos", "consumiveis", "instrumentos", "arremessaveis",
+                                     "grimorios", "outros_equipamentos", "consumiveis", "instrumentos", "arremessaveis",
                                      "venenos", "pergaminhos", "vender"])
         self.assertEqual(self.abas[-1], "vender")
 
@@ -93,8 +93,13 @@ class AbasTests(unittest.TestCase):
         for iid in ("talisma_despertar_forca", "talisma_ascensao_inteligencia", "amulet", "amulet_alcance_arcano",
                     "amuleto_jornada", "amuleto_jornada_infindavel", "relicario_jornada_eterna"):
             self.assertEqual(self.aba_de(iid), "talismas_amuletos", iid)
-        for iid in ("ultimo_suspiro", "bola_cristal_clarividencia", "grimorio_sono", "grimorio_bola_fogo"):
-            self.assertEqual(self.aba_de(iid), "outros_equipamentos", iid)
+        self.assertEqual(self.aba_de("ultimo_suspiro"), "outros_equipamentos")
+
+    def test_grimorios_e_bola_de_cristal(self):
+        grimorios = [i["id"] for i in S.SHOP_MERCHANT if i.get("effect") == "grimoire"]
+        self.assertEqual(len(grimorios), 10)
+        for iid in grimorios + ["bola_cristal_clarividencia"]:
+            self.assertEqual(self.aba_de(iid), "grimorios", iid)
 
     def test_mochilas_e_cintos_especificos(self):
         for iid in ("mochila_carga", "mochila_dimensional", "mochila_aljava_dimensional", "cinto_utilidades",
@@ -111,7 +116,8 @@ class AbasTests(unittest.TestCase):
 
     def test_cada_aba_nova_tem_itens_nas_cidades_grandes(self):
         lista = self.res["itens"]["alva_e_luz"]
-        for aba in ("elmos", "aneis", "botas", "talismas_amuletos", "mochila_carga", "outros_equipamentos", "consumiveis"):
+        for aba in ("elmos", "aneis", "botas", "talismas_amuletos", "mochila_carga", "grimorios",
+                    "outros_equipamentos", "consumiveis"):
             self.assertTrue(any(a == aba for _, a in lista), aba)
 
 
