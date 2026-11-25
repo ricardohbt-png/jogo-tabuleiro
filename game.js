@@ -31484,7 +31484,10 @@ function _menuStatusMarkup(p, opts = {}){
   const classAtkStat = ['bard','rogue','ranger'].includes(p.class_id) ? 'dex' : 'str_';
   const statKey = _weaponAttributeKey(p, weapon);
   const dadoDano = weapon?.die || '1';
-  const danoBase = _modAtributo(p[statKey]);
+  // Arco Bruto do Combatente (e variantes): a Força soma também ao DANO, nunca ao acerto.
+  const somaForcaNoDano = !!(weapon && (weapon.add_strength_to_damage || GS.armaBaseId(weapon.id) === 'arco_bruto_combatente'));
+  const modForcaExtra = somaForcaNoDano ? _modAtributo(p.str_) : 0;
+  const danoBase = _modAtributo(p[statKey]) + modForcaExtra;
   const baseAtk = Number(p.atk_bonus) || 0;
   // `atk_bonus` já guarda BAB + atributo e os efeitos permanentes do equipamento.
   // Separamos esses componentes aqui para que a ficha mostre exatamente como o
@@ -31515,7 +31518,7 @@ function _menuStatusMarkup(p, opts = {}){
   const bonusRes = sobrevivencia + (cancao.bonus_res || 0);
   const dano = `${dadoDano} ${_fmtBonus(danoBase)} → ${dadoDano} ${_fmtBonus(danoBase + bonusDano)}`;
   const detalheDano = t('ui.status.detalhe_dano', {
-    attr: nomeAtributoAtaque,
+    attr: somaForcaNoDano ? `${nomeAtributoAtaque} + ${t('ui.atributo.sigla.str_')}` : nomeAtributoAtaque,
     mod: _fmtBonus(danoBase),
     arma: _fmtBonus(bonusDanoArma + bonusDanoEquip),
     temp: _fmtBonus(bonusDano - bonusDanoArma - bonusDanoEquip)
