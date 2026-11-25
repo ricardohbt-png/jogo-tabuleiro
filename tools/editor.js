@@ -1663,6 +1663,21 @@
     for (const f of S.falas) {
       ctx.fillText("💬", f.pos[0] * CELL + 2, f.pos[1] * CELL + 1);
     }
+    // Selo 🔎 nos objetos com esconderijo (conteúdo que só aparece depois de notado):
+    // canto superior-esquerdo do objeto, num disco escuro para ler sobre qualquer arte.
+    for (const d of S.decorations) {
+      if (!d.loot || !d.escondido) continue;
+      const tiles = decorTiles(d);
+      if (!tiles.length) continue;
+      const minX = Math.min(...tiles.map(p => p[0])), minY = Math.min(...tiles.map(p => p[1]));
+      const bx = minX * CELL + 9, by = minY * CELL + 9;
+      ctx.save();
+      ctx.fillStyle = "rgba(20,14,8,.82)"; ctx.strokeStyle = "#ffd86a"; ctx.lineWidth = 1.25;
+      ctx.beginPath(); ctx.arc(bx, by, 8, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.font = "10px sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("🔎", bx, by + .5);
+      ctx.restore();
+    }
     ctx.textAlign = "start"; ctx.textBaseline = "middle";
     // Emojis de decorações com escala visual: desenhados à parte, ancorados na
     // base-centro do footprint e crescendo para cima.
