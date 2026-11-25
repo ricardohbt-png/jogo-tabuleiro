@@ -11911,6 +11911,10 @@ window.LANG_INTERFACE = {
   "ui.menuacoes.sem_habilidades": {"en":"No abilities to use right now.","pt":"Nenhuma habilidade para usar agora."},
   "ui.menuacoes.em_recarga": {"en":"Recharging: {n} round(s)","pt":"Em recarga: {n} rodada(s)"},
   "ui.menuacoes.indisponivel": {"en":"Unavailable right now (action, resource or condition).","pt":"Indisponível agora (ação, recurso ou condição)."},
-  "ui.menuacoes.vez_de": {"en":"Turn:","pt":"Vez de"}
+  "ui.menuacoes.vez_de": {"en":"Turn:","pt":"Vez de"},
+  "ui.status.card.titulo": {"en":"Conditions","pt":"Condições"},
+  "ui.status.card.medo": {"en":"Frightened","pt":"Amedrontado"},
+  "ui.status.card.lento": {"en":"Slowed","pt":"Lento"},
+  "ui.status.card.rodadas": {"en":"{n} round(s) left","pt":"{n} rodada(s) restantes"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

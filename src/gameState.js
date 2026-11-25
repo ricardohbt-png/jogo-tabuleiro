@@ -1654,6 +1654,22 @@ const GS = (() => {
     return Math.max(1, Math.round(dado + (Number(prev.dano_fixo) || 0) + furtivo));
   }
 
+  // Faixa de dano de um ACERTO comum (mínimo e máximo), antes de resistências.
+  // Mesma base de danoMedioPrevisao: dado × multiplicador + fixo + d4 do furtivo; piso de 1.
+  function faixaDanoPrevisao(prev) {
+    if (!prev) return {min: 0, max: 0};
+    const m = /^(\d+)d(\d+)$/.exec(String(prev.dano_dado || '').trim());
+    const dMin = m ? Number(m[1]) : (Number(prev.dano_dado) || 0);
+    const dMax = m ? Number(m[1]) * Number(m[2]) : (Number(prev.dano_dado) || 0);
+    const mult = Number(prev.golpe_mult) || 1;
+    const fixo = Number(prev.dano_fixo) || 0;
+    const f4 = Number(prev.furtivo_d4) || 0;
+    return {
+      min: Math.max(1, Math.floor(dMin * mult) + fixo + f4),
+      max: Math.max(1, Math.floor(dMax * mult) + fixo + f4 * 4),
+    };
+  }
+
   // ── Idioma ────────────────────────────────────────────────────────────────
   // O servidor traduz narração e erros no idioma de cada conexão; esta é a
   // única coisa que ele precisa saber. Guardado aqui para ser reenviado em toda
@@ -4774,6 +4790,7 @@ const GS = (() => {
     pedirIntencoes,
     intencoes,
     danoMedioPrevisao,
+    faixaDanoPrevisao,
     getWarriorFuriaAttacks,
     setWarriorFuriaAttacks,
     clearWarriorSelected,

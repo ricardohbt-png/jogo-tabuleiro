@@ -2390,3 +2390,11 @@ body.preview-mode #map-panel { width:100%; }
 .turn-mon-stats { display: flex; gap: 12px; margin-top: 4px; font-size: .72rem; }
 .turn-vez-rotulo { margin-top: 5px; font: 700 .62rem var(--font-title); letter-spacing: .08em; color: #e4d2ae; }
 @media (max-width: 820px) { .tam-tab { padding: 5px 8px; font-size: .66rem; } .tam-icon { width: 40px; height: 40px; } }
+/* Condições negativas no card da vez */
+.turn-status { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; }
+.turn-status-chip {
+  display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 10px;
+  border: 1px solid #d66a5a99; background: #3a1d1ccc; color: #ffd9cf; font-size: .7rem; cursor: default;
+}
+.turn-status-icon { font-size: .85rem; line-height: 1; }
+.turn-status-chip b { font: 700 .66rem var(--font-title); color: #ffe7ae; }
