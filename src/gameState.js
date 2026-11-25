@@ -2073,6 +2073,8 @@ const GS = (() => {
         // pede o estado completo em vez de renderizar um mapa vazio.
         if (!_completarDiferidos(msg, gameState)) { send({ type: 'pedir_estado_completo' }); break; }
         gameState = msg;
+        // O catálogo da Guilda também chega com o game_state (quem não passou pela cidade).
+        if (Array.isArray(msg.guild_catalog) && msg.guild_catalog.length) guildCatalogCache = msg.guild_catalog;
         _limparPrevisoes();
         _captarStory(msg);
         if (msg.active_scene) _emit('sceneStart', msg.active_scene);

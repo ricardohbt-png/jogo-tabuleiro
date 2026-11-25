@@ -49,7 +49,7 @@ console.log("[5] fiação: handler do servidor conhece o pedido");
 const srv = fs.readFileSync(path.join(raiz, "server.py"), "utf8");
 check("server.py trata pedir_estado_completo", srv.includes('t == "pedir_estado_completo"'));
 const lista = srv.match(/ESTADO_DIFERIVEL = \(([^)]*)\)/)[1].match(/"(\w+)"/g).map(s => s.replace(/"/g, ""));
-check("ESTADO_DIFERIVEL tem os 10 campos", lista.length === 10);
+check("ESTADO_DIFERIVEL tem os 11 campos (inclui o catálogo da Guilda)", lista.length === 11 && lista.includes("guild_catalog"));
 
 console.log(`\n${PASS} ok, ${FAIL} falhas`);
 process.exit(FAIL ? 1 : 0);
