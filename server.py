@@ -23047,6 +23047,14 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             p = self.players.get(actor["id"])
             if p and self._ativo(p):
                 await self._start_initiative_player_turn(p)
+                if not p.get("alive"):
+                    # Morreu nos efeitos do início da própria vez (lava, fogo, veneno...).
+                    # _start_initiative_player_turn sai antes de iniciar o relógio, então
+                    # sem passar a vez aqui a iniciativa ficava parada num herói morto.
+                    self._cancelar_timer_turno()
+                    await self.push_state()
+                    await self._advance_initiative()
+                    return
                 if p.get("fosso_turno_perdido"):
                     # A iniciativa do herói oculto é consumida automaticamente:
                     # não há ações para o jogador encerrar manualmente. Ele
@@ -23256,6 +23264,25 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 break
             self.initiative_index = (self.initiative_index + 1) % len(self.initiative_order); attempts += 1
         await self._activate_initiative_actor()
+
+    def _agendar_passagem_do_morto(self, pid):
+        """O herói morreu: se era a vez dele, a vez passa ao próximo. Roda numa tarefa
+        à parte, depois de a ação que o matou terminar de resolver (ataque, passo,
+        armadilha...), e só age se ele AINDA for o ator atual e continuar morto."""
+        if self.phase != "playing" or self.current_pid() != pid or self.last_stand_pid == pid:
+            return
+        asyncio.create_task(self._isolar(self._passar_vez_do_morto(pid), f"passar a vez do morto {pid}"))
+
+    async def _passar_vez_do_morto(self, pid):
+        await asyncio.sleep(0.25)
+        p = self.players.get(pid)
+        if (self.phase != "playing" or not p or p.get("alive")
+                or self.current_pid() != pid or self.last_stand_pid == pid):
+            return
+        if self.animados_phase_pid == pid:
+            self.animados_phase_pid = None
+        self._cancelar_timer_turno()
+        await self._advance_initiative()
 
     def _ativo(self, p):
         """Jogador ativo no jogo: vivo, conectado E dentro da masmorra.
@@ -60849,6 +60876,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             # Morreu o último herói que estava DENTRO da masmorra, mas alguém
             # segue vivo na cidade: a expedição é interrompida, não é derrota.
             await self._checar_masmorra_vazia()
+            # Morreu na própria vez: a vez não pode ficar parada num herói morto.
+            self._agendar_passagem_do_morto(pid)
 
     def _dono_do_painel(self, q):
         """Quem responde à escolha de magia deste herói: a conexão dele (ou a

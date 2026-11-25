@@ -19473,7 +19473,9 @@ function renderPlayers(state){
     const _csong = p.buffs_cancao && Object.keys(p.buffs_cancao).length;
     div.innerHTML=`
       <div class="pcard-top">
-        <span class="pcard-emoji">${p.emoji}</span>
+        ${_heroiMorto(p)
+          ? `<img class="pcard-caveira" src="${_imgURL(HERO_MORTO_CAVEIRA, 64)}" alt="" title="${_esc(t('ui.hud.heroi_morto'))}" onerror="this.replaceWith(document.createTextNode('💀'))">`
+          : `<span class="pcard-emoji">${p.emoji}</span>`}
         <span class="pcard-name" style="color:${p.color}">${p.name}</span>
         ${_csong ? `<span title="${t('ui.hud.inspirado_cancao')}" style="color:#4db8ff;font-size:11px;">🎵</span>` : ''}
         <span class="pcard-lvl">Lv${p.level}</span>
@@ -19563,6 +19565,14 @@ const HERO_PORTRAIT_PATHS = {
   bard:    'assets/portraits/henrique.jpeg',
   mage:    'assets/portraits/pedro.jpeg',
 };
+
+// Herói morto: a caveira substitui o retrato; ao reviver (alive volta a true) o original
+// reaparece sozinho, porque tudo é redesenhado a partir do estado a cada game_state.
+const HERO_MORTO_CAVEIRA = 'assets/portraits/heroi_morto_caveira.png';
+function _heroiMorto(p){ return !!p && p.alive === false; }
+function _retratoDoHeroi(p){
+  return _heroiMorto(p) ? HERO_MORTO_CAVEIRA : (HERO_PORTRAIT_PATHS[p?.class_id] || null);
+}
 
 // Estado de UI: aba ativa do painel principal do Pedro e animado selecionado.
 let _painelAbaPedro = 'atributos';
@@ -28626,9 +28636,13 @@ function renderMyPanel(state){
   const pFrame = document.getElementById('my-hero-portrait');
   const pImg   = document.getElementById('my-hero-portrait-img');
   if(pFrame && pImg){
-    const portraitSrc = HERO_PORTRAIT_PATHS[me.class_id]
-                     || (_CSD && _CSD[me.class_id]?.portrait)
-                     || null;
+    const morto = _heroiMorto(me);
+    const portraitSrc = morto
+      ? _imgURL(HERO_MORTO_CAVEIRA, 384)    // PNG grande: o servidor entrega reduzido
+      : (HERO_PORTRAIT_PATHS[me.class_id]
+         || (_CSD && _CSD[me.class_id]?.portrait)
+         || null);
+    pFrame.classList.toggle('morto', morto);
     if(portraitSrc){
       pImg.src = portraitSrc;
       pFrame.classList.add('visible');
