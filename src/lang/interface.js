@@ -11891,6 +11891,18 @@ window.LANG_INTERFACE = {
   "ui.inv.grupo_aljava": {
     "en": "Quiver: arrows and bolts",
     "pt": "Aljava: flechas e virotes"
-  }
+  },
+  "ui.veneno.titulo_confirmar": {"en":"☠️ CONFIRM POISON","pt":"☠️ CONFIRMAR ENVENENAMENTO"},
+  "ui.veneno.arrastar_ja_envenenada": {"en":"This is already poisoned.","pt":"Isto já está envenenado."},
+  "ui.veneno.arrastar_sem_arma": {"en":"No compatible bow or crossbow is equipped for this ammunition.","pt":"Nenhum arco ou besta compatível está equipado para esta munição."},
+  "ui.veneno.arrastar_arma_distancia": {"en":"Ranged weapons are poisoned through their ammunition: drop the vial on the arrows or bolts.","pt":"Armas de distância recebem veneno pela munição: solte o frasco sobre as flechas ou virotes."},
+  "ui.veneno.arrastar_aljava": {"en":"Ammunition inside a quiver cannot be poisoned. Move it to the bag or the shield hand first.","pt":"A munição dentro da aljava não pode ser envenenada. Mova-a para a bolsa ou a mão do escudo antes."},
+  "ui.loja.aba.elmos": {"en":"🪖 Helmets","pt":"🪖 Elmos"},
+  "ui.loja.aba.aneis": {"en":"💍 Rings","pt":"💍 Anéis"},
+  "ui.loja.aba.botas": {"en":"🥾 Boots","pt":"🥾 Botas"},
+  "ui.loja.aba.talismas_amuletos": {"en":"🧿 Talismans & Amulets","pt":"🧿 Talismãs e amuletos"},
+  "ui.loja.aba.mochila_carga": {"en":"🎒 Packs & Cargo","pt":"🎒 Mochila e carga"},
+  "ui.loja.aba.outros_equipamentos": {"en":"⚔️ Other Equipment","pt":"⚔️ Outros equipamentos"},
+  "ui.loja.aba_vazia": {"en":"Nothing in this category is for sale here.","pt":"Nada desta categoria está à venda aqui."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
