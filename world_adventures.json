@@ -451,7 +451,7 @@
       "dados": ""
     },
     "oculto_ate_liberar": true,
-    "ocultar_apos_concluir": false,
+    "ocultar_apos_concluir": true,
     "revisitavel": false,
     "so_na_cidade": false,
     "outro_rota": "",

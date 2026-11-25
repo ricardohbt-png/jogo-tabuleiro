@@ -195,6 +195,7 @@ async def secao_corrente():
     dest = ART["destinos"]
     for did, d in dest.items():
         check(f"{did}: oculto até liberar, não revisitável", d["oculto_ate_liberar"] and not d["revisitavel"])
+        check(f"{did}: some do mapa ao concluir só no Vau", bool(d.get("ocultar_apos_concluir")) == (did == "sombras_vau"))
         check(f"{did}: história já no formato limpo do servidor",
               all(S._clean_story_field(e["intro"]) == e["intro"] and S._clean_story_field(e["outro"]) == e["outro"]
                   for e in d["dungeons"]) and S._clean_story_field(d["outro_rota"]) == d["outro_rota"])
@@ -211,6 +212,11 @@ async def secao_corrente():
         check("as Minas continuam ocultas antes do Vau", not r._aventura_visivel(S.WORLD_ADVENTURES["sombras_minas"]))
         r.world_adventure_progress["sombras_vau"] = 1
         check("Vau concluído libera as Minas", r._aventura_visivel(S.WORLD_ADVENTURES["sombras_minas"]))
+        check("Vau concluído some do mapa (e as Minas seguem liberadas)",
+              not r._aventura_visivel(S.WORLD_ADVENTURES["sombras_vau"]))
+        r.world_adventure_progress["sombras_vau"] = 0
+        check("Vau ainda não concluído continua no mapa", r._aventura_visivel(S.WORLD_ADVENTURES["sombras_vau"]))
+        r.world_adventure_progress["sombras_vau"] = 1
         check("o Covil ainda não", not r._aventura_visivel(S.WORLD_ADVENTURES["sombras_covil"]))
         r.world_adventure_progress["sombras_minas"] = 1
         check("Minas concluídas liberam o Covil", r._aventura_visivel(S.WORLD_ADVENTURES["sombras_covil"]))
