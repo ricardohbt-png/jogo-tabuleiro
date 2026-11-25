@@ -3728,6 +3728,10 @@ def snapshot_character(player):
     """Extrai a ficha durável do jogador (deep copy). Ver _DURABLE_FIELDS."""
     return {k: deepcopy(player[k]) for k in _DURABLE_FIELDS if k in player}
 
+# Marcas de recarga/duracao que os itens guardam (rodada absoluta da sala).
+_SUFIXOS_RECARGA_ITEM = ("_ready_round", "_pronta_em", "_pronto_em", "_active_until")
+
+
 def _limpar_recargas_de_itens(player):
     """Zera as recargas guardadas nos itens (`*_ready_round`, `*_pronta_em`).
 
@@ -3738,7 +3742,7 @@ def _limpar_recargas_de_itens(player):
     def varre(x):
         if isinstance(x, dict):
             for k in [k for k in x
-                      if isinstance(k, str) and (k.endswith("_ready_round") or k.endswith("_pronta_em"))]:
+                      if isinstance(k, str) and k.endswith(_SUFIXOS_RECARGA_ITEM)]:
                 x.pop(k, None)
             for v in x.values():
                 varre(v)

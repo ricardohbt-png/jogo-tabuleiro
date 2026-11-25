@@ -21,6 +21,9 @@ def heroi_com_marcas():
     arma = dict(server.WEAPONS["mangual_sol_cativo"])
     arma.update(solar_flare_ready_round=40, thunder_pulse_ready_round=38,
                 lightning_line_pronta_em=35, bronze_serpent_ready_round=33)
+    p["gear"]["armor"] = {"id": "manto_das_sombras", "manto_escuridao_pronto_em": 30}
+    p["gear"]["off_hand"] = {"id": "escudo_g_retalhacao_trovejante",
+                             "thunder_reaction_ready_round": 44, "thunder_reaction_active_until": 42}
     p["gear"]["weapon"] = arma
     p["weapon"] = dict(arma)
     p["bag"] = [dict(server.WEAPONS["choque_do_trovao"], thunder_pulse_ready_round=50)]
@@ -32,7 +35,7 @@ def marcas(p):
     def varre(x):
         if isinstance(x, dict):
             for k, v in x.items():
-                if isinstance(k, str) and (k.endswith("_ready_round") or k.endswith("_pronta_em")) and v:
+                if isinstance(k, str) and (k.endswith(server._SUFIXOS_RECARGA_ITEM)) and v:
                     achadas.append(k)
                 varre(v)
         elif isinstance(x, list):
@@ -50,6 +53,9 @@ def main():
     restore_character(novo, snapshot_character(p))
     check("ao restaurar a ficha, nenhuma recarga de item sobrevive (rodada reinicia em 1)",
           marcas(novo) == [])
+    check("Manto das Sombras e escudo Retalhação (outros sufixos) também zeram",
+          "manto_escuridao_pronto_em" not in novo["gear"]["armor"]
+          and "thunder_reaction_active_until" not in novo["gear"]["off_hand"])
     check("o item continua equipado e com suas regras",
           novo["gear"]["weapon"].get("solar_flare") is True
           and novo["gear"]["weapon"].get("solar_flare_cooldown") == 10)
