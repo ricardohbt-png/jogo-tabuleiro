@@ -3148,7 +3148,7 @@ function openShop(pointId, type, sceneOverride){
   const shopTabs = (shopId==='ferreiro'
     ? ['armas','arcos_bestas','armaduras','escudos','municao','reparar','vender']
     : shopId==='mercador'
-    ? ['equipamentos','consumiveis','instrumentos','arremessaveis','venenos','pergaminhos','vender']
+    ? GS.ABAS_MERCADOR
     : shopId==='templo'
     ? ['comprar','servicos']
     : shopId==='taverna'
@@ -3431,7 +3431,7 @@ function _renderShopItems(){
   // Todas as abas de venda exibem o inventário completo: equipamento e bolsa.
   // A venda continua autoritativa no servidor, independentemente da loja.
   if(GS.activeShop==='ferreiro'&&aba===6){ _renderSellItems('all'); return; }
-  if(GS.activeShop==='mercador'&&aba===6){ _renderSellItems('all'); return; }
+  if(GS.activeShop==='mercador'&&GS.ABAS_MERCADOR[aba]==='vender'){ _renderSellItems('all'); return; }
 
   const myP=GS.cityState.players.find(p=>p.id===GS.myPid);
   const gold=_ouroDisponivelCidade(myP);
@@ -3456,23 +3456,9 @@ function _renderShopItems(){
       items=shops.ferreiro.ammo; shopKey='ferreiro_ammo';
     }
   } else if(GS.activeShop==='mercador') {
-    const mercadorItems=shops.mercador||[];
-    if(aba===2) {
-      items=mercadorItems.filter(item=>item.tipo_item==='instrumento');
-    } else if(aba===3) {
-      items=mercadorItems.filter(item=>item.effect==='throwable');
-    } else if(aba===4) {
-      items=mercadorItems.filter(item=>item.effect==='coat_poison');
-    } else if(aba===5) {
-      items=mercadorItems.filter(item=>item.effect==='scroll');
-    } else {
-      // Itens gerais, sem duplicar as categorias próprias: o que se equipa (efeito
-      // enquanto equipado) vai em Equipamentos; o resto da bolsa, em Consumíveis.
-      const geral=mercadorItems.filter(item=>item.tipo_item!=='instrumento'
-        && item.effect!=='throwable' && item.effect!=='coat_poison' && item.effect!=='scroll');
-      const equipavel=item=>!!item.item_slot && item.item_slot!=='bag';
-      items=geral.filter(item=>aba===0 ? equipavel(item) : !equipavel(item));
-    }
+    // Cada item pertence a uma aba só (GS.abaMercadorDoItem): nada aparece em duas nem some.
+    const idAba=GS.ABAS_MERCADOR[aba];
+    items=(shops.mercador||[]).filter(item=>GS.abaMercadorDoItem(item)===idAba);
   } else if(GS.activeShop==='templo') {
     const temploItems=shops.templo||[];
     const servicos=new Set(['full_heal','bless','cleanse']);
@@ -3488,6 +3474,11 @@ function _renderShopItems(){
   const list=$('shop-items-list'); if(!list) return;
   // Cura Completa do Templo é serviço de GRUPO: o preço vem dos PV que faltam (plano puro do GS).
   const planoCura=GS.planoCuraGrupoTemplo(GS.cityState, GS.myPid);
+  if(!items.length && GS.activeShop==='mercador'){
+    // Cada cidade vende um conjunto: uma aba pode ficar sem itens ali.
+    list.innerHTML=`<div class="shop-vazio" style="padding:18px 6px;text-align:center;color:var(--text2);font-size:.8rem;">${t('ui.loja.aba_vazia')}</div>`;
+    return;
+  }
   list.innerHTML=items.map(item=>{
     const precoCompra=item.refeicao_grupo
       ? Number(item.price||0)*heroisGrupo.length
