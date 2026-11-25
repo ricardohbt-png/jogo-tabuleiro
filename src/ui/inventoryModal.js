@@ -706,6 +706,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
 
   function _onQuiverSlotClick(gearSlot, pocketIndex){
     if(_readOnly) return;
+    if(_frascoVenenoArrastado(_currentPlayer())){
+      if(typeof toast === 'function') toast(t('ui.veneno.arrastar_aljava'), 'var(--orange)');
+      _selected = null; refresh(); return;
+    }
     if(_selected?.kind === 'bag'){
       GS.moveQuiverAmmo('to_quiver', gearSlot, pocketIndex, _selected.index, _currentPlayer()?.gear?.[gearSlot]?.quiver_token);
       _selected = null; _gamepadAction = null; return;
@@ -1181,6 +1185,13 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
   function _attemptMoveToGear(slotKey){
     const sel = _selected;
     _gamepadAction = null;
+    // Frasco de veneno solto sobre a arma ou a munição equipada: confirma o envenenamento.
+    const frascoNoSlot = _frascoVenenoArrastado(_currentPlayer());
+    if(frascoNoSlot && (slotKey === 'weapon' || slotKey === 'off_hand')){
+      const jogador = _currentPlayer();
+      const alvoSlot = _alvoVenenoDoSlot(jogador, slotKey);
+      if(alvoSlot){ _soltarVenenoSobre(jogador, frascoNoSlot, alvoSlot); return; }
+    }
     if(!sel || sel.kind === 'gear' || sel.kind === 'belt' || sel.kind === 'quiver'){ refresh(); return; }   // gear→gear: sem suporte, ignora
     // Soltar um item do baú no paperdoll é a mesma retirada de sempre: quem escolhe
     // o encaixe é o servidor, que já manda o item para o slot livre compatível.
@@ -1213,6 +1224,44 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     equipar();
   }
 
+  // Frasco de veneno que está sendo arrastado (da bolsa ou de um bolso do cinto)?
+  // Devolve {itemId, sourceInfo} ou null. Só vale na própria ficha e fora do baú.
+  function _frascoVenenoArrastado(player){
+    const sel = _selected;
+    if(_readOnly || _storageCtx || !sel || !player) return null;
+    if(sel.kind === 'bag'){
+      const it = (player.bag || [])[sel.index];
+      return it && it.effect === 'coat_poison' ? {itemId: it.veneno_id || it.id, sourceInfo: undefined} : null;
+    }
+    if(sel.kind === 'belt'){
+      const entry = _beltEntry(player, sel.gearSlot, sel.pocketIndex);
+      const it = entry && entry.item;
+      return it && it.effect === 'coat_poison'
+        ? {itemId: it.veneno_id || it.id,
+           sourceInfo: {source:'utility_belt', gearSlot: sel.gearSlot, pocketIndex: sel.pocketIndex,
+                        beltToken: player.gear[sel.gearSlot].utility_belt_token}}
+        : null;
+    }
+    return null;
+  }
+
+  // Alvo de veneno de um slot do paperdoll ('weapon' | 'off_hand'); null se não há o que envenenar ali.
+  function _alvoVenenoDoSlot(player, slotKey){
+    const item = (player.gear || {})[slotKey];
+    if(!item) return null;
+    if(item.effect === 'ammo' || item.ammo_type) return slotKey === 'off_hand' ? {tipo:'municao', source:'off_hand', index:0} : null;
+    if(item.die) return {tipo:'arma', slot: slotKey};
+    return null;
+  }
+
+  // Abre a confirmação rápida do painel "Envenenar" com o alvo já escolhido.
+  function _soltarVenenoSobre(player, frasco, alvoFixo){
+    _selected = null; _gamepadAction = null;
+    if(typeof window.abrirPainelEnvenenarArrastado === 'function')
+      window.abrirPainelEnvenenarArrastado(frasco.itemId, frasco.sourceInfo, alvoFixo);
+    refresh();
+  }
+
   function _attemptMoveToBag(toIndex){
     const sel = _selected;
     if(!sel){ refresh(); return; }
@@ -1227,6 +1276,12 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     }
     const player = _currentPlayer();
     const alvo = player && player.bag ? player.bag[toIndex] : null;
+    // Frasco de veneno solto sobre uma pilha de flechas/virotes da bolsa: confirma o envenenamento.
+    const frascoNaBolsa = _frascoVenenoArrastado(player);
+    if(frascoNaBolsa && alvo && alvo.effect === 'ammo' && !(sel.kind === 'bag' && sel.index === toIndex)){
+      _soltarVenenoSobre(player, frascoNaBolsa, {tipo:'municao', source:'bag', index:toIndex});
+      return;
+    }
     if(sel.kind === 'bag'){
       if(sel.index === toIndex){ refresh(); return; }
       // Pilha de munição solta sobre outra igual: junta (até o limite da pilha).
@@ -1261,6 +1316,11 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     if(_selected.kind === 'stash'){
       const doBau = _storageStash().items[_selected.index];
       slot.classList.toggle('drop-invalid', !doBau || !GS.canPlaceItem(doBau, slotKey, player.gear || {}));
+      return;
+    }
+    const frascoSobre = _frascoVenenoArrastado(player);
+    if(frascoSobre && (slotKey === 'weapon' || slotKey === 'off_hand')){
+      slot.classList.toggle('drop-invalid', !((player.gear || {})[slotKey] || {}).die && !_alvoVenenoDoSlot(player, slotKey));
       return;
     }
     if(_selected.kind !== 'bag'){ slot.classList.add('drop-invalid'); return; }
