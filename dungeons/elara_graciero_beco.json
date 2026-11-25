@@ -1300,8 +1300,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "alabarda_vendaval"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_4",
@@ -1361,8 +1370,20 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "caldo_revigorante"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_9",
@@ -1711,12 +1732,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "pocao_resistencia_gelo"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_34",
@@ -1801,12 +1831,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "veste_egide_arcana"
+          },
+          {
+            "id": "pao"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_39",

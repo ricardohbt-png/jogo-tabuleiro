@@ -2213,13 +2213,22 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "pao"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         1.7,
         2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_12",

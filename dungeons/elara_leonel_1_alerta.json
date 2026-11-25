@@ -1849,8 +1849,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "pernil"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "casa_barril_6",
@@ -2901,7 +2910,23 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "leite"
+          },
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "cerveja_ana"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
       "key_objective": false,
       "size": [
         2,
@@ -2910,7 +2935,9 @@
       "vscale": [
         1.6,
         2.2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_69",

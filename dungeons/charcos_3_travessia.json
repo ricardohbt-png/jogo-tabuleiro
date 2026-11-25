@@ -2087,7 +2087,17 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "fermentado_raizes"
+          },
+          {
+            "id": "garrafa_vinho"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "size": [
@@ -2097,7 +2107,9 @@
       "vscale": [
         1.4,
         1
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_2",

@@ -22922,7 +22922,20 @@ window.EDITOR_DUNGEONS = [
             -1,
             0
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              },
+              {
+                "id": "fermentado_raizes"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
           "key_objective": false,
           "disable_trap_ids": [
             "trap_4"
@@ -22938,7 +22951,9 @@ window.EDITOR_DUNGEONS = [
           "voffset": [
             -0.3,
             0
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_3",
@@ -22976,7 +22991,20 @@ window.EDITOR_DUNGEONS = [
             0,
             -1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 20,
+            "items": [
+              {
+                "id": "mira_do_falcao"
+              },
+              {
+                "id": "leite"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             1,
@@ -22989,7 +23017,9 @@ window.EDITOR_DUNGEONS = [
           "voffset": [
             0,
             -0.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_5",
@@ -28481,13 +28511,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             1.5,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_5",
@@ -28557,13 +28596,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "pao"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             1.5,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_9",
@@ -28633,13 +28681,25 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             1.5,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_13",
@@ -28690,13 +28750,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "suco_fruta"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             1.5,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_16",
@@ -29090,12 +29159,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.9,
             2.1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_37",
@@ -29432,12 +29510,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "rum"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.9,
             2.1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_56",
@@ -29504,12 +29591,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              },
+              {
+                "id": "hidromel"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.9,
             2.1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_60",
@@ -34676,13 +34775,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "pao"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             1.7,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_12",
@@ -39947,7 +40055,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "size": [
@@ -39957,7 +40075,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.4,
             1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_2",
@@ -52051,7 +52171,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
@@ -52060,7 +52187,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.6,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_247",
@@ -59238,12 +59367,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_169",
@@ -60093,12 +60231,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "racao_completa"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_216",
@@ -60111,12 +60258,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "banquete_viagem"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_217",
@@ -60381,12 +60537,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_232",
@@ -60525,12 +60693,27 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "leite"
+              },
+              {
+                "id": "caneca_cerveja"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_240",
@@ -60651,12 +60834,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "fruto_de_lumen"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_247",
@@ -60687,12 +60882,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "cerveja_ana"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.4
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_249",
@@ -68544,12 +68748,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_tigre"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_62",
@@ -68868,8 +69081,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              },
+              {
+                "id": "racao_viagem"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_83",
@@ -68956,12 +69184,30 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "leite"
+              },
+              {
+                "id": "fermentado_raizes"
+              },
+              {
+                "id": "cerveja_ana"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_90",
@@ -69946,12 +70192,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "chapeu_aventureiro"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_145",
@@ -72112,12 +72367,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "manto_linho_engomado"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.6,
             2.6
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_271",
@@ -72280,8 +72544,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "alforge_explorador_aprimorado"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_281",
@@ -72628,12 +72901,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "hidromel"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_303",
@@ -73024,12 +73309,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             3
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_325",
@@ -78996,12 +79293,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "racao_viagem"
+              },
+              {
+                "id": "hidromel"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             2.2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_123",
@@ -79374,8 +79683,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_180",
@@ -79946,8 +80267,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "garrafa_vinho"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_243",
@@ -80184,12 +80520,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_negro_corvo"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2.5
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_269",
@@ -81752,8 +82100,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "aljava_grande"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_438",
@@ -83176,9 +83533,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "virotes_magicos_mais_2"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "arvore_seca.png"
+          "image": "arvore_seca.png",
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_561",
@@ -85296,12 +85662,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "amulet"
+              },
+              {
+                "id": "caldo_revigorante"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.9,
             2.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_680",
@@ -86034,12 +86412,27 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "anel_protecao"
+              },
+              {
+                "id": "leite"
+              },
+              {
+                "id": "rum"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.9,
             2.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_721",
@@ -94934,8 +95327,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "anel_bastiao_basalto"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "cacada_barril_6",
@@ -94976,13 +95378,28 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "caneca_cerveja"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "carroca.png",
           "vscale": [
             1.3,
             1.3
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "cacada_barril_9",
@@ -95172,9 +95589,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "caixa_ferramentas.png"
+          "image": "caixa_ferramentas.png",
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_12",
@@ -95217,9 +95646,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "mochila_aljava_dimensional"
+              },
+              {
+                "id": "racao_completa"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "saco_grao.png"
+          "image": "saco_grao.png",
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_15",
@@ -99249,8 +99693,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "anel_danca_vento"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_9",
@@ -99263,8 +99716,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "rum"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_10",
@@ -99277,8 +99745,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "anel_olho_esfinge"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_11",
@@ -101142,8 +101619,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "alabarda_vendaval"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_4",
@@ -101203,8 +101689,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_9",
@@ -101553,12 +102051,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "pocao_resistencia_gelo"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_34",
@@ -101643,12 +102150,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "veste_egide_arcana"
+              },
+              {
+                "id": "pao"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.8,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_39",
@@ -106522,8 +107041,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "ring_str"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "cais_barril_10",
@@ -106536,8 +107064,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "chapeu_bruxo"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "cais_barril_11",
@@ -106857,9 +107394,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "racao_viagem"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "barril_cerveja.png"
+          "image": "barril_cerveja.png",
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_19",
@@ -107026,8 +107578,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "essencia_vento_favoravel"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_31",
@@ -107456,13 +108017,28 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "banquete_viagem"
+              },
+              {
+                "id": "leite"
+              },
+              {
+                "id": "cerveja_ana"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "saco_grao.png",
           "vscale": [
             0.7,
             0.7
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_59",
@@ -107505,9 +108081,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "solucao_mecanismo"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "caixa_ferramentas.png"
+          "image": "caixa_ferramentas.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_62",
@@ -107580,9 +108165,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "pocao_resistencia_acido"
+              },
+              {
+                "id": "fruto_de_lumen"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "caixa_ferramentas.png"
+          "image": "caixa_ferramentas.png",
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_67",
@@ -113838,8 +114438,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "pracam_carroca_4",
@@ -113852,9 +114461,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "pracam_monte_ossos_5",
@@ -115565,9 +116183,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "barril_cerveja.png"
+          "image": "barril_cerveja.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_172",
@@ -117955,8 +118585,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "pracam_carroca_4",
@@ -117969,9 +118608,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_1",
@@ -119667,9 +120315,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "barril_cerveja.png"
+          "image": "barril_cerveja.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_172",
@@ -121875,8 +122535,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "pracam_carroca_4",
@@ -121889,9 +122558,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_1",
@@ -123587,9 +124265,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "barril_cerveja.png"
+          "image": "barril_cerveja.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_172",
@@ -126820,8 +127510,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "pernil"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "casa_barril_6",
@@ -127872,7 +128571,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "leite"
+              },
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "cerveja_ana"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
@@ -127881,7 +128596,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.6,
             2.2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_69",
@@ -131512,8 +132229,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "pernil"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "casa_barril_6",
@@ -132564,7 +133290,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "leite"
+              },
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "cerveja_ana"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
@@ -132573,7 +133315,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.6,
             2.2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "decor_69",
@@ -136458,7 +137202,17 @@ window.EDITOR_DUNGEONS = [
             0,
             -1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "racao_completa"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
           "size": [
             2,
@@ -136467,7 +137221,9 @@ window.EDITOR_DUNGEONS = [
           "vscale": [
             1.1,
             1.1
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "mansao_estante_armas_16",
@@ -137787,9 +138543,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "banquete_viagem"
+              },
+              {
+                "id": "fruto_de_lumen"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "barril_cerveja.png"
+          "image": "barril_cerveja.png",
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_75",
@@ -143771,9 +144542,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "racao_viagem"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "arvore_seca.png"
+          "image": "arvore_seca.png",
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_29",
@@ -143786,13 +144566,28 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "cerveja_ana"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             0.6,
             0.7
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_77",
@@ -151220,13 +152015,28 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "racao_completa"
+              },
+              {
+                "id": "pao"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "arvore_seca.png",
           "vscale": [
             2,
             2
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_12",
@@ -154147,9 +154957,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "caldo_revigorante"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "carroca.png"
+          "image": "carroca.png",
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "carav_barril_2",
@@ -154247,8 +155066,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "pernil"
+              },
+              {
+                "id": "fruto_de_lumen"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "carav_carroca_9",
@@ -158362,7 +159196,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "leite"
+              },
+              {
+                "id": "garrafa_vinho"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 15
         },
         {
           "id": "casa_barril_3",
@@ -158427,7 +159276,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "carne_bovina"
+              },
+              {
+                "id": "racao_completa"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "casa_cama_8",
@@ -158501,7 +159365,22 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "pocao_resistencia_fogo"
+              },
+              {
+                "id": "fermentado_raizes"
+              },
+              {
+                "id": "cerveja_ana"
+              }
+            ]
+          },
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "casa_barril_13",
@@ -161804,8 +162683,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "gole_do_gigante"
+              },
+              {
+                "id": "hidromel"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_27",
@@ -161958,8 +162849,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "elixir_cavalo_ferro"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_38",
@@ -162000,8 +162900,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "banquete_viagem"
+              },
+              {
+                "id": "carne_bovina"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_41",
@@ -162196,8 +163111,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "sabedoria_liquida"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_55",
@@ -162557,9 +163481,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "lagrima_ultima_luz"
+              },
+              {
+                "id": "racao_viagem"
+              },
+              {
+                "id": "rum"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "saco_grao.png"
+          "image": "saco_grao.png",
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_80",
@@ -162602,9 +163541,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "ring_vita"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "saco_grao.png"
+          "image": "saco_grao.png",
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_83",
@@ -169740,12 +170688,27 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "bote_da_serpente"
+              },
+              {
+                "id": "banquete_viagem"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             2,
             3
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_91",
@@ -169758,12 +170721,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "kit_reparo_campo"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             0.6,
             0.6
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_92",
@@ -203950,8 +204925,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "banquete_viagem"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "vau_arvore_3",
@@ -204669,12 +205653,30 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "pao"
+              },
+              {
+                "id": "carne_bovina"
+              },
+              {
+                "id": "absinto"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_38",
@@ -205254,12 +206256,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "suco_fruta"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_70",
@@ -205344,12 +206355,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "fermentado_raizes"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_75",
@@ -205758,12 +206778,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "leite"
+              },
+              {
+                "id": "rum"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_98",
@@ -205956,12 +206988,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 20,
+            "items": [
+              {
+                "id": "pernil"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_109",
@@ -206046,12 +207090,24 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 5,
+            "items": [
+              {
+                "id": "racao_viagem"
+              },
+              {
+                "id": "hidromel"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1,
             1.8
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_114",
@@ -208909,8 +209965,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "rum"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 13
         },
         {
           "id": "decor_11",
@@ -208951,8 +210019,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 25,
+            "items": [
+              {
+                "id": "racao_viagem"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_14",
@@ -213185,4 +214262,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO por tools/export_catalog.py — não editar à mão.
+// GERADO ao salvar no editor (e por tools/export_catalog.py).

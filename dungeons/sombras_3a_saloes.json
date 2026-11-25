@@ -886,8 +886,20 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "rum"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_11",
@@ -928,8 +940,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "racao_viagem"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_14",

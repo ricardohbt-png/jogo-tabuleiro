@@ -705,8 +705,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 15,
+        "items": [
+          {
+            "id": "banquete_viagem"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "vau_arvore_3",
@@ -1424,12 +1433,30 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "pao"
+          },
+          {
+            "id": "carne_bovina"
+          },
+          {
+            "id": "absinto"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1,
         1.8
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_38",
@@ -2009,12 +2036,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "suco_fruta"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1,
         1.8
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 11
     },
     {
       "id": "decor_70",
@@ -2099,12 +2135,21 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "fermentado_raizes"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1,
         1.8
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_75",
@@ -2513,12 +2558,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "leite"
+          },
+          {
+            "id": "rum"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1,
         1.8
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_98",
@@ -2711,12 +2768,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 20,
+        "items": [
+          {
+            "id": "pernil"
+          },
+          {
+            "id": "garrafa_vinho"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1,
         1.8
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_109",
@@ -2801,12 +2870,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "racao_viagem"
+          },
+          {
+            "id": "hidromel"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1,
         1.8
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_114",

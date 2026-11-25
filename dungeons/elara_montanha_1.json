@@ -2815,9 +2815,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 25,
+        "items": [
+          {
+            "id": "racao_viagem"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "arvore_seca.png"
+      "image": "arvore_seca.png",
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_29",
@@ -2830,13 +2839,28 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "pao"
+          },
+          {
+            "id": "cerveja_ana"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "arvore_seca.png",
       "vscale": [
         0.6,
         0.7
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_77",

@@ -1468,9 +1468,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "caldo_revigorante"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "carroca.png"
+      "image": "carroca.png",
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "carav_barril_2",
@@ -1568,8 +1577,23 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "pernil"
+          },
+          {
+            "id": "fruto_de_lumen"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "carav_carroca_9",

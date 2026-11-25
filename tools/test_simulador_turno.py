@@ -61,6 +61,16 @@ async def heroi(room, cls, x, y, config=None):
     await room.handle_mestre_adicionar_heroi_teste(MASTER, cls, x, y, config)
     return room.players[f"test_hero_{cls}"]
 
+def sala_com_dual_arremessador(monsters):
+    """O Goblin Dual sorteia a mão secundária (adaga 90%, chicote 10%) e só a adaga arremessa:
+    refaz a sala até ele nascer com ela, para o teste não depender da sorte."""
+    for _ in range(60):
+        r = sala(monsters)
+        if next(m for m in r.monsters.values() if m["type"] == "goblin_dual").get("pode_arremessar"):
+            return r
+    raise AssertionError("nenhum Goblin Dual nasceu com adaga em 60 tentativas")
+
+
 def monstro(room, tipo=None):
     return next(m for m in room.monsters.values() if tipo is None or m["type"] == tipo)
 
@@ -312,7 +322,7 @@ async def main():
     check("com dano desde o turno anterior, enfurece", m.get("furia_cega") is True)
 
     print("\n[12] Goblin Combatente: Arremesso manual como ação bônus")
-    r = sala([{"type": "goblin_dual", "pos": [6, 6]}])   # o Combatente não arremessa mais; o Dual sim
+    r = sala_com_dual_arremessador([{"type": "goblin_dual", "pos": [6, 6]}])   # o Combatente não arremessa mais; o Dual sim
     h = await heroi(r, "warrior", 8, 6); h["hp"] = h["max_hp"] = 500; h["ac"] = 0
     await iniciar(r); m = monstro(r)
     await ir_para(r, "monster", m["id"]); r._errs.clear()
@@ -435,7 +445,7 @@ async def main():
     check("a CA do goblin pressionado caiu 2 no ataque de monstro", cas and cas[-1] == ca_base - 2)
 
     print("\n[19d] Arremesso do Goblin no Manual aceita criatura a até 3 casas")
-    r = sala([{"type": "goblin_dual", "pos": [6, 6]}, {"type": "troll", "pos": [8, 6]}])
+    r = sala_com_dual_arremessador([{"type": "goblin_dual", "pos": [6, 6]}, {"type": "troll", "pos": [8, 6]}])
     h = await heroi(r, "warrior", 11, 11); h["hp"] = h["max_hp"] = 500
     await iniciar(r); gob = monstro(r, "goblin_dual"); tr = monstro(r, "troll")
     tr["hp"] = tr["max_hp"] = 500

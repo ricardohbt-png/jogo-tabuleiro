@@ -2525,12 +2525,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "racao_viagem"
+          },
+          {
+            "id": "hidromel"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.3,
         2.2
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_123",
@@ -2903,8 +2915,20 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "fermentado_raizes"
+          },
+          {
+            "id": "caneca_cerveja"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_180",
@@ -3475,8 +3499,23 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "garrafa_vinho"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_243",
@@ -3713,12 +3752,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "anel_negro_corvo"
+          },
+          {
+            "id": "absinto"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.8,
         2.5
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_269",
@@ -5281,8 +5332,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "aljava_grande"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_438",
@@ -6705,9 +6765,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "virotes_magicos_mais_2"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "arvore_seca.png"
+      "image": "arvore_seca.png",
+      "escondido": true,
+      "cd_busca": 12
     },
     {
       "id": "decor_561",
@@ -8825,12 +8894,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "amulet"
+          },
+          {
+            "id": "caldo_revigorante"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.9,
         2.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_680",
@@ -9563,12 +9644,27 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 10,
+        "items": [
+          {
+            "id": "anel_protecao"
+          },
+          {
+            "id": "leite"
+          },
+          {
+            "id": "rum"
+          }
+        ]
+      },
       "key_objective": false,
       "vscale": [
         1.9,
         2.9
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_721",

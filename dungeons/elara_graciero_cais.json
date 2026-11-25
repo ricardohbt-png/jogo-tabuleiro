@@ -2259,8 +2259,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "ring_str"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "cais_barril_10",
@@ -2273,8 +2282,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "chapeu_bruxo"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "cais_barril_11",
@@ -2594,9 +2612,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "pao"
+          },
+          {
+            "id": "racao_viagem"
+          },
+          {
+            "id": "caneca_cerveja"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "barril_cerveja.png"
+      "image": "barril_cerveja.png",
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_19",
@@ -2763,8 +2796,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "essencia_vento_favoravel"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_31",
@@ -3193,13 +3235,28 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "banquete_viagem"
+          },
+          {
+            "id": "leite"
+          },
+          {
+            "id": "cerveja_ana"
+          }
+        ]
+      },
       "key_objective": false,
       "image": "saco_grao.png",
       "vscale": [
         0.7,
         0.7
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_59",
@@ -3242,9 +3299,18 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 15,
+        "items": [
+          {
+            "id": "solucao_mecanismo"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "caixa_ferramentas.png"
+      "image": "caixa_ferramentas.png",
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_62",
@@ -3317,9 +3383,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "pocao_resistencia_acido"
+          },
+          {
+            "id": "fruto_de_lumen"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "caixa_ferramentas.png"
+      "image": "caixa_ferramentas.png",
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_67",

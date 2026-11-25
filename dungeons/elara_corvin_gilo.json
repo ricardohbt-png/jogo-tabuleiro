@@ -897,8 +897,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "anel_danca_vento"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 13
     },
     {
       "id": "decor_9",
@@ -911,8 +920,23 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 5,
+        "items": [
+          {
+            "id": "suco_fruta"
+          },
+          {
+            "id": "rum"
+          },
+          {
+            "id": "health_potion_small"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_10",
@@ -925,8 +949,17 @@
         0,
         1
       ],
-      "loot": null,
-      "key_objective": false
+      "loot": {
+        "gold": 40,
+        "items": [
+          {
+            "id": "anel_olho_esfinge"
+          }
+        ]
+      },
+      "key_objective": false,
+      "escondido": true,
+      "cd_busca": 15
     },
     {
       "id": "decor_11",

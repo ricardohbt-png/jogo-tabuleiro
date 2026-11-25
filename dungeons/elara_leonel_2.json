@@ -2087,7 +2087,17 @@
         0,
         -1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "racao_completa"
+          },
+          {
+            "id": "cantil_agua"
+          }
+        ]
+      },
       "key_objective": false,
       "size": [
         2,
@@ -2096,7 +2106,9 @@
       "vscale": [
         1.1,
         1.1
-      ]
+      ],
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "mansao_estante_armas_16",
@@ -3416,9 +3428,24 @@
         0,
         1
       ],
-      "loot": null,
+      "loot": {
+        "gold": 0,
+        "items": [
+          {
+            "id": "banquete_viagem"
+          },
+          {
+            "id": "fruto_de_lumen"
+          },
+          {
+            "id": "garrafa_vinho"
+          }
+        ]
+      },
       "key_objective": false,
-      "image": "barril_cerveja.png"
+      "image": "barril_cerveja.png",
+      "escondido": true,
+      "cd_busca": 14
     },
     {
       "id": "decor_75",
