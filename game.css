@@ -459,7 +459,10 @@ input:focus { outline: none; border-color: var(--gold); }
          padding: 7px 9px; margin-bottom: 5px; }
 .pcard.me { border-color: var(--gold); }
 .pcard.current { border-color: var(--green); }
-.pcard.dead { opacity: .4; }
+/* Morto: o cartão esmaece, mas a caveira fica em cor total. */
+.pcard.dead { opacity: 1; }
+.pcard.dead > :not(.pcard-top), .pcard.dead .pcard-name, .pcard.dead .pcard-lvl { opacity: .45; }
+.pcard-caveira { width: 24px; height: 24px; object-fit: cover; border-radius: 4px; flex: 0 0 auto; }
 .pcard-top { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
 .pcard-emoji { font-size: 1.1rem; }
 .pcard-name { font-size: .82rem; font-weight: bold; flex: 1; }
@@ -499,6 +502,7 @@ input:focus { outline: none; border-color: var(--gold); }
   display: none;
 }
 #my-hero-portrait.visible { display: block; }
+#my-hero-portrait.morto img { object-position: 50% 50%; }   /* a caveira é quadrada: sem o recorte do rosto */
 #my-hero-portrait img {
   width: 100%; height: 100%;
   object-fit: cover; object-position: 50% 18%;  /* face-to-waist */

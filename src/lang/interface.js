@@ -11917,6 +11917,7 @@ window.LANG_INTERFACE = {
   "ui.status.card.lento": {"en":"Slowed","pt":"Lento"},
   "ui.status.card.rodadas": {"en":"{n} round(s) left","pt":"{n} rodada(s) restantes"},
   "ui.status.exploracao": {"en":"Exploration","pt":"Exploração"},
-  "ui.status.detalhe_percepcao": {"en":"base {base} · gear {equip} · penalties {pen}","pt":"base {base} · equipamento {equip} · penalidades {pen}"}
+  "ui.status.detalhe_percepcao": {"en":"base {base} · gear {equip} · penalties {pen}","pt":"base {base} · equipamento {equip} · penalidades {pen}"},
+  "ui.hud.heroi_morto": {"en":"Fallen hero","pt":"Herói morto"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
