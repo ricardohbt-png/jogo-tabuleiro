@@ -31860,6 +31860,23 @@ function _weaponAttributeKey(player, weapon, thrown=false){
   if((weapon.finesse || ['dagger','punhal_assassino','punhal_assassino_maior','bordao','cajado_madeira','staff'].includes(base)) && _modAtributo(player.dex) > _modAtributo(player.str_)) return 'dex';
   return 'str_';
 }
+// Percepção e visão na ficha de status. O servidor manda o valor final (`percepcao`);
+// aqui só se separa quanto vem do equipamento (Óculos do Terceiro Olho e afins) e das
+// penalidades, para o bônus do item aparecer em vez de sumir dentro do total.
+function _percepcaoDetalhesStatus(p){
+  const total = Number(p?.percepcao);
+  const raio = Number(p?.vision_radius);
+  let equip = 0;
+  for(const item of Object.values(p?.gear || {})){
+    if(!item || typeof item !== 'object') continue;
+    if(item.effect === 'perception_bonus') equip += Number(item.value) || 0;
+    for(const b of (item.bonuses || [])) if(b && b.effect === 'perception_bonus') equip += Number(b.value) || 0;
+  }
+  const pen = Number(p?.penalidades?.percepcao) || 0;
+  const valor = Number.isFinite(total) ? total : Math.max(1, 10 + Math.floor((Number.isFinite(raio) ? raio : 1) / 2) + pen + equip);
+  return {valor, base: valor - equip - pen, equip, pen, raio: Number.isFinite(raio) ? raio : null};
+}
+
 function _menuStatusMarkup(p, opts = {}){
   if(!p) return '';
   const weapon = p.weapon || p.gear?.weapon;
@@ -31937,7 +31954,7 @@ function _menuStatusMarkup(p, opts = {}){
   const hint = opts.embedded ? `<small>${p.name || t('ui.tabuleiro.heroi')}</small>` : `<small>${p.name || t('ui.tabuleiro.heroi')} · ${t('ui.status.tecla_s')}</small>`;
   return `<section class="menu-status${opts.embedded ? ' menu-status-embedded' : ''}" role="dialog" aria-modal="true" aria-label="${t('ui.status.aria')}">
     <header class="st-header"><div><b>${t('ui.status.titulo')}</b>${hint}</div>${close}</header>
-    <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, detalheDano)}${linhasOff}</section>
+    <div class="st-body"><section><h3>${t('ui.status.combate')}</h3>${linha(t('ui.status.arma_equipada'), weapon?.name || t('ui.status.desarmado'))}${linha(t('ui.status.acerto_total'), _fmtBonus(acertoTotal), detalheAcerto)}${linha(t('ui.status.classe_armadura'), `${p.ac ?? 10} → ${Number(p.ac ?? 10) + bonusCa}`, _bAtual)}${linha(t('ui.pergaminho.dano'), dano, detalheDano)}${linhasOff}</section><section><h3>${t('ui.status.exploracao')}</h3>${(() => { const d = _percepcaoDetalhesStatus(p); return linha(t('ui.ficha.percepcao'), d.equip || d.pen ? `${d.base} → ${d.valor}` : String(d.valor), t('ui.status.detalhe_percepcao', {base:d.base, equip:_fmtBonus(d.equip), pen:_fmtBonus(d.pen)})) + (d.raio != null ? linha(t('ui.ficha.raio_visao'), String(d.raio)) : ''); })()}</section>
     <section><h3>${t('ui.status.resistencias')}</h3>${linha(t('ui.resistencia.fortitude'), `${_fmtBonus(p.fort)} → ${_fmtBonus(Number(p.fort || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.reflexos'), `${_fmtBonus(p.ref_)} → ${_fmtBonus(Number(p.ref_ || 0) + bonusRes)}`, _bAtual)}${linha(t('ui.resistencia.vontade'), `${_fmtBonus(p.will)} → ${_fmtBonus(Number(p.will || 0) + bonusRes)}`, _bAtual)}</section>
     <section><h3>${t('ui.status.modificadores_temp')}</h3>${temporarios.length ? temporarios.map(m => { const n = m.rodadas != null ? Number(m.rodadas) : (m.ate != null && r ? Math.max(0, Number(m.ate) - r) : null); return `<div class="st-effect"><b>${m.nome}</b><span>${m.efeito}</span>${n != null && n > 0 ? `<em>${t('ui.status.rodadas_restantes', {n:n})}</em>` : ''}</div>`; }).join('') : `<p class="st-empty">${t('ui.status.sem_temporarios')}</p>`}</section></div></section>`;
 }
