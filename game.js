@@ -19923,7 +19923,11 @@ function _htmlPrevisaoAtaque(prev){
   if(fixo) expr += (fixo > 0 ? '+' : '') + fixo;
   if(prev.furtivo_d4) expr += ` +${prev.furtivo_d4}d4🗡️`;
   const tagsHTML = tags.length ? ` <span style="color:#c8b89a">(${tags.join(', ')})</span>` : '';
-  return `🎯 <b style="color:${cor}">${t('ui.previsao.chance', {pct})}</b>${tagsHTML}`
+  const faixa = GS.faixaDanoPrevisao(prev);
+  const resumo = `<div class="previsao-resumo" style="font-size:15px;font-weight:700;letter-spacing:.02em">`
+    + `<span style="color:${cor}">🎯 ${pct}%</span> <span style="color:#e8dcc2">·</span> `
+    + `<span style="color:#ffd9a0">⚔ ${faixa.min === faixa.max ? faixa.min : faixa.min + '–' + faixa.max}</span></div>`;
+  return resumo + `<span style="color:${cor};font-size:10px">${t('ui.previsao.chance', {pct})}</span>${tagsHTML}`
        + `<br><span style="color:#c8b89a" title="${t('ui.previsao.dica')}">⚔ ${t('ui.previsao.dano', {media: GS.danoMedioPrevisao(prev), expr})}</span>`;
 }
 function _linhaPrevisaoAtaque(monster, tx, ty, myP){
@@ -28160,8 +28164,37 @@ function _barraEsconderTip(){
   document.getElementById('tam-tip')?.remove();
   ocultarTooltipMagia?.();
 }
+// Prévia de alcance ao passar o mouse: acende o anel de alcance sem iniciar a mira.
+// Só vale enquanto nenhuma mira está ativa (a mira tem o próprio realce).
+let _previaAlcanceAtiva = false;
+function _previaAlcanceMostrar(alcance){
+  if(_aimSessionState.current) return;
+  const me = GS.me;
+  if(!me?.pos || !(alcance > 0)) return;
+  const range = new Set();
+  _addCheb(me.pos[0], me.pos[1], _alcanceComAlturaCli(me, alcance), range);
+  window._spellHL.range = range;
+  _previaAlcanceAtiva = true;
+  _aplicarSpellHL();
+}
+function _previaAlcanceLimpar(){
+  if(!_previaAlcanceAtiva) return;
+  _previaAlcanceAtiva = false;
+  if(_aimSessionState.current) return;
+  window._spellHL.range = new Set();
+  _aplicarSpellHL();
+}
+// Alcance (em casas) que a magia teria ao mirar; 0 quando o anel não se aplica
+// (auto-lançada, linha, cone, área centrada ou mira livre).
+function _alcancePreviaMagia(m, me){
+  if(!m || !me || m.alcance_los || m.alvoLivre) return 0;
+  if(['buff_self', 'utilidade', 'reacao', 'invocacao', 'area_centrada', 'linha_reflexiva', 'cone'].includes(m.tipo)) return 0;
+  return Math.max(0, _alcanceMagiaCli(m, me.level, me, false));
+}
+
 function _barraFechar(){
   _barraMenuAberto = null;
+  _previaAlcanceLimpar();
   _barraEsconderTip();
   document.querySelectorAll('#turn-actions-bar .tam-pop').forEach(p => p.hidden = true);
   document.querySelectorAll('#turn-actions-bar .tam-tab').forEach(b => b.setAttribute('aria-expanded', 'false'));
@@ -28218,7 +28251,7 @@ function _habilidadesEspelhadas(){
       : (emoji || '✦');
     const custo = (orig.querySelector('.skill-cost')?.textContent || '').replace(/\s+/g, ' ').trim();
     const rec = orig.classList.contains('skill-cooldown') ? (custo.match(/(\d+)\s*r/) || [])[1] : null;
-    out.push({orig, nome, icone, custo, desc: (orig.querySelector('.skill-desc')?.textContent || '').trim(),
+    out.push({orig, nome, icone, custo, alcance: Number(orig.dataset.alcance) || 0, desc: (orig.querySelector('.skill-desc')?.textContent || '').trim(),
       off: orig.disabled, ativa: orig.classList.contains('skill-active'), rec});
   }
   return out;
@@ -28240,6 +28273,12 @@ function _barraPopHabilidades(pop){
     else if(h.off) motivo = `<div class="tam-motivo">${_esc(t('ui.menuacoes.indisponivel'))}</div>`;
     const corpo = `${_esc(h.desc)}${h.custo && h.custo !== '—' && !h.rec ? `<div class="tam-custo">${_esc(h.custo)}</div>` : ''}${motivo}`;
     _barraLigarTip(b, _esc(h.nome), corpo);
+    if(h.alcance){
+      b.addEventListener('mouseenter', () => _previaAlcanceMostrar(h.alcance));
+      b.addEventListener('focus', () => _previaAlcanceMostrar(h.alcance));
+      b.addEventListener('mouseleave', _previaAlcanceLimpar);
+      b.addEventListener('blur', _previaAlcanceLimpar);
+    }
     b.onclick = () => {
       if(h.off){ toast(h.rec ? t('ui.menuacoes.em_recarga', {n:h.rec}) : t('ui.menuacoes.indisponivel'), 'var(--orange)'); return; }
       _barraFechar();
@@ -28271,6 +28310,13 @@ function _barraPopMagias(pop, hero){
       b.innerHTML = `<span class="tam-glyph">${magiaIconHTML(m, 34)}</span>`;
       const motivo = !livre ? `<div class="tam-motivo">${_esc(t('ui.magia.sem_slot'))}</div>` : '';
       _barraLigarTip(b, _esc(m.nome), `${m.custo ? `<div class="tam-custo">${_esc(m.custo)}</div>` : ''}${motivo}`);
+      const alc = _alcancePreviaMagia(m, hero);
+      if(alc){
+        b.addEventListener('mouseenter', () => _previaAlcanceMostrar(alc));
+        b.addEventListener('focus', () => _previaAlcanceMostrar(alc));
+        b.addEventListener('mouseleave', _previaAlcanceLimpar);
+        b.addEventListener('blur', _previaAlcanceLimpar);
+      }
       // A descrição completa da magia usa o quadro que já existe, depois dos 1,5 s.
       b.addEventListener('mouseenter', () => {
         clearTimeout(_barraTipTimer);
@@ -28332,6 +28378,7 @@ function _barraSincronizar(){
     const aberto = _barraMenuAberto === pop.dataset.menu;
     pop.hidden = !aberto;
     if(!aberto || !hero) continue;
+    _previaAlcanceLimpar();
     if(pop.dataset.menu === 'habilidades') _barraPopHabilidades(pop);
     else _barraPopMagias(pop, hero);
   }
@@ -28362,6 +28409,45 @@ function _atorDaVezParaCard(state){
     return {monster:true, actor:m};
   }
   return null;
+}
+
+// Condições negativas de um ator (herói ou monstro) para o card da vez:
+// cada uma vira um ícone com a duração (rodadas) ou o nível, em vez de só no log.
+function _condicoesDoCard(a){
+  const out = [];
+  const add = (icone, nome, valor, rodadas) => out.push({icone, nome, valor, rodadas});
+  const num = v => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.ceil(n) : 0; };
+  if(!a) return out;
+  if(num(a.sangramento_nivel)){
+    const r = num(a.sangramento_rodadas);
+    add('🩸', t('ui.condicao.sangramento'), `N${num(a.sangramento_nivel)}`, r);
+  }
+  if(a.ferida_aberta) add('🩹', t('ui.condicao.ferida_aberta_titulo'), '', 0);
+  if(a.hemorragia) add('🩸', t('ui.condicao.hemorragia'), '', 0);
+  if(num(a.em_chamas_rodadas)) add('🔥', t('ui.hud.resumo_chamas'), '', num(a.em_chamas_rodadas));
+  if(num(a.acido_residual)) add('🧪', t('ui.hud.resumo_acido'), String(num(a.acido_residual)), 0);
+  if(Array.isArray(a.efeitos_veneno) && a.efeitos_veneno.length){
+    const maior = Math.max(0, ...a.efeitos_veneno.map(e => num(e?.duracao)));
+    add('☠️', t('ui.hud.resumo_veneno'), a.efeitos_veneno.length > 1 ? `×${a.efeitos_veneno.length}` : '', maior);
+  }
+  if(num(a.dormindo_rodadas)) add('💤', t('ui.hud.resumo_sono'), '', num(a.dormindo_rodadas));
+  if(num(a.paralisado_rodadas)) add('🧊', t('ui.hud.resumo_paralisia'), '', num(a.paralisado_rodadas));
+  if(num(a.cego_rodadas)) add('🙈', t('ui.hud.resumo_cegueira'), '', num(a.cego_rodadas));
+  if(num(a.petrificacao_marcas)) add('🪨', t('ui.condicao.petrificacao'), `${num(a.petrificacao_marcas)}`, 0);
+  if(a.com_medo) add('😨', t('ui.status.card.medo'), '', num(a.medo_rodadas));
+  if(a.lento) add('🐌', t('ui.status.card.lento'), '', num(a.lento_rodadas));
+  return out;
+}
+function _statusCardHTML(a){
+  const lista = _condicoesDoCard(a);
+  if(!lista.length) return '';
+  const chips = lista.map(c => {
+    const dur = c.rodadas ? `${c.rodadas}r` : '';
+    const rotulo = [c.valor, dur].filter(Boolean).join(' · ');
+    const titulo = `${c.nome}${c.valor ? ' ' + c.valor : ''}${c.rodadas ? ` · ${t('ui.status.card.rodadas', {n:c.rodadas})}` : ''}`;
+    return `<span class="turn-status-chip" title="${_esc(titulo)}" aria-label="${_esc(titulo)}"><span class="turn-status-icon">${c.icone}</span>${rotulo ? `<b>${_esc(rotulo)}</b>` : ''}</span>`;
+  }).join('');
+  return `<div class="turn-status" role="list" aria-label="${_esc(t('ui.status.card.titulo'))}">${chips}</div>`;
 }
 
 function renderTurnHeroHud(state){
@@ -28395,12 +28481,12 @@ function renderTurnHeroHud(state){
             <span class="bar-val">${hp}/${max}</span></div></div>
           <div class="turn-mon-stats"><span>🛡️ ${_esc(t('ui.hud.sigla_ca'))} <b>${a.ac ?? '—'}</b></span>
             <span>👣 <b>${a.movement ?? '—'}</b></span></div>
-        </div></div><div class="turn-vez-rotulo">${_esc(t('ui.menuacoes.vez_de'))} ${nome}</div>`;
+        </div></div>${_statusCardHTML(a)}<div class="turn-vez-rotulo">${_esc(t('ui.menuacoes.vez_de'))} ${nome}</div>`;
     } else {
       hud.innerHTML = `<div class="turn-hero-main">
         <div class="turn-hero-portrait" aria-hidden="true">${retrato}</div>
         <div class="turn-hero-vitals"><strong>${nome}</strong>${renderHeroVitals(a, {guide:false})}</div>
-      </div>${_renderRecursosRodada(a, state, true)}<div class="turn-vez-rotulo">${_esc(t('ui.menuacoes.vez_de'))} ${nome}</div>`;
+      </div>${_statusCardHTML(a)}${_renderRecursosRodada(a, state, true)}<div class="turn-vez-rotulo">${_esc(t('ui.menuacoes.vez_de'))} ${nome}</div>`;
     }
     return;
   }
@@ -28432,7 +28518,7 @@ function renderTurnHeroHud(state){
   hud.innerHTML = `<div class="turn-hero-main">
     <div class="turn-hero-portrait" aria-hidden="true">${portrait}</div>
     <div class="turn-hero-vitals"><strong>${name}</strong>${renderHeroVitals(hero, {guide:true})}</div>
-  </div>${_renderRecursosRodada(hero, state, true)}${spells}`;
+  </div>${_statusCardHTML(hero)}${_renderRecursosRodada(hero, state, true)}${spells}`;
 }
 
 function _renderRecursosRodada(me, state, emTurno = !!(state?.phase === 'playing' && GS.isMyTurn && me?.alive)){
@@ -29108,6 +29194,8 @@ function renderMyPanel(state){
     const btn = document.createElement('button');
     btn.className = 'skill-btn guild-tec' + (restante > 0 ? ' skill-cooldown' : '');
     btn.disabled = !podeUsar;
+    if(cat.alvo === 'monstro_adjacente') btn.dataset.alcance = '1';
+    else if(cat.alvo === 'aliado_raio4') btn.dataset.alcance = '4';
     const estado = restante > 0
       ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ recarrega em ${restante}r</small>`
       : pendente ? ' <small style="color:var(--gold);font-size:.65rem;">● preparada</small>' : '';
@@ -33210,6 +33298,7 @@ function _weaponThrowSkillBtn(me, skill){
   const btn = document.createElement('button');
   btn.className = 'skill-btn weapon-throw-skill';
   btn.disabled = !podeAgir;
+  if(item?.throw_range) btn.dataset.alcance = String(item.throw_range + _bonusAlcanceArremessoCli(me));
   btn.innerHTML = `
     <div class="skill-info">
       <div class="skill-name">${abilityIconHtml(skill, skill.icon || '🎯')} ${skill.name}</div>
