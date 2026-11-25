@@ -3750,6 +3750,17 @@ def restore_character(player, snap):
     for k in _DURABLE_FIELDS:
         if k in snap:
             player[k] = deepcopy(snap[k])
+    # `hp` é durável, mas `alive` não: um herói salvo morto (0 PV) voltava "vivo" com
+    # 0 PV numa aventura nova, já no limite da morte. Quem chega de outra aventura com
+    # 0 PV é trazido de volta com 1 PV, como na Ressurreição do Templo. (A foto da
+    # masmorra guarda a ficha inteira, inclusive `alive`, e não passa por aqui.)
+    try:
+        hp_salvo = int(player.get("hp", 1))
+    except (TypeError, ValueError):
+        hp_salvo = 1
+    if hp_salvo <= 0:
+        player["hp"] = 1
+        player["alive"] = True
     _restaurar_servos(player)
     # Botas Velozes já foram persistidas no slot genérico de itens. Migra a
     # peça para o slot dedicado quando disponível para liberar o espaço antigo.
