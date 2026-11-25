@@ -34715,7 +34715,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          "stun_crit_min_nat", "stun_fort_dc",
                          "atk_bonus", "damage_bonus", "extra_damages", "granted_ability",
                          "extra_damage_once_per_turn",
-                         "magical", "fire_on_hit", "fire_crit_damage", "freeze_on_crit",
+                         "magical", "causa_sangramento", "fire_on_hit", "fire_crit_damage", "freeze_on_crit",
                          "thunder_push_on_crit", "thunder_pulse", "thunder_pulse_cooldown",
                          "solar_flare", "solar_flare_cooldown",
                          "chicote_encore", "chicote_encore_cooldown", "chicote_encore_ready_round",
