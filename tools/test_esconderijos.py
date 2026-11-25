@@ -131,7 +131,10 @@ class DeteccaoTests(unittest.TestCase):
     def test_desligada_nao_acha_de_longe(self):
         r = sala(mapa_minimo(), "rogue")
         p = r.players["p0"]; p["pos"] = [1, 3]
-        asyncio.run(r._procurar_esconderijos(p))
+        # A percepção por raio rola d20 (o esconderijo está dentro do raio do Ladino):
+        # com 1 natural ela nunca passa, então só a detecção automática poderia achar.
+        with mock.patch.object(S.random, "randint", return_value=1):
+            asyncio.run(r._procurar_esconderijos(p))
         self.assertFalse(serial(r)["tem_loot"])
 
     def test_ligada_acha_ao_andar_e_na_manutencao(self):
