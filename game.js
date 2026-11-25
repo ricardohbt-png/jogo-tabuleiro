@@ -24505,7 +24505,7 @@ window._spellHL = { range: new Set(), area: new Set(), double: new Set(), hover:
 // (`op` alimenta os planos 3D em _mkSpell; `fill` alimenta o canvas 2D), entao
 // esta e a fonte unica da intensidade da mira -- nao repita numero solto.
 const AIM_COLORS = {
-  range:   { hex: 0x2f7dff, op: .52, fill: 'rgba(47,125,255,.40)' },   // alcance  (delta ~66)
+  range:   { hex: 0xe23b3b, op: .46, fill: 'rgba(226,59,59,.38)' },    // alcance (vermelho)
   valid:   { hex: 0x22c96f, op: .62, fill: 'rgba(34,201,111,.52)' },   // confirma (delta ~83 somado ao alcance)
   blocked: { hex: 0xff4d57, op: .46, fill: 'rgba(255,77,87,.40)' },
   preview: { hex: 0xffc857, op: .48, fill: 'rgba(255,200,87,.40)' },
@@ -24558,7 +24558,7 @@ function _aimRenderLegend(session) {
     item.style.color = color;
     guide.appendChild(item);
   };
-  chip('#78abff', t('ui.mira.alcance'));
+  chip('#ff7a7a', t('ui.mira.alcance'));
   chip('#72e5a5', session.targetLabel || t('ui.mira.valido'));
   chip('#ff8b92', t('ui.mira.bloqueado'));
   copy.append(title, instruction, guide, status);
@@ -28167,13 +28167,17 @@ function _barraEsconderTip(){
 // Prévia de alcance ao passar o mouse: acende o anel de alcance sem iniciar a mira.
 // Só vale enquanto nenhuma mira está ativa (a mira tem o próprio realce).
 let _previaAlcanceAtiva = false;
-function _previaAlcanceMostrar(alcance){
+function _previaAlcanceMostrar(alcance, areaRaio = 0, areaLado = 0){
   if(_aimSessionState.current) return;
   const me = GS.me;
-  if(!me?.pos || !(alcance > 0)) return;
-  const range = new Set();
-  _addCheb(me.pos[0], me.pos[1], _alcanceComAlturaCli(me, alcance), range);
+  if(!me?.pos || !(alcance > 0 || areaRaio > 0 || areaLado > 0)) return;
+  // Alcance em vermelho; o que age numa área (centrada em quem usa) em verde.
+  const range = new Set(), area = new Set();
+  if(alcance > 0) _addCheb(me.pos[0], me.pos[1], _alcanceComAlturaCli(me, alcance), range);
+  if(areaLado > 0) _addQuadrado(me.pos[0], me.pos[1], areaLado, area);
+  else if(areaRaio > 0) _addCheb(me.pos[0], me.pos[1], areaRaio, area);
   window._spellHL.range = range;
+  window._spellHL.area = area;
   _previaAlcanceAtiva = true;
   _aplicarSpellHL();
 }
@@ -28182,13 +28186,24 @@ function _previaAlcanceLimpar(){
   _previaAlcanceAtiva = false;
   if(_aimSessionState.current) return;
   window._spellHL.range = new Set();
+  window._spellHL.area = new Set();
   _aplicarSpellHL();
 }
 // Alcance (em casas) que a magia teria ao mirar; 0 quando o anel não se aplica
 // (auto-lançada, linha, cone, área centrada ou mira livre).
+// Área (em verde) de uma magia que age ao redor de quem a lança: {raio, lado}.
+function _areaCentradaPreviaMagia(m, me){
+  if(!m || !me) return {raio: 0, lado: 0};
+  const centrada = m.tipo === 'area_centrada'
+    || (['area', 'area_fixa', 'area_persistente'].includes(m.tipo) && _alcanceMagiaCli(m, me.level, me) <= 0);
+  if(!centrada) return {raio: 0, lado: 0};
+  const lado = _areaLadoMiraMagia(m.id, m, me, false);
+  return lado ? {raio: 0, lado} : {raio: _areaRaioMagiaCli(m) || 0, lado: 0};
+}
 function _alcancePreviaMagia(m, me){
   if(!m || !me || m.alcance_los || m.alvoLivre) return 0;
   if(['buff_self', 'utilidade', 'reacao', 'invocacao', 'area_centrada', 'linha_reflexiva', 'cone'].includes(m.tipo)) return 0;
+  if(_areaCentradaPreviaMagia(m, me).raio || _areaCentradaPreviaMagia(m, me).lado) return 0;
   return Math.max(0, _alcanceMagiaCli(m, me.level, me, false));
 }
 
@@ -28251,7 +28266,7 @@ function _habilidadesEspelhadas(){
       : (emoji || '✦');
     const custo = (orig.querySelector('.skill-cost')?.textContent || '').replace(/\s+/g, ' ').trim();
     const rec = orig.classList.contains('skill-cooldown') ? (custo.match(/(\d+)\s*r/) || [])[1] : null;
-    out.push({orig, nome, icone, custo, alcance: Number(orig.dataset.alcance) || 0, desc: (orig.querySelector('.skill-desc')?.textContent || '').trim(),
+    out.push({orig, nome, icone, custo, alcance: Number(orig.dataset.alcance) || 0, areaRaio: Number(orig.dataset.areaRaio) || 0, desc: (orig.querySelector('.skill-desc')?.textContent || '').trim(),
       off: orig.disabled, ativa: orig.classList.contains('skill-active'), rec});
   }
   return out;
@@ -28273,9 +28288,9 @@ function _barraPopHabilidades(pop){
     else if(h.off) motivo = `<div class="tam-motivo">${_esc(t('ui.menuacoes.indisponivel'))}</div>`;
     const corpo = `${_esc(h.desc)}${h.custo && h.custo !== '—' && !h.rec ? `<div class="tam-custo">${_esc(h.custo)}</div>` : ''}${motivo}`;
     _barraLigarTip(b, _esc(h.nome), corpo);
-    if(h.alcance){
-      b.addEventListener('mouseenter', () => _previaAlcanceMostrar(h.alcance));
-      b.addEventListener('focus', () => _previaAlcanceMostrar(h.alcance));
+    if(h.alcance || h.areaRaio){
+      b.addEventListener('mouseenter', () => _previaAlcanceMostrar(h.alcance, h.areaRaio));
+      b.addEventListener('focus', () => _previaAlcanceMostrar(h.alcance, h.areaRaio));
       b.addEventListener('mouseleave', _previaAlcanceLimpar);
       b.addEventListener('blur', _previaAlcanceLimpar);
     }
@@ -28311,9 +28326,10 @@ function _barraPopMagias(pop, hero){
       const motivo = !livre ? `<div class="tam-motivo">${_esc(t('ui.magia.sem_slot'))}</div>` : '';
       _barraLigarTip(b, _esc(m.nome), `${m.custo ? `<div class="tam-custo">${_esc(m.custo)}</div>` : ''}${motivo}`);
       const alc = _alcancePreviaMagia(m, hero);
-      if(alc){
-        b.addEventListener('mouseenter', () => _previaAlcanceMostrar(alc));
-        b.addEventListener('focus', () => _previaAlcanceMostrar(alc));
+      const areaC = _areaCentradaPreviaMagia(m, hero);
+      if(alc || areaC.raio || areaC.lado){
+        b.addEventListener('mouseenter', () => _previaAlcanceMostrar(alc, areaC.raio, areaC.lado));
+        b.addEventListener('focus', () => _previaAlcanceMostrar(alc, areaC.raio, areaC.lado));
         b.addEventListener('mouseleave', _previaAlcanceLimpar);
         b.addEventListener('blur', _previaAlcanceLimpar);
       }
@@ -33336,6 +33352,7 @@ function _thunderPulseWeaponSkillBtn(me, skill){
   const btn = document.createElement('button');
   btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
   btn.disabled = !podeUsar;
+  btn.dataset.areaRaio = '1';
   const recarga = restante > 0
     ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
   btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '⚡')} ${skill.name}${recarga}</div>
@@ -33359,6 +33376,7 @@ function _solarFlareWeaponSkillBtn(me, skill){
   const btn = document.createElement('button');
   btn.className = 'skill-btn' + (restante > 0 ? ' skill-cooldown' : '');
   btn.disabled = !podeUsar;
+  btn.dataset.areaRaio = '1';
   const recarga = restante > 0
     ? ` <small style="color:#e07060;font-size:.65rem;">⏱️ ${t('ui.tecnica.recarrega_em', {n:restante})}</small>` : '';
   btn.innerHTML = `<div class="skill-info"><div class="skill-name">${abilityIconHtml(skill, '☀️')} ${skill.name}${recarga}</div>
