@@ -136017,7 +136017,7 @@ window.EDITOR_DUNGEONS = [
           "w": 13,
           "h": 10,
           "role": "monster",
-          "locked": true,
+          "locked": false,
           "doors": []
         },
         {
@@ -136036,8 +136036,8 @@ window.EDITOR_DUNGEONS = [
         "41,29": "portao_levadico"
       },
       "entrance": {
-        "x": 2,
-        "y": 7
+        "x": 27,
+        "y": 30
       },
       "hero_spawns": [],
       "exit": {
@@ -136205,6 +136205,19 @@ window.EDITOR_DUNGEONS = [
             }
           ],
           "key_objective": true
+        },
+        {
+          "pos": [
+            43,
+            5
+          ],
+          "gold": 300,
+          "items": [
+            {
+              "id": "fermentado_raizes"
+            }
+          ],
+          "key_objective": false
         }
       ],
       "traps": [
@@ -137668,7 +137681,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "rum"
+              }
+            ]
+          },
           "key_objective": false
         },
         {
@@ -137682,7 +137702,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "hidromel"
+              }
+            ]
+          },
           "key_objective": false
         },
         {
@@ -137820,7 +137847,14 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "barril_cerveja.png"
         },
@@ -137850,7 +137884,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "caneca_cerveja"
+              },
+              {
+                "id": "cerveja_ana"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "barril_cerveja.png"
         },
@@ -138048,13 +138092,20 @@ window.EDITOR_DUNGEONS = [
           "type": "saco_grao",
           "pos": [
             20,
-            31
+            25
           ],
           "facing": [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "pao"
+              }
+            ]
+          },
           "key_objective": false,
           "image": "saco_grao.png"
         },
@@ -139155,8 +139206,8 @@ window.EDITOR_DUNGEONS = [
         {
           "id": "mansao_chegada",
           "pos": [
-            2,
-            4
+            21,
+            21
           ],
           "falante": {
             "nome": "Narrador",

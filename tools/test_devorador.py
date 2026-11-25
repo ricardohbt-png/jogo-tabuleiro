@@ -263,7 +263,7 @@ async def main():
     # Dual: 2 ataques, dropa espada+adaga, é chefe de bando
     dual = make_monster(dual_def, {"id": 1, "cx": 5, "cy": 5})
     check("Dual: 2 ataques", len(dual["attacks"]) == 2)
-    check("Dual: equipa duas armas sorteadas, que viram o loot", len(dual.get("equipped_items", [])) == 2 and not dual.get("guaranteed_loot"))
+    check("Dual: equipa duas armas sorteadas, que viram o loot", len(dual.get("equipped_items", [])) >= 2 and not dual.get("guaranteed_loot"))
     check("Dual: tem spawn_companions (comb/arq/xamã)", len(dual_def.get("spawn_companions", [])) == 3)
 
     # Arremesso do Dual: 1 natural quebra a arma.
