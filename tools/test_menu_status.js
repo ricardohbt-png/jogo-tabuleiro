@@ -16,13 +16,13 @@ function extrair(nome) {
   return src.slice(ini, fim + 2);
 }
 
-function montar(estado, temporarios) {
+function montar(estado, temporarios, armaBaseId = id => id) {
   const corpo = extrair('_weaponAttributeKey') + '\n' + extrair('_menuStatusMarkup');
   const fabrica = new Function('GS', 't', '_rotulo', '_fmtBonus', '_modAtributo', '_modificadoresTemporariosStatus',
     corpo + '\nreturn _menuStatusMarkup;');
   const t = (k, p) => p && p.n != null ? `${k}:${p.n}` : k;
   return fabrica(
-    { gameState: estado, cityState: null, getWarriorSelected: () => [], armaBaseId: id => id },
+    { gameState: estado, cityState: null, getWarriorSelected: () => [], armaBaseId },
     t, (id, pre, pad) => pad, n => (n >= 0 ? '+' : '') + n, v => Math.floor(((v || 10) - 10) / 2),
     () => temporarios);
 }
@@ -102,6 +102,21 @@ console.log('\n[3] Na cidade (sem gameState) também não quebra');
   check('absinto: cinco doses mostram -2 movimento até a primeira expiração', heavy.some(r => r.efeito === 'ui.status.bebida_movimento_ef:2' && r.rodadas === 1));
   const light = fn({...base,absinto_penalty_rodadas:[3,5,7,9]});
   check('absinto: quatro doses mostram -1 movimento até restarem duas', light.some(r => r.efeito === 'ui.status.bebida_movimento_ef:1' && r.rodadas === 5));
+}
+
+// Arco Bruto do Combatente (e variantes): Força soma ao DANO, nunca ao acerto.
+{
+  // armaBaseId real: tira o sufixo de material (como GS.armaBaseId no jogo).
+  const fn = montar(null, [], id => id.replace(/_(aco_damasco|obsidiana_ferro|liga_titanio|freixo_negro|cedro_rubro|cerne_tita|prata)$/, ''));
+  const p = {class_id:'warrior',str_:18,dex:14,atk_bonus:3,level_bonus:1,fome:50,sede:50,
+    weapon:{id:'arco_bruto_combatente',stat:'dex',die:'1d10',add_strength_to_damage:true},gear:{}};
+  check('Arco Bruto: dano soma DES + FOR (+2 +4)', fn(p).includes('1d10 +6 →'));
+  // atk_bonus 3 já embute a FOR +4 da classe: 3 − 4 + DES +2 = +1 (a Força não entra no acerto).
+  check('Arco Bruto: acerto continua só com DES', fn(p).includes('ui.status.acerto_total</span><b>+1</b>'));
+  p.weapon = {id:'arco_bruto_combatente_cedro_rubro',stat:'dex',die:'1d10',add_strength_to_damage:true};
+  check('Variante do Arco Bruto também soma a Força no dano', fn(p).includes('1d10 +6 →'));
+  p.weapon = {id:'arco_composto_longo',stat:'dex',die:'1d10'};
+  check('Outro arco continua só com DES no dano', fn(p).includes('1d10 +2 →'));
 }
 
 console.log(`\n=== ${pass} passaram, ${fail} falharam ===`);
