@@ -47005,6 +47005,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         decor_trap = None
         arm = self._armadilha_no_tile(tx, ty)
+        if arm and arm.get("suspeita"):
+            arm["visivel"] = True        # ao tentar desarmar, o Ladino identifica a armadilha suspeita
         if not arm:
             decor_trap = self._decor_com_armadilha_proxima([tx, ty], apenas_revelada=True)
             if decor_trap and not self._adjacente_a_decor(p["pos"], decor_trap):
@@ -47856,18 +47858,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if a.get("esgotada"):
                 continue
             tipo = ARMADILHAS.get(a["tipo"], {})
+            identificada = bool(a.get("visivel") or self._vela_reveladora_cobre_pos(a.get("pos")))
+            suspeita = bool(a.get("suspeita")) and not identificada and not a.get("ativada")
             out.append({
                 "id":      a["id"],
-                "tipo":    a["tipo"],
+                "tipo":    "suspeita" if suspeita else a["tipo"],
                 "pos":     a["pos"],
-                "icone":   tipo.get("icone", "🪤"),
-                "nome":    tipo.get("nome", a["tipo"]),
-                "visivel": bool(a.get("visivel") or self._vela_reveladora_cobre_pos(a.get("pos"))),
+                "icone":   "⚠️" if suspeita else tipo.get("icone", "🪤"),
+                "nome":    T("ui.armadilha.suspeita") if suspeita else tipo.get("nome", a["tipo"]),
+                "suspeita": suspeita,
+                "visivel": identificada or suspeita,
                 "vela_revelada": self._vela_reveladora_cobre_pos(a.get("pos")),
                 "ativada": a.get("ativada", False),
                 "aliada":  a.get("criador") in self.players,
                 "so_luccas": False,   # reservado p/ armadilhas de masmorra detectadas (futuro)
-                "image":   a.get("image"),   # PNG opcional â€” o cliente mostra sÃ³ quando revelada
+                "image":   None if suspeita else a.get("image"),   # PNG opcional â€” o cliente mostra sÃ³ quando revelada
                 # cr sÃ³ das autoradas (aliadas mandam 0 â€” nÃ£o contam no minimapa de CR).
                 "cr":      (0 if a.get("criador") in self.players else trap_cr(tipo)),
             })
@@ -51298,29 +51303,107 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Esconderijo ainda não notado por nenhum herói."""
         return bool(d.get("escondido") and not d.get("encontrado"))
 
+    # Percepção por raio: o herói nota esconderijos e armadilhas escondidas a até
+    # metade do próprio raio de visão (arredondada para cima), com linha de visão.
+    # Testa na 1ª vez que o objeto entra no raio e de novo a 2 e a 1 casa (uma
+    # rolagem por faixa, por herói); cada casa além da primeira dá -1 na rolagem.
+    ARMADILHA_CD_PADRAO = 12
+
+    def _raio_percepcao(self, p):
+        return max(1, (self._get_raio_visao(p) + 1) // 2)
+
+    @staticmethod
+    def _faixas_percepcao(raio):
+        return sorted({raio, 2, 1} & set(range(1, raio + 1)), reverse=True)
+
+    def _tentar_perceber(self, p, obj, dist, raio, cd, bonus):
+        """Uma rolagem secreta se o herói alcançou uma faixa ainda não testada.
+        Devolve True só no sucesso."""
+        quem = p.get("class_id") or p["id"]
+        feitas = obj.get("buscado_por")
+        if isinstance(feitas, list):                 # formato antigo: 1 teste por herói
+            feitas = {q: [99] for q in feitas}
+        if not isinstance(feitas, dict):
+            feitas = {}
+        obj["buscado_por"] = feitas
+        ja = set(feitas.get(quem, []))
+        alcancadas = [f for f in self._faixas_percepcao(raio) if dist <= f and f not in ja]
+        if not alcancadas or 99 in ja:
+            return False
+        feitas[quem] = sorted(ja | set(alcancadas))
+        penal = max(0, dist - 1)
+        return random.randint(1, 20) + bonus - penal >= int(cd)
+
+    def _alvos_de_percepcao(self, p, raio):
+        """(objeto, tipo, distância, CD) de tudo o que ainda está escondido ao alcance."""
+        px, py = p["pos"]
+        alvos = []
+
+        def dist_a(tiles):
+            return max(1, min(max(abs(tx - px), abs(ty - py)) for tx, ty in tiles))
+
+        def visivel_a(tiles, d):
+            return d <= 1 or any(self._tem_linha_de_visao(p["pos"], tuple(t)) for t in tiles)
+
+        for d in self.decorations:
+            tiles = self._decor_tiles(d)
+            if not tiles:
+                continue
+            dist = dist_a(tiles)
+            if dist > raio:
+                continue
+            if self._decor_oculto(d) and visivel_a(tiles, dist):
+                alvos.append((d, "esconderijo", dist, d.get("cd_busca", ESCONDERIJO_CD_PADRAO)))
+            tr = d.get("trap") if isinstance(d.get("trap"), dict) else None
+            pend = bool(tr and not d.get("trap_disarmed")
+                        and (not d.get("trap_triggered") or tr.get("permanente")))
+            pend = pend or bool(d.get("chest_trap_monster_type") and not d.get("chest_trap_disarmed")
+                                and (not d.get("chest_trap_triggered") or d.get("chest_trap_permanente")))
+            if pend and not d.get("trap_revealed") and visivel_a(tiles, dist):
+                cd = ((tr or {}).get("dificuldade")
+                      or ARMADILHAS.get((tr or {}).get("tipo"), {}).get("dificuldade")
+                      or self.ARMADILHA_CD_PADRAO)
+                alvos.append((d, "armadilha_objeto", dist, cd))
+        for a in self.armadilhas:
+            if (a.get("esgotada") or a.get("visivel") or a.get("suspeita") or a.get("ativada")
+                    or a.get("so_luccas") or a.get("criador") in self.players):
+                continue
+            dist = dist_a([a["pos"]])
+            if dist > raio or not visivel_a([a["pos"]], dist):
+                continue
+            cd = (a.get("dificuldade") or ARMADILHAS.get(a.get("tipo"), {}).get("dificuldade")
+                  or self.ARMADILHA_CD_PADRAO)
+            alvos.append((a, "armadilha", dist, cd))
+        return alvos
+
     async def _procurar_esconderijos(self, p):
-        """Ao terminar um passo ao lado de um esconderijo, o herói tenta notá-lo
-        (uma vez por objeto). A rolagem é secreta: só o sucesso é narrado."""
-        if not p.get("alive") or not p.get("pos") or not getattr(self, "decorations", None):
+        """Percepção passiva do herói ao se mover (ver comentário acima). A rolagem é
+        secreta: só o sucesso é narrado. Com Detectar Armadilhas ligada, o que está
+        no raio de visão é achado sem rolar."""
+        if not p.get("alive") or not p.get("pos") or not (
+                getattr(self, "decorations", None) or getattr(self, "armadilhas", None)):
             return
         if p.get("detectar_ativo"):
             await self._detectar_esconderijos(p)
-        quem = p.get("class_id") or p["id"]
-        for d in self.decorations:
-            if not self._decor_oculto(d) or not self._adjacente_a_decor(p["pos"], d):
+        raio = self._raio_percepcao(p)
+        bonus = self._get_percepcao_heroi(p) - 10
+        if p.get("class_id") == "rogue":
+            bonus += ESCONDERIJO_BONUS_LADINO
+        for obj, tipo, dist, cd in self._alvos_de_percepcao(p, raio):
+            if not self._tentar_perceber(p, obj, dist, raio, cd, bonus):
                 continue
-            ja = d.setdefault("buscado_por", [])
-            if quem in ja:
+            if tipo == "armadilha":
+                obj["suspeita"] = True
+                await self.gm_say(T("narracao.armadilha_suspeita", heroi=p["name"]))
                 continue
-            ja.append(quem)
-            bonus = self._get_percepcao_heroi(p) - 10
-            if p.get("class_id") == "rogue":
-                bonus += ESCONDERIJO_BONUS_LADINO
-            if random.randint(1, 20) + bonus >= int(d.get("cd_busca", ESCONDERIJO_CD_PADRAO)):
-                d["encontrado"] = True
-                meta = DECOR_TYPES.get(d["type"], {})
-                await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"],
-                                    objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+            meta = DECOR_TYPES.get(obj["type"], {})
+            nome = nome_cat("decor", obj["type"], meta.get("nome", obj["type"]))
+            if tipo == "armadilha_objeto":
+                obj["trap_revealed"] = True
+                await self.gm_say(T("narracao.armadilha_suspeita_objeto", heroi=p["name"], objeto=nome))
+                continue
+            obj["encontrado"] = True
+            await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"], objeto=nome))
 
     async def _detectar_esconderijos(self, p):
         """Com Detectar Armadilhas ativa, o herói nota sem rolagem os esconderijos

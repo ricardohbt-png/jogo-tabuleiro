@@ -11879,6 +11879,10 @@ window.LANG_INTERFACE = {
   "ui.relampago_mao.desc": {"en":"Line up to 4 squares: creatures in the path, allies included, take 3d6 lightning (Reflex DC 13 halves). The final target also takes a normal attack. Cooldown: 10 rounds.","pt":"Linha de até 4 casas: criaturas na trajetória, inclusive aliados, sofrem 3d6 de eletricidade (Reflexos CD 13 reduz à metade). O alvo final também recebe um ataque normal. Recarga: 10 rodadas."},
   "ui.relampago_mao.cancelada": {"en":"Discharge cancelled.","pt":"Descarga cancelada."},
   "ui.relampago_mao.escolha_alvo": {"en":"Choose a highlighted enemy in the line of reach.","pt":"Escolha um inimigo destacado na linha de alcance."},
-  "ui.gamepad.cursor_fechado": {"en":"🖱 Interface cursor closed.","pt":"🖱 Cursor de interface fechado."}
+  "ui.gamepad.cursor_fechado": {"en":"🖱 Interface cursor closed.","pt":"🖱 Cursor de interface fechado."},
+  "ui.armadilha.suspeita": {
+    "en": "Suspicious trap",
+    "pt": "Armadilha suspeita"
+  }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
