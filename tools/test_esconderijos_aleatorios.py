@@ -14,7 +14,7 @@ import server as S
 import esconder_aleatorios as A
 
 COMIDAS = set(A.COMIDA) | set(A.BEBIDA)
-MAGICOS = {i for lst in A.MAGICOS.values() for i in lst}
+MAGICOS = {i for lst in A.montar_pools(S._DUNGEON_ITEM_CATALOG).values() for i in lst}
 
 
 def copia_dos_mapas():
@@ -71,7 +71,9 @@ class SorteioTests(unittest.TestCase):
 
     def test_nao_toca_chave_armadilha_nem_conteudo_existente(self):
         for mapa in A.MAPAS:
-            antes = {d["id"]: d for d in ler(S.DUNGEONS_DIR, mapa)["decorations"]}
+            original = ler(S.DUNGEONS_DIR, mapa)
+            A._limpar(original, A._ler_ledger().get(A.MAPAS[mapa][1] or mapa) or {})   # sem o sorteio gravado
+            antes = {d["id"]: d for d in original["decorations"]}
             for d in self.mapas[mapa]["decorations"]:
                 velho = antes[d["id"]]
                 if velho.get("key_objective") or velho.get("trap") or velho.get("loot"):
@@ -95,6 +97,18 @@ class SorteioTests(unittest.TestCase):
             onde = [m for m, defn in self.mapas.items() if m not in variantes
                     for d in self.esconderijos(defn) for it in d["loot"]["items"] if it["id"] == item]
             self.assertEqual(len(onde), 1, f"{item} aparece em {onde}")
+
+    def test_esconderijos_dos_prototipos_nao_vazam_para_adhadal(self):
+        """Adhadal é cópia de floresta/floresta_2 (tools/elara_gilo_mapas.py): o gerador copia o
+        protótipo sem os esconderijos dele, que são do protótipo."""
+        import elara_gilo_mapas as M
+        for f in (M.masmorra_adhadal_1, M.masmorra_adhadal_2):
+            d = f()
+            self.assertFalse([o for o in d["decorations"] if o.get("escondido") or o.get("loot")])
+
+    def test_prototipos_floresta_tem_esconderijos(self):
+        for mapa in ("floresta", "floresta_2"):
+            self.assertGreaterEqual(len(self.esconderijos(self.mapas[mapa])), 3, mapa)
 
     def test_reexecutar_reaplica_o_mesmo_resultado(self):
         antes = {m: json.dumps(d, sort_keys=True) for m, d in self.mapas.items()}

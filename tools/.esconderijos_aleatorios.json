@@ -1081,6 +1081,198 @@
    "tipo": "barril"
   }
  },
+ "floresta": {
+  "decor_100": {
+   "achado": "misto",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "longsword_magica"
+    },
+    {
+     "id": "fruto_de_lumen"
+    },
+    {
+     "id": "absinto"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_133": {
+   "achado": "magico",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "sword_magica"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_157": {
+   "achado": "magico",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "shortsword_magica"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "arvore"
+  },
+  "decor_50": {
+   "achado": "comida",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "carne_bovina"
+    },
+    {
+     "id": "cantil_agua"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  }
+ },
+ "floresta_2": {
+  "decor_131": {
+   "achado": "misto",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "escudo_p_retalhacao_trovejante"
+    },
+    {
+     "id": "racao_completa"
+    },
+    {
+     "id": "rum"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_137": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "pernil"
+    },
+    {
+     "id": "garrafa_vinho"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_163": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "racao_viagem"
+    },
+    {
+     "id": "cerveja_ana"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_285": {
+   "achado": "comida",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "suco_fruta"
+    },
+    {
+     "id": "pao"
+    },
+    {
+     "id": "cantil_agua"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_3": {
+   "achado": "misto",
+   "cd": 14,
+   "itens": [
+    {
+     "id": "lanca_enorme_magica"
+    },
+    {
+     "id": "leite"
+    },
+    {
+     "id": "caneca_cerveja"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_30": {
+   "achado": "magico",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "machado_duplo_magica"
+    }
+   ],
+   "ouro": 15,
+   "tipo": "arvore"
+  },
+  "decor_470": {
+   "achado": "magico",
+   "cd": 12,
+   "itens": [
+    {
+     "id": "warhammer_magica"
+    },
+    {
+     "id": "absinto"
+    }
+   ],
+   "ouro": 0,
+   "tipo": "arvore"
+  },
+  "decor_53": {
+   "achado": "comida",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "banquete_viagem"
+    },
+    {
+     "id": "hidromel"
+    },
+    {
+     "id": "health_potion_small"
+    }
+   ],
+   "ouro": 10,
+   "tipo": "arvore"
+  },
+  "decor_561": {
+   "achado": "magico",
+   "cd": 11,
+   "itens": [
+    {
+     "id": "marreta_quebra_couracas"
+    }
+   ],
+   "ouro": 40,
+   "tipo": "arvore_seca"
+  }
+ },
  "sombras_1_vau": {
   "decor_108": {
    "achado": "misto",

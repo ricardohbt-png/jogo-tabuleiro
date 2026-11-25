@@ -32,8 +32,16 @@ FUGA_TEXTO = ("Derrotado, o Gilo ri entre os dentes. Uma melodia estridente vem 
 
 
 def _proto(nome):
+    """Protótipo do autor, SEM os esconderijos: eles são do protótipo (tools/esconder_aleatorios.py)
+    e não podem vazar para as cópias de Adhadal, que têm os seus."""
     with open(os.path.join(RAIZ, "dungeons", nome + ".json"), encoding="utf-8") as f:
-        return json.load(f)
+        d = json.load(f)
+    for o in d.get("decorations", []):
+        if o.get("escondido"):
+            o["loot"] = None
+            o.pop("escondido", None)
+            o.pop("cd_busca", None)
+    return d
 
 
 def _crs():

@@ -172715,12 +172715,27 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "carne_bovina"
+              },
+              {
+                "id": "cantil_agua"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_51",
@@ -173543,12 +173558,27 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "longsword_magica"
+              },
+              {
+                "id": "fruto_de_lumen"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_101",
@@ -174170,12 +174200,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "sword_magica"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_134",
@@ -174602,12 +174641,21 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "shortsword_magica"
+              }
+            ]
+          },
           "key_objective": false,
           "vscale": [
             1.3,
             1.9
-          ]
+          ],
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_158",
@@ -177438,8 +177486,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "lanca_enorme_magica"
+              },
+              {
+                "id": "leite"
+              },
+              {
+                "id": "caneca_cerveja"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 14
         },
         {
           "id": "decor_4",
@@ -177816,8 +177879,17 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 15,
+            "items": [
+              {
+                "id": "machado_duplo_magica"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_31",
@@ -178138,8 +178210,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "banquete_viagem"
+              },
+              {
+                "id": "hidromel"
+              },
+              {
+                "id": "health_potion_small"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_54",
@@ -179234,8 +179321,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "escudo_p_retalhacao_trovejante"
+              },
+              {
+                "id": "racao_completa"
+              },
+              {
+                "id": "rum"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_132",
@@ -179318,8 +179420,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "pernil"
+              },
+              {
+                "id": "garrafa_vinho"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_138",
@@ -179682,8 +179796,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 10,
+            "items": [
+              {
+                "id": "racao_viagem"
+              },
+              {
+                "id": "cerveja_ana"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_164",
@@ -181390,8 +181516,23 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "suco_fruta"
+              },
+              {
+                "id": "pao"
+              },
+              {
+                "id": "cantil_agua"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_286",
@@ -184008,8 +184149,20 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
-          "key_objective": false
+          "loot": {
+            "gold": 0,
+            "items": [
+              {
+                "id": "warhammer_magica"
+              },
+              {
+                "id": "absinto"
+              }
+            ]
+          },
+          "key_objective": false,
+          "escondido": true,
+          "cd_busca": 12
         },
         {
           "id": "decor_471",
@@ -185347,9 +185500,18 @@ window.EDITOR_DUNGEONS = [
             0,
             1
           ],
-          "loot": null,
+          "loot": {
+            "gold": 40,
+            "items": [
+              {
+                "id": "marreta_quebra_couracas"
+              }
+            ]
+          },
           "key_objective": false,
-          "image": "arvore_seca.png"
+          "image": "arvore_seca.png",
+          "escondido": true,
+          "cd_busca": 11
         },
         {
           "id": "decor_562",
