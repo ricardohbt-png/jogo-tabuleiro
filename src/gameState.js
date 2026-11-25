@@ -3974,6 +3974,34 @@ const GS = (() => {
   // munição que o servidor aceita preparar. Puro (só lê `me` e `opts`); o servidor
   // continua sendo quem valida. opts: {metodo:'frasco'|'veneno_rapido', venenoId,
   // doisVenenos, maxPorFrasco}.
+  // ── Abas do Mercador ────────────────────────────────────────────────────────
+  // A ORDEM é índice de lógica (shopTabIdx): trocar a ordem aqui já reordena as abas na
+  // tela e as comparações do render, que usam o id e não o número. "vender" é sempre a última.
+  const ABAS_MERCADOR = ['elmos', 'aneis', 'botas', 'talismas_amuletos', 'mochila_carga',
+    'outros_equipamentos', 'consumiveis', 'instrumentos', 'arremessaveis', 'venenos',
+    'pergaminhos', 'vender'];
+  // Em qual aba do Mercador um item é vendido. Toda a lista cai em alguma aba (o que não
+  // tem regra própria vai para "outros_equipamentos" se se equipa, ou "consumiveis" se não).
+  function abaMercadorDoItem(item) {
+    if (!item) return 'consumiveis';
+    if (item.tipo_item === 'instrumento') return 'instrumentos';
+    if (item.effect === 'throwable') return 'arremessaveis';
+    if (item.effect === 'coat_poison') return 'venenos';
+    if (item.effect === 'scroll') return 'pergaminhos';
+    const slot = item.item_slot;
+    if (slot === 'head') return 'elmos';
+    if (slot === 'ring') return 'aneis';
+    if (slot === 'boots') return 'botas';
+    if (slot === 'item') {
+      if (item.effect === 'bagslots' || item.effect === 'utility_belt') return 'mochila_carga';
+      const id = String(item.id || '');
+      if (/^(talisma_|amulet|relicario_)/.test(id)) return 'talismas_amuletos';
+      return 'outros_equipamentos';
+    }
+    if (slot && slot !== 'bag') return 'outros_equipamentos';   // grimórios, bola de cristal...
+    return 'consumiveis';
+  }
+
   function venenoAlvos(me, opts) {
     opts = opts || {};
     const metodo = opts.metodo || 'frasco';
@@ -4766,6 +4794,8 @@ const GS = (() => {
     ladinoVenenoMaxHits,
     ladinoVeneno2Slots,
     venenoAlvos,
+    ABAS_MERCADOR,
+    abaMercadorDoItem,
     ladinoEsconderBonus,
     ladinoEsconderLivre,
     ladinoEsconderRevelaCA,
