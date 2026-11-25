@@ -62631,7 +62631,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             sofre_escuridao = bool(zonas_escuridao and not self._tem_visao_no_escuro(p))
             duracoes_escuridao = [int(z.get("duracao", 0) or 0) for z in zonas_escuridao
                                   if int(z.get("duracao", 0) or 0) > 0]
+            # Ação principal extra (Velocidade / Oportunidade) ainda não gasta: o
+            # servidor a consome em `_acao_bloqueada`, mas o cliente só libera o
+            # ataque e as habilidades quando `action_done` é falso. Mostra como livre
+            # (e marca `acao_extra_disponivel`) enquanto o crédito existe.
+            acao_extra = bool(p.get("action_done") and p.get("alive") and (
+                (p.get("velocidade_rodadas", 0) > 0 and not p.get("velocidade_extra_usada"))
+                or (p.get("oportunidade_credito")
+                    and p.get("oportunidade_round") == self.round_num)))
             snapshot = dict(p,
+                            action_done=bool(p.get("action_done")) and not acao_extra,
+                            acao_extra_disponivel=acao_extra,
                             magias_conhecidas=magias_visiveis,
                             magias_grimorio=magias_grimorio,
                             initiative=self.initiative_value(p),
