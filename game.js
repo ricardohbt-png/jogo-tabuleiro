@@ -50323,10 +50323,10 @@ function startLoop3D(){
     _animarChamasVivasPersistentes3D(now);
     _updateArmadilhas3D(now);
     _updateFumaca3D(now);
-    _syncLootBadges3D();
-    _updateAchados3D(now);
     _updateSombras3D(now);
     _updateChamasFx3D(now);
+    _syncLootBadges3D();
+    _updateAchados3D(now);
     _updateCongelamentoFx3D(now);
     _updateServosTom3D();
 
