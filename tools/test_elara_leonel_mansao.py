@@ -159,8 +159,9 @@ class InteriorTests(unittest.TestCase):
     def test_celas_tem_o_que_achar(self):
         d = M.masmorra_leonel_2()
         com_loot = [o for o in d["decorations"] if o.get("loot") and not o.get("escondido")]  # esconderijos: tools/esconder_tesouros.py
-        self.assertGreaterEqual(len(com_loot), 3)
-        self.assertTrue(all(o["type"] == "gaiola" for o in com_loot))
+        # O interior foi decorado à mão (barris, mesas, lareira...): o saque não é só das celas.
+        gaiolas = [o for o in com_loot if o["type"] == "gaiola"]
+        self.assertGreaterEqual(len(gaiolas), 3)
 
     def test_mapa_valido(self):
         ok, msg = S.validar_dungeon(M.masmorra_leonel_2())
