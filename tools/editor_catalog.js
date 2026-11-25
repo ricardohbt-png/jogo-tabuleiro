@@ -17486,6 +17486,48 @@ window.EDITOR_CATALOG = {
       "descricao": "+1 de acerto e +1 de dano por acerto com armas corpo a corpo ou à distância."
     },
     {
+      "id": "anel_caminhante_incansavel",
+      "name": "Anel do Caminhante Incansável",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_caminhante_incansavel.png",
+      "magical": true,
+      "item_slot": "ring",
+      "effect": "fome_max",
+      "value": 10,
+      "bonuses": [
+        {
+          "effect": "sede_max",
+          "value": 10
+        }
+      ],
+      "descricao": "+10 aos máximos de fome e sede enquanto estiver equipado."
+    },
+    {
+      "id": "anel_peregrino_vigilante",
+      "name": "Anel do Peregrino Vigilante",
+      "emoji": "💍",
+      "icon": "assets/itens/anel_peregrino_vigilante.png",
+      "magical": true,
+      "item_slot": "ring",
+      "effect": "vision",
+      "value": 2,
+      "bonuses": [
+        {
+          "effect": "save_bonus",
+          "value": 1
+        },
+        {
+          "effect": "fome_max",
+          "value": 5
+        },
+        {
+          "effect": "sede_max",
+          "value": 5
+        }
+      ],
+      "descricao": "+2 de visão, +1 em todos os testes de resistência e +5 aos máximos de fome e sede enquanto estiver equipado."
+    },
+    {
       "id": "ring_vita",
       "name": "Anel da Vitalidade",
       "emoji": "💍",
@@ -17756,9 +17798,17 @@ window.EDITOR_CATALOG = {
         {
           "effect": "initiative",
           "value": 1
+        },
+        {
+          "effect": "fome_max",
+          "value": 5
+        },
+        {
+          "effect": "sede_max",
+          "value": 5
         }
       ],
-      "descricao": "+1 de visão e +1 de iniciativa enquanto equipado."
+      "descricao": "+1 de visão, +1 de iniciativa e +5 aos máximos de fome e sede enquanto equipado."
     },
     {
       "id": "chapeu_explorador",
@@ -17772,9 +17822,17 @@ window.EDITOR_CATALOG = {
         {
           "effect": "atk",
           "value": 1
+        },
+        {
+          "effect": "fome_max",
+          "value": 4
+        },
+        {
+          "effect": "sede_max",
+          "value": 4
         }
       ],
-      "descricao": "+2 de visão e +1 nos ataques enquanto equipado."
+      "descricao": "+2 de visão, +1 nos ataques e +4 aos máximos de fome e sede enquanto equipado."
     },
     {
       "id": "chapeu_cacador",

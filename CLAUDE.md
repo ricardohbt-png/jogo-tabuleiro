@@ -599,7 +599,7 @@ O item nativo `anel_protecao` está em `SHOP_MERCHANT`: slot `ring`, `effect: "d
 
 `boina_batedor` custa 60 moedas e concede `vision: +1`; `boina_alerta` custa 150 moedas e concede `vision: +1` mais `save_bonus: +1` em todos os testes de resistência enquanto equipada. Ambas ocupam `head`, usam `assets/itens/chapeu1.png` e estão nos cinco mercadores. `save_bonus` é aplicado e removido no fluxo de equipamento e somado em `_testar_save`.
 
-`chapeu_aventureiro` custa 120 moedas, ocupa `head`, usa `assets/itens/chapeu_aventureiro.png` e está nos cinco mercadores. Concede `vision: +1` e `initiative: +1` enquanto equipado; ambos usam o fluxo reversível de bônus de equipamento e qualquer classe pode usá-lo.
+`chapeu_aventureiro` custa 120 moedas, ocupa `head`, usa `assets/itens/chapeu_aventureiro.png` e está nos cinco mercadores. Concede `vision: +1`, `initiative: +1`, `fome_max: +5` e `sede_max: +5` enquanto equipado; os bônus usam o fluxo reversível de equipamento e qualquer classe pode usá-lo.
 
 ### Manto das Sombras (2026-10-26)
 
@@ -775,6 +775,12 @@ Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` conc
 
 `amuleto_jornada` custa 400 moedas e concede +1 Constituição e +5 aos máximos de fome e sede; `amuleto_jornada_infindavel` custa 600 e concede +1 Constituição e +10 aos dois máximos; `relicario_jornada_eterna` custa 1.000 e concede +2 Constituição e +20 aos dois máximos. Todos ocupam o slot `item`, usam ícones PNG próprios em `assets/itens/` e estão à venda nos cinco mercadores (`city_shops.json`). Os efeitos `fome_max`/`sede_max` são modificadores reversíveis de equipamento calculados por `_recalcular_maximos_sobrevivencia`; os nomes e descrições estão no catálogo PT/EN e no catálogo do editor.
 
+### Anel do Caminhante Incansável (2026-11-25)
+
+`anel_caminhante_incansavel` custa 350 moedas, ocupa o slot `ring`, usa `assets/itens/anel_caminhante_incansavel.png` e concede +10 aos máximos de fome e sede enquanto equipado. Os efeitos reversíveis `fome_max`/`sede_max` usam `_recalcular_maximos_sobrevivencia`; o item está nos cinco mercadores e nos catálogos PT/EN e do editor.
+
+`anel_peregrino_vigilante` custa 800 moedas, ocupa o slot `ring`, usa `assets/itens/anel_peregrino_vigilante.png` e concede +2 de visão, +1 em todos os testes de resistência e +5 aos máximos de fome e sede enquanto equipado. Os efeitos reversíveis ficam no catálogo e o item está nos cinco mercadores.
+
 ### Aljavas (2026-10-25)
 
 `mini_aljava`, `aljava_pequena` e `aljava_grande` oferecem respectivamente 1, 2 e 3 slots `quiver_slots` no próprio item equipado. Cada slot comporta até 40 projéteis de uma mesma pilha de flechas ou virotes, incluindo variantes especiais; o conteúdo permanece na aljava ao desequipá-la. A mini ocupa `item1`/`item2`; as demais ocupam `off_hand`. `move_quiver_ammo` transfere munição entre bolsa e aljava; ataques e prévias consideram as aljavas equipadas. Cada pilha na bolsa comporta até 20 unidades, sem truncar pilhas antigas maiores. Arcos com aljava e bestas também podem consumir munição da bolsa, conforme as preferências existentes. A aljava não concede munição nem altera dano.
@@ -797,7 +803,7 @@ mochila_carga custa 250 moedas, usa assets/itens/backpack.png e concede +6 espa�
 
 `maravilha_aventureiro_menor` custa 2.500 moedas, concede +9 espaços de mochila, quatro bolsos com até 4 unidades iguais cada e 1 slot de aljava com até 40 flechas ou virotes. `maravilha_aventureiro_maior` custa 6.000 moedas, concede +12 espaços, quatro bolsos com até 8 unidades iguais cada e 2 slots de aljava com até 40 projéteis cada. Ambos ocupam um único espaço `item1`/`item2`, mantêm os conteúdos ao desequipar e usam `assets/itens/maravilha_do_aventureiro.png`.
 
-`chapeu_explorador` custa 300 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 de visão e +1 nos ataques enquanto equipado.
+`chapeu_explorador` custa 300 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 de visão, +1 nos ataques e +4 aos máximos de fome e sede enquanto equipado. Os bônus de sobrevivência são revertidos ao desequipar via efeitos `fome_max`/`sede_max`.
 
 `chapeu_cacador` custa 200 moedas, ocupa o slot `head`, usa `assets/itens/chapeu_aventureiro.png` e concede +2 ao dano por acerto com armas corpo a corpo ou à distância enquanto equipado, pelo efeito existente `damage_bonus`.
 
