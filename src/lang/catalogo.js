@@ -2530,6 +2530,14 @@ window.LANG_CATALOGO = {
     "en": "Basalt Bastion Ring",
     "pt": "Anel do Bastião de Basalto"
   },
+  "cat.item.anel_caminhante_incansavel.desc": {
+    "en": "+10 maximum hunger and thirst while equipped.",
+    "pt": "+10 aos máximos de fome e sede enquanto estiver equipado."
+  },
+  "cat.item.anel_caminhante_incansavel.nome": {
+    "en": "Tireless Wayfarer Ring",
+    "pt": "Anel do Caminhante Incansável"
+  },
   "cat.item.anel_danca_vento.desc": {
     "en": "+4 Dexterity while equipped.",
     "pt": "+4 de Destreza enquanto estiver equipado."
@@ -2561,6 +2569,14 @@ window.LANG_CATALOGO = {
   "cat.item.anel_olho_esfinge.nome": {
     "en": "Eye of the Sphinx Ring",
     "pt": "Anel do Olho da Esfinge"
+  },
+  "cat.item.anel_peregrino_vigilante.desc": {
+    "en": "+2 vision, +1 to all saving throws, and +5 maximum hunger and thirst while equipped.",
+    "pt": "+2 de visão, +1 em todos os testes de resistência e +5 aos máximos de fome e sede enquanto estiver equipado."
+  },
+  "cat.item.anel_peregrino_vigilante.nome": {
+    "en": "Vigilant Pilgrim Ring",
+    "pt": "Anel do Peregrino Vigilante"
   },
   "cat.item.anel_protecao.desc": {
     "en": "+1 Armor Class while equipped.",
@@ -3295,8 +3311,8 @@ window.LANG_CATALOGO = {
     "pt": "Chapéu do Arquimago Superior"
   },
   "cat.item.chapeu_aventureiro.desc": {
-    "en": "+1 vision and +1 initiative while equipped.",
-    "pt": "+1 de visão e +1 de iniciativa enquanto equipado."
+    "en": "+1 vision, +1 initiative, and +5 maximum hunger and thirst while equipped.",
+    "pt": "+1 de visão, +1 de iniciativa e +5 aos máximos de fome e sede enquanto equipado."
   },
   "cat.item.chapeu_aventureiro.nome": {
     "en": "Adventurer's Hat",
@@ -3327,8 +3343,8 @@ window.LANG_CATALOGO = {
     "pt": "Chapéu do Conjurador"
   },
   "cat.item.chapeu_explorador.desc": {
-    "en": "+2 vision and +1 to attacks while equipped.",
-    "pt": "+2 de visão e +1 nos ataques enquanto equipado."
+    "en": "+2 vision, +1 to attacks, and +4 maximum hunger and thirst while equipped.",
+    "pt": "+2 de visão, +1 nos ataques e +4 aos máximos de fome e sede enquanto equipado."
   },
   "cat.item.chapeu_explorador.nome": {
     "en": "Explorer's Hat",

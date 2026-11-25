@@ -416,7 +416,9 @@
       "laminas_riposta",
       "amuleto_jornada",
       "amuleto_jornada_infindavel",
-      "relicario_jornada_eterna"
+      "relicario_jornada_eterna",
+      "anel_caminhante_incansavel",
+      "anel_peregrino_vigilante"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -891,7 +893,9 @@
       "laminas_riposta",
       "amuleto_jornada",
       "amuleto_jornada_infindavel",
-      "relicario_jornada_eterna"
+      "relicario_jornada_eterna",
+      "anel_caminhante_incansavel",
+      "anel_peregrino_vigilante"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -1366,7 +1370,9 @@
       "laminas_riposta",
       "amuleto_jornada",
       "amuleto_jornada_infindavel",
-      "relicario_jornada_eterna"
+      "relicario_jornada_eterna",
+      "anel_caminhante_incansavel",
+      "anel_peregrino_vigilante"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -1841,7 +1847,9 @@
       "laminas_riposta",
       "amuleto_jornada",
       "amuleto_jornada_infindavel",
-      "relicario_jornada_eterna"
+      "relicario_jornada_eterna",
+      "anel_caminhante_incansavel",
+      "anel_peregrino_vigilante"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -2265,7 +2273,9 @@
       "laminas_riposta",
       "amuleto_jornada",
       "amuleto_jornada_infindavel",
-      "relicario_jornada_eterna"
+      "relicario_jornada_eterna",
+      "anel_caminhante_incansavel",
+      "anel_peregrino_vigilante"
     ]
   }
 }
