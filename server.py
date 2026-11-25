@@ -3728,6 +3728,27 @@ def snapshot_character(player):
     """Extrai a ficha durável do jogador (deep copy). Ver _DURABLE_FIELDS."""
     return {k: deepcopy(player[k]) for k in _DURABLE_FIELDS if k in player}
 
+def _limpar_recargas_de_itens(player):
+    """Zera as recargas guardadas nos itens (`*_ready_round`, `*_pronta_em`).
+
+    Elas sao rodadas ABSOLUTAS da sala, mas o contador recomeca em 1 a cada sala
+    nova (continuar o jogo salvo): uma arma usada na rodada 30 ficava indisponivel
+    ate a 40a rodada da sessao seguinte. Tambem faz parte do descanso na cidade,
+    como o das tecnicas (`technique_cooldowns`)."""
+    def varre(x):
+        if isinstance(x, dict):
+            for k in [k for k in x
+                      if isinstance(k, str) and (k.endswith("_ready_round") or k.endswith("_pronta_em"))]:
+                x.pop(k, None)
+            for v in x.values():
+                varre(v)
+        elif isinstance(x, list):
+            for v in x:
+                varre(v)
+    for campo in ("gear", "weapon", "bag"):
+        varre(player.get(campo))
+
+
 def _restaurar_servos(player):
     """Servos voltam com o herói. Só os vivos e leais; cada um ganha id novo
     (new_id recomeça a cada boot e colidiria com monstros da sessão nova) e
@@ -3762,6 +3783,7 @@ def restore_character(player, snap):
         player["hp"] = 1
         player["alive"] = True
     _restaurar_servos(player)
+    _limpar_recargas_de_itens(player)   # a sala nova recomeca na rodada 1
     # Botas Velozes já foram persistidas no slot genérico de itens. Migra a
     # peça para o slot dedicado quando disponível para liberar o espaço antigo.
     gear = player.get("gear") or {}
@@ -33089,6 +33111,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             pp["technique_cooldowns"] = {}   # descanso na cidade â†’ recarga total das tÃ©cnicas
             pp["em_chamas_rodadas"] = 0    # chamas nÃ£o persistem fora da masmorra
             pp["chamas_agua_apaga"] = True
+            _limpar_recargas_de_itens(pp)   # descanso: armas tambem recarregam
             pp.pop("visao_escuro_missao", None)
             pp.pop("visao_escuro_rodadas", None)
             pp.pop("visao_escuro_manto", None)
