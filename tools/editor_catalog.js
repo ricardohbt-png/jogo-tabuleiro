@@ -12309,9 +12309,9 @@ window.EDITOR_CATALOG = {
       ],
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": false,
+      "add_strength_to_damage": true,
       "categoria": "perfurante",
-      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
     },
     {
       "id": "warhammer",
@@ -14289,10 +14289,10 @@ window.EDITOR_CATALOG = {
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": false,
+      "add_strength_to_damage": true,
       "categoria": "perfurante",
       "atk_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "hand_crossbow_freixo_negro",
@@ -14988,10 +14988,10 @@ window.EDITOR_CATALOG = {
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": false,
+      "add_strength_to_damage": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "hand_crossbow_cedro_rubro",
@@ -15641,9 +15641,9 @@ window.EDITOR_CATALOG = {
       "material": "madeira",
       "range": 10,
       "range_all_directions": true,
-      "add_strength_to_damage": false,
+      "add_strength_to_damage": true,
       "categoria": "perfurante",
-      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "hand_crossbow_cerne_tita",

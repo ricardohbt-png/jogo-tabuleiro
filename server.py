@@ -1716,7 +1716,7 @@ WEAPONS = {
     "besta_duelista": {"id": "besta_duelista", "name": "Besta do Duelista", "die": "1d6", "stat": "dex", "range": 4, "categoria": "perfurante", "icon": "assets/itens/besta_do_duelista.png"},
     "longbow":       {"id": "longbow",       "name": "Arco Longo",           "die": "1d8",  "stat": "dex",  "range": 10, "categoria": "perfurante"},
     "arco_composto_longo": {"id": "arco_composto_longo", "name": "Arco Composto Longo", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/arco_composto_longo.png", "allowed_classes": ["paladin", "warrior"]},
-    "arco_bruto_combatente": {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": False, "categoria": "perfurante", "icon": "assets/itens/arco_bruto_do_combatente.png", "allowed_classes": ["paladin", "warrior"]},
+    "arco_bruto_combatente": {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "die": "1d10", "stat": "dex", "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": True, "categoria": "perfurante", "icon": "assets/itens/arco_bruto_do_combatente.png", "allowed_classes": ["paladin", "warrior"]},
     "besta":         {"id": "besta",         "name": "Besta",                "die": "1d8",  "stat": "dex",  "range": 8,  "categoria": "perfurante"},
     "besta_pesada":  {"id": "besta_pesada",  "name": "Besta Pesada",         "die": "1d10", "stat": "dex",  "range": 12, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_pesada.png", "allowed_classes": ["warrior", "paladin", "cleric", "rogue"]},
     "besta_repetidora_patrulha": {"id": "besta_repetidora_patrulha", "name": "Besta Repetidora de Patrulha", "die": "1d6", "stat": "dex", "range": 6, "two_handed": True, "categoria": "perfurante", "icon": "assets/itens/besta_repetidora_media.png", "repeating_crossbow": True, "repeating_crossbow_cooldown": 10, "allowed_classes": ["warrior", "paladin", "bard", "rogue"]},
@@ -7847,7 +7847,7 @@ SHOP_WEAPONS = [
     {"id": "longbow",       "name": "Arco Longo",         "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 16, "range": 10, "categoria": "perfurante",
      "allowed_classes": ["paladin", "warrior"]},
     {"id": "arco_composto_longo", "name": "Arco Composto Longo", "emoji": "🏹", "icon": "assets/itens/arco_composto_longo.png", "die": "1d10", "stat": "dex", "price": 60, "range": 10, "range_all_directions": True, "two_handed": True, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."},
-    {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "emoji": "🏹", "icon": "assets/itens/arco_bruto_do_combatente.png", "die": "1d10", "stat": "dex", "price": 120, "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": False, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e usa Destreza no dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."},
+    {"id": "arco_bruto_combatente", "name": "Arco Bruto do Combatente", "emoji": "🏹", "icon": "assets/itens/arco_bruto_do_combatente.png", "die": "1d10", "stat": "dex", "price": 120, "range": 10, "range_all_directions": True, "two_handed": True, "add_strength_to_damage": True, "categoria": "perfurante", "allowed_classes": ["paladin", "warrior"], "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."},
     {"id": "warhammer",     "name": "Martelo de Guerra",  "emoji": "🔨",  "die": "1d8",  "stat": "str_", "price": 18, "crit_nat20_multiplier": 3, "categoria": "contundente",
      "allowed_classes": ["cleric", "paladin", "warrior"]},
     {"id": "besta",         "name": "Besta",              "emoji": "🏹",  "die": "1d8",  "stat": "dex",  "price": 18, "range": 8, "categoria": "perfurante",
@@ -18558,8 +18558,13 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
     def _bonus_atributo_dano_arma(self, p, weapon):
         """Modificador de atributo somado ao dado da arma (acuidade usa o melhor
-        de FOR/DES). Compartilhado pelo dano real e pela prévia do tooltip."""
-        return _weapon_attribute_modifier(p, weapon)
+        de FOR/DES). Compartilhado pelo dano real e pela prévia do tooltip.
+        Armas com `add_strength_to_damage` (Arco Bruto do Combatente e variantes)
+        somam também a Força ao dano — nunca ao acerto."""
+        bonus = _weapon_attribute_modifier(p, weapon)
+        if _weapon_adds_strength_to_damage(weapon):
+            bonus += mod(p.get("str_", 10))
+        return bonus
 
     def _bonus_fixo_dano_arma(self, p, weapon, surv_mod, cancao_dano, gl_dano, bonus_extra):
         """Parcela FIXA do dano armado (tudo além do dado e do atributo), antes do
@@ -66054,6 +66059,16 @@ def _hero_attack_bonus_with_weapon(p, weapon=None):
     class_attr = _CLASS_ATK_ATTR.get(p.get("class_id"), "str_")
     return (int(p.get("atk_bonus", 0) or 0) - mod(p.get(class_attr, 10))
             + _weapon_attribute_modifier(p, weapon))
+
+def _weapon_adds_strength_to_damage(weapon):
+    """True para armas que somam a Força ao dano além do atributo da própria arma.
+    Aceita a propriedade do item, a do catálogo e a da arma-base (variantes de
+    material e cópias de combate antigas)."""
+    weapon = weapon or {}
+    wid = weapon.get("id", "")
+    return bool(weapon.get("add_strength_to_damage")
+                or WEAPONS.get(wid, {}).get("add_strength_to_damage")
+                or WEAPONS.get(_arma_base_id(wid), {}).get("add_strength_to_damage"))
 
 def _weapon_uses_finesse(weapon):
     """Aceita a propriedade do item e também corrige equipamentos legados."""

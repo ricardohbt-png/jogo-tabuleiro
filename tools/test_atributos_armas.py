@@ -36,4 +36,34 @@ class AtributosArmas(unittest.TestCase):
             self.assertEqual(s._hero_attack_bonus_with_weapon(p,s.WEAPONS[wid]),1)
         self.assertEqual(s._hero_attack_bonus_with_weapon(p,s.WEAPONS["dagger_aco_damasco"]),5)
 
+    def test_arco_bruto_soma_forca_so_no_dano(self):
+        """Arco Bruto do Combatente e variantes: acerto só com Destreza; dano com Destreza + Força."""
+        room = s.GameRoom("TEST")
+        ids = ("arco_bruto_combatente", "arco_bruto_combatente_freixo_negro",
+               "arco_bruto_combatente_cedro_rubro", "arco_bruto_combatente_cerne_tita")
+        for classe in ("warrior", "paladin"):
+            p = s.make_player("p", "Teste", classe, 0)
+            room._apply_attribute_delta(p, "str_", 18 - p["str_"])      # +4
+            room._apply_attribute_delta(p, "dex", 14 - p["dex"])        # +2
+            base = p["atk_bonus"] - s.mod(p[s._CLASS_ATK_ATTR[classe]])
+            for wid in ids:
+                with self.subTest(classe=classe, arma=wid):
+                    self.assertIn(wid, s.WEAPONS)
+                    for arma in (s.WEAPONS[wid], {"id": wid}):   # catálogo e cópia de combate sem o campo
+                        self.assertEqual(s._hero_attack_bonus_with_weapon(p, arma), base + 2)
+                        self.assertEqual(room._bonus_atributo_dano_arma(p, arma), 2 + 4)
+        # as outras armas à distância continuam só com Destreza no dano
+        p = s.make_player("p", "Teste", "warrior", 0)
+        room._apply_attribute_delta(p, "str_", 18 - p["str_"])
+        room._apply_attribute_delta(p, "dex", 14 - p["dex"])
+        for wid in ("longbow", "arco_composto_longo", "besta_pesada"):
+            self.assertEqual(room._bonus_atributo_dano_arma(p, s.WEAPONS[wid]), 2, wid)
+
+    def test_arco_bruto_forca_negativa_reduz_o_dano(self):
+        room = s.GameRoom("TEST")
+        p = s.make_player("p", "Teste", "warrior", 0)
+        room._apply_attribute_delta(p, "str_", 8 - p["str_"])           # -1
+        room._apply_attribute_delta(p, "dex", 14 - p["dex"])            # +2
+        self.assertEqual(room._bonus_atributo_dano_arma(p, s.WEAPONS["arco_bruto_combatente"]), 1)
+
 if __name__ == "__main__": unittest.main()
