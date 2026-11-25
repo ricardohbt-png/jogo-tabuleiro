@@ -305,6 +305,7 @@ def destinos():
          "as velhas minas de Pedra-Funda. Falavam de uma garra negra.",
          "Tomé ferido junto à fogueira do acampamento"),
     ])
+    vau_outro["slides"][0]["image"] = "assets/story/sombras_vau_tome_nao_era_roubo.webp"
     minas_intro = historia("minas.intro", [
         ("As minas de Pedra-Funda foram abandonadas quando a veia de prata secou. Agora, "
          "dizem os mineiros, a montanha voltou a ranger à noite.",
@@ -360,6 +361,7 @@ def destinos():
     ])
     fim_rota["slides"][0]["image"] = "assets/story/sombras_final_garra_negra.png"
     fim_rota["slides"][1]["image"] = "assets/story/sombras_caravanas_volta_alva.png"
+    fim_rota["slides"][2]["image"] = "assets/story/sombras_covil_estante_segredo.webp"
     fim_rota["slides"][3]["image"] = "assets/story/sombras_fim_novas_estradas_taverna.png"
 
     def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota=""):
