@@ -364,17 +364,18 @@ def destinos():
     fim_rota["slides"][2]["image"] = "assets/story/sombras_covil_estante_segredo.webp"
     fim_rota["slides"][3]["image"] = "assets/story/sombras_fim_novas_estradas_taverna.png"
 
-    def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota=""):
+    def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota="", some_ao_concluir=False):
         x, y = perto(dx, dy)
         return {"id": did, "nome": nome, "x": x, "y": y, "fome": custo, "sede": custo,
                 "dungeons": etapas, "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "outro_rota": outro_rota,
+                "ocultar_apos_concluir": some_ao_concluir,
                 "requisito": S._clean_requirement(requisito), "renome_recompensa": renome}
 
     return {
         "sombras_vau": destino("sombras_vau", "Emboscada no Vau", 6, 3, 1,
                                [_etapa("sombras_1_vau.json", vau_intro, vau_outro)],
-                               {"fato": FATO_GANCHO}, 1),
+                               {"fato": FATO_GANCHO}, 1, some_ao_concluir=True),
         "sombras_minas": destino("sombras_minas", "Minas de Pedra-Funda", 11, -4, 2,
                                  [_etapa("sombras_2_minas.json", minas_intro, minas_outro)],
                                  {"aventura_id": "sombras_vau"}, 1),
