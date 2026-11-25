@@ -5744,7 +5744,7 @@ A poção não recebe o bônus de área do Cajado Arcano. Ícone:
 bônus. Ao beber, consome o frasco e chama `_executar_velocidade` com duração
 `1d4+1`, compartilhando com a magia o movimento dobrado, uma ação principal
 extra por turno, animação e expiração. A ação extra renova no turno seguinte;
-cada ação ainda paga seu custo normal. Ícone: `assets/itens/pocao_velocidade.png`.
+cada ação ainda paga seu custo normal. Ícone: `assets/itens/pocao_velocidade.png`. **Duração e movimento (2026-11-25):** a rodada do cast não conta (`velocidade_nova` impede que o 1º início de turno seguinte desconte a duração), então `dur` rodadas valem `dur` turnos com o efeito, e o movimento que resta no turno do cast também dobra (só se o efeito não estava ativo; recast não dobra de novo). Vale para a magia Velocidade e para a poção (`_executar_velocidade`). Teste: `python -X utf8 tools/test_velocidade_duracao.py`.
 Regressão: `python -X utf8 tools/test_potions.py`.
 
 ### Poção de Voo (2026-10-17)
