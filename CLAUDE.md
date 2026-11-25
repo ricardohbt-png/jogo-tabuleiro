@@ -763,6 +763,10 @@ Cada uma das 21 variantes usa PNG próprio em `assets/itens/<base>_<material>.pn
 
 Há oito talismãs fixos no `SHOP_MERCHANT`: `talisma_despertar_<atributo>` concede +1 por 250 moedas e usa `assets/itens/medalhao3.png`; `talisma_ascensao_<atributo>` concede +2 por 500 moedas e usa `assets/itens/medalhao4.png`. Cada tier tem uma versão de Força (`str_`), Destreza (`dex`), Inteligência (`int_`) e Constituição (`con_`). São equipamentos no slot `item`, aplicados e removidos por `_apply_gear_effect`/`_apply_attribute_delta`, então derivados como ataque, CA, resistências, PV e CD acompanham o atributo. Os oito SKUs ficam nos cinco mercadores em `city_shops.json` e no catálogo PT/EN e do editor.
 
+### Amuletos de jornada (2026-11-25)
+
+`amuleto_jornada` custa 400 moedas e concede +1 Constituição e +5 aos máximos de fome e sede; `amuleto_jornada_infindavel` custa 600 e concede +1 Constituição e +10 aos dois máximos; `relicario_jornada_eterna` custa 1.000 e concede +2 Constituição e +20 aos dois máximos. Todos ocupam o slot `item`, usam ícones PNG próprios em `assets/itens/` e estão à venda nos cinco mercadores (`city_shops.json`). Os efeitos `fome_max`/`sede_max` são modificadores reversíveis de equipamento calculados por `_recalcular_maximos_sobrevivencia`; os nomes e descrições estão no catálogo PT/EN e no catálogo do editor.
+
 ### Aljavas (2026-10-25)
 
 `mini_aljava`, `aljava_pequena` e `aljava_grande` oferecem respectivamente 1, 2 e 3 slots `quiver_slots` no próprio item equipado. Cada slot comporta até 40 projéteis de uma mesma pilha de flechas ou virotes, incluindo variantes especiais; o conteúdo permanece na aljava ao desequipá-la. A mini ocupa `item1`/`item2`; as demais ocupam `off_hand`. `move_quiver_ammo` transfere munição entre bolsa e aljava; ataques e prévias consideram as aljavas equipadas. Cada pilha na bolsa comporta até 20 unidades, sem truncar pilhas antigas maiores. Arcos com aljava e bestas também podem consumir munição da bolsa, conforme as preferências existentes. A aljava não concede munição nem altera dano.
