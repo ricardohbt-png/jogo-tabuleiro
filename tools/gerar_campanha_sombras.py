@@ -298,6 +298,8 @@ def destinos():
         ("Na curva do rio, uma carroça tombada. Cordas cortadas. E, entre as árvores, o "
          "brilho de olhos pequenos e amarelos.", "carroça tombada, goblins espreitando no mato"),
     ], MUSICA_ABERTURA)
+    vau_intro["slides"][0]["image"] = "assets/story/sombras_estrada_vau_herois.png"
+    vau_intro["slides"][1]["image"] = "assets/story/sombras_vau_carroca_dia.png"
     vau_outro = historia("vau.outro", [
         ("— Não era só roubo — diz Tomé, esfregando os pulsos. — Eles levavam a carga para "
          "as velhas minas de Pedra-Funda. Falavam de uma garra negra.",
@@ -310,21 +312,27 @@ def destinos():
         ("Pegadas miúdas e rastros de carga arrastada descem para o escuro.",
          "túnel com pegadas de kobold iluminado por tocha"),
     ], MUSICA_ABERTURA)
+    minas_intro["slides"][0]["image"] = "assets/story/sombras_minas_chegada_noite.png"
+    minas_intro["slides"][1]["image"] = "assets/story/sombras_minas_rastros_tocha.png"
     minas_outro = historia("minas.outro", [
         ("No cofre, frascos que os kobolds nunca entenderam — ácido e óleo — e um bilhete "
          "com o sinal de uma garra negra: o Covil, e um guardião que não morre.",
          "cofre aberto com frascos e um bilhete marcado por uma garra"),
     ])
+    minas_outro["slides"][0]["image"] = "assets/story/sombras_minas_cofre_bilhete.png"
     covil_intro = historia("covil.intro", [
         ("O Covil da Garra Negra fica numa fortaleza em ruínas, na encosta sobre as minas.",
          "fortaleza em ruínas na encosta, fumaça saindo das seteiras"),
         ("Daqui não há volta até o fim: os andares se emendam, e o que for gasto lá dentro "
          "não se recupera.", "portão de pedra entreaberto, escuro lá dentro"),
     ], MUSICA_ABERTURA)
+    covil_intro["slides"][0]["image"] = "assets/story/sombras_covil_fortaleza_noite.png"
+    covil_intro["slides"][1]["image"] = "assets/story/sombras_covil_entrada.png"
     saloes_outro = historia("covil.transicao", [
         ("A escadaria desce para o calor. Cheiro de fumaça e de carne podre. Algo enorme "
          "respira lá embaixo.", "escada de pedra descendo para um salão iluminado por braseiros"),
     ])
+    saloes_outro["slides"][0]["image"] = "assets/story/sombras_covil_escadaria.png"
     trono_intro = historia("trono.intro", [
         ("No Trono de Pedra, entre braseiros, o guardião se levanta: um troll. As feridas "
          "que os heróis abrem se fecham diante dos olhos.",
@@ -332,10 +340,13 @@ def destinos():
         ("Ácido e fogo. É o que diz o bilhete. É o que sobrou do cofre.",
          "mão segurando um frasco de ácido"),
     ], MUSICA_TROLL)
+    trono_intro["slides"][0]["image"] = "assets/story/sombras_trono_troll.png"
+    trono_intro["slides"][1]["image"] = "assets/story/sombras_trono_acido_fogo.png"
     trono_outro = historia("trono.outro", [
         ("O troll tomba de vez. O bando da Garra Negra se desfaz na noite.",
          "troll caído entre braseiros apagados"),
     ])
+    trono_outro["slides"][0]["image"] = "assets/story/sombras_trono_vitoria.png"
     fim_rota = historia("covil.fim", [
         ("Parabéns, heróis! A Garra Negra caiu, e as estradas de Alva e Luz estão seguras "
          "outra vez. Missão cumprida.", "heróis erguendo as armas ao amanhecer, fortaleza em ruínas ao fundo"),
@@ -347,6 +358,9 @@ def destinos():
          {"requisito": S._clean_requirement({"item_id": ANEL_ID}), "negar": True}),
         ("Outras estradas esperam por vocês no mapa.", "mapa-múndi aberto sobre a mesa da taverna"),
     ])
+    fim_rota["slides"][0]["image"] = "assets/story/sombras_final_garra_negra.png"
+    fim_rota["slides"][1]["image"] = "assets/story/sombras_caravanas_volta_alva.png"
+    fim_rota["slides"][3]["image"] = "assets/story/sombras_fim_novas_estradas_taverna.png"
 
     def destino(did, nome, dx, dy, custo, etapas, requisito, renome, outro_rota=""):
         x, y = perto(dx, dy)
