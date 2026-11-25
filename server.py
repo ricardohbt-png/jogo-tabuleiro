@@ -62778,6 +62778,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "marcador_entrada": self.marcador_entrada,
             "start_mode": self.start_mode,
             "hero_spawns": [dict(s, pos=list(s["pos"])) for s in self.hero_spawns],
+            # Catálogo da Guilda: só o city_state o levava, então quem entra direto na
+            # masmorra (continuar um jogo salvo, religar, recarregar a página) ficava sem
+            # os botões das técnicas — inclusive as concedidas por itens equipados.
+            # É estático e vai como campo diferível: uma vez por conexão.
+            "guild_catalog": list(GUILD_CATALOG.values()),
             # Saída individual: o cliente confirma o custo antes de enviar exit_dungeon.
             "saida_permitida": self.saida_permitida,
             "custo_saida": dict(zip(("fome", "sede"), self._custo_viagem_saida())),
@@ -63035,7 +63040,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
 # Campos do game_state grandes e quase estáticos: ver GameRoom.push_state.
 ESTADO_DIFERIVEL = ("tiles", "rooms", "materiais", "decorations", "secret_passages",
-                    "elevacoes", "alturas_parede", "pontes", "door_conditions", "hero_spawns")
+                    "elevacoes", "alturas_parede", "pontes", "door_conditions", "hero_spawns",
+                    "guild_catalog")
 # Listas de entidades com `id` enviadas como delta (só as que mudaram): ver push_state.
 ESTADO_LISTAS_DELTA = ("monsters", "players", "chests", "corpses", "armadilhas")
 
