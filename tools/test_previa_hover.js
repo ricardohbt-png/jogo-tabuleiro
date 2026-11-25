@@ -30,11 +30,16 @@ for (const p of [{dano_dado: '1d10', dano_fixo: 4}, {dano_dado: '3d6', dano_fixo
 
 // [2] fiação no game.js
 const game = fs.readFileSync(path.join(raiz, 'game.js'), 'utf8').split('\r\n').join('\n');
-ok(/function _previaAlcanceMostrar\(alcance\)/.test(game), 'falta _previaAlcanceMostrar');
+ok(/function _previaAlcanceMostrar\(alcance, areaRaio = 0, areaLado = 0\)/.test(game), 'falta _previaAlcanceMostrar');
 ok(/if\(_aimSessionState\.current\) return;\n  const me = GS\.me;/.test(game), 'a prévia não pode rodar durante uma mira');
 ok(/function _barraFechar\(\)\{\n  _barraMenuAberto = null;\n  _previaAlcanceLimpar\(\);/.test(game), 'fechar o menu deve limpar a prévia');
-ok(/mouseenter', \(\) => _previaAlcanceMostrar\(h\.alcance\)/.test(game), 'habilidades sem hover de alcance');
-ok(/mouseenter', \(\) => _previaAlcanceMostrar\(alc\)/.test(game), 'magias sem hover de alcance');
+ok(/mouseenter', \(\) => _previaAlcanceMostrar\(h\.alcance, h\.areaRaio\)/.test(game), 'habilidades sem hover de alcance');
+ok(/mouseenter', \(\) => _previaAlcanceMostrar\(alc, areaC\.raio, areaC\.lado\)/.test(game), 'magias sem hover de alcance');
+// cores: alcance em vermelho, área em verde
+ok(/range: +\{ hex: 0xe23b3b/.test(game), 'alcance deve ser vermelho');
+ok(/valid: +\{ hex: 0x22c96f/.test(game), 'área/válido deve continuar verde');
+ok(/chip\('#ff7a7a', t\('ui\.mira\.alcance'\)\)/.test(game), 'legenda do alcance deve ser vermelha');
+ok(/_addQuadrado\(me\.pos\[0\], me\.pos\[1\], areaLado, area\)/.test(game), 'prévia da área centrada ausente');
 ok(/dataset\.alcance = '1'/.test(game) && /dataset\.alcance = '4'/.test(game), 'técnicas com alvo sem alcance');
 ok(/btn\.dataset\.alcance = String\(item\.throw_range/.test(game), 'arremesso de arma sem alcance');
 ok(/GS\.faixaDanoPrevisao\(prev\)/.test(game), 'tooltip não usa a faixa de dano');
