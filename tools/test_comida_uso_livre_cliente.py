@@ -21,7 +21,7 @@ class ComidaLivreTests(unittest.TestCase):
         bloco = re.search(r"const BONUS_ACTION_EFFECTS = new Set\(\[(.*?)\]\);", js, re.S).group(1)
         efeitos = set(re.findall(r"'([a-z_]+)'", bloco))
         servidor = ler("server.py")
-        livres = re.search(r"effect not in \{([^}]*)\}:\s*\n\s*#[^\n]*\n\s*#[^\n]*\n\s*ok = await self\._executar_acao_bonus", servidor)
+        livres = re.search(r"effect not in \{([^}]*)\}\s*\n\s*and not consumo_sobrevivencia_cidade\)", servidor)
         self.assertIsNotNone(livres, "o servidor deixou de listar as comidas livres")
         livres = set(re.findall(r'"([a-z_]+)"', livres.group(1)))
         self.assertTrue({"food", "meal_survival"} <= livres)

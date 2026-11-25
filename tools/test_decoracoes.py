@@ -187,11 +187,11 @@ def test_catalog():
           and not d["oasis_pequeno"]["loot_capaz"]
           and d["oasis_pequeno"]["image"] == "oasis_pequeno.png"
           and server.DECOR_MODEL3D["oasis_pequeno"].endswith("oasis_pequeno.glb"))
-    check("acampamento abandonado ocupa 2x2, é alto, bloqueia passagem e usa PNG/GLB",
+    check("acampamento abandonado ocupa 2x2, é alto, bloqueia passagem, aceita loot e usa PNG/GLB",
           d["acampamento_abandonado"]["size"] == [2, 2]
           and d["acampamento_abandonado"]["alto"]
           and not d["acampamento_abandonado"]["pisavel"]
-          and not d["acampamento_abandonado"]["loot_capaz"]
+          and d["acampamento_abandonado"]["loot_capaz"]
           and d["acampamento_abandonado"]["image"] == "acampamento_abandonado.png"
           and server.DECOR_MODEL3D["acampamento_abandonado"].endswith("acampamento_abandonado.glb"))
     check("todo tipo tem emoji/nome/gira/loot_capaz", all(

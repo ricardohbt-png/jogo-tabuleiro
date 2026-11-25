@@ -142,7 +142,7 @@ check("game.js aplica o catálogo nos 3 estáticos",
       && /aplicarCatalogo\(\s*ARMADILHAS_LUCCAS/.test(gamejs)
       && /aplicarCatalogo\(\s*GS\.CATALOGO_ITENS/.test(gamejs));
 check("a conversão do inventário prefere o nome do servidor",
-      /\{\s*\.\.\.cat,\s*nome:\s*it\.name\s*\|\|\s*cat\.nome\s*\}/.test(gamejs));
+      /\.\.\.cat,[\s\S]{0,80}?nome:\s*it\.name\s*\|\|\s*cat\.nome\s*\}/.test(gamejs));
 
 console.log("\n[N] Nomes compostos no cliente (etapa 4c)");
 I18N.setLang("en");

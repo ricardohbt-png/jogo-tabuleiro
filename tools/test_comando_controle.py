@@ -120,6 +120,8 @@ async def main():
     # mudos, o aviso do [2] nao adianta: sao 34 handlers com a mesma guarda.
     r2, p2_, q2, m2 = montar()
     await abrir_janela(r2, p2_, m2)
+    # O servidor resolve o item antes de checar a vez: o herói precisa tê-lo na bolsa.
+    r2.players["p1"].setdefault("bag", []).append(dict(next(i for i in S.SHOP_TEMPLE if i["id"] == "health_potion")))
     casos = [
         ("mover",        r2.handle_move("p1", 1, 0)),
         ("atacar",       r2.handle_attack("p1", "m1")),
