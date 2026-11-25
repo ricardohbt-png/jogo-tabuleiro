@@ -423,10 +423,12 @@
           "slides": [
             {
               "text": "A Estrada do Vau atravessa o bosque a leste de Alva e Luz. Há três luas nenhuma caravana chega do outro lado.",
+              "image": "assets/story/sombras_estrada_vau_herois.png",
               "fit": "contain"
             },
             {
               "text": "Na curva do rio, uma carroça tombada. Cordas cortadas. E, entre as árvores, o brilho de olhos pequenos e amarelos.",
+              "image": "assets/story/sombras_vau_carroca_dia.png",
               "fit": "contain"
             }
           ],
@@ -476,10 +478,12 @@
           "slides": [
             {
               "text": "As minas de Pedra-Funda foram abandonadas quando a veia de prata secou. Agora, dizem os mineiros, a montanha voltou a ranger à noite.",
+              "image": "assets/story/sombras_minas_chegada_noite.png",
               "fit": "contain"
             },
             {
               "text": "Pegadas miúdas e rastros de carga arrastada descem para o escuro.",
+              "image": "assets/story/sombras_minas_rastros_tocha.png",
               "fit": "contain"
             }
           ],
@@ -489,6 +493,7 @@
           "slides": [
             {
               "text": "No cofre, frascos que os kobolds nunca entenderam — ácido e óleo — e um bilhete com o sinal de uma garra negra: o Covil, e um guardião que não morre.",
+              "image": "assets/story/sombras_minas_cofre_bilhete.png",
               "fit": "contain"
             }
           ]
@@ -529,10 +534,12 @@
           "slides": [
             {
               "text": "O Covil da Garra Negra fica numa fortaleza em ruínas, na encosta sobre as minas.",
+              "image": "assets/story/sombras_covil_fortaleza_noite.png",
               "fit": "contain"
             },
             {
               "text": "Daqui não há volta até o fim: os andares se emendam, e o que for gasto lá dentro não se recupera.",
+              "image": "assets/story/sombras_covil_entrada.png",
               "fit": "contain"
             }
           ],
@@ -542,6 +549,7 @@
           "slides": [
             {
               "text": "A escadaria desce para o calor. Cheiro de fumaça e de carne podre. Algo enorme respira lá embaixo.",
+              "image": "assets/story/sombras_covil_escadaria.png",
               "fit": "contain"
             }
           ]
@@ -554,10 +562,12 @@
           "slides": [
             {
               "text": "No Trono de Pedra, entre braseiros, o guardião se levanta: um troll. As feridas que os heróis abrem se fecham diante dos olhos.",
+              "image": "assets/story/sombras_trono_troll.png",
               "fit": "contain"
             },
             {
               "text": "Ácido e fogo. É o que diz o bilhete. É o que sobrou do cofre.",
+              "image": "assets/story/sombras_trono_acido_fogo.png",
               "fit": "contain"
             }
           ],
@@ -567,6 +577,7 @@
           "slides": [
             {
               "text": "O troll tomba de vez. O bando da Garra Negra se desfaz na noite.",
+              "image": "assets/story/sombras_trono_vitoria.png",
               "fit": "contain"
             }
           ]
@@ -586,10 +597,12 @@
       "slides": [
         {
           "text": "Parabéns, heróis! A Garra Negra caiu, e as estradas de Alva e Luz estão seguras outra vez. Missão cumprida.",
+          "image": "assets/story/sombras_final_garra_negra.png",
           "fit": "contain"
         },
         {
           "text": "Semanas depois, as caravanas voltam a cruzar o Vau. Em Alva e Luz, o nome do grupo corre de mesa em mesa na taverna.",
+          "image": "assets/story/sombras_caravanas_volta_alva.png",
           "fit": "contain"
         },
         {
@@ -606,6 +619,7 @@
         },
         {
           "text": "Outras estradas esperam por vocês no mapa.",
+          "image": "assets/story/sombras_fim_novas_estradas_taverna.png",
           "fit": "contain"
         }
       ]
