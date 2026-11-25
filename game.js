@@ -13487,6 +13487,19 @@ function renderMap(state){
         ctx.fillStyle = '#ff6b52';
         ctx.fillText('⚠', ecx - CELL * 0.30, ecy - CELL * 0.29);
       }
+      // Esconderijo recém-notado: moldura dourada pulsando por alguns segundos.
+      if (_achadosAtivos.has(d.id)) {
+        const _ate = _achadosAtivos.get(d.id), _agora = performance.now();
+        if (_agora >= _ate) { _achadosAtivos.delete(d.id); }
+        else {
+          const _f = (_agora % 900) / 900;
+          ctx.save(); ctx.strokeStyle = `rgba(255,210,74,${(0.95 * (1 - _f)).toFixed(3)})`; ctx.lineWidth = 3;
+          const _g = 2 + _f * 6;
+          for (const [tx2, ty2] of tiles) ctx.strokeRect(tx2 * CELL - _g, ty2 * CELL - _g, CELL + _g * 2, CELL + _g * 2);
+          ctx.restore();
+          _agendarChamas2D();
+        }
+      }
       // Loot indicator badge
       if (d.tem_loot) {
         ctx.font = `bold ${Math.round(CELL * 0.18)}px monospace`;
@@ -50310,6 +50323,8 @@ function startLoop3D(){
     _animarChamasVivasPersistentes3D(now);
     _updateArmadilhas3D(now);
     _updateFumaca3D(now);
+    _syncLootBadges3D();
+    _updateAchados3D(now);
     _updateSombras3D(now);
     _updateChamasFx3D(now);
     _updateCongelamentoFx3D(now);
@@ -53882,6 +53897,80 @@ function _decorTrapBadge3D(){
   badge.renderOrder = 8;
   badge.userData.isTrapBadge = true;
   return badge;
+}
+
+// Marcador 💰 de um objeto com item/ouro a pegar (no 2D já existe como texto).
+function _decorLootBadge3D(){
+  const T = g3.T;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 96;
+  const ctx = cv.getContext('2d');
+  ctx.beginPath(); ctx.arc(48, 48, 39, 0, Math.PI * 2);
+  ctx.fillStyle = '#4a3410'; ctx.fill();
+  ctx.lineWidth = 5; ctx.strokeStyle = '#ffd24a'; ctx.stroke();
+  ctx.font = '50px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('💰', 48, 52);
+  const tex = new T.CanvasTexture(cv);
+  tex._owned = true;
+  const badge = new T.Sprite(new T.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  badge.scale.set(0.5, 0.5, 1);
+  badge.renderOrder = 8;
+  badge.userData.isLootBadge = true;
+  return badge;
+}
+
+// Objeto com item/ouro a pegar (inclui o esconderijo já notado): marcador 💰.
+// Roda a cada quadro, e não dentro de renderMap3D, porque a malha de uma decoração
+// com modelo GLB só passa a existir quando o arquivo termina de carregar — depois do
+// estado que a trouxe — e o marcador ficaria de fora até o próximo estado.
+function _syncLootBadges3D(){
+  if(!g3?.decorMeshes || !g3.T) return;
+  for(const d of (GS.decorations || [])){
+    const mesh = g3.decorMeshes[d.id];
+    if(!mesh) continue;
+    let lb = mesh.userData && mesh.userData._lootBadge;
+    if(d.tem_loot && !lb){
+      lb = _decorLootBadge3D();
+      mesh.add(lb);
+      mesh.userData._lootBadge = lb;
+    }
+    if(lb){
+      const visivel = !!(d.tem_loot && mesh.visible);
+      if(lb.visible !== visivel) lb.visible = visivel;
+      const x = ((d.trap || d.chest_trap) && d.trap_revealed) ? 0.3 : 0;
+      if(lb.position.x !== x || lb.position.y !== 1.4) lb.position.set(x, 1.4, 0);
+    }
+  }
+}
+
+// Brilho dourado pulsando no chão do objeto recém-descoberto (some sozinho).
+function _updateAchados3D(now){
+  if(!g3?.decorMeshes || !g3.T) return;
+  const T = g3.T;
+  for(const [id, ate] of _achadosAtivos){
+    const mesh = g3.decorMeshes[id];
+    let anel = mesh?.userData?._achadoAnel;
+    if(now >= ate || !mesh){
+      if(anel){
+        mesh.remove(anel); anel.geometry.dispose(); anel.material.dispose();
+        mesh.userData._achadoAnel = null;
+      }
+      _achadosAtivos.delete(id);
+      continue;
+    }
+    if(!anel){
+      anel = new T.Mesh(new T.RingGeometry(0.42, 0.52, 48),
+        new T.MeshBasicMaterial({ color: 0xffd24a, transparent: true, side: T.DoubleSide,
+                                  depthWrite: false, toneMapped: false }));
+      anel.rotation.x = -Math.PI / 2;
+      anel.position.set(0, 0.06, 0);
+      anel.renderOrder = 7;
+      mesh.add(anel);
+      mesh.userData._achadoAnel = anel;
+    }
+    const fase = (now % 900) / 900;
+    anel.scale.setScalar(1.0 + 0.7 * fase);
+    anel.material.opacity = 0.95 * (1 - fase) * Math.min(1, (ate - now) / 800);
+  }
 }
 
 function _syncVelaTrapMarkers3D(state, exploredSet){
@@ -61513,6 +61602,19 @@ GS.on('licaoResultado', msg => {
   const chave = 'ui.tutorial.resultado.' + msg.chave;
   const texto = t(chave, {roll: msg.roll, bonus: msg.bonus, total: msg.total, ca: msg.ca});
   if(texto && texto !== chave) _guiaAviso(texto);
+});
+
+// Esconderijo notado: aviso na tela + brilho no objeto (o log de narração começa
+// recolhido e, no 3D, o 💰 só aparece quando o objeto passa a ter item visível).
+const _achadosAtivos = new Map();   // decor_id -> instante (performance.now) em que o brilho acaba
+const ACHADO_BRILHO_MS = 6000;
+GS.on('esconderijoAchado', msg => {
+  if(!msg) return;
+  if(msg.texto) toast(String(msg.texto).replace(/\*\*/g, ''), '#7a5a10');
+  if(msg.decor_id != null){
+    _achadosAtivos.set(msg.decor_id, performance.now() + ACHADO_BRILHO_MS);
+    if(!(mode3D && g3) && GS.gameState) _agendarChamas2D();
+  }
 });
 
 GS.on('fala', msg => {

@@ -51381,6 +51381,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvos.append((a, "armadilha", dist, cd))
         return alvos
 
+    async def _avisar_esconderijo_achado(self, p, d, chave_texto):
+        """Narra no log E manda o aviso visível (toast + brilho no objeto) a todos."""
+        meta = DECOR_TYPES.get(d["type"], {})
+        nome = nome_cat("decor", d["type"], meta.get("nome", d["type"]))
+        texto = T(chave_texto, heroi=p["name"], objeto=nome)
+        await self.gm_say(texto)
+        await self.broadcast({"type": "esconderijo_achado", "decor_id": d["id"],
+                              "pos": list(d["pos"]), "heroi_id": p.get("id"), "texto": texto})
+
     async def _procurar_esconderijos(self, p):
         """Percepção passiva do herói ao se mover (ver comentário acima). A rolagem é
         secreta: só o sucesso é narrado. Com Detectar Armadilhas ligada, o que está
@@ -51408,7 +51417,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.armadilha_suspeita_objeto", heroi=p["name"], objeto=nome))
                 continue
             obj["encontrado"] = True
-            await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"], objeto=nome))
+            await self._avisar_esconderijo_achado(p, obj, "narracao.esconderijo_achado")
 
     async def _detectar_esconderijos(self, p):
         """Com Detectar Armadilhas ativa, o herói nota sem rolagem os esconderijos
@@ -51427,9 +51436,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             d["encontrado"] = True
             achados += 1
-            meta = DECOR_TYPES.get(d["type"], {})
-            await self.gm_say(T("narracao.esconderijo_detectado", heroi=p["name"],
-                                objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+            await self._avisar_esconderijo_achado(p, d, "narracao.esconderijo_detectado")
         return achados
 
     def _adjacente_a_decor(self, pos, d):
