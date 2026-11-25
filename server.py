@@ -34715,7 +34715,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                          "stun_crit_min_nat", "stun_fort_dc",
                          "atk_bonus", "damage_bonus", "extra_damages", "granted_ability",
                          "extra_damage_once_per_turn",
-                         "magical", "fire_on_hit", "fire_crit_damage", "freeze_on_crit",
+                         "magical", "causa_sangramento", "fire_on_hit", "fire_crit_damage", "freeze_on_crit",
                          "thunder_push_on_crit", "thunder_pulse", "thunder_pulse_cooldown",
                          "solar_flare", "solar_flare_cooldown",
                          "chicote_encore", "chicote_encore_cooldown", "chicote_encore_ready_round",
@@ -51393,6 +51393,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             alvos.append((a, "armadilha", dist, cd))
         return alvos
 
+    async def _avisar_esconderijo_achado(self, p, d, chave_texto):
+        """Narra no log E manda o aviso visível (toast + brilho no objeto) a todos."""
+        meta = DECOR_TYPES.get(d["type"], {})
+        nome = nome_cat("decor", d["type"], meta.get("nome", d["type"]))
+        texto = T(chave_texto, heroi=p["name"], objeto=nome)
+        await self.gm_say(texto)
+        await self.broadcast({"type": "esconderijo_achado", "decor_id": d["id"],
+                              "pos": list(d["pos"]), "heroi_id": p.get("id"), "texto": texto})
+
     async def _procurar_esconderijos(self, p):
         """Percepção passiva do herói ao se mover (ver comentário acima). A rolagem é
         secreta: só o sucesso é narrado. Com Detectar Armadilhas ligada, o que está
@@ -51420,7 +51429,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.armadilha_suspeita_objeto", heroi=p["name"], objeto=nome))
                 continue
             obj["encontrado"] = True
-            await self.gm_say(T("narracao.esconderijo_achado", heroi=p["name"], objeto=nome))
+            await self._avisar_esconderijo_achado(p, obj, "narracao.esconderijo_achado")
 
     async def _detectar_esconderijos(self, p):
         """Com Detectar Armadilhas ativa, o herói nota sem rolagem os esconderijos
@@ -51439,9 +51448,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 continue
             d["encontrado"] = True
             achados += 1
-            meta = DECOR_TYPES.get(d["type"], {})
-            await self.gm_say(T("narracao.esconderijo_detectado", heroi=p["name"],
-                                objeto=nome_cat("decor", d["type"], meta.get("nome", d["type"]))))
+            await self._avisar_esconderijo_achado(p, d, "narracao.esconderijo_detectado")
         return achados
 
     def _adjacente_a_decor(self, pos, d):
@@ -62636,7 +62643,17 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             sofre_escuridao = bool(zonas_escuridao and not self._tem_visao_no_escuro(p))
             duracoes_escuridao = [int(z.get("duracao", 0) or 0) for z in zonas_escuridao
                                   if int(z.get("duracao", 0) or 0) > 0]
+            # Ação principal extra (Velocidade / Oportunidade) ainda não gasta: o
+            # servidor a consome em `_acao_bloqueada`, mas o cliente só libera o
+            # ataque e as habilidades quando `action_done` é falso. Mostra como livre
+            # (e marca `acao_extra_disponivel`) enquanto o crédito existe.
+            acao_extra = bool(p.get("action_done") and p.get("alive") and (
+                (p.get("velocidade_rodadas", 0) > 0 and not p.get("velocidade_extra_usada"))
+                or (p.get("oportunidade_credito")
+                    and p.get("oportunidade_round") == self.round_num)))
             snapshot = dict(p,
+                            action_done=bool(p.get("action_done")) and not acao_extra,
+                            acao_extra_disponivel=acao_extra,
                             magias_conhecidas=magias_visiveis,
                             magias_grimorio=magias_grimorio,
                             initiative=self.initiative_value(p),

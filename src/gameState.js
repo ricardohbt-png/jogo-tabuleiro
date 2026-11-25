@@ -2165,6 +2165,10 @@ const GS = (() => {
         _emit('gmNarration', msg.text);
         break;
 
+      case 'esconderijo_achado':
+        _emit('esconderijoAchado', msg);   // {decor_id, pos, heroi_id, texto}
+        break;
+
       case 'ability_activation':
         _emit('abilityActivation', msg);
         break;
