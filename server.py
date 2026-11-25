@@ -39829,8 +39829,16 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "target_id": caster["id"], "origin": list(caster["pos"]),
             "target": list(caster["pos"]), "rise_ms": 760,
         })
+        ja_ativa = caster.get("velocidade_rodadas", 0) > 0
         caster["velocidade_rodadas"]      = dur
-        caster["velocidade_extra_usada"]  = False   # aÃ§Ã£o extra disponÃ­vel jÃ¡ neste turno
+        # A rodada do cast não conta: o 1º início de turno seguinte NÃO desconta a
+        # duração, então `dur` rodadas valem `dur` turnos com o efeito.
+        caster["velocidade_nova"]         = True
+        caster["velocidade_extra_usada"]  = False   # ação extra disponível já neste turno
+        # Movimento dobrado também no turno do cast (o restante que sobrou). Se já
+        # estava ativa, o movimento deste turno já foi dobrado no início dele.
+        if not ja_ativa and caster.get("id") in self.players:
+            caster["moves_left"] = max(0, int(caster.get("moves_left", 0) or 0)) * 2
         caster["velocidade_visual_id"]    = animation_id
         await self.broadcast({
             "type": "spell_animation", "spell_id": "velocidade", "phase": "resolve",
@@ -43871,7 +43879,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Velocidade: a cada turno renova a aÃ§Ã£o extra; expira por duraÃ§Ã£o.
         if alvo.get("velocidade_rodadas", 0) > 0:
             alvo["velocidade_extra_usada"] = False
-            alvo["velocidade_rodadas"] -= 1
+            if alvo.pop("velocidade_nova", False):
+                pass                       # 1º turno depois do cast: a duração ainda não cai
+            else:
+                alvo["velocidade_rodadas"] -= 1
             if alvo["velocidade_rodadas"] <= 0:
                 visual_id = alvo.get("velocidade_visual_id")
                 if visual_id:
@@ -43882,6 +43893,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                     })
                 alvo.pop("velocidade_rodadas", None)
                 alvo.pop("velocidade_extra_usada", None)
+                alvo.pop("velocidade_nova", None)
                 alvo.pop("velocidade_visual_id", None)
                 await self.gm_say(T("narracao.a_velocidade_de_termina", alvo=nome_criatura(alvo)))
         # RegeneraÃ§Ã£o: cura +1 HP/rodada da reserva.

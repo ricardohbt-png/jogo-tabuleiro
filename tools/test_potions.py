@@ -134,14 +134,18 @@ async def main():
           and player.get("action_done") is False
           and player.get("velocidade_extra_usada") is True)
     await room._processar_buffs_magicos_turno(player)
-    check("a ação extra renova no turno seguinte e a duração cai uma rodada",
-          player.get("velocidade_rodadas") == 3
+    check("1º turno depois do cast: a ação extra renova e a duração ainda não cai",
+          player.get("velocidade_rodadas") == 4
           and player.get("velocidade_extra_usada") is False)
+    await room._processar_buffs_magicos_turno(player)
+    check("a partir do 2º turno a duração cai uma rodada por turno",
+          player.get("velocidade_rodadas") == 3)
     for _ in range(3):
         await room._processar_buffs_magicos_turno(player)
-    check("o efeito e seus marcadores expiram ao fim da duração",
+    check("o efeito e seus marcadores expiram ao fim da duração (4 turnos com efeito)",
           "velocidade_rodadas" not in player
           and "velocidade_extra_usada" not in player
+          and "velocidade_nova" not in player
           and "velocidade_visual_id" not in player)
 
     print("\n[1c] Poção de Voo")
