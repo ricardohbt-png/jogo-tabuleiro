@@ -25,6 +25,7 @@ import argparse
 import json
 import os
 import random
+import re
 import sys
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -34,6 +35,8 @@ LEDGER = os.path.join(RAIZ, "tools", ".esconderijos_aleatorios.json")
 
 # Mapa → (nível da etapa, mapa que dá a semente). Só os mapas das campanhas.
 MAPAS = {
+    "floresta": (1, None),
+    "floresta_2": (1, None),
     "casa_secreta": (1, None),
     "fazenda": (1, None),
     "elara_riacho_casa": (2, None),
@@ -96,6 +99,32 @@ BEBIDA = ["hidromel", "rum", "absinto", "cerveja_ana", "caneca_cerveja", "garraf
 CURA = ["health_potion_small", "health_potion_improved"]
 
 
+# Faixa de preço (moedas) dos itens mágicos que entram automaticamente em cada nível, além da
+# lista curada acima. Fora daqui: pergaminhos, grimórios e relíquias lendárias.
+FAIXA_PRECO = {1: (0, 400), 2: (400, 1600), 3: (1600, 5000)}
+
+
+# Variantes de material (+1 mágicas dos monstros) ficam fora: já caem no saque deles.
+_MATERIAL_RE = re.compile(r"_(aco_damasco|obsidiana_ferro|liga_titanio|prata|freixo_negro|cedro_rubro|cerne_tita)(_magica)?$")
+
+
+def montar_pools(catalogo):
+    """Lista de mágicos por nível: a curada + os itens `magical` do catálogo na faixa de preço."""
+    pools = {n: [i for i in lst if i in catalogo] for n, lst in MAGICOS.items()}
+    curados = {i for lst in pools.values() for i in lst}
+    for iid in sorted(catalogo):
+        it = catalogo[iid]
+        if (iid in curados or not it.get("magical") or it.get("effect") in ("scroll", "grimoire")
+                or _MATERIAL_RE.search(iid)):
+            continue
+        preco = it.get("price") or it.get("buy_price") or 0
+        for n, (lo, hi) in FAIXA_PRECO.items():
+            if lo < preco <= hi:
+                pools[n].append(iid)
+                break
+    return pools
+
+
 def _ler_ledger():
     try:
         with open(LEDGER, encoding="utf-8") as f:
@@ -116,9 +145,12 @@ def _candidatos(defn, meta):
     return saida
 
 
-def _alvo_quantidade(total_candidatos, existentes):
-    """Quantos esconderijos o mapa deve ter no total (os já gravados contam)."""
+def _alvo_quantidade(total_candidatos, existentes, area=None):
+    """Quantos esconderijos o mapa deve ter no total (os já gravados contam). Mapa pequeno
+    não ganha mais que 1 achado por ~90 casas, para não ficar abarrotado."""
     meta = max(3, min(9, round(2.5 + total_candidatos / 14)))
+    if area:
+        meta = min(meta, max(3, area // 90))
     return max(0, meta - existentes)
 
 
@@ -140,10 +172,10 @@ def _escolher_objetos(rng, cands, n):
     return escolhidos
 
 
-def _conteudo(rng, nivel, usados, catalogo, magicos_usados):
+def _conteudo(rng, nivel, usados, catalogo, magicos_usados, pools):
     """Um achado: mágico, comida ou um pouco dos dois. `usados` evita repetir item no mapa;
     `magicos_usados` evita repetir item mágico em toda a campanha (comida pode repetir)."""
-    todos_magicos = {i for lst in MAGICOS.values() for i in lst}
+    todos_magicos = {i for lst in pools.values() for i in lst}
 
     def pegar(lista, k=1):
         livres = [i for i in lista if i in catalogo and i not in usados
@@ -154,12 +186,12 @@ def _conteudo(rng, nivel, usados, catalogo, magicos_usados):
         magicos_usados.update(i for i in achados if i in todos_magicos)
         return achados
 
-    magicos = MAGICOS[nivel] + (MAGICOS[nivel - 1] if nivel > 1 else [])
+    magicos = pools[nivel] + (pools[nivel - 1] if nivel > 1 else [])
 
     def magico():
         """Um mágico do nível; se a lista do nível acabou, desce (ou sobe) de nível."""
-        for n in sorted(MAGICOS, key=lambda n: (abs(n - nivel), -n)):
-            achado = pegar(MAGICOS[n])
+        for n in sorted(pools, key=lambda n: (abs(n - nivel), -n)):
+            achado = pegar(pools[n])
             if achado:
                 return achado
         return []
@@ -201,7 +233,8 @@ def aplicar(simular=False, pasta=None, refazer=False, ledger=None, anterior=None
     gravado = {} if refazer else (ledger if ledger is not None else _ler_ledger())
     novo_ledger = {}
     relatorio = []
-    todos_magicos = {i for lst in MAGICOS.values() for i in lst}
+    pools = montar_pools(S._DUNGEON_ITEM_CATALOG)
+    todos_magicos = {i for lst in pools.values() for i in lst}
     magicos_usados = set()      # já escondidos à mão ou sorteados antes, em qualquer mapa
     for mapa in MAPAS:
         with open(os.path.join(pasta, f"{mapa}.json"), encoding="utf-8") as f:
@@ -237,11 +270,11 @@ def aplicar(simular=False, pasta=None, refazer=False, ledger=None, anterior=None
             if not plano:
                 rng = random.Random(f"esconderijos:{chave}")
                 cands = _candidatos(defn, S.DECOR_TYPES)
-                n = _alvo_quantidade(len(cands) + existentes, existentes)
+                n = _alvo_quantidade(len(cands) + existentes, existentes, defn["grid"]["w"] * defn["grid"]["h"])
                 usados = {i["id"] for d in defn.get("decorations", []) for i in (d.get("loot") or {}).get("items", [])}
                 plano = {}
                 for o in _escolher_objetos(rng, cands, n):
-                    tipo, ouro, itens = _conteudo(rng, nivel, usados, S._DUNGEON_ITEM_CATALOG, magicos_usados)
+                    tipo, ouro, itens = _conteudo(rng, nivel, usados, S._DUNGEON_ITEM_CATALOG, magicos_usados, pools)
                     plano[o["id"]] = {"tipo": o["type"], "cd": rng.choice([11, 12, 13, 14, 15][max(0, nivel - 1):nivel + 3]),
                                       "achado": tipo, "ouro": ouro, "itens": itens}
         novo_ledger[chave] = plano
