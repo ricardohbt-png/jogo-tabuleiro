@@ -11904,6 +11904,13 @@ window.LANG_INTERFACE = {
   "ui.loja.aba.mochila_carga": {"en":"🎒 Packs & Cargo","pt":"🎒 Mochila e carga"},
   "ui.loja.aba.grimorios": {"en":"📖 Grimoires","pt":"📖 Grimórios"},
   "ui.loja.aba.outros_equipamentos": {"en":"⚔️ Other Equipment","pt":"⚔️ Outros equipamentos"},
-  "ui.loja.aba_vazia": {"en":"Nothing in this category is for sale here.","pt":"Nada desta categoria está à venda aqui."}
+  "ui.loja.aba_vazia": {"en":"Nothing in this category is for sale here.","pt":"Nada desta categoria está à venda aqui."},
+  "ui.menuacoes.habilidades": {"en":"Abilities","pt":"Habilidades"},
+  "ui.menuacoes.magias": {"en":"Spells","pt":"Magias"},
+  "ui.menuacoes.encerrar": {"en":"End turn","pt":"Encerrar turno"},
+  "ui.menuacoes.sem_habilidades": {"en":"No abilities to use right now.","pt":"Nenhuma habilidade para usar agora."},
+  "ui.menuacoes.em_recarga": {"en":"Recharging: {n} round(s)","pt":"Em recarga: {n} rodada(s)"},
+  "ui.menuacoes.indisponivel": {"en":"Unavailable right now (action, resource or condition).","pt":"Indisponível agora (ação, recurso ou condição)."},
+  "ui.menuacoes.vez_de": {"en":"Turn:","pt":"Vez de"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

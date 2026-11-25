@@ -394,6 +394,7 @@ document.body.innerHTML = `
           <div id="initiative-track-actors" role="list" tabindex="0"></div>
         </div>
         <div id="battlefield-turn-tools">
+        <div id="turn-actions-bar" hidden></div>
         <section id="turn-hero-hud" hidden></section>
       <div id="cooperative-marker-control" hidden>
         <button id="cooperative-marker-toggle" type="button" data-gamepad-action="activate" tabindex="0"
@@ -6130,6 +6131,7 @@ function handleGameState(msg){
   updateInitiativeTrack(msg);
   renderTurnHeroHud(msg);
   _atualizarBotaoEncerrarTurno(msg);
+  _barraSincronizar();
   syncDiceCanvas();
   renderMap(msg);
   centerOnPlayer(msg);
@@ -7006,35 +7008,10 @@ function _centerInitiativeActor(id, monster){
   else _scrollMapToTile(pos);
 }
 
-function updateInitiativeTrack(state){
-  const track = $('initiative-track'), list = $('initiative-track-actors');
-  if(!track || !list) return;
-  const order = state.initiative_order || [];
-  const currentKey = _initiativeActorKey(state.current_actor);
-  const currentIndex = order.findIndex(entry => _initiativeActorKey(entry) === currentKey);
-  if(state.phase !== 'playing' || state.test_mode || currentIndex < 0){
-    track.hidden = true;
-    list.replaceChildren();
-    _initiativeTrackKey = '';
-    return;
-  }
-  const players = new Map((state.players || []).map(actor => [String(actor.id), actor]));
-  const monsters = new Map((state.monsters || []).map(actor => [String(actor.id), actor]));
-  const me = players.get(String(GS.myPid));
-  const master = GS.isMaster();
-  const vision = !master && me?.pos && state.explored ? computeVisionSet(state, me) : new Set();
-  const entries = [];
-  for(const entry of order.slice(currentIndex)){
-    const monster = entry.kind === 'monster';
-    const actor = (monster ? monsters : players).get(String(entry.id));
-    if(!actor || !(actor.hp > 0)) continue;
-    if(monster){
-      if(!actor.initiative_engaged || _monstroOcultadoParaJogador(actor)
-        || (!master && !vision.has(actor.pos?.join(',')))) continue;
-    } else if(entry.kind !== 'player' || actor.alive === false || actor.connected === false
-      || actor.fora_masmorra || actor.fosso_oculto) continue;
-    const sprite = monster ? _monsterImageName(actor) : null;
-    const portrait = monster
+// Retrato do ator (herói ou monstro) usado na ordem de iniciativa e no card da vez.
+function _retratoDoAtor(actor, monster){
+  const sprite = monster ? _monsterImageName(actor) : null;
+  return monster
       ? (actor.type === 'lobo_cinzento'
         ? 'assets/retratos/monstros/lobo_cinzento.png'
         : actor.type === 'lobo_cinzento_customizado'
@@ -7196,7 +7173,37 @@ function updateInitiativeTrack(state){
         : ['escorpiao_pedra', 'escorpiao_de_pedra_customizado'].includes(actor.type)
           ? 'assets/retratos/monstros/escorpiao_pedra.png'
         : sprite && `assets/pawns/monstros/${sprite}/${sprite}.png`)
-      : HERO_PORTRAIT_PATHS[actor.class_id];
+    : HERO_PORTRAIT_PATHS[actor.class_id];
+}
+
+function updateInitiativeTrack(state){
+  const track = $('initiative-track'), list = $('initiative-track-actors');
+  if(!track || !list) return;
+  const order = state.initiative_order || [];
+  const currentKey = _initiativeActorKey(state.current_actor);
+  const currentIndex = order.findIndex(entry => _initiativeActorKey(entry) === currentKey);
+  if(state.phase !== 'playing' || state.test_mode || currentIndex < 0){
+    track.hidden = true;
+    list.replaceChildren();
+    _initiativeTrackKey = '';
+    return;
+  }
+  const players = new Map((state.players || []).map(actor => [String(actor.id), actor]));
+  const monsters = new Map((state.monsters || []).map(actor => [String(actor.id), actor]));
+  const me = players.get(String(GS.myPid));
+  const master = GS.isMaster();
+  const vision = !master && me?.pos && state.explored ? computeVisionSet(state, me) : new Set();
+  const entries = [];
+  for(const entry of order.slice(currentIndex)){
+    const monster = entry.kind === 'monster';
+    const actor = (monster ? monsters : players).get(String(entry.id));
+    if(!actor || !(actor.hp > 0)) continue;
+    if(monster){
+      if(!actor.initiative_engaged || _monstroOcultadoParaJogador(actor)
+        || (!master && !vision.has(actor.pos?.join(',')))) continue;
+    } else if(entry.kind !== 'player' || actor.alive === false || actor.connected === false
+      || actor.fora_masmorra || actor.fosso_oculto) continue;
+    const portrait = _retratoDoAtor(actor, monster);
     entries.push({
       key: _initiativeActorKey(entry),
       id: String(entry.id),
@@ -28140,6 +28147,221 @@ function renderHeroVitals(hero, {guide = false, completa = true} = {}){
   </div>`;
 }
 
+// ── Barra de ações do turno: Magias | Habilidades | Encerrar turno ──────────
+// As habilidades vêm do mesmo painel que já existe (#skills-list): a barra só as
+// espelha como ícones e repassa o clique ao botão original, então as regras de
+// cada habilidade continuam num lugar só.
+let _barraMenuAberto = null;      // 'habilidades' | 'magias' | null
+let _barraTipTimer = null;
+const _BARRA_TIP_MS = 1500;
+
+function _barraEsconderTip(){
+  clearTimeout(_barraTipTimer); _barraTipTimer = null;
+  document.getElementById('tam-tip')?.remove();
+  ocultarTooltipMagia?.();
+}
+function _barraFechar(){
+  _barraMenuAberto = null;
+  _barraEsconderTip();
+  document.querySelectorAll('#turn-actions-bar .tam-pop').forEach(p => p.hidden = true);
+  document.querySelectorAll('#turn-actions-bar .tam-tab').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+// Etiqueta junto do ícone: o nome sai na hora; a descrição, depois de 1,5 s.
+function _barraMostrarTip(el, titulo, corpoHTML){
+  _barraEsconderTip();
+  const tip = document.createElement('div');
+  tip.id = 'tam-tip';
+  tip.innerHTML = `<b>${titulo}</b>`;
+  document.body.appendChild(tip);
+  const r = el.getBoundingClientRect();
+  const posicionar = () => {
+    const w = tip.offsetWidth, h = tip.offsetHeight;
+    tip.style.left = Math.max(6, Math.min(innerWidth - w - 6, r.left + r.width / 2 - w / 2)) + 'px';
+    tip.style.top = Math.max(6, r.top - h - 8) + 'px';
+  };
+  posicionar();
+  _barraTipTimer = setTimeout(() => {
+    if(!tip.isConnected) return;
+    if(corpoHTML) tip.innerHTML = `<b>${titulo}</b><div class="tam-tip-corpo">${corpoHTML}</div>`;
+    tip.classList.add('is-full');
+    posicionar();
+  }, _BARRA_TIP_MS);
+}
+function _barraLigarTip(el, titulo, corpoHTML){
+  el.addEventListener('mouseenter', () => _barraMostrarTip(el, titulo, corpoHTML));
+  el.addEventListener('focus', () => _barraMostrarTip(el, titulo, corpoHTML));
+  el.addEventListener('mouseleave', _barraEsconderTip);
+  el.addEventListener('blur', _barraEsconderTip);
+}
+
+function _habilidadesEspelhadas(){
+  const lista = document.getElementById('skills-list');
+  if(!lista) return [];
+  const passivaTxt = [t('ui.hud.passiva'), t('ui.hud.passiva_2')].map(x => String(x).toLowerCase());
+  const out = [];
+  for(const orig of lista.querySelectorAll(':scope > button.skill-btn')){
+    const nomeEl = orig.querySelector('.skill-name');
+    if(!nomeEl) continue;
+    const limpo = nomeEl.cloneNode(true);
+    const marcas = [...limpo.querySelectorAll('small')].map(x => x.textContent.trim().toLowerCase());
+    // Passivas não são clicáveis: ficam fora da lista.
+    if(marcas.some(m => passivaTxt.includes(m))) continue;
+    limpo.querySelectorAll('small, img').forEach(x => x.remove());
+    let nome = limpo.textContent.replace(/\s+/g, ' ').trim();
+    let emoji = '';
+    const m = nome.match(/^(\S+)\s+(.*)$/);
+    if(m && !/[\p{L}\p{N}]/u.test(m[1])){ emoji = m[1]; nome = m[2]; }
+    const img = nomeEl.querySelector('img.ability-icon');
+    const idAb = nomeEl.dataset.abilityId;
+    const icone = img ? img.outerHTML
+      : (idAb && ABILITY_ICON_ASSETS[idAb]) ? abilityIconHtml(idAb, emoji || '✦')
+      : (emoji || '✦');
+    const custo = (orig.querySelector('.skill-cost')?.textContent || '').replace(/\s+/g, ' ').trim();
+    const rec = orig.classList.contains('skill-cooldown') ? (custo.match(/(\d+)\s*r/) || [])[1] : null;
+    out.push({orig, nome, icone, custo, desc: (orig.querySelector('.skill-desc')?.textContent || '').trim(),
+      off: orig.disabled, ativa: orig.classList.contains('skill-active'), rec});
+  }
+  return out;
+}
+
+function _barraPopHabilidades(pop){
+  const itens = _habilidadesEspelhadas();
+  if(!itens.length){ pop.innerHTML = `<p class="tam-vazio">${_esc(t('ui.menuacoes.sem_habilidades'))}</p>`; return; }
+  pop.replaceChildren(...itens.map(h => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tam-icon' + (h.off ? ' is-off' : '') + (h.ativa ? ' is-active' : '') + (h.rec ? ' is-cd' : '');
+    b.dataset.gamepadAction = 'activate';
+    b.setAttribute('aria-label', h.nome);
+    b.setAttribute('aria-disabled', h.off ? 'true' : 'false');
+    b.innerHTML = `<span class="tam-glyph">${h.icone}</span>${h.rec ? `<i class="tam-badge">${_esc(h.rec)}</i>` : ''}`;
+    let motivo = '';
+    if(h.rec) motivo = `<div class="tam-motivo">⏱️ ${_esc(t('ui.menuacoes.em_recarga', {n:h.rec}))}</div>`;
+    else if(h.off) motivo = `<div class="tam-motivo">${_esc(t('ui.menuacoes.indisponivel'))}</div>`;
+    const corpo = `${_esc(h.desc)}${h.custo && h.custo !== '—' && !h.rec ? `<div class="tam-custo">${_esc(h.custo)}</div>` : ''}${motivo}`;
+    _barraLigarTip(b, _esc(h.nome), corpo);
+    b.onclick = () => {
+      if(h.off){ toast(h.rec ? t('ui.menuacoes.em_recarga', {n:h.rec}) : t('ui.menuacoes.indisponivel'), 'var(--orange)'); return; }
+      _barraFechar();
+      h.orig.click();
+    };
+    return b;
+  }));
+}
+
+function _barraPopMagias(pop, hero){
+  const magias = _magiasConhecidasIds(hero).map(id => GRIMORIO_CLIENT[id]).filter(Boolean);
+  if(!magias.length){ pop.innerHTML = `<p class="tam-vazio">${_esc(t('ui.magia.nenhuma_conhecida'))}</p>`; return; }
+  const slots = _slotsMenuMagias(hero);
+  const podeAgir = !!GS.isMyTurn;
+  const partes = [];
+  for(const c of ['primeiro', 'segundo', 'terceiro', 'quarto']){
+    const doCirculo = magias.filter(m => m.circulo === c);
+    if(!doCirculo.length) continue;
+    const grupo = document.createElement('div');
+    grupo.className = 'tam-grupo';
+    grupo.innerHTML = `<span class="tam-grupo-rotulo">${_esc(_labelCirculo(c) || c)}</span>`;
+    for(const m of doCirculo){
+      const livre = podeAgir && (slots[m.circulo]?.livres || 0) > 0;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tam-icon' + (livre ? '' : ' is-off');
+      b.dataset.gamepadAction = 'activate';
+      b.setAttribute('aria-label', m.nome);
+      b.innerHTML = `<span class="tam-glyph">${magiaIconHTML(m, 34)}</span>`;
+      const motivo = !livre ? `<div class="tam-motivo">${_esc(t('ui.magia.sem_slot'))}</div>` : '';
+      _barraLigarTip(b, _esc(m.nome), `${m.custo ? `<div class="tam-custo">${_esc(m.custo)}</div>` : ''}${motivo}`);
+      // A descrição completa da magia usa o quadro que já existe, depois dos 1,5 s.
+      b.addEventListener('mouseenter', () => {
+        clearTimeout(_barraTipTimer);
+        _barraTipTimer = setTimeout(() => {
+          document.getElementById('tam-tip')?.remove();
+          const r = b.getBoundingClientRect();
+          mostrarTooltipMagia(m.id, {currentTarget:b, target:b, clientX:r.left, clientY:r.top});
+        }, _BARRA_TIP_MS);
+      });
+      b.onclick = () => {
+        if(!livre){ toast(t('ui.magia.sem_slot'), 'var(--orange)'); return; }
+        _barraFechar();
+        ativarMagiaDoMenu(m.id);
+      };
+      grupo.appendChild(b);
+    }
+    partes.push(grupo);
+  }
+  pop.replaceChildren(...partes);
+}
+
+function _renderBarraAcoes(state, hero){
+  const bar = document.getElementById('turn-actions-bar');
+  if(!bar) return;
+  if(!hero){
+    _barraFechar(); bar.hidden = true; bar.replaceChildren(); delete bar.dataset.pronta;
+    return;
+  }
+  bar.hidden = false;
+  const temMagias = hero.class_id === 'mage' || hero.class_id === 'cleric';
+  if(!bar.dataset.pronta || bar.dataset.magias !== String(temMagias)){
+    bar.dataset.pronta = '1'; bar.dataset.magias = String(temMagias);
+    bar.innerHTML = `${temMagias ? `<div class="tam-slot"><button type="button" class="tam-tab" data-menu="magias" data-gamepad-action="activate" aria-expanded="false">✨ <span>${_esc(t('ui.menuacoes.magias'))}</span></button><div class="tam-pop" data-menu="magias" hidden></div></div>` : ''}
+      <div class="tam-slot"><button type="button" class="tam-tab" data-menu="habilidades" data-gamepad-action="activate" aria-expanded="false">⚔️ <span>${_esc(t('ui.menuacoes.habilidades'))}</span></button><div class="tam-pop" data-menu="habilidades" hidden></div></div>
+      <button type="button" class="tam-tab tam-end" data-gamepad-action="activate">⏭ <span>${_esc(t('ui.menuacoes.encerrar'))}</span></button>`;
+    bar.querySelectorAll('.tam-tab[data-menu]').forEach(b => b.onclick = () => {
+      const qual = b.dataset.menu;
+      if(_barraMenuAberto === qual){ _barraFechar(); return; }
+      _barraFechar();
+      _barraMenuAberto = qual;
+      b.setAttribute('aria-expanded', 'true');
+      _barraSincronizar();
+    });
+    bar.querySelector('.tam-end').onclick = () => { _barraFechar(); document.getElementById('btn-end-turn')?.click(); };
+  }
+  bar.querySelector('.tam-end').disabled = !!document.getElementById('btn-end-turn')?.disabled;
+  _barraSincronizar();
+}
+function _barraSincronizar(){
+  const bar = document.getElementById('turn-actions-bar');
+  if(!bar || bar.hidden) return;
+  const fim = bar.querySelector('.tam-end');
+  if(fim) fim.disabled = !!document.getElementById('btn-end-turn')?.disabled;
+  const st = GS.gameState;
+  const hero = st && (st.players || []).find(p => p.id === GS.myPid);
+  for(const pop of bar.querySelectorAll('.tam-pop')){
+    const aberto = _barraMenuAberto === pop.dataset.menu;
+    pop.hidden = !aberto;
+    if(!aberto || !hero) continue;
+    if(pop.dataset.menu === 'habilidades') _barraPopHabilidades(pop);
+    else _barraPopMagias(pop, hero);
+  }
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && _barraMenuAberto) _barraFechar(); });
+document.addEventListener('mousedown', e => {
+  if(_barraMenuAberto && !e.target.closest?.('#turn-actions-bar')) _barraFechar();
+});
+
+// Quem está agindo agora, quando não sou eu: herói de outro jogador ou monstro
+// que eu enxergo. O mestre tem HUD próprio e não entra aqui.
+function _atorDaVezParaCard(state){
+  const cur = state.current_actor;
+  if(!cur || GS.isMaster() || state.phase !== 'playing' || state.test_mode) return null;
+  if(cur.kind === 'player'){
+    const p = (state.players || []).find(x => String(x.id) === String(cur.id));
+    if(!p || p.alive === false || p.connected === false || p.fora_masmorra || p.fosso_oculto) return null;
+    return {monster:false, actor:p};
+  }
+  if(cur.kind === 'monster'){
+    const m = (state.monsters || []).find(x => String(x.id) === String(cur.id));
+    if(!m || !(m.hp > 0) || !m.initiative_engaged || _monstroOcultadoParaJogador(m)) return null;
+    const me = (state.players || []).find(x => x.id === GS.myPid);
+    if(me?.pos && state.explored){
+      const vis = computeVisionSet(state, me);
+      if(!vis.has(m.pos?.join(','))) return null;
+    }
+    return {monster:true, actor:m};
+  }
+  return null;
+}
+
 function renderTurnHeroHud(state){
   const hud = $('turn-hero-hud');
   if(!hud) return;
@@ -28147,11 +28369,41 @@ function renderTurnHeroHud(state){
   const hero = state.phase === 'playing' && !state.test_mode && !state.animados_turn
     && pid != null && GS.ehMeuHeroi(pid)
     && (state.players || []).find(p => p.id === pid && !p.fora_masmorra && p.connected !== false);
-  hud.hidden = !hero;
+  hud.classList.remove('is-other', 'is-monster');
   if(!hero){
-    hud.replaceChildren();
+    // Fora da minha vez: mostra as estatísticas de quem está agindo.
+    const outro = _atorDaVezParaCard(state);
+    _renderBarraAcoes(state, null);
+    if(!outro){ hud.hidden = true; hud.replaceChildren(); return; }
+    hud.hidden = false;
+    hud.classList.add('is-other');
+    const a = outro.actor;
+    const nome = _esc(a.name || a.class_id || a.type);
+    const caminho = _retratoDoAtor(a, outro.monster);
+    const retrato = caminho ? `<img src="${_esc(_assetURL(caminho))}" alt="">` : _esc(a.emoji || (outro.monster ? '👹' : '🛡️'));
+    hud.setAttribute('aria-label', `${t('ui.menuacoes.vez_de')} ${a.name || a.class_id || a.type}`);
+    if(outro.monster){
+      hud.classList.add('is-monster');
+      const hp = Math.max(0, Number(a.hp) || 0), max = Math.max(1, Number(a.max_hp) || hp || 1);
+      hud.innerHTML = `<div class="turn-hero-main">
+        <div class="turn-hero-portrait" aria-hidden="true">${retrato}</div>
+        <div class="turn-hero-vitals"><strong>${nome}</strong>
+          <div class="bars"><div class="bar-row"><span class="bar-label">HP</span>
+            <div class="bar-bg"><div class="bar-fill hp" style="width:${Math.min(100, hp / max * 100)}%"></div></div>
+            <span class="bar-val">${hp}/${max}</span></div></div>
+          <div class="turn-mon-stats"><span>🛡️ ${_esc(t('ui.hud.sigla_ca'))} <b>${a.ac ?? '—'}</b></span>
+            <span>👣 <b>${a.movement ?? '—'}</b></span></div>
+        </div></div><div class="turn-vez-rotulo">${_esc(t('ui.menuacoes.vez_de'))} ${nome}</div>`;
+    } else {
+      hud.innerHTML = `<div class="turn-hero-main">
+        <div class="turn-hero-portrait" aria-hidden="true">${retrato}</div>
+        <div class="turn-hero-vitals"><strong>${nome}</strong>${renderHeroVitals(a, {guide:false})}</div>
+      </div>${_renderRecursosRodada(a, state, true)}<div class="turn-vez-rotulo">${_esc(t('ui.menuacoes.vez_de'))} ${nome}</div>`;
+    }
     return;
   }
+  hud.hidden = false;
+  _renderBarraAcoes(state, hero);
 
   const name = _esc(hero.name || hero.class_id);
   const path = HERO_PORTRAIT_PATHS[hero.class_id];
@@ -28912,6 +29164,7 @@ function renderMyPanel(state){
 
   // End turn button
   _atualizarBotaoEncerrarTurno(state);
+  _barraSincronizar();
 }
 
 // ── Itens comprados na loja client-side (GS.getHeroiAtivo().inventario) ──────
