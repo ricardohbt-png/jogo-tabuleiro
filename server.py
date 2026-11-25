@@ -9100,6 +9100,15 @@ SHOP_MERCHANT = [
      "descricao": "+2 de Inteligência enquanto equipado."},
     {"id": "talisma_ascensao_constituicao", "name": "Talismã da Ascensão: Constituição", "emoji": "📿", "icon": "assets/itens/medalhao4.png", "price": 500, "item_slot": "item", "effect": "con_", "value": 2,
      "descricao": "+2 de Constituição enquanto equipado."},
+    {"id": "amuleto_jornada", "name": "Amuleto da Jornada", "emoji": "📿", "icon": "assets/itens/amuleto_jornada.png", "price": 400, "item_slot": "item", "effect": "con_", "value": 1,
+     "bonuses": [{"effect": "fome_max", "value": 5}, {"effect": "sede_max", "value": 5}],
+     "descricao": "+1 de Constituição e +5 aos limites máximos de fome e sede enquanto equipado."},
+    {"id": "amuleto_jornada_infindavel", "name": "Amuleto da Jornada Infindável", "emoji": "📿", "icon": "assets/itens/amuleto_jornada_infindavel.png", "price": 600, "item_slot": "item", "effect": "con_", "value": 1,
+     "bonuses": [{"effect": "fome_max", "value": 10}, {"effect": "sede_max", "value": 10}],
+     "descricao": "+1 de Constituição e +10 aos limites máximos de fome e sede enquanto equipado."},
+    {"id": "relicario_jornada_eterna", "name": "Relicário da Jornada Eterna", "emoji": "📿", "icon": "assets/itens/relicario_jornada_eterna.png", "price": 1000, "item_slot": "item", "effect": "con_", "value": 2,
+     "bonuses": [{"effect": "fome_max", "value": 20}, {"effect": "sede_max", "value": 20}],
+     "descricao": "+2 de Constituição e +20 aos limites máximos de fome e sede enquanto equipado."},
     {"id": "backpack",      "name": "Mochila de Couro",  "emoji": "🎒",  "price": 100, "item_slot": "item",  "effect": "bagslots",  "value": 3},
     {"id": "mochila_carga", "name": "Mochila de Carga", "emoji": "🎒", "icon": "assets/itens/backpack.png", "price": 250, "item_slot": "item", "effect": "bagslots", "value": 6,
      "descricao": "Equipado, aumenta em 6 espaços a capacidade da mochila."},
@@ -34025,6 +34034,21 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         elif e == "bagslots":
             # Mochila/alforje: expande o inventÃ¡rio enquanto equipada
             p["bag_size"] = max(1, p.get("bag_size", 6) + v)
+        elif e in ("fome_max", "sede_max"):
+            recurso = e.removesuffix("_max")
+            base_key = f"{recurso}_max_base"
+            mods_key = f"{recurso}_max_modificadores"
+            p.setdefault(base_key, int(p.get(f"{recurso}_max", 100)))
+            modificadores = p.setdefault(mods_key, [])
+            if equipping:
+                modificadores.append({"valor": int(v)})
+            else:
+                alvo = int(-v)
+                for indice, modificador in enumerate(modificadores):
+                    if isinstance(modificador, dict) and int(modificador.get("valor", 0) or 0) == alvo:
+                        modificadores.pop(indice)
+                        break
+            _recalcular_maximos_sobrevivencia(p)
         elif e in ("str_", "dex", "con_", "int_"):
             self._apply_attribute_delta(p, e, v)
 

@@ -413,7 +413,10 @@
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
       "botas_passo_felino",
-      "laminas_riposta"
+      "laminas_riposta",
+      "amuleto_jornada",
+      "amuleto_jornada_infindavel",
+      "relicario_jornada_eterna"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -885,7 +888,10 @@
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
       "botas_passo_felino",
-      "laminas_riposta"
+      "laminas_riposta",
+      "amuleto_jornada",
+      "amuleto_jornada_infindavel",
+      "relicario_jornada_eterna"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -1357,7 +1363,10 @@
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
       "botas_passo_felino",
-      "laminas_riposta"
+      "laminas_riposta",
+      "amuleto_jornada",
+      "amuleto_jornada_infindavel",
+      "relicario_jornada_eterna"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -1829,7 +1838,10 @@
       "talisma_ascensao_inteligencia",
       "talisma_ascensao_constituicao",
       "botas_passo_felino",
-      "laminas_riposta"
+      "laminas_riposta",
+      "amuleto_jornada",
+      "amuleto_jornada_infindavel",
+      "relicario_jornada_eterna"
     ],
     "templo": [
       "lagrima_ultima_luz",
@@ -2250,7 +2262,10 @@
       "amulet_alcance_arcano",
       "ultimo_suspiro",
       "botas_passo_felino",
-      "laminas_riposta"
+      "laminas_riposta",
+      "amuleto_jornada",
+      "amuleto_jornada_infindavel",
+      "relicario_jornada_eterna"
     ]
   }
 }

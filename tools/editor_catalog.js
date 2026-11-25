@@ -17959,6 +17959,66 @@ window.EDITOR_CATALOG = {
       "descricao": "+2 de Constituição enquanto equipado."
     },
     {
+      "id": "amuleto_jornada",
+      "name": "Amuleto da Jornada",
+      "emoji": "📿",
+      "icon": "assets/itens/amuleto_jornada.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "fome_max",
+          "value": 5
+        },
+        {
+          "effect": "sede_max",
+          "value": 5
+        }
+      ],
+      "descricao": "+1 de Constituição e +5 aos limites máximos de fome e sede enquanto equipado."
+    },
+    {
+      "id": "amuleto_jornada_infindavel",
+      "name": "Amuleto da Jornada Infindável",
+      "emoji": "📿",
+      "icon": "assets/itens/amuleto_jornada_infindavel.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 1,
+      "bonuses": [
+        {
+          "effect": "fome_max",
+          "value": 10
+        },
+        {
+          "effect": "sede_max",
+          "value": 10
+        }
+      ],
+      "descricao": "+1 de Constituição e +10 aos limites máximos de fome e sede enquanto equipado."
+    },
+    {
+      "id": "relicario_jornada_eterna",
+      "name": "Relicário da Jornada Eterna",
+      "emoji": "📿",
+      "icon": "assets/itens/relicario_jornada_eterna.png",
+      "item_slot": "item",
+      "effect": "con_",
+      "value": 2,
+      "bonuses": [
+        {
+          "effect": "fome_max",
+          "value": 20
+        },
+        {
+          "effect": "sede_max",
+          "value": 20
+        }
+      ],
+      "descricao": "+2 de Constituição e +20 aos limites máximos de fome e sede enquanto equipado."
+    },
+    {
       "id": "backpack",
       "name": "Mochila de Couro",
       "emoji": "🎒",

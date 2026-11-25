@@ -2498,6 +2498,22 @@ window.LANG_CATALOGO = {
     "en": "Amulet of Arcane Reach",
     "pt": "Amuleto do Alcance Arcano"
   },
+  "cat.item.amuleto_jornada.desc": {
+    "en": "+1 Constitution and +5 to maximum hunger and thirst while equipped.",
+    "pt": "+1 de Constituição e +5 aos limites máximos de fome e sede enquanto equipado."
+  },
+  "cat.item.amuleto_jornada.nome": {
+    "en": "Journey Amulet",
+    "pt": "Amuleto da Jornada"
+  },
+  "cat.item.amuleto_jornada_infindavel.desc": {
+    "en": "+1 Constitution and +10 to maximum hunger and thirst while equipped.",
+    "pt": "+1 de Constituição e +10 aos limites máximos de fome e sede enquanto equipado."
+  },
+  "cat.item.amuleto_jornada_infindavel.nome": {
+    "en": "Endless Journey Amulet",
+    "pt": "Amuleto da Jornada Infindável"
+  },
   "cat.item.anel_aguia.desc": {
     "en": "+2 Dexterity and +2 vision while equipped.",
     "pt": "+2 de Destreza e +2 de visão enquanto estiver equipado."
@@ -5741,6 +5757,14 @@ window.LANG_CATALOGO = {
   "cat.item.relampago_de_mao.nome": {
     "en": "Hand Lightning",
     "pt": "Relâmpago de Mão"
+  },
+  "cat.item.relicario_jornada_eterna.desc": {
+    "en": "+2 Constitution and +20 to maximum hunger and thirst while equipped.",
+    "pt": "+2 de Constituição e +20 aos limites máximos de fome e sede enquanto equipado."
+  },
+  "cat.item.relicario_jornada_eterna.nome": {
+    "en": "Eternal Journey Reliquary",
+    "pt": "Relicário da Jornada Eterna"
   },
   "cat.item.ring_str.desc": {
     "en": "+1 to attack rolls while equipped.",
