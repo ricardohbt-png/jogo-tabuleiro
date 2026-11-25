@@ -22,7 +22,7 @@ ok(d.valor === 13 && d.equip === 0, 'sem valor do servidor: 10 + metade da visã
 ok(/<h3>\$\{t\('ui\.status\.exploracao'\)\}<\/h3>/.test(game), 'seção Exploração ausente no painel de status');
 ok(/_percepcaoDetalhesStatus\(p\)/.test(game), 'painel não usa o cálculo');
 for (const k of ['exploracao', 'detalhe_percepcao']) {
-  const m = lang.match(new RegExp('"ui\.status\.' + k + '":[^\n]*'));
-  ok(m && /"en":/.test(m[0]) && /"pt":/.test(m[0]), 'chave sem pt/en: ' + k);
+  const linha = lang.split('\n').find(l => l.includes('"ui.status.' + k + '":'));
+  ok(linha && linha.includes('"en":') && linha.includes('"pt":'), 'chave sem pt/en: ' + k);
 }
 console.log('test_percepcao_status: ' + n + ' verificações OK');
