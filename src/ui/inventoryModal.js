@@ -215,7 +215,9 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
 .inv-belt-sections{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:12px 0;}
 .inv-belt-section{padding:8px;border:1px solid #8d633b;border-radius:6px;background:#302014;}
 .inv-belt-heading{font:12px Georgia,serif;color:#ead8b0;margin-bottom:7px;}
-.inv-belt-row{display:flex;gap:8px;}
+.inv-belt-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;}
+.inv-belt-group{display:flex;align-items:center;gap:8px;}
+.inv-group-icon{font-size:1.15rem;line-height:1;opacity:.9;cursor:help;user-select:none;}
 .inv-belt-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
 .inv-quiver-pocket{width:42px;height:42px;position:relative;background:linear-gradient(145deg,#69472b,#392519);border-color:#b28556;box-sizing:border-box;}
 .inv-belt-pocket .inv-bagslot-emoji{font-size:.8rem;}
@@ -714,14 +716,30 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     _gamepadAction = null; refresh(); _focusSelectedSlot();
   }
 
-  function _renderQuivers(host, player){
+  // Ícone na frente de cada grupo de slots, para dizer o que ele guarda.
+  function _groupIcon(icone, titulo){
+    const el = document.createElement('span'); el.className = 'inv-group-icon';
+    el.textContent = icone; el.title = titulo; el.setAttribute('aria-label', titulo);
+    return el;
+  }
+
+  // Uma só caixa por equipamento: o cinto/maravilha já criou a sua (em `secoes`);
+  // a aljava entra na mesma linha, depois de um espaço, com o ícone de flechas.
+  function _renderQuivers(host, player, secoes = {}){
     for(const gearSlot of ['off_hand', 'item1', 'item2']){
       const quiver = player.gear?.[gearSlot], capacity = QUIVER_CAPACITIES[quiver?.id];
       if(!capacity) continue;
-      const section = document.createElement('section'); section.className = 'inv-belt-section';
-      const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
-      heading.textContent = `${quiver.name} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
-      const row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
+      let section = secoes[gearSlot]?.section, row = secoes[gearSlot]?.row, junto = !!section;
+      if(!section){
+        section = document.createElement('section'); section.className = 'inv-belt-section';
+        const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
+        heading.textContent = `${quiver.name} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
+        row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
+      }
+      const grupo = document.createElement('div');
+      grupo.className = 'inv-belt-group inv-quiver-group' + (junto ? ' apos-bolsos' : '');
+      grupo.appendChild(_groupIcon('🏹', t('ui.inv.grupo_aljava')));
+      row.appendChild(grupo);
       for(let i = 0; i < capacity; i++){
         const item = quiver.quiver_slots?.[i];
         const slot = document.createElement('div');
@@ -746,9 +764,9 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
           slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
           slot.addEventListener('drop', e => {e.preventDefault(); e.stopPropagation(); slot.classList.remove('drop-hover'); _onQuiverSlotClick(gearSlot, i);});
         }
-        row.appendChild(slot);
+        grupo.appendChild(slot);
       }
-      host.appendChild(section);
+      if(!junto) host.appendChild(section);
     }
   }
 
@@ -793,6 +811,7 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
     const host = overlay.querySelector('.inv-belt-sections');
     if(!host) return;
     host.innerHTML = '';
+    const secoes = {};
     for(const gearSlot of ['item1', 'item2']){
       const belt = player.gear?.[gearSlot];
       const capacity = BELT_CAPACITIES[belt?.id];
@@ -802,6 +821,10 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
       const heading = document.createElement('div'); heading.className = 'inv-belt-heading';
       heading.textContent = `${belt.name || t('ui.inv.cinto')} — ${_slotLabel(gearSlot)}`; section.appendChild(heading);
       const row = document.createElement('div'); row.className = 'inv-belt-row'; section.appendChild(row);
+      secoes[gearSlot] = {section, row};
+      const grupoBolsos = document.createElement('div'); grupoBolsos.className = 'inv-belt-group';
+      grupoBolsos.appendChild(_groupIcon('🧪', t('ui.inv.grupo_bolsos')));
+      row.appendChild(grupoBolsos);
       for(let pocketIndex = 0; pocketIndex < capacity; pocketIndex++){
         const entry = _beltEntry(player, gearSlot, pocketIndex), item = entry?.item;
         const slot = document.createElement('div');
@@ -841,11 +864,11 @@ body.inv-open #city-hero-bar .city-hcard.drop-hover{border-color:#8fe08a;backgro
           slot.addEventListener('dragleave', () => slot.classList.remove('drop-hover'));
           slot.addEventListener('drop', e => {e.preventDefault(); e.stopPropagation(); slot.classList.remove('drop-hover'); _onBeltSlotClick(gearSlot, pocketIndex);});
         }
-        row.appendChild(slot);
+        grupoBolsos.appendChild(slot);
       }
       host.appendChild(section);
     }
-    _renderQuivers(host, player);
+    _renderQuivers(host, player, secoes);
   }
 
   function _renderBag(overlay, player){

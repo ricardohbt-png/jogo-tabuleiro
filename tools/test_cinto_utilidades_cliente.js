@@ -39,8 +39,9 @@ vm.createContext(context);
 const instrumented=ui.replace('return { open, close, toggle,',`return { testRender:_renderBelts, testSelect:s=>{_selected=s}, testPlayer:()=>{_openPid='p'}, testBag:_attemptMoveToBag, testReadOnly:x=>{_readOnly=x}, testActivate:_activateBeltItem, open, close, toggle,`);
 vm.runInContext(instrumented+';this.modal=InventoryModal;',context);const modal=context.modal;modal.testPlayer();
 modal.testRender({querySelector:()=>host},player);
-check('runtime renders exactly 4/2 only from equipped belts',host.children.length===2&&host.children[0].children[1].children.length===4&&host.children[1].children[1].children.length===2);
-const slots=host.children.flatMap(section=>section.children[1].children);
+const bolsos=section=>section.children[1].children.flatMap(g=>g.children.filter(c=>c.dataset&&c.dataset.pocketIndex!==undefined));
+check('runtime renders exactly 4/2 only from equipped belts',host.children.length===2&&bolsos(host.children[0]).length===4&&bolsos(host.children[1]).length===2);
+const slots=host.children.flatMap(bolsos);
 check('runtime count and item tooltip touch handlers',slots[0].innerHTML.includes('>4</span>')&&slots[0].events.touchstart&&slots[0].events.touchend);
 const before=JSON.stringify(player);
 modal.testSelect({kind:'bag',index:0});slots[2].onclick();
@@ -51,7 +52,7 @@ modal.testActivate('item1',0);check('runtime use coordinates',JSON.stringify(sen
 modal.testActivate('item1',1);const throwRequest=sent.pop();check('runtime custom throwable coordinates',throwRequest?.[3]?.pocketIndex===1 && throwRequest?.[3]?.beltToken==='belt-A');
 check('runtime never changes synchronized inventory',JSON.stringify(player)===before);
 modal.testReadOnly(true);modal.testActivate('item1',0);check('runtime read-only cannot use',sent.length===0);
-const oldHost=new Element();modal.testRender({querySelector:()=>oldHost},{gear:{item1:{id:'cinto_utilidades'}}});check('runtime old empty belt renders four pockets',oldHost.children[0].children[1].children.length===4);
+const oldHost=new Element();modal.testRender({querySelector:()=>oldHost},{gear:{item1:{id:'cinto_utilidades'}}});check('runtime old empty belt renders four pockets',bolsos(oldHost.children[0]).length===4);
 console.log(`Total: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
 function extract(source,name){const start=source.indexOf('function '+name+'(');let depth=0;for(let i=source.indexOf('{',start);i<source.length;i++){if(source[i]==='{')depth++;if(source[i]==='}'&&!--depth)return source.slice(start,i+1);if(source[i]!=='}')continue;}throw Error(name);}
 // Renderer use must preserve origin across asynchronous ally selection.
@@ -75,17 +76,28 @@ context.t=(key,params)=>context.window.I18N.t(key,params);
 for(const [lang,beltLabel,emptyLabel] of [['pt','Cinto','Bolso 1 vazio'],['en','Belt','Empty pocket 1']]) {
   context.window.I18N.setLang(lang);
   const localized=new Element();modal.testRender({querySelector:()=>localized},{gear:{item1:{id:'cinto_com_bolsos'}}});
-  check('actual inventory belt section and empty pocket '+lang, localized.children[0].children[0].textContent.startsWith(beltLabel+' — ') && localized.children[0].children[1].children[0].attrs['aria-label']===emptyLabel);
+  check('actual inventory belt section and empty pocket '+lang, localized.children[0].children[0].textContent.startsWith(beltLabel+' — ') && bolsos(localized.children[0])[0].attrs['aria-label']===emptyLabel);
 }
 console.log(`Review final: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
 const arrows={id:'flechas',name:'Flechas',effect:'ammo',ammo_type:'flechas',ammo_count:30};
 player.gear.off_hand={id:'aljava_grande',name:'Aljava Grande',quiver_token:'q1',quiver_slots:[arrows,null,null]};
 context.GS.moveQuiverAmmo=(...args)=>sent.push(['quiver',...args]);
 const quiverHost=new Element();modal.testRender({querySelector:()=>quiverHost},player);
-const quiverSlots=quiverHost.children.at(-1).children[1].children;
+const quiverSlots=bolsos(quiverHost.children.at(-1));
 check('runtime large quiver renders three slots and ammunition count',quiverSlots.length===3&&quiverSlots[0].innerHTML.includes('>30</span>'));
 modal.testSelect({kind:'bag',index:0});quiverSlots[1].onclick();
 check('runtime bag to quiver request',JSON.stringify(sent.pop())===JSON.stringify(['quiver','to_quiver','off_hand',1,0,'q1']));
 modal.testSelect({kind:'quiver',gearSlot:'off_hand',pocketIndex:0,quiverToken:'q1'});modal.testBag(1);
 check('runtime quiver to bag request',JSON.stringify(sent.pop())===JSON.stringify(['quiver','to_bag','off_hand',0,1,'q1']));
 console.log(`Quiver: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
+
+// Maravilha do Aventureiro: bolsos e aljava na MESMA caixa, cada grupo com seu ícone.
+player.gear.off_hand=null;
+player.gear.item2={id:'maravilha_aventureiro_menor',name:'Maravilha',quiver_token:'q2',quiver_slots:[arrows],utility_belt_slots:[]};
+const mHost=new Element();modal.testRender({querySelector:()=>mHost},player);
+const caixaM=mHost.children.find(sec=>sec.children[0].textContent.startsWith('Maravilha'));
+const grupos=caixaM.children[1].children;
+check('maravilha: uma caixa só com dois grupos',mHost.children.filter(sec=>sec.children[0].textContent.startsWith('Maravilha')).length===1&&grupos.length===2);
+check('maravilha: ícones 🧪 e 🏹 na frente dos grupos',grupos[0].children[0].textContent==='🧪'&&grupos[1].children[0].textContent==='🏹');
+check('maravilha: 4 bolsos + 1 slot de aljava',bolsos(caixaM).length===5&&grupos[1].children.length===2&&/apos-bolsos/.test(grupos[1].className));
+console.log(`Maravilha: ${pass} passed, ${fail} failed`);process.exitCode=fail?1:0;
