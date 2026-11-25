@@ -12209,7 +12209,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_curto.png",
       "allowed_classes": [
         "bard",
@@ -12220,7 +12219,7 @@ window.EDITOR_CATALOG = {
       "range": 6,
       "range_all_directions": true,
       "categoria": "perfurante",
-      "descricao": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
+      "descricao": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
     },
     {
       "id": "lanca",
@@ -12284,7 +12283,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_longo.png",
       "allowed_classes": [
         "paladin",
@@ -12293,7 +12291,7 @@ window.EDITOR_CATALOG = {
       "range": 10,
       "range_all_directions": true,
       "categoria": "perfurante",
-      "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
+      "descricao": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
     },
     {
       "id": "arco_bruto_combatente",
@@ -12301,7 +12299,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_bruto_do_combatente.png",
       "allowed_classes": [
         "paladin",
@@ -12311,7 +12308,7 @@ window.EDITOR_CATALOG = {
       "range_all_directions": true,
       "add_strength_to_damage": true,
       "categoria": "perfurante",
-      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+      "descricao": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
     },
     {
       "id": "warhammer",
@@ -14215,7 +14212,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_curto_freixo_negro.png",
       "allowed_classes": [
         "bard",
@@ -14230,7 +14226,7 @@ window.EDITOR_CATALOG = {
       "range_all_directions": true,
       "categoria": "perfurante",
       "atk_bonus": 1,
-      "descricao": "Arco Composto Curto de Freixo Negro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Composto Curto de Freixo Negro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "longbow_freixo_negro",
@@ -14257,7 +14253,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_longo_freixo_negro.png",
       "allowed_classes": [
         "paladin",
@@ -14270,7 +14265,7 @@ window.EDITOR_CATALOG = {
       "range_all_directions": true,
       "categoria": "perfurante",
       "atk_bonus": 1,
-      "descricao": "Arco Composto Longo de Freixo Negro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Composto Longo de Freixo Negro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "arco_bruto_combatente_freixo_negro",
@@ -14278,7 +14273,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_bruto_combatente_freixo_negro.png",
       "allowed_classes": [
         "paladin",
@@ -14292,7 +14286,7 @@ window.EDITOR_CATALOG = {
       "add_strength_to_damage": true,
       "categoria": "perfurante",
       "atk_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "hand_crossbow_freixo_negro",
@@ -14910,7 +14904,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_curto_cedro_rubro.png",
       "allowed_classes": [
         "bard",
@@ -14926,7 +14919,7 @@ window.EDITOR_CATALOG = {
       "range_all_directions": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+      "descricao": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "longbow_cedro_rubro",
@@ -14954,7 +14947,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_longo_cedro_rubro.png",
       "allowed_classes": [
         "paladin",
@@ -14968,7 +14960,7 @@ window.EDITOR_CATALOG = {
       "range_all_directions": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+      "descricao": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "arco_bruto_combatente_cedro_rubro",
@@ -14976,7 +14968,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_bruto_combatente_cedro_rubro.png",
       "allowed_classes": [
         "paladin",
@@ -14991,7 +14982,7 @@ window.EDITOR_CATALOG = {
       "add_strength_to_damage": true,
       "categoria": "perfurante",
       "damage_bonus": 1,
-      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
     },
     {
       "id": "hand_crossbow_cedro_rubro",
@@ -15570,7 +15561,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d8",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_curto_cerne_tita.png",
       "allowed_classes": [
         "bard",
@@ -15584,7 +15574,7 @@ window.EDITOR_CATALOG = {
       "range": 6,
       "range_all_directions": true,
       "categoria": "perfurante",
-      "descricao": "Arco Composto Curto de Cerne de Titã: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Composto Curto de Cerne de Titã: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "longbow_cerne_tita",
@@ -15610,7 +15600,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_composto_longo_cerne_tita.png",
       "allowed_classes": [
         "paladin",
@@ -15622,7 +15611,7 @@ window.EDITOR_CATALOG = {
       "range": 10,
       "range_all_directions": true,
       "categoria": "perfurante",
-      "descricao": "Arco Composto Longo de Cerne de Titã: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Composto Longo de Cerne de Titã: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "arco_bruto_combatente_cerne_tita",
@@ -15630,7 +15619,6 @@ window.EDITOR_CATALOG = {
       "emoji": "🏹",
       "die": "1d10",
       "stat": "dex",
-      "two_handed": true,
       "icon": "assets/itens/arco_bruto_combatente_cerne_tita.png",
       "allowed_classes": [
         "paladin",
@@ -15643,7 +15631,7 @@ window.EDITOR_CATALOG = {
       "range_all_directions": true,
       "add_strength_to_damage": true,
       "categoria": "perfurante",
-      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+      "descricao": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
     },
     {
       "id": "hand_crossbow_cerne_tita",

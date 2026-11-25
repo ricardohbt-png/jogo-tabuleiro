@@ -538,11 +538,15 @@ Servos do jogador (mortos-vivos reanimados e elementais, `players[].animados`) d
 
 ### Arcos Compostos (2026-11-12)
 
-`arco_composto_curto` custa 35 moedas e causa 1d8 perfurante usando Destreza; `arco_composto_longo` custa 60 e causa 1d10. Ambos são armas mundanas de duas mãos, usam as listas de classes do Arco Curto e do Arco Longo respectivamente e alcançam seu alcance integral também na diagonal: 6 casas para o curto e 10 para o longo. Usam flechas normais e especiais, consumindo uma por disparo mesmo se errar. `range_all_directions` diferencia esses arcos da regra dos arcos básicos (metade do alcance na diagonal). Imagens: `assets/itens/arco_composto_curto.png` e `assets/itens/arco_composto_longo.png`; ambos estão nos cinco ferreiros.
+`arco_composto_curto` custa 35 moedas e causa 1d8 perfurante usando Destreza; `arco_composto_longo` custa 60 e causa 1d10. Ambos são armas mundanas de uma mão (as flechas ficam equipadas na mão do escudo), usam as listas de classes do Arco Curto e do Arco Longo respectivamente e alcançam seu alcance integral também na diagonal: 6 casas para o curto e 10 para o longo. Usam flechas normais e especiais, consumindo uma por disparo mesmo se errar. `range_all_directions` diferencia esses arcos da regra dos arcos básicos (metade do alcance na diagonal). Imagens: `assets/itens/arco_composto_curto.png` e `assets/itens/arco_composto_longo.png`; ambos estão nos cinco ferreiros.
+
+### Arcos são de uma mão (2026-11-25)
+
+Nenhum arco é de duas mãos: Arco Curto, Arco Longo, os Compostos, o Arco Bruto do Combatente e as variantes de madeira perderam `two_handed`. Sem aljava, o arco só atira com as flechas **equipadas na mão do escudo** (`handle_attack` recusa com `erro.sem_municao_no_local` se elas estão só na bolsa), então a mão do escudo fica com as flechas e não há escudo; com aljava, vale a regra de aljavas. As bestas pesadas e repetidoras continuam de duas mãos. Teste: `python -X utf8 tools/test_arcos_uma_mao.py`.
 
 ### Arco Bruto do Combatente (2026-11-12)
 
-`arco_bruto_combatente` custa 120 moedas e é uma versão robusta do Arco Composto Longo: causa 1d10 perfurante, usa apenas Destreza no ataque e soma Destreza e Força ao dano. Tem alcance de 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flechas. É mundano e exclusivo de Paladino e Guerreiro. `add_strength_to_damage` só altera o modificador de dano, sem afetar o ataque. Usa `assets/itens/arco_bruto_do_combatente.png` e está nos cinco ferreiros.
+`arco_bruto_combatente` custa 120 moedas e é uma versão robusta do Arco Composto Longo: causa 1d10 perfurante, usa apenas Destreza no ataque e soma Destreza e Força ao dano. Tem alcance de 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam na mão do escudo, então não se usa escudo) e aceita todos os tipos de flechas. É mundano e exclusivo de Paladino e Guerreiro. `add_strength_to_damage` só altera o modificador de dano, sem afetar o ataque. Usa `assets/itens/arco_bruto_do_combatente.png` e está nos cinco ferreiros.
 
 ### Rede Corrosiva (2026-10-30)
 
