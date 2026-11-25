@@ -34,6 +34,8 @@ ASSINATURAS = os.path.join(RAIZ, "tools", ".elara_gilo_assinaturas.json")
 # Fatos (contrato com o plano 4: nomes estáveis)
 F_RAMO_B = "elara_ramo_b"
 F_CHEGADA = "elara_corvin_chegada"
+IMAGEM_TAVERNA_CORVIN = "assets/story/elara_corvin_taverna_barman.webp"   # os heróis na taverna, ouvindo o barman
+IMAGEM_FIM_ADHADAL = "assets/story/elara_adhadal_fim_estrada_corvin.webp"   # o grupo sai da mata e avista Corvin
 F_PISTA = "elara_pista_graciero"       # grava o objetivo do confronto com o Gilo
 F_RUMO_GRACIERO = "elara_rumo_graciero"   # contrato com o plano 4: o grupo decidiu seguir para Graciero
 
@@ -82,22 +84,41 @@ def conversas():
     }
 
 
+def fim_adhadal():
+    """Encerramento da 2ª etapa: a estrada, a vila à vista e a chegada à taverna (a conversa do barman
+    ouvida de longe; a mesma pista segue disponível ao falar com ele)."""
+    return {"slides": [
+        {"image": IMAGEM_FIM_ADHADAL, "fit": "cover",
+         "text": "A mata finalmente se abre. Lama até os joelhos, vocês pisam na estrada de terra e, lá embaixo, "
+                 "entre os campos e o rio, avistam a paliçada de Corvin. Sobreviveram à Floresta de Adhadal."},
+        {"image": IMAGEM_TAVERNA_CORVIN, "fit": "cover",
+         "text": "Cansados e famintos, vocês cruzam o portão atrás de uma taverna e de um prato quente. Da porta "
+                 "ouvem o barman comentar com um freguês: “Um sujeito de botas atoladas de lama pagou um quarto "
+                 "que nem usou e perguntou pela estrada de Graciero...”"},
+    ]}
+
+
 def destinos():
     a, c = S.WORLD_LOCATIONS["alva_e_luz"], S.WORLD_LOCATIONS[CIDADE]
     meio = (round((a["x"] + c["x"]) / 2, 2), round((a["y"] + c["y"]) / 2, 2))
     perto = (round(min(100, c["x"] + 2.5), 2), round(min(100, c["y"] + 2.5), 2))
 
-    def destino(did, nome, xy, etapas, fome_sede, requisito, renome, so_na_cidade=False):
+    def destino(did, nome, xy, etapas, fome_sede, requisito, renome, so_na_cidade=False,
+                chegada_em="", outro_final=""):
         extra = {"so_na_cidade": True} if so_na_cidade else {}
+        if chegada_em:
+            extra["chegada_em"] = chegada_em
+        etapas = [(arq, enc, outro_final if (i == len(etapas) - 1 and outro_final) else "")
+                  for i, (arq, enc) in enumerate(etapas)]
         return {**extra, "id": did, "nome": nome, "x": xy[0], "y": xy[1], "fome": fome_sede, "sede": fome_sede,
-                "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": ""} for arq, enc in etapas],
+                "dungeons": [{"file": arq, "encadear": enc, "intro": "", "outro": out} for arq, enc, out in etapas],
                 "espera_retorno": {"modo": "fixa", "rodadas": 0, "dados": ""},
                 "oculto_ate_liberar": True, "revisitavel": False, "ocultar_apos_concluir": True,
                 "outro_rota": "", "requisito": requisito, "renome_recompensa": renome}
     return {
         "elara_adhadal": destino("elara_adhadal", "A Floresta de Adhadal", meio,
                                  [("elara_adhadal_1.json", True), ("elara_adhadal_2.json", False)], 2,
-                                 _req(fato=F_RAMO_B), 1),
+                                 _req(fato=F_RAMO_B), 1, chegada_em=CIDADE, outro_final=fim_adhadal()),
         "elara_corvin": destino("elara_corvin", "O Curtume de Corvin", perto,
                                 [("elara_corvin_cacada.json", True), ("elara_corvin_gilo.json", False)], 1,
                                 _req(aventura_id="elara_adhadal"), 2, so_na_cidade=True),
