@@ -2635,8 +2635,8 @@ window.LANG_CATALOGO = {
     "pt": "Antídoto"
   },
   "cat.item.arco_bruto_combatente.desc": {
-    "en": "Combatant’s Brutish Bow: a sturdy, nonmagical long composite bow with thick black wood and war carvings. Deals 1d10 piercing damage; uses Dexterity for attack rolls and adds both Dexterity and Strength modifiers to damage. Range: 10 squares in any direction, including diagonals. Requires two hands, accepts all arrow types, and is exclusive to Paladins and Warriors.",
-    "pt": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
+    "en": "Combatant’s Brutish Bow: a sturdy, nonmagical long composite bow with thick black wood and war carvings. Deals 1d10 piercing damage; uses Dexterity for attack rolls and adds both Dexterity and Strength modifiers to damage. Range: 10 squares in any direction, including diagonals. uses only the main hand (the arrows are equipped in the shield hand, so no shield), accepts all arrow types, and is exclusive to Paladins and Warriors.",
+    "pt": "Arco Bruto do Combatente: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro."
   },
   "cat.item.arco_bruto_combatente.nome": {
     "en": "Combatant’s Brutish Bow",
@@ -2644,7 +2644,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_cedro_rubro.desc": {
     "en": "Red Cedar Combatant Bow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    "pt": "Arco Bruto do Combatente de Cedro Rubro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_bruto_combatente_cedro_rubro.nome": {
     "en": "Red Cedar Combatant Bow",
@@ -2652,7 +2652,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_cerne_tita.desc": {
     "en": "Titan Heartwood Combatant Bow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Bruto do Combatente de Cerne de Titã: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_bruto_combatente_cerne_tita.nome": {
     "en": "Titan Heartwood Combatant Bow",
@@ -2660,15 +2660,15 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_bruto_combatente_freixo_negro.desc": {
     "en": "Black Ash Combatant Bow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
-    "pt": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; exige duas mãos e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Bruto do Combatente de Freixo Negro: arco longo composto mundano, de madeira negra grossa e entalhes de guerra. Causa 1d10 perfurante; usa apenas Destreza no acerto e soma os modificadores de Destreza e Força ao dano. Alcance de 10 casas em qualquer direção, inclusive diagonais; ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso exclusivo de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_bruto_combatente_freixo_negro.nome": {
     "en": "Black Ash Combatant Bow",
     "pt": "Arco Bruto do Combatente de Freixo Negro"
   },
   "cat.item.arco_composto_curto.desc": {
-    "en": "Nonmagical short composite bow: 1d8 piercing damage, using Dexterity. Range: 6 squares in any direction, including diagonals. Requires two hands and accepts all arrow types.",
-    "pt": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
+    "en": "Nonmagical short composite bow: 1d8 piercing damage, using Dexterity. Range: 6 squares in any direction, including diagonals. uses only the main hand (the arrows are equipped in the shield hand, so no shield) and accepts all arrow types.",
+    "pt": "Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro."
   },
   "cat.item.arco_composto_curto.nome": {
     "en": "Short Composite Bow",
@@ -2676,7 +2676,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_curto_cedro_rubro.desc": {
     "en": "Red Cedar Composite Shortbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    "pt": "Arco Composto Curto de Cedro Rubro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_composto_curto_cedro_rubro.nome": {
     "en": "Red Cedar Composite Shortbow",
@@ -2684,7 +2684,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_curto_cerne_tita.desc": {
     "en": "Titan Heartwood Composite Shortbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
-    "pt": "Arco Composto Curto de Cerne de Titã: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Composto Curto de Cerne de Titã: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_composto_curto_cerne_tita.nome": {
     "en": "Titan Heartwood Composite Shortbow",
@@ -2692,15 +2692,15 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_curto_freixo_negro.desc": {
     "en": "Black Ash Composite Shortbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
-    "pt": "Arco Composto Curto de Freixo Negro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Composto Curto de Freixo Negro: Arco composto curto não mágico, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d8 perfurante usando Destreza, alcança até 6 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Bardo, Ladino, Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_composto_curto_freixo_negro.nome": {
     "en": "Black Ash Composite Shortbow",
     "pt": "Arco Composto Curto de Freixo Negro"
   },
   "cat.item.arco_composto_longo.desc": {
-    "en": "Nonmagical long composite bow: 1d10 piercing damage, using Dexterity. Range: 10 squares in any direction, including diagonals. Requires two hands and accepts all arrow types.",
-    "pt": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
+    "en": "Nonmagical long composite bow: 1d10 piercing damage, using Dexterity. Range: 10 squares in any direction, including diagonals. uses only the main hand (the arrows are equipped in the shield hand, so no shield) and accepts all arrow types.",
+    "pt": "Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro."
   },
   "cat.item.arco_composto_longo.nome": {
     "en": "Long Composite Bow",
@@ -2708,7 +2708,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_longo_cedro_rubro.desc": {
     "en": "Red Cedar Composite Longbow: retains the base weapon's combat profile and class restrictions. Nonmagical material; +1 damage and one corrosion level without penalties. The next two levels apply normal penalties; the fourth destroys the weapon.",
-    "pt": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
+    "pt": "Arco Composto Longo de Cedro Rubro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Cedro Rubro; +1 de dano. Material frágil contra corrosão: o primeiro golpe corrosivo destrói a arma."
   },
   "cat.item.arco_composto_longo_cedro_rubro.nome": {
     "en": "Red Cedar Composite Longbow",
@@ -2716,7 +2716,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_longo_cerne_tita.desc": {
     "en": "Titan Heartwood Composite Longbow: retains the base weapon's combat profile and class restrictions. Mundane material with no attack or damage bonus. Corrosion levels 1–2 cause no penalties; levels 3–5 apply normal penalties, and level 6 destroys the weapon.",
-    "pt": "Arco Composto Longo de Cerne de Titã: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Composto Longo de Cerne de Titã: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante mundana de Cerne de Titã, sem bônus adicional de ataque ou dano. Tolera 2 níveis de corrosão sem penalidade; os três níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_composto_longo_cerne_tita.nome": {
     "en": "Titan Heartwood Composite Longbow",
@@ -2724,7 +2724,7 @@ window.LANG_CATALOGO = {
   },
   "cat.item.arco_composto_longo_freixo_negro.desc": {
     "en": "Black Ash Composite Longbow: Keeps the base weapon's damage, range, class restrictions, and special traits. Nonmagical material: +1 to attack rolls, with no damage bonus. The first corrosion level causes no penalties; the next two apply normal penalties, and the fourth destroys the weapon.",
-    "pt": "Arco Composto Longo de Freixo Negro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, exige duas mãos e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
+    "pt": "Arco Composto Longo de Freixo Negro: Arco composto longo não mágico, de grande porte, feito com camadas reforçadas de madeira, chifre e tendão. Causa 1d10 perfurante usando Destreza, alcança até 10 casas em qualquer direção, inclusive diagonais, ocupa só a mão principal (as flechas ficam equipadas na mão do escudo, então não se usa escudo) e aceita todos os tipos de flecha. Uso de Paladino e Guerreiro. Variante não mágica de Freixo Negro; +1 no acerto, sem bônus de dano. O material tolera 1 nível de corrosão sem penalidade; os dois níveis seguintes aplicam as penalidades normais e o próximo nível destrói a arma."
   },
   "cat.item.arco_composto_longo_freixo_negro.nome": {
     "en": "Black Ash Composite Longbow",
