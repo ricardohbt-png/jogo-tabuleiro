@@ -95,7 +95,7 @@ console.log('\n[4] Fiação no game.js');
   check('metamorfoseado gira dentro do modelo de monstro',
     GAME.includes('if(formaVisual) _setMonsterMeshFacing3D(_figInvis, p.facing);'));
   check('laço sincroniza anel e direção após obterFig',
-    GAME.includes('_sincronizarPeaoHeroi3D(_figInvis, isCur, p.facing, !!pSel);'));
+    GAME.includes('_sincronizarPeaoHeroi3D(_figInvis, isCur, (_facingPreview && _facingPreview.pid === p.id) ? _facingPreview.f : p.facing, !!pSel);'));
   check('build3DFig cria o anel para todo herói (classId), visível só na vez',
     /if\(isCurrent \|\| classId\)\{[\s\S]{0,700}ring\.visible = !!isCurrent;[\s\S]{0,80}grp\.userData\.turnRing = ring;/.test(GAME));
   check('giraRaiz marcado só para GLB de herói sem metamorfose',
