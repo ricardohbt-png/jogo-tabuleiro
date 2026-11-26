@@ -68471,8 +68471,6 @@ def avisos_integridade_masmorra(defn):
     for d in decors:
         p = pos_de(d)
         desliga = [str(i) for i in (d.get("disable_trap_ids") or []) if isinstance(i, (str, int))]
-        if d.get("escondido") and (desliga or str(d.get("id")) in chaves_mecanismo):
-            av("mecanismo_escondido", p, id=str(d.get("id") or "?"), cd=int(d.get("cd_busca") or ESCONDERIJO_CD_PADRAO))
         for tid in desliga:
             if tid not in trap_ids:
                 av("desliga_inexistente", p, id=str(d.get("id") or "?"), trap=tid)
