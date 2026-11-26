@@ -31030,8 +31030,25 @@ function _bussolaPedidaPelaLicao(st){
   const me = (st.players || []).find(p => String(p.id) === String(GS.myPid));
   return !!st.tutorial?.por_classe?.[me?.class_id]?.requer_escolher_direcao;
 }
+// Preferência pessoal (⚙️): 'combate' (padrão), 'sempre' ou 'nunca'. A lição de treinamento
+// que exige escolher a direção vale mesmo em 'nunca'.
+const _BUSSOLA_KEY = 'lfh_bussola_modo';
+function _bussolaLerModo(v){ return v === 'sempre' || v === 'nunca' ? v : 'combate'; }
+let _bussolaModo = (() => {
+  try { return _bussolaLerModo(localStorage.getItem(_BUSSOLA_KEY)); }
+  catch(e){ return 'combate'; }
+})();
+function _setBussolaModo(modo){
+  _bussolaModo = _bussolaLerModo(modo);
+  try { localStorage.setItem(_BUSSOLA_KEY, _bussolaModo); } catch(e){}
+  const sel = document.getElementById('cfg-bussola-sel');
+  if(sel) sel.value = _bussolaModo;
+}
 function _bussolaEmCombate(st){
-  return _autoTurnCombatActive(st) || _bussolaPedidaPelaLicao(st);
+  if(_bussolaPedidaPelaLicao(st)) return true;
+  if(_bussolaModo === 'sempre') return true;
+  if(_bussolaModo === 'nunca') return false;
+  return _autoTurnCombatActive(st);
 }
 function _bussolaCabe(){
   const st = GS.gameState, me = GS.me;
@@ -35802,6 +35819,18 @@ function _gamepadShortcutEntryFromFocus(){
   const focused = _gamepadUi.focusEl?.isConnected ? _gamepadUi.focusEl : document.activeElement;
   return _atalhoEntryFromElement(focused?.closest?.('[data-shortcut-kind]'));
 }
+function _gamepadDesfazerEsperar(pad){
+  const hero = GS.me;
+  if(_gamepadButtonEdge(pad, 1)){
+    if(GS.isMyTurn && hero?.pode_desfazer && GS.desfazerMovimento()) toast(t('ui.gamepad.desfeito'), 'var(--green)');
+    return true;
+  }
+  if(_gamepadButtonEdge(pad, 0)){
+    if(GS.isMyTurn && hero?.pode_esperar && GS.esperarVez()) toast(t('ui.gamepad.esperando'), 'var(--green)');
+    return true;
+  }
+  return false;
+}
 function _gamepadUseOrAssignShortcut(slot){
   const entry = _gamepadShortcutEntryFromFocus();
   const menu = _gamepadCharacterMenuKind();
@@ -36047,6 +36076,10 @@ function _pollGamepad(now){
     } else if(_gamepadButtonEdge(pad, 3)){
       shortcutHandled = _gamepadUseOrAssignShortcut(9);
     }
+  }
+  // L2 + B desfaz o último movimento; L2 + A espera (adia a vez). O servidor decide se vale.
+  if(!shortcutHandled && !_gamepadInput.shortcutWheelConsumed && l2Held && !l1Held && !r1Held && playing){
+    shortcutHandled = _gamepadDesfazerEsperar(pad);
   }
   if(shortcutHandled){
     _clearGamepadEndTurnConfirm();
@@ -38667,6 +38700,11 @@ function _audioPanelEnsure(){
     +       '<option value="off" data-i18n="ui.menu.intencao.off">Desligada</option>'
     +       '<option value="grupo" data-i18n="ui.menu.intencao.grupo">Ameaças ao meu grupo</option>'
     +       '<option value="todas" data-i18n="ui.menu.intencao.todas">Todas</option></select></label>'
+    +     '<label class="cfg-access-check"><span data-i18n="ui.menu.bussola">Direção ao encerrar o turno</span> <select id="cfg-bussola-sel">'
+    +       '<option value="combate" data-i18n="ui.menu.bussola.combate">Só em combate</option>'
+    +       '<option value="sempre" data-i18n="ui.menu.bussola.sempre">Sempre</option>'
+    +       '<option value="nunca" data-i18n="ui.menu.bussola.nunca">Nunca</option></select></label>'
+    +     '<small data-i18n="ui.menu.bussola_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Quando perguntar para onde o herói olha. Lições de treinamento sempre perguntam quando precisam.</small>'
     +     '<small data-i18n="ui.menu.intencao_dica" style="display:block;margin:2px 0 6px;opacity:.7;font-size:.7rem;">Mostra setas de quem cada monstro atacaria agora. Tecla T alterna.</small>'
     +     '<button id="cfg-visao-host-btn" style="width:100%;padding:8px;background:rgba(30,48,62,.7);border:1px solid #6da7bd88;border-radius:6px;color:#d7f0f8;font-family:inherit;font-size:.8rem;cursor:pointer;"></button>'
     +     '<small id="cfg-visao-note" style="display:block;margin-top:5px;opacity:.72;"></small>'
@@ -38766,6 +38804,8 @@ function _audioPanelEnsure(){
   };
   wrap.querySelector('#cfg-intencao-sel').value = _intencaoModo;
   wrap.querySelector('#cfg-intencao-sel').onchange = (e) => { _setIntencaoModo(e.target.value); };
+  wrap.querySelector('#cfg-bussola-sel').value = _bussolaModo;
+  wrap.querySelector('#cfg-bussola-sel').onchange = (e) => { _setBussolaModo(e.target.value); };
   const _enviarRitmo = () => {
     const state=GS.gameState||GS.cityState;
     if(!state || !GS.souAnfitriao(state.host)){ toast(t('ui.menu.ritmo_so_host'),'var(--red)'); _refreshVelocidadeInimigosOption(); return; }

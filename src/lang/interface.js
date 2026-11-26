@@ -669,8 +669,8 @@ window.LANG_INTERFACE = {
     "pt": "🎮 Joystick"
   },
   "ui.ajuda.joystick_turno": {
-    "en": "<b>Dungeon:</b> D-pad or left stick chooses a tile · Confirm activates it · Cancel leaves target mode · Menu opens pause · R3 twice ends your turn · Y cycles useful targets · LB/RB + face buttons use shortcuts 1–8 · LT+X/Y use shortcuts 9–10.",
-    "pt": "<b>Masmorra:</b> direcional ou analógico esquerdo escolhe uma casa · Confirmar ativa a casa · Cancelar sai da mira · Menu abre a pausa · R3 duas vezes encerra o turno · Y alterna entre alvos úteis · LB/RB + botões frontais usam os atalhos 1–8 · LT+X/Y usam os atalhos 9–10."
+    "en": "<b>Dungeon:</b> D-pad or left stick chooses a tile · Confirm activates it · Cancel leaves target mode · Menu opens pause · R3 twice ends your turn · Y cycles useful targets · LB/RB + face buttons use shortcuts 1–8 · LT+X/Y use shortcuts 9–10 · LT+B undoes your last move · LT+A waits (acts after the others).",
+    "pt": "<b>Masmorra:</b> direcional ou analógico esquerdo escolhe uma casa · Confirmar ativa a casa · Cancelar sai da mira · Menu abre a pausa · R3 duas vezes encerra o turno · Y alterna entre alvos úteis · LB/RB + botões frontais usam os atalhos 1–8 · LT+X/Y usam os atalhos 9–10 · LT+B desfaz o último movimento · LT+A espera (age depois dos outros)."
   },
   "ui.ajuda.objetivo": {
     "en": "<b>Goal:</b> explore the dungeon, defeat the boss 👹 and return to the stairs to the city (buy items, rest) before the next floor.",
@@ -11942,6 +11942,13 @@ window.LANG_INTERFACE = {
   "ui.menuacoes.desfazer_dica": {"en":"Undo your last move (Ctrl+Z), only if nothing has changed since: no new fog, hits or actions.","pt":"Desfaz o último movimento (Ctrl+Z), só se nada mudou desde então: sem névoa nova, dano ou ações."},
   "ui.menuacoes.esperar": {"en":"Wait","pt":"Esperar"},
   "ui.menuacoes.esperar_dica": {"en":"Act after the others this round (X). Only at the start of your turn, once per round.","pt":"Age depois dos outros nesta rodada (X). Só no começo da vez, uma vez por rodada."},
-  "ui.ajuda.desfazer_esperar": {"en":"<b>Undo / Wait:</b> <b>Ctrl+Z</b> takes back your last move if nothing has changed since (new fog, a hit, an action or an opened door blocks it). <b>X</b> (or the ⏳ button) sends your turn to the end of the round, only before moving or acting, once per round.","pt":"<b>Desfazer / Esperar:</b> <b>Ctrl+Z</b> desfaz o último movimento se nada mudou desde então (névoa nova, dano, ação ou porta aberta bloqueiam). <b>X</b> (ou o botão ⏳) manda a sua vez para o fim da rodada, só antes de andar ou agir, uma vez por rodada."}
+  "ui.ajuda.desfazer_esperar": {"en":"<b>Undo / Wait:</b> <b>Ctrl+Z</b> takes back your last move if nothing has changed since (new fog, a hit, an action or an opened door blocks it). <b>X</b> (or the ⏳ button) sends your turn to the end of the round, only before moving or acting, once per round.","pt":"<b>Desfazer / Esperar:</b> <b>Ctrl+Z</b> desfaz o último movimento se nada mudou desde então (névoa nova, dano, ação ou porta aberta bloqueiam). <b>X</b> (ou o botão ⏳) manda a sua vez para o fim da rodada, só antes de andar ou agir, uma vez por rodada."},
+  "ui.menu.bussola": {"en":"Facing when ending turn","pt":"Direção ao encerrar o turno"},
+  "ui.menu.bussola.combate": {"en":"Only in combat","pt":"Só em combate"},
+  "ui.menu.bussola.sempre": {"en":"Always","pt":"Sempre"},
+  "ui.menu.bussola.nunca": {"en":"Never","pt":"Nunca"},
+  "ui.menu.bussola_dica": {"en":"When to ask which way your hero looks. Training lessons always ask when they need it.","pt":"Quando perguntar para onde o herói olha. Lições de treinamento sempre perguntam quando precisam."},
+  "ui.gamepad.desfeito": {"en":"↶ Move undone","pt":"↶ Movimento desfeito"},
+  "ui.gamepad.esperando": {"en":"⏳ Waiting","pt":"⏳ Esperando"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
