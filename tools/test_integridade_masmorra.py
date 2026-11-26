@@ -69,12 +69,13 @@ def main():
     d = base(); d["traps"] = [{"id": "t", "tipo": "teto_esmagador", "pos": [6, 2]}]
     check("Teto Esmagador fora de sala: não funciona", "teto_fora_de_sala" in codigos(d))
 
-    print("\n[3] Mecanismo escondido e referência quebrada")
+    print("\n[3] Esconderijo que também é mecanismo, e referência quebrada")
     d = base()
     d["traps"] = [{"id": "g", "tipo": "camara_gas", "pos": [2, 2]}]
     d["decorations"] = [{"id": "lar", "type": "lareira", "pos": [3, 1], "disable_trap_ids": ["g"],
                          "escondido": True, "cd_busca": 12, "loot": {"gold": 1, "items": []}}]
-    check("objeto que desliga armadilha marcado como esconderijo", "mecanismo_escondido" in codigos(d))
+    # "escondido" só esconde o SAQUE; o mecanismo segue clicável (ver [3b]).
+    check("esconderijo que desliga armadilha não gera aviso", "mecanismo_escondido" not in codigos(d))
     d["decorations"][0]["disable_trap_ids"] = ["nao_existe"]
     check("objeto desliga armadilha que não existe", "desliga_inexistente" in codigos(d))
 
@@ -119,7 +120,32 @@ def main():
     real = json.load(open(os.path.join(RAIZ, "dungeons", "casa_secreta.json"), encoding="utf-8"))
     cs = codigos(real)
     check("aponta a Câmara de Gás fora de sala", "gas_fora_de_sala" in cs)
-    check("aponta a lareira escondida que desliga a armadilha", "mecanismo_escondido" in cs)
+    check("não acusa a lareira (o esconderijo só guarda o saque)", "mecanismo_escondido" not in cs)
+
+    print("\n[8b] No motor, a lareira escondida é clicável e desliga o gás")
+    room = server.GameRoom("LAR")
+    room.load_authored_dungeon(real)
+    room.phase = "playing"
+    msgs = []
+
+    async def noop(*a, **k):
+        pass
+
+    async def cap(pid, m):
+        msgs.append(m)
+    room.gm_say = room.broadcast = room.push_state = noop
+    room.send_to = cap
+    heroi = server.make_player("p", "p", "warrior", 0)
+    heroi["pos"] = [2, 11]
+    room.players = {"p": heroi}
+    lar = next(x for x in room._serializar_decoracoes() if x["id"] == "decor_2")
+    check("a lareira vai ao cliente como clicável", lar.get("interactive") is True)
+    check("o saque dela segue escondido", lar.get("tem_loot") is False)
+    asyncio.run(room.handle_interagir_decor("p", "decor_2"))
+    check("clicar oferece o mecanismo", any(m.get("type") == "decor_mechanism" for m in msgs))
+    asyncio.run(room.handle_activate_decor_mechanism("p", "decor_2"))
+    gas = next(a for a in room.armadilhas if a.get("autoral_id") == "trap_4")
+    check("acionar desliga a Câmara de Gás", gas.get("desativada") is True)
 
     print("\n[9] Mensagem do editor")
     msgs = []
