@@ -64050,9 +64050,9 @@ async def handler(ws):
                         avisos_int = avisos_integridade_masmorra(msg.get("defn"))
                         payload = {"type": "integridade_masmorra", "upload_id": msg.get("upload_id"),
                                    "ok": True, "avisos": avisos_int}
-                    except Exception as e:
+                    except Exception as exc:
                         payload = {"type": "integridade_masmorra", "upload_id": msg.get("upload_id"),
-                                   "ok": False, "error": f"{type(e).__name__}: {e}"}
+                                   "ok": False, "error": f"{type(exc).__name__}: {exc}"}
                     await ws.send(json.dumps(payload, default=lambda o, _l=lang_ed: _t_render(o, _l)))
                     continue
 
