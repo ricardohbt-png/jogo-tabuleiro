@@ -2649,6 +2649,30 @@ window.LANG_EDITOR = {
   "ui.editor.subtipo.raca_padrao": {
     "en": "Standard Race",
     "pt": "Raça Padrão"
-  }
+  },
+  "ui.editor.masmorra.integ.gas_fora_de_sala": {"en":"Gas Chamber {id} is outside any drawn room: the gas will fill the closed area around it (walls and doors limit it). Draw a room there if you want a different area.","pt":"A Câmara de Gás {id} está fora de qualquer sala desenhada: o gás vai encher a área fechada em volta dela (paredes e portas limitam). Desenhe uma sala ali se quiser outra área."},
+  "ui.editor.masmorra.integ.teto_fora_de_sala": {"en":"Crushing Ceiling {id} is outside any drawn room and will do nothing. Draw a room around it.","pt":"O Teto Esmagador {id} está fora de qualquer sala desenhada e não vai fazer nada. Desenhe uma sala em volta dele."},
+  "ui.editor.masmorra.integ.mecanismo_escondido": {"en":"Object {id} is a mechanism but marked as hidden: it can only be clicked after a hero notices it (Perception DC {cd}).","pt":"O objeto {id} é um mecanismo, mas está como esconderijo: só fica clicável depois que um herói o notar (Percepção CD {cd})."},
+  "ui.editor.masmorra.integ.desliga_inexistente": {"en":"Object {id} disables trap {trap}, which does not exist on this map.","pt":"O objeto {id} desliga a armadilha {trap}, que não existe neste mapa."},
+  "ui.editor.masmorra.integ.objetivo_sem_alvo": {"en":"An objective asks to kill the target, but no monster is marked as target.","pt":"Um objetivo pede para matar o alvo, mas nenhum monstro está marcado como alvo."},
+  "ui.editor.masmorra.integ.objetivo_sem_bau_chave": {"en":"An objective asks to open the key chest, but no chest or object is marked as key.","pt":"Um objetivo pede para abrir o baú-chave, mas nenhum baú ou objeto está marcado como chave."},
+  "ui.editor.masmorra.integ.objetivo_sem_refem": {"en":"An objective asks for a rescue, but there is no hostage on the map.","pt":"Um objetivo pede um resgate, mas não há refém no mapa."},
+  "ui.editor.masmorra.integ.objetivo_sem_saida": {"en":"An objective asks to reach the exit, but the map has no exit.","pt":"Um objetivo pede para chegar à saída, mas o mapa não tem saída."},
+  "ui.editor.masmorra.integ.inalcancavel": {"en":"{peca} cannot be reached from the entrance (walking over floor, doors and secret passages).","pt":"{peca} não pode ser alcançado(a) a partir da entrada (andando por chão, portas e passagens secretas)."},
+  "ui.editor.masmorra.integ.peca_na_parede": {"en":"{peca} is on a wall or outside the map.","pt":"{peca} está em cima de uma parede ou fora do mapa."},
+  "ui.editor.masmorra.integ.peca.saida": {"en":"The exit","pt":"A saída"},
+  "ui.editor.masmorra.integ.peca.bau_chave": {"en":"The key chest","pt":"O baú-chave"},
+  "ui.editor.masmorra.integ.peca.alvo": {"en":"The target monster","pt":"O monstro-alvo"},
+  "ui.editor.masmorra.integ.peca.refem": {"en":"A hostage","pt":"Um refém"},
+  "ui.editor.masmorra.integ.peca.objeto_chave": {"en":"A key object","pt":"Um objeto-chave"},
+  "ui.editor.masmorra.integ.peca.monstro": {"en":"A monster","pt":"Um monstro"},
+  "ui.editor.masmorra.integ.peca.bau": {"en":"A chest","pt":"Um baú"},
+  "ui.editor.masmorra.integ.peca.armadilha": {"en":"A trap","pt":"Uma armadilha"},
+  "ui.editor.masmorra.integ.botao": {"en":"🔍 Check integrity","pt":"🔍 Verificar integridade"},
+  "ui.editor.masmorra.integ.titulo": {"en":"Integrity ({n})","pt":"Integridade ({n})"},
+  "ui.editor.masmorra.integ.ok": {"en":"✅ Integrity: nothing wrong found.","pt":"✅ Integridade: nada de errado encontrado."},
+  "ui.editor.masmorra.integ.verificando": {"en":"Checking…","pt":"Verificando…"},
+  "ui.editor.masmorra.integ.sem_servidor": {"en":"Integrity check needs the editor opened through the game server.","pt":"A verificação de integridade precisa do editor aberto pelo servidor do jogo."},
+  "ui.editor.masmorra.integ.erro": {"en":"Could not check: {erro}","pt":"Não foi possível verificar: {erro}"}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_EDITOR);

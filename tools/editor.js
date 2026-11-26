@@ -3233,11 +3233,47 @@
     return avisos;
   }
 
+  // ── Verificação de integridade (servidor: avisos_integridade_masmorra) ──────
+  // Fica no botão (não ao vivo): manda o mapa aberto ao servidor e lista o que
+  // não vai funcionar em jogo. null = ainda não verificado.
+  var _integResultado = null;
+  function _escInteg(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function verificarIntegridade() {
+    if (!window.EDITOR_SAVE || !window.EDITOR_SAVE.verificarIntegridade || location.protocol === "file:") {
+      _integResultado = { erro: t("ui.editor.masmorra.integ.sem_servidor") };
+      renderPanel();
+      return;
+    }
+    _integResultado = { carregando: true };
+    renderPanel();
+    var lang = (window.I18N && window.I18N.lang) || "pt";
+    window.EDITOR_SAVE.verificarIntegridade(buildJSON(), lang)
+      .then(function (avisos) { _integResultado = { avisos: avisos || [] }; renderPanel(); })
+      .catch(function (e) { _integResultado = { erro: t("ui.editor.masmorra.integ.erro", { erro: (e && e.message) || e }) }; renderPanel(); });
+  }
+  function _integridadeHTML() {
+    var h = '<div style="margin-top:8px"><button id="btn-integ" type="button">' + t("ui.editor.masmorra.integ.botao") + '</button></div>';
+    var r = _integResultado;
+    if (!r) return h;
+    if (r.carregando) return h + '<div style="color:#9fb8d4;font-size:11px;margin-top:4px">' + t("ui.editor.masmorra.integ.verificando") + '</div>';
+    if (r.erro) return h + '<div style="color:#ff9a9a;font-size:11px;margin-top:4px">' + _escInteg(r.erro) + '</div>';
+    if (!r.avisos.length) return h + '<div style="color:#7ea87e;font-size:12px;margin-top:4px">' + t("ui.editor.masmorra.integ.ok") + '</div>';
+    return h + '<label style="display:block;margin-top:6px">🔍 ' + t("ui.editor.masmorra.integ.titulo", { n: r.avisos.length }) + '</label>' +
+      r.avisos.map(function (a) {
+        var onde = Array.isArray(a.pos) ? ' <span style="opacity:.7">(' + a.pos[0] + ',' + a.pos[1] + ')</span>' : '';
+        return '<div style="color:#ffb27a;font-size:11px;margin-top:2px">• ' + _escInteg(a.texto) + onde + '</div>';
+      }).join("");
+  }
+
   function _avisosDesignHTML() {
     var av = _validarDesign();
-    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ ' + t("ui.editor.masmorra.design.sem_avisos") + '</div>';
+    if (!av.length) return '<hr style="border-color:#3a3022;margin:10px 0"><div style="color:#7ea87e;font-size:12px">✅ ' + t("ui.editor.masmorra.design.sem_avisos") + '</div>' + _integridadeHTML();
     return '<hr style="border-color:#3a3022;margin:10px 0"><label>⚠️ ' + t("ui.editor.masmorra.design.avisos", { n: av.length }) + '</label>' +
-      av.map(function (a) { return '<div style="color:#d8b06a;font-size:11px;margin-top:2px">• ' + a + '</div>'; }).join("");
+      av.map(function (a) { return '<div style="color:#d8b06a;font-size:11px;margin-top:2px">• ' + a + '</div>'; }).join("") + _integridadeHTML();
   }
 
   function _termometroHTML() {
@@ -3583,6 +3619,8 @@
       var epL = document.getElementById("ep-level");
       if (epH) epH.onchange = e => { S.expectedParty.heroes = Math.max(1, Math.min(6, parseInt(e.target.value, 10) || 4)); renderPanel(); };
       if (epL) epL.onchange = e => { S.expectedParty.level = Math.max(1, parseInt(e.target.value, 10) || 1); renderPanel(); };
+      var btnInteg = document.getElementById("btn-integ");
+      if (btnInteg) btnInteg.onclick = verificarIntegridade;
       panel.querySelectorAll(".ndprev").forEach(function (b) {
         b.onclick = function () {
           var n = parseInt(b.dataset.ndprev, 10);
