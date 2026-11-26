@@ -9654,7 +9654,10 @@ function _intencaoLinhaTooltip(monster){
   const chave = it.acao === 'distancia' ? 'ui.intencao.tooltip.distancia'
               : it.acao === 'ameaca' ? 'ui.intencao.tooltip.ameaca' : 'ui.intencao.tooltip.corpo';
   const cert = it.certeza === 'firme' ? '' : ` <span style="color:#c8b89a">(${t('ui.intencao.provavel')})</span>`;
-  return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${cert}</div>`;
+  // De onde vem o golpe: costas +2 / flanco +1 (a seta já mostra a casa de ataque).
+  const setor = (it.setor === 'costas' || it.setor === 'flanco') && it.acao !== 'distancia'
+    ? ` <b>${t('ui.intencao.setor_' + it.setor, {bonus: it.setor === 'costas' ? 2 : 1})}</b>` : '';
+  return `<div style="margin-top:4px;font-size:11px;color:${IntencaoMonstros.estilo(it).cor}">${t(chave, {alvo: nome})}${setor}${cert}</div>`;
 }
 GS.on('intencoesMonstros', msg => {
   if(IntencaoMonstros.descartar(msg, GS.gameState)) return;   // outra rodada ou outra vez
@@ -31040,13 +31043,18 @@ function _bussolaFechar(confirmar){
   document.removeEventListener('keydown', onKey, true);
   document.removeEventListener('wheel', onWheel, true);
   el.remove(); _bussola = null; _facingPreview = null;
+  _bussolaMarcarVista();   // o aviso de primeira vez aparece uma só vez por navegador
   if(confirmar){
     const ok = GS.endTurn(f);
     if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
   } else if(typeof _agendarChamas2D === 'function') _agendarChamas2D();
 }
+const _BUSSOLA_VISTA_KEY = 'lfh_bussola_vista';
+function _bussolaJaVista(){ try{ return localStorage.getItem(_BUSSOLA_VISTA_KEY) === '1'; }catch(e){ return true; } }
+function _bussolaMarcarVista(){ try{ localStorage.setItem(_BUSSOLA_VISTA_KEY, '1'); }catch(e){} }
 function _bussolaAbrir(){
   if(_bussola) return;
+  const primeiraVez = !_bussolaJaVista();
   const el = document.createElement('div');
   el.id = 'bussola-direcao'; el.className = 'bussola-direcao'; el.setAttribute('role', 'dialog');
   el.setAttribute('aria-label', t('ui.direcao.titulo'));
@@ -31056,6 +31064,7 @@ function _bussolaAbrir(){
     <div class="bussola-setas">${botoes}</div>
     <div class="bussola-diagrama"></div>
     <div class="bussola-legenda">${t('ui.direcao.legenda')}</div>
+    ${primeiraVez ? `<div class="bussola-novo">💡 ${t('ui.direcao.primeira_vez')}</div>` : ''}
     <div class="bussola-dica">${t('ui.direcao.dica_entrada')}</div>
     <div class="bussola-acoes">
       <button type="button" class="bussola-ok">${t('ui.direcao.confirmar')}</button>

@@ -12,6 +12,7 @@ sys.path.insert(0, RAIZ)
 sys.path.insert(0, os.path.join(RAIZ, "tools"))
 import server as S  # noqa: E402
 import aplicar_fatia20_tutorial as F20  # noqa: E402
+import aplicar_fatia22_tutorial as F22  # noqa: E402
 import gerar_guia_comum as G  # noqa: E402
 
 CAMINHO = os.path.join(RAIZ, "dungeons", "campo_de_treinamento.json")
@@ -23,6 +24,7 @@ def aplicado():
     """O que o `main()` grava: a fatia 20 + o guia gerado (como em aplicar_fatia13)."""
     d = copy.deepcopy(ATUAL)
     F20.aplicar(d)
+    F22.aplicar(d)   # o pipeline da missão aplica a fatia 22 logo depois
     G.aplicar_guia(d)
     return d
 
@@ -85,6 +87,7 @@ class MapaTests(unittest.TestCase):
         a = aplicado()
         b = copy.deepcopy(a)
         F20.aplicar(b)
+        F22.aplicar(b)
         G.aplicar_guia(b)
         self.assertEqual(a, b)
 

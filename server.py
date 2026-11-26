@@ -61,7 +61,9 @@ LICAO_VERBOS  = ("mover_ate", "abrir_porta", "atacar", "matar",
                  # Sala das reações de terreno: o evento vem do motor de reações.
                  "explodir_gas", "incendiar_piche",
                  # Mecanismo (decoração) que desliga armadilhas autoradas.
-                 "desativar_armadilha")
+                 "desativar_armadilha",
+                 # end_turn com uma direção válida escolhida na bússola.
+                 "escolher_direcao")
 # Verbos cujo alvo é uma casa [x,y]; nos demais o alvo é uma string
 # (tipo do monstro, para atacar/matar; id do item, para pegar/equipar).
 LICAO_VERBOS_CASA = ("mover_ate", "abrir_porta", "guiar_refem")
@@ -10584,6 +10586,8 @@ def validar_dungeon(defn):
                 _cc = _ps.get("conclui_com")
                 if _cc is not None and (not isinstance(_cc, dict) or _cc.get("tipo") not in LICAO_VERBOS):
                     return False, "conclui_com de passo inválido."
+                if _cc is not None and _cc.get("requer_setor") not in (None, "costas", "flanco"):
+                    return False, "requer_setor de passo deve ser costas ou flanco."
         _tar = _f.get("tarefa")
         if _tar is None:
             continue
@@ -25571,7 +25575,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         await self.send_to(p["id"], {"type": "licao_passo", "licao_id": lic["id"],
                                      "passo": _guia_payload(lic, p["licao_passo"])})
 
-    async def _guia_evento(self, p, lic, verbo, alvo):
+    async def _guia_evento(self, p, lic, verbo, alvo, contexto=None):
         """Avança o passo atual se o evento é o que ele declarou em `conclui_com`.
         O último passo nunca avança aqui: quem encerra a lição é a tarefa."""
         passos = _guia_passos(lic)
@@ -25582,6 +25586,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if not cond or cond.get("tipo") != verbo:
             return
         if not self._licao_alvo_ok(cond.get("alvo"), alvo):
+            return
+        setor = cond.get("requer_setor")
+        if setor and (contexto or {}).get("setor") != setor:
+            await self._guia_dica(p["id"], "setor_errado")   # atacou, mas não por onde a lição pede
             return
         await self._guia_avancar(p, lic)
 
@@ -25656,7 +25664,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         # O passo avança por qualquer evento que ele declarar, mesmo que a tarefa
         # da lição seja outra (ex.: "atacar" no passo 2 de uma lição de habilidade).
-        await self._guia_evento(p, lic, verbo, alvo)
+        await self._guia_evento(p, lic, verbo, alvo, contexto)
         if tar.get("tipo") != verbo:
             return
         if not self._training_requirements(p, lic):
@@ -28031,7 +28039,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self._licao_evento(p, "atacar", alvo=target.get("type"),
                                         contexto={"veneno": bool(_melee_poison_vid or _ranged_poison_vid),
                                                   "categoria_arma": (p.get("weapon") or {}).get("categoria"),
-                                                  "sala_alvo_id": target.get("room_id")})
+                                                  "sala_alvo_id": target.get("room_id"),
+                                                  "setor": (_mods.get("posicional") or {}).get("setor")})
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:
@@ -49307,6 +49316,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         p_dir = self.players.get(pid)
         if p_dir and not _forcado and isinstance(facing, (list, tuple)) and len(facing) == 2                 and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)                 and tuple(facing) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
             p_dir["facing"] = [int(facing[0]), int(facing[1])]
+            await self._licao_evento(p_dir, "escolher_direcao")
         # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
         # conhecido e aceito: o turno também termina por estouro de timer, e por
         # esse caminho o dano não cobra.
@@ -53333,32 +53343,31 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return True
         return bool(m.get("_personalizado") and m.get("ai_type") in AI_PERFIS_FLANQUEADORES)
 
-    async def _monster_flank_premove(self, m, targets):
-        """Antes da IA normal: se existe uma casa adjacente ao alvo, ao alcance do
-        movimento que sobra, com costas/flanco melhor que a atual, vai para lá.
-        Nunca perde o ataque (a casa é adjacente) e gasta o mesmo orçamento
-        (`_water_moves_left`) que a IA usaria. True se se moveu."""
+    def _monster_flank_plan(self, m, alvo_obj):
+        """Plano (SÓ LEITURA) de flanqueio: casa ortogonal ao alvo, alcançável com o
+        movimento que resta, de melhor setor (costas 2, flanco 1) e melhor que a
+        atual; None se não há o que melhorar. Usado pela IA (que move) e pela seta
+        de intenção (que só mostra)."""
         if not self._monster_flanqueia(m):
-            return False
+            return None
         if list(m.get("size") or [1, 1]) != [1, 1] or m.get("oriented"):
-            return False
+            return None
         ataques = m.get("attacks") or []
         if any(a.get("range") for a in ataques):
-            return False
+            return None
         for a in ataques:
             alc = a.get("reach", 1)
             if not str(alc).isdigit() or int(alc) > 1:
-                return False                        # arma de haste/rótulo: não é de contato
-        alvo_obj = self._get_monster_primary_target(m, targets)
+                return None                         # arma de haste/rótulo: não é de contato
         if not alvo_obj or alvo_obj.get("kind") not in ("player", "animado"):
-            return False
+            return None
         alvo = alvo_obj["obj"]
         tpos = alvo.get("pos")
         if not tpos or len(tpos) != 2:
-            return False
+            return None
         orcamento = int(m.get("_water_moves_left", m.get("movement", 0)) or 0)
         if orcamento <= 0:
-            return False
+            return None
         perigosas = set(self._monster_known_hazard_tiles(m))
         reservadas = getattr(self, "_monster_ai_reserved_tiles", set())
         inicio = tuple(m["pos"])
@@ -53402,14 +53411,26 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if pts > melhor_pts or (pts == melhor_pts and dist[t] < dist[melhor]):
                 melhor, melhor_pts = t, pts
         if melhor is None or melhor_pts <= 0 or melhor_pts <= (atual_pts if atual_pts is not None else -1):
-            return False
+            return None
         caminho, passo = [], melhor
         while passo is not None and passo != inicio:
             caminho.append(passo); passo = ant[passo]
         caminho.reverse()
+        return {"tile": melhor, "caminho": caminho, "pts": melhor_pts}
+
+    async def _monster_flank_premove(self, m, targets):
+        """Antes da IA normal: se `_monster_flank_plan` acha uma casa melhor, vai
+        para lá. Nunca perde o ataque (a casa é adjacente) e gasta o mesmo
+        orçamento (`_water_moves_left`) que a IA usaria. True se se moveu."""
+        if not self._monster_flanqueia(m):
+            return False
+        alvo_obj = self._get_monster_primary_target(m, targets)
+        plano = self._monster_flank_plan(m, alvo_obj)
+        if not plano:
+            return False
+        alvo = alvo_obj["obj"]
         antes = list(m["pos"])
-        for px, py in caminho:
-            pos_antes = list(m["pos"])
+        for px, py in plano["caminho"]:
             await self._monster_move_step(m, [px, py])
             if m["pos"] != [px, py] or m.get("hp", 0) <= 0:
                 break

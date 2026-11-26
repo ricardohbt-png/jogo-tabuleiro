@@ -174,6 +174,16 @@ def main():
     check(f"{len(casos)} casos aleatórios: cliente = servidor", cli == srv)
     check("o conjunto tem frente, flanco e costas", {"frente", "flanco", "costas"} <= set(srv))
 
+    print("\n[8] Helper de teste: virar_para tira o bônus de posição")
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from posicao_util import virar_para
+    r = setup()
+    for pos in ((6, 5), (4, 5), (5, 4), (5, 6)):
+        alvo = mon(r, "t", (5, 5)); atac = hero(r, "a", pos)
+        f = virar_para(alvo, atac["pos"])
+        check(f"virar_para {pos}: alvo olha {f} e o atacante fica de frente",
+              r._setor_ataque(atac, alvo) == "frente" and r._bonus_posicional(atac, alvo)["total"] == 0)
+
     print(f"\nTotal: {PASS} ok, {FAIL} falhas")
     sys.exit(1 if FAIL else 0)
 

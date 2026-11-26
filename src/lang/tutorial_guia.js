@@ -504,6 +504,38 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Turn on 3D view with the highlighted button. Or select Got it.",
     "pt": "Ative a visão 3D no botão destacado. Se preferir, selecione Entendi."
   },
+  "ui.tutorial.guia.fala_direcao.atacar.dica.1": {
+    "en": "Attacking from the front or the flank does not count here: go to the side opposite the wedge.",
+    "pt": "Atacar de frente ou pelo flanco não conta aqui: vá para o lado oposto à cunha."
+  },
+  "ui.tutorial.guia.fala_direcao.atacar.porque": {
+    "en": "From behind the strike gets +2 to hit, and the Rogue triggers Sneak Attack.",
+    "pt": "Pelas costas o golpe ganha +2 no acerto, e o Ladino dispara o Ataque Furtivo."
+  },
+  "ui.tutorial.guia.fala_direcao.atacar.texto": {
+    "en": "Attack the dummy from behind and see the behind bonus in the log.",
+    "pt": "Ataque o boneco por trás e veja o bônus de costas no registro."
+  },
+  "ui.tutorial.guia.fala_direcao.costas.texto": {
+    "en": "Walk to the marked square, on the side opposite the wedge: the dummy's back.",
+    "pt": "Ande até a casa marcada, do lado oposto ao da cunha: as costas do boneco."
+  },
+  "ui.tutorial.guia.fala_direcao.olhar.porque": {
+    "en": "Attacking from the flank gives +1 to hit and from behind +2. Monsters do the same to you.",
+    "pt": "Atacar pelo flanco dá +1 no acerto e pelas costas +2. Os monstros fazem o mesmo com você."
+  },
+  "ui.tutorial.guia.fala_direcao.olhar.texto": {
+    "en": "See the red wedge on the floor: it marks where the dummy looks.",
+    "pt": "Confira a cunha vermelha no chão: ela marca para onde o boneco olha."
+  },
+  "ui.tutorial.guia.fala_direcao.virar.porque": {
+    "en": "Mouse wheel, arrows or the D-pad choose; Enter confirms. Facing the enemies protects your own back.",
+    "pt": "Roda do mouse, setas ou direcional escolhem; Enter confirma. Quem olha para os inimigos protege as próprias costas."
+  },
+  "ui.tutorial.guia.fala_direcao.virar.texto": {
+    "en": "End your turn and, on the compass, choose where your hero will look.",
+    "pt": "Encerre o turno e, na bússola, escolha para onde seu herói vai olhar."
+  },
   "ui.tutorial.guia.fala_gargula.ativar.dica.1": {
     "en": "Stand adjacent to the gargoyle; activating the mechanism does not use your turn.",
     "pt": "Fique adjacente à gárgula; ativar o mecanismo não gasta o turno."

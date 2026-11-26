@@ -26,6 +26,7 @@ INTENT_CAMPOS_ALVO = (
     "paralisado", "imobilizado", "enredado", "preso", "derrubado",
     "engolido", "altura", "voo", "voo_magico", "visao_escuro", "cego",
     "fora_masmorra", "connected", "class_id", "requiem_alvo",
+    "facing",   # o setor (costas/flanco) depende da direção do alvo
 )
 INTENT_CAMPOS_MONSTRO = INTENT_CAMPOS_ALVO + (
     "alertado", "control_mode", "master_target_id",
@@ -35,7 +36,7 @@ INTENT_CAMPOS_MONSTRO = INTENT_CAMPOS_ALVO + (
     "perde_turno", "dormindo", "dormindo_rodadas", "comandado", "dominado",
     "dominado_rodadas", "dominado_permanente", "com_medo", "medo_rodadas",
     "lento", "lento_rodadas", "lento_pulou", "movement", "requiem_por",
-    "ai_adaptation", "attacks", "ai_type",
+    "ai_adaptation", "attacks", "ai_type", "flanqueia",
 )
 
 
@@ -197,6 +198,19 @@ class MonsterIntent:
         else:
             atk_usado = a_corpo or a_dist
 
+        # Esperto: vai contornar o alvo (mesmo plano da IA) — a seta mostra a casa
+        # de flanco/costas em vez da primeira casa adjacente.
+        if a_corpo is not None and a_dist is None:
+            plano = self._monster_flank_plan(m, escolhido)
+            if plano:
+                alcanca, casa, atk_usado = True, list(plano["tile"]), a_corpo
+        setor = None
+        if alcanca and casa:
+            try:
+                setor = self._setor_ataque({"pos": list(casa)}, obj)
+            except (KeyError, TypeError, IndexError):
+                setor = None
+
         if papel in {"controlador", "suporte"} or atk_usado is None:
             acao = "ameaca"
         elif atk_usado.get("range"):
@@ -217,6 +231,7 @@ class MonsterIntent:
             "acao": acao,
             "alcanca": bool(alcanca),
             "casa_ataque": casa if alcanca else None,
+            "setor": setor,
             "certeza": "firme" if firme else "provavel",
         }
 

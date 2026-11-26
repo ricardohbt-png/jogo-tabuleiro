@@ -122,6 +122,29 @@ def main():
     check("o ataque dele pelas costas soma +2 em relação ao do flanco (+1)",
           bool(mods1) and bool(mods0) and mods1[0] == mods0[0] + 1)
 
+    print("\n[7] Seta de intenção mostra a casa de flanqueio e o setor")
+    def intencao(flanqueia, facing=(0, 1)):
+        r = sala(); p = heroi(r, facing=facing); p["connected"] = True; r.connections["p"] = object()
+        m = monstro(r, "lobo_cinzento", (9, 5)); m["flanqueia"] = flanqueia
+        return r._prever_intencoes("p"), r, p, m
+    itens, r, p, m = intencao(True)
+    check("esperto: casa_ataque é a das costas e o setor é 'costas'",
+          len(itens) == 1 and itens[0]["casa_ataque"] == [5, 4] and itens[0]["setor"] == "costas")
+    itens, *_ = intencao(False)
+    check("não esperto: primeira casa adjacente (flanco) e setor 'flanco'",
+          itens[0]["casa_ataque"] == [6, 5] and itens[0]["setor"] == "flanco")
+    itens, r, p, m = intencao(True)
+    p["facing"] = [0, -1]          # herói vira para o norte: as costas passam a ser o sul
+    itens2 = r._prever_intencoes("p")
+    check("a seta acompanha a direção nova do herói (cache invalidado)",
+          itens2[0]["casa_ataque"] == [5, 6] and itens2[0]["setor"] == "costas")
+    # a seta bate com o que a IA realmente faz
+    r = sala(); p = heroi(r); m = monstro(r, "lobo_cinzento", (9, 5)); m["flanqueia"] = True
+    p["connected"] = True; r.connections["p"] = object()
+    previsto = r._prever_intencoes("p")[0]["casa_ataque"]
+    run(r._monster_flank_premove(m, alvos(p)))
+    check("a casa prevista é a casa onde o monstro de fato para", m["pos"] == previsto)
+
     print(f"\nFalhas: {len(FALHAS)}")
     sys.exit(1 if FALHAS else 0)
 

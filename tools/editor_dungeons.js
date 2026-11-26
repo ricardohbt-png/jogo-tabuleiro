@@ -19719,6 +19719,66 @@ window.EDITOR_DUNGEONS = [
           ]
         },
         {
+          "id": "fala_direcao",
+          "ordem": 34,
+          "pos": [
+            51,
+            15
+          ],
+          "falante": {
+            "nome": "Mestre de Armas",
+            "emoji": "🛡️",
+            "retrato": "assets/portraits/mestre_de_armas.png"
+          },
+          "texto": "Onde você fica em relação ao inimigo importa. Pelo flanco você acerta com +1, pelas costas com +2. Dê a volta no boneco, ataque por trás e depois escolha para onde olhar.",
+          "trigger": {
+            "tipo": "proximidade",
+            "raio": 1
+          },
+          "continua_sem": [
+            "fala_res",
+            "fala_vuln"
+          ],
+          "tarefa": {
+            "tipo": "escolher_direcao",
+            "vezes": 1,
+            "texto_curto": "Encerre o turno escolhendo para onde olhar"
+          },
+          "guia": [
+            {
+              "id": "olhar",
+              "texto": "ui.tutorial.guia.fala_direcao.olhar.texto",
+              "porque": "ui.tutorial.guia.fala_direcao.olhar.porque",
+              "ui": "monstro:boneco_treino"
+            },
+            {
+              "id": "costas",
+              "texto": "ui.tutorial.guia.fala_direcao.costas.texto",
+              "ui": "casa:[51,14]"
+            },
+            {
+              "id": "atacar",
+              "texto": "ui.tutorial.guia.fala_direcao.atacar.texto",
+              "porque": "ui.tutorial.guia.fala_direcao.atacar.porque",
+              "ui": "monstro:boneco_treino",
+              "dica": [
+                "ui.tutorial.guia.fala_direcao.atacar.dica.1"
+              ],
+              "conclui_com": {
+                "tipo": "atacar",
+                "alvo": "boneco_treino",
+                "requer_setor": "costas"
+              }
+            },
+            {
+              "id": "virar",
+              "texto": "ui.tutorial.guia.fala_direcao.virar.texto",
+              "porque": "ui.tutorial.guia.fala_direcao.virar.porque",
+              "ui": "botao:encerrar_turno"
+            }
+          ]
+        },
+        {
           "id": "fala_hostilidade",
           "pos": [
             32,
@@ -19870,7 +19930,8 @@ window.EDITOR_DUNGEONS = [
             "fala_vuln",
             "fala_atalhos",
             "fala_piche",
-            "fala_gargula"
+            "fala_gargula",
+            "fala_direcao"
           ],
           "ordem": 39,
           "tarefa": {
@@ -19913,7 +19974,8 @@ window.EDITOR_DUNGEONS = [
           "continua_sem": [
             "fala_res",
             "fala_vuln",
-            "fala_atalhos"
+            "fala_atalhos",
+            "fala_direcao"
           ],
           "ordem": 35,
           "tarefa": {
@@ -19971,7 +20033,8 @@ window.EDITOR_DUNGEONS = [
           "continua_sem": [
             "fala_res",
             "fala_vuln",
-            "fala_atalhos"
+            "fala_atalhos",
+            "fala_direcao"
           ],
           "tarefa": {
             "tipo": "explodir_gas",
@@ -20022,7 +20085,8 @@ window.EDITOR_DUNGEONS = [
           "continua_sem": [
             "fala_res",
             "fala_vuln",
-            "fala_atalhos"
+            "fala_atalhos",
+            "fala_direcao"
           ],
           "tarefa": {
             "tipo": "incendiar_piche",
@@ -20073,7 +20137,8 @@ window.EDITOR_DUNGEONS = [
             "fala_res",
             "fala_vuln",
             "fala_atalhos",
-            "fala_piche"
+            "fala_piche",
+            "fala_direcao"
           ],
           "tarefa": {
             "tipo": "desativar_armadilha",
@@ -214424,4 +214489,4 @@ window.EDITOR_DUNGEONS = [
     }
   }
 ];
-// GERADO ao salvar no editor (e por tools/export_catalog.py).
+// GERADO por tools/export_catalog.py — não editar à mão.
