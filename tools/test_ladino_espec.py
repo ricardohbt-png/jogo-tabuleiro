@@ -33,7 +33,7 @@ def rogue(**owned):
     return p
 
 def monster(mid="m1", pos=(0,1), hp=20):
-    return {"id": mid, "name": "Goblin", "pos": list(pos), "hp": hp, "max_hp": hp, "ac": 10}
+    return {"id": mid, "name": "Goblin", "pos": list(pos), "hp": hp, "max_hp": hp, "ac": 10, "facing": [0, -1]}
 
 async def main():
     # [1] Catálogo — 8 nós literais

@@ -3561,6 +3561,18 @@ window.LANG_NARRACAO = {
   "narracao.refem_morreu": {"en":"💀 {refem} was killed.","pt":"💀 {refem} morreu."},
   "narracao.arma_retorna_a_mao": {"en":"{arma} returns to {heroi}'s hand.","pt":"{arma} retorna à mão de {heroi}."},
   "narracao.suplicia_vital_cura": {"en":"🙏 **{cleric}** calls on the Guardian Vow: {target} recovers {cura} HP.","pt":"🙏 **{cleric}** invoca a Súplica Vital: {target} recupera {cura} PV."},
-  "narracao.espada_juramento_reduz": {"en":"🛡️ **{paladino}** invokes the Unbroken Oath and reduces the damage to **{aliado}** by **{reducao}**.","pt":"🛡️ **{paladino}** invoca o Juramento Inquebrantável e reduz em **{reducao}** o dano sofrido por **{aliado}**."}
+  "narracao.espada_juramento_reduz": {"en":"🛡️ **{paladino}** invokes the Unbroken Oath and reduces the damage to **{aliado}** by **{reducao}**.","pt":"🛡️ **{paladino}** invoca o Juramento Inquebrantável e reduz em **{reducao}** o dano sofrido por **{aliado}**."},
+  "narracao.posicao_costas": {
+    "en": "🗡️ {alvo} is struck from behind: +{bonus} to hit.",
+    "pt": "🗡️ {alvo} é atingido pelas costas: +{bonus} no acerto."
+  },
+  "narracao.posicao_flanco": {
+    "en": "↔️ {alvo} is flanked: +{bonus} to hit.",
+    "pt": "↔️ {alvo} é atacado pelo flanco: +{bonus} no acerto."
+  },
+  "narracao.posicao_altura": {
+    "en": "⛰️ High ground: +{bonus} to hit.",
+    "pt": "⛰️ Vantagem de altura: +{bonus} no acerto."
+  }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

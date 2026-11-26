@@ -1296,6 +1296,52 @@ const GS = (() => {
     }
     return null;
   }
+  // Posição do atacante (espelho de `_setor_ataque`/`_bonus_posicional` do servidor,
+  // spec 2026-11-25): costas +2, flanco +1, altura +1/nível (máx +2), soma ≤ 4.
+  const BONUS_COSTAS = 2, BONUS_FLANCO = 1, BONUS_ALTURA_MAX = 2, BONUS_POSICIONAL_MAX = 4;
+  function facingDe(ent) {
+    const f = ent?.facing;
+    if (Array.isArray(f) && f.length === 2) {
+      const [x, y] = f;
+      if ((Math.abs(x) + Math.abs(y) === 1) && Number.isInteger(x) && Number.isInteger(y)) return [x, y];
+    }
+    return ent?.oriented ? [-1, 0] : [0, 1];
+  }
+  function alvoIncapaz(a) {
+    if (!a) return false;
+    for (const k of ['paralisado', 'petrificado', 'enredado', 'perde_turno', 'bordao_atordoado'])
+      if (a[k]) return true;
+    if (a.dormindo && (a.dormindo_rodadas === undefined || a.dormindo_rodadas > 0)) return true;
+    return a.type !== undefined && a.initiative_engaged === false;   // monstro fora de combate
+  }
+  function _centroFootprint(ent) {
+    const casas = (ent && ent.type !== undefined && ent.hp !== undefined && ent.class_id === undefined)
+      ? monsterTiles(ent) : [ent.pos];
+    const n = casas.length || 1;
+    return [casas.reduce((s, c) => s + c[0], 0) / n, casas.reduce((s, c) => s + c[1], 0) / n];
+  }
+  function setorAtaque(state, atacante, alvo) {
+    if (!atacante?.pos || !alvo?.pos) return 'frente';
+    if (alvoIncapaz(alvo)) return 'costas';
+    const [ax, ay] = _centroFootprint(atacante), [tx, ty] = _centroFootprint(alvo);
+    const rx = ax - tx, ry = ay - ty;
+    const [fx, fy] = facingDe(alvo);
+    const dot = rx * fx + ry * fy, cruz = Math.abs(rx * fy - ry * fx);
+    if (dot < 0 && -dot >= cruz) return 'costas';
+    if (cruz > Math.abs(dot)) return 'flanco';
+    return 'frente';
+  }
+  function bonusPosicional(state, atacante, alvo) {
+    const zero = { setor: 'frente', costas: 0, flanco: 0, altura: 0, total: 0 };
+    if (!state || !atacante?.pos || !alvo?.pos) return zero;
+    const setor = setorAtaque(state, atacante, alvo);
+    const costas = setor === 'costas' ? BONUS_COSTAS : 0;
+    const flanco = setor === 'flanco' ? BONUS_FLANCO : 0;
+    const ctx = { state, elevacoes: state.elevacoes };
+    const dif = _elevacaoTerreno(atacante.pos[0], atacante.pos[1], ctx) - _elevacaoTerreno(alvo.pos[0], alvo.pos[1], ctx);
+    const altura = Math.max(0, Math.min(BONUS_ALTURA_MAX, dif));
+    return { setor, costas, flanco, altura, total: Math.min(BONUS_POSICIONAL_MAX, costas + flanco + altura) };
+  }
   // Meia cobertura (espelho de `_cobertura_baixa_bonus` do servidor): +2 de CA
   // quando a linha do ataque passa por cima de um objeto baixo e sólido numa
   // casa INTERMEDIÁRIA. Quem está no ar não dá nem recebe cobertura.
@@ -2637,14 +2683,17 @@ const GS = (() => {
              moves_left: me.moves_left || 0, ref: me };
   }
 
-  function endTurn()       {
+  function endTurn(facing = null)       {
     // Consumo de fome/sede é 100% autoritativo do servidor (escala 0–100).
     // O antigo consumo cliente foi desativado.
     // Habilidades do guerreiro só valem para o ataque que as envia. Encerrar o
     // turno sem atacar as descarta localmente, sem custo e sem gastar a
     // especialização de combinação da Guilda.
     clearWarriorSelected();
-    return send({ type: 'end_turn' });
+    // `facing` (opcional): direção escolhida pelo jogador ao encerrar o turno.
+    const msg = { type: 'end_turn' };
+    if (Array.isArray(facing) && facing.length === 2) msg.facing = [facing[0], facing[1]];
+    return send(msg);
   }
   function sceneChoice(sceneId, eventId, optionId) { send({ type:'scene_choice', scene_id:sceneId, event_id:eventId, option_id:optionId }); }
   function sceneTest(sceneId, eventId) { send({ type:'scene_test', scene_id:sceneId, event_id:eventId }); }
@@ -4442,6 +4491,9 @@ const GS = (() => {
     hasLineOfSight,
     sombraDeObjetos,
     coberturaBaixa,
+    setorAtaque,
+    bonusPosicional,
+    facingDe,
     custoVerticalTerreno,
     diferencaVerticalTerreno,
     degrausCorpoACorpo,

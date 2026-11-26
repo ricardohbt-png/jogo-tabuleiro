@@ -247,6 +247,7 @@ MAP_H = 30
 # Combate vertical: a grade continua autoritativa em pos=[x,y]; altura é um
 # eixo discreto adicional, usado pelo alcance e pela representação 3D.
 ALTURA_MIN = 0
+BONUS_POSICIONAL_MAX = 4   # teto da soma costas/flanco + altura (spec 2026-11-25)
 ALTURA_MAX = 10
 ALTURA_INICIAL_VOO = 2
 ALTURA_POR_QUADRADO_ALCANCE = 2
@@ -4845,7 +4846,7 @@ GUILD_CATALOG = {
     "ladino_furtivo_2": { "id":"ladino_furtivo_2","categoria":"especializacao","classe":"rogue",
         "linha":"ladino_furtivo","nivel":2,"requer":None,"exclusiva":False,"preco":150,
         "nome":"Ataque Furtivo II","icon":"🗡️",
-        "desc":"Ataque Furtivo também dispara se há aliado adjacente ao alvo." },
+        "desc":"Ataque Furtivo também dispara pelo flanco do alvo e se há aliado adjacente a ele." },
     "ladino_furtivo_3": { "id":"ladino_furtivo_3","categoria":"especializacao","classe":"rogue",
         "linha":"ladino_furtivo","nivel":3,"requer":"ladino_furtivo_2","exclusiva":False,"preco":200,
         "nome":"Ataque Furtivo Supremo","icon":"🗡️",
@@ -18661,6 +18662,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                              and self._verificar_ataque_furtivo(p, target))
         penalidade_furtivo = self._penalidade_furtivo_duas_cabecas(target) if furtivo_planejado else 0
         eff_atk += penalidade_furtivo
+        # Posição do atacante: costas/flanco/altura somam ao acerto (spec 2026-11-25).
+        posicional = self._bonus_posicional(p, target)
+        eff_atk += posicional["total"]
         # Amaldiçoar reduz a CA do alvo (mod_magia ca negativo) → mais fácil de acertar.
         # Camuflagem Natural (cobra venenosa): +2 CA contra o PRIMEIRO ataque.
         # Fúria Cega (orc): -1 CA enquanto enfurecido.
@@ -18691,6 +18695,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 "cancao_dano": cancao_dano, "gl_dano": gl_dano,
                 "main_attack_base": main_attack_base,
                 "eff_atk": eff_atk, "eff_target_ac": eff_target_ac, "cobertura": cobertura,
+                "posicional": posicional,
                 "furtivo_planejado": furtivo_planejado, "penalidade_furtivo": penalidade_furtivo,
                 "esc": esc, "mira_ranged": mira_ranged, "investida": investida,
                 "vantagem": vantagem, "desvantagem": desvantagem}
@@ -26125,6 +26130,92 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Casas de objeto de visão "baixo": vê-se por cima, dá meia cobertura."""
         return getattr(self, "_decor_low_tiles", set())
 
+    # ── Posição do atacante: costas, flanco e altura (spec 2026-11-25) ─────────
+    BONUS_COSTAS = 2
+    BONUS_FLANCO = 1
+    BONUS_ALTURA_MAX = 2
+
+    def _facing_de(self, ent):
+        """Direção cardinal [dx,dy] de um herói/monstro. Sem direção válida:
+        sul [0,1]; monstro ORIENTADO sem direção mantém o oeste [-1,0] da arte."""
+        f = ent.get("facing")
+        if (isinstance(f, (list, tuple)) and len(f) == 2
+                and tuple(f) in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+            return [int(f[0]), int(f[1])]
+        return [-1, 0] if ent.get("oriented") else [0, 1]
+
+    def _alvo_incapaz(self, alvo):
+        """Quem não consegue se defender não protege nenhum lado: conta como
+        'costas'. Monstro fora de combate (sala trancada / ainda dormente) também."""
+        for chave in ("paralisado", "petrificado", "enredado", "perde_turno", "bordao_atordoado"):
+            if alvo.get(chave):
+                return True
+        if alvo.get("dormindo") and alvo.get("dormindo_rodadas", 1) > 0:
+            return True
+        if alvo.get("id") in self.monsters and not self._monstro_ativo_em_combate(alvo):
+            return True
+        return False
+
+    def _centro_footprint(self, ent):
+        """Centro (float) das casas ocupadas; herói/servo = a própria casa."""
+        casas = None
+        if ent.get("id") in self.monsters:
+            casas = self._monster_tiles(ent)
+        if not casas:
+            casas = [ent["pos"]]
+        return (sum(c[0] for c in casas) / len(casas), sum(c[1] for c in casas) / len(casas))
+
+    def _setor_ataque(self, atacante, alvo):
+        """'frente' | 'flanco' | 'costas' do atacante em relação ao alvo.
+        rel = centro do atacante − centro do alvo; costas se estiver atrás
+        (dot<0) e a menos de 45° do eixo traseiro; flanco se mais de lado."""
+        if self._alvo_incapaz(alvo):
+            return "costas"
+        ax, ay = self._centro_footprint(atacante)
+        tx, ty = self._centro_footprint(alvo)
+        rx, ry = ax - tx, ay - ty
+        fx, fy = self._facing_de(alvo)
+        dot = rx * fx + ry * fy
+        cruz = abs(rx * fy - ry * fx)
+        if dot < 0 and -dot >= cruz:
+            return "costas"
+        if cruz > abs(dot):
+            return "flanco"
+        return "frente"
+
+    def _bonus_altura(self, atacante, alvo):
+        """+1 por nível de TERRENO acima do alvo (máx. +2). Voo não conta e
+        estar abaixo não penaliza."""
+        try:
+            ap = atacante["pos"]; tp = alvo["pos"]
+            dif = self._elevacao_terreno(ap[0], ap[1]) - self._elevacao_terreno(tp[0], tp[1])
+        except (KeyError, TypeError, IndexError):
+            return 0
+        return max(0, min(self.BONUS_ALTURA_MAX, int(dif)))
+
+    async def _narrar_posicional(self, alvo, pos):
+        """Conta no log o bônus de posição aplicado ao ataque (nada se for 0)."""
+        if not pos or not pos.get("total"):
+            return
+        if pos["costas"]:
+            await self.gm_say(T("narracao.posicao_costas", alvo=nome_criatura(alvo), bonus=pos["costas"]))
+        if pos["flanco"]:
+            await self.gm_say(T("narracao.posicao_flanco", alvo=nome_criatura(alvo), bonus=pos["flanco"]))
+        if pos["altura"]:
+            await self.gm_say(T("narracao.posicao_altura", bonus=pos["altura"]))
+
+    def _bonus_posicional(self, atacante, alvo):
+        """Bônus de ACERTO do atacante pela posição: costas +2, flanco +1, mais
+        altura; soma limitada a BONUS_POSICIONAL_MAX. Não afeta dano nem crítico."""
+        if not atacante or not alvo or not atacante.get("pos") or not alvo.get("pos"):
+            return {"setor": "frente", "costas": 0, "flanco": 0, "altura": 0, "total": 0}
+        setor = self._setor_ataque(atacante, alvo)
+        costas = self.BONUS_COSTAS if setor == "costas" else 0
+        flanco = self.BONUS_FLANCO if setor == "flanco" else 0
+        altura = self._bonus_altura(atacante, alvo)
+        return {"setor": setor, "costas": costas, "flanco": flanco, "altura": altura,
+                "total": min(BONUS_POSICIONAL_MAX, costas + flanco + altura)}
+
     def _cobertura_baixa_bonus(self, atacante, alvo, alvo_tile=None):
         """+2 de CA quando a linha do ataque passa por cima de um objeto baixo
         (casa INTERMEDIÁRIA — a do atacante e a do alvo não contam, então corpo a
@@ -26240,8 +26331,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return False   # Defesa ImpecÃ¡vel: imune a Ataque Furtivo (inerte hoje â€” nenhum monstro dÃ¡ furtivo a jogador)
         if luccas.get("invisivel_sombras") or luccas.get("oculto_vela"):
             return True
+        # Posição (spec 2026-11-25): costas dispara o Furtivo; o nível II também o
+        # flanco, além do aliado adjacente que já valia.
+        setor = self._setor_ataque(luccas, alvo)
+        if setor == "costas":
+            return True
         if not tem_espec(luccas, "ladino_furtivo_2"):
             return False
+        if setor == "flanco":
+            return True
         ax, ay = alvo["pos"]
         for pid2, aliado in self.players.items():
             if pid2 == luccas["id"] or not aliado["alive"]:
@@ -27599,6 +27697,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                 await self.gm_say(T("narracao.ataca_enquanto_preso_2_no_acerto", heroi=p['name']))
             if _mods["cobertura"]:
                 await self.gm_say(T("narracao.cobertura_baixa", alvo=nome_criatura(target), bonus=_mods["cobertura"]))
+            await self._narrar_posicional(target, _mods["posicional"])
             # Técnicas apenas armadas tornam-se gastas quando modificam de fato
             # este ataque; até aqui um clique no menu não iniciava recarga.
             if p.get("tecnica_buff_dano_arma"):
@@ -28916,12 +29015,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                         "item_elemento": defn.get("elemento")})
         roll = random.randint(1, 20)
         total = roll + _hero_attack_bonus_with_stat(p, "dex")
+        _posicional = self._bonus_posicional(p, target)
+        total += _posicional["total"]
         nat1 = (roll == 1); crit = (roll == 20)
         target_ac = (10 + mod(target.get("dex", 10))) if defn.get("holy_water") else self._ponto_vulneravel_ac(target, target_tile, target["ac"], attacker_id=pid)
         _cobertura = self._cobertura_baixa_bonus(p, target, target_tile)
         if _cobertura:
             target_ac += _cobertura
             await self.gm_say(T("narracao.cobertura_baixa", alvo=nome_criatura(target), bonus=_cobertura))
+        await self._narrar_posicional(target, _posicional)
         hit = (not nat1) and (crit or total >= target_ac)
         await self.broadcast({"type": "dice_roll", "die": "d20", "value": roll,
                               "label": T("dado.arremesso_de_item", item=defn['name']), "hit": hit, "crit": crit})
@@ -49168,7 +49270,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             self.players[pid]["atk_bonus"] = self.players[pid]["base_atk_bonus"]
             self.blessed.pop(pid)
 
-    async def handle_end_turn(self, pid, _forcado=False):
+    async def handle_end_turn(self, pid, _forcado=False, facing=None):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         # Escolha de magia pendente: recusa antes de qualquer efeito de fim de
@@ -49196,6 +49298,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             await self.send_to(pid, {"type": "error",
                 "msg": T("erro.tempestade_ciclones_posicionamento_pendente")})
             return
+        # Direção escolhida pelo jogador ao encerrar o turno (spec 2026-11-25): só
+        # depois de todas as recusas acima, e só cardinal; inválida = mantém.
+        p_dir = self.players.get(pid)
+        if p_dir and not _forcado and isinstance(facing, (list, tuple)) and len(facing) == 2                 and all(isinstance(c, int) and not isinstance(c, bool) for c in facing)                 and tuple(facing) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            p_dir["facing"] = [int(facing[0]), int(facing[1])]
         # Dor Constante: cobra ANTES de qualquer avanço de iniciativa. Furo
         # conhecido e aceito: o turno também termina por estouro de timer, e por
         # esse caminho o dano não cobra.
@@ -53568,6 +53675,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                  - int(atk_def.get("rede_corrosiva_atk_pen", 0) or 0))
         if flash_attack_penalty:
             m_atk -= flash_attack_penalty
+        _posicional = self._bonus_posicional(m, target)   # simétrico: monstro também flanqueia
+        m_atk += _posicional["total"]
+        await self._narrar_posicional(target, _posicional)
         esc = self._verificar_escuridao(m, target)
         prov = bool(m.get("provocado_turno_efeito"))
         desvantagem = (prov or esc == "desvantagem"
@@ -64362,7 +64472,7 @@ async def handler(ws):
                     if room: await room.handle_use_scroll(pid, msg.get("item_id"), msg)
 
                 elif t == "end_turn":
-                    if room: await room.handle_end_turn(pid)
+                    if room: await room.handle_end_turn(pid, facing=msg.get("facing"))
 
                 elif t == "set_group_gold_sharing":
                     if room: await room.handle_set_group_gold_sharing(pid, msg.get("enabled"))

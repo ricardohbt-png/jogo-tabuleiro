@@ -15,6 +15,7 @@ class SmokeReactionTests(unittest.IsolatedAsyncioTestCase):
         self.r.SMOKE_REACTION_TIMEOUT = .08
         self.p['bag'] = [{'id': 'bomba_fumaca', 'name': 'Bomba de Fumaça'}]
         self.p['pos'] = [2, 2]
+        self.p['facing'] = [1, 0]   # de frente para o monstro: sem bônus de flanco no ataque dele
         self.m = self.r.monsters['m1']
         self.m['pos'] = [3, 2]
         self.m.update(max_hp=999, atk_bonus=2, damage='1d4', str_=10, dex=10)

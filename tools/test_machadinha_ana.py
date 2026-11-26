@@ -43,7 +43,7 @@ class MachadinhaTests(unittest.IsolatedAsyncioTestCase):
         self.r.players["h"] = self.p
         mdef = next(m for m in S.MONSTER_DEFS if m["type"] == "urso_negro")
         self.m = S.make_monster(mdef, {"id": 1, "cx": 6, "cy": 5})
-        self.m.update(pos=[6, 5], hp=100, max_hp=100, ac=15)
+        self.m.update(pos=[6, 5], hp=100, max_hp=100, ac=15, facing=[-1, 0])  # de frente para o herói
         self.r.monsters[self.m["id"]] = self.m
 
     def axe(self, level=0):

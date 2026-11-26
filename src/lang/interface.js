@@ -11918,6 +11918,21 @@ window.LANG_INTERFACE = {
   "ui.status.card.rodadas": {"en":"{n} round(s) left","pt":"{n} rodada(s) restantes"},
   "ui.status.exploracao": {"en":"Exploration","pt":"Exploração"},
   "ui.status.detalhe_percepcao": {"en":"base {base} · gear {equip} · penalties {pen}","pt":"base {base} · equipamento {equip} · penalidades {pen}"},
-  "ui.hud.heroi_morto": {"en":"Fallen hero","pt":"Herói morto"}
+  "ui.hud.heroi_morto": {"en":"Fallen hero","pt":"Herói morto"},
+  "ui.direcao.titulo": {"en":"Which way will your hero face?","pt":"Para onde seu herói vai olhar?"},
+  "ui.direcao.legenda": {"en":"The front is safe. Attackers get +1 on your flank and +2 behind you.","pt":"A frente é segura. Quem ataca ganha +1 pelo seu flanco e +2 pelas suas costas."},
+  "ui.direcao.confirmar": {"en":"End turn ↵","pt":"Encerrar turno ↵"},
+  "ui.direcao.cancelar": {"en":"Back (Esc)","pt":"Voltar (Esc)"},
+  "ui.direcao.dir_N": {"en":"North (↑ / W)","pt":"Norte (↑ / W)"},
+  "ui.direcao.dir_S": {"en":"South (↓ / S)","pt":"Sul (↓ / S)"},
+  "ui.direcao.dir_O": {"en":"West (← / A)","pt":"Oeste (← / A)"},
+  "ui.direcao.dir_L": {"en":"East (→ / D)","pt":"Leste (→ / D)"},
+  "ui.direcao.setor_frente": {"en":"Front: no bonus","pt":"Frente: sem bônus"},
+  "ui.direcao.setor_flanco": {"en":"Flank: +1 to hit","pt":"Flanco: +1 no acerto"},
+  "ui.direcao.setor_costas": {"en":"Behind: +2 to hit","pt":"Costas: +2 no acerto"},
+  "ui.direcao.dica_costas": {"en":"🗡️ From behind +{bonus}","pt":"🗡️ Pelas costas +{bonus}"},
+  "ui.direcao.dica_flanco": {"en":"↔️ Flank +{bonus}","pt":"↔️ Flanco +{bonus}"},
+  "ui.direcao.dica_altura": {"en":"⛰️ High ground +{bonus}","pt":"⛰️ Altura +{bonus}"},
+  "ui.ajuda.direcao": {"en":"<b>Facing:</b> when you end your turn, choose where your hero looks (arrows/WASD, Enter). Attacks from the flank get +1 to hit, from behind +2, from above +1 per level (max +4 total); monsters follow the same rule. Rogues use Sneak Attack from behind (and from the flank with Sneak Attack II).","pt":"<b>Direção:</b> ao encerrar o turno, escolha para onde o herói olha (setas/WASD, Enter). Ataques pelo flanco ganham +1 no acerto, pelas costas +2, de cima +1 por nível (máx. +4 no total); os monstros seguem a mesma regra. O Ladino usa Ataque Furtivo pelas costas (e pelo flanco com o Ataque Furtivo II)."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

@@ -51,7 +51,7 @@ class GoblinArcher(unittest.TestCase):
 class ArcherAttack(unittest.IsolatedAsyncioTestCase):
     async def test_actual_magic_arrow_adds_attack_and_damage(self):
         m=spawn(ammo=.21); m['pos']=[3,3]
-        p=S.make_player('p','Hero','warrior',0); p.update(pos=[3,6],hp=100,max_hp=100)
+        p=S.make_player('p','Hero','warrior',0); p.update(pos=[3,6],hp=100,max_hp=100,facing=[0,-1])
         r=S.GameRoom('ARCHER_ATTACK'); r.phase='playing'; r.map_w=r.map_h=10
         r.tiles=[[S.FLOOR]*10 for _ in range(10)]; r.players['p']=p; r.monsters[m['id']]=m
         async def noop(*args,**kwargs): pass
@@ -68,7 +68,7 @@ class ArcherAttack(unittest.IsolatedAsyncioTestCase):
         for ammo_roll, expected in [(.225,94),(.232,94)]:
             with self.subTest(ammo=ammo_roll):
                 m=spawn(ammo=ammo_roll); m['pos']=[3,3]
-                p=S.make_player('p','Hero','warrior',0); p.update(pos=[3,6],hp=100,max_hp=100)
+                p=S.make_player('p','Hero','warrior',0); p.update(pos=[3,6],hp=100,max_hp=100,facing=[0,-1])
                 r=S.GameRoom('ARCHER_ATTACK'); r.phase='playing'; r.map_w=r.map_h=10
                 r.tiles=[[S.FLOOR]*10 for _ in range(10)]; r.players['p']=p; r.monsters[m['id']]=m
                 async def noop(*args,**kwargs): pass
@@ -83,7 +83,7 @@ class ArcherAttack(unittest.IsolatedAsyncioTestCase):
     async def test_explosive_arrow_hits_nearby_ally(self):
         m=spawn(ammo=.232); m['pos']=[3,3]
         ally=spawn(); ally['pos']=[4,6]; ally['hp']=ally['max_hp']=20
-        p=S.make_player('p','Hero','warrior',0); p.update(pos=[3,6],hp=100,max_hp=100)
+        p=S.make_player('p','Hero','warrior',0); p.update(pos=[3,6],hp=100,max_hp=100,facing=[0,-1])
         r=S.GameRoom('ARCHER_AREA'); r.phase='playing'; r.map_w=r.map_h=10
         r.tiles=[[S.FLOOR]*10 for _ in range(10)]; r.players['p']=p
         r.monsters={m['id']:m,ally['id']:ally}
