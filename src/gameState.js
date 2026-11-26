@@ -1307,6 +1307,15 @@ const GS = (() => {
     }
     return ent?.oriented ? [-1, 0] : [0, 1];
   }
+  // Gira uma direção cardinal no anel N → L → S → O (sentido horário no mapa).
+  // Usada pela roda do mouse na bússola; direção inválida parte do sul.
+  const _ANEL_DIRECOES = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+  function girarDirecao(f, passo = 0) {
+    const base = facingDe({ facing: f });
+    const i = _ANEL_DIRECOES.findIndex(d => d[0] === base[0] && d[1] === base[1]);
+    const n = (((i + Math.trunc(Number(passo) || 0)) % 4) + 4) % 4;
+    return _ANEL_DIRECOES[n].slice();
+  }
   function alvoIncapaz(a) {
     if (!a) return false;
     for (const k of ['paralisado', 'petrificado', 'enredado', 'perde_turno', 'bordao_atordoado'])
@@ -4494,6 +4503,7 @@ const GS = (() => {
     setorAtaque,
     bonusPosicional,
     facingDe,
+    girarDirecao,
     custoVerticalTerreno,
     diferencaVerticalTerreno,
     degrausCorpoACorpo,
