@@ -49,7 +49,7 @@
       sock.onmessage = (ev) => {
         let m;
         try { m = JSON.parse(ev.data); } catch (e) { return; }
-        if (m.type !== "upload_result" && m.type !== "objetos_list" && m.type !== "preview_state" && m.type !== "test_dungeon_created") return;
+        if (m.type !== "upload_result" && m.type !== "objetos_list" && m.type !== "preview_state" && m.type !== "test_dungeon_created" && m.type !== "integridade_masmorra") return;
         const p = pending.get(m.upload_id);
         if (!p) return;
         pending.delete(m.upload_id);
@@ -134,6 +134,13 @@
 
   // Monta a prévia da masmorra atual SEM gravar nada em disco. Resolve com
   // { state, avisos } — `state` é o game_state que o cliente do jogo renderiza.
+  // Avisos de integridade da masmorra (nada é gravado). Resolve com a lista
+  // [{codigo, texto, pos?}] já traduzida no idioma do editor.
+  function verificarIntegridade(defn, lang) {
+    return request("verificar_integridade", { defn: defn, lang: lang || "pt" })
+      .then((m) => m.avisos || []);
+  }
+
   function previewDungeon(defn) {
     return request("preview_dungeon", { defn: defn })
       .then((m) => ({ state: m.state, avisos: m.avisos || [] }));
@@ -255,7 +262,7 @@
 
   window.STORY_UPLOAD = { upload: upload };
   window.PRISONER_UPLOAD = { upload: uploadPrisoner };
-  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, createTestDungeon: createTestDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, loadMonsterHostility: loadMonsterHostility, saveMonsterHostility: saveMonsterHostility, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, saveCustomItem: saveCustomItem, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, uploadRefugioArt: uploadRefugioArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
+  window.EDITOR_SAVE = { saveDungeon: saveDungeon, previewDungeon: previewDungeon, verificarIntegridade: verificarIntegridade, createTestDungeon: createTestDungeon, saveCampaign: saveCampaign, loadScenes: loadScenes, saveScenes: saveScenes, loadMonsterHostility: loadMonsterHostility, saveMonsterHostility: saveMonsterHostility, uploadSceneMedia: uploadSceneMedia, saveCustomMonster: saveCustomMonster, saveCustomItem: saveCustomItem, uploadMonsterArt: uploadMonsterArt, uploadItemArt: uploadItemArt, uploadTavernArt: uploadTavernArt, uploadCityArt: uploadCityArt, uploadRefugioArt: uploadRefugioArt, loadCityShops: loadCityShops, saveCityShops: saveCityShops, saveWorldCities: saveWorldCities, loadWorldAdventures: loadWorldAdventures, saveWorldAdventures: saveWorldAdventures };
   window.EDITOR_CLIENTE = { url: clienteURL, emArquivoLocal: editorEmArquivoLocal };
 
   // Aviso fixo quando o editor foi aberto por duplo clique no arquivo. A prévia

@@ -64043,6 +64043,19 @@ async def handler(ws):
                     await ws.send(json.dumps(payload))
                     continue
 
+                if t == "verificar_integridade":
+                    # Editor: avisos de integridade da masmorra aberta (nada é gravado).
+                    lang_ed = _lang_valido(msg.get("lang"))
+                    try:
+                        avisos_int = avisos_integridade_masmorra(msg.get("defn"))
+                        payload = {"type": "integridade_masmorra", "upload_id": msg.get("upload_id"),
+                                   "ok": True, "avisos": avisos_int}
+                    except Exception as e:
+                        payload = {"type": "integridade_masmorra", "upload_id": msg.get("upload_id"),
+                                   "ok": False, "error": f"{type(e).__name__}: {e}"}
+                    await ws.send(json.dumps(payload, default=lambda o, _l=lang_ed: _t_render(o, _l)))
+                    continue
+
                 if t == "create_test_dungeon":
                     room_test, erro_test, token = _criar_sala_teste_masmorra(msg.get("defn"))
                     payload = {"type": "test_dungeon_created", "upload_id": msg.get("upload_id"),
@@ -68390,6 +68403,140 @@ def _serve_static(request):
     return _http(200, "OK", corpo, ctype, extra=validadores)
 
 PREVIEW_PID = "preview"   # pid falso da prévia do editor (nunca entra numa sala real)
+
+# ── Verificação de integridade da masmorra (avisos do editor) ──────────────────
+# Confere se as peças autoradas FUNCIONAM juntas no motor (o validar_dungeon só
+# recusa o que não carrega). Só avisa, nunca bloqueia. Regra nova de motor que
+# dependa de uma peça autorada: acrescente o aviso aqui.
+ARMADILHAS_DE_SALA = {"camara_gas": "gas_fora_de_sala", "teto_esmagador": "teto_fora_de_sala"}
+
+
+def avisos_integridade_masmorra(defn):
+    """Lista de {codigo, texto (T), pos?} com o que não vai funcionar em jogo."""
+    if not isinstance(defn, dict):
+        return []
+    out, vistos = [], set()
+
+    def av(codigo, pos=None, unico=False, **params):
+        if unico:
+            if codigo in vistos:
+                return
+            vistos.add(codigo)
+        item = {"codigo": codigo, "texto": T("ui.editor.masmorra.integ." + codigo, **params)}
+        if isinstance(pos, (list, tuple)) and len(pos) >= 2:
+            try:
+                item["pos"] = [int(pos[0]), int(pos[1])]
+            except (TypeError, ValueError):
+                pass
+        out.append(item)
+
+    tiles = defn.get("tiles") if isinstance(defn.get("tiles"), list) else []
+
+    def chao(x, y):
+        return 0 <= y < len(tiles) and isinstance(tiles[y], list) and 0 <= x < len(tiles[y]) \
+            and tiles[y][x] != WALL
+
+    def pos_de(obj):
+        p = obj.get("pos") if isinstance(obj, dict) else None
+        if isinstance(p, (list, tuple)) and len(p) >= 2 and all(isinstance(v, int) for v in p[:2]):
+            return [p[0], p[1]]
+        if isinstance(obj, dict) and isinstance(obj.get("x"), int) and isinstance(obj.get("y"), int):
+            return [obj["x"], obj["y"]]
+        return None
+
+    rooms = [r for r in (defn.get("rooms") or []) if isinstance(r, dict)
+             and all(isinstance(r.get(k), int) for k in ("x", "y", "w", "h"))]
+    em_sala = lambda p: any(room_contains(r, p[0], p[1]) for r in rooms)
+    lista = lambda chave: [o for o in (defn.get(chave) or []) if isinstance(o, dict)]
+    traps, decors, monsters, chests = lista("traps"), lista("decorations"), lista("monsters"), lista("chests")
+    passagens = lista("secret_passages")
+    refens = [r for r in _refens_da_definicao(defn) if isinstance(r, dict)]
+    saida = pos_de(defn.get("exit")) if isinstance(defn.get("exit"), dict) else None
+
+    # 1) Armadilha que age na SALA colocada fora de qualquer sala desenhada.
+    for tr in traps:
+        p = pos_de(tr)
+        cod = ARMADILHAS_DE_SALA.get(tr.get("tipo"))
+        if p and cod and not em_sala(p):
+            av(cod, p, id=str(tr.get("id") or "?"))
+
+    # 2) Mecanismos: escondidos (só clicáveis depois de notados) e referências quebradas.
+    trap_ids = {str(tr.get("id")) for tr in traps if tr.get("id") is not None}
+    chaves_mecanismo = set()
+    for sp in passagens:
+        chaves_mecanismo.update(str(k) for k in (sp.get("key_decor_ids") or []))
+    for cond in (defn.get("door_conditions") or {}).values():
+        if isinstance(cond, dict):
+            chaves_mecanismo.update(str(k) for k in (cond.get("key_decor_ids") or []))
+    for d in decors:
+        p = pos_de(d)
+        desliga = [str(i) for i in (d.get("disable_trap_ids") or []) if isinstance(i, (str, int))]
+        if d.get("escondido") and (desliga or str(d.get("id")) in chaves_mecanismo):
+            av("mecanismo_escondido", p, id=str(d.get("id") or "?"), cd=int(d.get("cd_busca") or ESCONDERIJO_CD_PADRAO))
+        for tid in desliga:
+            if tid not in trap_ids:
+                av("desliga_inexistente", p, id=str(d.get("id") or "?"), trap=tid)
+
+    # 3) Objetivo cujo cumprimento depende de uma peça que não está no mapa.
+    obj = defn.get("objectives") if isinstance(defn.get("objectives"), dict) else {}
+    objetivos = [obj.get("primary"), obj.get("alternativo")] + list(obj.get("secondary") or []) + list(obj.get("steps") or [])
+    for o in objetivos:
+        tipo = o.get("type") if isinstance(o, dict) else None
+        if tipo == "kill_target" and not any(m.get("target") for m in monsters):
+            av("objetivo_sem_alvo", unico=True)
+        elif tipo == "open_key_chest" and not (any(c.get("key_objective") for c in chests)
+                                                or any(d.get("key_objective") for d in decors)):
+            av("objetivo_sem_bau_chave", unico=True)
+        elif tipo == "rescue_prisoner" and not refens:
+            av("objetivo_sem_refem", unico=True)
+        elif tipo in ("reach_exit", "all_heroes_at_exit") and not saida:
+            av("objetivo_sem_saida", unico=True)
+
+    # 4) Peças importantes que não dá para alcançar a partir da entrada.
+    pecas = []
+    if saida:
+        pecas.append(("saida", saida))
+    pecas += [("bau_chave", pos_de(c)) for c in chests if c.get("key_objective")]
+    pecas += [("alvo", pos_de(m)) for m in monsters if m.get("target")]
+    pecas += [("refem", pos_de(r)) for r in refens]
+    pecas += [("objeto_chave", pos_de(d)) for d in decors
+              if d.get("key_objective") or d.get("disable_trap_ids") or str(d.get("id")) in chaves_mecanismo]
+    inicios = []
+    if defn.get("start_mode") == "hero_spawns":
+        inicios = [pos_de(s) for s in lista("hero_spawns")]
+    elif isinstance(defn.get("entrance"), dict):
+        inicios = [pos_de(defn["entrance"])]
+    inicios = [p for p in inicios if p and chao(*p)]
+    if inicios:
+        passa_secreta = {tuple(p) for p in (pos_de(sp) for sp in passagens) if p}
+        anda = lambda x, y: chao(x, y) or (x, y) in passa_secreta
+        vistos_bfs = {tuple(p) for p in inicios}
+        fila = [tuple(p) for p in inicios]
+        while fila:
+            x, y = fila.pop()
+            for dx in (-1, 0, 1):
+                for dy in (-1, 0, 1):
+                    v = (x + dx, y + dy)
+                    if v not in vistos_bfs and anda(*v):
+                        vistos_bfs.add(v)
+                        fila.append(v)
+        for tipo, p in pecas:
+            if not p or not chao(*p):
+                continue        # peça na parede é o aviso 5
+            perto = any((p[0] + dx, p[1] + dy) in vistos_bfs for dx in (-1, 0, 1) for dy in (-1, 0, 1))
+            if not perto:
+                av("inalcancavel", p, peca=T("ui.editor.masmorra.integ.peca." + tipo))
+
+    # 5) Peça em cima de parede ou fora do mapa.
+    for tipo, objs in (("monstro", monsters), ("bau", chests), ("refem", refens), ("armadilha", traps)):
+        for o in objs:
+            p = pos_de(o)
+            if p and not chao(*p):
+                av("peca_na_parede", p, peca=T("ui.editor.masmorra.integ.peca." + tipo))
+    if saida and not chao(*saida):
+        av("peca_na_parede", saida, peca=T("ui.editor.masmorra.integ.peca.saida"))
+    return out
+
 
 def _preview_dungeon_state(defn):
     """Monta o game_state da prévia do editor a partir do dict cru da masmorra.
