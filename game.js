@@ -31036,8 +31036,9 @@ function _bussolaAtualizar(){
 }
 function _bussolaFechar(confirmar){
   if(!_bussola) return;
-  const { el, onKey, f } = _bussola;
+  const { el, onKey, onWheel, f } = _bussola;
   document.removeEventListener('keydown', onKey, true);
+  document.removeEventListener('wheel', onWheel, true);
   el.remove(); _bussola = null; _facingPreview = null;
   if(confirmar){
     const ok = GS.endTurn(f);
@@ -31055,6 +31056,7 @@ function _bussolaAbrir(){
     <div class="bussola-setas">${botoes}</div>
     <div class="bussola-diagrama"></div>
     <div class="bussola-legenda">${t('ui.direcao.legenda')}</div>
+    <div class="bussola-dica">${t('ui.direcao.dica_entrada')}</div>
     <div class="bussola-acoes">
       <button type="button" class="bussola-ok">${t('ui.direcao.confirmar')}</button>
       <button type="button" class="bussola-cancela">${t('ui.direcao.cancelar')}</button>
@@ -31072,14 +31074,40 @@ function _bussolaAbrir(){
     const d = mapa[e.key];
     if(d){ e.preventDefault(); e.stopImmediatePropagation(); _bussola.f = d.slice(); _bussolaAtualizar(); }
   };
-  _bussola = { el, onKey, f: GS.facingDe(GS.me) };
+  // Roda do mouse gira a direção (cima = anti-horário, baixo = horário). O trackpad
+  // dispara dezenas de eventos por gesto, então há um intervalo mínimo entre passos.
+  let ultimoGiro = 0;
+  const onWheel = e => {
+    e.preventDefault(); e.stopImmediatePropagation();   // não deixa a roda dar zoom na câmera
+    const agora = performance.now();
+    if(!e.deltaY || agora - ultimoGiro < 110) return;
+    ultimoGiro = agora;
+    _bussola.f = GS.girarDirecao(_bussola.f, e.deltaY > 0 ? 1 : -1);
+    _bussolaAtualizar();
+  };
+  _bussola = { el, onKey, onWheel, f: GS.facingDe(GS.me), padDir: '' };
   document.addEventListener('keydown', onKey, true);
+  document.addEventListener('wheel', onWheel, { capture: true, passive: false });
   el.querySelectorAll('[data-dir]').forEach(b => b.addEventListener('click', () => {
     _bussola.f = b.dataset.dir.split(',').map(Number); _bussolaAtualizar();
   }));
   el.querySelector('.bussola-ok').addEventListener('click', () => _bussolaFechar(true));
   el.querySelector('.bussola-cancela').addEventListener('click', () => _bussolaFechar(false));
   _bussolaAtualizar();
+}
+
+// Controle na bússola: direcional/analógico escolhem (mesma tradução de câmera do
+// movimento), confirmar ou encerrar-turno aceitam, cancelar volta ao turno.
+function _bussolaGamepad(pad){
+  if(!_bussola) return;
+  if(_gamepadButtonEdge(pad, _gamepadBinding('confirm')) || _gamepadButtonEdge(pad, _gamepadBinding('endTurn'))){
+    _gamepadRumble('endTurn'); _bussolaFechar(true); return;
+  }
+  if(_gamepadButtonEdge(pad, _gamepadBinding('cancel'))){ _bussolaFechar(false); return; }
+  const dir = _gamepadBoardDirectionForView(_gamepadDirection(pad, 0, 1, 12, 13, 14, 15));
+  const chave = dir ? dir.join(',') : '';
+  if(chave && chave !== _bussola.padDir){ _bussola.f = dir.slice(); _bussolaAtualizar(); _gamepadRumble('target'); }
+  _bussola.padDir = chave;
 }
 
 function endTurn(opcoes){
@@ -34437,6 +34465,13 @@ function _gamepadRequestEndTurn(now){
     endTurn({semBussola: true});
     return;
   }
+  if(_bussola) return;   // a bússola já está aberta: o controle dela cuida da confirmação
+  if(_bussolaCabe()){
+    _clearGamepadEndTurnConfirm();
+    _gamepadRumble('target');
+    endTurn();   // abre a bússola; escolher a direção e confirmar substitui o aperto duplo
+    return;
+  }
   if(now <= _gamepadEndTurnConfirmUntil){
     _clearGamepadEndTurnConfirm();
     _gamepadRumble('endTurn');
@@ -35806,6 +35841,11 @@ function _pollGamepad(now){
   if(playing && _solucaoMecanismoPreview){
     if(_gamepadButtonEdge(pad, _gamepadBinding('confirm'))) _confirmarPreviewSolucaoMecanismo();
     else if(_gamepadButtonEdge(pad, _gamepadBinding('cancel'))) _cancelarPreviewSolucaoMecanismo();
+    _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
+    return;
+  }
+  if(inDungeon && _bussola){
+    _bussolaGamepad(pad);
     _gamepadInput.buttons = Array.from(pad.buttons, button => !!button.pressed);
     return;
   }

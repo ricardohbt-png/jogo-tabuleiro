@@ -2431,3 +2431,4 @@ body.preview-mode #map-panel { width:100%; }
 .bussola-acoes button { padding: 6px 14px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 700; }
 .bussola-ok { background: #2e8b57; color: #fff; }
 .bussola-cancela { background: #444; color: #ddd; }
+.bussola-dica { font-size: .68rem; color: #9fb8d4; margin: -2px 0 8px; max-width: 260px; }
