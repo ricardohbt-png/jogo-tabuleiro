@@ -24,7 +24,7 @@ const fontes = nomes.map(extrair);
 check("as funções existem em game.js", fontes.every(Boolean));
 if (fontes.every(Boolean)) {
   let GS;
-  const contexto = new Function("GS", fontes.join("\n") + "\nreturn { _bussolaCabe, _bussolaEmCombate };");
+  const contexto = new Function("GS", "let _bussolaModo = 'combate';\n" + fontes.join("\n") + "\nreturn { _bussolaCabe, _bussolaEmCombate };");
 
   const base = () => ({
     phase: "playing", current_turn: "p1", monsters: [], players: [{ id: "p1", class_id: "warrior", alive: true, pos: [3, 3] }],
