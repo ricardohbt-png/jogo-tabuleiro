@@ -28480,6 +28480,8 @@ function _renderBarraAcoes(state, hero){
     bar.dataset.pronta = '1'; bar.dataset.magias = String(temMagias);
     bar.innerHTML = `${temMagias ? `<div class="tam-slot"><button type="button" class="tam-tab" data-menu="magias" data-gamepad-action="activate" aria-expanded="false">✨ <span>${_esc(t('ui.menuacoes.magias'))}</span></button><div class="tam-pop" data-menu="magias" hidden></div></div>` : ''}
       <div class="tam-slot"><button type="button" class="tam-tab" data-menu="habilidades" data-gamepad-action="activate" aria-expanded="false">⚔️ <span>${_esc(t('ui.menuacoes.habilidades'))}</span></button><div class="tam-pop" data-menu="habilidades" hidden></div></div>
+      <button type="button" class="tam-tab tam-desfazer" data-gamepad-action="activate" title="${_esc(t('ui.menuacoes.desfazer_dica'))}">↶ <span>${_esc(t('ui.menuacoes.desfazer'))}</span></button>
+      <button type="button" class="tam-tab tam-esperar" data-gamepad-action="activate" title="${_esc(t('ui.menuacoes.esperar_dica'))}">⏳ <span>${_esc(t('ui.menuacoes.esperar'))}</span></button>
       <button type="button" class="tam-tab tam-end" data-gamepad-action="activate">⏭ <span>${_esc(t('ui.menuacoes.encerrar'))}</span></button>`;
     bar.querySelectorAll('.tam-tab[data-menu]').forEach(b => b.onclick = () => {
       const qual = b.dataset.menu;
@@ -28490,6 +28492,8 @@ function _renderBarraAcoes(state, hero){
       _barraSincronizar();
     });
     bar.querySelector('.tam-end').onclick = () => { _barraFechar(); document.getElementById('btn-end-turn')?.click(); };
+    bar.querySelector('.tam-desfazer').onclick = () => { _barraFechar(); if(!GS.desfazerMovimento()) toast(t('ui.conexao.sem_servidor'), 'var(--red)'); };
+    bar.querySelector('.tam-esperar').onclick = () => { _barraFechar(); if(!GS.esperarVez()) toast(t('ui.conexao.sem_servidor'), 'var(--red)'); };
   }
   bar.querySelector('.tam-end').disabled = !!document.getElementById('btn-end-turn')?.disabled;
   _barraSincronizar();
@@ -28503,6 +28507,10 @@ function _barraSincronizar(){
   const hero = st && (st.players || []).find(p => p.id === GS.myPid);
   // Verde mais forte quando a ação principal já foi usada: dica de que dá para encerrar.
   if(fim) fim.classList.toggle('is-pronto', !!hero?.action_done);
+  // Desfazer/Esperar: o servidor diz quando valem (nada mudou desde o passo / começo da vez).
+  const desf = bar.querySelector('.tam-desfazer'), esp = bar.querySelector('.tam-esperar');
+  if(desf) desf.disabled = !hero?.pode_desfazer || !GS.isMyTurn;
+  if(esp) esp.disabled = !hero?.pode_esperar || !GS.isMyTurn;
   for(const pop of bar.querySelectorAll('.tam-pop')){
     const aberto = _barraMenuAberto === pop.dataset.menu;
     pop.hidden = !aberto;
@@ -34241,6 +34249,10 @@ document.addEventListener('keydown', e=>{
   if(!GS.isMyTurn || !GS.gameState || GS.gameState.phase!=='playing') return;
   const me=GS.gameState.players.find(p=>p.id===GS.myPid);
   if(!me?.alive) return;
+  if(!e.repeat && !e.altKey && !e.metaKey && !(e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.isContentEditable))){
+    if((e.key === 'z' || e.key === 'Z') && e.ctrlKey && me.pode_desfazer){ GS.desfazerMovimento(); e.preventDefault(); return; }
+    if((e.key === 'x' || e.key === 'X') && !e.ctrlKey && me.pode_esperar){ GS.esperarVez(); e.preventDefault(); return; }
+  }
   switch(e.key){
     case 'ArrowUp':    case 'w': case 'W': GS.move(0,-1); e.preventDefault(); break;
     case 'ArrowDown':  case 's': case 'S': GS.move(0,1);  e.preventDefault(); break;
@@ -38634,6 +38646,7 @@ function _audioPanelEnsure(){
     +       '<p data-i18n-html="ui.ajuda.camera"></p>'
     +       '<p data-i18n-html="ui.ajuda.intencao"></p>'
     +       '<p data-i18n-html="ui.ajuda.direcao"></p>'
+    +       '<p data-i18n-html="ui.ajuda.desfazer_esperar"></p>'
     +     '</div>'
     +     '<section class="cfg-help-controller"><h4 data-i18n="ui.ajuda.joystick_titulo">🎮 Joystick</h4>'
     +       '<p data-i18n-html="ui.ajuda.joystick_turno"></p><p data-i18n-html="ui.ajuda.joystick_camera"></p><p data-i18n-html="ui.ajuda.joystick_menu"></p>'

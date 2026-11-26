@@ -3577,6 +3577,9 @@ window.LANG_NARRACAO = {
   "narracao.monstro_contorna": {
     "en": "🐾 {monstro} circles around {alvo} looking for an opening.",
     "pt": "🐾 {monstro} contorna {alvo} procurando uma brecha."
-  }
+  },
+  "narracao.desfaz_movimento": {"en": "↶ {heroi} takes the step back.", "pt": "↶ {heroi} desfaz o movimento."},
+  "narracao.espera_a_vez": {"en": "⏳ {heroi} waits for the others to act first.", "pt": "⏳ {heroi} espera para ver os outros agirem primeiro."},
+  "narracao.volta_a_vez": {"en": "⏳ {heroi}'s turn comes back.", "pt": "⏳ A vez de {heroi} volta."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

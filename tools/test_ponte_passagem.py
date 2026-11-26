@@ -148,7 +148,8 @@ asyncio.run(r._empurrar(h, 0, -1, 1))
 check("empurrar da ponte para o vão custa HP", h["hp"] < 40)
 
 print("\n[8] Os portões usam _passo_seguro")
-for nome in ("handle_move", "_tile_livre_para_animado", "_passo_monstro",
+# handle_move é um wrapper (ponto de retorno do Desfazer); o passo de verdade está em _handle_move_impl.
+for nome in ("_handle_move_impl", "_tile_livre_para_animado", "_passo_monstro",
              "_commit_monster_step", "_monster_can_occupy",
              "_passo_livre_licantropo"):
     corpo = inspect.getsource(getattr(S.GameRoom, nome))

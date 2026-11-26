@@ -11937,6 +11937,11 @@ window.LANG_INTERFACE = {
   "ui.direcao.dica_entrada": {"en":"Mouse wheel, arrows/WASD or the D-pad/stick choose.","pt":"Roda do mouse, setas/WASD ou direcional/analógico escolhem."},
   "ui.intencao.setor_costas": {"en":"from behind (+{bonus})","pt":"pelas costas (+{bonus})"},
   "ui.intencao.setor_flanco": {"en":"from the flank (+{bonus})","pt":"pelo flanco (+{bonus})"},
-  "ui.direcao.primeira_vez": {"en":"Tip: face the enemies to protect your back. Clever monsters try to circle around you.","pt":"Dica: olhe para os inimigos para proteger as costas. Monstros espertos tentam contornar você."}
+  "ui.direcao.primeira_vez": {"en":"Tip: face the enemies to protect your back. Clever monsters try to circle around you.","pt":"Dica: olhe para os inimigos para proteger as costas. Monstros espertos tentam contornar você."},
+  "ui.menuacoes.desfazer": {"en":"Undo","pt":"Desfazer"},
+  "ui.menuacoes.desfazer_dica": {"en":"Undo your last move (Ctrl+Z), only if nothing has changed since: no new fog, hits or actions.","pt":"Desfaz o último movimento (Ctrl+Z), só se nada mudou desde então: sem névoa nova, dano ou ações."},
+  "ui.menuacoes.esperar": {"en":"Wait","pt":"Esperar"},
+  "ui.menuacoes.esperar_dica": {"en":"Act after the others this round (X). Only at the start of your turn, once per round.","pt":"Age depois dos outros nesta rodada (X). Só no começo da vez, uma vez por rodada."},
+  "ui.ajuda.desfazer_esperar": {"en":"<b>Undo / Wait:</b> <b>Ctrl+Z</b> takes back your last move if nothing has changed since (new fog, a hit, an action or an opened door blocks it). <b>X</b> (or the ⏳ button) sends your turn to the end of the round, only before moving or acting, once per round.","pt":"<b>Desfazer / Esperar:</b> <b>Ctrl+Z</b> desfaz o último movimento se nada mudou desde então (névoa nova, dano, ação ou porta aberta bloqueiam). <b>X</b> (ou o botão ⏳) manda a sua vez para o fim da rodada, só antes de andar ou agir, uma vez por rodada."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);

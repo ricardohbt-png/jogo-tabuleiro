@@ -3940,6 +3940,7 @@ FOTO_SALA_CATEGORIAS = {
     "_objetivo_concluido": "foto", "mission_complete_pending": "foto",
     "_secundarios_pagos": "foto", "_faixa_paga": "foto",
     # turno (a foto é tirada na virada da rodada; a iniciativa é remontada)
+    "_desfazer_pilhas": "efemero",
     "round_num": "foto", "initiative_order": "foto", "initiative_index": "foto",
     "turn_index": "foto",
     # contadores de id (evitam id repetido depois de retomar)
@@ -15524,6 +15525,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         self.zonas_especiais = []  # zonas mÃ¡gicas (escuridÃ£o/silÃªncio) â€” ver GRIMORIO/handle_magia
         self.turn_index = 0
         self.round_num = 1
+        self._desfazer_pilhas = {}   # pid -> pontos de retorno do movimento (efêmero)
         # Ordem individual de iniciativa: [{kind:"player"|"monster", id, ...}].
         # Ã‰ recalculada no inÃ­cio de cada rodada, pois DES/INT podem mudar.
         self.initiative_order = []
@@ -23085,6 +23087,15 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if actor["kind"] == "player":
             p = self.players.get(actor["id"])
             if p and self._ativo(p):
+                if p.pop("_esperou_ativa", False):
+                    # Volta da espera: o preparo do início do turno (veneno, recargas,
+                    # movimento) já rodou na primeira ativação; só reabre o relógio.
+                    self._desfazer_pilhas.pop(p["id"], None)
+                    self._iniciar_timer_turno()
+                    await self.gm_say(T("narracao.volta_a_vez", heroi=p.get("name", "")))
+                    await self.push_state()
+                    return
+                self._desfazer_pilhas.pop(p["id"], None)
                 await self._start_initiative_player_turn(p)
                 if not p.get("alive"):
                     # Morreu nos efeitos do início da própria vez (lava, fogo, veneno...).
@@ -23242,6 +23253,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         fila descartável do simulador do editor (`_teste_combate_avancar`) —
         sem isto o simulador virava a rodada só no contador, e nada ticava."""
         self.round_num += 1
+        for _p in self.players.values():
+            _p.pop("_esperou_ativa", None)   # quem esperou e não voltou a agir não pula o próximo preparo
         for owner_id, marker in list(self.cooperative_markers.items()):
             if int(marker.get("expires_round", 0) or 0) < self.round_num:
                 self.cooperative_markers.pop(owner_id, None)
@@ -24696,7 +24709,128 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
     # técnicas/magias fica bem abaixo disso; o excesso é descartado).
     MAX_PASSOS_CAMINHO = 40
 
+    # ── Desfazer movimento e Esperar (spec 2026-11-25-desfazer-esperar) ─────────
+    # Chaves da ficha que o próprio movimento pode alterar; qualquer OUTRA diferença
+    # (PV, ação gasta, status, bolsa, lição...) torna o movimento irreversível.
+    DESFAZER_CHAVES_PERMITIDAS = frozenset({
+        "pos", "moves_left", "facing", "moved_this_turn", "_water_min_step_used",
+        "_piche_movimento_encerrado", "_swamp_penalty_applied", "_snow_movement_reduced",
+        "_rodamoinho_ultima_pos", "_rodamoinho_profundo_ultima_pos", "fome", "sede"})
+
+    def _desfazer_mundo(self):
+        """Impressão digital do mundo que um passo não pode alterar sem virar irreversível:
+        névoa, salas abertas, monstros alertas, baús, itens no chão, armadilhas reveladas."""
+        return (len(self.explored),
+                sum(1 for r in self.rooms if not r.get("locked")),
+                sum(1 for m in self.monsters.values() if m.get("alertado")),
+                len(self.chests), len(self.ground_items),
+                sum(1 for a in self.armadilhas if a.get("visivel")),
+                len(getattr(self, "corpses", {}) or {}))
+
+    def _desfazer_diferencas(self, antes, p):
+        aus = object()
+        dif = set()
+        for k in set(antes) | set(p):
+            a, b = antes.get(k, aus), p.get(k, aus)
+            if a == b:
+                continue
+            # Chave que só nasceu com valor neutro (None/False/[]/0) é inicialização
+            # preguiçosa de status, não uma mudança.
+            if (a is aus and not b) or (b is aus and not a):
+                continue
+            dif.add(k)
+        return dif
+
+    def _desfazer_valido(self, p, entrada):
+        if entrada["mundo"] != self._desfazer_mundo():
+            return False
+        return self._desfazer_diferencas(entrada["ficha"], p) <= self.DESFAZER_CHAVES_PERMITIDAS
+
+    def _pode_desfazer(self, p):
+        if not p or not p.get("alive") or not self._is_turn(p["id"]) or self.last_stand_pid == p["id"]:
+            return False
+        if getattr(self, "active_scene", None):
+            return False
+        pilha = self._desfazer_pilhas.get(p["id"])
+        return bool(pilha) and self._desfazer_valido(p, pilha[-1])
+
+    async def _com_ponto_de_retorno(self, pid, fazer):
+        """Guarda o estado antes de um COMANDO de movimento e o descarta se ele não andou."""
+        p = self.players.get(pid)
+        entrada = None
+        if p and p.get("alive") and self._is_turn(pid) and self.last_stand_pid != pid:
+            entrada = {"ficha": deepcopy(p), "mundo": self._desfazer_mundo()}
+            self._desfazer_pilhas.setdefault(pid, []).append(entrada)
+        pos0 = list(p.get("pos") or []) if p else None
+        try:
+            await fazer()
+        finally:
+            if entrada is not None and (not p or list(p.get("pos") or []) == pos0):
+                pilha = self._desfazer_pilhas.get(pid) or []
+                if pilha and pilha[-1] is entrada:
+                    pilha.pop()
+
+    async def handle_desfazer_movimento(self, pid):
+        p = self.players.get(pid)
+        if not p:
+            return
+        if not self._pode_desfazer(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nada_a_desfazer")})
+            return
+        entrada = self._desfazer_pilhas[pid].pop()
+        for k in self._desfazer_diferencas(entrada["ficha"], p):
+            if k in entrada["ficha"]:
+                p[k] = deepcopy(entrada["ficha"][k])
+            else:
+                p.pop(k, None)
+        cavalo = self._cavalo_montado_do(p)
+        if cavalo:
+            cavalo["pos"] = list(p["pos"])
+        await self.gm_say(T("narracao.desfaz_movimento", heroi=p.get("name", "")))
+        await self.push_state()
+
+    def _ator_da_fila_vivo(self, entrada):
+        if entrada["kind"] == "player":
+            return self._ativo(self.players.get(entrada["id"]))
+        m = self.monsters.get(entrada["id"]) or {}
+        return m.get("hp", 0) > 0 or self._monster_regenerando_a_zero(m)
+
+    def _pode_esperar(self, p):
+        """Só no começo da vez (nada gasto), uma vez por rodada e se alguém ainda age depois."""
+        if not p or not p.get("alive") or not self._is_turn(p["id"]) or self.last_stand_pid == p["id"]:
+            return False
+        if p.get("esperou_rodada") == self.round_num or p.get("licantropia_transformado"):
+            return False
+        if p.get("moved_this_turn") or p.get("action_done") or p.get("bonus_action_used"):
+            return False
+        ator = self.current_actor()
+        if not ator or ator["id"] != p["id"] or not self.initiative_order:
+            return False
+        idx = self.initiative_index % len(self.initiative_order)
+        return any(self._ator_da_fila_vivo(e) for e in self.initiative_order[idx + 1:])
+
+    async def handle_esperar_vez(self, pid):
+        p = self.players.get(pid)
+        if not p:
+            return
+        if not self._pode_esperar(p):
+            await self.send_to(pid, {"type": "error", "msg": T("erro.nao_pode_esperar")})
+            return
+        idx = self.initiative_index % len(self.initiative_order)
+        entrada = self.initiative_order.pop(idx)
+        self.initiative_order.append(entrada)
+        self.initiative_index = idx - 1          # _advance_initiative soma 1 e cai no próximo
+        p["esperou_rodada"] = self.round_num
+        p["_esperou_ativa"] = True               # a vez que volta não repete o preparo do início do turno
+        self._desfazer_pilhas.pop(pid, None)
+        self._cancelar_timer_turno()
+        await self.gm_say(T("narracao.espera_a_vez", heroi=p.get("name", "")))
+        await self._advance_initiative()
+
     async def handle_move_path(self, pid, path):
+        return await self._com_ponto_de_retorno(pid, lambda: self._handle_move_path_impl(pid, path))
+
+    async def _handle_move_path_impl(self, pid, path):
         """Caminho inteiro numa mensagem só.
 
         Antes o cliente mandava um `move` por casa e cada um virava um
@@ -24876,6 +25010,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                   "to": list(casa), "kind": kind})
 
     async def handle_move(self, pid, dx, dy, _push=True, _atravessar=False):
+        if not _push:   # dentro de um caminho: o ponto de retorno é do caminho inteiro
+            return await self._handle_move_impl(pid, dx, dy, _push, _atravessar)
+        return await self._com_ponto_de_retorno(
+            pid, lambda: self._handle_move_impl(pid, dx, dy, _push, _atravessar))
+
+    async def _handle_move_impl(self, pid, dx, dy, _push=True, _atravessar=False):
         if self.active_scene:
             await self.send_to(pid, {"type":"error", "msg": T("erro.a_masmorra_esta_pausada_durante_uma_cena")}); return
         if not self._is_turn(pid):
@@ -49344,6 +49484,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         fosso_encerrando = bool(p.get("fosso_turno_perdido"))
         # Limpa imobilizaÃ§Ã£o (teia/rede) â€” o jogador encerrou o turno bloqueado
         p.pop("perde_turno", None)
+        self._desfazer_pilhas.pop(pid, None)   # a vez acabou: não há mais o que desfazer
         if p.get("oculto_vela"):
             vela_rodadas = max(1, int(p.get("oculto_vela_rodadas", 1) or 1)) - 1
             if vela_rodadas > 0:
@@ -62974,6 +63115,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             snapshot = dict(p,
                             action_done=bool(p.get("action_done")) and not acao_extra,
                             acao_extra_disponivel=acao_extra,
+                            pode_desfazer=self._pode_desfazer(p),
+                            pode_esperar=self._pode_esperar(p),
                             magias_conhecidas=magias_visiveis,
                             magias_grimorio=magias_grimorio,
                             initiative=self.initiative_value(p),
@@ -64599,6 +64742,12 @@ async def handler(ws):
 
                 elif t == "end_turn":
                     if room: await room.handle_end_turn(pid, facing=msg.get("facing"))
+
+                elif t == "desfazer_movimento":
+                    if room: await room.handle_desfazer_movimento(pid)
+
+                elif t == "esperar_vez":
+                    if room: await room.handle_esperar_vez(pid)
 
                 elif t == "set_group_gold_sharing":
                     if room: await room.handle_set_group_gold_sharing(pid, msg.get("enabled"))
