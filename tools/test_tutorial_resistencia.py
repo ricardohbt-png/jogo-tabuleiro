@@ -146,7 +146,8 @@ class TutorialResistenciaTests(unittest.IsolatedAsyncioTestCase):
             await r.handle_attack(p["id"], boneco["id"])
         self.assertIn("fala_vuln", p["licoes_feitas"])
 
-        self.assertIsNone(p["licao_atual"])
+        # Perto do boneco, a vulnerabilidade libera a lição da direção (fatia 22).
+        self.assertEqual(p["licao_atual"], "fala_direcao")
         p["pos"] = [36, 36]   # a saída do Campo (depois do corredor de armadilhas e das salas de reações)
         await r._verificar_falas(p, r._room_containing_point(p["pos"]))
         self.assertEqual(p["licao_atual"], "fala_retirada")

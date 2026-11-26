@@ -272,4 +272,7 @@ def aplicar(definicao):
     # terreno) as move para baixo. Aplicada aqui, nenhum caminho do pipeline a desfaz.
     from aplicar_fatia20_tutorial import aplicar as _aplicar_fatia20
     _aplicar_fatia20(definicao)
+    # Fatia 22: a lição da direção (costas, flanco e a bússola de fim de turno).
+    from aplicar_fatia22_tutorial import aplicar as _aplicar_fatia22
+    _aplicar_fatia22(definicao)
     return definicao

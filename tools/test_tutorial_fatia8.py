@@ -228,7 +228,7 @@ class AvancaSemTravarTests(unittest.IsolatedAsyncioTestCase):
     async def test_retirada_pode_seguir_sem_aulas_opcionais_de_dano(self):
         retirada = _F["fala_retirada"]
         self.assertEqual(retirada.get("continua_sem"),
-                         ["fala_res", "fala_vuln", "fala_atalhos", "fala_piche", "fala_gargula"])
+                         ["fala_res", "fala_vuln", "fala_atalhos", "fala_piche", "fala_gargula", "fala_direcao"])
         self.assertEqual(retirada["pos"], [36, 36])
         self.assertEqual(retirada["trigger"], {"tipo": "proximidade", "raio": 1})
 
@@ -249,7 +249,7 @@ class AvancaSemTravarTests(unittest.IsolatedAsyncioTestCase):
         await self.chegar_em(r, p, retirada["pos"])
 
         puladas = [m["licao_id"] for m in msgs(r, "licao_pulada")]
-        self.assertEqual(puladas, ["fala_res", "fala_vuln", "fala_armadilhas", "fala_gas", "fala_piche", "fala_gargula"])
+        self.assertEqual(puladas, ["fala_res", "fala_vuln", "fala_direcao", "fala_armadilhas", "fala_gas", "fala_piche", "fala_gargula"])
         self.assertEqual(p["licao_atual"], "fala_retirada")
 
     async def test_trilha_pulada_nao_paga_o_bonus_de_trilha(self):

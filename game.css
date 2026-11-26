@@ -2432,3 +2432,5 @@ body.preview-mode #map-panel { width:100%; }
 .bussola-ok { background: #2e8b57; color: #fff; }
 .bussola-cancela { background: #444; color: #ddd; }
 .bussola-dica { font-size: .68rem; color: #9fb8d4; margin: -2px 0 8px; max-width: 260px; }
+.bussola-novo { font-size: .72rem; color: #ffe08a; background: rgba(240,200,103,.12); border: 1px solid rgba(240,200,103,.4);
+  border-radius: 8px; padding: 6px 8px; margin: 0 0 8px; max-width: 260px; }
