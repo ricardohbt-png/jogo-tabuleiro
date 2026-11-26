@@ -2704,6 +2704,10 @@ const GS = (() => {
     if (Array.isArray(facing) && facing.length === 2) msg.facing = [facing[0], facing[1]];
     return send(msg);
   }
+  // Desfazer o último movimento e Esperar (adiar a vez); o servidor decide se vale
+  // (`pode_desfazer`/`pode_esperar` no jogador) e responde erro se não.
+  function desfazerMovimento() { return send({ type: 'desfazer_movimento' }); }
+  function esperarVez()        { return send({ type: 'esperar_vez' }); }
   function sceneChoice(sceneId, eventId, optionId) { send({ type:'scene_choice', scene_id:sceneId, event_id:eventId, option_id:optionId }); }
   function sceneTest(sceneId, eventId) { send({ type:'scene_test', scene_id:sceneId, event_id:eventId }); }
   function sceneEnd(force) { send({ type:'scene_end', force:!!force }); }
@@ -4645,6 +4649,8 @@ const GS = (() => {
     animadoAtual,
     animadoPendenteParaEncerrar,
     endTurn,
+    desfazerMovimento,
+    esperarVez,
     sceneChoice,
     sceneTest,
     sceneEnd,

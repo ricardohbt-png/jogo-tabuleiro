@@ -2289,6 +2289,8 @@ window.LANG_ERROS = {
     "en": "The mechanism has already been activated.",
     "pt": "O mecanismo já foi ativado."
   },
-  "erro.alvo_fora_do_alcance_de_arremesso": {"en":"{alvo} is out of throwing range ({alcance} squares).","pt":"{alvo} está fora do alcance de arremesso ({alcance} casas)."}
+  "erro.alvo_fora_do_alcance_de_arremesso": {"en":"{alvo} is out of throwing range ({alcance} squares).","pt":"{alvo} está fora do alcance de arremesso ({alcance} casas)."},
+  "erro.nada_a_desfazer": {"en": "There is nothing to undo: something has changed since you moved.", "pt": "Não há o que desfazer: algo mudou desde que você andou."},
+  "erro.nao_pode_esperar": {"en": "You can only wait at the start of your turn, once per round, and only if someone still acts after you.", "pt": "Você só pode esperar no começo da sua vez, uma vez por rodada, e só se alguém ainda agir depois de você."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_ERROS);
