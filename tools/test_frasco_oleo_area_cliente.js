@@ -18,6 +18,7 @@ const sandbox = {
   },
   _aplicarSpellHL() {},
   _reagePrever() {},
+  _atingidosPrever() {},
 };
 vm.runInNewContext(`${match[0]}\n_recomputarAreaThrow(7, 4);`, sandbox);
 assert.deepStrictEqual(Array.from(sandbox.window._spellHL.area), ['7,4']);

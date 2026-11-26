@@ -11937,6 +11937,11 @@ window.LANG_INTERFACE = {
   "ui.menu.bussola.nunca": {"en":"Never","pt":"Nunca"},
   "ui.menu.bussola_dica": {"en":"When to ask which way your hero looks. Training lessons always ask when they need it.","pt":"Quando perguntar para onde o herói olha. Lições de treinamento sempre perguntam quando precisam."},
   "ui.gamepad.desfeito": {"en":"↶ Move undone","pt":"↶ Movimento desfeito"},
-  "ui.gamepad.esperando": {"en":"⏳ Waiting","pt":"⏳ Esperando"}
+  "ui.gamepad.esperando": {"en":"⏳ Waiting","pt":"⏳ Esperando"},
+  "ui.mira.atinge_inimigos": {"en":"🎯 Hits {n} enemy(ies)","pt":"🎯 Atinge {n} inimigo(s)"},
+  "ui.mira.atinge_aliados": {"en":"⚠ Hits allies: {nomes}","pt":"⚠ Atinge aliados: {nomes}"},
+  "ui.mira.beneficia_aliados": {"en":"✨ Helps {n} ally(ies)","pt":"✨ Beneficia {n} aliado(s)"},
+  "ui.mira.dano_com_save": {"en":"{dano}, {save} halves","pt":"{dano}, {save} reduz à metade"},
+  "ui.mira.confirma_aliado": {"en":"⚠ This will hit {nomes}. Click the same spot again to confirm.","pt":"⚠ Isso vai atingir {nomes}. Clique de novo no mesmo lugar para confirmar."}
 };
 Object.assign(window.LANG_STRINGS, window.LANG_INTERFACE);
