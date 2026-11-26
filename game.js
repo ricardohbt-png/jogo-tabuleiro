@@ -13138,6 +13138,7 @@ function renderMap(state){
   // ── PASS 1.5: Realce de mira — alcance (azul), zona (laranja), alvo/área (verde)
   _desenharSpellHL2D(ctx, exploredSet);
   _desenharSpellTargetPreview2D(ctx, state, exploredSet);
+  _desenharAtingidos2D(ctx, exploredSet);
   _desenharSpellDirection2D(ctx, state);
   for(const _animSenhorAguas of _senhorAguasAnims)
     _senhorAguasDraw2D(ctx, state, _animSenhorAguas, performance.now());
@@ -23976,6 +23977,10 @@ function _clickTileMagia(tx, ty) {
     }
   }
 
+  if (['tile', 'linha', 'cone', 'self_area'].includes(mode.alvoTipo)) {
+    _recomputarAreaMagia(tx, ty);              // a área do clique (toque sem hover)
+    if (!_confirmaAtingirAliado()) return;
+  }
   const fields = Object.assign({}, spec.fields);
   if (magiaId === 'chamado_inverno') {
     fields.terreno = _chamadoInvernoTerreno;
@@ -24519,6 +24524,8 @@ function _clickTileThrow(tx, ty){
     GS.throwItem(r.itemId, r.targetId, r.targetPos, window._modoThrowItem.sourceInfo);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_area'){
+    _recomputarAreaThrow(r.tx, r.ty);
+    if(!_confirmaAtingirAliado()) return;
     GS.throwItemArea(r.itemId, r.tx, r.ty, window._modoThrowItem.sourceInfo);
     _encerrarMiraArremesso();
   } else if(r && r.type === 'throw_blocked'){
@@ -24778,7 +24785,7 @@ function _aimHoverMagic(tx, ty) {
     || mode.alvoTipo === 'self_area' || mode.validTiles?.has(key) || window._spellHL.range?.has(key);
   const valid = !!spec.ok && !!inRange;
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') + _reageSufixo(true) : (spec.msg || t('ui.mira.escolha_uma_casa_destacada_dentro_do_alcan')), valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus(valid ? t('ui.mira.mira_valida_confirme_para_lancar') + _reageSufixo(true) + _atingidosSufixo(true) : (spec.msg || t('ui.mira.escolha_uma_casa_destacada_dentro_do_alcan')), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverThrow(tx, ty) {
@@ -24789,7 +24796,7 @@ function _aimHoverThrow(tx, ty) {
     _aplicarSpellHL();
   }
   _aimSetHover(tx, ty, valid ? 'valid' : 'blocked');
-  _aimSetStatus((valid ? t('ui.arremesso.mira_valida_confirme_para_arremessar') : t('ui.arremesso.escolha_um_alvo_ou_casa_valida_sem_parede')) + _reageSufixo(valid), valid ? '#94dfb0' : '#ff9aa2');
+  _aimSetStatus((valid ? t('ui.arremesso.mira_valida_confirme_para_arremessar') : t('ui.arremesso.escolha_um_alvo_ou_casa_valida_sem_parede')) + _reageSufixo(valid) + _atingidosSufixo(valid), valid ? '#94dfb0' : '#ff9aa2');
 }
 
 function _aimHoverHabilidadeTeste(tx, ty) {
@@ -25298,6 +25305,84 @@ function _reageSufixo(valido) {
   return valido && r && r.texto ? ' · ' + r.texto : '';
 }
 
+// ── Prévia de quem a área atinge (spec 2026-11-26) ───────────────────────────
+// Quem o EFEITO atinge (não as reações de terreno): inimigos em laranja, aliados
+// feridos em vermelho com ⚠, aliados beneficiados em verde. A regra de quem cada
+// efeito atinge é GS.AREA_ALCANCE (conferida contra o servidor por teste).
+let _confirmaAliadoChave = null, _confirmaAliadoModo = null;
+function _efeitoAreaMira(){
+  if (window._modoMagia && window._modoMagia.testHeroId == null) return window._modoMagia.magiaId;
+  if (window._modoThrowItem) return window._modoThrowItem.id;
+  return null;
+}
+function _atingidosPrever(area) {
+  const hl = window._spellHL;
+  hl.atingidos = null;
+  const st = GS.gameState, me = GS.me, efeito = _efeitoAreaMira();
+  if (!st || !me || !efeito || !area || !area.size) return;
+  let visao = null;
+  try { visao = computeVisionSet(st, me); } catch (e) { visao = null; }
+  const casas = [...area, ...(hl.double || [])];
+  const r = GS.atingidosNaArea(st, casas, efeito, me.id, visao ? (x, y) => visao.has(`${x},${y}`) : null);
+  if (!r.alcance) return;
+  const chaves = lista => new Set(lista.flatMap(x => x.tiles.map(c => `${c[0]},${c[1]}`)));
+  hl.atingidos = { inimigos: chaves(r.inimigos), aliadosCasas: chaves(r.aliados),
+    beneficiadosCasas: chaves(r.beneficiados), aliados: r.aliados, beneficiados: r.beneficiados,
+    nInimigos: r.inimigos.length };
+}
+function _atingidosSufixo(valido) {
+  const at = window._spellHL && window._spellHL.atingidos;
+  if (!valido || !at) return '';
+  const partes = [];
+  if (at.nInimigos) partes.push(t('ui.mira.atinge_inimigos', {n: at.nInimigos}));
+  if (at.beneficiados.length) partes.push(t('ui.mira.beneficia_aliados', {n: at.beneficiados.length}));
+  if (at.aliados.length) partes.push(t('ui.mira.atinge_aliados', {nomes: at.aliados.map(a => a.nome).filter(Boolean).join(', ')}));
+  const item = window._modoThrowItem && GS.CATALOGO_ITENS && GS.CATALOGO_ITENS[window._modoThrowItem.id];
+  if (item && item.dano) partes.push(item.saveTipo
+    ? t('ui.mira.dano_com_save', {dano: item.dano, save: t('dado.save.' + item.saveTipo)})
+    : String(item.dano));
+  return partes.length ? ' · ' + partes.join(' · ') : '';
+}
+// Lançar sobre o próprio grupo pede um segundo clique na mesma área.
+function _confirmaAtingirAliado() {
+  const hl = window._spellHL || {};
+  const at = hl.atingidos;
+  if (!at || !at.aliados || !at.aliados.length) { _confirmaAliadoChave = null; return true; }
+  const chave = [...(hl.area || [])].sort().join('|');
+  const modo = window._modoMagia || window._modoThrowItem || null;
+  if (_confirmaAliadoChave === chave && _confirmaAliadoModo === modo) { _confirmaAliadoChave = null; return true; }
+  _confirmaAliadoChave = chave; _confirmaAliadoModo = modo;
+  const msg = t('ui.mira.confirma_aliado', {nomes: at.aliados.map(a => a.nome).filter(Boolean).join(', ')});
+  _aimSetStatus(msg, '#ff9a5c');
+  toast(msg, 'var(--orange)');
+  return false;
+}
+function _desenharAtingidos2D(ctx, exploredSet) {
+  const at = window._spellHL && window._spellHL.atingidos;
+  if (!at) return;
+  const anel = (set, cor, icone) => {
+    for (const k of set) {
+      if (exploredSet && !exploredSet.has(k)) continue;
+      const [x, y] = k.split(',').map(Number);
+      const cx = x * CELL + CELL / 2, cy = y * CELL + CELL / 2;
+      ctx.save();
+      ctx.lineWidth = Math.max(4, CELL * 0.1); ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.beginPath(); ctx.arc(cx, cy, CELL * 0.4, 0, Math.PI * 2); ctx.stroke();
+      ctx.lineWidth = Math.max(2, CELL * 0.06); ctx.strokeStyle = cor;
+      ctx.beginPath(); ctx.arc(cx, cy, CELL * 0.4, 0, Math.PI * 2); ctx.stroke();
+      if (icone) {
+        ctx.font = `${Math.round(CELL * 0.34)}px sans-serif`;
+        ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText(icone, x * CELL + CELL * 0.96, y * CELL + CELL * 0.02);
+      }
+      ctx.restore();
+    }
+  };
+  anel(at.inimigos, '#ff8c1a', '🎯');
+  anel(at.beneficiadosCasas, '#5fe08a', '');
+  anel(at.aliadosCasas, '#ff2d55', '⚠');
+}
+
 function _recomputarAreaMagia(hx, hy) {
   const mode = window._modoMagia; if (!mode) return;
   if (mode.alvoTipo === 'adjacent_tile') {
@@ -25342,6 +25427,7 @@ function _recomputarAreaMagia(hx, hy) {
   window._spellHL.area   = area;
   window._spellHL.double = dbl;
   _reagePrever(area);
+  _atingidosPrever(area);
   _aplicarSpellHL();
 }
 
@@ -25366,6 +25452,7 @@ function _recomputarAreaThrow(hx, hy) {
   window._spellHL.area   = area;
   window._spellHL.double = new Set();
   _reagePrever(area);
+  _atingidosPrever(area);
   _aplicarSpellHL();
 }
 
@@ -25470,6 +25557,12 @@ function _aplicarSpellHL3D() {
   if (g3.spellReageMeshes) {
     for (const tp of Object.keys(g3.spellReageMeshes)) toggle(g3.spellReageMeshes[tp], hl.reage?.tipos?.[tp] || []);
     toggle(g3.spellReageAlvoMeshes, hl.reage?.alvos || []);
+  }
+  if (g3.spellAtingidoMeshes) {
+    const at = hl.atingidos;
+    toggle(g3.spellAtingidoMeshes.inimigo, at ? at.inimigos : []);
+    toggle(g3.spellAtingidoMeshes.aliado, at ? at.aliadosCasas : []);
+    toggle(g3.spellAtingidoMeshes.beneficiado, at ? at.beneficiadosCasas : []);
   }
   if(g3.spellTargetMeshes){
     const targets = _spellPreviewTargetSets(GS.gameState, hl.area);
@@ -29864,6 +29957,7 @@ function _spellPreviewTargetSets(state, area){
     return out;
   }
   if(!state || !area?.size) return out;
+  if(window._spellHL?.atingidos) return out;   // a prévia de atingidos assume (anéis)
   const mode = window._modoMagia || window._modoMestreMira || window._modoThrowItem;
   const caster = mode?.caster || (state.players || []).find(p => String(p.id) === String(GS.myPid));
   if(!caster) return out;
@@ -49194,6 +49288,15 @@ function init3D(state){
   const spellReageAlvoMeshes = _mkOverlayPool(_mkPlano(new T.RingGeometry(TW * 0.40, TW * 0.495, 28),
     new T.MeshBasicMaterial({ color: 0xff2d55, opacity: 0.95, transparent: true, depthWrite: false, side: T.DoubleSide }),
     0.0165, _ehChao));
+  // Prévia de quem a área atinge: anel laranja (inimigo), vermelho (aliado ferido), verde (beneficiado).
+  const _anelAtingido = (hex, y) => _mkOverlayPool(_mkPlano(new T.RingGeometry(TW * 0.36, TW * 0.46, 28),
+    new T.MeshBasicMaterial({ color: hex, opacity: 0.95, transparent: true, depthWrite: false, side: T.DoubleSide, toneMapped: false }),
+    y, _ehChao));
+  const spellAtingidoMeshes = {
+    inimigo: _anelAtingido(0xff8c1a, 0.0170),
+    aliado: _anelAtingido(0xff2d55, 0.0172),
+    beneficiado: _anelAtingido(0x5fe08a, 0.0171),
+  };
 
   // ── Fogo persistente da Bola de Fogo: 1 brilho + 5 chamas + 14 brasas ────────
   // Eram 21 objetos com geometria e material PRÓPRIOS por casa de chão — 18.522
@@ -50185,7 +50288,7 @@ function init3D(state){
     weaponRangeMeshes,
     masterAttackRangeMeshes, masterAttackZoneMeshes, inspectorAttackMeshes, inspectorMoveMeshes, masterFootprintMeshes,
     masterHistoryAttackerMeshes, masterHistoryTargetMeshes,
-    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellReageMeshes, spellReageAlvoMeshes, spellLivingFlameBaixoFx, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx, spellLivingFlameFx,
+    spellRangeMeshes, spellZonaMeshes, spellDoubleMeshes, spellAreaMeshes, spellTargetMeshes, spellReageMeshes, spellReageAlvoMeshes, spellAtingidoMeshes, spellLivingFlameBaixoFx, spellEscuridaoMeshes, spellSilencioMeshes, spellFireFx, spellLivingFlameFx,
     dustPts, dustVel: _dVel, dustXZ: _dXZ, dustY: _dY,
     dustCount: DUST_N, dustCeil: DUST_CEIL,
     W, H, boardVisualSig, animFrame:null, resizeObs,

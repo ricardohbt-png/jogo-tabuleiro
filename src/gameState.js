@@ -1087,6 +1087,52 @@ const GS = (() => {
     return !(occupied && occupied.has(`${x},${y}`));
   }
 
+  // ── Prévia de quem a área atinge (spec 2026-11-26) ──────────────────────────
+  // Quem cada efeito de área atinge NO SERVIDOR: 'todos' (aliados também) ou
+  // 'aliados' (só beneficia o grupo). Efeito fora da tabela não marca ninguém
+  // (terreno, escuridão, silêncio). tools/test_previa_area_atingidos.py roda cada
+  // efeito no servidor e confere esta tabela: mudou um executor, mude aqui.
+  const AREA_ALCANCE = {
+    bola_fogo: 'todos', sono: 'todos', medo: 'todos', amaldicoar: 'todos', definhar: 'todos',
+    ira_rocha_ardente: 'todos', jato_ar: 'todos', lentidao: 'todos', relampago: 'todos',
+    prisao_chamas: 'todos', tempestade_ciclones: 'todos',
+    abencoar: 'aliados',
+    granada: 'todos', granada_superior: 'todos', bomba_incendiaria: 'todos', frasco_oleo: 'todos',
+  };
+
+  // Criaturas dentro de `casas` (Set ou lista de "x,y") que o efeito atinge.
+  // `visivel(x,y)` (opcional) filtra monstros que o jogador não enxerga.
+  // Devolve { alcance, inimigos:[{id,nome,tiles}], aliados:[...], beneficiados:[...] }.
+  function atingidosNaArea(state, casas, efeitoId, euId, visivel) {
+    const alcance = AREA_ALCANCE[efeitoId] || null;
+    const out = { alcance, inimigos: [], aliados: [], beneficiados: [] };
+    if (!state || !alcance || !casas) return out;
+    const dentro = casas instanceof Set ? casas : new Set(casas);
+    if (!dentro.size) return out;
+    const toca = (tiles) => tiles.some(t => dentro.has(`${t[0]},${t[1]}`));
+    const grupo = [];
+    for (const p of (state.players || [])) {
+      if (p && p.alive && Array.isArray(p.pos) && p.pos[0] >= 0 && !p.fora_masmorra && toca([p.pos]))
+        grupo.push({ id: p.id, nome: p.name, tiles: [p.pos] });
+      for (const a of ((p && p.animados) || [])) {
+        if (a && (a.vida_atual ?? 1) > 0 && Array.isArray(a.pos) && toca([a.pos]))
+          grupo.push({ id: a.id, nome: a.nome || a.name || '', tiles: [a.pos] });
+      }
+    }
+    for (const pr of (state.prisoners || [])) {
+      if (pr && pr.freed && !pr.salvo && Array.isArray(pr.pos) && toca([pr.pos]))
+        grupo.push({ id: pr.id, nome: pr.nome || pr.name || '', tiles: [pr.pos] });
+    }
+    if (alcance === 'aliados') { out.beneficiados = grupo; return out; }
+    out.aliados = grupo;
+    for (const m of (state.monsters || [])) {
+      if (!m || !(m.hp > 0) || !Array.isArray(m.pos) || m.invisivel_sombras) continue;
+      const tiles = monsterTiles(m).filter(t => !visivel || visivel(t[0], t[1]));
+      if (toca(tiles)) out.inimigos.push({ id: m.id, nome: m.name, tiles: monsterTiles(m) });
+    }
+    return out;
+  }
+
   // Casas ocupadas por um monstro. Os orientados legados 2×1 continuam em linha;
   // os retangulares usam comprimento para trás e largura perpendicular ao facing.
   function monsterTiles(m) {
@@ -4503,6 +4549,8 @@ const GS = (() => {
     // ── Linha de visão (paredes/portas barram ataques/magias à distância) ──
     hasLineOfSight,
     sombraDeObjetos,
+    AREA_ALCANCE,
+    atingidosNaArea,
     coberturaBaixa,
     setorAtaque,
     bonusPosicional,

@@ -125,8 +125,8 @@ console.log('\n[2] _reagePrever do game.js (executado)');
 console.log('\n[3] fiação no game.js');
 check('Relâmpago/Bola/Prisão/Raio Congelante mapeados', /_ELEMENTO_MIRA_MAGIA = \{ relampago: 'lightning', bola_fogo: 'fire', prisao_chamas: 'fire', raio_congelante: 'cold' \}/.test(GAME));
 check('óleo, Fogo Grego e Bomba Incendiária mapeados (piche não)', /_ELEMENTO_MIRA_ITEM = \{ frasco_oleo: 'fire', fogo_grego: 'fire', bomba_incendiaria: 'fire' \}/.test(GAME) && !/_ELEMENTO_MIRA_ITEM[^;]*frasco_piche/.test(GAME));
-check('_recomputarAreaMagia calcula a prévia antes de aplicar', /function _recomputarAreaMagia[^]*?window\._spellHL\.double = dbl;\n  _reagePrever\(area\);\n  _aplicarSpellHL\(\);/.test(GAME));
-check('_recomputarAreaThrow calcula a prévia', /function _recomputarAreaThrow[^]*?_reagePrever\(area\);\n  _aplicarSpellHL\(\);/.test(GAME));
+check('_recomputarAreaMagia calcula a prévia antes de aplicar', /function _recomputarAreaMagia[^]*?window\._spellHL\.double = dbl;\n  _reagePrever\(area\);\n  _atingidosPrever\(area\);\n  _aplicarSpellHL\(\);/.test(GAME));
+check('_recomputarAreaThrow calcula a prévia', /function _recomputarAreaThrow[^]*?_reagePrever\(area\);\n  _atingidosPrever\(area\);\n  _aplicarSpellHL\(\);/.test(GAME));
 check('arremesso de alvo único calcula a prévia no hover', /function _aimHoverThrow[^]*?area == null[^]*?_reagePrever\(valid/.test(GAME));
 check('status da mira ganha o texto da reação (magia e arremesso)', /_reageSufixo\(true\)/.test(GAME.split('function _aimHoverMagic')[1].split('function _aimHoverThrow')[0])
   && /_reageSufixo\(valid\)/.test(GAME.split('function _aimHoverThrow')[1].split('function _aimHoverHabilidadeTeste')[0]));
