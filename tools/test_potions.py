@@ -868,7 +868,7 @@ async def main():
           and "mira_falcao_bonus" not in player)
 
     alvo = {"id": "m1", "type": "goblin", "name": "Alvo", "hp": 30,
-            "ac": 12, "pos": [2, 0]}
+            "ac": 12, "pos": [2, 0], "facing": [-1, 0]}   # de frente para o herói
     arco = {"id": "arco_curto", "range": 6, "die": "1d6", "stat": "dex"}
     player["weapon"] = arco
     player.pop("mira_falcao_rodadas", None)

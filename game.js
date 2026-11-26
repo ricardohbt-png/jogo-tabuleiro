@@ -9509,6 +9509,93 @@ function _anelInimigo3D(){
   }
 }
 
+// ── Marca de frente (spec 2026-11-25) ────────────────────────────────────────
+// Cunha no chão, do lado para onde o peão olha: a frente protege; flanco e costas
+// dão bônus a quem ataca. Heróis em verde-água, o seu em dourado, monstros em vermelho.
+let _facingPreview = null;   // {pid, f}: direção em escolha na bússola (só visual)
+const _MARCA_COR = { eu: '#f0c867', heroi: '#5fd0c4', monstro: '#e5484d' };
+function _marcasFrenteEntidades(state, visionSet){
+  const out = [];
+  const pode = (x, y) => !visionSet || visionSet.has(`${x},${y}`);
+  const add = (id, tipo, tiles, f, cor) => {
+    const n = tiles.length;
+    const cx = tiles.reduce((s, t) => s + t[0], 0) / n, cy = tiles.reduce((s, t) => s + t[1], 0) / n;
+    const frente = Math.max(...tiles.map(t => (t[0] - cx) * f[0] + (t[1] - cy) * f[1])) + 0.5;
+    out.push({ id, tipo, cx, cy, f, frente, cor });
+  };
+  for(const p of (state.players || [])){
+    if(!p || !p.alive || p.fora_masmorra || !Array.isArray(p.pos) || p.pos[0] < 0 || !pode(p.pos[0], p.pos[1])) continue;
+    const f = (_facingPreview && _facingPreview.pid === p.id) ? _facingPreview.f : GS.facingDe(p);
+    add(p.id, 'heroi', [p.pos], f, p.id === GS.myPid ? _MARCA_COR.eu : _MARCA_COR.heroi);
+  }
+  for(const m of (state.monsters || [])){
+    if(!m || !(m.hp > 0) || !Array.isArray(m.pos) || m.invisivel_sombras || !pode(m.pos[0], m.pos[1])) continue;
+    add(m.id, 'monstro', GS.monsterTiles(m), GS.facingDe(m), _MARCA_COR.monstro);
+  }
+  return out;
+}
+function _desenharMarcasFrente2D(ctx, state, visionSet){
+  const marcas = _marcasFrenteEntidades(state, visionSet);
+  if(!marcas.length) return;
+  ctx.save();
+  for(const e of marcas){
+    const [fx, fy] = e.f, px = -fy, py = fx;
+    const bx = (e.cx + 0.5 + fx * (e.frente - 0.03)) * CELL, by = (e.cy + 0.5 + fy * (e.frente - 0.03)) * CELL;
+    const tx = bx + fx * CELL * 0.22, ty = by + fy * CELL * 0.22, w = CELL * 0.13;
+    ctx.globalAlpha = .88; ctx.fillStyle = e.cor; ctx.strokeStyle = 'rgba(0,0,0,.55)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(bx + px * w, by + py * w); ctx.lineTo(bx - px * w, by - py * w); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+  }
+  ctx.restore();
+}
+const MARCAS_FRENTE_MAX = 40;
+function _marcasFrentePool3D(){
+  if(g3.marcasFrentePool) return g3.marcasFrentePool;
+  const T = g3.T, grupo = new T.Group(), slots = [];
+  const geo = new T.BufferGeometry();
+  geo.setAttribute('position', new T.BufferAttribute(new Float32Array([-0.13, 0, 0, 0.13, 0, 0, 0, 0, 0.27]), 3));
+  geo.computeVertexNormals();
+  for(let i = 0; i < MARCAS_FRENTE_MAX; i++){
+    const mat = new T.MeshBasicMaterial({ color: 0xe5484d, transparent: true, opacity: .9, side: T.DoubleSide,
+      depthTest: false, depthWrite: false, toneMapped: false });
+    const mesh = new T.Mesh(geo, mat); mesh.renderOrder = 70; mesh.raycast = () => {}; mesh.visible = false; mesh.frustumCulled = false;
+    grupo.add(mesh); slots.push(mesh);
+  }
+  g3.scene.add(grupo);
+  g3.marcasFrentePool = { grupo, slots, geo };
+  return g3.marcasFrentePool;
+}
+function _marcasFrenteEsconder3D(){
+  if(g3 && g3.marcasFrentePool) for(const m of g3.marcasFrentePool.slots) m.visible = false;
+}
+function _marcasFrenteDispose3D(){
+  if(!g3 || !g3.marcasFrentePool) return;
+  const { grupo, slots, geo } = g3.marcasFrentePool;
+  for(const m of slots) m.material.dispose();
+  geo.dispose(); g3.scene.remove(grupo); g3.marcasFrentePool = null;
+}
+function _marcasFrenteAtualizar3D(){
+  if(!g3) return;
+  const st = GS.gameState;
+  if(!st || st.test_mode){ _marcasFrenteEsconder3D(); return; }
+  const marcas = _marcasFrenteEntidades(st, _guiaVisao3D(st)).slice(0, MARCAS_FRENTE_MAX);
+  if(!marcas.length){ _marcasFrenteEsconder3D(); return; }
+  const pool = _marcasFrentePool3D();
+  marcas.forEach((e, i) => {
+    const s = pool.slots[i];
+    // Herói 1×1 acompanha a miniatura durante o deslize; o resto usa a casa do estado.
+    const fig = e.tipo === 'heroi' ? getPeaoMesh(e.id) : null;
+    const gx = fig ? fig.position.x : e.cx;
+    const gz = fig ? fig.position.z : e.cy;
+    const [fx, fy] = e.f;
+    s.position.set(gx + fx * (e.frente - 0.03), topoSuperficie3D(st, Math.round(e.cx), Math.round(e.cy)) + 0.07, gz + fy * (e.frente - 0.03));
+    s.rotation.y = Math.atan2(fx, fy);
+    s.material.color.set(e.cor);
+    s.visible = true;
+  });
+  for(let i = marcas.length; i < pool.slots.length; i++) pool.slots[i].visible = false;
+}
+
 function _intencoesDesenhar2D(ctx, state, visionSet){
   const itens = _intencoesVisiveis(state, visionSet);
   if(!itens.length) return;
@@ -9608,6 +9695,18 @@ function _coberturaTooltipHTML(me, alvo, tx, ty){
   if(!me || !alvo || !GS.gameState) return '';
   const bonus = GS.coberturaBaixa(GS.gameState, me, alvo, [tx, ty]);
   return bonus ? `<br><span style="color:#9fc7ff">${t('ui.tabuleiro.cobertura_baixa', {bonus})}</span>` : '';
+}
+
+// Posição do atacante (spec 2026-11-25): costas/flanco/altura somam ao acerto.
+function _posicionalTooltipHTML(me, alvo){
+  if(!me || !alvo || !GS.gameState) return '';
+  const b = GS.bonusPosicional(GS.gameState, me, alvo);
+  if(!b.total) return '';
+  const partes = [];
+  if(b.costas) partes.push(t('ui.direcao.dica_costas', {bonus: b.costas}));
+  if(b.flanco) partes.push(t('ui.direcao.dica_flanco', {bonus: b.flanco}));
+  if(b.altura) partes.push(t('ui.direcao.dica_altura', {bonus: b.altura}));
+  return `<br><span style="color:#ffcf7a">${partes.join(' · ')}</span>`;
 }
 
 function _sombraTooltipHTML(tx, ty){
@@ -14034,6 +14133,7 @@ function renderMap(state){
   _drawDefeatVisuals2D(ctx, state, _agoraRelampago);
   _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
+  _desenharMarcasFrente2D(ctx, state, visionSet);
   _intencoesDesenhar2D(ctx, state, visionSet);
   _reacoesDesenhar2D(ctx, state, visionSet);
 }
@@ -30882,7 +30982,7 @@ function _autoTurnSchedule(state=GS.gameState, reset=false){
     }
     _autoTurnClearTimer();
     _autoTurnRefreshButton(latest);
-    endTurn();
+    endTurn({semBussola: true});
   }, AUTO_END_TURN_GRACE_MS);
   _autoEndTurnInterval = setInterval(() => _autoTurnRefreshButton(GS.gameState), 250);
   _autoTurnRefreshButton(state);
@@ -30906,7 +31006,83 @@ document.addEventListener('keydown', e => {
       && _autoEndTurnTimer) _autoTurnSchedule(GS.gameState, true);
 }, true);
 
-function endTurn(){
+// ── Bússola de direção ao encerrar o turno (spec 2026-11-25) ─────────────────
+// Escolhe para onde o herói olha. Frente = nenhum bônus a quem ataca; flanco +1;
+// costas +2. Setas/WASD escolhem, Enter confirma, Esc cancela (o turno segue).
+let _bussola = null;
+const _BUSSOLA_DIRS = [['N', [0, -1], '↑'], ['O', [-1, 0], '←'], ['L', [1, 0], '→'], ['S', [0, 1], '↓']];
+function _bussolaCabe(){
+  const st = GS.gameState, me = GS.me;
+  return !!(st && me && st.phase === 'playing' && GS.isMyTurn && me.alive && Array.isArray(me.pos)
+    && !st.test_mode && !GS.isMaster() && st.last_stand_pid !== me.id);
+}
+function _bussolaDiagramaHTML(f){
+  let html = '<div class="bussola-grade">';
+  for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){
+    if(!dx && !dy){ html += '<span class="bussola-eu">🧍</span>'; continue; }
+    const s = GS.setorAtaque({}, { pos: [1 + dx, 1 + dy], class_id: 'x' }, { pos: [1, 1], class_id: 'x', facing: f });
+    const bonus = s === 'costas' ? '+2' : s === 'flanco' ? '+1' : '0';
+    html += `<span class="bussola-${s}" title="${_esc(t('ui.direcao.setor_' + s))}">${bonus}</span>`;
+  }
+  return html + '</div>';
+}
+function _bussolaAtualizar(){
+  if(!_bussola) return;
+  const f = _bussola.f;
+  _facingPreview = { pid: GS.myPid, f };
+  _bussola.el.querySelectorAll('[data-dir]').forEach(b => b.classList.toggle('ativa', b.dataset.dir === f.join(',')));
+  _bussola.el.querySelector('.bussola-diagrama').innerHTML = _bussolaDiagramaHTML(f);
+  if(typeof _agendarChamas2D === 'function') _agendarChamas2D();
+}
+function _bussolaFechar(confirmar){
+  if(!_bussola) return;
+  const { el, onKey, f } = _bussola;
+  document.removeEventListener('keydown', onKey, true);
+  el.remove(); _bussola = null; _facingPreview = null;
+  if(confirmar){
+    const ok = GS.endTurn(f);
+    if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
+  } else if(typeof _agendarChamas2D === 'function') _agendarChamas2D();
+}
+function _bussolaAbrir(){
+  if(_bussola) return;
+  const el = document.createElement('div');
+  el.id = 'bussola-direcao'; el.className = 'bussola-direcao'; el.setAttribute('role', 'dialog');
+  el.setAttribute('aria-label', t('ui.direcao.titulo'));
+  const botoes = _BUSSOLA_DIRS.map(([id, d, seta]) =>
+    `<button type="button" class="bussola-seta" data-dir="${d.join(',')}" title="${_esc(t('ui.direcao.dir_' + id))}" aria-label="${_esc(t('ui.direcao.dir_' + id))}">${seta}<small>${id}</small></button>`).join('');
+  el.innerHTML = `<div class="bussola-titulo">${t('ui.direcao.titulo')}</div>
+    <div class="bussola-setas">${botoes}</div>
+    <div class="bussola-diagrama"></div>
+    <div class="bussola-legenda">${t('ui.direcao.legenda')}</div>
+    <div class="bussola-acoes">
+      <button type="button" class="bussola-ok">${t('ui.direcao.confirmar')}</button>
+      <button type="button" class="bussola-cancela">${t('ui.direcao.cancelar')}</button>
+    </div>`;
+  document.body.appendChild(el);
+  const mapa = { ArrowUp: [0, -1], w: [0, -1], W: [0, -1], ArrowDown: [0, 1], s: [0, 1], S: [0, 1],
+    ArrowLeft: [-1, 0], a: [-1, 0], A: [-1, 0], ArrowRight: [1, 0], d: [1, 0], D: [1, 0] };
+  const onKey = e => {
+    if(e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); _bussolaFechar(false); return; }
+    if(e.key === 'Enter' || e.key === ' '){
+      e.preventDefault(); e.stopImmediatePropagation();
+      if(!e.repeat) _bussolaFechar(true);
+      return;
+    }
+    const d = mapa[e.key];
+    if(d){ e.preventDefault(); e.stopImmediatePropagation(); _bussola.f = d.slice(); _bussolaAtualizar(); }
+  };
+  _bussola = { el, onKey, f: GS.facingDe(GS.me) };
+  document.addEventListener('keydown', onKey, true);
+  el.querySelectorAll('[data-dir]').forEach(b => b.addEventListener('click', () => {
+    _bussola.f = b.dataset.dir.split(',').map(Number); _bussolaAtualizar();
+  }));
+  el.querySelector('.bussola-ok').addEventListener('click', () => _bussolaFechar(true));
+  el.querySelector('.bussola-cancela').addEventListener('click', () => _bussolaFechar(false));
+  _bussolaAtualizar();
+}
+
+function endTurn(opcoes){
   const btn = $('btn-end-turn');
   // A validação visual continua sendo feita em renderMyPanel; esta guarda evita
   // que um clique atrasado envie um turno fora da vez do jogador.
@@ -30916,13 +31092,17 @@ function endTurn(){
   // servidor seleciona a próxima. Só a última fecha a janela. A decisão mora em
   // gameState.js; aqui só passamos a seleção visual atual.
   const peca = GS.animadoPendenteParaEncerrar(_prisSel ?? _animadoSel);
+  if(peca == null && !(opcoes && opcoes.semBussola) && _bussolaCabe()){
+    _bussolaAbrir();   // o jogador escolhe a direção; a bússola envia o end_turn
+    return;
+  }
   const ok = (peca != null) ? GS.encerrarAnimado(peca) : GS.endTurn();
   if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
 }
 
 // Mantém o comando de encerrar turno ligado mesmo se o código for carregado em
 // um contexto que não expõe funções globais para atributos onclick.
-$('btn-end-turn')?.addEventListener('click', endTurn);
+$('btn-end-turn')?.addEventListener('click', () => endTurn());
 
 // ── Ação Bônus — efeitos de item que consomem ação bônus (máx. 1/turno) ──────
 // Espelha BONUS_ACTION_EFFECTS em server.py — manter sincronizados.
@@ -34254,13 +34434,13 @@ function _gamepadRequestEndTurn(now){
   if(GS.animadoPendenteParaEncerrar(_prisSel ?? _animadoSel) != null){
     _clearGamepadEndTurnConfirm();
     _gamepadRumble('endTurn');
-    endTurn();
+    endTurn({semBussola: true});
     return;
   }
   if(now <= _gamepadEndTurnConfirmUntil){
     _clearGamepadEndTurnConfirm();
     _gamepadRumble('endTurn');
-    endTurn();
+    endTurn({semBussola: true});
     return;
   }
   _gamepadEndTurnConfirmUntil = now + GAMEPAD_END_TURN_CONFIRM_MS;
@@ -36010,7 +36190,7 @@ $('dungeon-canvas').addEventListener('mousemove', e=>{
     const canAtk=GS.isMyTurn&&myP&&!myP.action_done&&inRange&&lineClear&&GS.gameState.phase==='playing';
     const atkLabel=canAtk?`<br><span style="color:#f55">${_wRng!=null?'🏹':'⚔'} ${t('ui.tabuleiro.clique_atacar')}</span>`:'';
     tip.innerHTML=_monsterTooltipCompactHTML(monster)
-                  +_linhaPrevisaoAtaque(monster, tx, ty, myP)+atkLabel+_coberturaTooltipHTML(myP, monster, tx, ty);
+                  +_linhaPrevisaoAtaque(monster, tx, ty, myP)+atkLabel+_coberturaTooltipHTML(myP, monster, tx, ty)+_posicionalTooltipHTML(myP, monster);
     tip.style.display='block';
     tip.style.left=(e.clientX+14)+'px';
     tip.style.top=(e.clientY-10)+'px';
@@ -38393,6 +38573,7 @@ function _audioPanelEnsure(){
     +       '<p data-i18n-html="ui.ajuda.fome_sede"></p>'
     +       '<p data-i18n-html="ui.ajuda.camera"></p>'
     +       '<p data-i18n-html="ui.ajuda.intencao"></p>'
+    +       '<p data-i18n-html="ui.ajuda.direcao"></p>'
     +     '</div>'
     +     '<section class="cfg-help-controller"><h4 data-i18n="ui.ajuda.joystick_titulo">🎮 Joystick</h4>'
     +       '<p data-i18n-html="ui.ajuda.joystick_turno"></p><p data-i18n-html="ui.ajuda.joystick_camera"></p><p data-i18n-html="ui.ajuda.joystick_menu"></p>'
@@ -50179,6 +50360,7 @@ function dispose3D(){
   if(window.CombatScene) CombatScene.reset();
   _projetilLimparTodos();
   _intencoesDispose3D();
+  _marcasFrenteDispose3D();
   _reacoes3DDispose();
   for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
   for(const fx of g3._duetoFantasmaSombras?.values() || [])
@@ -50954,6 +51136,7 @@ function startLoop3D(){
     _intencoesAtualizar3D();
     _anelInimigo3D();
     _reacoes3DAtualizar();
+    _marcasFrenteAtualizar3D();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -59086,7 +59269,7 @@ function on3DMouseMove(e){
     tip.innerHTML=_monsterTooltipCompactHTML(monster) +
                   _linhaPrevisaoAtaque(monster, tx, ty, myP) +
                   (canA ?`<br><span style="color:#f88">${t('ui.tabuleiro.clique_seta_atacar')}</span>` : '') +
-                  _coberturaTooltipHTML(myP, monster, tx, ty);
+                  _coberturaTooltipHTML(myP, monster, tx, ty)+_posicionalTooltipHTML(myP, monster);
     tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY-10)+'px';
     el.style.cursor = canA ? 'crosshair' : 'default';
     g3.hoveredPos = [tx, ty];   // trigger hover-lift + vitrine light
