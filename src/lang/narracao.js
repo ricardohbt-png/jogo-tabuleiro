@@ -631,6 +631,10 @@ window.LANG_NARRACAO = {
     "en": "🌊 **{nome_criatura_criatura}** falls into the deep whirlpool, is trapped and loses the turn!",
     "pt": "🌊 **{nome_criatura_criatura}** cai no rodamoinho profundo, fica preso e perde o turno!"
   },
+  "narracao.camara_gas_ativa_area": {
+    "en": "☠️ The Gas Chamber fills the area around it for **{duracao}** round(s). Fortitude DC 13 is required at the start of each turn.",
+    "pt": "☠️ A Câmara de Gás preenche a área ao redor por **{duracao}** rodada(s). É preciso testar Fortitude CD 13 no início de cada turno."
+  },
   "narracao.camara_gas_ativa": {
     "en": "☠️ The Gas Chamber fills room **{sala}** for **{duracao}** round(s). Fortitude DC 13 is required at the start of each turn.",
     "pt": "☠️ A Câmara de Gás preenche a sala **{sala}** por **{duracao}** rodada(s). É preciso testar Fortitude CD 13 no início de cada turno."
