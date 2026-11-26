@@ -184,7 +184,7 @@ class TerrainReactions:
 
     def _rx_gas_tiles(self, zona):
         """Casas ocupadas pelo gás: a Câmara cobre o piso da sala; a Nuvem tem casas próprias."""
-        if zona.get("tipo") == "camara_gas":
+        if zona.get("tipo") == "camara_gas" and zona.get("room_id") is not None:
             sala = self._room_by_id(zona.get("room_id"))
             if not sala:
                 return set()

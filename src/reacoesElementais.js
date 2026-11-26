@@ -99,7 +99,7 @@
 
   // Casas cobertas por uma zona de gás ativa (Câmara = piso/porta da sala; Nuvem = casas próprias).
   function _casasDoGas(state, z) {
-    if (z.tipo === 'camara_gas') {
+    if (z.tipo === 'camara_gas' && z.room_id != null) {
       const sala = ((state && state.rooms) || []).find(r => String(r.id) === String(z.room_id));
       const out = [];
       if (!sala || !state.tiles) return out;

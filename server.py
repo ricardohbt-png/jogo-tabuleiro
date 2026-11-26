@@ -46727,8 +46727,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return
         if self._voo_imune_terreno(alvo):
             return
-        sala = self._room_by_id(zona.get("room_id"))
-        if not sala or not self._alvo_na_sala(alvo, sala):
+        if not self._alvo_no_gas(alvo, zona):
             return
         save_ok, d20, sb, stot = self._testar_save(alvo, "fortitude", _trap_cd(zona, ARMADILHAS["camara_gas"]))
         nome = alvo.get("name") or alvo.get("nome", "Alvo")
@@ -46750,24 +46749,78 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             efeitos_extra=[T("quadro.falhou_no_teste_de_fortitude_e_sofreu_de_dan", dano=dano)],
             tipo_id="camara_gas")
 
+    CAMARA_GAS_TETO_AREA = 60   # casas, quando a armadilha não está numa sala desenhada
+
+    def _area_fechada_em(self, pos, teto=None):
+        """Casas de chão ligadas a `pos` sem atravessar parede nem porta (BFS em
+        4 direções, até `teto` casas). É a "sala" de uma armadilha que o autor
+        colocou fora de qualquer sala desenhada."""
+        teto = teto or self.CAMARA_GAS_TETO_AREA
+        try:
+            x0, y0 = int(pos[0]), int(pos[1])
+        except (TypeError, ValueError, IndexError):
+            return []
+        tiles = self.tiles or []
+
+        def piso(x, y):
+            return 0 <= y < len(tiles) and 0 <= x < len(tiles[y]) and tiles[y][x] == FLOOR
+
+        if not piso(x0, y0):
+            return []
+        vistos, fila, out = {(x0, y0)}, [(x0, y0)], []
+        while fila and len(out) < teto:
+            x, y = fila.pop(0)
+            out.append([x, y])
+            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                v = (x + dx, y + dy)
+                if v not in vistos and piso(*v):
+                    vistos.add(v)
+                    fila.append(v)
+        return out
+
+    def _alvo_no_gas(self, alvo, zona):
+        """A criatura está dentro da Câmara: na sala dela ou, sem sala, nas casas gravadas."""
+        if zona.get("room_id") is not None:
+            sala = self._room_by_id(zona.get("room_id"))
+            return bool(sala) and self._alvo_na_sala(alvo, sala)
+        casas = {tuple(t) for t in (zona.get("tiles") or [])}
+        if not casas:
+            return False
+        if alvo.get("id") in self.monsters:
+            return any(tuple(t) in casas for t in self._monster_tiles(alvo))
+        pos = alvo.get("pos")
+        return isinstance(pos, (list, tuple)) and len(pos) >= 2 and (pos[0], pos[1]) in casas
+
     async def _disparar_camara_gas(self, acionador, arm, tipo):
-        """Ativa uma zona de gás que ocupa toda a sala da armadilha."""
+        """Ativa uma zona de gás que ocupa toda a sala da armadilha. Sem sala
+        desenhada ali, ocupa a área fechada por paredes e portas em volta dela."""
         sala = self._room_containing_point(arm.get("pos"))
-        if not sala:
+        casas = [] if sala else self._area_fechada_em(arm.get("pos"))
+        if not sala and not casas:
             return
         duracao = self._rolar_dado("1d6+1")
         zona = {
             "id": f"camara_gas_{arm['id']}", "tipo": "camara_gas",
-            "room_id": sala["id"], "duracao": duracao, "ativa": True,
+            "room_id": sala["id"] if sala else None, "duracao": duracao, "ativa": True,
             "criador": arm.get("criador"), "created_round": self.round_num,
             "dificuldade": arm.get("dificuldade"), "dano": arm.get("dano"),
         }
+        if not sala:
+            zona["tiles"] = casas
         self.zonas_especiais.append(zona)
-        await self.gm_say(T(
-            "narracao.camara_gas_ativa", sala=sala.get("id", "?"), duracao=duracao))
-        # A ativação afeta imediatamente todos que já estavam na sala,
+        if sala:
+            await self.gm_say(T(
+                "narracao.camara_gas_ativa", sala=sala.get("id", "?"), duracao=duracao))
+            alvos = self._alvos_na_sala_id(sala["id"])
+        else:
+            await self.gm_say(T("narracao.camara_gas_ativa_area", duracao=duracao))
+            alvos = [p for p in self.players.values() if p.get("alive")]
+            alvos += [m for m in self.monsters.values() if m.get("hp", 0) > 0]
+            alvos += [pr for pr in self._refens_no_mapa() if pr.get("freed")]
+            alvos = [a for a in alvos if self._alvo_no_gas(a, zona)]
+        # A ativação afeta imediatamente todos que já estavam na área,
         # incluindo quem pisou no quadrado da armadilha.
-        for alvo in self._alvos_na_sala_id(sala["id"]):
+        for alvo in alvos:
             await self._resolver_camara_gas_turno(alvo, zona)
 
     async def _processar_camara_gas_inicio_turno(self, alvo):

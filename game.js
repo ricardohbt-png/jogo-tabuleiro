@@ -11789,6 +11789,12 @@ function _fumacaTilesSala(state, roomId){
   return tiles;
 }
 
+// Casas da Câmara de Gás: o piso da sala ou, sem sala desenhada, as casas que o servidor gravou.
+function _fumacaTilesGas(state, z){
+  if(z.room_id == null) return Array.isArray(z.tiles) ? z.tiles : [];
+  return _fumacaTilesSala(state, z.room_id);
+}
+
 function _fumacaCriarNuvem({id,cx,cy,raio=1,now=performance.now(),gas=false,tiles=null,
   nova=false,persistente=true,expiraEm=null}){
   const pontos=Array.isArray(tiles)&&tiles.length?tiles:null;
@@ -11837,7 +11843,7 @@ function _fumacaSync(state){
     vivas.add(id);
     let n = _fumacaNuvens.get(id);
     if(!n){
-      const roomTiles=z.tipo==='nuvem_gas'?(Array.isArray(z.tiles)?z.tiles:null):isGas?_fumacaTilesSala(state,z.room_id):null;
+      const roomTiles=z.tipo==='nuvem_gas'?(Array.isArray(z.tiles)?z.tiles:null):isGas?_fumacaTilesGas(state,z):null;
       const xs=roomTiles?.length?roomTiles.map(t=>t[0]):null, ys=roomTiles?.length?roomTiles.map(t=>t[1]):null;
       const cx=isGas&&xs?(Math.min(...xs)+Math.max(...xs))/2:Number(z.cx);
       const cy=isGas&&ys?(Math.min(...ys)+Math.max(...ys))/2:Number(z.cy);
@@ -25376,6 +25382,10 @@ function _atualizarZonasMagia(state) {
                                   .map(z => ({ cx: z.cx, cy: z.cy, raio: z.raio || 1 }));
   const gasTiles = new Set();
   for (const z of zz.filter(z => z.ativa && z.tipo === 'camara_gas')) {
+    if (z.room_id == null) {   // sem sala desenhada: casas gravadas pelo servidor
+      for (const c of (z.tiles || [])) gasTiles.add(`${c[0]},${c[1]}`);
+      continue;
+    }
     const room = (state.rooms || []).find(r => String(r.id) === String(z.room_id));
     if (!room) continue;
     for (let y = room.y; y < room.y + room.h; y++) {
