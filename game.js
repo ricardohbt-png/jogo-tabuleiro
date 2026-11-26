@@ -14137,6 +14137,7 @@ function renderMap(state){
   _drawCooperativeMarkers2D(ctx, state, visionSet);
   _guiaDesenhar2D(ctx, state, visionSet);
   _desenharMarcasFrente2D(ctx, state, visionSet);
+  _desenharSetoresDirecao2D(ctx, state);
   _intencoesDesenhar2D(ctx, state, visionSet);
   _reacoesDesenhar2D(ctx, state, visionSet);
 }
@@ -31021,7 +31022,6 @@ document.addEventListener('keydown', e => {
 // Escolhe para onde o herói olha. Frente = nenhum bônus a quem ataca; flanco +1;
 // costas +2. Setas/WASD escolhem, Enter confirma, Esc cancela (o turno segue).
 let _bussola = null;
-const _BUSSOLA_DIRS = [['N', [0, -1], '↑'], ['O', [-1, 0], '←'], ['L', [1, 0], '→'], ['S', [0, 1], '↓']];
 // A bússola só pergunta em combate (monstro vivo alertado ou procurando, o mesmo critério
 // do auto-encerrar) ou quando a lição de treinamento a pede. Na exploração o turno acaba
 // direto, mantendo a direção atual: perguntar toda rodada viraria atrito.
@@ -31055,22 +31055,82 @@ function _bussolaCabe(){
   return !!(st && me && st.phase === 'playing' && GS.isMyTurn && me.alive && Array.isArray(me.pos)
     && !st.test_mode && !GS.isMaster() && st.last_stand_pid !== me.id && _bussolaEmCombate(st));
 }
-function _bussolaDiagramaHTML(f){
-  let html = '<div class="bussola-grade">';
+// Tom no chão das 8 casas vizinhas conforme o setor (frente/flanco/costas) de quem ataca
+// vindo dali, para a direção que está sendo escolhida. Só existe durante a escolha.
+const _SETOR_COR = { costas: '#ff5a3c', flanco: '#ffd23c', frente: '#5fd0c4' };
+const _SETOR_ALFA = { costas: .40, flanco: .30, frente: .10 };
+function _setoresDaEscolha(state){
+  if(!_bussola || !state || !Array.isArray(state.tiles)) return [];
+  const me = GS.me;
+  if(!me || !Array.isArray(me.pos)) return [];
+  const out = [];
   for(let dy = -1; dy <= 1; dy++) for(let dx = -1; dx <= 1; dx++){
-    if(!dx && !dy){ html += '<span class="bussola-eu">🧍</span>'; continue; }
-    const s = GS.setorAtaque({}, { pos: [1 + dx, 1 + dy], class_id: 'x' }, { pos: [1, 1], class_id: 'x', facing: f });
-    const bonus = s === 'costas' ? '+2' : s === 'flanco' ? '+1' : '0';
-    html += `<span class="bussola-${s}" title="${_esc(t('ui.direcao.setor_' + s))}">${bonus}</span>`;
+    if(!dx && !dy) continue;
+    const x = me.pos[0] + dx, y = me.pos[1] + dy;
+    const v = state.tiles[y] && state.tiles[y][x];
+    if(v == null || v === TILE_WALL) continue;
+    const setor = GS.setorAtaque({}, { pos: [1 + dx, 1 + dy], class_id: 'x' }, { pos: [1, 1], class_id: 'x', facing: _bussola.f });
+    out.push({ x, y, setor });
   }
-  return html + '</div>';
+  return out;
+}
+function _desenharSetoresDirecao2D(ctx, state){
+  const casas = _setoresDaEscolha(state);
+  if(!casas.length) return;
+  ctx.save();
+  for(const c of casas){
+    ctx.globalAlpha = _SETOR_ALFA[c.setor]; ctx.fillStyle = _SETOR_COR[c.setor];
+    ctx.fillRect(c.x * CELL + 2, c.y * CELL + 2, CELL - 4, CELL - 4);
+  }
+  ctx.restore();
+}
+function _setoresPool3D(){
+  if(g3.setoresPool) return g3.setoresPool;
+  const T = g3.T, grupo = new T.Group(), slots = [];
+  const geo = new T.PlaneGeometry(0.92, 0.92); geo.rotateX(-Math.PI / 2);
+  for(let i = 0; i < 8; i++){
+    const mat = new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .3, depthTest: false,
+      depthWrite: false, toneMapped: false });
+    const m = new T.Mesh(geo, mat); m.renderOrder = 65; m.raycast = () => {}; m.visible = false; m.frustumCulled = false;
+    grupo.add(m); slots.push(m);
+  }
+  g3.scene.add(grupo);
+  g3.setoresPool = { grupo, slots, geo };
+  return g3.setoresPool;
+}
+function _setoresAtualizar3D(){
+  if(!g3) return;
+  const pool = g3.setoresPool;
+  const st = GS.gameState;
+  const casas = _bussola && st ? _setoresDaEscolha(st) : [];
+  if(!casas.length){ if(pool) for(const m of pool.slots) m.visible = false; return; }
+  const p = _setoresPool3D();
+  casas.forEach((c, i) => {
+    const m = p.slots[i];
+    m.position.set(c.x, topoSuperficie3D(st, c.x, c.y) + 0.06, c.y);
+    m.material.color.set(_SETOR_COR[c.setor]); m.material.opacity = _SETOR_ALFA[c.setor];
+    m.visible = true;
+  });
+  for(let i = casas.length; i < p.slots.length; i++) p.slots[i].visible = false;
+}
+function _setoresDispose3D(){
+  if(!g3 || !g3.setoresPool) return;
+  const { grupo, slots, geo } = g3.setoresPool;
+  for(const m of slots) m.material.dispose();
+  geo.dispose(); g3.scene.remove(grupo); g3.setoresPool = null;
+}
+// O próprio boneco gira em tempo real enquanto a direção é escolhida (só no 3D; no 2D
+// a marca de frente no chão faz esse papel).
+function _bussolaGirarPeao(f){
+  if(!g3 || !mode3D) return;
+  const fig = getPeaoMesh(GS.myPid);
+  if(fig && fig.userData && fig.userData.giraRaiz) _girarRaizPeao3D(fig, _facingToRotY(f));
 }
 function _bussolaAtualizar(){
   if(!_bussola) return;
   const f = _bussola.f;
   _facingPreview = { pid: GS.myPid, f };
-  _bussola.el.querySelectorAll('[data-dir]').forEach(b => b.classList.toggle('ativa', b.dataset.dir === f.join(',')));
-  _bussola.el.querySelector('.bussola-diagrama').innerHTML = _bussolaDiagramaHTML(f);
+  _bussolaGirarPeao(f);
   if(typeof _agendarChamas2D === 'function') _agendarChamas2D();
 }
 function _bussolaFechar(confirmar){
@@ -31078,35 +31138,30 @@ function _bussolaFechar(confirmar){
   const { el, onKey, onWheel, f } = _bussola;
   document.removeEventListener('keydown', onKey, true);
   document.removeEventListener('wheel', onWheel, true);
-  el.remove(); _bussola = null; _facingPreview = null;
-  _bussolaMarcarVista();   // o aviso de primeira vez aparece uma só vez por navegador
+  if(el) el.remove();
+  _bussola = null; _facingPreview = null;
   if(confirmar){
+    _bussolaMarcarVista();   // a dica de primeira vez some depois da primeira confirmação
     const ok = GS.endTurn(f);
     if(!ok) toast(t('ui.conexao.sem_servidor'), 'var(--red)');
-  } else if(typeof _agendarChamas2D === 'function') _agendarChamas2D();
+  } else {
+    _bussolaGirarPeao(GS.facingDe(GS.me));   // cancelou: o boneco volta a olhar como antes
+    if(typeof _agendarChamas2D === 'function') _agendarChamas2D();
+  }
 }
 const _BUSSOLA_VISTA_KEY = 'lfh_bussola_vista';
 function _bussolaJaVista(){ try{ return localStorage.getItem(_BUSSOLA_VISTA_KEY) === '1'; }catch(e){ return true; } }
 function _bussolaMarcarVista(){ try{ localStorage.setItem(_BUSSOLA_VISTA_KEY, '1'); }catch(e){} }
 function _bussolaAbrir(){
   if(_bussola) return;
-  const primeiraVez = !_bussolaJaVista();
-  const el = document.createElement('div');
-  el.id = 'bussola-direcao'; el.className = 'bussola-direcao'; el.setAttribute('role', 'dialog');
-  el.setAttribute('aria-label', t('ui.direcao.titulo'));
-  const botoes = _BUSSOLA_DIRS.map(([id, d, seta]) =>
-    `<button type="button" class="bussola-seta" data-dir="${d.join(',')}" title="${_esc(t('ui.direcao.dir_' + id))}" aria-label="${_esc(t('ui.direcao.dir_' + id))}">${seta}<small>${id}</small></button>`).join('');
-  el.innerHTML = `<div class="bussola-titulo">${t('ui.direcao.titulo')}</div>
-    <div class="bussola-setas">${botoes}</div>
-    <div class="bussola-diagrama"></div>
-    <div class="bussola-legenda">${t('ui.direcao.legenda')}</div>
-    ${primeiraVez ? `<div class="bussola-novo">💡 ${t('ui.direcao.primeira_vez')}</div>` : ''}
-    <div class="bussola-dica">${t('ui.direcao.dica_entrada')}</div>
-    <div class="bussola-acoes">
-      <button type="button" class="bussola-ok">${t('ui.direcao.confirmar')}</button>
-      <button type="button" class="bussola-cancela">${t('ui.direcao.cancelar')}</button>
-    </div>`;
-  document.body.appendChild(el);
+  // Sem quadro: só uma dica discreta (e só até a primeira confirmação).
+  let el = null;
+  if(!_bussolaJaVista()){
+    el = document.createElement('div');
+    el.id = 'bussola-direcao'; el.className = 'bussola-dica-rodape';
+    el.textContent = t('ui.direcao.dica_rodape');
+    document.body.appendChild(el);
+  }
   const mapa = { ArrowUp: [0, -1], w: [0, -1], W: [0, -1], ArrowDown: [0, 1], s: [0, 1], S: [0, 1],
     ArrowLeft: [-1, 0], a: [-1, 0], A: [-1, 0], ArrowRight: [1, 0], d: [1, 0], D: [1, 0] };
   const onKey = e => {
@@ -31133,11 +31188,6 @@ function _bussolaAbrir(){
   _bussola = { el, onKey, onWheel, f: GS.facingDe(GS.me), padDir: '' };
   document.addEventListener('keydown', onKey, true);
   document.addEventListener('wheel', onWheel, { capture: true, passive: false });
-  el.querySelectorAll('[data-dir]').forEach(b => b.addEventListener('click', () => {
-    _bussola.f = b.dataset.dir.split(',').map(Number); _bussolaAtualizar();
-  }));
-  el.querySelector('.bussola-ok').addEventListener('click', () => _bussolaFechar(true));
-  el.querySelector('.bussola-cancela').addEventListener('click', () => _bussolaFechar(false));
   _bussolaAtualizar();
 }
 
@@ -31161,6 +31211,7 @@ function endTurn(opcoes){
   // que um clique atrasado envie um turno fora da vez do jogador.
   if(!btn || btn.disabled) return;
   getAudioContext();
+  if(_bussola){ _bussolaFechar(true); return; }   // segunda vez: confirma a direção escolhida
   // Na janela pós-turno do mago, este botão encerra a vez de UMA peça e o
   // servidor seleciona a próxima. Só a última fecha a janela. A decisão mora em
   // gameState.js; aqui só passamos a seleção visual atual.
@@ -50474,6 +50525,7 @@ function dispose3D(){
   _projetilLimparTodos();
   _intencoesDispose3D();
   _marcasFrenteDispose3D();
+  _setoresDispose3D();
   _reacoes3DDispose();
   for(const anim of _duetoMarcialAnims) _duetoMarcialDispose3D(anim);
   for(const fx of g3._duetoFantasmaSombras?.values() || [])
@@ -51250,6 +51302,7 @@ function startLoop3D(){
     _anelInimigo3D();
     _reacoes3DAtualizar();
     _marcasFrenteAtualizar3D();
+    _setoresAtualizar3D();
 
     // ── Sombra direcional congelada: só redesenha o shadow map quando algo mexeu ─
     // Enquanto a cena está parada (orbitando a câmera, lendo o HUD) o mapa de
@@ -54339,7 +54392,7 @@ function renderMap3D(state){
         if(p.training_ally) f.add(_makeAprendizTag3D(p));
         return f;
       }, px, py, p.altura);
-    _sincronizarPeaoHeroi3D(_figInvis, isCur, p.facing, !!pSel);
+    _sincronizarPeaoHeroi3D(_figInvis, isCur, (_facingPreview && _facingPreview.pid === p.id) ? _facingPreview.f : p.facing, !!pSel);
     // Metamorfoseado: a direção mora no modelo de monstro, como num monstro.
     if(formaVisual) _setMonsterMeshFacing3D(_figInvis, p.facing);
     _figInvis.userData.magicalInvisible = !!p.invisivel_magico || _invisibilidadeAnimAtiva(p.id);

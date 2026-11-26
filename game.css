@@ -2410,27 +2410,6 @@ body.preview-mode #map-panel { width:100%; }
 .tam-tab.tam-end:disabled { border-color: #ead4a544; background: linear-gradient(120deg, #28374966, #27314033); }
 
 /* Bússola de direção ao encerrar o turno (spec 2026-11-25) */
-.bussola-direcao { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); z-index: 9000;
-  background: rgba(20,18,26,.96); border: 2px solid #f0c867; border-radius: 12px; padding: 12px 16px;
-  color: #eee; text-align: center; box-shadow: 0 8px 30px rgba(0,0,0,.6); min-width: 230px; }
-.bussola-titulo { font-weight: 700; color: #f0c867; margin-bottom: 8px; }
-.bussola-setas { display: flex; gap: 6px; justify-content: center; margin-bottom: 8px; }
-.bussola-seta { width: 44px; height: 44px; font-size: 1.3rem; background: #2a2733; color: #eee; border: 2px solid #555;
-  border-radius: 8px; cursor: pointer; line-height: 1; }
-.bussola-seta small { display: block; font-size: .55rem; opacity: .7; }
-.bussola-seta.ativa { border-color: #f0c867; background: #4a3d12; }
-.bussola-grade { display: grid; grid-template-columns: repeat(3, 30px); gap: 3px; justify-content: center; margin: 4px auto; }
-.bussola-grade span { height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 5px;
-  font-size: .8rem; font-weight: 700; }
-.bussola-frente { background: #24412f; color: #9be3b0; }
-.bussola-flanco { background: #5a4616; color: #ffd978; }
-.bussola-costas { background: #5a1d22; color: #ff9aa0; }
-.bussola-eu { background: transparent; }
-.bussola-legenda { font-size: .7rem; opacity: .75; margin: 6px 0 8px; max-width: 260px; }
-.bussola-acoes { display: flex; gap: 8px; justify-content: center; }
-.bussola-acoes button { padding: 6px 14px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 700; }
-.bussola-ok { background: #2e8b57; color: #fff; }
-.bussola-cancela { background: #444; color: #ddd; }
-.bussola-dica { font-size: .68rem; color: #9fb8d4; margin: -2px 0 8px; max-width: 260px; }
-.bussola-novo { font-size: .72rem; color: #ffe08a; background: rgba(240,200,103,.12); border: 1px solid rgba(240,200,103,.4);
-  border-radius: 8px; padding: 6px 8px; margin: 0 0 8px; max-width: 260px; }
+.bussola-dica-rodape { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 9000;
+  background: rgba(20,18,26,.82); border: 1px solid rgba(240,200,103,.55); border-radius: 8px; padding: 6px 12px;
+  color: #f4e6b8; font-size: .78rem; max-width: min(92vw, 560px); text-align: center; pointer-events: none; }
