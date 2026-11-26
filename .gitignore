@@ -44,3 +44,4 @@ assets/pawns/_tripo_tmp/
 # Miniaturas geradas pelo servidor (?w=)
 .cache/
 backup_nevoa/
+backup_atualizacao/
