@@ -31014,10 +31014,21 @@ document.addEventListener('keydown', e => {
 // costas +2. Setas/WASD escolhem, Enter confirma, Esc cancela (o turno segue).
 let _bussola = null;
 const _BUSSOLA_DIRS = [['N', [0, -1], '↑'], ['O', [-1, 0], '←'], ['L', [1, 0], '→'], ['S', [0, 1], '↓']];
+// A bússola só pergunta em combate (monstro vivo alertado ou procurando, o mesmo critério
+// do auto-encerrar) ou quando a lição de treinamento a pede. Na exploração o turno acaba
+// direto, mantendo a direção atual: perguntar toda rodada viraria atrito.
+function _bussolaPedidaPelaLicao(st){
+  if(!st?.tutorial?.training) return false;
+  const me = (st.players || []).find(p => String(p.id) === String(GS.myPid));
+  return !!st.tutorial?.por_classe?.[me?.class_id]?.requer_escolher_direcao;
+}
+function _bussolaEmCombate(st){
+  return _autoTurnCombatActive(st) || _bussolaPedidaPelaLicao(st);
+}
 function _bussolaCabe(){
   const st = GS.gameState, me = GS.me;
   return !!(st && me && st.phase === 'playing' && GS.isMyTurn && me.alive && Array.isArray(me.pos)
-    && !st.test_mode && !GS.isMaster() && st.last_stand_pid !== me.id);
+    && !st.test_mode && !GS.isMaster() && st.last_stand_pid !== me.id && _bussolaEmCombate(st));
 }
 function _bussolaDiagramaHTML(f){
   let html = '<div class="bussola-grade">';

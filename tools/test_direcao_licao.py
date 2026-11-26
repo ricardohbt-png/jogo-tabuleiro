@@ -146,6 +146,21 @@ def main():
     achou, passo, atual = run(campo((50, 15)))
     check("atacar pelo FLANCO (casa [50,15]) não avança o passo", passo == 2)
 
+    print("\n[7] O game_state avisa o cliente quando a lição pede a bússola")
+    def payload(tipo):
+        r = sala_treino([dict(lic_dir(), tarefa={"tipo": tipo, "vezes": 1, "texto_curto": "x"})])
+        p = heroi(r)
+        return r._tutorial_payload()["por_classe"]["warrior"]
+    dir_ = payload("escolher_direcao")
+    check("lição escolher_direcao: requer_escolher_direcao e fim de turno manual",
+          dir_["requer_escolher_direcao"] is True and dir_["requer_encerrar_turno_manual"] is True)
+    fim = payload("encerrar_turno")
+    check("lição encerrar_turno: manual, mas sem pedir a bússola",
+          fim["requer_encerrar_turno_manual"] is True and fim["requer_escolher_direcao"] is False)
+    atk = payload("atacar")
+    check("lição de ataque: nenhum dos dois",
+          atk["requer_encerrar_turno_manual"] is False and atk["requer_escolher_direcao"] is False)
+
     print(f"\nFalhas: {len(FALHAS)}")
     sys.exit(1 if FALHAS else 0)
 
