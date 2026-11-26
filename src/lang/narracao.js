@@ -3573,6 +3573,10 @@ window.LANG_NARRACAO = {
   "narracao.posicao_altura": {
     "en": "⛰️ High ground: +{bonus} to hit.",
     "pt": "⛰️ Vantagem de altura: +{bonus} no acerto."
+  },
+  "narracao.monstro_contorna": {
+    "en": "🐾 {monstro} circles around {alvo} looking for an opening.",
+    "pt": "🐾 {monstro} contorna {alvo} procurando uma brecha."
   }
 };
 Object.assign(window.LANG_STRINGS, window.LANG_NARRACAO);

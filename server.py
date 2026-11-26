@@ -247,6 +247,10 @@ MAP_H = 30
 # Combate vertical: a grade continua autoritativa em pos=[x,y]; altura é um
 # eixo discreto adicional, usado pelo alcance e pela representação 3D.
 ALTURA_MIN = 0
+# Monstros "espertos" que contornam o alvo (spec 2026-11-25-ia-flanqueio).
+FLANQUEADORES_TIPOS = frozenset({"bandido", "goblin_assassino", "lobo_cinzento",
+                                 "lobo_cinzento_customizado", "bugbear_sombras"})
+AI_PERFIS_FLANQUEADORES = frozenset({"tatico", "emboscador", "cacador"})
 BONUS_POSICIONAL_MAX = 4   # teto da soma costas/flanco + altura (spec 2026-11-25)
 ALTURA_MAX = 10
 ALTURA_INICIAL_VOO = 2
@@ -53077,6 +53081,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         """Encontra uma posição de tiro/conjuração antes da ação ofensiva."""
         if self._monster_ai_role(m) not in {"atirador", "suporte", "controlador"}:
             return None
+        if self._monster_flanqueia(m) and not any(a.get("range") for a in m.get("attacks", [])):
+            return None   # flanqueador de contato não foge da adjacência: ele a procura
         if m.get("boss") or m.get("authored_boss") or m.get("undead"):
             return None
         alvo = (target_obj or {}).get("obj") or {}
@@ -53313,6 +53319,103 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             if sabe and isinstance(arm.get("pos"), list) and len(arm["pos"]) >= 2:
                 conhecido.add((arm["pos"][0], arm["pos"][1]))
         return conhecido
+
+    # ── IA de flanqueio (spec 2026-11-25-ia-flanqueio) ─────────────────────────
+    def _monster_flanqueia(self, m):
+        """Monstro 'esperto': contorna o alvo para atacar pelas costas/flanco.
+        `flanqueia` na ficha manda (False desliga); senão tipo da lista ou perfil
+        personalizado tático/emboscador/caçador."""
+        if m.get("flanqueia") is False:
+            return False
+        if m.get("flanqueia"):
+            return True
+        if m.get("type") in FLANQUEADORES_TIPOS:
+            return True
+        return bool(m.get("_personalizado") and m.get("ai_type") in AI_PERFIS_FLANQUEADORES)
+
+    async def _monster_flank_premove(self, m, targets):
+        """Antes da IA normal: se existe uma casa adjacente ao alvo, ao alcance do
+        movimento que sobra, com costas/flanco melhor que a atual, vai para lá.
+        Nunca perde o ataque (a casa é adjacente) e gasta o mesmo orçamento
+        (`_water_moves_left`) que a IA usaria. True se se moveu."""
+        if not self._monster_flanqueia(m):
+            return False
+        if list(m.get("size") or [1, 1]) != [1, 1] or m.get("oriented"):
+            return False
+        ataques = m.get("attacks") or []
+        if any(a.get("range") for a in ataques):
+            return False
+        for a in ataques:
+            alc = a.get("reach", 1)
+            if not str(alc).isdigit() or int(alc) > 1:
+                return False                        # arma de haste/rótulo: não é de contato
+        alvo_obj = self._get_monster_primary_target(m, targets)
+        if not alvo_obj or alvo_obj.get("kind") not in ("player", "animado"):
+            return False
+        alvo = alvo_obj["obj"]
+        tpos = alvo.get("pos")
+        if not tpos or len(tpos) != 2:
+            return False
+        orcamento = int(m.get("_water_moves_left", m.get("movement", 0)) or 0)
+        if orcamento <= 0:
+            return False
+        perigosas = set(self._monster_known_hazard_tiles(m))
+        reservadas = getattr(self, "_monster_ai_reserved_tiles", set())
+        inicio = tuple(m["pos"])
+        dist, ant, fila = {inicio: 0}, {inicio: None}, [inicio]
+        cab = 0
+        while cab < len(fila):
+            atual = fila[cab]; cab += 1
+            if dist[atual] >= orcamento:
+                continue
+            for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0)):
+                prox = (atual[0] + dx, atual[1] + dy)
+                if prox in dist or prox in perigosas or prox in reservadas:
+                    continue
+                if not self._monster_can_occupy(m, prox[0], prox[1], None):
+                    continue
+                dist[prox] = dist[atual] + 1
+                ant[prox] = atual
+                fila.append(prox)
+        atk_ref = ataques[0] if ataques else {}
+        pontos = {"frente": 0, "flanco": 1, "costas": 2}
+
+        def pontuar(t):
+            # Corpo a corpo de monstro é CARDINAL: só as 4 casas ortogonais ao alvo
+            # servem (a mesma regra de `_monster_attack_in_range`, com a altura).
+            if abs(t[0] - tpos[0]) + abs(t[1] - tpos[1]) != 1:
+                return None
+            fantasma = dict(m); fantasma["pos"] = [t[0], t[1]]
+            if not self._monster_attack_in_range(fantasma, tpos, {"reach": 1}):
+                return None
+            if t != inicio and not self._monster_attack_height_ok(fantasma, alvo, atk_ref):
+                return None
+            return pontos[self._setor_ataque({"pos": [t[0], t[1]]}, alvo)]
+        atual_pts = pontuar(inicio)
+        melhor, melhor_pts = None, -1
+        for t in dist:
+            if t == inicio:
+                continue
+            pts = pontuar(t)
+            if pts is None:
+                continue
+            if pts > melhor_pts or (pts == melhor_pts and dist[t] < dist[melhor]):
+                melhor, melhor_pts = t, pts
+        if melhor is None or melhor_pts <= 0 or melhor_pts <= (atual_pts if atual_pts is not None else -1):
+            return False
+        caminho, passo = [], melhor
+        while passo is not None and passo != inicio:
+            caminho.append(passo); passo = ant[passo]
+        caminho.reverse()
+        antes = list(m["pos"])
+        for px, py in caminho:
+            pos_antes = list(m["pos"])
+            await self._monster_move_step(m, [px, py])
+            if m["pos"] != [px, py] or m.get("hp", 0) <= 0:
+                break
+        if m["pos"] != antes:
+            await self.gm_say(T("narracao.monstro_contorna", monstro=nome_criatura(m), alvo=nome_criatura(alvo)))
+        return m["pos"] != antes
 
     async def _monster_move_to_goal(self, m, goal, avoid_tiles=None):
         """Move um passo pelo caminho até goal, usando BFS quando necessário."""
@@ -58632,6 +58735,7 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         personalidade_alvo = self._get_monster_primary_target(m, targets)
         if await self._monster_try_personality_behavior(m, personalidade_alvo):
             return
+        await self._monster_flank_premove(m, targets)   # esperto: contorna antes de atacar (depois da personalidade)
         # Ficha personalizada: os perfis genéricos do editor (AI_PROFILES) usam o
         # comportamento reutilizável de `_run_profile_ai`. Mas o editor também
         # deixa escolher o `ai_type` de uma ESPÉCIE nativa (é o que
