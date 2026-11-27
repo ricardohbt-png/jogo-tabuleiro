@@ -28621,6 +28621,7 @@ function _renderBarraAcoes(state, hero){
     bar.dataset.pronta = '1'; bar.dataset.magias = String(temMagias);
     bar.innerHTML = `${temMagias ? `<div class="tam-slot"><button type="button" class="tam-tab" data-menu="magias" data-gamepad-action="activate" aria-expanded="false">✨ <span>${_esc(t('ui.menuacoes.magias'))}</span></button><div class="tam-pop" data-menu="magias" hidden></div></div>` : ''}
       <div class="tam-slot"><button type="button" class="tam-tab" data-menu="habilidades" data-gamepad-action="activate" aria-expanded="false">⚔️ <span>${_esc(t('ui.menuacoes.habilidades'))}</span></button><div class="tam-pop" data-menu="habilidades" hidden></div></div>
+      <button type="button" class="tam-tab tam-itens" data-gamepad-action="activate" title="${_esc(t('ui.menuacoes.itens_dica'))}">🎒 <span>${_esc(t('ui.menuacoes.itens'))}</span></button>
       <button type="button" class="tam-tab tam-desfazer" data-gamepad-action="activate" title="${_esc(t('ui.menuacoes.desfazer_dica'))}">↶ <span>${_esc(t('ui.menuacoes.desfazer'))}</span></button>
       <button type="button" class="tam-tab tam-esperar" data-gamepad-action="activate" title="${_esc(t('ui.menuacoes.esperar_dica'))}">⏳ <span>${_esc(t('ui.menuacoes.esperar'))}</span></button>
       <button type="button" class="tam-tab tam-end" data-gamepad-action="activate">⏭ <span>${_esc(t('ui.menuacoes.encerrar'))}</span></button>`;
@@ -28633,6 +28634,8 @@ function _renderBarraAcoes(state, hero){
       _barraSincronizar();
     });
     bar.querySelector('.tam-end').onclick = () => { _barraFechar(); document.getElementById('btn-end-turn')?.click(); };
+    // Atalho para o inventário completo (o mesmo do I); clicar de novo com ele aberto fecha.
+    bar.querySelector('.tam-itens').onclick = () => { _barraFechar(); if(typeof InventoryModal !== 'undefined') InventoryModal.toggle(GS.myPid); };
     bar.querySelector('.tam-desfazer').onclick = () => { _barraFechar(); if(!GS.desfazerMovimento()) toast(t('ui.conexao.sem_servidor'), 'var(--red)'); };
     bar.querySelector('.tam-esperar').onclick = () => { _barraFechar(); if(!GS.esperarVez()) toast(t('ui.conexao.sem_servidor'), 'var(--red)'); };
     const espBtn = bar.querySelector('.tam-esperar');
