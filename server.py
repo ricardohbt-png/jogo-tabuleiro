@@ -3071,13 +3071,18 @@ def create_savegame(name, owner, mode, campaign_file, has_master, group_id=None,
         "capitulo_atual": 1,
         "arquivado_por": [],
     }
+    # Limite de tempo por turno: no Solo ninguém espera a vez, então nasce desligado.
+    # Multiplayer (e jogo sem modo informado, como antes) nasce ligado; o anfitrião
+    # muda no ⚙️ e a escolha fica salva.
+    sg["turn_timer_enabled"] = sg["play_mode"] != "solo"
     if isinstance(inherited, dict):
         # Continuação é uma cópia: jamais compartilha referências nem altera a
         # campanha de origem.
         for key in ("campaign_phase", "world_location", "world_adventure_progress",
                     "world_adventure_route_progress", "dungeon_snapshots", "renome", "fatos",
                     "scene_conversations_done", "members", "characters", "slots",
-                    "shortcut_slots", "refugio", "hero_rooms", "ouro_compartilhado"):
+                    "shortcut_slots", "refugio", "hero_rooms", "ouro_compartilhado",
+                    "turn_timer_enabled"):
             if key in inherited:
                 sg[key] = deepcopy(inherited[key])
     ensure_campaign_schema(sg)
