@@ -53559,7 +53559,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             return True
         if m.get("type") in FLANQUEADORES_TIPOS:
             return True
-        return bool(m.get("_personalizado") and m.get("ai_type") in AI_PERFIS_FLANQUEADORES)
+        # O editor grava o perfil em `ai_profile` (e `ai_type` fica "agressivo"); o
+        # `ai_type` segue valendo para fichas feitas à mão que o usam.
+        return bool(m.get("_personalizado") and (m.get("ai_profile") in AI_PERFIS_FLANQUEADORES
+                                                  or m.get("ai_type") in AI_PERFIS_FLANQUEADORES))
 
     def _monster_flank_plan(self, m, alvo_obj):
         """Plano (SÓ LEITURA) de flanqueio: casa ortogonal ao alvo, alcançável com o
@@ -66361,6 +66364,10 @@ def _validate_custom_monster(raw):
         "ignora_obstaculos_voo": ignora_obstaculos_voo,
     }
     result["level"] = _monster_int(raw.get("level", 1), 1, 1, 20)
+    if isinstance(raw.get("flanqueia"), bool):
+        # Sim/Não do editor. Ausente = padrão (espécie e perfil de IA): não grava nada,
+        # para as fichas antigas ficarem idênticas.
+        result["flanqueia"] = raw["flanqueia"]
     if raw.get("class_id"):
         result["class_id"] = str(raw.get("class_id"))[:24]
     if typ == "gilo_dedos_sujos" and isinstance(raw.get("gilo_loadout"), dict):
@@ -66410,6 +66417,7 @@ def _validate_custom_monster(raw):
             "voo", "altura_inicial", "altura_max", "pode_alterar_altura", "custo_mov_altura", "ignora_obstaculos_voo",
             "assassino_loadout",
             "leonel_loadout",
+            "flanqueia",
         }
         for key, value in native_source.items():
             if key in editor_fields or key in {"_personalizado", "original_type"}:

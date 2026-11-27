@@ -279,6 +279,13 @@
     // perfil substituir o campo legado; use o rascunho nesse curto intervalo.
     out.ai_profile = get("me-ai_profile")?.value || draft.ai_profile || "agressivo";
     out.ai_tactics = [...root.querySelectorAll(".me-ai-tactic:checked")].map(el => el.value);
+    // Flanqueia: Sim/Não gravam o campo; Padrão o apaga (segue a espécie e o perfil).
+    const flqSel = get("me-flanqueia");
+    if (flqSel) {
+      if (flqSel.value === "sim") out.flanqueia = true;
+      else if (flqSel.value === "nao") out.flanqueia = false;
+      else delete out.flanqueia;
+    }
     out.ai_type = "agressivo";
     nums.forEach(k => out[k] = n(get("me-" + k)?.value, 0));
     out.movement = draft.movement_exception ? n(draft.movement, 6) : 6;
@@ -840,10 +847,14 @@
     if (aiControl && identityFields) {
       const selectedTactics = new Set(draft.ai_tactics || []);
       aiControl.outerHTML = `<label>Perfil de IA<select id="me-ai_profile">${AI_PROFILES.map(p => `<option value="${p.id}"${draft.ai_profile === p.id ? " selected" : ""}>${p.name}</option>`).join("")}</select><small id="me-ai-profile-desc"></small></label>`;
-      const profileControl = identityFields.querySelector("#me-ai_profile")?.closest("label");
+      // O seletor de perfil fica onde estava o de IA (seção Comportamento), não nos campos de
+      // identidade: buscar só lá deixava táticas, descrição e Flanqueia sem aparecer.
+      const profileControl = root.querySelector("#me-ai_profile")?.closest("label");
+      const flq = draft.flanqueia === true ? "sim" : (draft.flanqueia === false ? "nao" : "");
+      profileControl?.insertAdjacentHTML("afterend", `<label>Flanqueia<select id="me-flanqueia"><option value=""${flq === "" ? " selected" : ""}>Padrão (pela espécie e pelo perfil)</option><option value="sim"${flq === "sim" ? " selected" : ""}>Sim: contorna o alvo para atacar pelas costas</option><option value="nao"${flq === "nao" ? " selected" : ""}>Não</option></select><small>No padrão, os perfis tático, emboscador e caçador flanqueiam.</small></label>`);
       profileControl?.insertAdjacentHTML("afterend", `<div class="me-ai-tactics"><b>Táticas especiais</b><small>Refinam como o perfil toma decisões.</small><div>${AI_TACTICS.map(([id,label]) => `<label><input class="me-ai-tactic" type="checkbox" value="${id}"${selectedTactics.has(id) ? " checked" : ""}> ${label}</label>`).join("")}</div></div>`);
-      const profileSelect = identityFields.querySelector("#me-ai_profile");
-      const showProfile = () => { const p=AI_PROFILES.find(x=>x.id===profileSelect.value); const e=identityFields.querySelector("#me-ai-profile-desc"); if(e) e.textContent=p?.desc || ""; };
+      const profileSelect = root.querySelector("#me-ai_profile");
+      const showProfile = () => { const p=AI_PROFILES.find(x=>x.id===profileSelect.value); const e=root.querySelector("#me-ai-profile-desc"); if(e) e.textContent=p?.desc || ""; };
       if (profileSelect) { profileSelect.onchange=showProfile; showProfile(); }
     }
     root.querySelector("#me-tier")?.closest("label")?.remove();
