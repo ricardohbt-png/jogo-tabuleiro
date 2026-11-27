@@ -21,6 +21,11 @@ function ler(rel) {
   return fs.readFileSync(path.join(RAIZ, rel), 'utf8').split('\r\n').join('\n');
 }
 
+// Escapa todo caractere especial de expressão regular (o nome entra literal na busca).
+function _escRe(texto) {
+  return String(texto).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Pula string/template/comentário a partir de `i` (que aponta para o caractere de abertura).
 function _pular(src, i) {
   const c = src[i], d = src[i + 1];
@@ -55,7 +60,7 @@ function _pular(src, i) {
 
 // Texto da função `nome` (function / async function), do cabeçalho ao `}` que a fecha.
 function funcao(src, nome) {
-  const re = new RegExp('(?:^|\\n)\\s*(?:async\\s+)?function\\s+' + nome.replace(/\$/g, '\\$') + '\\s*\\(');
+  const re = new RegExp('(?:^|\\n)\\s*(?:async\\s+)?function\\s+' + _escRe(nome) + '\\s*\\(');
   const m = re.exec(src);
   if (!m) throw new Error('função não encontrada: ' + nome);
   const comeco = m.index + m[0].search(/(?:async\s+)?function/);
@@ -117,7 +122,7 @@ function funcaoQueContem(src, idx) {
 // Valor de uma constante de topo (`const nome = …;`), avaliado. Para conferir o CONTEÚDO de
 // um mapa ou lista sem depender de espaços, ordem das chaves ou quebra de linha.
 function constante(src, nome) {
-  const m = new RegExp('(?:^|\\n)\\s*const\\s+' + nome.replace(/\$/g, '\\$') + '\\s*=').exec(src);
+  const m = new RegExp('(?:^|\\n)\\s*const\\s+' + _escRe(nome) + '\\s*=').exec(src);
   if (!m) throw new Error('constante não encontrada: ' + nome);
   let k = m.index + m[0].length, prof = 0;
   const ini = k;
