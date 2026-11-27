@@ -38151,6 +38151,8 @@ function _coletarEfeitosAtivos(state, player, incluirLocais = true){
     golpe_devastador:t('ui.hud.golpe_devastador'), furia_berserker:t('ui.hud.furia_berserker'),
     aprimorar_magia:t('ui.hud.aprimorar_magia'), estender_magia:t('ui.hud.estender_magia'),
     fortalecer_magia:t('ui.hud.fortalecer_magia'), aumento_ca_temporario:t('ui.hud.ca_temporaria'),
+    // Habilidade de classe do Pedro: não está em player.skills nem no catálogo da Guilda.
+    animar_mortos:t('ui.animar.nome_curto'), senhor_da_morte:t('ui.animar.senhor_da_morte'),
   };
   const nomeSkill = id => {
     const h = window._menuHabilidadesDados?.[id]
