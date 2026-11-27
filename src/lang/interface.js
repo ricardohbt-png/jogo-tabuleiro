@@ -1184,9 +1184,9 @@ window.LANG_INTERFACE = {
     "en": "Trap placement cancelled.",
     "pt": "Posicionamento de armadilha cancelado."
   },
-  "ui.armadilha.posicionar": {
-    "en": "🪤 PLACE",
-    "pt": "🪤 POSICIONAR"
+  "ui.armadilha.sem_veneno": {
+    "en": "No poison",
+    "pt": "Sem veneno"
   },
   "ui.armadilha.posicionar_armadilha": {
     "en": "PLACE TRAP",
