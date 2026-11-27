@@ -807,6 +807,8 @@ input:focus { outline: none; border-color: var(--gold); }
   font-size: .7rem;
 }
 .initiative-actor.is-monster { --actor-accent: #e88777; }
+/* Prévia do Esperar: quem esperou reaparece no fim da fila, tracejado e com ⏳. */
+.initiative-actor.is-esperando { outline: 2px dashed #f0c25a; outline-offset: -2px; opacity: .85; }
 .initiative-focus {
   position: relative;
   display: grid;

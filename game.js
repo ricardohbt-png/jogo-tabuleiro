@@ -7176,6 +7176,27 @@ function _retratoDoAtor(actor, monster){
     : HERO_PORTRAIT_PATHS[actor.class_id];
 }
 
+// Prévia do Esperar: vale enquanto o botão ⏳ Esperar (habilitado) está sob o mouse ou com
+// foco, na minha vez e com o servidor permitindo esperar. Lida a cada desenho, então não
+// fica presa ligada se a barra for refeita no meio do caminho.
+function _esperarPreviaAtiva(state){
+  if(!state || state.phase !== 'playing') return false;
+  const ator = state.current_actor;
+  if(!ator || ator.kind !== 'player' || String(ator.id) !== String(GS.myPid)) return false;
+  const me = (state.players || []).find(p => String(p.id) === String(GS.myPid));
+  if(!me?.pode_esperar || !GS.isMyTurn) return false;
+  return !!document.querySelector('#turn-actions-bar .tam-esperar:hover:not(:disabled), #turn-actions-bar .tam-esperar:focus:not(:disabled)');
+}
+// Nomes, na ordem, de quem a coluna mostra agindo antes de eu voltar se eu esperar.
+function _nomesAntesDeVoltar(state){
+  const lista = $('initiative-track-actors');
+  if(!state || !lista) return [];
+  const minha = `player:${String(GS.myPid)}`;
+  return [...lista.querySelectorAll('.initiative-focus')]
+    .filter(b => b.dataset.actorKey !== minha)
+    .map(b => b.querySelector('.initiative-actor-name')?.textContent || '')
+    .filter(Boolean);
+}
 function updateInitiativeTrack(state){
   const track = $('initiative-track'), list = $('initiative-track-actors');
   if(!track || !list) return;
@@ -7193,8 +7214,10 @@ function updateInitiativeTrack(state){
   const me = players.get(String(GS.myPid));
   const master = GS.isMaster();
   const vision = !master && me?.pos && state.explored ? computeVisionSet(state, me) : new Set();
+  const previa = _esperarPreviaAtiva(state);
+  const filaVisivel = previa ? GS.filaAposEsperar(order, currentIndex) : order.slice(currentIndex);
   const entries = [];
-  for(const entry of order.slice(currentIndex)){
+  for(const entry of filaVisivel){
     const monster = entry.kind === 'monster';
     const actor = (monster ? monsters : players).get(String(entry.id));
     if(!actor || !(actor.hp > 0)) continue;
@@ -7222,16 +7245,19 @@ function updateInitiativeTrack(state){
 
   const title = t('ui.hud.ordem_iniciativa');
   const now = t('ui.hud.agora');
-  const renderKey = JSON.stringify([state.round, currentKey, entries, title, now]);
+  const voltaAqui = t('ui.hud.volta_aqui');
+  const renderKey = JSON.stringify([state.round, currentKey, entries, title, now, previa, voltaAqui]);
   if(renderKey === _initiativeTrackKey) return;
   _initiativeTrackKey = renderKey;
   track.setAttribute('aria-label', title);
   const focusedKey = list.contains(document.activeElement) ? document.activeElement.dataset.actorKey : null;
   let focusTarget = null;
   list.replaceChildren(...entries.map(({key, id, monster, portrait, name, icon}, index) => {
-    const active = key === currentKey;
+    // Na prévia do Esperar ninguém está "agora": quem esperou aparece no fim, tracejado.
+    const esperando = previa && key === currentKey;
+    const active = !previa && key === currentKey;
     const item = document.createElement('div');
-    item.className = `initiative-actor ${monster ? 'is-monster' : 'is-hero'}${active ? ' is-current' : ''}`;
+    item.className = `initiative-actor ${monster ? 'is-monster' : 'is-hero'}${active ? ' is-current' : ''}${esperando ? ' is-esperando' : ''}`;
     item.setAttribute('role', 'listitem');
     if(active) item.setAttribute('aria-current', 'step');
     const button = document.createElement('button');
@@ -7239,7 +7265,7 @@ function updateInitiativeTrack(state){
     button.className = 'initiative-focus';
     button.dataset.actorKey = key;
     button.dataset.gamepadAction = 'activate';
-    button.title = active ? `${name} · ${now}` : name;
+    button.title = active ? `${name} · ${now}` : (esperando ? `⏳ ${name} · ${voltaAqui}` : name);
     button.onclick = () => _centerInitiativeActor(id, monster);
     if(focusedKey === key) focusTarget = button;
 
@@ -28598,6 +28624,9 @@ function _renderBarraAcoes(state, hero){
     bar.querySelector('.tam-end').onclick = () => { _barraFechar(); document.getElementById('btn-end-turn')?.click(); };
     bar.querySelector('.tam-desfazer').onclick = () => { _barraFechar(); if(!GS.desfazerMovimento()) toast(t('ui.conexao.sem_servidor'), 'var(--red)'); };
     bar.querySelector('.tam-esperar').onclick = () => { _barraFechar(); if(!GS.esperarVez()) toast(t('ui.conexao.sem_servidor'), 'var(--red)'); };
+    const espBtn = bar.querySelector('.tam-esperar');
+    for(const ev of ['mouseenter', 'mouseleave', 'focus', 'blur'])
+      espBtn.addEventListener(ev, () => { if(GS.gameState) updateInitiativeTrack(GS.gameState); });
   }
   bar.querySelector('.tam-end').disabled = !!document.getElementById('btn-end-turn')?.disabled;
   _barraSincronizar();
@@ -28615,6 +28644,10 @@ function _barraSincronizar(){
   const desf = bar.querySelector('.tam-desfazer'), esp = bar.querySelector('.tam-esperar');
   if(desf) desf.disabled = !hero?.pode_desfazer || !GS.isMyTurn;
   if(esp) esp.disabled = !hero?.pode_esperar || !GS.isMyTurn;
+  if(esp){
+    const antes = esp.disabled ? [] : _nomesAntesDeVoltar(st);
+    esp.title = antes.length ? t('ui.menuacoes.esperar_dica_fila', {nomes: antes}) : t('ui.menuacoes.esperar_dica');
+  }
   for(const pop of bar.querySelectorAll('.tam-pop')){
     const aberto = _barraMenuAberto === pop.dataset.menu;
     pop.hidden = !aberto;
