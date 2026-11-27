@@ -2754,6 +2754,13 @@ const GS = (() => {
   // (`pode_desfazer`/`pode_esperar` no jogador) e responde erro se não.
   function desfazerMovimento() { return send({ type: 'desfazer_movimento' }); }
   function esperarVez()        { return send({ type: 'esperar_vez' }); }
+  // Prévia do Esperar (puro): espelho de handle_esperar_vez, que tira a entrada da
+  // vez e a põe no FIM da fila da rodada. Devolve o que resta da rodada a partir de
+  // quem agiria a seguir, com quem esperou por último. Não muda `order`.
+  function filaAposEsperar(order, currentIndex) {
+    if (!Array.isArray(order) || !(currentIndex >= 0) || currentIndex >= order.length) return [];
+    return [...order.slice(currentIndex + 1), order[currentIndex]];
+  }
   function sceneChoice(sceneId, eventId, optionId) { send({ type:'scene_choice', scene_id:sceneId, event_id:eventId, option_id:optionId }); }
   function sceneTest(sceneId, eventId) { send({ type:'scene_test', scene_id:sceneId, event_id:eventId }); }
   function sceneEnd(force) { send({ type:'scene_end', force:!!force }); }
@@ -4699,6 +4706,7 @@ const GS = (() => {
     endTurn,
     desfazerMovimento,
     esperarVez,
+    filaAposEsperar,
     sceneChoice,
     sceneTest,
     sceneEnd,
