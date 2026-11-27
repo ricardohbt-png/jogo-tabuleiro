@@ -2463,3 +2463,10 @@ body.preview-mode #map-panel { width:100%; }
   #servos-fichas { left: 0; bottom: calc(100% + 6px); max-width: calc(100vw - 30px); }
   .servo-ficha.is-atual { width: 220px; }
 }
+
+/* Barrinha de ações acima da ficha do servo da vez (Encerrar + Habilidades). */
+.servo-ficha-col { display: flex; flex-direction: column; align-items: stretch; gap: 6px; flex: 0 0 auto; }
+.servo-barra { display: flex; gap: 6px; pointer-events: auto; }
+.servo-barra .tam-tab { flex: 1 1 auto; }
+/* A camada do painel ignora cliques (pointer-events: none); a lista precisa ligá-los. */
+#servos-hab-pop { position: absolute; z-index: 61; pointer-events: auto; }

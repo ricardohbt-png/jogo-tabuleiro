@@ -397,6 +397,7 @@ document.body.innerHTML = `
         <div id="turn-actions-bar" hidden></div>
         <section id="turn-hero-hud" hidden></section>
         <div id="servos-fichas" role="group" hidden></div>
+        <div id="servos-hab-pop" class="tam-pop" hidden></div>
       <div id="cooperative-marker-control" hidden>
         <button id="cooperative-marker-toggle" type="button" data-gamepad-action="activate" tabindex="0"
                 aria-expanded="false" aria-controls="cooperative-marker-options" onclick="_toggleCooperativeMarkerMenu()">📍 <span data-i18n="ui.marker.title">Marcar</span></button>
@@ -6030,24 +6031,30 @@ function _atualizarBotaoEncerrarTurno(state){
   // acompanha o idioma sozinho, sem entrar na lista do _setLang.
   const span = btn.querySelector('span');
   if(!span) return;
-  // Dict por pid: cada jogador lê a própria entrada.
-  const atual = state?.animados_atual?.[GS.myPid] ?? null;
-  const naFila = state?.animados_turn === GS.myPid && atual !== null;
-  if(naFila){
-    const ordem = state.animados_order || [];
-    const total = ordem.length + _refensGuiadosNaFila(state);
-    // A posição é o índice do servo da vez na ordem de iniciativa. Os reféns
-    // não estão em `animados_order`: vêm depois dos servos.
-    const idx = ordem.indexOf(atual);
-    const pos = (idx >= 0) ? idx + 1 : total;
+  const rotuloServo = _rotuloEncerrarServo(state);
+  if(rotuloServo){
     span.removeAttribute('data-i18n');
-    span.textContent = GS.ehRefemId(atual)
-      ? t('ui.hud.encerrar_prisioneiro')
-      : t('ui.hud.encerrar_servo', {pos, total});
+    span.textContent = rotuloServo;
   } else if(!span.hasAttribute('data-i18n')){
     span.setAttribute('data-i18n', 'ui.hud.encerrar_turno');
     span.textContent = t('ui.hud.encerrar_turno');
   }
+}
+
+// Rótulo do Encerrar na vez dos servos ("⏭ Encerrar servo (2/3)" ou "Encerrar
+// prisioneiro"); null fora dela. Usado pelo botão do painel lateral e pela barrinha
+// acima da ficha do servo, para os dois mostrarem sempre o mesmo texto.
+function _rotuloEncerrarServo(state){
+  // Dict por pid: cada jogador lê a própria entrada.
+  const atual = state?.animados_atual?.[GS.myPid] ?? null;
+  if(state?.animados_turn !== GS.myPid || atual === null) return null;
+  const ordem = state.animados_order || [];
+  const total = ordem.length + _refensGuiadosNaFila(state);
+  // A posição é o índice do servo da vez na ordem de iniciativa. Os reféns
+  // não estão em `animados_order`: vêm depois dos servos.
+  const idx = ordem.indexOf(atual);
+  const pos = (idx >= 0) ? idx + 1 : total;
+  return GS.ehRefemId(atual) ? t('ui.hud.encerrar_prisioneiro') : t('ui.hud.encerrar_servo', {pos, total});
 }
 
 // Os reféns que eu guio ocupam o fim da fila da janela pós-turno.
@@ -28774,6 +28781,77 @@ function _ajustarLarguraServosFichas(){
   box.style.maxWidth = Math.max(80, area.clientWidth - coluna.offsetWidth - 8) + 'px';
 }
 window.addEventListener('resize', _ajustarLarguraServosFichas);
+// Barrinha acima da ficha do servo da vez, no visual da barra do Pedro: ⏭ Encerrar
+// servo (a MESMA ação do botão do painel lateral) e, para servos do Senhor da Morte e
+// elementais (a mesma regra do painel), ⚔️ Habilidades.
+function _servoBarraAcoes(f, state){
+  const barra = document.createElement('div');
+  barra.className = 'servo-barra';
+  const e = f.ent;
+  if(f.kind === 'servo' && (e.senhor_da_morte || (e.tipo === 'elemental' && e.tipo_elemental))){
+    const hab = document.createElement('button');
+    hab.type = 'button';
+    hab.classList.add('tam-tab', 'servo-hab');
+    hab.dataset.gamepadAction = 'activate';
+    hab.setAttribute('aria-expanded', 'false');
+    hab.innerHTML = `⚔️ <span>${_esc(t('ui.menuacoes.habilidades'))}</span>`;
+    hab.onclick = ev => { ev.stopPropagation(); _servoHabilidadesAbrir(hab, e); };
+    barra.appendChild(hab);
+  }
+  const fim = document.createElement('button');
+  fim.type = 'button';
+  fim.classList.add('tam-tab', 'tam-end', 'servo-encerrar');
+  fim.dataset.gamepadAction = 'activate';
+  const rotulo = _rotuloEncerrarServo(state);
+  fim.textContent = rotulo || t('ui.hud.encerrar_turno');
+  // Pelo estado, não pelo botão do painel (a ordem de desenho dos dois não é garantida).
+  fim.disabled = !rotulo;
+  fim.onclick = () => { _servoHabilidadesFechar(); document.getElementById('btn-end-turn')?.click(); };
+  barra.appendChild(fim);
+  return barra;
+}
+// Lista de habilidades do servo, aberta para cima. Mora fora da fileira (que rola
+// na horizontal e cortaria um menu aberto para cima), presa à coluna do herói.
+function _servoHabilidadesAbrir(btn, ent){
+  const pop = $('servos-hab-pop'), coluna = $('battlefield-turn-tools');
+  if(!pop || !coluna) return;
+  if(!pop.hidden && pop.dataset.servo === String(ent.id)){ _servoHabilidadesFechar(); return; }
+  const lista = _animadoManualAbilityList(ent);
+  pop.dataset.servo = String(ent.id);
+  if(!lista.length){
+    pop.innerHTML = `<p class="tam-vazio">${_esc(t('ui.animar.esta_ficha_nao_possui_habilidades_ativas_d'))}</p>`;
+  } else {
+    const pend = window._animadoAbilityPending;
+    pop.replaceChildren(...lista.map(ab => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      const sel = pend && String(pend.animadoId) === String(ent.id) && pend.abilityId === ab.id;
+      b.className = 'tam-icon' + (sel ? ' is-active' : '');
+      b.dataset.gamepadAction = 'activate';
+      const nome = ab.nome || ab.name || ab.id;
+      b.setAttribute('aria-label', nome);
+      b.innerHTML = `<span class="tam-glyph">${_esc(ab.icone || '☠️')}</span>`;
+      const custo = ab.action_type === 'acao_bonus' ? t('ui.animar.bonus') : (ab.action_type === 'acao_livre' ? t('ui.animar.livre') : t('ui.animar.acao'));
+      _barraLigarTip(b, _esc(nome), `${_esc(ab.descricao || ab.description || t('ui.animar.habilidade_da_ficha_original'))}<div class="tam-custo">${_esc(custo)}</div>`);
+      b.onclick = () => { _servoHabilidadesFechar(); selecionarHabilidadeAnimado(ent.id, ab.id); };
+      return b;
+    }));
+  }
+  pop.hidden = false;
+  const rc = coluna.getBoundingClientRect(), rb = btn.getBoundingClientRect();
+  pop.style.left = Math.max(0, rb.left - rc.left) + 'px';
+  pop.style.bottom = Math.max(0, rc.bottom - rb.top + 6) + 'px';
+  btn.setAttribute('aria-expanded', 'true');
+}
+function _servoHabilidadesFechar(){
+  const pop = $('servos-hab-pop');
+  if(pop && !pop.hidden){ pop.hidden = true; pop.replaceChildren(); delete pop.dataset.servo; }
+  document.querySelectorAll('#servos-fichas .servo-hab').forEach(b => b.setAttribute('aria-expanded', 'false'));
+}
+document.addEventListener('mousedown', e => {
+  if(!e.target.closest?.('#servos-hab-pop') && !e.target.closest?.('.servo-hab')) _servoHabilidadesFechar();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape') _servoHabilidadesFechar(); });
 function _centrarServoFicha(ent){
   const pos = Array.isArray(ent && ent.pos) ? [ent.pos[0], ent.pos[1]] : null;
   if(!pos || !Number.isFinite(pos[0]) || !Number.isFinite(pos[1]) || pos[0] < 0 || pos[1] < 0) return;
@@ -28807,8 +28885,10 @@ function _renderServosFichas(state){
       ataques: GS.ataquesDoServo(e, f.kind),
     };
   });
+  const rotuloEncerrar = _rotuloEncerrarServo(state);
   const chave = JSON.stringify([dono, dados.map(d => [d.id, d.nome, d.hp, d.hpMax, d.ca, d.mov, d.movMax, d.acted,
-    d.atual, d.feito, d.retrato, d.ataques]), I18N.lang]);
+    d.atual, d.feito, d.retrato, d.ataques]), I18N.lang, rotuloEncerrar,
+    (window._animadoAbilityPending || {}).abilityId || null]);
   box.hidden = false;
   _ajustarLarguraServosFichas();
   if(box.dataset.chave === chave) return;
@@ -28838,10 +28918,16 @@ function _renderServosFichas(state){
         + `<span>👣 ${_esc(t('ui.servos.mov'))} <b>${d.mov}/${d.movMax}</b></span>${acao}</div>${ataques}`;
     }
     b.onclick = () => _centrarServoFicha(d.f.ent);
-    return b;
+    if(!d.atual) return b;
+    // Servo da vez: a barrinha (Encerrar + Habilidades) fica logo acima da ficha.
+    const coluna = document.createElement('div');
+    coluna.className = 'servo-ficha-col';
+    coluna.append(_servoBarraAcoes(d.f, state), b);
+    return coluna;
   }));
+  if(!box.querySelector('.servo-ficha.is-atual')) _servoHabilidadesFechar();
   // Tela estreita: a fileira rola, e a ficha da vez nunca pode ficar fora de vista.
-  const atual = box.querySelector('.servo-ficha.is-atual');
+  const atual = box.querySelector('.servo-ficha-col') || box.querySelector('.servo-ficha.is-atual');
   if(atual){
     const fim = atual.offsetLeft + atual.offsetWidth;
     if(atual.offsetLeft < box.scrollLeft) box.scrollLeft = atual.offsetLeft;
