@@ -49313,6 +49313,18 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
 
         await self.push_state()
 
+    def _ordem_servos(self, p):
+        """Servos vivos e leais do herói, na ordem em que agem na janela pós-turno.
+
+        Fonte única da ordem: abre a janela dos servos e vai no game_state
+        (`servos_ordem`) para as fichas mostrarem, já na vez do herói, quem age
+        logo depois dele. Roubados por um necromante não obedecem nesta fase."""
+        vivos = [a for a in (p or {}).get("animados", [])
+                 if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
+        return sorted(vivos, key=lambda a: (-self.initiative_value(a),
+                                            -self._initiative_attribute(a, "dex"),
+                                            -self._initiative_attribute(a, "int_"), str(a.get("id"))))
+
     def _animado_pode_agir(self, a):
         """Um servo só entra na fila se tiver como fazer alguma coisa na vez dele.
 
@@ -49582,15 +49594,11 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # Controle progressivo (Dominar Morto-Vivo): re-teste de Vontade ao abrir a fase.
         if self.animados_phase_pid != pid:
             await self._retestar_dominacao_jogador(p)
-        # Animados roubados por um necromante nÃ£o obedecem o jogador nesta fase.
-        animados_vivos = [a for a in p.get("animados", [])
-                          if a.get("vida_atual", 0) > 0 and not a.get("dominado_por_monstro")]
         # A janela dos servos respeita a iniciativa original da criatura. A
         # ordem é enviada ao cliente, que já seleciona o primeiro servo.
+        animados_vivos = self._ordem_servos(p)
         for a in animados_vivos:
             a["initiative"] = self.initiative_value(a)
-        animados_vivos.sort(key=lambda a: (-a["initiative"], -self._initiative_attribute(a, "dex"),
-                                            -self._initiative_attribute(a, "int_"), a["id"]))
         # Fase 3: o herÃ³i que libertou o prisioneiro o controla na janela pÃ³s-turno
         # (como os servos). Se o resgatador morreu, o controle passa ao herÃ³i vivo
         # mais prÃ³ximo do prisioneiro.
@@ -63350,6 +63358,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             "dungeon_intro_until_ms": self.dungeon_intro_until_ms,
             "animados_turn": self.animados_phase_pid,   # pid no turno dos servos (ou None)
             "animados_order": self.animados_order,
+            # Ordem dos servos de cada herói (mesma de _ordem_servos), para as fichas
+            # junto ao painel mostrarem, já na vez dele, quem age logo depois.
+            "servos_ordem": {pid_: [a["id"] for a in self._ordem_servos(p_)]
+                             for pid_, p_ in self.players.items() if p_.get("animados")},
             # Quem cada jogador controla agora na janela pós-turno (id do
             # servo, id do refém, ou None) — dict por pid porque este payload é
             # montado UMA vez para a sala inteira (sem pid em escopo aqui); o

@@ -396,6 +396,7 @@ document.body.innerHTML = `
         <div id="battlefield-turn-tools">
         <div id="turn-actions-bar" hidden></div>
         <section id="turn-hero-hud" hidden></section>
+        <div id="servos-fichas" role="group" hidden></div>
       <div id="cooperative-marker-control" hidden>
         <button id="cooperative-marker-toggle" type="button" data-gamepad-action="activate" tabindex="0"
                 aria-expanded="false" aria-controls="cooperative-marker-options" onclick="_toggleCooperativeMarkerMenu()">📍 <span data-i18n="ui.marker.title">Marcar</span></button>
@@ -28523,6 +28524,21 @@ function _habilidadesEspelhadas(){
     out.push({orig, nome, icone, custo, alcance: Number(orig.dataset.alcance) || 0, areaRaio: Number(orig.dataset.areaRaio) || 0, desc: (orig.querySelector('.skill-desc')?.textContent || '').trim(),
       off: orig.disabled, ativa: orig.classList.contains('skill-active'), rec});
   }
+  // Habilidade de CLASSE do Pedro: não mora na lista do painel (só na ficha, no H e nos
+  // atalhos), então entra aqui direto. Ação principal: esmaecida fora da vez ou já gasta.
+  const me = GS.me;
+  if(me && me.class_id === 'mage'){
+    const off = !GS.isMyTurn || me.alive === false || !!me.action_done;
+    const extra = (nome, desc, versao) => ({
+      orig: { click: () => (versao ? usarAnimarMortos(versao) : usarAnimarMortos()) },
+      nome, desc, custo: t('ui.animar.custo_por_uso', {n:20}),
+      icone: abilityIconHtml('animar_mortos', '💀'), alcance: 3, areaRaio: 0, off, ativa: false, rec: null,
+    });
+    out.push(extra(t('ui.animar.nome_curto'), t('ui.animar.classe_acao'), null));
+    const especs = (GS.guildOwnedOf?.(GS.myPid) || {}).especializacoes || [];
+    if(especs.includes('mago_reviver_4'))
+      out.push(extra(t('ui.animar.senhor_da_morte'), t('ui.magia.versao_alternativa_ficha_completa_nd_2_slo'), 'senhor_da_morte'));
+  }
   return out;
 }
 
@@ -28738,7 +28754,103 @@ function _statusCardHTML(a){
   return `<div class="turn-status" role="list" aria-label="${_esc(t('ui.status.card.titulo'))}">${chips}</div>`;
 }
 
+// ── Fichas dos servos junto ao painel do herói ───────────────────────────────
+// Na vez do herói: fichas pequenas (retrato + PV) à direita do painel, na ordem em
+// que os servos agem. Na vez dos servos: a ficha do servo da vez cresce e mostra PV,
+// CA, movimento, ação e os ataques que ele pode usar (GS.ataquesDoServo). Quem já
+// agiu fica no lugar, esmaecido com ✓. Reféns guiados vêm no fim. Só para quem
+// controla o herói; o clique centraliza a câmera no servo.
+function _retratoServoFicha(f){
+  const e = f.ent;
+  if(f.kind === 'refem') return e.image ? `assets/pawns/prisioneiros/${e.image}` : null;
+  return _retratoDoAtor({...e, type: e.type || e.tipo_original || e.tipo}, true);
+}
+// A fileira não pode passar por baixo do painel lateral: a largura livre é a da área
+// do tabuleiro menos a coluna do herói (o CSS não sabe quanto o painel ocupa).
+function _ajustarLarguraServosFichas(){
+  const box = $('servos-fichas'), area = $('battlefield-left-hud'), coluna = $('battlefield-turn-tools');
+  if(!box || box.hidden || !area || !coluna) return;
+  if(window.matchMedia && window.matchMedia('(max-width: 820px)').matches){ box.style.maxWidth = ''; return; }
+  box.style.maxWidth = Math.max(80, area.clientWidth - coluna.offsetWidth - 8) + 'px';
+}
+window.addEventListener('resize', _ajustarLarguraServosFichas);
+function _centrarServoFicha(ent){
+  const pos = Array.isArray(ent && ent.pos) ? [ent.pos[0], ent.pos[1]] : null;
+  if(!pos || !Number.isFinite(pos[0]) || !Number.isFinite(pos[1]) || pos[0] < 0 || pos[1] < 0) return;
+  if(mode3D) centralizarCamera3DNoPeao(pos);
+  else _scrollMapToTile(pos);
+}
+function _renderServosFichas(state){
+  const box = $('servos-fichas');
+  if(!box) return;
+  const esconder = () => { box.hidden = true; box.replaceChildren(); box.dataset.chave = ''; };
+  if(!state || state.phase !== 'playing' || state.test_mode || GS.isMaster()) return esconder();
+  // Dono: o herói meu cujos servos estão agindo, ou o herói meu que está na vez.
+  let dono = null;
+  if(state.animados_turn != null && GS.ehMeuHeroi(state.animados_turn)) dono = state.animados_turn;
+  else {
+    const pid = state.last_stand_pid || state.current_turn;
+    if(pid != null && GS.ehMeuHeroi(pid)) dono = pid;
+  }
+  const fichas = dono == null ? [] : GS.fichasDosServos(state, dono);
+  if(!fichas.length) return esconder();
+  const dados = fichas.map(f => {
+    const e = f.ent, refem = f.kind === 'refem';
+    return {
+      f, id: String(f.id), refem, atual: f.atual, feito: f.feito,
+      nome: String(e.name || e.nome || ''),
+      hp: Math.max(0, Number(refem ? e.hp : e.vida_atual) || 0),
+      hpMax: Math.max(1, Number(refem ? e.max_hp : e.vida_max) || 1),
+      ca: refem ? e.ac : (e.ca ?? e.ac),
+      mov: Number(e.moves_left) || 0, movMax: Number(refem ? e.move : e.movimento) || 0,
+      acted: !!e.acted, retrato: _retratoServoFicha(f), icone: e.icone || (refem ? '🧍' : '💀'),
+      ataques: GS.ataquesDoServo(e, f.kind),
+    };
+  });
+  const chave = JSON.stringify([dono, dados.map(d => [d.id, d.nome, d.hp, d.hpMax, d.ca, d.mov, d.movMax, d.acted,
+    d.atual, d.feito, d.retrato, d.ataques]), I18N.lang]);
+  box.hidden = false;
+  _ajustarLarguraServosFichas();
+  if(box.dataset.chave === chave) return;
+  box.dataset.chave = chave;
+  box.setAttribute('aria-label', t('ui.servos.titulo'));
+  box.replaceChildren(...dados.map(d => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'servo-ficha' + (d.atual ? ' is-atual' : '') + (d.feito ? ' is-feito' : '') + (d.refem ? ' is-refem' : '');
+    b.dataset.gamepadAction = 'activate';
+    b.title = d.nome;
+    const pct = Math.max(0, Math.min(100, d.hp / d.hpMax * 100));
+    const retrato = `<span class="servo-ficha-retrato" aria-hidden="true">${_esc(d.icone)}${d.retrato
+      ? `<img src="${_esc(_assetURL(d.retrato))}" alt="" onerror="this.remove()">` : ''}</span>`;
+    const barra = `<span class="servo-ficha-pv"><span class="servo-ficha-pv-bar"><i style="width:${pct}%"></i></span>`
+      + `<b>${d.hp}/${d.hpMax}</b></span>`;
+    if(!d.atual){
+      b.innerHTML = `${retrato}${barra}${d.feito ? '<span class="servo-ficha-ok" aria-hidden="true">✓</span>' : ''}`;
+    } else {
+      const ataques = d.refem
+        ? `<div class="servo-ficha-atk">${_esc(t('ui.servos.so_move'))}</div>`
+        : d.ataques.map(a => `<div class="servo-ficha-atk">⚔️ ${_esc(a.nome)} <b>${a.bonus >= 0 ? '+' : ''}${a.bonus}</b> · ${_esc(a.dano)}${a.vezes > 1 ? ` ×${a.vezes}` : ''}</div>`).join('');
+      const acao = d.refem ? '' : `<span class="${d.acted ? 'is-usada' : ''}">${_esc(t(d.acted ? 'ui.servos.acao_usada' : 'ui.servos.acao_livre'))}</span>`;
+      b.innerHTML = `<div class="servo-ficha-topo">${retrato}<div class="servo-ficha-info"><strong>${_esc(d.nome)}</strong>`
+        + `<span class="servo-ficha-vez">${_esc(t('ui.servos.na_vez'))}</span>${barra}</div></div>`
+        + `<div class="servo-ficha-stats"><span>🛡️ ${_esc(t('ui.servos.ca'))} <b>${d.ca ?? '—'}</b></span>`
+        + `<span>👣 ${_esc(t('ui.servos.mov'))} <b>${d.mov}/${d.movMax}</b></span>${acao}</div>${ataques}`;
+    }
+    b.onclick = () => _centrarServoFicha(d.f.ent);
+    return b;
+  }));
+  // Tela estreita: a fileira rola, e a ficha da vez nunca pode ficar fora de vista.
+  const atual = box.querySelector('.servo-ficha.is-atual');
+  if(atual){
+    const fim = atual.offsetLeft + atual.offsetWidth;
+    if(atual.offsetLeft < box.scrollLeft) box.scrollLeft = atual.offsetLeft;
+    else if(fim > box.scrollLeft + box.clientWidth) box.scrollLeft = fim - box.clientWidth;
+  }
+}
+
 function renderTurnHeroHud(state){
+  _renderServosFichas(state);
   const hud = $('turn-hero-hud');
   if(!hud) return;
   const pid = state.last_stand_pid || state.current_turn;

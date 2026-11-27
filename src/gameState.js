@@ -2754,6 +2754,50 @@ const GS = (() => {
   // (`pode_desfazer`/`pode_esperar` no jogador) e responde erro se não.
   function desfazerMovimento() { return send({ type: 'desfazer_movimento' }); }
   function esperarVez()        { return send({ type: 'esperar_vez' }); }
+
+  // ── Fichas dos servos (puro) ─────────────────────────────────────────────────
+  // Quem aparece na fileira junto ao painel do herói `owner`: os servos na ordem em
+  // que agem (servos_ordem, a mesma do servidor ao abrir a vez deles) e, depois, os
+  // reféns que ele GUIA (Seguir anda sozinho e não abre vez). Cada entrada:
+  // {kind:'servo'|'refem', id, ent, atual, feito}. `atual`/`feito` só valem na vez
+  // dos servos DESTE herói.
+  function fichasDosServos(state, owner) {
+    if (!state || owner == null) return [];
+    const heroi = (state.players || []).find(p => String(p.id) === String(owner));
+    const vivos = ((heroi && heroi.animados) || [])
+      .filter(a => a && (a.vida_atual || 0) > 0 && !a.dominado_por_monstro);
+    const ordem = state.servos_ordem && state.servos_ordem[owner];
+    const porId = new Map(vivos.map(a => [String(a.id), a]));
+    const servos = Array.isArray(ordem)
+      ? ordem.map(id => porId.get(String(id))).filter(Boolean)
+      : vivos;
+    const refens = (state.prisoners || []).filter(pr => pr && pr.freed && pr.alive !== false && !pr.salvo
+      && String(pr.rescuer_pid) === String(owner) && (pr.modo || 'guiar') === 'guiar');
+    const naVez = String(state.animados_turn) === String(owner);
+    const atual = naVez ? (state.animados_atual || {})[owner] : null;
+    const feitos = new Set(naVez ? (state.animados_done || []).map(String) : []);
+    return [...servos.map(a => ({ kind: 'servo', ent: a })), ...refens.map(pr => ({ kind: 'refem', ent: pr }))]
+      .map(x => ({ ...x, id: x.ent.id,
+                   atual: atual != null && String(atual) === String(x.ent.id),
+                   feito: feitos.has(String(x.ent.id)) }));
+  }
+
+  // Ataques que o servo pode usar, como o servidor resolve (handle_atacar_animado):
+  // Animar Mortos básico faz UM golpe com o primeiro ataque (bônus do ataque ou o nível
+  // do servo; dano do ataque ou o do servo); Senhor da Morte e elementais usam o motor
+  // completo da criatura (todos os ataques, com o número de golpes). Refém não ataca.
+  function ataquesDoServo(ent, kind) {
+    if (!ent || kind === 'refem') return [];
+    const atks = Array.isArray(ent.attacks) ? ent.attacks : [];
+    const completo = !!ent.senhor_da_morte || (ent.tipo === 'elemental' && !!ent.tipo_elemental);
+    if (completo) {
+      return atks.map(a => ({ nome: a.name || ent.nome, bonus: Number(a.atk_bonus) || 0,
+                              dano: a.damage || ent.dano || '1d4', vezes: Math.max(1, Number(a.num_attacks) || 1) }));
+    }
+    const a = atks[0] || {};
+    return [{ nome: a.name || ent.nome, bonus: a.atk_bonus != null ? Number(a.atk_bonus) : Number(ent.nivel || 1),
+              dano: a.damage || ent.dano || '1d4', vezes: 1 }];
+  }
   // Prévia do Esperar (puro): espelho de handle_esperar_vez, que tira a entrada da
   // vez e a põe no FIM da fila da rodada. Devolve o que resta da rodada a partir de
   // quem agiria a seguir, com quem esperou por último. Não muda `order`.
@@ -4706,6 +4750,8 @@ const GS = (() => {
     endTurn,
     desfazerMovimento,
     esperarVez,
+    fichasDosServos,
+    ataquesDoServo,
     filaAposEsperar,
     sceneChoice,
     sceneTest,
