@@ -347,6 +347,11 @@ class TrainingTests(unittest.IsolatedAsyncioTestCase):
             await r.handle_esconder_sombras(p['id'],{})
             self.assertEqual(p['licao_atual'],'treino_furtivo')
             await r.handle_attack(p['id'],m['id'])
+            # Fatia 23: depois do furtivo escondido vem o furtivo pelas costas, visível.
+            self.assertEqual(p['licao_atual'],'treino_furtivo_costas')
+            for sala in r.rooms: sala['locked']=False
+            p['pos']=[11,6];p['action_done']=False;p['bonus_action_used']=False
+            await r.handle_attack(p['id'],m['id'])
             self.assertEqual(p['licao_atual'],'treino_veneno')
         await lesson(r,p,'treino_criar',[9,7])
         await r.handle_criar_armadilha(p['id'],{'tipo':'buraco','tx':9,'ty':8})

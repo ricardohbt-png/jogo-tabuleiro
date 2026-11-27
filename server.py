@@ -10601,6 +10601,10 @@ def validar_dungeon(defn):
             return False, "tarefa de lição precisa de vezes maior ou igual a 1."
         if not (_tar.get("texto_curto") or "").strip():
             return False, "tarefa de lição sem texto_curto."
+        if _tar.get("requer_setor") not in (None, "costas", "flanco"):
+            return False, "requer_setor da tarefa deve ser costas ou flanco."
+        if not isinstance(_tar.get("requer_visivel", False), bool):
+            return False, "requer_visivel da tarefa deve ser verdadeiro ou falso."
         _ef = _f.get("efeito")
         if _ef is not None:
             if not isinstance(_ef, dict) or not _ef:
@@ -25805,6 +25809,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         # O passo avança por qualquer evento que ele declarar, mesmo que a tarefa
         # da lição seja outra (ex.: "atacar" no passo 2 de uma lição de habilidade).
         await self._guia_evento(p, lic, verbo, alvo, contexto)
+        setor_pedido = tar.get("requer_setor")
+        if (setor_pedido and verbo == "atacar" and tar.get("tipo") != verbo
+                and (contexto or {}).get("licao_antes", lic_id) == lic_id
+                and (contexto or {}).get("setor") not in (None, setor_pedido)):
+            # Acertou o golpe, mas não de onde a lição pede: o furtivo nem saiu.
+            await self._guia_dica(p["id"], "setor_errado")
         if tar.get("tipo") != verbo:
             return
         if not self._training_requirements(p, lic):
@@ -25814,6 +25824,12 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
         if tar.get("requer_veneno") and not (contexto or {}).get("veneno"):
             return
         if tar.get("requer_sagrado") and not p.get("golpe_sagrado_ativo"):
+            return
+        if tar.get("requer_visivel") and (contexto or {}).get("escondido"):
+            await self._guia_dica(p["id"], "furtivo_escondido")
+            return
+        if setor_pedido and (contexto or {}).get("setor") != setor_pedido:
+            await self._guia_dica(p["id"], "setor_errado")
             return
         if tar.get("requer_sinfonia") and not (contexto or {}).get("sinfonia"):
             await self._guia_dica(p["id"], "sem_sinfonia")
@@ -27832,6 +27848,9 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
             main_attack_base = _mods["main_attack_base"]
             eff_atk = _mods["eff_atk"]; eff_target_ac = _mods["eff_target_ac"]
             furtivo_planejado = _mods["furtivo_planejado"]
+            # Lição ativa ANTES do golpe: um furtivo que conclui uma lição libera a
+            # próxima no meio deste mesmo ataque, e ela não deve receber dica dele.
+            _licao_antes_do_golpe = p.get("licao_atual")
             penalidade_furtivo = _mods["penalidade_furtivo"]
             esc = _mods["esc"]; _mira_ranged = _mods["mira_ranged"]; _investida = _mods["investida"]
             vantagem = _mods["vantagem"]; desvantagem = _mods["desvantagem"]
@@ -28042,7 +28061,10 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                            "dice_theme": "sneak_attack"})
                     _bonus_extra += dano_furtivo
                     furtivo_detail = f" +🗡️{dano_furtivo} furtivo [{nd4}d4]"
-                    await self._licao_evento(p, "usar_habilidade", alvo="ataque_furtivo")
+                    await self._licao_evento(
+                        p, "usar_habilidade", alvo="ataque_furtivo",
+                        contexto={"setor": (_mods.get("posicional") or {}).get("setor"),
+                                  "escondido": bool(p.get("invisivel_sombras") or p.get("oculto_vela"))})
                 # A muniÃ§Ã£o de prata empresta sua propriedade ao disparo, sem
                 # transformar permanentemente a arma equipada em uma arma de prata.
                 damage_weapon = {**(p.get("weapon") or {})}
@@ -28180,7 +28202,8 @@ class GameRoom(TutorialTraining, MonsterIntent, TerrainReactions):
                                         contexto={"veneno": bool(_melee_poison_vid or _ranged_poison_vid),
                                                   "categoria_arma": (p.get("weapon") or {}).get("categoria"),
                                                   "sala_alvo_id": target.get("room_id"),
-                                                  "setor": (_mods.get("posicional") or {}).get("setor")})
+                                                  "setor": (_mods.get("posicional") or {}).get("setor"),
+                                                  "licao_antes": _licao_antes_do_golpe})
                 if target["hp"] <= 0:
                     await self._monster_dies(target, pid)
                 else:

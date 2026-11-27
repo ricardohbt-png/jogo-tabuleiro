@@ -7898,6 +7898,50 @@
       ]
     },
     {
+      "id": "treino_furtivo_costas",
+      "pos": [
+        9,
+        7
+      ],
+      "falante": {
+        "nome": "Mestre de Armas",
+        "emoji": "🎓",
+        "retrato": "assets/portraits/mestre_de_armas.png"
+      },
+      "texto": "Nem sempre é preciso se esconder: o Ataque Furtivo também acontece quando você golpeia pelas costas. Os bonecos olham para o sul. Sem se esconder, vá para a casa atrás de um deles e ataque.",
+      "trigger": {
+        "tipo": "sala"
+      },
+      "classe": "rogue",
+      "sala_exclusiva": true,
+      "tarefa": {
+        "tipo": "usar_habilidade",
+        "vezes": 1,
+        "texto_curto": "Acerte um Ataque Furtivo pelas costas, sem se esconder",
+        "alvo": "ataque_furtivo",
+        "requer_setor": "costas",
+        "requer_visivel": true
+      },
+      "ordem": 9,
+      "guia": [
+        {
+          "id": "olhar",
+          "texto": "ui.tutorial.guia.treino_furtivo_costas.olhar.texto",
+          "porque": "ui.tutorial.guia.treino_furtivo_costas.olhar.porque",
+          "ui": "monstro:boneco_treino"
+        },
+        {
+          "id": "costas",
+          "texto": "ui.tutorial.guia.treino_furtivo_costas.costas.texto",
+          "porque": "ui.tutorial.guia.treino_furtivo_costas.costas.porque",
+          "ui": "casa:[11,6]",
+          "dica": [
+            "ui.tutorial.guia.treino_furtivo_costas.costas.dica.1"
+          ]
+        }
+      ]
+    },
+    {
       "id": "treino_veneno",
       "pos": [
         9,
@@ -7914,7 +7958,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 9,
+      "ordem": 10,
       "tarefa": {
         "tipo": "usar_habilidade",
         "vezes": 1,
@@ -7947,7 +7991,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 10,
+      "ordem": 11,
       "tarefa": {
         "tipo": "atacar",
         "vezes": 1,
@@ -7981,7 +8025,7 @@
       },
       "classe": "rogue",
       "sala_exclusiva": true,
-      "ordem": 11,
+      "ordem": 12,
       "tarefa": {
         "tipo": "usar_habilidade",
         "vezes": 1,
@@ -9273,7 +9317,7 @@
         "tipo": "sala"
       },
       "classe": "rogue",
-      "ordem": 12,
+      "ordem": 13,
       "tarefa": {
         "tipo": "mover_ate",
         "alvo": [
