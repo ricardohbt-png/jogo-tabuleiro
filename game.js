@@ -21528,6 +21528,12 @@ function abrirPainelCriarArmadilha(){
       ${selecionada && ((ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.requer_veneno) || (ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.permite_veneno)) ? `
         <div style="margin-top:10px;">
           <div style="color:#9900cc; font-size:9px; letter-spacing:2px; margin-bottom:6px;" data-i18n="ui.armadilha.escolha_o_veneno">ESCOLHA O VENENO:</div>
+          ${ARMADILHAS_LUCCAS.find(a=>a.id===selecionada)?.permite_veneno ? `
+            <div onclick="selecionarVenenoPara('')" style="
+              padding:6px 10px; margin-bottom:3px; background:rgba(255,255,255,0.02);
+              border:1px solid #2a2a2a; cursor:pointer;">
+              <span style="color:#c8b89a; font-size:10px;">🚫 ${t('ui.armadilha.sem_veneno')}</span>
+            </div>` : ''}
           ${venenos.map(v => `
             <div onclick="selecionarVenenoPara('${v.id}')" style="
               padding:6px 10px; margin-bottom:3px;
@@ -21538,24 +21544,29 @@ function abrirPainelCriarArmadilha(){
         </div>` : ''}
       <div style="display:flex; gap:6px; margin-top:12px;">
         <button onclick="document.getElementById('painel-armadilha').remove()" style="flex:1; padding:8px; background:transparent; border:1px solid #4a4a4a; color:#8a7a5a; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;" data-i18n="ui.geral.cancelar_caixa">CANCELAR</button>
-        <button onclick="confirmarCriarArmadilha()" ${!selecionada ? 'disabled' : ''} style="flex:2; padding:8px;
-          background:${selecionada?'rgba(200,169,81,0.15)':'transparent'};
-          border:1px solid ${selecionada?'#c8a951':'#4a4a4a'};
-          color:${selecionada?'#c8a951':'#4a4a4a'}; font-family:'Cinzel',serif; font-size:10px; letter-spacing:2px; cursor:pointer;" data-i18n="ui.armadilha.posicionar">🪤 POSICIONAR</button>
       </div>`;
   }
 
   renderPainel();
   document.body.appendChild(painel);
 
-  window.selecionarArmadilha = function(id){ selecionada = (selecionada === id ? null : id); veneno_id = null; renderPainel(); };
-  window.selecionarVenenoPara = function(vid){ veneno_id = vid; renderPainel(); };
-  window.confirmarCriarArmadilha = function(){
+  // Um clique: fecha o quadro e liga a mira no mapa. Armadilha de veneno (obrigatório
+  // ou opcional) abre antes a lista de venenos, e o clique no veneno (ou em "Sem
+  // veneno") é que posiciona.
+  function posicionar(tipoId, vid){
+    document.getElementById('painel-armadilha')?.remove();
+    _ativarModoPlacementArmadilha(tipoId, vid || null);
+  }
+  window.selecionarArmadilha = function(id){
+    const arm = ARMADILHAS_LUCCAS.find(a => a.id === id);
+    if(!(arm?.requer_veneno || arm?.permite_veneno)){ posicionar(id, null); return; }
+    selecionada = (selecionada === id ? null : id); veneno_id = null; renderPainel();
+  };
+  window.selecionarVenenoPara = function(vid){
     if(!selecionada) return;
     const arm = ARMADILHAS_LUCCAS.find(a => a.id === selecionada);
-    if(arm?.requer_veneno && !veneno_id){ GS.adicionarLog(t('ui.armadilha.escolha_um_veneno_para_a_armadilha')); return; }
-    document.getElementById('painel-armadilha')?.remove();
-    _ativarModoPlacementArmadilha(selecionada, veneno_id);
+    if(arm?.requer_veneno && !vid){ GS.adicionarLog(t('ui.armadilha.escolha_um_veneno_para_a_armadilha')); return; }
+    posicionar(selecionada, vid);
   };
 }
 
