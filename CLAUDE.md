@@ -1,5 +1,25 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Fichas dos servos e Animar Mortos na barra (2026-11-27)
+
+**Animar Mortos na barra:** a habilidade de classe do Pedro não mora em `#skills-list`, que é de onde `_habilidadesEspelhadas` copia o menu ⚔️ Habilidades da barra. Por isso o menu a acrescenta direto: 💀 Animar Mortos e, com `mago_reviver_4`, ☠️ Senhor da Morte, esmaecidos fora da vez ou com a ação principal gasta. O clique chama `usarAnimarMortos(versao)`, como a ficha.
+
+**Fichas dos servos:** `_renderServosFichas` (chamada no início de `renderTurnHeroHud`) desenha `#servos-fichas` à direita do painel do herói (`#battlefield-turn-tools`), no mesmo visual translúcido. Só aparece para quem controla o herói, na vez dele (fichas pequenas: retrato e PV) e na vez dos servos dele.
+- **Servo da vez:** a ficha cresce (`.is-atual`) e mostra PV, CA, movimento, ataque disponível ou usado, e os ataques.
+- **Quem já agiu:** fica no lugar, esmaecido com ✓ (`.is-feito`).
+- **Reféns guiados:** vêm no fim da fileira (os que estão em Seguir não abrem vez).
+- **Clique:** centraliza a câmera no servo.
+
+**Ordem:** o servidor manda `servos_ordem` no `game_state`, calculada por `_ordem_servos(p)`, a mesma função que abre a janela dos servos. Não copie a regra de iniciativa no cliente.
+
+**Lógica pura** (`gameState.js`):
+- `GS.fichasDosServos(state, owner)`.
+- `GS.ataquesDoServo(ent, kind)`, espelho de `handle_atacar_animado`: Animar Mortos básico faz UM golpe com o primeiro ataque (bônus do ataque ou nível do servo; dano do ataque ou do servo); Senhor da Morte e elementais usam todos os ataques, com `num_attacks`. **Mudou o ataque do servo no servidor, mude o espelho.**
+
+**Largura:** `_ajustarLarguraServosFichas` limita a fileira ao espaço livre até o painel lateral; em tela estreita ela rola até a ficha da vez.
+
+Testes: `tools/test_servos_ordem.py`, `tools/test_servos_fichas_cliente.js` e `tools/test_barra_animar_mortos.js`.
+
 ### Testes de comportamento, não de texto (2026-11-27)
 
 Teste que procura a FORMA exata do código ("a linha A vem logo antes da B", "a chamada é escrita assim") quebra quando o código é reescrito sem mudar o que faz, e já derrubou o CI à toa (PRs 103, 105, 106). Em teste novo, verifique comportamento. No cliente use `tools/js_teste_util.js`:
