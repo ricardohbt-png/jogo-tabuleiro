@@ -11,6 +11,7 @@ Um cliente alterado (ou com bug) pode mandar qualquer JSON. Duas garantias:
 
 Roda da raiz: python tools/test_protocolo_robustez.py
 """
+import ast
 import asyncio
 import collections
 import json
@@ -60,14 +61,45 @@ class FakeWS:
         pass
 
 
-def tipos_do_dispatcher():
-    """Lê os `t == "..."` do dispatcher para cobrir TODO o protocolo — assim uma
-    mensagem nova entra na varredura sozinha, sem ninguém lembrar de atualizar."""
+def _funcao_handler():
+    """Nó `ast` da função `handler` do server.py (o dispatcher do WebSocket).
+
+    Lido pela GRAMÁTICA do Python, não por texto: antes o fim do dispatcher era
+    achado pela frase `except Exception as e:`, e um bloco novo que usasse essa
+    mesma frase cortava a varredura no lugar errado (PR 106)."""
     base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     src = open(os.path.join(base, "server.py"), encoding="utf-8", errors="replace").read()
-    ini = src.index('            t = msg.get("type")')
-    fim = src.index('            except Exception as e:', ini)
-    return sorted(set(re.findall(r't == "([a-z_]+)"', src[ini:fim])))
+    arvore = ast.parse(src)
+    return next(n for n in arvore.body
+                if isinstance(n, ast.AsyncFunctionDef) and n.name == "handler")
+
+
+def tipos_do_dispatcher():
+    """Os `t == "..."` do dispatcher, para cobrir TODO o protocolo — assim uma
+    mensagem nova entra na varredura sozinha, sem ninguém lembrar de atualizar."""
+    tipos = set()
+    for n in ast.walk(_funcao_handler()):
+        if (isinstance(n, ast.Compare) and isinstance(n.left, ast.Name) and n.left.id == "t"
+                and len(n.ops) == 1 and isinstance(n.ops[0], ast.Eq)
+                and isinstance(n.comparators[0], ast.Constant) and isinstance(n.comparators[0].value, str)):
+            tipos.add(n.comparators[0].value)
+    return sorted(tipos)
+
+
+def _despacho_protege(handler, campo):
+    """True se a chamada `room.<handler>(...)` do dispatcher recebe `_key(msg.get("<campo>"))`
+    em algum argumento — olhando a estrutura da chamada, não as linhas do texto."""
+    def eh_key_do_campo(arg):
+        return (isinstance(arg, ast.Call) and isinstance(arg.func, ast.Name) and arg.func.id == "_key"
+                and arg.args and isinstance(arg.args[0], ast.Call)
+                and isinstance(arg.args[0].func, ast.Attribute) and arg.args[0].func.attr == "get"
+                and isinstance(arg.args[0].func.value, ast.Name) and arg.args[0].func.value.id == "msg"
+                and arg.args[0].args and isinstance(arg.args[0].args[0], ast.Constant)
+                and arg.args[0].args[0].value == campo)
+    chamadas = [n for n in ast.walk(_funcao_handler())
+                if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr == handler]
+    return bool(chamadas) and all(
+        any(eh_key_do_campo(a) for a in list(c.args) + [k.value for k in c.keywords]) for c in chamadas)
 
 
 # Valores hostis: não-hashable (chave de dict), não-numérico (índice),
@@ -221,21 +253,10 @@ async def main():
     # `attack` (o turno é do monstro). Como o handler acima prova que o id cru
     # estoura, conferimos por leitura que o despacho aplica o `_key` — sem isto,
     # remover a guarda passaria despercebido.
-    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    src = open(os.path.join(base, "server.py"), encoding="utf-8", errors="replace").read()
-    ini = src.index('            t = msg.get("type")')
-    fim = src.index('            except Exception as e:', ini)
-    despacho = src[ini:fim]
     for handler, campo in (("handle_attack", "target_id"),
                            ("handle_pickup_item", "ground_id"),
                            ("handle_take_from_chest", "chest_id")):
-        linhas = despacho.splitlines()
-        i = next((n for n, l in enumerate(linhas) if f"room.{handler}(" in l), None)
-        # A chamada pode quebrar em várias linhas (take_from_chest quebra), então
-        # olhamos a linha do despacho e as 2 seguintes.
-        trecho = "".join(linhas[i:i + 3]) if i is not None else ""
-        check(f"despacho de {handler} protege {campo} com _key",
-              f'_key(msg.get("{campo}"))' in trecho)
+        check(f"despacho de {handler} protege {campo} com _key", _despacho_protege(handler, campo))
 
     print("\n[6] Helpers de coerção")
     check("_num converte texto numérico", S._num("7") == 7)

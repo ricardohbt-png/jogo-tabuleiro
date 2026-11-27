@@ -8,6 +8,7 @@ const path = require('path');
 const raiz = path.join(__dirname, '..');
 const GAME = fs.readFileSync(path.join(raiz, 'game.js'), 'utf8').split('\r\n').join('\n');
 const MOD = fs.readFileSync(path.join(raiz, 'src', 'reacoesElementais.js'), 'utf8');
+const U = require('./js_teste_util');
 let PASS = 0, FAIL = 0;
 function check(nome, cond) { if (cond) { PASS++; console.log('  ✅ ' + nome); } else { FAIL++; console.log('  ❌ ' + nome); } }
 
@@ -123,22 +124,49 @@ console.log('\n[2] _reagePrever do game.js (executado)');
 }
 
 console.log('\n[3] fiação no game.js');
-check('Relâmpago/Bola/Prisão/Raio Congelante mapeados', /_ELEMENTO_MIRA_MAGIA = \{ relampago: 'lightning', bola_fogo: 'fire', prisao_chamas: 'fire', raio_congelante: 'cold' \}/.test(GAME));
-check('óleo, Fogo Grego e Bomba Incendiária mapeados (piche não)', /_ELEMENTO_MIRA_ITEM = \{ frasco_oleo: 'fire', fogo_grego: 'fire', bomba_incendiaria: 'fire' \}/.test(GAME) && !/_ELEMENTO_MIRA_ITEM[^;]*frasco_piche/.test(GAME));
-check('_recomputarAreaMagia calcula a prévia antes de aplicar', /function _recomputarAreaMagia[^]*?window\._spellHL\.double = dbl;\n  _reagePrever\(area\);\n  _atingidosPrever\(area\);\n  _aplicarSpellHL\(\);/.test(GAME));
-check('_recomputarAreaThrow calcula a prévia', /function _recomputarAreaThrow[^]*?_reagePrever\(area\);\n  _atingidosPrever\(area\);\n  _aplicarSpellHL\(\);/.test(GAME));
-check('arremesso de alvo único calcula a prévia no hover', /function _aimHoverThrow[^]*?area == null[^]*?_reagePrever\(valid/.test(GAME));
-check('status da mira ganha o texto da reação (magia e arremesso)', /_reageSufixo\(true\)/.test(GAME.split('function _aimHoverMagic')[1].split('function _aimHoverThrow')[0])
-  && /_reageSufixo\(valid\)/.test(GAME.split('function _aimHoverThrow')[1].split('function _aimHoverHabilidadeTeste')[0]));
-check('limpeza: _aimSetHighlights e a limpeza geral zeram o destaque', (GAME.match(/_spellHL\.reage = null/g) || []).length >= 2);
-check('3D: um pool por tipo de reação + pool de anéis', /spellReageMeshes\[tp\] = _mkSpell\(hex, 0\.68, 0\.0155\)/.test(GAME) && /spellReageAlvoMeshes = _mkOverlayPool/.test(GAME));
-check('3D: pools entram no objeto g3', /spellTargetMeshes, spellReageMeshes, spellReageAlvoMeshes,/.test(GAME));
-check('3D: toggle recebe lista (nunca null: o filtro de visibilidade espalha o argumento)', !/spellReage[A-Za-z]*, hl\.reage[^;]*\|\| null\)/.test(GAME));
-check('3D: _aplicarSpellHL3D alterna os pools de reação', /_aplicarSpellHL3D[^]*?g3\.spellReageMeshes[^]*?toggle\(g3\.spellReageAlvoMeshes/.test(GAME));
-check('2D: _desenharSpellHL2D pinta cor, ícone e anel', /function _desenharSpellHL2D[^]*?hl\.reage[^]*?_REAGE_ICONE\[tp\][^]*?hl\.reage\.alvos/.test(GAME));
-check('os 5 tipos têm cor 2D, cor 3D, ícone e texto', ['choque', 'ignicao', 'congelar', 'gas', 'derreter'].every(k =>
-  new RegExp(`${k}:\\s*'`).test(GAME.slice(GAME.indexOf('const _REAGE_ICONE'), GAME.indexOf('const _REAGE_TEXTO')))
-  && new RegExp(`${k}: n => t\\('ui\\.mira\\.reage\\.${k}'`).test(GAME)));
+// Olha o comportamento e o conteúdo, não a forma exata das linhas (js_teste_util).
+{
+  const magia = U.constante(GAME, '_ELEMENTO_MIRA_MAGIA'), item = U.constante(GAME, '_ELEMENTO_MIRA_ITEM');
+  check('Relâmpago/Bola/Prisão/Raio Congelante mapeados', magia.relampago === 'lightning' && magia.bola_fogo === 'fire'
+    && magia.prisao_chamas === 'fire' && magia.raio_congelante === 'cold');
+  check('óleo, Fogo Grego e Bomba Incendiária mapeados (piche não)', item.frasco_oleo === 'fire' && item.fogo_grego === 'fire'
+    && item.bomba_incendiaria === 'fire' && !('frasco_piche' in item));
+  // As duas recomputações de área, EXECUTADAS: as prévias recebem a área antes do desenho.
+  const previasAntesDoDesenho = (r) => {
+    const nomes = r.chamadas.map(c => c.nome), area = r.ctx.window._spellHL.area;
+    const iDes = nomes.indexOf('_aplicarSpellHL');
+    return iDes >= 0 && ['_reagePrever', '_atingidosPrever'].every(n => {
+      const i = nomes.indexOf(n);
+      return i >= 0 && i < iDes && r.chamadas[i].args[0] === area;
+    });
+  };
+  const rM = U.executar(GAME, ['_recomputarAreaMagia'], {
+    window: { _modoMagia: { magiaId: 'x', alvoTipo: 'foe' }, _spellHL: {} },
+    GRIMORIO_CLIENT: { x: {} }, GS: { me: { pos: [1, 1] } } });
+  rM.api._recomputarAreaMagia(4, 5);
+  check('_recomputarAreaMagia calcula a prévia antes de aplicar', rM.ctx.window._spellHL.area.has('4,5') && previasAntesDoDesenho(rM));
+  const rT = U.executar(GAME, ['_recomputarAreaThrow'], {
+    window: { _modoThrowItem: { area: 1 }, _spellHL: {} },
+    _addCheb(cx, cy, r, out) { out.add(`${cx},${cy}`); } });
+  rT.api._recomputarAreaThrow(2, 3);
+  check('_recomputarAreaThrow calcula a prévia', rT.ctx.window._spellHL.area.has('2,3') && previasAntesDoDesenho(rT));
+  check('arremesso de alvo único calcula a prévia no hover', U.chamadas(U.funcao(GAME, '_aimHoverThrow')).includes('_reagePrever'));
+  check('status da mira ganha o texto da reação (magia e arremesso)',
+    U.chamadas(U.funcao(GAME, '_aimHoverMagic')).includes('_reageSufixo') && U.chamadas(U.funcao(GAME, '_aimHoverThrow')).includes('_reageSufixo'));
+  check('limpeza: _aimSetHighlights e a limpeza geral zeram o destaque', (GAME.match(/_spellHL\.reage\s*=\s*null/g) || []).length >= 2);
+  check('3D: um pool por tipo de reação + pool de anéis', /spellReageMeshes\[tp\]\s*=\s*_mkSpell\(/.test(GAME) && /spellReageAlvoMeshes\s*=\s*_mkOverlayPool\(/.test(GAME));
+  const g3 = U.bloco(GAME, 'g3 = {');
+  check('3D: pools entram no objeto g3', /\bspellReageMeshes\b/.test(g3) && /\bspellReageAlvoMeshes\b/.test(g3));
+  check('3D: toggle recebe lista (nunca null: o filtro de visibilidade espalha o argumento)', !/spellReage[A-Za-z]*, hl\.reage[^;]*\|\| null\)/.test(GAME));
+  const hl3d = U.funcao(GAME, '_aplicarSpellHL3D');
+  check('3D: _aplicarSpellHL3D alterna os pools de reação', hl3d.includes('spellReageMeshes') && hl3d.includes('spellReageAlvoMeshes')
+    && U.chamadas(hl3d).includes('toggle'));
+  const hl2d = U.funcao(GAME, '_desenharSpellHL2D');
+  check('2D: _desenharSpellHL2D pinta cor, ícone e anel', hl2d.includes('hl.reage') && hl2d.includes('_REAGE_ICONE') && hl2d.includes('reage.alvos'));
+  const icones = U.constante(GAME, '_REAGE_ICONE');
+  check('os 5 tipos têm cor 2D, cor 3D, ícone e texto', ['choque', 'ignicao', 'congelar', 'gas', 'derreter'].every(k =>
+    typeof icones[k] === 'string' && new RegExp(`${k}: n => t\\('ui\\.mira\\.reage\\.${k}'`).test(GAME)));
+}
 check('index.html carrega o módulo (já existente)', fs.readFileSync(path.join(raiz, 'index.html'), 'utf8').includes('src/reacoesElementais.js'));
 
 console.log('\n[4] idiomas');
