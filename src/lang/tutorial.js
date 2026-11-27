@@ -163,6 +163,10 @@ window.LANG_TUTORIAL = {
     "en": "That hit did not come from behind. The wedge on the floor marks the dummy's front: go to the opposite side.",
     "pt": "Esse golpe não veio pelas costas. A cunha no chão marca a frente do boneco: vá para o lado oposto."
   },
+  "ui.tutorial.dica_erro.furtivo_escondido": {
+    "en": "This time, without hiding: the Sneak Attack has to come from behind.",
+    "pt": "Desta vez, sem se esconder: o Ataque Furtivo tem de vir das costas."
+  },
   "ui.tutorial.dica_erro.categoria_arma_errada": {
     "en": "Use the weapon type requested in the lesson to compare its damage.",
     "pt": "Use o tipo de arma pedido na lição para comparar o dano."

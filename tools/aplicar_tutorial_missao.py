@@ -275,4 +275,7 @@ def aplicar(definicao):
     # Fatia 22: a lição da direção (costas, flanco e a bússola de fim de turno).
     from aplicar_fatia22_tutorial import aplicar as _aplicar_fatia22
     _aplicar_fatia22(definicao)
+    # Fatia 23: o Ladino aprende o Ataque Furtivo pelas costas, sem se esconder.
+    from aplicar_fatia23_tutorial import aplicar as _aplicar_fatia23
+    _aplicar_fatia23(definicao)
     return definicao

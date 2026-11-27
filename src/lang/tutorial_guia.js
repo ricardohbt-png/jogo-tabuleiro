@@ -1084,6 +1084,26 @@ window.LANG_TUTORIAL_GUIA = {
     "en": "Attack the dummy while hidden.",
     "pt": "Ataque o boneco enquanto estiver escondido."
   },
+  "ui.tutorial.guia.treino_furtivo_costas.costas.dica.1": {
+    "en": "Attacked head-on or hidden? Walk around and strike in plain sight.",
+    "pt": "Atacou de frente ou escondido? Dê a volta e ataque à vista."
+  },
+  "ui.tutorial.guia.treino_furtivo_costas.costas.porque": {
+    "en": "From behind the [[furtivo]] lands even in plain sight, and you get +2 to hit.",
+    "pt": "Pelas costas o [[furtivo]] sai mesmo à vista, e o acerto ganha +2."
+  },
+  "ui.tutorial.guia.treino_furtivo_costas.costas.texto": {
+    "en": "Attack the dummy from the square behind it, without hiding.",
+    "pt": "Ataque o boneco pela casa atrás dele, sem se esconder."
+  },
+  "ui.tutorial.guia.treino_furtivo_costas.olhar.porque": {
+    "en": "It faces south; its back is the square right above it.",
+    "pt": "Ele olha para o sul; as costas ficam na casa logo acima dele."
+  },
+  "ui.tutorial.guia.treino_furtivo_costas.olhar.texto": {
+    "en": "Check where the dummy faces: the mark on the floor points to its front.",
+    "pt": "Confira para onde o boneco olha: a marca no chão aponta a frente."
+  },
   "ui.tutorial.guia.treino_golpe.golpe.dica.1": {
     "en": "If you already used your action, click End Turn first.",
     "pt": "Se já usou sua ação, clique em Encerrar Turno antes."
