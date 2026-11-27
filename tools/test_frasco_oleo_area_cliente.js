@@ -1,25 +1,18 @@
 // Regressão: raio 0 deve manter a prévia de área no quadrado escolhido.
+// Executa a _recomputarAreaThrow REAL; as outras funções que ela chama viram espiões
+// (js_teste_util), então acrescentar uma chamada nova a ela não quebra este teste.
 const assert = require('assert');
-const fs = require('fs');
-const vm = require('vm');
+const U = require('./js_teste_util');
 
-const source = fs.readFileSync('game.js', 'utf8');
-const match = source.match(/function _recomputarAreaThrow\(hx, hy\) \{[\s\S]*?\n\}/);
-assert(match, 'função de prévia de área do arremesso encontrada');
-
-const sandbox = {
-  window: {
-    _modoThrowItem: { area: 0 },
-    _spellHL: { area: new Set(), double: new Set() },
-  },
+const GAME = U.ler('game.js');
+const { api, chamadas, ctx } = U.executar(GAME, ['_recomputarAreaThrow'], {
+  window: { _modoThrowItem: { area: 0 }, _spellHL: { area: new Set(), double: new Set() } },
   _addCheb(cx, cy, radius, out) {
     for (let y = cy - radius; y <= cy + radius; y++)
       for (let x = cx - radius; x <= cx + radius; x++) out.add(`${x},${y}`);
   },
-  _aplicarSpellHL() {},
-  _reagePrever() {},
-  _atingidosPrever() {},
-};
-vm.runInNewContext(`${match[0]}\n_recomputarAreaThrow(7, 4);`, sandbox);
-assert.deepStrictEqual(Array.from(sandbox.window._spellHL.area), ['7,4']);
-console.log('1 verificação passou');
+});
+api._recomputarAreaThrow(7, 4);
+assert.deepStrictEqual(Array.from(ctx.window._spellHL.area), ['7,4']);
+assert.ok(chamadas.some(c => c.nome === '_aplicarSpellHL'), 'a prévia é desenhada');
+console.log('2 verificações passaram');

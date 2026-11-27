@@ -1,5 +1,15 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Testes de comportamento, não de texto (2026-11-27)
+
+Teste que procura a FORMA exata do código ("a linha A vem logo antes da B", "a chamada é escrita assim") quebra quando o código é reescrito sem mudar o que faz, e já derrubou o CI à toa (PRs 103, 105, 106). Em teste novo, verifique comportamento. No cliente use `tools/js_teste_util.js`:
+- `funcao(src, nome)`: texto de uma função de topo pelo nome, casando chaves fora de strings, templates e comentários.
+- `executar(src, nomes, ctx)`: executa as funções reais; nomes que o teste não fornece viram espiões que registram as chamadas, então uma chamada nova dentro da função não quebra o teste.
+- `chamadas(trecho)` e `chamaAntes(trecho, a, b)`: "chama X" e "X antes de Y" sem exigir linhas coladas.
+- `constante`, `bloco` e `parenteses`: ler o conteúdo de um mapa, objeto ou chamada sem depender de espaços e ordem.
+
+No servidor, use `ast`, como `tools/test_protocolo_robustez.py` faz para achar o dispatcher: o recorte por texto (`except Exception as e:`) chegou a tirar 22 dos 228 tipos de mensagem da varredura sem avisar. Ao converter um teste, prove com mutação: o teste novo tem de falhar com o defeito reposto e passar com uma reescrita inofensiva. Fatia 1 convertida: `test_peao_sem_reconstrucao.js`, `test_destaque_mira_cliente.js`, `test_frasco_oleo_area_cliente.js` e `test_protocolo_robustez.py`. Teste do utilitário: `tools/test_js_teste_util.js`.
+
 ### Limite de tempo por turno no Solo (2026-11-27)
 
 `create_savegame` grava `turn_timer_enabled`: desligado quando `play_mode == "solo"` (ninguém espera a vez) e ligado no Multiplayer, com Mestre ou sem modo informado (como antes). A continuação herda o valor do jogo de origem. Jogos salvos já existentes não mudam: sem o campo, a sala abre ligada, como sempre. O anfitrião continua alternando no ⚙️ (`set_turn_timer`), e a escolha fica salva. Teste: `tools/test_timer_solo.py`.
