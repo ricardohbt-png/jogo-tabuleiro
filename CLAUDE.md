@@ -18,6 +18,12 @@
 
 **Largura:** `_ajustarLarguraServosFichas` limita a fileira ao espaço livre até o painel lateral; em tela estreita ela rola até a ficha da vez.
 
+**Barrinha acima da ficha da vez (2026-11-27):** `_servoBarraAcoes` põe, acima da ficha do servo da vez (coluna `.servo-ficha-col`), dois botões no visual da barra do Pedro:
+- **⏭ Encerrar servo (N/T):** clica no `#btn-end-turn`, a mesma ação do painel lateral. O rótulo vem de `_rotuloEncerrarServo`, que o painel também usa.
+- **⚔️ Habilidades:** só para Senhor da Morte e elementais, a mesma regra do painel. Abre `#servos-hab-pop` para cima, a partir de `_animadoManualAbilityList`; escolher uma habilidade chama `selecionarHabilidadeAnimado`.
+
+A lista mora fora da fileira, que rola na horizontal e cortaria o menu. Ela precisa de `pointer-events: auto`, porque `#battlefield-left-hud` ignora cliques. Teste: `tools/test_servo_barra_acoes.js`.
+
 Testes: `tools/test_servos_ordem.py`, `tools/test_servos_fichas_cliente.js` e `tools/test_barra_animar_mortos.js`.
 
 ### Testes de comportamento, não de texto (2026-11-27)
