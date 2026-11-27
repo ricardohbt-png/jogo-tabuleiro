@@ -1,5 +1,9 @@
 # Legends for Hire — Regras de Arquitetura
 
+### Limite de tempo por turno no Solo (2026-11-27)
+
+`create_savegame` grava `turn_timer_enabled`: desligado quando `play_mode == "solo"` (ninguém espera a vez) e ligado no Multiplayer, com Mestre ou sem modo informado (como antes). A continuação herda o valor do jogo de origem. Jogos salvos já existentes não mudam: sem o campo, a sala abre ligada, como sempre. O anfitrião continua alternando no ⚙️ (`set_turn_timer`), e a escolha fica salva. Teste: `tools/test_timer_solo.py`.
+
 ### Prévia de quem a área atinge (2026-11-26)
 
 Ao mirar magia ou arremesso de área, `_atingidosPrever` (game.js) usa `GS.atingidosNaArea` (puro, gameState.js) para marcar quem o EFEITO atinge: anel laranja com 🎯 nos inimigos visíveis, vermelho com ⚠ nos aliados feridos (heróis, inclusive o conjurador, servos e refém liberto) e verde nos beneficiados (2D `_desenharAtingidos2D`, 3D pool `spellAtingidoMeshes`); a linha da mira soma o resumo (`_atingidosSufixo`, com dado e teste do arremessável). Com aliado ferido na área, lançar pede um segundo clique na mesma área (`_confirmaAtingirAliado`). Quem cada efeito atinge é `GS.AREA_ALCANCE` (`todos`|`aliados`; fora da tabela não marca, p.ex. terreno, escuridão, silêncio): **mudou um executor, mude a tabela** — `tools/test_previa_area_atingidos.py` roda cada efeito no servidor com aliado e inimigo na área e confere. A camada antiga azul/vermelha por casa (`_spellPreviewTargetSets`) cede lugar quando há prévia. Teste do cliente: `tools/test_previa_area_atingidos_cliente.js`.
